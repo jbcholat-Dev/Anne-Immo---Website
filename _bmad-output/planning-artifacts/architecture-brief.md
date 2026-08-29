@@ -99,3 +99,27 @@ Contraintes déjà actées, non rediscutables ici (détail dans SPEC.md v3) :
 - **Langues livrées en v1** — FR seul, FR+EN, ou les quatre.
 - **Barème de la question sur la performance commerciale** — le déployé scinde visites et offres (12 combinaisons) là où la conception documente 5 options combinées. Le croisement n'existe nulle part.
 - **Remontée des leads dans Modelo** — priorité basse, une solution simple suffit probablement en v1, à condition que la contrainte de stockage côté site soit respectée.
+
+---
+
+## Réponses de JB (2026-08-29, en séance)
+
+Ces cinq réponses sont des **entrées d'architecture actées**, pas des hypothèses.
+
+| # | Question | Réponse | Ce que ça impose à l'architecture |
+|---|---|---|---|
+| 1 | Autonomie d'Anne | **Court terme : JB gère tout.** Moyen terme : brique CMS pour qu'elle publie son contenu éditorial seule. | Stack **CMS-ready sans CMS en v1** : contenus déjà externalisés (fichiers de contenu, pas de texte en dur), pour qu'un CMS se branche plus tard **sans refonte**. Le multilingue par conception va dans le même sens. |
+| 2 | Budget récurrent | **20-50 €/mois** | Zone confortable : hébergement, e-mails transactionnels, outil de RDV, et plus tard le CMS. Le chiffrage doit tenir dans cette enveloppe **CMS inclus à terme**, pas seulement en v1. |
+| 3 | Notion | **Anne pourrait l'adopter si c'est simple** | Notion n'est **pas** la source de référence des leads. Le stockage propre au site fait référence ; Notion est une **vue alimentée automatiquement**, qu'Anne peut adopter ou ignorer sans que rien ne casse. |
+| 4 | Nom de domaine | **Son nom** (ex. `annevialtissot.fr`) | Cohérent avec le personal branding acté. Le nom d'agence n'est pas réservé aujourd'hui — décision différée, non bloquante. Enregistrement **au nom d'Anne**. |
+| 5 | Temps de maintenance JB | **1 à 3h/mois** | Auto-surveillance obligatoire (JB ne découvre pas les pannes en regardant) + une routine mensuelle courte. Exclut toute solution demandant un entretien serveur régulier. |
+
+**Conséquence transverse** : le couple « JB gère tout maintenant / CMS plus tard » + « 1-3h/mois » disqualifie les stacks à entretien continu et privilégie une base statique, versionnée, à contenus externalisés.
+
+### ⚠️ Le piège de la réponse 1 — à traiter en vague 1, pas en vague 2
+
+« CMS-ready sans CMS en v1 » est une promesse qui se tient **uniquement si le modèle de contenu est arrêté maintenant**. Externaliser les textes dans des fichiers ne suffit pas : ce qui rend un CMS branchable sans refonte, c'est que les **objets** soient déjà définis — qu'est-ce qu'une story de vente exactement (commune, type, délai, photo maîtresse, galerie, récit, témoignage, statut publié) ; qu'est-ce qu'un témoignage ; qu'est-ce qu'un avis. Si ces formes sont improvisées au build et que le CMS arrive après, on refait le site.
+
+Or le découpage ci-dessus renvoie le modèle de contenu en vague 2. **Contradiction à lever** : la vague 1 doit fixer la *forme* des objets de contenu (champs, obligatoires ou non, relations), même si le *rendu* de ces objets reste à la vague 2 avec la maquette. La maquette peut changer l'apparence d'une story ; elle ne change pas le fait qu'une story a une commune, un récit et un témoignage — c'est le contrat qui le dit (CAP-3).
+
+Décision proposée : **remonter en vague 1 la définition des objets de contenu**, laisser en vague 2 leur mise en page et leurs composants.
