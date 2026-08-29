@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=DM+Sans:wght@400;500;700&display=swap">
+  <style>
+    body { margin: 0; font-family: 'DM Sans', system-ui, sans-serif; color: #26201A; background: #F7F2EA; }
+    a { color: #002FA7; text-decoration: none; }
+    a:hover { color: #002FA7; text-decoration: underline; }
+    .opt { width: 100%; text-align: left; background: #F7F2EA; border: 1.5px solid #D8CDBB;
+           border-radius: 12px; padding: 19px 24px; font-family: 'DM Sans', sans-serif;
+           font-size: 16px; color: #26201A; cursor: pointer; min-height: 44px; }
+    .opt:hover { border-color: #C4623E; background: #F7F2EA; }
+    .opt:focus-visible { outline: 3px solid #002FA7; outline-offset: 2px; }
+  </style>
+</helmet>
+
+<div style="width:1360px;min-height:820px;background:#F7F2EA;display:flex;flex-direction:column">
+
+  <!-- navigation masquée pendant le parcours : logo, sortie, rien d'autre -->
+  <header style="display:flex;align-items:center;justify-content:space-between;padding:18px 48px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <svg viewBox="24 26 108 108" width="26" height="26" aria-hidden="true"><defs><clipPath id="qk"><circle cx="78" cy="80" r="54"></circle></clipPath></defs><g clip-path="url(#qk)"><rect x="24" y="26" width="108" height="108" fill="#002FA7"></rect><path d="M 24 79 C 44 73, 60 84, 78 78 C 96 72, 114 81, 132 76 L 132 134 L 24 134 Z" fill="#C4623E"></path></g></svg>
+      <span style="font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#5A5346">Diagnostic — Système 360™</span>
+    </div>
+    <a href="#q" style="font-size:13px;color:#6E6354">Reprendre plus tard</a>
+  </header>
+
+  <div style="padding:0 48px">
+    <div style="height:4px;background:#E9E0D2;border-radius:999px;overflow:hidden"><div style="width:6%;height:100%;background:#C4623E;border-radius:999px"></div></div>
+    <div style="display:flex;justify-content:space-between;margin-top:10px">
+      <span style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#002FA7;font-weight:500">Préparation à la Vente</span>
+      <span style="font-size:12.5px;color:#5A5346">Question 1 sur 15</span>
+    </div>
+  </div>
+
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;max-width:760px;width:100%;margin:0 auto;padding:48px">
+    <h1 style="font-family:Italiana,serif;font-weight:400;font-size:40px;line-height:1.2;margin:0 0 36px;text-align:center;text-wrap:pretty">Comment avez-vous déterminé le prix de vente de votre bien ?</h1>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <button class="opt">Avis d'un ou plusieurs agents immobiliers</button>
+      <button class="opt">Estimateur en ligne + ajustements personnels</button>
+      <button class="opt">Estimation personnelle (basé sur le prix d'achat)</button>
+      <button class="opt">Je n'ai pas encore défini de prix</button>
+    </div>
+    <p style="font-size:13px;color:#5A5346;text-align:center;margin:26px 0 0">Une réponse sélectionnée passe automatiquement à la question suivante. Retour possible dès l'écran 2.</p>
+  </div>
+
+  <footer style="padding:18px 48px;text-align:center;font-size:11.5px;color:#6E6354">
+    Vos réponses restent confidentielles — <a href="#q" style="font-size:11.5px;color:#4A4238">politique de confidentialité</a>
+  </footer>
+
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"$preview":{"width":1360,"height":820}}'>
+class Component extends DCLogic {}
+</script>
+</body>
+</html>

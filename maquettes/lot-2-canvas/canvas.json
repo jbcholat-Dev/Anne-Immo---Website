@@ -1,0 +1,44 @@
+{
+  "pages": [
+    { "id": "page-1", "name": "Écrans" },
+    { "id": "page-2", "name": "Hero — 3 variantes" }
+  ],
+  "artboards": [
+    { "file": "Main.dc.html", "page": "page-1", "title": "Accueil — desktop 1360", "x": 0, "y": 0, "w": 1360, "h": 3820 },
+    { "file": "AccueilMobile.dc.html", "page": "page-1", "title": "Accueil — mobile 390", "x": 1520, "y": 0, "w": 390, "h": 3560 },
+    { "file": "Diagnostic.dc.html", "page": "page-1", "title": "Diagnostic — landing autonome", "x": 2070, "y": 0, "w": 1360, "h": 1400 },
+    { "file": "Question.dc.html", "page": "page-1", "title": "Diagnostic — écran de question", "x": 2070, "y": 1520, "w": 1360, "h": 840 },
+    { "file": "Resultats.dc.html", "page": "page-1", "title": "Résultats — Sortie A", "x": 2070, "y": 2480, "w": 1360, "h": 1620 },
+
+    { "file": "HeroA.dc.html", "page": "page-2", "title": "Hero A — photo fixe, lien souligné", "x": 0, "y": 0, "w": 1360, "h": 740 },
+    { "file": "HeroB.dc.html", "page": "page-2", "title": "Hero B — vidéo drone, lien souligné", "x": 0, "y": 860, "w": 1360, "h": 740 },
+    { "file": "HeroC.dc.html", "page": "page-2", "title": "Hero C — photo fixe, pilule terracotta", "x": 0, "y": 1720, "w": 1360, "h": 740 }
+  ],
+  "annotations": [
+    {
+      "id": "note-corrections",
+      "page": "page-1",
+      "x": -420,
+      "y": 0,
+      "w": 340,
+      "text": "Corrigé depuis la v1\n\n• Bouton de nav : Diagnostic (Contact redevient une entrée de menu)\n• Ventes récentes : 6 biens en carrousel — flèches et points cliquables\n• Nouvelle section « Ils l'ont rencontrée » : 3 témoignages d'acheteurs non convertis (CAP-2)\n• §1.2 preuve ramenée à une bande compacte\n• Gris #8a8177 (contraste 3,4:1) remplacé par #6E6354 partout\n• Landing : « 15 questions », coordonnées annoncées d'emblée, sortie basse vers le guide\n• Écran de question : le libellé réel du déployé"
+    },
+    {
+      "id": "note-images",
+      "page": "page-1",
+      "x": -420,
+      "y": 560,
+      "w": 340,
+      "text": "Images\n\nAucune photo réelle : les visuels sont des placeholders dessinés, marqués « visuel de maquette ». Ils servent à juger la composition et les proportions, pas l'image.\n\nÀ remplacer par le dossier d'Anne (voir la table des actifs du brief)."
+    },
+    {
+      "id": "note-hero",
+      "page": "page-2",
+      "x": -420,
+      "y": 0,
+      "w": 340,
+      "text": "Comment arbitrer\n\nMême composition dans les trois : une seule variable change à chaque fois.\n\nA → B : photo fixe contre vidéo.\nA → C : lien souligné contre pilule.\n\nLe critère : laquelle fait comprendre en trois secondes qu'il s'agit de biens réels sur un territoire précis ?\n\nLe paysage est un placeholder dessiné — eau ouverte, rive d'en face basse, coteau habité. Pas de lac de montagne encaissé, l'erreur de la v1."
+    }
+  ],
+  "launch": { "view": "canvas", "page": "page-1" }
+}

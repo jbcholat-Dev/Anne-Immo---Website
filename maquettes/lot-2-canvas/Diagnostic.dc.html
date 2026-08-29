@@ -1,0 +1,132 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=DM+Sans:wght@400;500;700&display=swap">
+  <style>
+    body { margin: 0; font-family: 'DM Sans', system-ui, sans-serif; color: #26201A; background: #F7F2EA; }
+    a { color: #002FA7; text-decoration: none; }
+    a:hover { color: #002FA7; text-decoration: underline; }
+    .lbl { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; font-weight: 500; }
+    .badge { position: absolute; right: 10px; bottom: 10px; font-size: 10px; letter-spacing: .08em;
+             text-transform: uppercase; background: rgba(38,32,26,.62); color: #F7F2EA;
+             padding: 3px 9px; border-radius: 999px; }
+    .pill { display: inline-block; border-radius: 999px; padding: 15px 30px; font-weight: 500;
+            font-size: 16px; background: #C4623E; color: #F7F2EA; }
+    .pill:hover { background: #A34E30; color: #F7F2EA; }
+  </style>
+</helmet>
+
+<div style="width:1360px;background:#F7F2EA">
+
+  <header style="display:flex;align-items:center;justify-content:space-between;padding:18px 48px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <svg viewBox="24 26 108 108" width="30" height="30" aria-hidden="true"><defs><clipPath id="dk"><circle cx="78" cy="80" r="54"></circle></clipPath></defs><g clip-path="url(#dk)"><rect x="24" y="26" width="108" height="108" fill="#002FA7"></rect><path d="M 24 79 C 44 73, 60 84, 78 78 C 96 72, 114 81, 132 76 L 132 134 L 24 134 Z" fill="#C4623E"></path></g></svg>
+      <span style="font-family:Italiana,serif;font-size:22px;letter-spacing:.03em">Anne VIAL-TISSOT</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:24px;font-size:14px">
+      <a href="#d" style="color:#26201A">Le site d'Anne →</a>
+      <span style="font-size:12.5px;color:#6E6354;letter-spacing:.06em">FR · EN · ES · PT</span>
+    </div>
+  </header>
+
+  <!-- au-dessus de la ligne de flottaison : l'offre -->
+  <div style="display:grid;grid-template-columns:minmax(0, 1fr) 520px;gap:64px;padding:56px 48px 72px;align-items:center">
+    <div>
+      <div class="lbl" style="color:#002FA7;margin-bottom:16px">Diagnostic de vente — Système 360™</div>
+      <h1 style="font-family:Italiana,serif;font-weight:400;font-size:54px;line-height:1.1;margin:0">Où en est votre vente ?</h1>
+      <svg style="width:190px;height:9px;margin-top:12px" viewBox="0 0 220 10" aria-hidden="true"><path d="M2 6 C 40 1, 90 9, 130 5 C 165 1, 195 7, 218 4" fill="none" stroke="#C4623E" stroke-width="2.6" stroke-linecap="round"></path></svg>
+      <p style="font-size:17px;line-height:1.6;color:#4A4238;max-width:52ch;margin:20px 0 26px">15 questions concrètes sur votre préparation, votre visibilité et votre approche commerciale. À la fin :</p>
+      <div style="display:flex;flex-direction:column;max-width:480px;margin-bottom:22px">
+        <div style="display:flex;align-items:baseline;gap:14px;padding:13px 0;border-top:1px solid #E9E0D2"><b style="font-family:Italiana,serif;font-weight:400;font-size:24px;color:#002FA7;width:34px;flex:none">01</b><span style="font-size:15.5px">Un score de maturité sur 100</span></div>
+        <div style="display:flex;align-items:baseline;gap:14px;padding:13px 0;border-top:1px solid #E9E0D2"><b style="font-family:Italiana,serif;font-weight:400;font-size:24px;color:#002FA7;width:34px;flex:none">02</b><span style="font-size:15.5px">Un diagnostic personnalisé sur chacun des trois axes</span></div>
+        <div style="display:flex;align-items:baseline;gap:14px;padding:13px 0;border-top:1px solid #E9E0D2;border-bottom:1px solid #E9E0D2"><b style="font-family:Italiana,serif;font-weight:400;font-size:24px;color:#002FA7;width:34px;flex:none">03</b><span style="font-size:15.5px">Des recommandations concrètes, applicables tout de suite</span></div>
+      </div>
+      <!-- annoncer le prix à payer, ici -->
+      <p style="font-size:14px;line-height:1.6;color:#4A4238;max-width:52ch;margin:0 0 24px;padding-left:14px;border-left:2px solid #C4623E">Le résultat complet s'affiche après vos coordonnées — prénom, nom, e-mail et téléphone. <a href="#d" style="font-size:14px">Ce qu'on en fait</a>.</p>
+      <div style="display:flex;align-items:center;gap:20px">
+        <a href="#d" class="pill">Démarrez votre diagnostic</a>
+        <span style="font-size:13.5px;color:#5A5346">Gratuit · 3 minutes · Sans engagement</span>
+      </div>
+    </div>
+    <div style="position:relative;border-radius:12px;overflow:hidden;height:540px">
+      <svg viewBox="0 0 520 540" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%" aria-label="Maison face au lac — visuel de maquette">
+        <defs>
+          <linearGradient id="dSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C3D6E8"/><stop offset="1" stop-color="#EFE0CA"/></linearGradient>
+          <linearGradient id="dWat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7392B5"/><stop offset="1" stop-color="#41628A"/></linearGradient>
+        </defs>
+        <rect width="520" height="540" fill="url(#dSky)"/>
+        <path d="M0 232 C 120 222, 260 232, 380 224 C 450 220, 490 226, 520 222 L520 252 L0 252 Z" fill="#9DAFC4" opacity=".8"/>
+        <rect x="0" y="248" width="520" height="120" fill="url(#dWat)"/>
+        <g stroke="#C8DCEC" stroke-linecap="round" opacity=".45"><path d="M40 288 h110" stroke-width="1.8"/><path d="M280 300 h150" stroke-width="2"/></g>
+        <path d="M0 368 C 130 352, 300 372, 520 356 L520 540 L0 540 Z" fill="#8E9668"/>
+        <g><rect x="150" y="382" width="190" height="120" fill="#EDE4D6"/><path d="M138 382 L245 306 L352 382 Z" fill="#8C5B45"/><rect x="196" y="430" width="42" height="72" fill="#7C8DA6" opacity=".85"/><rect x="266" y="424" width="46" height="40" fill="#7C8DA6" opacity=".6"/></g>
+      </svg>
+      <span class="badge">visuel de maquette</span>
+    </div>
+  </div>
+
+  <!-- en dessous : la crédibilité, compressée -->
+  <div style="background:#E9E0D2;padding:64px 48px">
+    <div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:24px;margin-bottom:32px">
+      <div style="background:#F7F2EA;border-radius:12px;padding:28px;display:flex;gap:20px;align-items:flex-start">
+        <div style="position:relative;flex:none;width:88px;height:88px;border-radius:50%;overflow:hidden">
+          <svg viewBox="0 0 88 88" style="width:100%;height:100%" aria-label="Portrait — visuel de maquette">
+            <rect width="88" height="88" fill="#DCD2C2"/><circle cx="44" cy="34" r="19" fill="#B9AC99"/>
+            <path d="M18 88 C 20 62, 30 52, 44 52 C 58 52, 68 62, 70 88 Z" fill="#A99B87"/>
+          </svg>
+        </div>
+        <div>
+          <div class="lbl" style="color:#6E6354;margin-bottom:8px">Qui pose ces questions</div>
+          <p style="font-size:15px;line-height:1.6;margin:0 0 10px;color:#26201A">Anne Vial-Tissot, consultante en immobilier sur le Chablais et le bassin lémanique. Dix ans de finance d'entreprise avant les ventes de particuliers.</p>
+          <span style="font-size:12px;letter-spacing:.08em;color:#5A5346">FR · EN · ES · PT</span>
+        </div>
+      </div>
+      <div style="background:#F7F2EA;border-radius:12px;padding:28px">
+        <div class="lbl" style="color:#6E6354;margin-bottom:12px">La preuve</div>
+        <div style="display:flex;gap:24px;align-items:flex-start">
+          <div style="flex:1">
+            <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:6px"><b style="font-family:Italiana,serif;font-weight:400;font-size:34px;color:#002FA7">4,9</b><span style="font-size:13px;color:#4A4238">/ 5 · 27 avis Immodvisor</span></div>
+            <p style="font-size:13.5px;line-height:1.55;margin:0;color:#4A4238">« Un suivi précis, des points chaque semaine. » — Claire, Sciez</p>
+          </div>
+          <a href="#d" style="flex:none;display:block;width:170px;color:inherit">
+            <span style="position:relative;display:block;border-radius:10px;overflow:hidden;height:100px">
+              <svg viewBox="0 0 170 100" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%" aria-label="Bien vendu — visuel de maquette">
+                <rect width="170" height="100" fill="#CFC4B2"/>
+                <path d="M0 72 C 40 64, 90 74, 130 68 C 152 65, 162 68, 170 66 L170 100 L0 100 Z" fill="#8C7F6B" opacity=".55"/>
+                <g opacity=".75"><rect x="58" y="42" width="54" height="30" fill="#F7F2EA" opacity=".85"/><path d="M52 42 L85 22 L118 42 Z" fill="#8C7F6B"/></g>
+              </svg>
+            </span>
+            <span style="display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6E6354;margin-top:8px">Yvoire — vendu →</span>
+          </a>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center">
+      <a href="#d" class="pill">Démarrez votre diagnostic</a>
+      <p style="font-size:12.5px;color:#5A5346;margin:12px 0 0">Vos réponses restent confidentielles. <a href="#d" style="font-size:12.5px">Politique de confidentialité</a></p>
+    </div>
+    <!-- la sortie basse -->
+    <p style="text-align:center;font-size:14px;color:#4A4238;margin:30px 0 0;padding-top:24px;border-top:1px solid #D8CDBB">
+      Pas envie de répondre à 15 questions ? <a href="#d" style="font-size:14px">Le guide des 10 erreurs, sans le diagnostic →</a>
+    </p>
+  </div>
+
+  <footer style="display:flex;justify-content:space-between;align-items:center;padding:22px 48px;background:#F7F2EA;font-size:12px;color:#6E6354">
+    <span>© 2026 Anne Vial-Tissot — réseau eXp France</span>
+    <span style="display:flex;gap:18px"><a href="#d" style="font-size:12px;color:#6E6354">Mentions légales</a><a href="#d" style="font-size:12px;color:#6E6354">Confidentialité</a><a href="#d" style="font-size:12px;color:#6E6354">Cookies</a></span>
+  </footer>
+
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"$preview":{"width":1360,"height":1360}}'>
+class Component extends DCLogic {}
+</script>
+</body>
+</html>

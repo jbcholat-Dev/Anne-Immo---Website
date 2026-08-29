@@ -1,0 +1,299 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=DM+Sans:wght@400;500;700&display=swap">
+  <style>
+    body { margin: 0; font-family: 'DM Sans', system-ui, sans-serif; color: #26201A; background: #F7F2EA; }
+    a { color: #002FA7; text-decoration: none; }
+    a:hover { color: #002FA7; text-decoration: underline; }
+    .lbl { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; font-weight: 500; }
+    .badge { position: absolute; right: 10px; bottom: 10px; font-size: 10px; letter-spacing: .08em;
+             text-transform: uppercase; background: rgba(38,32,26,.62); color: #F7F2EA;
+             padding: 3px 9px; border-radius: 999px; }
+    .pill { border-radius: 999px; padding: 14px 30px; font-weight: 500; font-size: 16px;
+            background: #C4623E; color: #F7F2EA; display: inline-block; }
+    .pill:hover { background: #A34E30; color: #F7F2EA; }
+    .ghost { border: 1.5px solid #26201A; border-radius: 999px; padding: 13px 26px;
+             font-weight: 500; font-size: 15px; color: #26201A; display: inline-block; }
+    .ghost:hover { border-color: #C4623E; color: #26201A; }
+    .card { background: #E9E0D2; border-radius: 12px; }
+    .carrow { width: 40px; height: 40px; border-radius: 999px; border: 1.5px solid #C6BAA8;
+              background: #F7F2EA; display: flex; align-items: center; justify-content: center;
+              cursor: pointer; padding: 0; }
+    .carrow:hover { border-color: #C4623E; }
+  </style>
+</helmet>
+
+<div style="width:1360px;background:#F7F2EA">
+
+  <!-- §0 navigation -->
+  <header style="display:flex;align-items:center;justify-content:space-between;padding:18px 48px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <svg viewBox="24 26 108 108" width="34" height="34" aria-hidden="true"><defs><clipPath id="mk"><circle cx="78" cy="80" r="54"></circle></clipPath></defs><g clip-path="url(#mk)"><rect x="24" y="26" width="108" height="108" fill="#002FA7"></rect><path d="M 24 79 C 44 73, 60 84, 78 78 C 96 72, 114 81, 132 76 L 132 134 L 24 134 Z" fill="#C4623E"></path></g></svg>
+      <span style="font-family:Italiana,serif;font-size:22px;letter-spacing:.03em">Anne VIAL-TISSOT</span>
+    </div>
+    <nav style="display:flex;align-items:center;gap:28px;font-size:14.5px">
+      <a href="#nav" style="color:#26201A">Ventes</a>
+      <a href="#nav" style="color:#26201A">La méthode</a>
+      <a href="#nav" style="color:#26201A">Anne</a>
+      <a href="#nav" style="color:#26201A">Contact</a>
+      <span style="font-size:12.5px;color:#6E6354;letter-spacing:.06em">FR · EN · ES · PT</span>
+      <a href="#nav" class="pill" style="padding:10px 24px;font-size:14.5px">Diagnostic</a>
+    </nav>
+  </header>
+
+  <!-- §1.1 ouverture — variante A (photo fixe lémanique) -->
+  <div style="position:relative;height:680px;overflow:hidden">
+    <svg viewBox="0 0 1360 680" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%" aria-label="Rives du Léman en fin d'après-midi — visuel de maquette">
+      <defs>
+        <linearGradient id="mSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#BCD2E6"/><stop offset=".55" stop-color="#E4D9C8"/><stop offset="1" stop-color="#F2DEC4"/></linearGradient>
+        <linearGradient id="mWat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7E9DBE"/><stop offset=".35" stop-color="#5B7FA6"/><stop offset="1" stop-color="#3E5F84"/></linearGradient>
+        <linearGradient id="mVig" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8E9668"/><stop offset="1" stop-color="#5F6844"/></linearGradient>
+        <linearGradient id="mVeil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(38,32,26,0)"/><stop offset=".55" stop-color="rgba(38,32,26,.18)"/><stop offset="1" stop-color="rgba(38,32,26,.66)"/></linearGradient>
+      </defs>
+      <rect width="1360" height="680" fill="url(#mSky)"/>
+      <!-- Jura, rive d'en face : long, bas, sans pic -->
+      <path d="M0 322 C 150 306, 300 316, 470 300 C 640 286, 800 300, 980 292 C 1130 286, 1250 296, 1360 290 L1360 350 L0 350 Z" fill="#9DAFC4" opacity=".85"/>
+      <path d="M0 340 C 200 330, 420 338, 640 330 C 880 322, 1120 334, 1360 328 L1360 356 L0 356 Z" fill="#8496AE" opacity=".7"/>
+      <!-- villages sur la rive d'en face -->
+      <g fill="#7C8DA6" opacity=".55"><rect x="250" y="336" width="7" height="8"/><rect x="262" y="333" width="6" height="11"/><rect x="700" y="335" width="8" height="9"/><rect x="712" y="332" width="6" height="12"/><rect x="1040" y="336" width="7" height="8"/></g>
+      <!-- le lac, large et ouvert -->
+      <rect x="0" y="352" width="1360" height="328" fill="url(#mWat)"/>
+      <g stroke="#C8DCEC" stroke-linecap="round" opacity=".5">
+        <path d="M120 396 h150" stroke-width="2"/><path d="M420 386 h230" stroke-width="1.6"/>
+        <path d="M760 402 h180" stroke-width="2"/><path d="M980 380 h150" stroke-width="1.4"/>
+        <path d="M240 448 h280" stroke-width="2.4" opacity=".8"/><path d="M700 462 h300" stroke-width="2.2" opacity=".7"/>
+        <path d="M100 520 h360" stroke-width="3" opacity=".55"/><path d="M820 540 h380" stroke-width="3" opacity=".5"/>
+      </g>
+      <!-- coteau habité au premier plan, à droite -->
+      <path d="M1010 680 L1010 470 C 1090 452, 1180 466, 1260 440 C 1310 424, 1340 432, 1360 424 L1360 680 Z" fill="url(#mVig)"/>
+      <g stroke="#4E5638" stroke-width="1.6" opacity=".5">
+        <path d="M1040 680 C 1100 600, 1180 540, 1360 486"/><path d="M1080 680 C 1140 612, 1220 556, 1360 512"/>
+        <path d="M1130 680 C 1190 624, 1264 578, 1360 540"/><path d="M1190 680 C 1244 638, 1300 604, 1360 574"/>
+      </g>
+      <g><rect x="1078" y="486" width="46" height="34" fill="#E4DACB"/><path d="M1072 486 L1101 468 L1130 486 Z" fill="#8C5B45"/><rect x="1094" y="502" width="10" height="18" fill="#7C8DA6"/></g>
+      <g><rect x="1188" y="452" width="34" height="26" fill="#DED3C2"/><path d="M1183 452 L1205 438 L1227 452 Z" fill="#8C5B45"/></g>
+      <rect width="1360" height="680" fill="url(#mVeil)"/>
+    </svg>
+    <span class="badge" style="right:14px;top:14px;bottom:auto">visuel de maquette</span>
+    <div style="position:absolute;left:48px;bottom:56px;color:#F7F2EA">
+      <h1 style="font-family:Italiana,serif;font-weight:400;font-size:64px;letter-spacing:.02em;line-height:1.08;margin:0">Anne VIAL-TISSOT</h1>
+      <svg style="width:210px;height:9px;margin-top:10px" viewBox="0 0 220 10" aria-hidden="true"><path d="M2 6 C 40 1, 90 9, 130 5 C 165 1, 195 7, 218 4" fill="none" stroke="#C4623E" stroke-width="2.6" stroke-linecap="round"></path></svg>
+      <p style="font-size:18px;margin:16px 0 22px;color:#F7F2EA;opacity:.95">Consultante en immobilier — Chablais &amp; bassin lémanique</p>
+      <a href="#hero" style="color:#F7F2EA;font-size:15.5px;border-bottom:1.5px solid #C4623E;padding-bottom:3px">Faire le point sur votre vente — 3 minutes</a>
+    </div>
+  </div>
+
+  <!-- §1.2 la preuve, bande compacte -->
+  <div style="display:flex;align-items:center;gap:44px;padding:30px 48px;background:#E9E0D2">
+    <div style="display:flex;align-items:baseline;gap:10px;flex:none">
+      <b style="font-family:Italiana,serif;font-weight:400;font-size:52px;color:#002FA7;font-variant-numeric:tabular-nums">4,9</b>
+      <span style="font-size:17px;color:#4A4238">/ 5</span>
+    </div>
+    <div style="flex:none;font-size:14.5px;color:#4A4238;max-width:150px;line-height:1.45">27 avis vérifiés<br>Immodvisor</div>
+    <div style="width:1px;height:52px;background:#C6BAA8;flex:none"></div>
+    <p style="flex:1;margin:0;font-size:16px;line-height:1.55;color:#26201A">« Un suivi précis, des points chaque semaine. On savait toujours où en était la vente. » <span style="color:#6E6354;font-size:14px">— Claire, vente à Sciez</span></p>
+    <a href="#preuve" style="flex:none;font-size:14.5px">Voir la fiche Immodvisor →</a>
+  </div>
+
+  <!-- §1.3 ventes récentes — carrousel 6 photos -->
+  <div style="padding:64px 48px 76px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:26px">
+      <h2 style="font-family:Italiana,serif;font-weight:400;font-size:40px;margin:0">Ventes récentes</h2>
+      <a href="#ventes" style="font-size:14.5px">Toutes les ventes →</a>
+    </div>
+
+    <div style="overflow:hidden">
+      <div style="display:flex;gap:24px;transform:{{ slideShift }};transition:transform .45s ease">
+        <sc-for list="{{ biens }}" as="b" hint-placeholder-count="6">
+          <article style="flex:none;width:429px;display:flex;flex-direction:column;gap:14px">
+            <div style="position:relative;border-radius:12px;overflow:hidden;height:320px;background:{{ b.tint }}">
+              <svg viewBox="0 0 430 320" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%" aria-label="Photographie du bien — visuel de maquette">
+                <rect width="430" height="320" fill="{{ b.tint }}"/>
+                <path d="M0 244 C 90 228, 180 240, 270 230 C 340 222, 390 230, 430 226 L430 320 L0 320 Z" fill="{{ b.tintDark }}" opacity=".55"/>
+                <g opacity=".72">
+                  <rect x="150" y="150" width="130" height="86" fill="#F7F2EA" opacity=".82"/>
+                  <path d="M138 150 L215 104 L292 150 Z" fill="{{ b.tintDark }}"/>
+                  <rect x="176" y="186" width="26" height="50" fill="{{ b.tintDark }}" opacity=".8"/>
+                  <rect x="228" y="180" width="30" height="26" fill="{{ b.tintDark }}" opacity=".55"/>
+                </g>
+                <g stroke="#F7F2EA" stroke-width="1.4" opacity=".28"><path d="M20 268 h120"/><path d="M300 282 h110"/></g>
+              </svg>
+              <span class="badge">visuel de maquette</span>
+            </div>
+            <div>
+              <div class="lbl" style="color:#6E6354;margin-bottom:8px">{{ b.commune }}</div>
+              <p style="font-size:16px;line-height:1.55;margin:0 0 12px;color:#26201A">{{ b.phrase }}</p>
+              <sc-if value="{{ b.story }}" hint-placeholder-val="{{ true }}"><a href="#ventes" style="font-size:14.5px">Voir cette vente →</a></sc-if>
+            </div>
+          </article>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:26px">
+      <div style="display:flex;gap:10px">
+        <sc-for list="{{ dots }}" as="d" hint-placeholder-count="2">
+          <button onClick="{{ d.go }}" aria-label="Voir la suite des ventes" style="width:{{ d.w }};height:6px;border-radius:999px;border:none;padding:0;cursor:pointer;background:{{ d.bg }};transition:width .3s ease"></button>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:12px">
+        <button class="carrow" onClick="{{ prev }}" aria-label="Ventes précédentes">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#26201A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18 L9 12 L15 6"/></svg>
+        </button>
+        <button class="carrow" onClick="{{ next }}" aria-label="Ventes suivantes">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#26201A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 L15 12 L9 18"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- §1.4 système 360 -->
+  <div style="background:#E9E0D2;padding:72px 48px">
+    <h2 style="font-family:Italiana,serif;font-weight:400;font-size:40px;margin:0 0 36px">Le Système 360™, en un coup d'œil</h2>
+    <div style="display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:24px;margin-bottom:36px">
+      <div style="background:#F7F2EA;border-radius:12px;padding:26px">
+        <div class="lbl" style="color:#002FA7;margin-bottom:10px">Vendeur 360°</div>
+        <p style="font-size:15.5px;line-height:1.6;margin:0;color:#4A4238">Le bien, le dossier, le prix : tout est prêt avant la première visite.</p>
+      </div>
+      <div style="background:#F7F2EA;border-radius:12px;padding:26px">
+        <div class="lbl" style="color:#002FA7;margin-bottom:10px">Marché 360°</div>
+        <p style="font-size:15.5px;line-height:1.6;margin:0;color:#4A4238">Une diffusion large et suivie, des acquéreurs qualifiés avant de visiter.</p>
+      </div>
+      <div style="background:#F7F2EA;border-radius:12px;padding:26px">
+        <div class="lbl" style="color:#002FA7;margin-bottom:10px">Partenaires 360°</div>
+        <p style="font-size:15.5px;line-height:1.6;margin:0;color:#4A4238">Courtier, géomètre, notaire : une équipe coordonnée jusqu'à l'acte.</p>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:24px;background:#002FA7;border-radius:12px;padding:20px 28px">
+      <span style="color:#F7F2EA;font-size:15px">Pas de mauvaise surprise. Pas de dossier qui traîne. Des ventes qui vont au bout.</span>
+      <a href="#methode" style="flex:none;border:1.5px solid #F7F2EA;border-radius:999px;padding:10px 22px;font-weight:500;font-size:14px;color:#F7F2EA">La méthode en détail</a>
+    </div>
+  </div>
+
+  <!-- §1.5 ils l'ont rencontrée — acheteurs non convertis -->
+  <div style="padding:76px 48px">
+    <h2 style="font-family:Italiana,serif;font-weight:400;font-size:40px;margin:0 0 8px">Ils l'ont rencontrée</h2>
+    <p style="font-size:16px;color:#4A4238;margin:0 0 32px;max-width:70ch">Des acheteurs qu'Anne a accompagnés sans que la vente se fasse. Ils n'avaient aucune raison de laisser un avis.</p>
+    <div style="display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:24px">
+      <figure class="card" style="padding:26px;margin:0">
+        <svg style="width:110px;height:8px;margin-bottom:16px" viewBox="0 0 220 10" aria-hidden="true"><path d="M2 6 C 40 1, 90 9, 130 5 C 165 1, 195 7, 218 4" fill="none" stroke="#C4623E" stroke-width="2.6" stroke-linecap="round"></path></svg>
+        <blockquote style="margin:0;font-size:15.5px;line-height:1.65;color:#26201A">« Nous n'avons pas acheté ce bien-là. Elle nous a quand même dit franchement pourquoi il ne nous convenait pas. »</blockquote>
+        <figcaption style="margin-top:16px;font-size:13px;color:#6E6354">Sophie — a visité deux biens en 2025</figcaption>
+      </figure>
+      <figure class="card" style="padding:26px;margin:0">
+        <svg style="width:110px;height:8px;margin-bottom:16px" viewBox="0 0 220 10" aria-hidden="true"><path d="M2 6 C 40 1, 90 9, 130 5 C 165 1, 195 7, 218 4" fill="none" stroke="#C4623E" stroke-width="2.6" stroke-linecap="round"></path></svg>
+        <blockquote style="margin:0;font-size:15.5px;line-height:1.65;color:#26201A">« Notre financement n'est pas passé. Elle a pris le temps de nous expliquer quoi corriger pour la prochaine fois. »</blockquote>
+        <figcaption style="margin-top:16px;font-size:13px;color:#6E6354">Karim — projet reporté</figcaption>
+      </figure>
+      <figure class="card" style="padding:26px;margin:0">
+        <svg style="width:110px;height:8px;margin-bottom:16px" viewBox="0 0 220 10" aria-hidden="true"><path d="M2 6 C 40 1, 90 9, 130 5 C 165 1, 195 7, 218 4" fill="none" stroke="#C4623E" stroke-width="2.6" stroke-linecap="round"></path></svg>
+        <blockquote style="margin:0;font-size:15.5px;line-height:1.65;color:#26201A">« Nous cherchions depuis Genève. Tout s'est fait en anglais, sans qu'on ait à demander. »</blockquote>
+        <figcaption style="margin-top:16px;font-size:13px;color:#6E6354">Helen — recherche en cours</figcaption>
+      </figure>
+    </div>
+    <p style="font-size:12.5px;color:#6E6354;margin:20px 0 0">Témoignages de maquette — à remplacer par les témoignages réels recueillis par Anne.</p>
+  </div>
+
+  <!-- §1.6 le diagnostic -->
+  <div style="background:#E7EDF9;padding:72px 48px;text-align:center">
+    <h2 style="font-family:Italiana,serif;font-weight:400;font-size:40px;margin:0 0 14px">Où en est votre vente ?</h2>
+    <p style="font-size:16.5px;color:#33405C;margin:0 0 6px">Un score sur 100, un diagnostic par axe, des recommandations concrètes.</p>
+    <p style="font-size:14px;color:#5A5346;margin:0 0 26px">Gratuit · 3 minutes</p>
+    <a href="#diag" class="pill">Démarrez votre diagnostic</a>
+  </div>
+
+  <!-- §1.7 anne -->
+  <div style="display:grid;grid-template-columns:420px minmax(0, 1fr);gap:56px;padding:80px 48px;align-items:center">
+    <div style="position:relative;border-radius:12px;overflow:hidden;height:500px">
+      <svg viewBox="0 0 420 500" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%" aria-label="Portrait d'Anne — visuel de maquette">
+        <rect width="420" height="500" fill="#DCD2C2"/>
+        <path d="M0 372 C 110 348, 230 366, 340 344 C 380 336, 404 342, 420 338 L420 500 L0 500 Z" fill="#C6BAA8" opacity=".7"/>
+        <circle cx="210" cy="196" r="74" fill="#B9AC99"/>
+        <path d="M108 500 C 112 384, 158 320, 210 320 C 262 320, 308 384, 312 500 Z" fill="#A99B87"/>
+      </svg>
+      <span class="badge">visuel de maquette</span>
+    </div>
+    <div>
+      <h2 style="font-family:Italiana,serif;font-weight:400;font-size:40px;margin:0">Anne</h2>
+      <svg style="width:150px;height:9px;margin-top:8px" viewBox="0 0 220 10" aria-hidden="true"><path d="M2 6 C 40 1, 90 9, 130 5 C 165 1, 195 7, 218 4" fill="none" stroke="#C4623E" stroke-width="2.6" stroke-linecap="round"></path></svg>
+      <p style="font-size:16.5px;line-height:1.7;color:#4A4238;max-width:54ch;margin:20px 0 18px">Dix ans de finance d'entreprise — Danone à Évian, Bel au Brésil — avant l'immobilier. Chaque vente est menée comme un projet : un dossier complet, un calendrier tenu, des points réguliers. Sur le Chablais et le bassin lémanique, au service d'une clientèle locale et internationale.</p>
+      <p style="font-size:13.5px;letter-spacing:.08em;color:#6E6354;margin:0 0 20px">FRANÇAIS · ENGLISH · ESPAÑOL · PORTUGUÊS</p>
+      <a href="#anne" style="font-size:15px">En savoir plus →</a>
+    </div>
+  </div>
+
+  <!-- §1.8 parler à anne -->
+  <div style="background:#E9E0D2;padding:64px 48px;display:flex;align-items:center;justify-content:space-between;gap:32px">
+    <div>
+      <h2 style="font-family:Italiana,serif;font-weight:400;font-size:34px;margin:0 0 8px">Parler à Anne</h2>
+      <p style="font-size:15.5px;color:#4A4238;margin:0">Un projet, une question ? Le plus simple est d'en parler.</p>
+    </div>
+    <div style="display:flex;gap:16px;flex:none">
+      <a href="#contact" class="pill" style="padding:13px 26px;font-size:15px">Réserver un créneau</a>
+      <a href="#contact" class="ghost">Écrire à Anne</a>
+    </div>
+  </div>
+
+  <!-- pied de page -->
+  <footer style="background:#26201A;color:#F7F2EA;padding:56px 48px 36px">
+    <div style="display:grid;grid-template-columns:minmax(0, 1fr) auto auto auto;gap:64px;margin-bottom:40px">
+      <div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <svg viewBox="24 26 108 108" width="30" height="30" aria-hidden="true"><defs><clipPath id="mkf"><circle cx="78" cy="80" r="54"></circle></clipPath></defs><g clip-path="url(#mkf)"><rect x="24" y="26" width="108" height="108" fill="#002FA7"></rect><path d="M 24 79 C 44 73, 60 84, 78 78 C 96 72, 114 81, 132 76 L 132 134 L 24 134 Z" fill="#C4623E"></path></g></svg>
+          <span style="font-family:Italiana,serif;font-size:22px;letter-spacing:.03em;color:#F7F2EA">Anne VIAL-TISSOT</span>
+        </div>
+        <p style="font-size:12.5px;line-height:1.6;color:#C4BAAB;max-width:38ch;margin:0">Consultante indépendante en immobilier, membre du réseau eXp France. Chablais &amp; bassin lémanique.</p>
+      </div>
+      <nav style="display:flex;flex-direction:column;gap:10px;font-size:13.5px"><a href="#f" style="color:#F7F2EA">Ventes</a><a href="#f" style="color:#F7F2EA">La méthode</a><a href="#f" style="color:#F7F2EA">Anne</a><a href="#f" style="color:#F7F2EA">Diagnostic</a><a href="#f" style="color:#F7F2EA">Contact</a></nav>
+      <nav style="display:flex;flex-direction:column;gap:10px;font-size:13.5px"><a href="#f" style="color:#C4BAAB">Le guide</a><a href="#f" style="color:#C4BAAB">Mentions légales</a><a href="#f" style="color:#C4BAAB">Confidentialité</a><a href="#f" style="color:#C4BAAB">Cookies</a></nav>
+      <nav style="display:flex;flex-direction:column;gap:10px;font-size:13.5px"><a href="#f" style="color:#C4BAAB">Immodvisor</a><a href="#f" style="color:#C4BAAB">Instagram</a><a href="#f" style="color:#C4BAAB">LinkedIn</a></nav>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(247,242,234,.15);padding-top:22px">
+      <span style="font-size:12px;color:#C4BAAB">© 2026 Anne Vial-Tissot</span>
+      <span style="font-size:12.5px;letter-spacing:.06em;color:#C4BAAB">FR · EN · ES · PT</span>
+    </div>
+  </footer>
+
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"$preview":{"width":1360,"height":3760}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { page: 0 };
+  }
+  renderVals() {
+    const page = this.state.page ?? 0;
+    const biens = [
+      { commune: 'Yvoire — vendu',            phrase: '« Trois compromis avaient échoué avant moi. Le dossier, repris pièce par pièce, a tenu jusqu’à l’acte. »', tint: '#CFC4B2', tintDark: '#8C7F6B', story: true },
+      { commune: 'Évian-les-Bains — vendu',   phrase: '« Le bon acquéreur n’était pas sur le marché français. Il a signé en anglais, chez un notaire de Thonon. »', tint: '#C6CEC4', tintDark: '#75816F', story: true },
+      { commune: 'Thonon-les-Bains — vendu',  phrase: '« Douze visites filtrées, deux offres au prix. La lumière a fait le reste. »', tint: '#CBC6D0', tintDark: '#7E7788', story: true },
+      { commune: 'Sciez — vendu',             phrase: '« Un bien resté six mois en ligne sans visite. Repris en photo, il est parti en trois semaines. »', tint: '#D2C7B6', tintDark: '#8E8069', story: false },
+      { commune: 'Douvaine — vendu',          phrase: '« Un point d’urbanisme repéré avant le compromis. Sans ça, la vente tombait chez le notaire. »', tint: '#C3CCD6', tintDark: '#72808F', story: false },
+      { commune: 'Publier — vendu',           phrase: '« Des acquéreurs suisses, un financement transfrontalier. Le courtier était dans la boucle dès le premier jour. »', tint: '#D0C8BC', tintDark: '#8A7F70', story: false }
+    ];
+    const dots = [0, 1].map((i) => ({
+      w: i === page ? '28px' : '6px',
+      bg: i === page ? '#C4623E' : '#C6BAA8',
+      go: () => this.setState({ page: i })
+    }));
+    return {
+      biens,
+      dots,
+      slideShift: page === 0 ? 'translateX(0px)' : 'translateX(-1359px)',
+      prev: () => this.setState({ page: Math.max(0, (this.state.page ?? 0) - 1) }),
+      next: () => this.setState({ page: Math.min(1, (this.state.page ?? 0) + 1) })
+    };
+  }
+}
+</script>
+</body>
+</html>

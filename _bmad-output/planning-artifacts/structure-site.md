@@ -297,7 +297,7 @@ Sous les trois blocs, **un lien discret vers le guide** (§9) : « Pas envie de 
 Sur chaque écran :
 - La question, grande, lisible.
 - Les options en boutons pleine largeur.
-- Une barre de progression indiquant **« écran n / 17 »** plutôt qu'un pourcentage — un pourcentage à 5,88 % par palier produit des nombres arbitraires.
+- Une barre de progression **remplie sur les 17 écrans réels**, mais **libellée « Question n / 15 »** — le visiteur s'est vu promettre 15 questions sur la landing ; lui annoncer 17 écrans en cours de route casse la promesse au pire moment. Les deux écrans d'une même question portent le même numéro. Ni pourcentage (5,88 % par palier donne des nombres arbitraires), ni compte d'écrans.
 - Un retour arrière à partir du 2ᵉ écran.
 - **La catégorie en cours** (Préparation à la Vente · Visibilité & Attractivité · Efficacité Commerciale) — *amélioration par rapport au déployé*, qui ne les révèle qu'à la fin. Les annoncer donne du sens au parcours et prépare la lecture des résultats.
 - Navigation masquée (voir §0).

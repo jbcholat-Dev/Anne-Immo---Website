@@ -3,3 +3,6 @@ Thumbs.db
 node_modules/
 .env
 .env.local
+
+# canvas de maquette : sortie generee, se reconstruit depuis les .dc.html
+maquettes/lot-2-canvas/site-anne-vial-tissot.html

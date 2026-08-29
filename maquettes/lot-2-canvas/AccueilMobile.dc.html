@@ -1,0 +1,208 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=DM+Sans:wght@400;500;700&display=swap">
+  <style>
+    body { margin: 0; font-family: 'DM Sans', system-ui, sans-serif; color: #26201A; background: #F7F2EA; }
+    a { color: #002FA7; text-decoration: none; }
+    a:hover { color: #002FA7; text-decoration: underline; }
+    .lbl { font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; font-weight: 500; }
+    .badge { position: absolute; right: 9px; bottom: 9px; font-size: 9.5px; letter-spacing: .08em;
+             text-transform: uppercase; background: rgba(38,32,26,.62); color: #F7F2EA;
+             padding: 3px 8px; border-radius: 999px; }
+    .pill { display: block; text-align: center; border-radius: 999px; padding: 16px 24px;
+            font-weight: 500; font-size: 16px; background: #C4623E; color: #F7F2EA; min-height: 44px; }
+    .pill:hover { background: #A34E30; color: #F7F2EA; }
+    .ghost { display: block; text-align: center; border: 1.5px solid #26201A; border-radius: 999px;
+             padding: 15px 24px; font-weight: 500; font-size: 15.5px; color: #26201A; min-height: 44px; }
+  </style>
+</helmet>
+
+<div style="width:390px;background:#F7F2EA">
+
+  <!-- navigation mobile : le bouton Diagnostic reste hors du menu -->
+  <header style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;gap:10px">
+    <div style="display:flex;align-items:center;gap:8px;flex:none">
+      <svg viewBox="24 26 108 108" width="32" height="32" role="img" aria-label="Anne VIAL-TISSOT"><defs><clipPath id="mm"><circle cx="78" cy="80" r="54"></circle></clipPath></defs><g clip-path="url(#mm)"><rect x="24" y="26" width="108" height="108" fill="#002FA7"></rect><path d="M 24 79 C 44 73, 60 84, 78 78 C 96 72, 114 81, 132 76 L 132 134 L 24 134 Z" fill="#C4623E"></path></g></svg>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;flex:none">
+      <a href="#m" style="background:#C4623E;color:#F7F2EA;border-radius:999px;padding:9px 16px;font-size:13.5px;font-weight:500">Diagnostic</a>
+      <button aria-label="Menu" style="display:flex;flex-direction:column;gap:4px;background:none;border:none;padding:10px 2px;cursor:pointer">
+        <span style="width:20px;height:1.8px;background:#26201A;display:block"></span>
+        <span style="width:20px;height:1.8px;background:#26201A;display:block"></span>
+        <span style="width:14px;height:1.8px;background:#26201A;display:block"></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ouverture : recadrée en portrait, pas une bande fine -->
+  <div style="position:relative;height:540px;overflow:hidden">
+    <svg viewBox="0 0 390 540" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%" aria-label="Rives du Léman — visuel de maquette">
+      <defs>
+        <linearGradient id="mbSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#BCD2E6"/><stop offset=".55" stop-color="#E4D9C8"/><stop offset="1" stop-color="#F2DEC4"/></linearGradient>
+        <linearGradient id="mbWat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7E9DBE"/><stop offset=".4" stop-color="#5B7FA6"/><stop offset="1" stop-color="#3E5F84"/></linearGradient>
+        <linearGradient id="mbVeil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(38,32,26,0)"/><stop offset=".5" stop-color="rgba(38,32,26,.2)"/><stop offset="1" stop-color="rgba(38,32,26,.7)"/></linearGradient>
+      </defs>
+      <rect width="390" height="540" fill="url(#mbSky)"/>
+      <path d="M0 246 C 70 234, 150 244, 230 232 C 300 222, 350 232, 390 226 L390 262 L0 262 Z" fill="#9DAFC4" opacity=".85"/>
+      <rect x="0" y="258" width="390" height="282" fill="url(#mbWat)"/>
+      <g stroke="#C8DCEC" stroke-linecap="round" opacity=".5">
+        <path d="M40 300 h90" stroke-width="1.8"/><path d="M210 292 h110" stroke-width="1.5"/>
+        <path d="M70 350 h150" stroke-width="2.2" opacity=".8"/><path d="M230 372 h130" stroke-width="2" opacity=".65"/>
+        <path d="M30 424 h200" stroke-width="2.6" opacity=".5"/>
+      </g>
+      <path d="M286 540 L286 400 C 320 388, 356 396, 390 380 L390 540 Z" fill="#6E7850"/>
+      <g><rect x="308" y="404" width="34" height="26" fill="#E4DACB"/><path d="M303 404 L325 390 L347 404 Z" fill="#8C5B45"/></g>
+      <rect width="390" height="540" fill="url(#mbVeil)"/>
+    </svg>
+    <span class="badge" style="right:12px;top:12px;bottom:auto">visuel de maquette</span>
+    <div style="position:absolute;left:20px;right:20px;bottom:34px;color:#F7F2EA">
+      <h1 style="font-family:Italiana,serif;font-weight:400;font-size:40px;letter-spacing:.02em;line-height:1.1;margin:0">Anne<br>VIAL-TISSOT</h1>
+      <svg style="width:150px;height:8px;margin-top:10px" viewBox="0 0 220 10" aria-hidden="true"><path d="M2 6 C 40 1, 90 9, 130 5 C 165 1, 195 7, 218 4" fill="none" stroke="#C4623E" stroke-width="2.6" stroke-linecap="round"></path></svg>
+      <p style="font-size:15px;margin:14px 0 18px;color:#F7F2EA;opacity:.95">Consultante en immobilier — Chablais &amp; bassin lémanique</p>
+      <a href="#m" style="color:#F7F2EA;font-size:14.5px;border-bottom:1.5px solid #C4623E;padding-bottom:3px">Faire le point sur votre vente — 3 min</a>
+    </div>
+  </div>
+
+  <!-- la preuve -->
+  <div style="background:#E9E0D2;padding:22px 20px;display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:baseline;gap:9px">
+      <b style="font-family:Italiana,serif;font-weight:400;font-size:40px;color:#002FA7">4,9</b>
+      <span style="font-size:15px;color:#4A4238">/ 5</span>
+      <span style="font-size:13.5px;color:#4A4238;margin-left:6px">27 avis Immodvisor</span>
+    </div>
+    <p style="margin:0;font-size:15px;line-height:1.55">« Un suivi précis, des points chaque semaine. » <span style="color:#6E6354;font-size:13.5px">— Claire, Sciez</span></p>
+    <a href="#m" style="font-size:14px">Voir la fiche Immodvisor →</a>
+  </div>
+
+  <!-- ventes récentes : une vue à la fois, balayage tactile -->
+  <div style="padding:36px 0 40px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;padding:0 20px;margin-bottom:18px">
+      <h2 style="font-family:Italiana,serif;font-weight:400;font-size:28px;margin:0">Ventes récentes</h2>
+      <a href="#m" style="font-size:13.5px">Toutes →</a>
+    </div>
+    <div style="display:flex;gap:14px;padding:0 20px;overflow:hidden">
+      <article style="flex:none;width:302px">
+        <div style="position:relative;border-radius:12px;overflow:hidden;height:300px;background:#CFC4B2">
+          <svg viewBox="0 0 302 300" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%" aria-label="Photographie du bien — visuel de maquette">
+            <rect width="302" height="300" fill="#CFC4B2"/>
+            <path d="M0 226 C 70 212, 140 224, 210 214 C 260 208, 285 214, 302 210 L302 300 L0 300 Z" fill="#8C7F6B" opacity=".55"/>
+            <g opacity=".72"><rect x="104" y="140" width="98" height="70" fill="#F7F2EA" opacity=".82"/><path d="M94 140 L153 104 L212 140 Z" fill="#8C7F6B"/><rect x="124" y="170" width="20" height="40" fill="#8C7F6B" opacity=".8"/></g>
+          </svg>
+          <span class="badge">visuel de maquette</span>
+        </div>
+        <div class="lbl" style="color:#6E6354;margin:12px 0 8px">Yvoire — vendu</div>
+        <p style="font-size:15.5px;line-height:1.55;margin:0 0 10px">« Trois compromis avaient échoué avant moi. Le dossier, repris pièce par pièce, a tenu jusqu'à l'acte. »</p>
+        <a href="#m" style="font-size:14px">Voir cette vente →</a>
+      </article>
+      <div style="flex:none;width:302px;border-radius:12px;background:#E9E0D2;height:300px"></div>
+    </div>
+    <div style="display:flex;gap:8px;padding:22px 20px 0">
+      <span style="width:22px;height:5px;border-radius:999px;background:#C4623E"></span>
+      <span style="width:5px;height:5px;border-radius:999px;background:#C6BAA8"></span>
+      <span style="width:5px;height:5px;border-radius:999px;background:#C6BAA8"></span>
+      <span style="width:5px;height:5px;border-radius:999px;background:#C6BAA8"></span>
+      <span style="width:5px;height:5px;border-radius:999px;background:#C6BAA8"></span>
+      <span style="width:5px;height:5px;border-radius:999px;background:#C6BAA8"></span>
+      <span style="font-size:12px;color:#6E6354;margin-left:8px">1 / 6 · balayez</span>
+    </div>
+  </div>
+
+  <!-- système 360 -->
+  <div style="background:#E9E0D2;padding:40px 20px">
+    <h2 style="font-family:Italiana,serif;font-weight:400;font-size:28px;margin:0 0 20px">Le Système 360™</h2>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">
+      <div style="background:#F7F2EA;border-radius:12px;padding:20px"><div class="lbl" style="color:#002FA7;margin-bottom:8px">Vendeur 360°</div><p style="font-size:15px;line-height:1.6;margin:0;color:#4A4238">Le bien, le dossier, le prix : tout est prêt avant la première visite.</p></div>
+      <div style="background:#F7F2EA;border-radius:12px;padding:20px"><div class="lbl" style="color:#002FA7;margin-bottom:8px">Marché 360°</div><p style="font-size:15px;line-height:1.6;margin:0;color:#4A4238">Une diffusion large et suivie, des acquéreurs qualifiés avant de visiter.</p></div>
+      <div style="background:#F7F2EA;border-radius:12px;padding:20px"><div class="lbl" style="color:#002FA7;margin-bottom:8px">Partenaires 360°</div><p style="font-size:15px;line-height:1.6;margin:0;color:#4A4238">Courtier, géomètre, notaire : une équipe coordonnée jusqu'à l'acte.</p></div>
+    </div>
+    <div style="background:#002FA7;border-radius:12px;padding:20px">
+      <p style="color:#F7F2EA;font-size:15px;margin:0 0 16px;line-height:1.55">Pas de mauvaise surprise. Pas de dossier qui traîne. Des ventes qui vont au bout.</p>
+      <a href="#m" style="display:inline-block;border:1.5px solid #F7F2EA;border-radius:999px;padding:12px 22px;font-size:14px;color:#F7F2EA">La méthode en détail</a>
+    </div>
+  </div>
+
+  <!-- ils l'ont rencontrée -->
+  <div style="padding:40px 20px">
+    <h2 style="font-family:Italiana,serif;font-weight:400;font-size:28px;margin:0 0 8px">Ils l'ont rencontrée</h2>
+    <p style="font-size:15px;color:#4A4238;margin:0 0 20px;line-height:1.55">Des acheteurs accompagnés sans que la vente se fasse. Ils n'avaient aucune raison de laisser un avis.</p>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <figure style="background:#E9E0D2;border-radius:12px;padding:20px;margin:0">
+        <blockquote style="margin:0;font-size:15px;line-height:1.65">« Nous n'avons pas acheté ce bien-là. Elle nous a quand même dit franchement pourquoi il ne nous convenait pas. »</blockquote>
+        <figcaption style="margin-top:12px;font-size:12.5px;color:#6E6354">Sophie — a visité deux biens en 2025</figcaption>
+      </figure>
+      <figure style="background:#E9E0D2;border-radius:12px;padding:20px;margin:0">
+        <blockquote style="margin:0;font-size:15px;line-height:1.65">« Notre financement n'est pas passé. Elle a pris le temps de nous expliquer quoi corriger. »</blockquote>
+        <figcaption style="margin-top:12px;font-size:12.5px;color:#6E6354">Karim — projet reporté</figcaption>
+      </figure>
+    </div>
+    <p style="font-size:12px;color:#6E6354;margin:14px 0 0">Témoignages de maquette — à remplacer.</p>
+  </div>
+
+  <!-- diagnostic -->
+  <div style="background:#E7EDF9;padding:44px 20px;text-align:center">
+    <h2 style="font-family:Italiana,serif;font-weight:400;font-size:28px;margin:0 0 12px">Où en est votre vente ?</h2>
+    <p style="font-size:15.5px;color:#33405C;margin:0 0 6px;line-height:1.55">Un score sur 100, un diagnostic par axe, des recommandations concrètes.</p>
+    <p style="font-size:13.5px;color:#5A5346;margin:0 0 22px">Gratuit · 3 minutes</p>
+    <a href="#m" class="pill">Démarrez votre diagnostic</a>
+  </div>
+
+  <!-- anne -->
+  <div style="padding:40px 20px">
+    <div style="position:relative;border-radius:12px;overflow:hidden;height:320px;margin-bottom:22px">
+      <svg viewBox="0 0 350 320" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%" aria-label="Portrait d'Anne — visuel de maquette">
+        <rect width="350" height="320" fill="#DCD2C2"/>
+        <circle cx="175" cy="122" r="58" fill="#B9AC99"/>
+        <path d="M96 320 C 100 226, 136 178, 175 178 C 214 178, 250 226, 254 320 Z" fill="#A99B87"/>
+      </svg>
+      <span class="badge">visuel de maquette</span>
+    </div>
+    <h2 style="font-family:Italiana,serif;font-weight:400;font-size:28px;margin:0">Anne</h2>
+    <svg style="width:130px;height:8px;margin-top:8px" viewBox="0 0 220 10" aria-hidden="true"><path d="M2 6 C 40 1, 90 9, 130 5 C 165 1, 195 7, 218 4" fill="none" stroke="#C4623E" stroke-width="2.6" stroke-linecap="round"></path></svg>
+    <p style="font-size:15.5px;line-height:1.7;color:#4A4238;margin:16px 0 14px">Dix ans de finance d'entreprise — Danone à Évian, Bel au Brésil — avant l'immobilier. Chaque vente est menée comme un projet : un dossier complet, un calendrier tenu, des points réguliers.</p>
+    <p style="font-size:12.5px;letter-spacing:.08em;color:#6E6354;margin:0 0 16px">FRANÇAIS · ENGLISH · ESPAÑOL · PORTUGUÊS</p>
+    <a href="#m" style="font-size:14.5px">En savoir plus →</a>
+  </div>
+
+  <!-- parler à anne -->
+  <div style="background:#E9E0D2;padding:36px 20px">
+    <h2 style="font-family:Italiana,serif;font-weight:400;font-size:26px;margin:0 0 8px">Parler à Anne</h2>
+    <p style="font-size:15px;color:#4A4238;margin:0 0 20px">Un projet, une question ? Le plus simple est d'en parler.</p>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <a href="#m" class="pill">Réserver un créneau</a>
+      <a href="#m" class="ghost">Écrire à Anne</a>
+    </div>
+  </div>
+
+  <footer style="background:#26201A;color:#F7F2EA;padding:36px 20px 26px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <svg viewBox="24 26 108 108" width="26" height="26" aria-hidden="true"><defs><clipPath id="mmf"><circle cx="78" cy="80" r="54"></circle></clipPath></defs><g clip-path="url(#mmf)"><rect x="24" y="26" width="108" height="108" fill="#002FA7"></rect><path d="M 24 79 C 44 73, 60 84, 78 78 C 96 72, 114 81, 132 76 L 132 134 L 24 134 Z" fill="#C4623E"></path></g></svg>
+      <span style="font-family:Italiana,serif;font-size:22px;color:#F7F2EA">Anne VIAL-TISSOT</span>
+    </div>
+    <p style="font-size:12.5px;line-height:1.6;color:#C4BAAB;margin:0 0 20px">Consultante indépendante en immobilier, membre du réseau eXp France.</p>
+    <div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:10px;font-size:13.5px;margin-bottom:20px">
+      <a href="#m" style="color:#F7F2EA">Ventes</a><a href="#m" style="color:#F7F2EA">La méthode</a>
+      <a href="#m" style="color:#F7F2EA">Anne</a><a href="#m" style="color:#F7F2EA">Contact</a>
+      <a href="#m" style="color:#C4BAAB">Le guide</a><a href="#m" style="color:#C4BAAB">Mentions légales</a>
+      <a href="#m" style="color:#C4BAAB">Confidentialité</a><a href="#m" style="color:#C4BAAB">Cookies</a>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(247,242,234,.15);padding-top:16px">
+      <span style="font-size:11.5px;color:#C4BAAB">© 2026 Anne Vial-Tissot</span>
+      <span style="font-size:12px;letter-spacing:.06em;color:#C4BAAB">FR · EN · ES · PT</span>
+    </div>
+  </footer>
+
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"$preview":{"width":390,"height":3480}}'>
+class Component extends DCLogic {}
+</script>
+</body>
+</html>
