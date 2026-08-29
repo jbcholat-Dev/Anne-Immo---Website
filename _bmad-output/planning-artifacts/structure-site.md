@@ -110,12 +110,29 @@ Huit sections. L'ordre est délibéré : **la preuve arrive avant l'argumentaire
 
 ### 1.1 — Ouverture · [QUI] + [PREUVE]
 **Rôle :** montrer, immédiatement.
-**Contenu :** une séquence vidéo drone d'un bien réellement vendu, plein cadre, en boucle, sans son. Le nom « Anne VIAL-TISSOT » et une ligne de positionnement. Le lac et la montagne doivent être lisibles — c'est le territoire.
+**Contenu :** un visuel plein cadre — **photo fixe ou vidéo drone, à arbitrer par test** (voir ci-dessous). Le nom « Anne VIAL-TISSOT » et une ligne de positionnement. Le lac et la montagne doivent être lisibles : c'est le territoire, et il doit être **reconnaissable comme le Chablais et le Léman**, pas comme une montagne générique.
 **CTA :** un seul, vers le diagnostic.
 **Volume :** une phrase. Pas de paragraphe.
-**Sur mobile :** vidéo recadrée en portrait ou carré, jamais une bande fine. Le nom et le CTA restent au-dessus de la ligne de flottaison.
-**Actif requis :** A-01 (voir table des actifs).
-⚠️ La vidéo ne bloque jamais l'affichage : image fixe d'abord, vidéo ensuite. Une alternative statique est servie si le visiteur a demandé la réduction des animations.
+**Sur mobile :** visuel recadré en portrait ou carré, jamais une bande fine. Le nom et le CTA restent au-dessus de la ligne de flottaison.
+**Actif requis :** A-01 (vidéo) et/ou A-14 (photo d'ouverture).
+
+#### 🔀 Arbitrage ouvert — photo fixe contre vidéo drone
+
+Le premier prototype ouvre sur une **photo fixe** de montagne, et le rendu convainc. L'hypothèse initiale (vidéo drone en fond) est donc remise en question. Les deux sont à maquetter et à départager sur des critères, pas à l'impression :
+
+| | Photo fixe | Vidéo drone |
+|---|---|---|
+| Chargement (SPEC : < 3 s utile en mobile) | Immédiat | Coût réel, différable mais jamais nul |
+| Force d'évocation | Dépend entièrement de la photo | Le mouvement crée l'échelle et le territoire |
+| Risque | Une belle photo générique ne prouve rien — elle peut se lire comme une image de banque | Détourne l'attention du nom et du CTA si elle est trop chargée |
+| Mouvement réduit | Sans objet | Repli statique obligatoire |
+| Disponibilité | Immédiate | Dépend du dossier d'Anne |
+
+**Critère de départage :** l'ouverture doit faire comprendre en trois secondes qu'il s'agit de **biens réels sur un territoire précis**. Celui des deux qui y arrive gagne. Une photo de montagne qui pourrait être n'importe où en Savoie perd contre une vidéo, même modeste, où l'on reconnaît le Léman.
+
+⚠️ **Conséquence à ne pas rater :** CAP-1 exige au minimum **1 séquence vidéo** sur l'accueil. Si l'ouverture devient une photo fixe, **la vidéo doit trouver un autre emplacement** — le plus naturel étant §1.3, en tête du carrousel de ventes.
+
+⚠️ Quel que soit l'arbitrage, le visuel ne bloque jamais l'affichage : image d'abord, vidéo ensuite, et alternative statique pour les visiteurs qui ont demandé la réduction des animations.
 
 ### 1.2 — La preuve, tout de suite · [PREUVE]
 **Rôle :** répondre à « pourquoi je vous ferais confiance » avant toute argumentation.
@@ -126,12 +143,22 @@ Huit sections. L'ordre est délibéré : **la preuve arrive avant l'argumentaire
 
 ### 1.3 — Ventes récentes · [PREUVE]
 **Rôle :** le cœur visuel du site, et le remplacement de la vitrine de biens.
-**Contenu :** **six photographies de biens vendus** répartis sur trois stories — pour chacune, une photo maîtresse en grand et une secondaire plus petite. Commune et une phrase extraite du récit d'Anne. Pas de prix, pas de surface, pas de caractéristiques : ce n'est pas une annonce.
-**Pourquoi six :** CAP-1 exige au minimum 1 vidéo et 6 photographies de biens réellement traités sur l'accueil. Trois photos ne satisfont pas le contrat.
-**CTA :** « Voir cette vente » par story, plus un lien vers l'index complet.
-**Volume :** une phrase par story.
-**Sur mobile :** pile verticale ou carrousel — au choix du concepteur, mais la photo maîtresse reste grande. Jamais trois vignettes côte à côte.
-**Actif requis :** A-02, A-03.
+**Contenu :** **six photographies de biens vendus, en carrousel.** Six photos empilées mangent une hauteur d'écran impraticable — constat du premier prototype. Le carrousel les fait tenir sans sacrifier la taille de chacune, qui reste le point important : ces photos sont le cœur visuel du site, pas des vignettes.
+
+Chaque vue porte la photo en grand, la commune, et une phrase extraite du récit d'Anne. Pas de prix, pas de surface, pas de caractéristiques : ce n'est pas une annonce.
+
+**Pourquoi six :** CAP-1 exige au minimum 1 vidéo et 6 photographies de biens réellement traités sur l'accueil. Si l'ouverture (§1.1) passe en photo fixe, **la séquence vidéo prend la première position du carrousel**.
+
+**Règles du carrousel** — un carrousel mal fait cache le contenu au lieu de l'économiser :
+- **Défilement manuel par défaut.** Si rotation automatique il y a, elle s'arrête au survol et au focus, et un contrôle de pause est visible.
+- Indicateurs de position visibles : le visiteur doit voir qu'il y a six vues, sinon il n'en verra qu'une.
+- La première vue est complète et autonome — elle doit tenir seule si personne ne fait défiler.
+- Navigable au clavier, et arrêtée pour les visiteurs qui ont demandé la réduction des animations.
+- **Sur mobile : balayage tactile**, une vue à la fois, photo toujours grande.
+
+**CTA :** « Voir cette vente » par vue, plus un lien vers l'index complet.
+**Volume :** une phrase par vue.
+**Actif requis :** A-02, A-03, éventuellement A-01.
 
 ### 1.4 — Le Système 360™, en un coup d'œil · [QUI]
 **Rôle :** nommer la méthode sans la dérouler.
@@ -433,6 +460,7 @@ Une maquette qui ne montre que le cas nominal ment sur le travail restant. Trois
 | **A-11** | Avis Immodvisor | — | Trancher : extraction possible, ou lien sortant seul ? |
 | **A-12** | Autorisations de publication | 1 par bien + 1 par personne citée | Modèle à rédiger. Accord des vendeurs pour les photos, accord nominatif des acheteurs. |
 | **A-13** | Contenu des mentions légales | 1 | Numéro RSAC, référence de carte professionnelle eXp, hébergeur. |
+| **A-14** | Photo d'ouverture | 1 | Uniquement si l'arbitrage §1.1 retient la photo fixe. Paysage, 2400 px minimum, **Chablais ou Léman reconnaissable** — pas une montagne générique. Recadrage portrait pour le mobile. |
 
 **Livraison :** fichiers originaux, non compressés et non recadrés — le site produira ses propres formats. Canal de dépôt et échéance à convenir avec Anne.
 
@@ -442,6 +470,7 @@ Une maquette qui ne montre que le cas nominal ment sur le travail restant. Trois
 
 ## Non tranché — n'empêche pas de maquetter
 
+- **Ouverture de l'accueil : photo fixe ou vidéo drone** (§1.1). À départager sur maquette, critère écrit. Si la photo gagne, la vidéo passe en tête du carrousel §1.3 — CAP-1 l'exige quelque part sur la page.
 - Le nom de la méthode : « Système 360™ » ou « Méthode 360° ». La maquette utilise **Système 360™** ; un changement est un remplacement de chaîne.
 - Le positionnement (Système 360 vs « Expert Frontaliers »).
 - Les langues effectivement livrées en v1 — la maquette prévoit le sélecteur quel que soit le nombre.
