@@ -1,12 +1,13 @@
 # Contexte existant — actifs à réutiliser ou composer avec
 
-## ScoreApp — diagnostic live (testé 2026-08-28)
+## ScoreApp — référence fonctionnelle à répliquer (décision 2026-08-29 : recréation native, pas de conservation en production)
 
-<https://jean-baptiste-rd287tdl.scoreapp.com/> — « Diagnostic 360° », fonctionnel jusqu'aux résultats.
+<https://jean-baptiste-rd287tdl.scoreapp.com/> — « Diagnostic 360° », fonctionnel jusqu'aux résultats. Sert désormais de spécification vivante pour CAP-4 : chaque mécanique ci-dessous doit être reproduite nativement dans le site.
 
 - 15 questions / 3 catégories : Préparation à la Vente · Visibilité & Attractivité · Efficacité Commerciale. Branchements conditionnels (10a/b, 11a/b), question ouverte finale. Q14 segmente en 3 niveaux d'offre (Système 360™ premium / forfait estimation+conseils / vente autonome).
 - Gate de capture : score en teaser, résultats complets contre prénom + nom + email + téléphone + opt-in, hCaptcha invisible. Résultats : donut + scores par dimension + feedbacks dynamiques par bande + « Impact chiffré ».
 - Points forts : scoring dynamique et capture fonctionnels.
+- ⚠️ « Impact chiffré » (valeur affichée dans les résultats) : formule boîte noire, jamais vue que côté sortie. Avant de coder CAP-4, soit la déduire en testant plusieurs profils de réponses sur le ScoreApp actuel, soit assumer une formule équivalente propre (plus simple, on possède déjà le contenu).
 - Points faibles à corriger si conservé : CTA finaux en placeholders anglais non configurés, boutons Télécharger/Réserver inertes (aucun booking branché), chaînes EN non localisées, couleurs par défaut (identité antérieure à la charte v1), lock-in template.
 - Entrée test « Test Claude-Test » (0600000000, marquée TEST) à supprimer du dashboard avant mise en production.
 

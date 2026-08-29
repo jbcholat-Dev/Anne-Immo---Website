@@ -43,6 +43,7 @@ Anne Vial-Tissot est mandataire indépendante chez eXp France, un modèle que le
 - Devis prestataires reçus (7-10 k€) — la réalisation interne (Claude Design + Framer) doit être poussée au maximum avant tout arbitrage prestataire.
 - Clientèle internationale du Léman — Anne travaille en FR/EN/ES/PT ; le site doit pouvoir adresser cette audience (périmètre de traduction non tranché).
 - Charte graphique v1 (identité Rive Signature, livrée et validée 2026-08-28) obligatoire pour tout visuel — palette, typographie Italiana, règles d'usage du logo (détail : `../../../design-system/README.md`).
+- Le diagnostic (CAP-4) est recréé nativement dans le site, sans dépendance à la plateforme SaaS ScoreApp (décision JB 2026-08-29 ; faisabilité confirmée — quiz à branchements conditionnels, scoring par catégorie, gate de capture et résultats dynamiques sont standards). Le ScoreApp existant devient une référence fonctionnelle à répliquer (détail : `contexte-existant.md`), pas un outil à conserver en production. Réserve : la formule de l'« Impact chiffré » affichée par ScoreApp est une boîte noire — à déduire par test ou à remplacer par une formule équivalente propre.
 
 ## Non-goals
 
@@ -62,9 +63,11 @@ Le site est en ligne, les 3 axes (visuels, preuve sociale, scorecard) et les 2 p
 
 ## Open Questions
 
-- Faisabilité de l'intégration ScoreApp × CRM Modelo (collecte des réponses, résultats dynamiques, écriture des leads) — risque identifié le 2026-08-17, non évalué.
-- ScoreApp : garder l'outil existant (avec ses CTA/branding à corriger) ou recréer le diagnostic ailleurs ?
-- Interne (Claude Design + Framer) vs prestataire (7-10 k€) — arbitrage définitif à l'étape ④, avec spec + maquette + architecture en main.
+- Interne (Claude Design + Framer) vs prestataire (7-10 k€) — arbitrage définitif à l'étape ④, avec spec + maquette + architecture en main ; désormais informé par la faisabilité confirmée de la recréation native du diagnostic (le signal penche interne).
+- Comment les leads captés (diagnostic recréé + contact direct) remontent dans le CRM Modelo ? Priorité basse (JB 2026-08-29) — pas de vitrine ni de sync temps réel prévue, une solution simple (notification email, export) suffit probablement en v1.
+
+Détails explicitement différés par JB le 2026-08-29, non bloquants pour la suite :
+
 - Où et comment présenter le formulaire de contact direct dans le parcours ? (renvoyé à la phase design)
 - Quel nom pour la méthode — « Système 360™ » (ScoreApp) ou « Méthode 360° » (Gamma) ?
 - Quel positionnement marketing — Système/Méthode 360 ou « Expert Frontaliers » ?
