@@ -1,0 +1,26 @@
+/* Design tokens — Anne VIAL-TISSOT · Charte v1 (2026-08-28)
+   Source de vérité : Identité Visuelle/Charte/Charte v1 — Anne Vial-Tissot.md */
+
+:root {
+  /* Couleurs */
+  --avt-ecru: #F7F2EA;        /* fond dominant (~65 %) — le « blanc » de la marque */
+  --avt-brun: #26201A;        /* texte, nom, « noir » de la marque */
+  --avt-klein: #002FA7;       /* le lac : symbole, sous-titres, titres-clés, liens */
+  --avt-terra: #C4623E;       /* la rive : ligne signature, CTA, accents */
+  --avt-terra-deep: #A34E30;  /* hover CTA, petits libellés terracotta sur clair */
+  --avt-galet: #E9E0D2;       /* fonds secondaires, cartes, filets */
+  --avt-brume: #E7EDF9;       /* encarts chiffres, fonds bleutés pâles */
+
+  /* Typographies (Google Fonts) */
+  --avt-font-display: 'Italiana', serif;      /* logo, H1/H2, grands chiffres — jamais < 22px web */
+  --avt-font-text: 'DM Sans', sans-serif;     /* texte courant, UI, sous-titres */
+
+  /* Règles clés (voir charte) :
+     - terracotta JAMAIS en texte courant (accents, gros titres, boutons) ;
+     - texte sur brun/Klein = écru, pas de blanc pur ;
+     - 1 couleur maîtresse par support ; jamais de dégradé Klein→terracotta ;
+     - boutons = pilule (radius 999px) terracotta, texte écru, hover terra-deep ;
+     - séparateur signature = ligne d'horizon ondulée terracotta fine. */
+  --avt-radius-btn: 999px;
+  --avt-radius-card: 12px;
+}

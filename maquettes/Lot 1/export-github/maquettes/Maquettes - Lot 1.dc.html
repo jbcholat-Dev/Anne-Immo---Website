@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap">
+<link rel="stylesheet" href="_ds/anne-vial-tissot-design-system-65939e9d-329d-4949-a831-49b1fcb19e19/tokens/tokens.css">
+<script src="_ds/anne-vial-tissot-design-system-65939e9d-329d-4949-a831-49b1fcb19e19/_ds_bundle.js"></script>
+<style>
+body{margin:0;background:#EDE8DF;font-family:'DM Sans',sans-serif;color:#26201A}
+a{color:#002FA7;text-decoration:none}a:hover{color:#A34E30}
+.dv-turn{padding:40px 44px 32px;scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#26201A;color:#F7F2EA;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 13px/1.2 'DM Sans',sans-serif;color:#26201A}
+.dv-opts{display:flex;flex-wrap:wrap;gap:36px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#26201A;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11.5px/1.3 'DM Sans',sans-serif;color:rgba(0,0,0,.55)}
+.dv-card{max-width:100%;background:#F7F2EA;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.07);overflow:hidden}
+.dv-opt:target .dv-oid{background:#002FA7;color:#F7F2EA}
+.dv-next{margin:22px 0 0;font:12px/1.5 'DM Sans',sans-serif;color:rgba(0,0,0,.5)}
+</style>
+</helmet>
+<style>{{ tweakCss }}</style>
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Lot 1 — Accueil (desktop + mobile), Diagnostic (landing + question), Résultats</span></div>
+<div style="max-width:880px;background:#F7F2EA;border:1px solid rgba(0,0,0,.08);border-radius:8px;padding:18px 22px;margin:0 0 26px;font-size:12.5px;line-height:1.65;color:#4A4238">
+<b style="color:#26201A">Hypothèses de maquette.</b> Photos = substituts Unsplash marqués « visuel de maquette », jamais des biens d'Anne. Chiffres de preuve (4,9/5 · 27 avis) et communes des stories = fictifs, à remplacer. Hero = nom seul + ligne de positionnement sobre (décision du 29/08). Résultats = Sortie A, score 78/100 (32+30+16), feedbacks verbatim du barème. Mobile = composition propre, pas une réduction. États limites : lot suivant.
+</div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a"><div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Accueil — desktop 1360</div>
+<div class="dv-card" style="width:1360px">
+<!-- nav -->
+<header style="display:flex;align-items:center;justify-content:space-between;padding:18px 48px;background:#F7F2EA">
+<div style="display:flex;align-items:center;gap:12px">
+<svg viewBox="24 26 108 108" width="34" height="34" aria-hidden="true"><defs><clipPath id="sA"><circle cx="78" cy="80" r="54"></circle></clipPath></defs><g clip-path="url(#sA)"><rect x="24" y="26" width="108" height="108" fill="#002FA7"></rect><path d="M 24 79 C 44 73, 60 84, 78 78 C 96 72, 114 81, 132 76 L 132 134 L 24 134 Z" fill="#C4623E"></path></g></svg>
+<span style="font-family:Italiana,serif;font-size:22px;letter-spacing:.03em">Anne VIAL-TISSOT</span>
+</div>
+<nav style="display:flex;align-items:center;gap:28px;font-size:14.5px">
+<a href="#1a" style="color:#26201A">Ventes</a><a href="#1a" style="color:#26201A">La méthode</a><a href="#1a" style="color:#26201A">Anne</a><a href="#1a" style="color:#26201A">Diagnostic</a>
+<span style="font-size:12.5px;color:#8a8177;letter-spacing:.06em">FR · EN · ES · PT</span>
+<a href="#1a" style="border:1.5px solid #26201A;border-radius:999px;padding:9px 20px;font-weight:500;font-size:14px;color:#26201A">Contact</a>
+</nav>
+</header>
+<!-- 1.1 ouverture -->
+<div style="position:relative;height:680px;overflow:hidden">
+<img src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=2000&q=80" alt="Vue sur le lac et les montagnes en fin d'après-midi — visuel de maquette" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 78%">
+<div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(38,32,26,.62) 0%,rgba(38,32,26,.12) 45%,rgba(38,32,26,0) 70%)"></div>
+<span style="position:absolute;right:14px;top:14px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:rgba(38,32,26,.55);color:#F7F2EA;padding:3px 9px;border-radius:999px">visuel de maquette</span>
+<div style="position:absolute;left:48px;bottom:56px;color:#F7F2EA">
+<h1 style="font-family:Italiana,serif;font-weight:400;font-size:64px;letter-spacing:.02em;line-height:1.08;margin:0">Anne VIAL-TISSOT</h1>
+<svg style="width:210px;height:9px;margin-top:10px" viewBox="0 0 220 10" aria-hidden="true"><path d="M2 6 C 40 1, 90 9, 130 5 C 165 1, 195 7, 218 4" fill="none" stroke="#C4623E" stroke-width="2.6" stroke-linecap="round"></path></svg>
+<p style="font-size:18px;margin:16px 0 22px;color:#F7F2EA;opacity:.95">Consultante en immobilier — Chablais &amp; bassin lémanique</p>
+<a href="#1a" style="color:#F7F2EA;font-size:15.5px;border-bottom:1.5px solid #C4623E;padding-bottom:3px">Faire le point sur votre vente — 3 minutes</a>
+</div>
+</div>
+<!-- 1.2 preuve -->
+<div style="display:grid;grid-template-columns:380px 1fr;gap:56px;padding:72px 48px;align-items:start">
+<div>
+<div style="display:flex;align-items:baseline;gap:10px"><b style="font-family:Italiana,serif;font-weight:400;font-size:72px;color:#002FA7;font-variant-numeric:tabular-nums">4,9</b><span style="font-size:20px;color:#4A4238">/ 5</span></div>
+<p style="font-size:15px;color:#4A4238;margin:6px 0 14px">27 avis clients vérifiés — Immodvisor</p>
+<a href="#1a" style="font-size:14.5px">Voir la fiche Immodvisor →</a>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px">
+<figure style="background:#E9E0D2;border-radius:12px;padding:22px;margin:0"><blockquote style="margin:0;font-size:14.5px;line-height:1.6;color:#26201A">« Un suivi précis, des points chaque semaine. On savait toujours où en était la vente. »</blockquote><figcaption style="margin-top:14px;font-size:12.5px;color:#6E6354">Claire — vente à Sciez</figcaption></figure>
+<figure style="background:#E9E0D2;border-radius:12px;padding:22px;margin:0"><blockquote style="margin:0;font-size:14.5px;line-height:1.6;color:#26201A">« Elle a repéré un point d'urbanisme avant le compromis. Ça nous a sauvé la vente. »</blockquote><figcaption style="margin-top:14px;font-size:12.5px;color:#6E6354">Marc &amp; Julie — Douvaine</figcaption></figure>
+<figure style="background:#E9E0D2;border-radius:12px;padding:22px;margin:0"><blockquote style="margin:0;font-size:14.5px;line-height:1.6;color:#26201A">« Des acquéreurs suisses : tout s'est fait en deux langues, sans friction. »</blockquote><figcaption style="margin-top:14px;font-size:12.5px;color:#6E6354">Laurent — Publier</figcaption></figure>
+</div>
+</div>
+<!-- 1.3 ventes récentes -->
+<div style="padding:8px 48px 80px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:28px">
+<h2 style="font-family:Italiana,serif;font-weight:400;font-size:40px;margin:0">Ventes récentes</h2>
+<a href="#1a" style="font-size:14.5px">Toutes les ventes →</a>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px">
+<article style="display:flex;flex-direction:column;gap:14px">
+<div style="position:relative;border-radius:12px;overflow:hidden;height:340px"><img src="https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&w=1200&q=80" alt="Maison de village en pierre et bois — visuel de maquette" style="width:100%;height:100%;object-fit:cover"><span style="position:absolute;right:10px;bottom:10px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:rgba(38,32,26,.55);color:#F7F2EA;padding:3px 9px;border-radius:999px">visuel de maquette</span></div>
+<div><div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#8a8177;font-weight:500;margin-bottom:8px">Yvoire — vendu</div>
+<p style="font-size:16px;line-height:1.55;margin:0 0 12px;color:#26201A">« Trois compromis avaient échoué avant moi. Le dossier, repris pièce par pièce, a tenu jusqu'à l'acte. »</p>
+<a href="#1a" style="font-size:14.5px">Voir cette vente →</a></div>
+</article>
+<article style="display:flex;flex-direction:column;gap:14px">
+<div style="position:relative;border-radius:12px;overflow:hidden;height:340px"><img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80" alt="Maison contemporaine, grandes ouvertures — visuel de maquette" style="width:100%;height:100%;object-fit:cover"><span style="position:absolute;right:10px;bottom:10px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:rgba(38,32,26,.55);color:#F7F2EA;padding:3px 9px;border-radius:999px">visuel de maquette</span></div>
+<div><div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#8a8177;font-weight:500;margin-bottom:8px">Évian-les-Bains — vendu</div>
+<p style="font-size:16px;line-height:1.55;margin:0 0 12px;color:#26201A">« Le bon acquéreur n'était pas sur le marché français. Il a signé en anglais, chez un notaire de Thonon. »</p>
+<a href="#1a" style="font-size:14.5px">Voir cette vente →</a></div>
+</article>
+<article style="display:flex;flex-direction:column;gap:14px">
+<div style="position:relative;border-radius:12px;overflow:hidden;height:340px"><img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80" alt="Appartement lumineux avec balcon — visuel de maquette" style="width:100%;height:100%;object-fit:cover"><span style="position:absolute;right:10px;bottom:10px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:rgba(38,32,26,.55);color:#F7F2EA;padding:3px 9px;border-radius:999px">visuel de maquette</span></div>
+<div><div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#8a8177;font-weight:500;margin-bottom:8px">Thonon-les-Bains — vendu</div>
+<p style="font-size:16px;line-height:1.55;margin:0 0 12px;color:#26201A">« Douze visites filtrées, deux offres au prix. La lumière a fait le reste. »</p>
+<a href="#1a" style="font-size:14.5px">Voir cette vente →</a></div>
+</article>
+</div>
+</div>
+<!-- 1.4 système 360 -->
+<div style="background:#E9E0D2;padding:72px 48px">
+<h2 style="font-family:Italiana,serif;font-weight:400;font-size:40px;margin:0 0 36px">Le Système 360™, en un coup d'œil</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-bottom:36px">
+<div style="background:#F7F2EA;border-radius:12px;padding:26px"><div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#002FA7;font-weight:500;margin-bottom:10px">Vendeur 360°</div><p style="font-size:15.5px;line-height:1.6;margin:0;color:#4A4238">Le bien, le dossier, le prix : tout est prêt avant la première visite.</p></div>
+<div style="background:#F7F2EA;border-radius:12px;padding:26px"><div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#002FA7;font-weight:500;margin-bottom:10px">Marché 360°</div><p style="font-size:15.5px;line-height:1.6;margin:0;color:#4A4238">Une diffusion large et suivie, des acquéreurs qualifiés avant de visiter.</p></div>
+<div style="background:#F7F2EA;border-radius:12px;padding:26px"><div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#002FA7;font-weight:500;margin-bottom:10px">Partenaires 360°</div><p style="font-size:15.5px;line-height:1.6;margin:0;color:#4A4238">Courtier, géomètre, notaire : une équipe coordonnée jusqu'à l'acte.</p></div>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:24px;background:#002FA7;border-radius:12px;padding:20px 28px">
+<span style="color:#F7F2EA;font-size:15px">Pas de mauvaise surprise. Pas de dossier qui traîne. Des ventes qui vont au bout.</span>
+<a href="#1a" style="flex:none;border:1.5px solid #F7F2EA;border-radius:999px;padding:10px 22px;font-weight:500;font-size:14px;color:#F7F2EA">La méthode en détail</a>
+</div>
+</div>
+<!-- 1.5 diagnostic -->
+<div style="background:#E7EDF9;padding:72px 48px;text-align:center">
+<h2 style="font-family:Italiana,serif;font-weight:400;font-size:40px;margin:0 0 14px">Où en est votre vente ?</h2>
+<p style="font-size:16.5px;color:#3d4966;margin:0 0 6px">Un score sur 100, un diagnostic par axe, des recommandations concrètes.</p>
+<p style="font-size:14px;color:#6E6354;margin:0 0 26px">Gratuit · 3 minutes</p>
+<a href="#1a" style="display:inline-block;background:#C4623E;color:#F7F2EA;border-radius:999px;padding:14px 30px;font-weight:500;font-size:16px" style-hover="background:#A34E30;color:#F7F2EA">Démarrez votre diagnostic</a>
+</div>
+<!-- 1.6 anne -->
+<div style="display:grid;grid-template-columns:420px 1fr;gap:56px;padding:80px 48px;align-items:center">
+<div style="position:relative;border-radius:12px;overflow:hidden;height:500px"><img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=900&q=80" alt="Portrait professionnel en extérieur — visuel de maquette" style="width:100%;height:100%;object-fit:cover"><span style="position:absolute;right:10px;bottom:10px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:rgba(38,32,26,.55);color:#F7F2EA;padding:3px 9px;border-radius:999px">visuel de maquette</span></div>
+<div>
+<h2 style="font-family:Italiana,serif;font-weight:400;font-size:40px;margin:0">Anne</h2>
+<svg style="width:150px;height:9px;margin-top:8px" viewBox="0 0 220 10" aria-hidden="true"><path d="M2 6 C 40 1, 90 9, 130 5 C 165 1, 195 7, 218 4" fill="none" stroke="#C4623E" stroke-width="2.6" stroke-linecap="round"></path></svg>
+<p style="font-size:16.5px;line-height:1.7;color:#4A4238;max-width:54ch;margin:20px 0 18px">Dix ans de finance d'entreprise — Danone à Évian, Bel au Brésil — avant l'immobilier. Chaque vente est menée comme un projet : un dossier complet, un calendrier tenu, des points réguliers. Sur le Chablais et le bassin lémanique, au service d'une clientèle locale et internationale.</p>
+<p style="font-size:13.5px;letter-spacing:.08em;color:#6E6354;margin:0 0 20px">FRANÇAIS · ENGLISH · ESPAÑOL · PORTUGUÊS</p>
+<a href="#1a" style="font-size:15px">En savoir plus →</a>
+</div>
+</div>
+<!-- 1.7 parler à anne -->
+<div style="background:#E9E0D2;padding:64px 48px;display:flex;align-items:center;justify-content:space-between;gap:32px">
+<div><h2 style="font-family:Italiana,serif;font-weight:400;font-size:34px;margin:0 0 8px">Parler à Anne</h2><p style="font-size:15.5px;color:#4A4238;margin:0">Un projet, une question ? Le plus simple est d'en parler.</p></div>
+<div style="display:flex;gap:16px;flex:none">
+<a href="#1a" style="background:#C4623E;color:#F7F2EA;border-radius:999px;padding:13px 26px;font-weight:500;font-size:15px" style-hover="background:#A34E30;color:#F7F2EA">Réserver un créneau</a>
+<a href="#1a" style="border:1.5px solid #26201A;border-radius:999px;padding:13px 26px;font-weight:500;font-size:15px;color:#26201A">Écrire à Anne</a>
+</div>
+</div>
+<!-- 1.8 footer -->
+<footer style="background:#26201A;color:#F7F2EA;padding:56px 48px 36px">
+<div style="display:grid;grid-template-columns:1fr auto auto auto;gap:64px;margin-bottom:40px">
+<div>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+<svg viewBox="24 26 108 108" width="30" height="30" aria-hidden="true"><defs><clipPath id="sAf"><circle cx="78" cy="80" r="54"></circle></clipPath></defs><g clip-path="url(#sAf)"><rect x="24" y="26" width="108" height="108" fill="#002FA7"></rect><path d="M 24 79 C 44 73, 60 84, 78 78 C 96 72, 114 81, 132 76 L 132 134 L 24 134 Z" fill="#C4623E"></path></g></svg>
+<span style="font-family:Italiana,serif;font-size:19px;letter-spacing:.03em;color:#F7F2EA">Anne VIAL-TISSOT</span>
+</div>
+<p style="font-size:12.5px;line-height:1.6;color:#B7AC9D;max-width:38ch;margin:0">Consultante indépendante en immobilier, membre du réseau eXp France. Chablais &amp; bassin lémanique.</p>
+</div>
+<nav style="display:flex;flex-direction:column;gap:10px;font-size:13.5px"><a href="#1a" style="color:#F7F2EA">Ventes</a><a href="#1a" style="color:#F7F2EA">La méthode</a><a href="#1a" style="color:#F7F2EA">Anne</a><a href="#1a" style="color:#F7F2EA">Diagnostic</a><a href="#1a" style="color:#F7F2EA">Contact</a></nav>
+<nav style="display:flex;flex-direction:column;gap:10px;font-size:13.5px"><a href="#1a" style="color:#B7AC9D">Mentions légales</a><a href="#1a" style="color:#B7AC9D">Confidentialité</a><a href="#1a" style="color:#B7AC9D">Cookies</a></nav>
+<nav style="display:flex;flex-direction:column;gap:10px;font-size:13.5px"><a href="#1a" style="color:#B7AC9D">Immodvisor</a><a href="#1a" style="color:#B7AC9D">Instagram</a><a href="#1a" style="color:#B7AC9D">LinkedIn</a></nav>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(247,242,234,.15);padding-top:22px">
+<span style="font-size:12px;color:#B7AC9D">© 2026 Anne Vial-Tissot</span>
+<span style="font-size:12.5px;letter-spacing:.06em;color:#B7AC9D">FR · EN · ES · PT</span>
+</div>
+</footer>
+</div>
+</div>
+
+<div class="dv-opt" id="1b"><div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Accueil — mobile 390</div>
+<div class="dv-card" style="width:390px">
+<header style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px">
+<div style="display:flex;align-items:center;gap:9px">
+<svg viewBox="24 26 108 108" width="28" height="28" aria-hidden="true"><defs><clipPath id="sB"><circle cx="78" cy="80" r="54"></circle></clipPath></defs><g clip-path="url(#sB)"><rect x="24" y="26" width="108" height="108" fill="#002FA7"></rect><path d="M 24 79 C 44 73, 60 84, 78 78 C 96 72, 114 81, 132 76 L 132 134 L 24 134 Z" fill="#C4623E"></path></g></svg>
+<span style="font-family:Italiana,serif;font-size:17px;letter-spacing:.03em">Anne VIAL-TISSOT</span>
+</div>
+<div style="display:flex;align-items:center;gap:14px">
+<span style="font-size:11.5px;color:#8a8177">FR</span>
+<div style="display:flex;flex-direction:column;gap:4px;padding:6px 0" aria-label="Menu"><span style="width:20px;height:1.8px;background:#26201A"></span><span style="width:20px;height:1.8px;background:#26201A"></span><span style="width:14px;height:1.8px;background:#26201A"></span></div>
+</div>
+</header>
+<div style="position:relative;height:560px;overflow:hidden">
+<img src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1000&q=80" alt="Lac et montagnes — visuel de maquette" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:45% 82%">
+<div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(38,32,26,.68) 0%,rgba(38,32,26,.1) 55%)"></div>
+<span style="position:absolute;right:10px;top:10px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;background:rgba(38,32,26,.55);color:#F7F2EA;padding:3px 8px;border-radius:999px">visuel de maquette</span>
+<div style="position:absolute;left:20px;right:20px;bottom:28px;color:#F7F2EA">
+<h1 style="font-family:Italiana,serif;font-weight:400;font-size:36px;line-height:1.1;margin:0">Anne VIAL-TISSOT</h1>
+<svg style="width:140px;height:8px;margin-top:8px" viewBox="0 0 220 10" aria-hidden="true"><path d="M2 6 C 40 1, 90 9, 130 5 C 165 1, 195 7, 218 4" fill="none" stroke="#C4623E" stroke-width="3" stroke-linecap="round"></path></svg>
+<p style="font-size:15px;margin:12px 0 18px">Consultante en immobilier — Chablais &amp; bassin lémanique</p>
+<a href="#1b" style="display:block;text-align:center;background:#C4623E;color:#F7F2EA;border-radius:999px;padding:15px 0;font-weight:500;font-size:15.5px" style-hover="background:#A34E30;color:#F7F2EA">Faire le point — 3 minutes</a>
+</div>
+</div>
+<div style="padding:36px 20px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:baseline;gap:8px"><b style="font-family:Italiana,serif;font-weight:400;font-size:44px;color:#002FA7">4,9</b><span style="font-size:14px;color:#4A4238">/ 5 · 27 avis Immodvisor</span></div>
+<figure style="background:#E9E0D2;border-radius:12px;padding:18px;margin:0"><blockquote style="margin:0;font-size:14px;line-height:1.6">« Un suivi précis, des points chaque semaine. On savait toujours où en était la vente. »</blockquote><figcaption style="margin-top:10px;font-size:12px;color:#6E6354">Claire — vente à Sciez</figcaption></figure>
+<a href="#1b" style="font-size:13.5px">Voir la fiche Immodvisor →</a>
+</div>
+<div style="padding:8px 20px 40px">
+<h2 style="font-family:Italiana,serif;font-weight:400;font-size:28px;margin:0 0 18px">Ventes récentes</h2>
+<div style="display:flex;flex-direction:column;gap:22px">
+<article style="display:flex;flex-direction:column;gap:10px">
+<div style="position:relative;border-radius:12px;overflow:hidden;height:230px"><img src="https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&w=800&q=80" alt="Maison de village — visuel de maquette" style="width:100%;height:100%;object-fit:cover"><span style="position:absolute;right:8px;bottom:8px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;background:rgba(38,32,26,.55);color:#F7F2EA;padding:3px 8px;border-radius:999px">maquette</span></div>
+<div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8a8177;font-weight:500">Yvoire — vendu</div>
+<p style="font-size:14.5px;line-height:1.55;margin:0">« Trois compromis avaient échoué avant moi. Le dossier, repris pièce par pièce, a tenu jusqu'à l'acte. »</p>
+<a href="#1b" style="font-size:13.5px">Voir cette vente →</a>
+</article>
+<article style="display:flex;flex-direction:column;gap:10px">
+<div style="position:relative;border-radius:12px;overflow:hidden;height:230px"><img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80" alt="Maison contemporaine — visuel de maquette" style="width:100%;height:100%;object-fit:cover"><span style="position:absolute;right:8px;bottom:8px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;background:rgba(38,32,26,.55);color:#F7F2EA;padding:3px 8px;border-radius:999px">maquette</span></div>
+<div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8a8177;font-weight:500">Évian-les-Bains — vendu</div>
+<p style="font-size:14.5px;line-height:1.55;margin:0">« Le bon acquéreur n'était pas sur le marché français. Il a signé en anglais, chez un notaire de Thonon. »</p>
+<a href="#1b" style="font-size:13.5px">Voir cette vente →</a>
+</article>
+<a href="#1b" style="font-size:14px">Toutes les ventes →</a>
+</div>
+</div>
+<div style="background:#E9E0D2;padding:36px 20px">
+<h2 style="font-family:Italiana,serif;font-weight:400;font-size:28px;margin:0 0 20px">Le Système 360™</h2>
+<div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">
+<div style="background:#F7F2EA;border-radius:12px;padding:18px"><div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#002FA7;font-weight:500;margin-bottom:6px">Vendeur 360°</div><p style="font-size:14px;line-height:1.55;margin:0;color:#4A4238">Le bien, le dossier, le prix : tout est prêt avant la première visite.</p></div>
+<div style="background:#F7F2EA;border-radius:12px;padding:18px"><div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#002FA7;font-weight:500;margin-bottom:6px">Marché 360°</div><p style="font-size:14px;line-height:1.55;margin:0;color:#4A4238">Une diffusion large et suivie, des acquéreurs qualifiés avant de visiter.</p></div>
+<div style="background:#F7F2EA;border-radius:12px;padding:18px"><div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#002FA7;font-weight:500;margin-bottom:6px">Partenaires 360°</div><p style="font-size:14px;line-height:1.55;margin:0;color:#4A4238">Courtier, géomètre, notaire : une équipe coordonnée jusqu'à l'acte.</p></div>
+</div>
+<a href="#1b" style="font-size:14px">La méthode en détail →</a>
+</div>
+<div style="background:#E7EDF9;padding:40px 20px;text-align:center">
+<h2 style="font-family:Italiana,serif;font-weight:400;font-size:28px;margin:0 0 10px">Où en est votre vente ?</h2>
+<p style="font-size:14.5px;color:#3d4966;margin:0 0 4px">Un score sur 100, un diagnostic par axe, des recommandations concrètes.</p>
+<p style="font-size:13px;color:#6E6354;margin:0 0 20px">Gratuit · 3 minutes</p>
+<a href="#1b" style="display:block;background:#C4623E;color:#F7F2EA;border-radius:999px;padding:15px 0;font-weight:500;font-size:15.5px" style-hover="background:#A34E30;color:#F7F2EA">Démarrez votre diagnostic</a>
+</div>
+<div style="padding:40px 20px">
+<div style="position:relative;border-radius:12px;overflow:hidden;height:300px;margin-bottom:18px"><img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80" alt="Portrait — visuel de maquette" style="width:100%;height:100%;object-fit:cover;object-position:50% 30%"><span style="position:absolute;right:8px;bottom:8px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;background:rgba(38,32,26,.55);color:#F7F2EA;padding:3px 8px;border-radius:999px">maquette</span></div>
+<h2 style="font-family:Italiana,serif;font-weight:400;font-size:28px;margin:0 0 12px">Anne</h2>
+<p style="font-size:14.5px;line-height:1.65;color:#4A4238;margin:0 0 12px">Dix ans de finance d'entreprise — Danone à Évian, Bel au Brésil — avant l'immobilier. Chaque vente est menée comme un projet : dossier complet, calendrier tenu, points réguliers.</p>
+<p style="font-size:12px;letter-spacing:.08em;color:#6E6354;margin:0 0 14px">FRANÇAIS · ENGLISH · ESPAÑOL · PORTUGUÊS</p>
+<a href="#1b" style="font-size:14px">En savoir plus →</a>
+</div>
+<div style="background:#E9E0D2;padding:36px 20px">
+<h2 style="font-family:Italiana,serif;font-weight:400;font-size:26px;margin:0 0 6px">Parler à Anne</h2>
+<p style="font-size:14px;color:#4A4238;margin:0 0 18px">Un projet, une question ? Le plus simple est d'en parler.</p>
+<div style="display:flex;flex-direction:column;gap:12px">
+<a href="#1b" style="display:block;text-align:center;background:#C4623E;color:#F7F2EA;border-radius:999px;padding:15px 0;font-weight:500;font-size:15px" style-hover="background:#A34E30;color:#F7F2EA">Réserver un créneau</a>
+<a href="#1b" style="display:block;text-align:center;border:1.5px solid #26201A;border-radius:999px;padding:14px 0;font-weight:500;font-size:15px;color:#26201A">Écrire à Anne</a>
+</div>
+</div>
+<footer style="background:#26201A;color:#F7F2EA;padding:36px 20px 28px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+<svg viewBox="24 26 108 108" width="26" height="26" aria-hidden="true"><defs><clipPath id="sBf"><circle cx="78" cy="80" r="54"></circle></clipPath></defs><g clip-path="url(#sBf)"><rect x="24" y="26" width="108" height="108" fill="#002FA7"></rect><path d="M 24 79 C 44 73, 60 84, 78 78 C 96 72, 114 81, 132 76 L 132 134 L 24 134 Z" fill="#C4623E"></path></g></svg>
+<span style="font-family:Italiana,serif;font-size:16px;color:#F7F2EA">Anne VIAL-TISSOT</span>
+</div>
+<p style="font-size:12px;line-height:1.6;color:#B7AC9D;margin:0 0 20px">Consultante indépendante en immobilier, membre du réseau eXp France. Chablais &amp; bassin lémanique.</p>
+<div style="display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;margin-bottom:20px"><a href="#1b" style="color:#F7F2EA">Ventes</a><a href="#1b" style="color:#F7F2EA">La méthode</a><a href="#1b" style="color:#F7F2EA">Anne</a><a href="#1b" style="color:#F7F2EA">Contact</a><a href="#1b" style="color:#B7AC9D">Mentions légales</a><a href="#1b" style="color:#B7AC9D">Confidentialité</a></div>
+<div style="display:flex;justify-content:space-between;border-top:1px solid rgba(247,242,234,.15);padding-top:16px"><span style="font-size:11px;color:#B7AC9D">© 2026</span><span style="font-size:11.5px;letter-spacing:.06em;color:#B7AC9D">FR · EN · ES · PT</span></div>
+</footer>
+</div>
+</div>
+
+<div class="dv-opt" id="1c"><div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Diagnostic — landing autonome, desktop 1360</div>
+<div class="dv-card" style="width:1360px">
+<header style="display:flex;align-items:center;justify-content:space-between;padding:18px 48px">
+<div style="display:flex;align-items:center;gap:12px">
+<svg viewBox="24 26 108 108" width="30" height="30" aria-hidden="true"><defs><clipPath id="sC"><circle cx="78" cy="80" r="54"></circle></clipPath></defs><g clip-path="url(#sC)"><rect x="24" y="26" width="108" height="108" fill="#002FA7"></rect><path d="M 24 79 C 44 73, 60 84, 78 78 C 96 72, 114 81, 132 76 L 132 134 L 24 134 Z" fill="#C4623E"></path></g></svg>
+<span style="font-family:Italiana,serif;font-size:19px;letter-spacing:.03em">Anne VIAL-TISSOT</span>
+</div>
+<div style="display:flex;align-items:center;gap:24px;font-size:14px">
+<a href="#1c" style="color:#26201A">Le site d'Anne →</a>
+<span style="font-size:12.5px;color:#8a8177;letter-spacing:.06em">FR · EN · ES · PT</span>
+</div>
+</header>
+<div style="display:grid;grid-template-columns:1fr 520px;gap:64px;padding:56px 48px 72px;align-items:center">
+<div>
+<div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#002FA7;font-weight:500;margin-bottom:16px">Diagnostic de vente — Système 360™</div>
+<h1 style="font-family:Italiana,serif;font-weight:400;font-size:54px;line-height:1.1;margin:0">Où en est votre vente ?</h1>
+<svg style="width:190px;height:9px;margin-top:12px" viewBox="0 0 220 10" aria-hidden="true"><path d="M2 6 C 40 1, 90 9, 130 5 C 165 1, 195 7, 218 4" fill="none" stroke="#C4623E" stroke-width="2.6" stroke-linecap="round"></path></svg>
+<p style="font-size:17px;line-height:1.6;color:#4A4238;max-width:52ch;margin:20px 0 26px">17 questions concrètes sur votre préparation, votre visibilité et votre approche commerciale. À la fin :</p>
+<div style="display:flex;flex-direction:column;gap:0;max-width:480px;margin-bottom:28px">
+<div style="display:flex;align-items:baseline;gap:14px;padding:13px 0;border-top:1px solid #E9E0D2"><b style="font-family:Italiana,serif;font-weight:400;font-size:24px;color:#002FA7;width:34px;flex:none">01</b><span style="font-size:15.5px">Un score de maturité sur 100</span></div>
+<div style="display:flex;align-items:baseline;gap:14px;padding:13px 0;border-top:1px solid #E9E0D2"><b style="font-family:Italiana,serif;font-weight:400;font-size:24px;color:#002FA7;width:34px;flex:none">02</b><span style="font-size:15.5px">Un diagnostic personnalisé sur chacun des trois axes</span></div>
+<div style="display:flex;align-items:baseline;gap:14px;padding:13px 0;border-top:1px solid #E9E0D2;border-bottom:1px solid #E9E0D2"><b style="font-family:Italiana,serif;font-weight:400;font-size:24px;color:#002FA7;width:34px;flex:none">03</b><span style="font-size:15.5px">Des recommandations concrètes, applicables tout de suite</span></div>
+</div>
+<div style="display:flex;align-items:center;gap:20px">
+<a href="#1c" style="background:#C4623E;color:#F7F2EA;border-radius:999px;padding:15px 30px;font-weight:500;font-size:16px" style-hover="background:#A34E30;color:#F7F2EA">Démarrez votre diagnostic</a>
+<span style="font-size:13.5px;color:#6E6354">Gratuit · 3 minutes · Sans engagement</span>
+</div>
+</div>
+<div style="position:relative;border-radius:12px;overflow:hidden;height:540px">
+<img src="https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=1100&q=80" alt="Maison face aux montagnes — visuel de maquette" style="width:100%;height:100%;object-fit:cover">
+<span style="position:absolute;right:10px;bottom:10px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:rgba(38,32,26,.55);color:#F7F2EA;padding:3px 9px;border-radius:999px">visuel de maquette</span>
+</div>
+</div>
+<div style="background:#E9E0D2;padding:64px 48px">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:36px">
+<div style="background:#F7F2EA;border-radius:12px;padding:28px;display:flex;gap:20px;align-items:flex-start">
+<div style="position:relative;flex:none;width:88px;height:88px;border-radius:50%;overflow:hidden"><img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80" alt="Portrait — visuel de maquette" style="width:100%;height:100%;object-fit:cover;object-position:50% 30%"></div>
+<div>
+<div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#8a8177;font-weight:500;margin-bottom:8px">Qui pose ces questions</div>
+<p style="font-size:15px;line-height:1.6;margin:0 0 10px;color:#26201A">Anne Vial-Tissot, consultante en immobilier sur le Chablais et le bassin lémanique. Dix ans de finance d'entreprise avant les ventes de particuliers.</p>
+<span style="font-size:12px;letter-spacing:.08em;color:#6E6354">FR · EN · ES · PT</span>
+</div>
+</div>
+<div style="background:#F7F2EA;border-radius:12px;padding:28px">
+<div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#8a8177;font-weight:500;margin-bottom:12px">La preuve</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+<div style="flex:1">
+<div style="display:flex;align-items:baseline;gap:6px;margin-bottom:6px"><b style="font-family:Italiana,serif;font-weight:400;font-size:34px;color:#002FA7">4,9</b><span style="font-size:13px;color:#4A4238">/ 5 · 27 avis Immodvisor</span></div>
+<p style="font-size:13.5px;line-height:1.55;margin:0;color:#4A4238">« Un suivi précis, des points chaque semaine. » — Claire, Sciez</p>
+</div>
+<a href="#1c" style="flex:none;display:block;width:170px;color:inherit">
+<span style="position:relative;display:block;border-radius:10px;overflow:hidden;height:100px"><img src="https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&w=500&q=80" alt="Maison vendue à Yvoire — visuel de maquette" style="width:100%;height:100%;object-fit:cover"></span>
+<span style="display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8a8177;margin-top:8px">Yvoire — vendu →</span>
+</a>
+</div>
+</div>
+</div>
+<div style="text-align:center">
+<a href="#1c" style="display:inline-block;background:#C4623E;color:#F7F2EA;border-radius:999px;padding:15px 30px;font-weight:500;font-size:16px" style-hover="background:#A34E30;color:#F7F2EA">Démarrez votre diagnostic</a>
+<p style="font-size:12.5px;color:#6E6354;margin:12px 0 0">Vos réponses restent confidentielles. <a href="#1c" style="font-size:12.5px">Politique de confidentialité</a></p>
+</div>
+</div>
+<footer style="display:flex;justify-content:space-between;align-items:center;padding:22px 48px;background:#F7F2EA;font-size:12px;color:#8a8177">
+<span>© 2026 Anne Vial-Tissot — réseau eXp France</span>
+<span style="display:flex;gap:18px"><a href="#1c" style="font-size:12px;color:#8a8177">Mentions légales</a><a href="#1c" style="font-size:12px;color:#8a8177">Confidentialité</a></span>
+</footer>
+</div>
+</div>
+
+<div class="dv-opt" id="1d"><div class="dv-olabel"><a class="dv-oid" href="#1d">1d</a>Diagnostic — écran Q1, desktop 1360</div>
+<div class="dv-card" style="width:1360px">
+<div style="min-height:820px;display:flex;flex-direction:column">
+<header style="display:flex;align-items:center;justify-content:space-between;padding:18px 48px">
+<div style="display:flex;align-items:center;gap:10px">
+<svg viewBox="24 26 108 108" width="26" height="26" aria-hidden="true"><defs><clipPath id="sD"><circle cx="78" cy="80" r="54"></circle></clipPath></defs><g clip-path="url(#sD)"><rect x="24" y="26" width="108" height="108" fill="#002FA7"></rect><path d="M 24 79 C 44 73, 60 84, 78 78 C 96 72, 114 81, 132 76 L 132 134 L 24 134 Z" fill="#C4623E"></path></g></svg>
+<span style="font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#6E6354">Diagnostic — Système 360™</span>
+</div>
+<a href="#1d" style="font-size:13px;color:#8a8177">Reprendre plus tard</a>
+</header>
+<div style="padding:0 48px">
+<div style="height:4px;background:#E9E0D2;border-radius:999px;overflow:hidden"><div style="width:6%;height:100%;background:#C4623E;border-radius:999px"></div></div>
+<div style="display:flex;justify-content:space-between;margin-top:10px">
+<span style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#002FA7;font-weight:500">Visibilité &amp; Attractivité</span>
+<span style="font-size:12.5px;color:#8a8177">Question 1 sur 17</span>
+</div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;max-width:760px;width:100%;margin:0 auto;padding:48px">
+<h1 style="font-family:Italiana,serif;font-weight:400;font-size:40px;line-height:1.2;margin:0 0 36px;text-align:center">Comment avez-vous valorisé visuellement votre bien ?</h1>
+<div style="display:flex;flex-direction:column;gap:12px">
+<button style="width:100%;text-align:left;background:#F7F2EA;border:1.5px solid #D8CDBB;border-radius:12px;padding:19px 24px;font-family:'DM Sans',sans-serif;font-size:16px;color:#26201A;cursor:pointer" style-hover="border-color:#C4623E;background:#FDFBF7">Photos professionnelles + visite virtuelle</button>
+<button style="width:100%;text-align:left;background:#F7F2EA;border:1.5px solid #D8CDBB;border-radius:12px;padding:19px 24px;font-family:'DM Sans',sans-serif;font-size:16px;color:#26201A;cursor:pointer" style-hover="border-color:#C4623E;background:#FDFBF7">Photos professionnelles uniquement</button>
+<button style="width:100%;text-align:left;background:#F7F2EA;border:1.5px solid #D8CDBB;border-radius:12px;padding:19px 24px;font-family:'DM Sans',sans-serif;font-size:16px;color:#26201A;cursor:pointer" style-hover="border-color:#C4623E;background:#FDFBF7">Photos amateur de qualité</button>
+<button style="width:100%;text-align:left;background:#F7F2EA;border:1.5px solid #D8CDBB;border-radius:12px;padding:19px 24px;font-family:'DM Sans',sans-serif;font-size:16px;color:#26201A;cursor:pointer" style-hover="border-color:#C4623E;background:#FDFBF7">Photos basiques au smartphone</button>
+</div>
+<p style="font-size:13px;color:#8a8177;text-align:center;margin:26px 0 0">Une réponse sélectionnée passe automatiquement à la question suivante. Retour possible dès l'écran 2.</p>
+</div>
+<footer style="padding:18px 48px;text-align:center;font-size:11.5px;color:#B7AC9D">Vos réponses restent confidentielles — <a href="#1d" style="font-size:11.5px;color:#8a8177">politique de confidentialité</a></footer>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1e"><div class="dv-olabel"><a class="dv-oid" href="#1e">1e</a>Résultats — Sortie A, score 78/100, desktop 1360</div>
+<div class="dv-card" style="width:1360px">
+<header style="display:flex;align-items:center;justify-content:space-between;padding:18px 48px">
+<div style="display:flex;align-items:center;gap:12px">
+<svg viewBox="24 26 108 108" width="28" height="28" aria-hidden="true"><defs><clipPath id="sE"><circle cx="78" cy="80" r="54"></circle></clipPath></defs><g clip-path="url(#sE)"><rect x="24" y="26" width="108" height="108" fill="#002FA7"></rect><path d="M 24 79 C 44 73, 60 84, 78 78 C 96 72, 114 81, 132 76 L 132 134 L 24 134 Z" fill="#C4623E"></path></g></svg>
+<span style="font-family:Italiana,serif;font-size:19px;letter-spacing:.03em">Anne VIAL-TISSOT</span>
+</div>
+<span style="font-size:12.5px;color:#8a8177;letter-spacing:.06em">FR · EN · ES · PT</span>
+</header>
+<div style="text-align:center;padding:56px 48px 48px">
+<div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#8a8177;font-weight:500;margin-bottom:18px">Votre diagnostic de vente</div>
+<div style="display:flex;align-items:baseline;justify-content:center;gap:10px">
+<b style="font-family:Italiana,serif;font-weight:400;font-size:120px;line-height:1;color:#002FA7;font-variant-numeric:tabular-nums">78</b>
+<span style="font-size:26px;color:#4A4238">/ 100</span>
+</div>
+<svg style="width:190px;height:9px;margin:14px auto 0;display:block" viewBox="0 0 220 10" aria-hidden="true"><path d="M2 6 C 40 1, 90 9, 130 5 C 165 1, 195 7, 218 4" fill="none" stroke="#C4623E" stroke-width="2.6" stroke-linecap="round"></path></svg>
+<h1 style="font-family:Italiana,serif;font-weight:400;font-size:38px;margin:22px 0 12px">Bien préparé</h1>
+<p style="font-size:16.5px;line-height:1.6;color:#4A4238;max-width:62ch;margin:0 auto">Votre approche est professionnelle et méthodique. Quelques ajustements tactiques suffiront pour optimiser vos résultats.</p>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;padding:0 48px 64px">
+<div style="background:#E9E0D2;border-radius:12px;padding:26px;display:flex;flex-direction:column;gap:14px">
+<div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#26201A;font-weight:700">Préparation à la vente</div>
+<div style="display:flex;align-items:baseline;gap:8px"><b style="font-family:Italiana,serif;font-weight:400;font-size:38px;color:#002FA7;font-variant-numeric:tabular-nums">32<span style="font-size:19px;color:#4A4238"> / 40</span></b><span style="font-size:13.5px;color:#6E6354">80 % — niveau élevé</span></div>
+<div style="height:5px;background:#F7F2EA;border-radius:999px;overflow:hidden"><div style="width:80%;height:100%;background:#002FA7;border-radius:999px"></div></div>
+<p style="font-size:13.5px;line-height:1.6;margin:0;color:#4A4238">Votre dossier est solide et votre approche méthodique. Vous avez anticipé les points de blocage classiques. Un regard expert sur la valorisation fine et la coordination notaire/banque peut encore vous faire gagner les derniers 5 % de valeur.</p>
+<div style="background:#E7EDF9;border-radius:10px;padding:14px 16px"><div style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#3d4966;font-weight:700;margin-bottom:6px">Impact chiffré</div><p style="font-size:13px;line-height:1.55;margin:0;color:#3d4966">Potentiel d'optimisation de 5-8 % sur le prix final grâce à une négociation en position de force.</p></div>
+</div>
+<div style="background:#E9E0D2;border-radius:12px;padding:26px;display:flex;flex-direction:column;gap:14px">
+<div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#26201A;font-weight:700">Visibilité &amp; attractivité</div>
+<div style="display:flex;align-items:baseline;gap:8px"><b style="font-family:Italiana,serif;font-weight:400;font-size:38px;color:#002FA7;font-variant-numeric:tabular-nums">30<span style="font-size:19px;color:#4A4238"> / 40</span></b><span style="font-size:13.5px;color:#6E6354">75 % — niveau élevé</span></div>
+<div style="height:5px;background:#F7F2EA;border-radius:999px;overflow:hidden"><div style="width:75%;height:100%;background:#002FA7;border-radius:999px"></div></div>
+<p style="font-size:13.5px;line-height:1.6;margin:0;color:#4A4238">Votre stratégie de visibilité est professionnelle. Vous générez le volume de contacts attendu. L'enjeu maintenant est de maintenir cette dynamique sur la durée et d'affiner le ciblage pour attirer uniquement les profils à fort potentiel de concrétisation.</p>
+<div style="background:#E7EDF9;border-radius:10px;padding:14px 16px"><div style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#3d4966;font-weight:700;margin-bottom:6px">Impact chiffré</div><p style="font-size:13px;line-height:1.55;margin:0;color:#3d4966">Maintien d'un flux régulier de 15-25 contacts qualifiés/mois, permettant une vente en 60-90 jours.</p></div>
+</div>
+<div style="background:#E9E0D2;border-radius:12px;padding:26px;display:flex;flex-direction:column;gap:14px">
+<div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#26201A;font-weight:700">Efficacité commerciale</div>
+<div style="display:flex;align-items:baseline;gap:8px"><b style="font-family:Italiana,serif;font-weight:400;font-size:38px;color:#002FA7;font-variant-numeric:tabular-nums">16<span style="font-size:19px;color:#4A4238"> / 20</span></b><span style="font-size:13.5px;color:#6E6354">80 % — niveau élevé</span></div>
+<div style="height:5px;background:#F7F2EA;border-radius:999px;overflow:hidden"><div style="width:80%;height:100%;background:#002FA7;border-radius:999px"></div></div>
+<p style="font-size:13.5px;line-height:1.6;margin:0;color:#4A4238">Votre approche commerciale est redoutable. Vous qualifiez rigoureusement et convertissez efficacement. Vous faites partie des 10 % de vendeurs qui obtiennent plusieurs offres rapidement. Continuez cette rigueur jusqu'à la signature pour maintenir votre pouvoir de négociation.</p>
+<div style="background:#E7EDF9;border-radius:10px;padding:14px 16px"><div style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#3d4966;font-weight:700;margin-bottom:6px">Impact chiffré</div><p style="font-size:13px;line-height:1.55;margin:0;color:#3d4966">Ratio visites/offre de 3-5:1, permettant d'obtenir 2-3 offres concurrentes et de négocier à +3-5 % du prix initial.</p></div>
+</div>
+</div>
+<div style="background:#002FA7;padding:64px 48px;text-align:center">
+<h2 style="font-family:Italiana,serif;font-weight:400;font-size:36px;color:#F7F2EA;margin:0 0 14px">Et maintenant ?</h2>
+<p style="font-size:16px;line-height:1.65;color:#C9D6F5;max-width:64ch;margin:0 auto 28px">Votre score montre que vous maîtrisez déjà les fondamentaux d'une vente réussie. Reste les derniers 10 % — ceux qui séparent une bonne vente d'une vente exceptionnelle. Si vous cherchez un accompagnement qui va au bout du projet, parlons-en.</p>
+<div style="display:flex;justify-content:center;align-items:center;gap:20px">
+<a href="#1e" style="background:#C4623E;color:#F7F2EA;border-radius:999px;padding:15px 30px;font-weight:500;font-size:16px" style-hover="background:#A34E30;color:#F7F2EA">Réservez un rendez-vous stratégique de 30 minutes</a>
+<a href="#1e" style="color:#F7F2EA;font-size:15px;border-bottom:1.5px solid rgba(247,242,234,.5);padding-bottom:2px">Écrire à Anne</a>
+</div>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:32px;padding:44px 48px;background:#E9E0D2">
+<div style="display:flex;align-items:center;gap:22px">
+<div style="flex:none;width:74px;height:98px;border-radius:6px;background:#26201A;display:flex;flex-direction:column;justify-content:space-between;padding:10px 8px">
+<svg viewBox="24 26 108 108" width="20" height="20" aria-hidden="true"><defs><clipPath id="sEg"><circle cx="78" cy="80" r="54"></circle></clipPath></defs><g clip-path="url(#sEg)"><rect x="24" y="26" width="108" height="108" fill="#002FA7"></rect><path d="M 24 79 C 44 73, 60 84, 78 78 C 96 72, 114 81, 132 76 L 132 134 L 24 134 Z" fill="#C4623E"></path></g></svg>
+<span style="font-family:Italiana,serif;font-size:9.5px;line-height:1.3;color:#F7F2EA">Le guide<br>du vendeur</span>
+</div>
+<div>
+<h3 style="font-size:16px;font-weight:700;margin:0 0 6px">Le guide, dans tous les cas</h3>
+<p style="font-size:14px;line-height:1.55;color:#4A4238;margin:0;max-width:56ch">« Les 10 erreurs fatales des vendeurs particuliers », avec la checklist « Prêt à Vendre » en 25 points — le complément écrit de votre diagnostic.</p>
+</div>
+</div>
+<a href="#1e" style="flex:none;border:1.5px solid #26201A;border-radius:999px;padding:12px 24px;font-weight:500;font-size:14.5px;color:#26201A">Télécharger le guide</a>
+</div>
+<footer style="display:flex;justify-content:space-between;align-items:center;padding:22px 48px;font-size:12px;color:#8a8177">
+<span>© 2026 Anne Vial-Tissot — réseau eXp France</span>
+<span style="display:flex;gap:18px"><a href="#1e" style="font-size:12px;color:#8a8177">Mentions légales</a><a href="#1e" style="font-size:12px;color:#8a8177">Confidentialité</a></span>
+</footer>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Essayez : « resserre le hero de <a class="dv-oid" href="#1a">1a</a> » · « montre l'écran Q13 multi-sélection » · « ajoute les états limites en annexe » · « une variante Sortie B de <a class="dv-oid" href="#1e">1e</a> »</p>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;couleurMaitresse&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;klein&quot;,&quot;terracotta&quot;],&quot;default&quot;:&quot;klein&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Ambiance&quot;},&quot;lumierePhotos&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;naturelle&quot;,&quot;doree&quot;],&quot;default&quot;:&quot;naturelle&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Ambiance&quot;},&quot;badgesMaquette&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Présentation&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.couleurMaitresse ?? 'klein';
+    const lumiere = this.props.lumierePhotos ?? 'naturelle';
+    const badges = this.props.badgesMaquette ?? true;
+    let css = '';
+    if (accent === 'terracotta') {
+      // les accents Klein (chiffres, libellés d'axes, barres) passent côté rive
+      css += '[style*="color:#002FA7"]{color:#C4623E!important}';
+      css += 'div[style*="background:#002FA7"][style*="height:100%"]{background:#C4623E!important}';
+    }
+    if (lumiere === 'doree') {
+      css += '.dv-card img{filter:sepia(.28) saturate(1.12) contrast(1.02) brightness(.98)}';
+    }
+    if (!badges) {
+      css += 'span[style*="rgba(38,32,26,.55)"]{display:none!important}';
+    }
+    return { tweakCss: css };
+  }
+}
+</script>
+</body>
+</html>

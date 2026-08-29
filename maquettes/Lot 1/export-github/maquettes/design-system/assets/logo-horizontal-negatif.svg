@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 170" role="img" aria-label="Anne VIAL-TISSOT — version négative pour fonds sombres">
+  <defs>
+    
+    <clipPath id="sym"><circle cx="78" cy="80" r="54"></circle></clipPath>
+  </defs>
+  <circle cx="78" cy="80" r="56.5" fill="none" stroke="#F7F2EA" stroke-width="2.5"></circle>
+  <g clip-path="url(#sym)">
+    <rect x="24" y="26" width="108" height="108" fill="#002FA7"></rect>
+    <path d="M 24 79 C 44 73, 60 84, 78 78 C 96 72, 114 81, 132 76 L 132 134 L 24 134 Z" fill="#C4623E"></path>
+  </g>
+  <text class="nm" x="158" y="96">Anne VIAL-TISSOT</text>
+  <path d="M 280 108 C 350 102, 490 110, 576 105" fill="none" stroke="#C4623E" stroke-width="4.5" stroke-linecap="round"></path>
+  <text class="st" x="158" y="134">CONSEIL IMMOBILIER — LÉMAN &amp; CHABLAIS</text>
+</svg>

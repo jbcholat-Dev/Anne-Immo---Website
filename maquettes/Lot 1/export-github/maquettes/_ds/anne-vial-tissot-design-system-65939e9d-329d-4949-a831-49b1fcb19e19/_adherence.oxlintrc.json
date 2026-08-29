@@ -1,0 +1,67 @@
+{
+  "plugins": [
+    "react",
+    "import"
+  ],
+  "rules": {
+    "react/forbid-elements": [
+      "warn",
+      {
+        "forbid": []
+      }
+    ],
+    "no-restricted-imports": [
+      "warn",
+      {
+        "patterns": []
+      }
+    ],
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "selector": "Literal[value=/#[0-9a-fA-F]{3,8}\\b/]",
+        "message": "Raw hex color — use a design-system color token via var()."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/index.js"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ],
+  "x-omelette": {
+    "components": {},
+    "tokens": [
+      "--avt-brume",
+      "--avt-brun",
+      "--avt-ecru",
+      "--avt-font-display",
+      "--avt-font-text",
+      "--avt-galet",
+      "--avt-klein",
+      "--avt-radius-btn",
+      "--avt-radius-card",
+      "--avt-terra",
+      "--avt-terra-deep"
+    ],
+    "tokenKinds": {
+      "--avt-ecru": "color",
+      "--avt-brun": "color",
+      "--avt-klein": "color",
+      "--avt-terra": "color",
+      "--avt-terra-deep": "color",
+      "--avt-galet": "color",
+      "--avt-brume": "color",
+      "--avt-font-display": "font",
+      "--avt-font-text": "font",
+      "--avt-radius-btn": "radius",
+      "--avt-radius-card": "radius"
+    },
+    "fontFamilies": []
+  }
+}

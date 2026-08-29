@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Monogramme AVT — Anne Vial-Tissot">
+  <defs>
+    
+    <clipPath id="symc"><circle cx="88" cy="86" r="52"></circle></clipPath>
+    <clipPath id="symo"><path clip-rule="evenodd" d="M0 0 H200 V200 H0 Z M 140 86 A 52 52 0 1 0 36 86 A 52 52 0 1 0 140 86"></path></clipPath>
+    <path id="voute" d="M 24 86 A 64 64 0 0 1 152 86"></path>
+  </defs>
+  <g clip-path="url(#symc)">
+    <rect x="36" y="34" width="104" height="104" fill="#002FA7"></rect>
+    <path d="M 36 85 C 54 79, 70 90, 88 84 C 106 78, 122 87, 140 82 L 140 138 L 36 138 Z" fill="#C4623E"></path>
+  </g>
+  <g clip-path="url(#symc)"><text class="avt" x="116" y="146" text-anchor="middle" fill="#F7F2EA">AVT</text></g>
+  <g clip-path="url(#symo)"><text class="avt" x="116" y="146" text-anchor="middle" fill="#26201A">AVT</text></g>
+  <text class="arc"><textPath href="#voute" startOffset="50%" text-anchor="middle">LÉMAN &amp; CHABLAIS</textPath></text>
+  <text class="lin" x="114" y="166" text-anchor="middle">CONSEIL IMMOBILIER</text>
+</svg>
