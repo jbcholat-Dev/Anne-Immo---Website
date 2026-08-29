@@ -1,0 +1,37 @@
+<!-- @dsCard group="Components" -->
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Boutons &amp; liens</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+  body{margin:0; background:#F7F2EA; color:#26201A; font-family:'DM Sans',sans-serif; padding:28px; display:flex; flex-direction:column; gap:16px}
+  .lbl{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#8a8177; font-weight:500}
+  .row{display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-top:6px}
+  .btn{display:inline-block; border-radius:999px; padding:12px 24px; font-weight:500; font-size:15px; text-decoration:none; cursor:pointer; border:none}
+  .btn-primary{background:#C4623E; color:#F7F2EA}
+  .btn-primary:hover{background:#A34E30}
+  .btn-secondary{background:transparent; color:#26201A; border:1.5px solid #26201A}
+  .btn-secondary:hover{background:#26201A; color:#F7F2EA}
+</style>
+</head>
+<body>
+  <div>
+    <div class="lbl">Bouton primaire — pilule terracotta, texte écru, hover terracotta profond</div>
+    <div class="row">
+      <button class="btn btn-primary">Faire le diagnostic gratuit</button>
+      <button class="btn btn-primary" style="background:#A34E30">État hover</button>
+    </div>
+  </div>
+  <div>
+    <div class="lbl">Bouton secondaire — contour brun 1,5 px sur écru</div>
+    <div class="row"><button class="btn btn-secondary">Découvrir la méthode</button></div>
+  </div>
+  <div>
+    <div class="lbl">Lien — Klein souligné</div>
+    <div class="row"><a href="#" style="color:#002FA7; font-size:15px">Voir les témoignages →</a></div>
+  </div>
+  <div style="font-size:12px; color:#6E6354">Règle : jamais de texte terracotta en petit corps hors bouton ; un seul bouton primaire visible par écran.</div>
+</body>
+</html>

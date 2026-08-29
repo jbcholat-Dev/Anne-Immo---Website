@@ -1,0 +1,38 @@
+<!-- @dsCard group="Components" -->
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Cartes, encarts &amp; séparateur</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+  body{margin:0; background:#F7F2EA; color:#26201A; font-family:'DM Sans',sans-serif; padding:28px; display:flex; flex-direction:column; gap:20px}
+  .lbl{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#8a8177; font-weight:500; margin-bottom:8px}
+  .card{background:#E9E0D2; border-radius:12px; padding:20px; max-width:340px}
+  .card h3{font-size:16px; margin:0 0 8px; font-weight:700}
+  .card p{font-size:14px; line-height:1.55; margin:0; color:#4A4238}
+  .stat{background:#E7EDF9; border-radius:12px; padding:18px 22px; max-width:340px; display:flex; gap:18px; align-items:baseline}
+  .stat b{font-family:Italiana,serif; font-weight:400; font-size:40px; color:#002FA7; font-variant-numeric:tabular-nums}
+  .stat span{font-size:13px; color:#3d4966; line-height:1.5}
+</style>
+</head>
+<body>
+  <div>
+    <div class="lbl">Carte — fond galet, radius 12 px, sans ombre</div>
+    <div class="card">
+      <h3>Filtrage rigoureux des acquéreurs</h3>
+      <p>Chaque visite est une opportunité réelle : capacité de financement validée avant tout rendez-vous.</p>
+    </div>
+  </div>
+  <div>
+    <div class="lbl">Encart chiffre — fond brume, chiffre en Italiana</div>
+    <div class="stat"><b>&lt;5</b><span>visites en moyenne pour obtenir une offre sérieuse</span></div>
+  </div>
+  <div>
+    <div class="lbl">Séparateur signature — ligne d'horizon ondulée terracotta (fine, 2-3 px)</div>
+    <svg viewBox="0 0 400 10" style="width:320px; height:9px; display:block" aria-hidden="true">
+      <path d="M2 6 C 60 1, 140 9, 210 5 C 280 1, 340 7, 398 4" fill="none" stroke="#C4623E" stroke-width="2.4" stroke-linecap="round"/>
+    </svg>
+  </div>
+</body>
+</html>
