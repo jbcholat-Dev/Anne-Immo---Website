@@ -91,6 +91,31 @@ Contraintes déjà actées, non rediscutables ici (détail dans SPEC.md v3) :
 
 ---
 
+## API Modelo Office — faisabilité établie (2026-08-30)
+
+Le risque « intégration Modelo jamais évaluée », ouvert depuis le cadrage du 2026-08-17, est **levé**. Source : <https://aide.netty.fr/gestion-cles-api-modelo-office> (Netty, éditeur de Modelo Office).
+
+**Ce qui marche**
+- API CRUD. Le sens qui nous intéresse — extérieur → Modelo — accepte POST/PUT/DELETE.
+- La documentation cite explicitement notre cas d'usage : « Créer un contact vendeur suite à la soumission d'un formulaire ».
+- 15 jours d'essai gratuit sur données de test.
+
+**Ce qui bloque**
+
+| Obstacle | Détail | Conséquence |
+|---|---|---|
+| **Droits** | Création de clé réservée au **super-administrateur** (couronne jaune), via `PARAMÈTRES > Configuration > Gestion des clés API`. | L'instance Modelo appartient à **eXp France**, pas à Anne. Elle doit en faire la demande, et eXp peut refuser de délivrer une clé à un agent isolé. **Dépendance externe non maîtrisée.** |
+| **Coût** | **25 € HT / mois** par clé activée. | Contre l'enveloppe de 20-50 €/mois, cette seule ligne consomme la moitié du budget — pour une fonction classée priorité basse. |
+| **Restriction IP** | Obligatoire à la création de la clé ; la documentation elle-même n'est accessible que depuis les IP autorisées. | **Le point dur.** Entre en collision avec la direction « base statique, pas d'entretien serveur » : un hébergement statique moderne n'a pas d'IP de sortie stable. Impose soit un hébergeur à IP de sortie fixe, soit un relais dédié — une pièce d'infrastructure de plus à entretenir, contre un budget de 1-3h/mois. |
+
+**Sans effet sur nous** : pas de webhooks (on ne fait que pousser) ; création de mandats et de biens impossible depuis l'extérieur (hors périmètre — pas de vitrine de biens).
+
+**Recommandation** : classer l'intégration Modelo **hors v1**, et concevoir l'architecture pour l'accueillir sans refonte. Le stockage de référence des leads reste **côté site** (contrainte déjà actée) ; Modelo devient une synchronisation en aval, activable le jour où eXp délivre une clé et où la contrainte d'IP est résolue. Ne pas faire dépendre le parcours de capture de cette intégration.
+
+**Action pour Anne, non bloquante** : demander à l'administrateur eXp France si une clé API Modelo peut lui être délivrée, et à quelles conditions. La réponse conditionne le calendrier, pas l'architecture.
+
+---
+
 ## Questions ouvertes héritées du contrat
 
 À trancher pendant l'architecture, pas avant :
