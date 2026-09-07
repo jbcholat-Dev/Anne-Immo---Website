@@ -1,8 +1,9 @@
 ---
 id: SPEC-anne-website
-version: 3
-date: 2026-08-29
+version: 4
+date: 2026-09-07
 companions:
+  - ../../planning-artifacts/architecture/architecture-anne-website-2026-08-29/ARCHITECTURE-SPINE.md
   - contexte-existant.md
   - quiz-conception-notion.md
   - quiz-contenu.md
@@ -15,11 +16,12 @@ sources:
   - Notion 3cb6cc4216e280d18425e4444a6e6198 — Note specs site, JB vocal (2026-08-29)
   - Notion 3bf6cc4216e280c29de3f4fa2554286f — Réunion de cadrage, JB vocal (2026-08-17)
   - review-findings.json — bmad-review, 31 findings (2026-08-29)
+  - ../../../../CLAUDE.md § journal 2026-09-07 — décisions d'architecture vague 1 (JB)
 ---
 
 # Site web Anne Vial-Tissot — vitrine de crédibilité et génération de leads
 
-> **Contrat canonique.** Ce SPEC et les fichiers listés dans `companions:` forment le contrat complet — quoi construire, tester, valider. Les autres documents du projet (CLAUDE.md, Notion) restent des références narratives, pas des sources de contrat.
+> **Contrat canonique.** Ce SPEC et les fichiers listés dans `companions:` forment le contrat complet — quoi construire, tester, valider. Depuis la v4, le **spine d'architecture** (`ARCHITECTURE-SPINE.md`, AD-1 à AD-18) en fait partie : les `AD-n` cités ci-dessous y renvoient. Les autres documents du projet (CLAUDE.md, Notion) restent des références narratives, pas des sources de contrat.
 >
 > ✅ Le contenu du diagnostic (questions, options, barème, seuils, feedbacks) est retrouvé et versionné dans `quiz-conception-notion.md` — CAP-4 est implémentable.
 > ⚠️ `quiz-contenu.md` (capture du ScoreApp en ligne) est en cours de production et sert à **vérifier** trois écarts connus entre la conception et le déployé : branchements conditionnels, nombre d'options de Q14, nombre total de questions.
@@ -60,29 +62,29 @@ Ces seuils sont posés par déduction du modèle économique (5-6 ventes/an), pa
   - **success:** Le CTA diagnostic est visible en homepage et mène au quiz. Les résultats complets sont délivrés après saisie de prénom, nom, email, téléphone (format international) et opt-in explicite. La page de résultats est liée à un jeton de soumission — elle n'est pas atteignable par URL directe. Le formulaire est protégé contre les soumissions automatisées sans friction visible. En cas d'échec de soumission, les réponses sont conservées côté client et un renvoi est possible.
 - **CAP-6 — Contact direct**
   - **intent:** Un prospect déjà prêt à échanger peut laisser ses coordonnées sans passer par le diagnostic.
-  - **success:** Un chemin de contact direct existe indépendamment du diagnostic, atteignable depuis toute page.
+  - **success:** Un chemin de contact direct existe indépendamment du diagnostic, atteignable depuis toute page. Il recueille prénom, nom, email, téléphone (format international) et l'acceptation de la politique de confidentialité ; chaque envoi est stocké côté site (AD-4, AD-6).
 - **CAP-7 — Activation post-diagnostic**
   - **intent:** Après le diagnostic, le prospect est orienté vers l'action la plus engageante qu'il est prêt à faire.
-  - **success:** La page de résultats route vers l'une des deux sorties définies dans `quiz-conception-notion.md`. **Sortie A (prospect qualifié)** — score 71-100 et Q14 orientée accompagnement : CTA « Réservez un rendez-vous stratégique de 30 minutes » (CAP-9), contact direct en second. **Sortie B (à nurturer)** — tous les autres : CTA de téléchargement du plan d'action (CAP-8), puis newsletter hebdomadaire. Règles d'arbitrage : **Q14 choisit l'offre présentée** ; **Q12 = « minimiser les frais d'agence » force la sortie B quel que soit le score** (un prospect qui refuse la valeur d'un accompagnement ne se convertit pas par un RDV). Le score seul ne décide jamais contre une intention déclarée.
+  - **success:** La page de résultats route vers l'une des deux sorties définies dans `quiz-conception-notion.md`. **Sortie A (prospect qualifié)** — score 71-100 et Q14 orientée accompagnement : CTA « Réservez un rendez-vous stratégique de 30 minutes » (CAP-9), contact direct en second. **Sortie B (à nurturer)** — tous les autres : CTA de téléchargement du plan d'action (CAP-8), puis newsletter hebdomadaire — **dans la v1**, envoyée via Resend (Audiences + Broadcasts) ; l'opt-in, distinct, est stocké côté site et synchronisé vers Resend ; le désabonnement est géré par Resend et rapporté côté site (AD-8, AD-16). Règles d'arbitrage : **Q14 choisit l'offre présentée** ; **Q12 = « minimiser les frais d'agence » force la sortie B quel que soit le score** (un prospect qui refuse la valeur d'un accompagnement ne se convertit pas par un RDV). Le score seul ne décide jamais contre une intention déclarée.
 - **CAP-8 — Téléchargement du guide**
   - **intent:** Le prospect repart avec un contenu utile, adapté à son profil de diagnostic.
-  - **success:** Depuis la page de résultats, le prospect télécharge un guide correspondant à son profil. Le guide est également accessible hors diagnostic, contre les mêmes coordonnées que CAP-5.
+  - **success:** Depuis la page de résultats, le prospect télécharge un guide correspondant à son profil. Le guide est également accessible hors diagnostic, contre prénom, nom, email et acceptation de la politique de confidentialité ; **le téléphone est facultatif** (AD-6, décision 2026-09-07). Le fichier n'est pas atteignable par URL directe : il est délivré au lead, avec un lien expirant (AD-8).
 - **CAP-9 — Prise de rendez-vous**
   - **intent:** Le prospect le plus chaud réserve un créneau avec Anne sans échange d'emails préalable.
-  - **success:** Un calendrier de disponibilités réelles est proposé depuis la page de résultats et depuis le contact direct. Les créneaux sont affichés dans le fuseau horaire du visiteur. Une confirmation est envoyée au prospect et à Anne. Un créneau pris entre l'affichage et la confirmation est refusé proprement, sans double réservation.
+  - **success:** Un calendrier de disponibilités réelles est proposé depuis la page de résultats et depuis le contact direct. Les créneaux sont affichés dans le fuseau horaire du visiteur. Une confirmation est envoyée au prospect et à Anne. Un créneau pris entre l'affichage et la confirmation est refusé proprement, sans double réservation. Le formulaire de réservation comporte une acceptation obligatoire de la politique de confidentialité, et chaque réservation est stockée côté site (AD-4, AD-7). Solution retenue : Cal.com, plan gratuit, qui couvre nativement fuseau, verrouillage de créneau et confirmations (AD-8).
 - **CAP-10 — Multilingue**
   - **intent:** La clientèle internationale du Léman lit le site dans sa langue — c'est un axe de positionnement d'Anne, pas une commodité.
-  - **success:** Le site est **multilingue par conception dès la v1** : aucun texte en dur dans le code, contenus et libellés externalisés, sélecteur de langue, URLs par langue. Le français est la langue de référence et le repli systématique. Le périmètre traduit couvre les pages, le quiz, les pages de résultats et les emails transactionnels — pas d'écran à moitié traduit. Les langues effectivement livrées en v1 sont fixées à l'étape architecture (voir Open Questions) ; l'architecture ne doit pas rendre l'ajout d'une langue coûteux.
+  - **success:** Le site est **multilingue par conception dès la v1** : aucun texte en dur dans le code, contenus et libellés externalisés, sélecteur de langue, URLs par langue. Le français est la langue de référence. **Une langue livrée est complète ou n'existe pas** : interface, pages éditoriales, diagnostic (17 écrans, 9 feedbacks), emails et pages légales à 100 %, vérifié au build ; un objet éditorial optionnel (story, témoignage) non traduit n'est pas publié dans cette langue — ni index, ni plan du site, ni balise de langue (AD-2). Il n'y a pas de repli automatique vers le français. **Langues livrées en v1 : FR + EN** (décision 2026-09-07) ; ES et PT s'ajoutent ensuite sans changement d'architecture.
 
 ## Constraints
 
 - **Diagnostic recréé nativement.** Le diagnostic (CAP-4) est construit dans le site, sans dépendance à la plateforme SaaS ScoreApp (décision JB 2026-08-29 ; faisabilité confirmée — quiz à branchements, scoring par catégorie, gate de capture et résultats dynamiques sont standards). Le contenu du diagnostic est intégralement possédé et versionné (`quiz-conception-notion.md`) ; le ScoreApp en ligne n'est plus qu'une référence de vérification, pas un outil à conserver en production.
-- **Réalisation interne poussée au maximum** (Claude Design + Framer) avant tout arbitrage prestataire — devis reçus : 7-10 k€.
+- **Réalisation interne poussée au maximum** avant tout arbitrage prestataire — devis reçus : 7-10 k€. Claude Design pour la maquette ; **Framer écarté** (2026-09-07) : le rendu est en Astro 7 sur Cloudflare Workers (spine, Stack).
 - **Charte graphique v1 obligatoire** pour tout visuel — identité Rive Signature, palette, typographie Italiana, règles d'usage du logo (détail : `../../../design-system/README.md`).
 - **Pas de vitrine de biens en ligne** — seulement 2-3 biens actifs, risque de décrédibilisation ; remplacée par CAP-3.
 - **Conformité RGPD.** Toute capture de données personnelles (CAP-5, CAP-6, CAP-8, CAP-9) exige : base légale identifiée, mentions légales, politique de confidentialité, opt-in distinct pour la newsletter, lien de désabonnement dans chaque email, et une localisation des données documentée.
-- **Stockage de référence des leads côté site.** Chaque lead capté est persisté côté site, indépendamment de toute synchronisation CRM. Une notification email à Anne ne constitue pas un stockage.
-- **CRM Modelo** fourni voire imposé par eXp France — la solution doit pouvoir alimenter Modelo à terme (export ou intégration) sans redéveloppement du parcours de capture. Intégration non évaluée à ce stade (détail : `contexte-existant.md`).
+- **Stockage de référence des leads côté site.** Chaque lead capté est persisté côté site, indépendamment de toute synchronisation CRM. Une notification email à Anne ne constitue pas un stockage. Critères testables : base en juridiction UE (AD-10) ; chaque soumission porte une clé d'idempotence — un renvoi ne crée jamais un second lead (AD-4) ; les champs obligatoires par source suivent le contrat AD-6.
+- **CRM Modelo** fourni voire imposé par eXp France — **tranché le 2026-09-07 (AD-14)** : en v1, l'email de notification à Anne est formaté « prêt à copier » dans la fiche contact Modelo, et une page d'administration protégée permet de marquer la recopie. L'export CSV est écarté (l'import de Modelo InTouch n'alimente pas la base contacts de Modelo Office, vérifié sur capture). L'API Modelo est hors horizon : clé réservée au super-administrateur eXp, 25 € HT/mois, adresse IP fixe requise. Le parcours de capture ne dépend en rien de Modelo.
 - **Performance, mobile et SEO local.** Le site est conçu mobile-first ; la homepage se charge utilement en moins de 3 secondes sur connexion mobile malgré les visuels lourds (vidéo différée, images adaptatives) ; le référencement local cible le Chablais et le bassin lémanique.
 - **Production de contenu par Anne.** CAP-1, CAP-2, CAP-3 et CAP-8 dépendent d'actifs qu'Anne doit produire ou collecter : séquences drone, photographies, témoignages d'acheteurs, récits de ventes, guide PDF rebrandé. Cette production est sur le chemin critique du lancement, au même titre que le développement.
 
@@ -90,8 +92,8 @@ Ces seuils sont posés par déduction du modèle économique (5-6 ventes/an), pa
 
 - Galerie ou vitrine de biens en ligne.
 - Estimation de la valeur d'un bien sur le site — c'est le chantier Estimateur, séparé. Le « diagnostic » porte sur la préparation du vendeur, jamais sur un prix.
-- Implémentation de l'intégration CRM Modelo (faisabilité non évaluée).
-- Choix final d'outil et arbitrage interne-vs-prestataire (différé à l'étape ④ architecture).
+- Intégration API avec le CRM Modelo — évaluée le 2026-08-30 et classée hors horizon (voir Constraints).
+- Arbitrage interne-vs-prestataire (différé à la vague 2 de l'architecture, après validation de la maquette). La stack, elle, est choisie (spine).
 
 ## Assumptions
 
@@ -99,15 +101,13 @@ Ces seuils sont posés par déduction du modèle économique (5-6 ventes/an), pa
 - Les chiffres publics repris de la conception (statistique PAP.fr des 9 vendeurs sur 10, « taux de concrétisation supérieur de 30 % à la moyenne ») sont republiés tels quels ; ils ne sont pas sourcés dans le document d'origine et doivent être revalidés avant mise en ligne.
 - Les seuils quantitatifs de CAP-1, CAP-2, CAP-3 (1 vidéo, 6 photos, 3 témoignages, 3 stories) et de la section Success signal sont **posés par défaut** pour rendre les critères testables. Ils sont à confirmer par Anne ; les revoir ne remet pas en cause les capacités.
 - Les cibles marketing du projet (primo-accédants, investisseurs, cadres sup, seniors 60+) s'appliquent aux 3 axes, faute de segmentation alternative dans les sources.
-- Les avis Immodvisor sont exploitables hors de leur plateforme (extraction ou widget) ; à défaut, CAP-2 se réduit à un lien sortant vers la fiche.
+- ~~Les avis Immodvisor sont exploitables hors de leur plateforme~~ — confirmé le 2026-09-07 (widget officiel existant) ; retenu : instantané local (note, nombre, extraits, lien vers la fiche), sans widget (AD-13).
 
 ## Open Questions
 
-- **Interne (Claude Design + Framer) vs prestataire (7-10 k€)** — arbitrage définitif à l'étape ④, avec spec + maquette + architecture en main ; informé par la faisabilité confirmée de la recréation native du diagnostic (le signal penche interne).
-- **Langues livrées en v1** — FR seul, FR+EN, ou les quatre (FR/EN/ES/PT) ? La décision porte sur le volume de traduction, pas sur l'architecture : CAP-10 impose le multilingue par conception quoi qu'il arrive.
+- **Interne vs prestataire (7-10 k€)** — arbitrage définitif à la vague 2 de l'architecture, avec la maquette validée en main. L'infrastructure retenue coûte ≈ 80 €/an (spine) : l'arbitrage porte sur le temps de JB, pas sur l'argent ; le signal penche interne.
 - **Barème de la Performance commerciale (Q10)** — la conception Notion note Q10 sur 10 points via 5 options combinées (« moins de 5 visites, plusieurs offres »…), alors que le déployé pose deux questions séparées : nombre de visites (4 options) puis nombre d'offres (3 options), soit 12 combinaisons. Le croisement n'est documenté nulle part. **À trancher avant le build** : reconstruire une matrice visites × offres, ou revenir à une question unique combinée. Sans décision, la question unique combinée de la conception s'applique.
 - **Intégration Modelo — faisabilité établie le 2026-08-30, calendrier ouvert.** L'API Modelo Office (Netty) accepte la création de contacts depuis l'extérieur et documente explicitement « créer un contact vendeur suite à la soumission d'un formulaire ». Trois obstacles : la clé ne peut être créée que par un **super-administrateur**, donc par eXp France et non par Anne ; elle coûte **25 € HT/mois** ; et elle impose une **restriction par IP**, incompatible en l'état avec un hébergement statique sans IP de sortie fixe. Recommandation : hors v1, architecture prête à l'accueillir. Détail : `../../planning-artifacts/architecture-brief.md`.
-- **Remontée des leads dans Modelo** — priorité basse (JB 2026-08-29) : une solution simple (notification email, export) suffit probablement en v1, à condition que la Constraint de stockage côté site soit respectée.
 
 ### Différés — non bloquants pour la maquette et l'architecture
 
