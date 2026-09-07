@@ -1,0 +1,189 @@
+<title>Le site d'Anne, expliqué</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap">
+<style>
+  :root {
+    --ecru: #F7F2EA; --brun: #26201A; --klein: #002FA7; --terra: #C4623E; --terra-deep: #A34E30;
+    --galet: #E9E0D2; --brume: #E7EDF9;
+    --bg: var(--ecru); --fg: var(--brun); --fg-soft: #5C5045; --line: #D9CFC0;
+    --card: #FBF8F3; --card-2: var(--brume); --accent: var(--klein); --accent-2: var(--terra);
+    --accent-2-text: var(--terra-deep); --ok: #3C6E47; --warn: #A34E30;
+    --display: 'Italiana', Georgia, serif; --text: 'DM Sans', system-ui, -apple-system, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1B1713; --fg: var(--ecru); --fg-soft: #C9BFB2; --line: #3E362E;
+      --card: #26201A; --card-2: #22283A; --accent: #8FA8F0; --accent-2: #E08A66; --accent-2-text: #E08A66;
+      --ok: #8FC29B; --warn: #E08A66;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1B1713; --fg: var(--ecru); --fg-soft: #C9BFB2; --line: #3E362E;
+    --card: #26201A; --card-2: #22283A; --accent: #8FA8F0; --accent-2: #E08A66; --accent-2-text: #E08A66;
+    --ok: #8FC29B; --warn: #E08A66;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--text); font-size: 17px; line-height: 1.55; }
+  main { max-width: 760px; margin: 0 auto; padding: 56px 24px 96px; }
+  h1, h2 { font-family: var(--display); font-weight: 400; letter-spacing: 0.01em; text-wrap: balance; margin: 0; }
+  h1 { font-size: 52px; line-height: 1.05; }
+  h2 { font-size: 34px; line-height: 1.15; margin-top: 72px; margin-bottom: 8px; }
+  h3 { font-family: var(--text); font-weight: 600; font-size: 17px; margin: 28px 0 8px; }
+  p { margin: 0 0 16px; max-width: 65ch; }
+  .eyebrow { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); font-weight: 500; margin-bottom: 14px; }
+  .lede { font-size: 21px; line-height: 1.45; color: var(--fg); max-width: 34ch; margin: 22px 0 0; }
+  .sig { width: 120px; height: 14px; margin: 26px 0 0; display: block; }
+  .meta { color: var(--fg-soft); font-size: 14px; margin-top: 18px; }
+  .horizon { border: 0; border-top: 1px solid var(--line); margin: 48px 0; }
+  a { color: var(--accent); }
+  strong { font-weight: 600; }
+  .key { background: var(--card-2); border-radius: 12px; padding: 20px 22px; margin: 22px 0; }
+  .key p:last-child { margin-bottom: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; margin: 18px 0 8px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 10px 10px 0; border-bottom: 1px solid var(--line); }
+  th { font-weight: 600; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-soft); }
+  td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 22px 0; align-items: stretch; }
+  .flow > div { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 12px; font-size: 14px; line-height: 1.35; }
+  .flow > div b { display: block; font-weight: 600; margin-bottom: 4px; }
+  .flow > div.first { border-color: var(--accent-2); }
+  .flow-note { font-size: 14px; color: var(--fg-soft); max-width: 65ch; }
+  @media (max-width: 640px) { .flow { grid-template-columns: 1fr 1fr; } h1 { font-size: 42px; } }
+  .qa { display: grid; grid-template-columns: 1fr; gap: 0; }
+  .qa > div { padding: 20px 0; border-bottom: 1px solid var(--line); }
+  .qa .q { font-weight: 600; margin-bottom: 6px; }
+  .qa .q em { font-style: normal; color: var(--accent-2-text); font-weight: 500; }
+  .qa p { margin-bottom: 8px; }
+  .qa p:last-child { margin-bottom: 0; }
+  .cost { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; margin: 6px 0 18px; }
+  .cost .big { font-family: var(--display); font-size: 46px; line-height: 1; color: var(--accent); }
+  .cost .vs { color: var(--fg-soft); font-size: 15px; }
+  ul { padding-left: 20px; margin: 0 0 16px; max-width: 65ch; }
+  li { margin-bottom: 6px; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  @media (max-width: 640px) { .cols { grid-template-columns: 1fr; } }
+  .who { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-soft); margin-bottom: 8px; }
+  .tag { display: inline-block; font-size: 12px; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--fg-soft); margin-left: 6px; vertical-align: middle; }
+  .footer { color: var(--fg-soft); font-size: 14px; margin-top: 64px; }
+</style>
+
+<main>
+  <div class="eyebrow">annevialtissot.fr · vague 1 · 7 septembre 2026</div>
+  <h1>Le site d'Anne, expliqué</h1>
+  <p class="lede">Les décisions de fondation, en langage courant — pour comprendre ce qu'on construit, ce que ça coûte et ce qu'Anne possède.</p>
+  <svg class="sig" viewBox="0 0 120 14" aria-hidden="true"><path d="M2 8 C 20 2, 35 12, 55 7 S 90 2, 118 8" fill="none" stroke="#C4623E" stroke-width="1.6" stroke-linecap="round"/></svg>
+  <p class="meta">Version lisible du document technique <code>ARCHITECTURE-SPINE.md</code>. Le technique fait foi pour construire ; cette page fait foi pour comprendre.</p>
+
+  <h2>En une phrase</h2>
+  <p>Le site est une <strong>brochure très rapide</strong> — des pages fabriquées à l'avance à partir de textes et de photos rangés dans des fichiers — à laquelle on ajoute <strong>un tout petit moteur</strong> qui ne fait que quatre choses : calculer le diagnostic, enregistrer chaque prospect, prévenir Anne, et se surveiller lui-même.</p>
+  <div class="key">
+    <p><strong>Le principe qui gouverne tout : écrire d'abord, prévenir ensuite.</strong> Quand quelqu'un termine le diagnostic, remplit le contact ou réserve un rendez-vous, la première chose qui se passe est l'enregistrement dans la base du site. L'e-mail à Anne vient après. Si l'e-mail échoue, le prospect existe quand même — et on peut renvoyer l'e-mail d'un clic. C'est ce qui rend « zéro lead perdu » vrai plutôt que souhaité.</p>
+  </div>
+
+  <h2>Comment ça marche</h2>
+  <div class="flow">
+    <div><b>Le visiteur</b>lit les pages, fait le diagnostic (17 écrans), laisse ses coordonnées</div>
+    <div class="first"><b>Le moteur écrit</b>le prospect dans la base, en Europe, avant toute autre chose</div>
+    <div><b>Le moteur calcule</b>le score et la page de résultats — jamais dans le navigateur avant le formulaire</div>
+    <div><b>Anne est prévenue</b>par un e-mail prêt à recopier dans Modelo ; le prospect reçoit sa confirmation</div>
+    <div><b>Le rendez-vous</b>se prend dans Cal.com, qui gère l'agenda, le fuseau horaire et les confirmations</div>
+  </div>
+  <p class="flow-note">Tout cela tourne chez Cloudflare, sur un compte au nom d'Anne. Il n'y a aucun serveur à entretenir : rien à mettre à jour la nuit, rien qui tombe parce qu'un disque est plein.</p>
+
+  <h2>Les huit questions du départ</h2>
+  <div class="qa">
+    <div>
+      <div class="q">« Modifiable » — par qui ? <em>Toi d'abord, Anne ensuite, sans refonte.</em></div>
+      <p>Aujourd'hui JB modifie le site depuis le dépôt. Mais tout le contenu — stories de ventes, témoignages, avis, textes — est rangé dès le premier jour comme des <strong>objets</strong> (une story = une commune, une photo, un récit, un témoignage) et non comme des pages écrites à la main. Le jour où on donne une interface d'édition à Anne, elle se branche sur ces objets : on ajoute une porte, on ne reconstruit pas la maison. La liste exacte des cases de chaque objet se fixe après la validation de la maquette, mais avant la première ligne de code.</p>
+    </div>
+    <div>
+      <div class="q">« Pérenne » — et si JB est indisponible trois semaines ? <em>Tout est à son nom, tout est écrit, tout se surveille seul.</em></div>
+      <p>Chaque compte de la chaîne — le domaine, l'hébergement, l'e-mail, l'agenda, la fiche Google — a <strong>Anne pour titulaire</strong> (son adresse, sa carte bancaire) et JB comme invité. Un manuel de reprise, <code>RUNBOOK.md</code>, explique à quelqu'un qui n'a jamais vu le projet comment tout redéployer, où sont les accès, comment voir et exporter les prospects. Il sera testé depuis un ordinateur vierge avant le lancement : s'il ne suffit pas, il est faux. Seule exception, temporaire : le dépôt de code reste chez JB jusqu'au lancement public.</p>
+    </div>
+    <div>
+      <div class="q">Le nom de domaine <em>annevialtissot.fr, à son nom, chez Infomaniak — plus le .com en redirection.</em></div>
+      <p>Le nom personnel, cohérent avec l'identité visuelle. Acheté chez un bureau d'enregistrement du Léman (Cloudflare ne vend pas de .fr), donc <strong>pas chez l'hébergeur</strong> : l'actif le plus durable est séparé du reste. Le .com protège le nom et sert la clientèle internationale qui le tape par réflexe. L'adresse <code>contact@annevialtissot.fr</code> est redirigée vers la boîte qu'Anne utilise déjà — aucune boîte à payer ni à surveiller en plus.</p>
+    </div>
+    <div>
+      <div class="q">Le référencement <em>La fiche Google d'abord, le contenu ensuite, et un site sans bandeau.</em></div>
+      <p>Pour un métier de proximité, la <strong>fiche Google Business</strong> (« agent immobilier Thonon ») pèse plus que le site. Elle est à créer par Anne, sans adresse visible, avec la zone Chablais–Léman ; le site répète exactement les mêmes nom, téléphone et zone. Les deux guides aujourd'hui hébergés chez Gamma <strong>reviennent sur le site</strong> : leur crédit de référencement va à Anne, plus à Gamma. Le site est en français et en anglais au lancement, avec une règle stricte : une langue est complète ou n'existe pas — jamais de page anglaise contenant du français, ce que Google punit.</p>
+      <p>Et parce qu'on ne pose <strong>aucun traceur non essentiel</strong> (la mesure d'audience se fait sans cookie, l'entonnoir du diagnostic est compté par notre propre moteur), il ne devrait pas y avoir de bandeau de consentement à afficher — seulement une page qui l'explique. Reste à vérifier au build que deux composants (l'anti-robot et l'agenda) ne déposent rien ; sinon ils se chargeront seulement quand le visiteur clique.</p>
+    </div>
+    <div>
+      <div class="q">Où vont les e-mails captés ? <em>Dans la base du site. Modelo est en aval, à la main.</em></div>
+      <p>La base du site est <strong>la référence</strong>, en Europe, conservée 3 ans après le dernier contact. Modelo, le CRM imposé par eXp, reçoit les prospects par le canal le plus simple : l'e-mail de notification est formaté champ par champ, dans l'ordre de la fiche Modelo, prêt à recopier — deux minutes par prospect, à 3-5 prospects par mois. Une page d'administration protégée montre la liste et permet de cocher « recopié dans Modelo ». L'import par fichier viendra si Anne confirme que Modelo le permet ; l'API Modelo, elle, exige une clé délivrée par eXp (25 € HT/mois) et une adresse IP fixe qu'on n'a pas — classée hors horizon, sans regret.</p>
+    </div>
+    <div>
+      <div class="q">Connexion à Notion <em>Retirée de l'équation.</em></div>
+      <p>Décision du 7 septembre : Notion n'est ni la référence des prospects ni un miroir. La cible est Modelo. Rien dans le site n'en dépend.</p>
+    </div>
+    <div>
+      <div class="q">Le coût <em>Environ 6,50 € par mois.</em></div>
+      <div class="cost"><span class="big">≈ 80 €/an</span><span class="vs">contre 7 000 à 10 000 € pour les devis reçus — et une enveloppe acceptée de 20 à 50 €/mois</span></div>
+      <div class="scroll"><table>
+        <tr><th>Poste</th><th>Fournisseur</th><th>Coût</th></tr>
+        <tr><td>Domaine .fr + .com</td><td>Infomaniak</td><td class="num">≈ 1,80 €/mois</td></tr>
+        <tr><td>Hébergement, base de données, anti-robot, page admin, réception d'e-mail, mesure d'audience</td><td>Cloudflare (plan payant)</td><td class="num">5 $/mois ≈ 4,60 €</td></tr>
+        <tr><td>E-mails de confirmation et newsletter (jusqu'à 1 000 abonnés)</td><td>Resend</td><td class="num">0 €</td></tr>
+        <tr><td>Prise de rendez-vous</td><td>Cal.com</td><td class="num">0 €</td></tr>
+        <tr><td>Surveillance</td><td>Better Stack</td><td class="num">0 €</td></tr>
+      </table></div>
+      <p>Le reste de l'enveloppe (≈ 40 €/mois) est réservé à l'interface d'édition d'Anne, plus tard. Ce qui coûte vraiment n'est pas récurrent : les photos et la vidéo drone, la traduction anglaise si elle est confiée à un professionnel (800 à 1 200 €), et le temps de JB.</p>
+    </div>
+    <div>
+      <div class="q">Bug et maintenance — comment on <em>sait</em> ? <em>Une machine s'en aperçoit avant Anne, en moins de 24 heures.</em></div>
+      <p>Quatre couches, toutes gratuites. Un service externe vérifie toutes les trois minutes que les pages répondent et contiennent bien ce qu'elles doivent. <strong>Chaque jour, un robot fait un vrai diagnostic de test</strong> — jusqu'à l'e-mail — puis efface sa trace ; si une étape casse, alerte à Anne et à JB. Un « battement » prouve que le robot lui-même est vivant. Et une routine mensuelle d'une à trois heures pour JB : jeter un œil à la page admin, exporter une sauvegarde, accepter les mises à jour proposées automatiquement. La base se restaure à n'importe quel instant des 30 derniers jours.</p>
+    </div>
+  </div>
+
+  <h2>Ce qu'Anne possède</h2>
+  <div class="scroll"><table>
+    <tr><th>Compte</th><th>Titulaire</th><th>JB</th><th>Ce que c'est</th></tr>
+    <tr><td>Infomaniak</td><td>Anne</td><td>contact technique</td><td>Le nom de domaine — l'actif le plus durable</td></tr>
+    <tr><td>Cloudflare</td><td>Anne, carte bancaire</td><td>administrateur invité</td><td>Le site, la base des prospects, la page admin ; le seul compte facturé</td></tr>
+    <tr><td>Resend</td><td>Anne</td><td>clé stockée côté site</td><td>Les e-mails et la newsletter</td></tr>
+    <tr><td>Cal.com</td><td>Anne</td><td>—</td><td>Son agenda de rendez-vous</td></tr>
+    <tr><td>Google Business Profile</td><td>Anne</td><td>gestionnaire</td><td>La fiche sur Google Maps et la recherche</td></tr>
+    <tr><td>Better Stack</td><td>Anne</td><td>alertes aux deux</td><td>La surveillance</td></tr>
+    <tr><td>GitHub <span class="tag">exception temporaire</span></td><td>JB</td><td>—</td><td>Le code et le contenu ; transfert vers un compte commun avant le lancement</td></tr>
+  </table></div>
+  <p>Les mots de passe vivent dans un coffre partagé à deux. Les deux comptes Cloudflare ont la double authentification. Les données des prospects sont stockées en Europe et la politique de confidentialité nomme les trois sous-traitants (Cloudflare, Resend, Cal.com). Une demande d'accès ou d'effacement se traite <strong>depuis la page admin</strong>, par Anne, sans aide technique.</p>
+
+  <h2>Trois choix qui méritent d'être compris</h2>
+  <h3>Pourquoi pas Framer, prévu au départ ?</h3>
+  <p>Framer est excellent pour une vitrine, mais deux exigences du contrat n'y tiennent pas : le diagnostic dont les résultats sont calculés hors du navigateur, et l'enregistrement des prospects dans une base qu'on possède. Il aurait fallu Framer <em>plus</em> un second système à côté — deux endroits où ça casse, deux sites à traduire, et une vitrine qu'on ne peut pas reconstruire depuis nos fichiers. Astro, l'outil retenu, est fait exactement pour ce cas : des pages statiques très rapides, du contenu en objets, et un petit moteur là où il faut.</p>
+  <h3>Pourquoi payer 5 $ à Cloudflare quand le gratuit existe ?</h3>
+  <p>Depuis le 1<sup>er</sup> septembre 2026, le plan gratuit <em>bloque</em> l'écriture en base au-delà d'un quota journalier. Un prospect non enregistré parce qu'un compteur est plein est précisément le scénario interdit. Cinq dollars achètent la garantie, la restauration à 30 jours et les tâches planifiées. Le concurrent le plus connu (Vercel) coûte 20 $/mois parce que son gratuit interdit l'usage commercial ; un autre (Netlify) met le site en pause quand la bande passante est épuisée — inacceptable avec une vidéo en page d'accueil.</p>
+  <h3>Beaucoup d'œufs dans le panier Cloudflare, non ?</h3>
+  <p>Oui, et c'est dit : hébergement, base, DNS, anti-robot, mesure — et l'éditeur d'Astro appartient à Cloudflare depuis janvier 2026. Ce qui rend ce risque acceptable : le code d'Astro reste libre, le contenu vit dans nos fichiers, la base s'exporte chaque mois, le domaine et l'e-mail sont ailleurs. Le vrai garde-fou n'est pas un second fournisseur, c'est le manuel de reprise — testé.</p>
+
+  <h2>Ce qui reste à faire</h2>
+  <div class="cols">
+    <div>
+      <div class="who">Anne</div>
+      <ul>
+        <li>Rassembler photos, vidéo drone, récits de ventes et témoignages (déjà demandé)</li>
+        <li>Créer et valider la fiche Google Business Profile</li>
+        <li>Fournir le numéro RSAC et la carte professionnelle eXp pour les mentions légales</li>
+        <li>Vérifier dans Modelo s'il existe un bouton « Importer » des contacts</li>
+        <li>Décider du rythme de la newsletter (hebdomadaire est un vrai engagement)</li>
+        <li>Tenir un registre des traitements — obligatoire, une page suffit</li>
+        <li>Valider le concept des « stories de ventes » et la maquette</li>
+      </ul>
+    </div>
+    <div>
+      <div class="who">JB, ensuite</div>
+      <ul>
+        <li>Faire valider la maquette par Anne</li>
+        <li>Vague 2 : fixer les cases de chaque objet de contenu, les composants, et trancher interne ou prestataire</li>
+        <li>Amender le contrat (SPEC) sur trois points : téléphone facultatif pour le guide, pas de repli automatique vers le français, newsletter via Resend</li>
+        <li>Corriger le brief de maquette : les paramètres de campagne n'imposent pas de bandeau ; dessiner la version avec et sans bandeau</li>
+        <li>Build, puis test du manuel de reprise depuis une machine vierge</li>
+        <li>Transférer le dépôt de code sur un compte commun avant le lancement</li>
+      </ul>
+    </div>
+  </div>
+
+  <hr class="horizon">
+  <p class="footer">Toutes les versions, tarifs et comportements cités ont été vérifiés le 7 septembre 2026 et relus par quatre revues indépendantes (rubrique, fraîcheur, adversariale, RGPD et sécurité). Les hypothèses restant à démontrer au build sont listées en fin du document technique.</p>
+</main>
