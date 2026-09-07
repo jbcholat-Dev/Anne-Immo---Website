@@ -11,3 +11,6 @@ maquettes/lot-2-canvas/site-anne-vial-tissot.html
 contenu-anne/videos/*
 !contenu-anne/videos/README.md
 !contenu-anne/videos/liens.md
+contenu-anne/**/*.mp4
+contenu-anne/**/*.mov
+contenu-anne/**/*.m4v
