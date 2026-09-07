@@ -6,3 +6,8 @@ node_modules/
 
 # canvas de maquette : sortie generee, se reconstruit depuis les .dc.html
 maquettes/lot-2-canvas/site-anne-vial-tissot.html
+
+# vidéos d'Anne : trop lourdes pour Git, partagées par lien (contenu-anne/videos/liens.md)
+contenu-anne/videos/*
+!contenu-anne/videos/README.md
+!contenu-anne/videos/liens.md
