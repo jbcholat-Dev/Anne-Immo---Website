@@ -57,7 +57,7 @@ Sens des dépendances : le contenu ne dépend de rien ; le rendu lit le contenu 
 
 - **Binds:** CAP-1, CAP-2, CAP-3, CAP-4, CAP-8, CAP-10, toutes les pages
 - **Prevents:** du texte éditorial dans les gabarits ; deux pages qui rangent le contenu différemment ; un CMS futur qui impose une refonte ; des réponses de quiz illisibles quand un libellé change
-- **Rule:** Tout texte, image ou donnée éditoriale vit dans `src/content/` sous l'un des types de l'inventaire, chacun avec un schéma déclaré **avant le premier objet** ; une propriété non déclarée fait échouer le build. Les gabarits ne contiennent aucune chaîne éditoriale — seulement des clés du dictionnaire d'interface. Le CMS de moyen terme se branche sur les schémas, jamais sur les pages. Inventaire fixé (relations et clés seulement ; autres champs en vague 2) : `StoryDeVente` (un bien vendu ; contient un `TemoignageAcheteur` ; référence n `Media` dont une photo maîtresse) · `TemoignageNonClient` (autonome) · `AvisImmodvisor` (instantané local : note, nombre, extraits, URL de la fiche source) · `Guide` (PDF ; clé `band` ∈ {`0-40`, `41-70`, `71-100`, `null`} — `null` = le guide générique accessible hors diagnostic) · `PageEditoriale` (méthode, Anne, légal) · `ContenuDiagnostic` (**identifiants immuables** : questions `q01`…`q17` et options `q01.a`… partagés par toutes les langues ; libellés et feedbacks par langue ; `bareme.json` et seuils indexés par ces identifiants) · `Identite` (nom, téléphone, adresse web, zone, RSAC, réseau — source unique, AD-13) · `Media` (identifiant stable, original non recadré, formats dérivés produits au build). Chaque objet porte un identifiant stable indépendant de la langue. Écart assumé au brief (qui proposait de fixer aussi tous les champs en vague 1) : décision de JB du 2026-09-07, option « règle + inventaire maintenant, champs en vague 2 avant le build ».
+- **Rule:** Tout texte, image ou donnée éditoriale vit dans `src/content/` sous l'un des types de l'inventaire, chacun avec un schéma déclaré **avant le premier objet** ; une propriété non déclarée fait échouer le build. Les gabarits ne contiennent aucune chaîne éditoriale — seulement des clés du dictionnaire d'interface. Le CMS de moyen terme se branche sur les schémas, jamais sur les pages. Inventaire fixé (relations et clés seulement ; autres champs en vague 2) : `StoryDeVente` (un bien vendu ; contient un `TemoignageAcheteur` ; référence n `Media` dont une photo maîtresse) · `TemoignageNonClient` (autonome) · `AvisImmodvisor` (instantané local : note, nombre, extraits, URL de la fiche source) · `SequenceEmail` (un e-mail de la séquence de nurturing : `step` 1…n, `delay_days` depuis l'inscription, sujet et corps par langue ; contenu distillé du guide) · `Guide` (PDF ; clé `band` ∈ {`0-40`, `41-70`, `71-100`, `null`} — `null` = le guide générique accessible hors diagnostic) · `PageEditoriale` (méthode, Anne, légal) · `ContenuDiagnostic` (**identifiants immuables** : questions `q01`…`q17` et options `q01.a`… partagés par toutes les langues ; libellés et feedbacks par langue ; `bareme.json` et seuils indexés par ces identifiants) · `Identite` (nom, téléphone, adresse web, zone, RSAC, réseau — source unique, AD-13) · `Media` (identifiant stable, original non recadré, formats dérivés produits au build). Chaque objet porte un identifiant stable indépendant de la langue. Écart assumé au brief (qui proposait de fixer aussi tous les champs en vague 1) : décision de JB du 2026-09-07, option « règle + inventaire maintenant, champs en vague 2 avant le build ».
 
 ### AD-2 — Une langue livrée est complète ou n'existe pas [ADOPTED]
 
@@ -96,7 +96,7 @@ Sens des dépendances : le contenu ne dépend de rien ; le rendu lit le contenu 
 | `privacy_accepted_at` | case cochée | case cochée | case cochée | question obligatoire du formulaire Cal.com, horodatée à la réservation |
 | `token`, `answers` (JSON par identifiants), `scores` (global + 3 catégories, brut et %), `band`, `orientation` ∈ {`A`, `B`}, `message` (≤ 1 000 car.) | obligatoires (`message` facultatif) | null (`message` obligatoire) | null | null |
 
-Index unique **partiel** sur `token` (`source = 'diagnostic'`). `lead_delivery` (`lead_id`, `channel` ∈ {`notify_anne`, `confirm_prospect`, `newsletter_subscribe`, `modelo`}, `status`, `attempts`, `delivered_at`, `last_error`) remplace tout marqueur dans `lead` ; `funnel_event` (`journey_id`, `event`, `screen`, `lang`, `is_test`, `at`) ne contient aucune donnée personnelle et ne référence jamais `lead`. Écart assumé au SPEC (CAP-8 « mêmes coordonnées que CAP-5 ») : téléphone facultatif pour le guide, décision de JB du 2026-09-07.
+Index unique **partiel** sur `token` (`source = 'diagnostic'`). `lead_delivery` (`lead_id`, `channel` ∈ {`notify_anne`, `confirm_prospect`, `sequence:<step>`, `modelo`}, `due_at`, `status`, `attempts`, `delivered_at`, `last_error`) — les lignes `sequence:<step>` sont créées à l'opt-in avec `due_at` = inscription + `delay_days`, et exécutées par le cron quotidien remplace tout marqueur dans `lead` ; `funnel_event` (`journey_id`, `event`, `screen`, `lang`, `is_test`, `at`) ne contient aucune donnée personnelle et ne référence jamais `lead`. Écart assumé au SPEC (CAP-8 « mêmes coordonnées que CAP-5 ») : téléphone facultatif pour le guide, décision de JB du 2026-09-07.
 
 ### AD-7 — Rien n'entre dans la base sans vérification serveur ; deux origines, deux contrôles [ADOPTED]
 
@@ -106,9 +106,9 @@ Index unique **partiel** sur `token` (`source = 'diagnostic'`). `lead_delivery` 
 
 ### AD-8 — Un fournisseur par fonction, derrière un adaptateur unique ; e-mail délivrable ; fichiers non publics [ADOPTED]
 
-- **Binds:** noyau, cron, admin, CAP-8, CAP-9, newsletter
+- **Binds:** noyau, cron, admin, CAP-7, CAP-8, CAP-9, séquence de nurturing
 - **Prevents:** un appel Resend ou Cal.com dispersé ; un changement de fournisseur qui devient une refonte ; une clé API dans Git ; un e-mail d'Anne classé en spam ; un PDF « réservé » accessible par URL
-- **Rule:** Chaque service externe (e-mail et newsletter : Resend · RDV : Cal.com · surveillance : Better Stack) est atteint par **un seul module** dans `src/server/adapters/`, sans état, exposant une interface propre au site. Le RDV délègue à Cal.com ce qu'il fait nativement — disponibilités réelles, fuseau du visiteur, verrouillage du créneau, confirmations aux deux parties — ; le noyau n'envoie pas de seconde confirmation. E-mail : envoi depuis `annevialtissot.fr` avec SPF, DKIM et DMARC (`p=quarantine`) dans le DNS Cloudflare, expéditeur `anne@annevialtissot.fr`, `Reply-To` la boîte d'Anne ; la newsletter est une audience Resend synchronisée par le canal `newsletter_subscribe`, le désabonnement est géré par Resend et rapporté en D1 par webhook (AD-7) ; Anne rédige dans l'éditeur Resend. Le PDF du guide **n'est jamais un fichier statique public** : servi par le noyau via un lien signé, lié au lead, expirant à 7 jours, affiché après capture et envoyé par e-mail. Secrets = *secrets* Cloudflare Workers ; `wrangler.jsonc` ne contient que des identifiants publics. Aucune donnée personnelle ne quitte D1 vers un service absent de la politique de confidentialité.
+- **Rule:** Chaque service externe (e-mail et newsletter : Resend · RDV : Cal.com · surveillance : Better Stack) est atteint par **un seul module** dans `src/server/adapters/`, sans état, exposant une interface propre au site. Le RDV délègue à Cal.com ce qu'il fait nativement — disponibilités réelles, fuseau du visiteur, verrouillage du créneau, confirmations aux deux parties — ; le noyau n'envoie pas de seconde confirmation. E-mail : envoi depuis `annevialtissot.fr` avec SPF, DKIM et DMARC (`p=quarantine`) dans le DNS Cloudflare, expéditeur `anne@annevialtissot.fr`, `Reply-To` la boîte d'Anne ; la séquence de nurturing (sortie B de CAP-7) est **envoyée par le site lui-même** : objets `SequenceEmail` (AD-1), lignes `lead_delivery` datées, cron quotidien, envoi transactionnel Resend ; le lien de désabonnement pointe sur une route du noyau (jeton signé) qui écrit `newsletter_unsubscribed_at` et annule les envois restants — aucune audience ni broadcast Resend, aucun contenu rédigé hors du dépôt. Le PDF du guide **n'est jamais un fichier statique public** : servi par le noyau via un lien signé, lié au lead, expirant à 7 jours, affiché après capture et envoyé par e-mail. Secrets = *secrets* Cloudflare Workers ; `wrangler.jsonc` ne contient que des identifiants publics. Aucune donnée personnelle ne quitte D1 vers un service absent de la politique de confidentialité.
 
 ### AD-9 — Anne est titulaire de chaque compte, JB membre, MFA partout [ADOPTED]
 
@@ -156,7 +156,7 @@ Index unique **partiel** sur `token` (`source = 'diagnostic'`). `lead_delivery` 
 
 - **Binds:** CAP-5, CAP-6, CAP-7, CAP-8, CAP-9, légal, cron, e-mails
 - **Prevents:** un opt-in newsletter confondu avec l'acceptation de la politique ; des données hors UE ; des leads conservés sans limite ; une politique de confidentialité sans base légale par traitement
-- **Rule:** Finalités et bases légales par défaut de l'architecture, reprises telles quelles dans la politique de confidentialité (à valider par Anne avant publication) : diagnostic, contact, guide, RDV = mesures précontractuelles à la demande de la personne ; newsletter = consentement (`newsletter_opt_in_at`) ; test synthétique et compteurs = intérêt légitime, sans donnée personnelle. Deux consentements horodatés séparés (AD-6). Données de leads en D1 `eu` ; sous-traitants nommés (Cloudflare, Resend, Cal.com) avec leur localisation. Purge automatique par cron des leads dont `last_activity_at` > 3 ans (`last_activity_at` = création, puis toute action admin sur le lead) ; durée écrite dans la politique. Tout e-mail non strictement transactionnel porte le lien de désabonnement Resend. Pages légales = `PageEditoriale` dans chaque langue (AD-2).
+- **Rule:** Finalités et bases légales par défaut de l'architecture, reprises telles quelles dans la politique de confidentialité (à valider par Anne avant publication) : diagnostic, contact, guide, RDV = mesures précontractuelles à la demande de la personne ; séquence d'e-mails de nurturing = consentement (`newsletter_opt_in_at`) ; test synthétique et compteurs = intérêt légitime, sans donnée personnelle. Deux consentements horodatés séparés (AD-6). Données de leads en D1 `eu` ; sous-traitants nommés (Cloudflare, Resend, Cal.com) avec leur localisation. Purge automatique par cron des leads dont `last_activity_at` > 3 ans (`last_activity_at` = création, puis toute action admin sur le lead) ; durée écrite dans la politique. Tout e-mail non strictement transactionnel (chaque `SequenceEmail`) porte le lien de désabonnement du site. Pages légales = `PageEditoriale` dans chaque langue (AD-2).
 
 ### AD-17 — La charte v1 est la seule source visuelle [ADOPTED]
 
@@ -189,10 +189,10 @@ Index unique **partiel** sur `token` (`source = 'diagnostic'`). `lead_delivery` 
 | @astrojs/sitemap (remplacé si AD-3 l'exige) | 3.7.4 | npm, 2026-09-07 |
 | wrangler | 4.129.1 | npm, 2026-09-07 |
 | Node.js (build, `.nvmrc`) | 24.12.0 | local, 2026-09-07 |
-| Cloudflare Workers, plan Paid | 5 $/mois | web, 2026-09-07 |
+| Cloudflare Workers, plan Paid (cron : test quotidien, séquence, purge) | 5 $/mois | web, 2026-09-07 |
 | Cloudflare D1, `jurisdiction=eu`, Time Travel 30 j | — | web, 2026-09-07 |
 | Cloudflare Access (≤ 50 utilisateurs), Turnstile, Email Routing, Web Analytics, Cron Triggers | inclus | web, 2026-09-07 |
-| Resend (transactionnel 3 000/mois ; Audiences + Broadcasts ≤ 1 000 contacts) | gratuit | web, 2026-09-07 |
+| Resend (transactionnel 3 000/mois, 100/jour — la séquence compte dedans) | gratuit | web, 2026-09-07 |
 | Cal.com (embed + webhook, plan gratuit) | — | web, 2026-09-07 |
 | Better Stack (10 moniteurs, battements inclus) | gratuit | web + relecture fraîcheur, 2026-09-07 |
 | Infomaniak (registrar `.fr` + `.com`) | ~21 €/an | web, 2026-09-07 |
@@ -274,7 +274,7 @@ Website/
 | CAP-4 Diagnostic | `ContenuDiagnostic`, îlot parcours, `server/scoring` | AD-1, AD-2, AD-5 |
 | CAP-5 Capture | `api/diagnostic`, `server/leads` | AD-4, AD-5, AD-6, AD-7, AD-11, AD-16 |
 | CAP-6 Contact direct | `api/contact` | AD-4, AD-6, AD-7 |
-| CAP-7 Activation (sortie A : RDV ; sortie B : guide + newsletter) | `server/scoring`, page résultats, `server/delivery`, audience Resend | AD-5, AD-8, AD-16 |
+| CAP-7 Activation (sortie A : RDV ; sortie B : guide + séquence) | `server/scoring`, page résultats, `SequenceEmail`, `server/delivery`, cron | AD-1, AD-5, AD-8, AD-16 |
 | CAP-8 Guide | `Guide`, `api/guide`, lien signé | AD-1, AD-4, AD-6, AD-8, AD-13 |
 | CAP-9 Rendez-vous | `adapters/booking`, `api/webhook-cal` | AD-4, AD-7, AD-8, AD-11 |
 | CAP-10 Multilingue | `content/*/<id>/<lang>`, `ui/`, `i18n/` | AD-2, AD-3, AD-5 |
@@ -302,15 +302,15 @@ Website/
 
 **Sorti de l'équation.** Notion n'est plus une pièce d'architecture (JB, 2026-09-07) : ni miroir des leads, ni source de contenu. La cible aval est Modelo (AD-14).
 
-**Amendements à porter au SPEC v3** (à faire via `bmad-spec`) : CAP-8 — téléphone facultatif pour le guide (AD-6) · CAP-10 — un objet optionnel non traduit n'est pas publié, pas de repli systématique (AD-2) · CAP-7 — l'outil de newsletter est Resend Broadcasts, l'opt-in vit en D1 (AD-8, AD-16) · Constraints — ajouter la clé d'idempotence et le contrat par source comme critères testables de « 0 lead perdu ».
+**Amendements à porter au SPEC v3** (à faire via `bmad-spec`) : CAP-8 — téléphone facultatif pour le guide (AD-6) · CAP-10 — un objet optionnel non traduit n'est pas publié, pas de repli systématique (AD-2) · CAP-7 — la sortie B est une séquence d'e-mails préparée, envoyée par le site (AD-1, AD-8, AD-16) · Constraints — ajouter la clé d'idempotence et le contrat par source comme critères testables de « 0 lead perdu ».
 
 **Corrections à reporter dans le brief de maquette (`structure-site.md`)** : §5 « UTM ⇒ traceur ⇒ consentement » est faux sous AD-11 ; §10 le bandeau est conditionnel, dessiner les deux variantes ; §8 le formulaire Cal.com porte une question obligatoire d'acceptation de la politique de confidentialité.
 
-**Actions hors architecture, pour Anne** : créer et valider la fiche Google Business Profile · tenir un registre des traitements (la gestion de prospects n'entre pas dans la dérogation des petites structures) · fournir RSAC, carte pro eXp, boîte de réception pour `contact@` · s'engager (ou non) sur le rythme de la newsletter.
+**Actions hors architecture, pour Anne** : créer et valider la fiche Google Business Profile · tenir un registre des traitements (la gestion de prospects n'entre pas dans la dérogation des petites structures) · fournir RSAC, carte pro eXp, boîte de réception pour `contact@` · écrire la séquence d'e-mails (n étapes, contenu distillé du guide — la « séquence 7 emails » de 2025 est une base à revalider).
 
 ## Hypothèses à vérifier au build
 
 - Cal.com plan gratuit : webhooks `BOOKING_CREATED` signés (probable), question de formulaire obligatoire de type case à cocher, fuseau, verrouillage de créneau et confirmations aux deux parties — démontrés par un test réel avant le build de CAP-9 ; sinon le lead RDV est capté par notre formulaire avant redirection.
-- Resend : région de données UE disponible pour le compte (sinon transfert hors UE documenté dans la politique) ; webhooks de désabonnement signés.
+- Resend : région de données UE disponible pour le compte (sinon transfert hors UE documenté dans la politique). Volume : 100 e-mails/jour en gratuit suffisent (séquence + transactionnel à notre échelle) ; sinon plan Pro 20 $/mois.
 - Turnstile invisible et l'intégration Cal.com ne déposent rien de non essentiel — sinon chargement après action (AD-11) et bandeau sur ces pages seulement.
 - `workerEntryPoint` de `@astrojs/cloudflare` 14 accepte un point d'entrée portant `fetch` + `scheduled` sans perte de fonctionnalité Astro (bindings D1, assets).

@@ -346,7 +346,7 @@ Quatre corrections obligatoires par rapport au déployé :
 ## §8 — Contact / Rendez-vous
 
 **Rôle :** le chemin direct, sans diagnostic.
-**Contenu :** deux chemins sur une page — le calendrier de créneaux réels (Cal.com intégré, affiché dans le fuseau du visiteur ; **son formulaire de réservation comporte une case obligatoire d'acceptation de la politique de confidentialité**, à dessiner dans le style du site), et un formulaire court : prénom, nom, email, téléphone (obligatoire), message, **case d'acceptation de la politique de confidentialité** (obligatoire) et, séparée, la case d'inscription à la newsletter (facultative). Rien d'autre (AD-6).
+**Contenu :** deux chemins sur une page — le calendrier de créneaux réels (Cal.com intégré, affiché dans le fuseau du visiteur ; **son formulaire de réservation comporte une case obligatoire d'acceptation de la politique de confidentialité**, à dessiner dans le style du site), et un formulaire court : prénom, nom, email, téléphone (obligatoire), message, **case d'acceptation de la politique de confidentialité** (obligatoire) et, séparée, la case d'inscription à la séquence d'e-mails (facultative). Rien d'autre (AD-6).
 **CTA :** réserver, ou envoyer.
 **Volume :** deux lignes d'introduction.
 **Sur mobile :** le calendrier en priorité, le formulaire en dessous.
@@ -358,7 +358,7 @@ Quatre corrections obligatoires par rapport au déployé :
 
 **Rôle :** la sortie à faible engagement, pour qui ne veut pas du diagnostic.
 **Points d'entrée :** lien discret en bas de la landing Diagnostic (§5), pied de page (§0), page de résultats (§7.2), et destination de campagne autonome.
-**Contenu :** couverture du guide, ce qu'il contient en cinq lignes, le formulaire de capture : prénom, nom, email, acceptation de la politique (obligatoires), **téléphone facultatif** (AD-6, décision 2026-09-07), case newsletter séparée. Le lien de téléchargement est délivré après capture et expire ; le PDF n'a pas d'adresse publique.
+**Contenu :** couverture du guide, ce qu'il contient en cinq lignes, le formulaire de capture : prénom, nom, email, acceptation de la politique (obligatoires), **téléphone facultatif** (AD-6, décision 2026-09-07), case d'inscription à la séquence d'e-mails séparée. Le lien de téléchargement est délivré après capture et expire ; le PDF n'a pas d'adresse publique.
 **CTA :** télécharger.
 **Volume :** cinq lignes.
 **Actif requis :** A-10.
@@ -370,7 +370,7 @@ Quatre corrections obligatoires par rapport au déployé :
 **Rôle :** la conformité, et elle se dessine.
 
 **Mentions légales** — identité d'Anne, statut de mandataire indépendante, **numéro RSAC**, réseau eXp France et référence de la carte professionnelle du réseau, coordonnées, hébergeur, directeur de publication.
-**Politique de confidentialité** — finalité de chaque collecte (diagnostic, contact, guide, newsletter), base légale, durée de conservation, destinataires, droits et modalités d'exercice.
+**Politique de confidentialité** — finalité de chaque collecte (diagnostic, contact, guide, séquence d'e-mails), base légale, durée de conservation, destinataires, droits et modalités d'exercice.
 **Politique cookies** — explique qu'aucun traceur non essentiel n'est déposé : mesure d'audience sans cookie, paramètres de campagne sans dépôt, seule la sauvegarde des réponses du diagnostic (strictement nécessaire) est conservée localement (AD-11).
 
 **Bandeau de consentement — conditionnel, deux variantes à dessiner.** L'architecture vise un site **sans traceur non essentiel** (AD-11) : si rien n'est déposé, il n'y a **pas de bandeau**, seulement la page cookies. Le bandeau ne devient nécessaire que si l'anti-robot (Turnstile) ou l'agenda intégré (Cal.com) déposent quelque chose — vérification au build. La maquette montre donc :
