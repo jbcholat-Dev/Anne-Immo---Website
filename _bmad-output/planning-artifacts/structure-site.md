@@ -1,10 +1,10 @@
 # Structure du site — brief de maquette
 
-**Version 2** (2026-08-29) — corrigée après `bmad-review` (20 findings adversarial + 12 structure, rapport : [review-structure-site.md](review-structure-site.md)).
+**Version 3** (2026-09-07) — alignée sur l'architecture vague 1 ([ARCHITECTURE-SPINE.md](architecture/architecture-anne-website-2026-08-29/ARCHITECTURE-SPINE.md)) : §5 les UTM n'imposent pas de consentement · §8 formulaire et réservation avec acceptation de la politique · §9 téléphone facultatif pour le guide · §10 bandeau conditionnel, deux variantes à dessiner · langues v1 tranchées. Version 2 (2026-08-29) : corrigée après `bmad-review` (20 findings adversarial + 12 structure, rapport : [review-structure-site.md](review-structure-site.md)).
 
 **Statut : input de l'étape ③ (maquette).** Ce document dit **quelles pages, quelles sections, dans quel ordre, avec quel contenu, quels états et quel appel à l'action**. Il prescrit la *composition et la hiérarchie*, pas le style — palette, typographie et composants viennent du design system (`Website/design-system/`, projet claude.ai/design « Anne VIAL-TISSOT — Design System »).
 
-**Amont :** [SPEC.md](../specs/spec-anne-website/SPEC.md) v3 · [quiz-conception-notion.md](../specs/spec-anne-website/quiz-conception-notion.md) · [quiz-contenu.md](../specs/spec-anne-website/quiz-contenu.md)
+**Amont :** [SPEC.md](../specs/spec-anne-website/SPEC.md) v4 · [ARCHITECTURE-SPINE.md](architecture/architecture-anne-website-2026-08-29/ARCHITECTURE-SPINE.md) · [quiz-conception-notion.md](../specs/spec-anne-website/quiz-conception-notion.md) · [quiz-contenu.md](../specs/spec-anne-website/quiz-contenu.md)
 
 **Livrables attendus de la maquette :** un artboard **desktop** et un artboard **mobile** par page. Le mobile n'est pas une réduction du desktop.
 
@@ -272,7 +272,7 @@ Sous les trois blocs, **un lien discret vers le guide** (§9) : « Pas envie de 
 
 ### Contraintes techniques
 - URL propre, stable, partageable — elle vivra dans des emails et des publications.
-- Paramètres de campagne (UTM) acceptés et transmis jusqu'au lead capté. ⚠️ Implique un traceur, donc un consentement — voir §10.
+- Paramètres de campagne (UTM) acceptés et transmis jusqu'au lead capté. Ils voyagent dans l'adresse puis dans l'état de la page jusqu'à la soumission, **sans rien déposer dans le navigateur** : pas de cookie, donc pas de consentement à demander pour ça (AD-11).
 - Aperçu de partage correct (titre, description, image).
 - Traduite comme le reste.
 - Le lien vers l'accueil reste accessible dans la navigation.
@@ -346,7 +346,7 @@ Quatre corrections obligatoires par rapport au déployé :
 ## §8 — Contact / Rendez-vous
 
 **Rôle :** le chemin direct, sans diagnostic.
-**Contenu :** deux chemins sur une page — le calendrier de créneaux réels (affichés dans le fuseau du visiteur), et un formulaire court : nom, email, téléphone, message. Rien d'autre.
+**Contenu :** deux chemins sur une page — le calendrier de créneaux réels (Cal.com intégré, affiché dans le fuseau du visiteur ; **son formulaire de réservation comporte une case obligatoire d'acceptation de la politique de confidentialité**, à dessiner dans le style du site), et un formulaire court : prénom, nom, email, téléphone (obligatoire), message, **case d'acceptation de la politique de confidentialité** (obligatoire) et, séparée, la case d'inscription à la newsletter (facultative). Rien d'autre (AD-6).
 **CTA :** réserver, ou envoyer.
 **Volume :** deux lignes d'introduction.
 **Sur mobile :** le calendrier en priorité, le formulaire en dessous.
@@ -358,7 +358,7 @@ Quatre corrections obligatoires par rapport au déployé :
 
 **Rôle :** la sortie à faible engagement, pour qui ne veut pas du diagnostic.
 **Points d'entrée :** lien discret en bas de la landing Diagnostic (§5), pied de page (§0), page de résultats (§7.2), et destination de campagne autonome.
-**Contenu :** couverture du guide, ce qu'il contient en cinq lignes, le formulaire de capture. Mêmes règles RGPD que le gate.
+**Contenu :** couverture du guide, ce qu'il contient en cinq lignes, le formulaire de capture : prénom, nom, email, acceptation de la politique (obligatoires), **téléphone facultatif** (AD-6, décision 2026-09-07), case newsletter séparée. Le lien de téléchargement est délivré après capture et expire ; le PDF n'a pas d'adresse publique.
 **CTA :** télécharger.
 **Volume :** cinq lignes.
 **Actif requis :** A-10.
@@ -371,13 +371,11 @@ Quatre corrections obligatoires par rapport au déployé :
 
 **Mentions légales** — identité d'Anne, statut de mandataire indépendante, **numéro RSAC**, réseau eXp France et référence de la carte professionnelle du réseau, coordonnées, hébergeur, directeur de publication.
 **Politique de confidentialité** — finalité de chaque collecte (diagnostic, contact, guide, newsletter), base légale, durée de conservation, destinataires, droits et modalités d'exercice.
-**Politique cookies** — la collecte d'UTM et toute mesure d'audience.
+**Politique cookies** — explique qu'aucun traceur non essentiel n'est déposé : mesure d'audience sans cookie, paramètres de campagne sans dépôt, seule la sauvegarde des réponses du diagnostic (strictement nécessaire) est conservée localement (AD-11).
 
-**Bandeau de consentement — à dessiner, ce n'est pas un détail technique :**
-- Apparition au premier chargement, non bloquante visuellement mais explicite.
-- **Refus possible en un clic**, au même niveau que l'acceptation.
-- Conséquence du refus sur le suivi de campagne, assumée.
-- Accès permanent depuis le pied de page pour revenir sur son choix.
+**Bandeau de consentement — conditionnel, deux variantes à dessiner.** L'architecture vise un site **sans traceur non essentiel** (AD-11) : si rien n'est déposé, il n'y a **pas de bandeau**, seulement la page cookies. Le bandeau ne devient nécessaire que si l'anti-robot (Turnstile) ou l'agenda intégré (Cal.com) déposent quelque chose — vérification au build. La maquette montre donc :
+- **Variante A, sans bandeau** (cible) : le pied de page porte le lien « Cookies » vers la page explicative. Rien d'autre.
+- **Variante B, avec bandeau** (repli, uniquement sur les pages concernées) : apparition au premier chargement, non bloquante visuellement mais explicite ; **refus possible en un clic**, au même niveau que l'acceptation ; conséquence du refus assumée (l'agenda se charge au clic) ; accès permanent depuis le pied de page pour revenir sur son choix.
 
 **Volume :** réglementaire.
 
@@ -473,7 +471,7 @@ Une maquette qui ne montre que le cas nominal ment sur le travail restant. Trois
 - **Ouverture de l'accueil : photo fixe ou vidéo drone** (§1.1). À départager sur maquette, critère écrit. Si la photo gagne, la vidéo passe en tête du carrousel §1.3 — CAP-1 l'exige quelque part sur la page.
 - Le nom de la méthode : « Système 360™ » ou « Méthode 360° ». La maquette utilise **Système 360™** ; un changement est un remplacement de chaîne.
 - Le positionnement (Système 360 vs « Expert Frontaliers »).
-- Les langues effectivement livrées en v1 — la maquette prévoit le sélecteur quel que soit le nombre.
+- ~~Les langues effectivement livrées en v1~~ — **tranché le 2026-09-07 : FR + EN**. La maquette prévoit le sélecteur quel que soit le nombre ; une story non traduite n'apparaît pas dans l'index anglais (AD-2) — l'état « index anglais plus court que le français » est normal, pas un bug.
 - Le barème de la question sur la performance commerciale (visites × offres) — sans effet sur la maquette.
 - La réconciliation des deux sources du quiz — sans effet sur les gabarits.
 - La validation du concept de stories par Anne elle-même.

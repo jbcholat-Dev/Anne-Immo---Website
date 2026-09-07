@@ -1,0 +1,206 @@
+<title>Le contrat du site, en clair</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap">
+<style>
+  :root {
+    --ecru: #F7F2EA; --brun: #26201A; --klein: #002FA7; --terra: #C4623E; --terra-deep: #A34E30; --brume: #E7EDF9;
+    --bg: var(--ecru); --fg: var(--brun); --fg-soft: #5C5045; --line: #D9CFC0; --card: #FBF8F3; --card-2: var(--brume);
+    --accent: var(--klein); --accent-2: var(--terra); --accent-2-text: var(--terra-deep); --ask: #FBEFE8;
+    --display: 'Italiana', Georgia, serif; --text: 'DM Sans', system-ui, -apple-system, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1B1713; --fg: var(--ecru); --fg-soft: #C9BFB2; --line: #3E362E; --card: #26201A; --card-2: #22283A;
+      --accent: #8FA8F0; --accent-2: #E08A66; --accent-2-text: #E08A66; --ask: #3A2A22;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1B1713; --fg: var(--ecru); --fg-soft: #C9BFB2; --line: #3E362E; --card: #26201A; --card-2: #22283A;
+    --accent: #8FA8F0; --accent-2: #E08A66; --accent-2-text: #E08A66; --ask: #3A2A22;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--text); font-size: 17px; line-height: 1.55; }
+  main { max-width: 760px; margin: 0 auto; padding: 56px 24px 96px; }
+  h1, h2 { font-family: var(--display); font-weight: 400; letter-spacing: 0.01em; text-wrap: balance; margin: 0; }
+  h1 { font-size: 52px; line-height: 1.05; }
+  h2 { font-size: 34px; line-height: 1.15; margin: 72px 0 10px; }
+  h3 { font-family: var(--text); font-weight: 600; font-size: 17px; margin: 0 0 6px; }
+  p { margin: 0 0 16px; max-width: 65ch; }
+  .eyebrow { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); font-weight: 500; margin-bottom: 14px; }
+  .lede { font-size: 21px; line-height: 1.45; max-width: 36ch; margin: 22px 0 0; }
+  .sig { width: 120px; height: 14px; margin: 26px 0 0; display: block; }
+  .meta { color: var(--fg-soft); font-size: 14px; margin-top: 18px; max-width: 65ch; }
+  .horizon { border: 0; border-top: 1px solid var(--line); margin: 48px 0; }
+  a { color: var(--accent); }
+  strong { font-weight: 600; }
+  .key { background: var(--card-2); border-radius: 12px; padding: 20px 22px; margin: 22px 0; }
+  .key p:last-child { margin-bottom: 0; }
+  .nums { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 22px 0 8px; }
+  .nums > div { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 14px 12px; }
+  .nums b { display: block; font-family: var(--display); font-size: 36px; line-height: 1; color: var(--accent); margin-bottom: 6px; font-weight: 400; font-variant-numeric: tabular-nums; }
+  .nums span { font-size: 14px; line-height: 1.35; color: var(--fg-soft); display: block; }
+  @media (max-width: 640px) { .nums { grid-template-columns: 1fr 1fr; } h1 { font-size: 42px; } }
+  .cap { border-top: 1px solid var(--line); padding: 22px 0; }
+  .cap:last-of-type { border-bottom: 1px solid var(--line); }
+  .cap .id { font-size: 12px; letter-spacing: 0.1em; color: var(--fg-soft); text-transform: uppercase; margin-bottom: 4px; }
+  .cap p { margin-bottom: 8px; }
+  .cap .ok { color: var(--fg-soft); }
+  .cap .ok b { color: var(--fg); font-weight: 600; }
+  .ask { background: var(--ask); border-left: 3px solid var(--accent-2); border-radius: 0 10px 10px 0; padding: 10px 14px; margin: 10px 0 0; font-size: 15px; max-width: 65ch; }
+  .ask::before { content: "À toi de dire · "; color: var(--accent-2-text); font-weight: 600; letter-spacing: 0.02em; }
+  ul { padding-left: 20px; margin: 0 0 16px; max-width: 65ch; }
+  li { margin-bottom: 8px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  @media (max-width: 640px) { .two { grid-template-columns: 1fr; } }
+  .who { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-soft); margin-bottom: 8px; }
+  ol.check { padding-left: 24px; max-width: 65ch; }
+  ol.check li { margin-bottom: 12px; }
+  .footer { color: var(--fg-soft); font-size: 14px; margin-top: 64px; max-width: 65ch; }
+  code { font-size: 0.92em; }
+</style>
+
+<main>
+  <div class="eyebrow">annevialtissot.fr · SPEC v4 · 7 septembre 2026</div>
+  <h1>Le contrat du site, en clair</h1>
+  <p class="lede">Ce que le site doit faire, ce qu'il ne fera pas, et comment on saura qu'il marche — pour vérifier que c'est bien ce qu'on veut.</p>
+  <svg class="sig" viewBox="0 0 120 14" aria-hidden="true"><path d="M2 8 C 20 2, 35 12, 55 7 S 90 2, 118 8" fill="none" stroke="#C4623E" stroke-width="1.6" stroke-linecap="round"/></svg>
+  <p class="meta">Traduction fidèle de <code>SPEC.md</code> v4 (10 capacités, 9 garde-fous, 4 non-objectifs). Les encadrés « À toi de dire » signalent les endroits où le contrat a pris une position par défaut que tu n'as pas explicitement validée — c'est là que ton regard compte.</p>
+
+  <h2>Pourquoi ce site</h2>
+  <p>Anne est mandataire indépendante chez eXp France. Les agences traditionnelles attaquent ce modèle sur un seul terrain : la légitimité. Le site doit donc <strong>installer sa crédibilité</strong> — preuve sociale, visuels de qualité — et <strong>ouvrir un canal de prospects qualifiés</strong> qui ne dépende pas de son portefeuille de biens (2 ou 3 à la fois). Son modèle tient avec 5 à 6 ventes par an : l'enjeu est la qualité des prospects, jamais leur volume.</p>
+
+  <h2>Comment on saura que ça marche</h2>
+  <p>Sur les six premiers mois après la mise en ligne :</p>
+  <div class="nums">
+    <div><b>20</b><span>diagnostics terminés, avec des coordonnées valides</span></div>
+    <div><b>40 %</b><span>des visiteurs qui commencent le diagnostic vont jusqu'au bout</span></div>
+    <div><b>8</b><span>rendez-vous pris via le site</span></div>
+    <div><b>0</b><span>prospect perdu : chaque soumission est enregistrée et Anne prévenue</span></div>
+  </div>
+  <div class="ask">Ces quatre chiffres ont été <strong>déduits</strong> du modèle économique (5-6 ventes/an), pas fixés par toi ou Anne. Ils servent à rendre le succès mesurable. Sont-ils crédibles ? Le 40 % surtout : c'est un bon taux pour 17 écrans.</div>
+
+  <h2>Ce que le site fait — dix capacités</h2>
+  <p>Chacune dit ce que le visiteur obtient, puis à quoi on reconnaît que c'est réussi.</p>
+
+  <div class="cap">
+    <div class="id">CAP-1</div><h3>Des visuels qui sont ceux d'Anne</h3>
+    <p>Dès la page d'accueil, le visiteur voit de vraies images : vidéo drone, photos de biens qu'Anne a réellement traités. Jamais de photo de banque, nulle part.</p>
+    <p class="ok"><b>Réussi quand :</b> l'accueil montre au moins 1 séquence vidéo et 6 photos issues de biens réels.</p>
+    <div class="ask">« 1 vidéo, 6 photos » sont des seuils posés par défaut. Anne peut-elle les fournir ? Faut-il les ajuster ?</div>
+  </div>
+  <div class="cap">
+    <div class="id">CAP-2</div><h3>Une preuve qui ne vient pas d'Anne</h3>
+    <p>Des avis Immodvisor (note, extraits, lien vers la fiche vérifiable) et des témoignages d'<strong>acheteurs qui n'ont pas acheté avec elle</strong> — des gens qu'elle a accompagnés sans qu'ils deviennent clients, ce qui est plus crédible qu'un client satisfait.</p>
+    <p class="ok"><b>Réussi quand :</b> au moins 3 témoignages sont publiés, chacun avec un prénom et un contexte.</p>
+    <div class="ask">Le concept « témoignage d'acheteur non converti » : Anne a-t-elle ces personnes, et est-elle à l'aise pour leur demander ?</div>
+  </div>
+  <div class="cap">
+    <div class="id">CAP-3</div><h3>Des histoires de ventes, pas une vitrine</h3>
+    <p>Aucune liste de biens à vendre (2-3 biens, ça ferait petit). À la place, des <strong>stories de biens vendus</strong> : la photo, le récit d'Anne, le mot de l'acheteur.</p>
+    <p class="ok"><b>Réussi quand :</b> 3 stories sont publiées au lancement, chacune avec les trois éléments.</p>
+    <div class="ask">Cette idée est la tienne (29 août). Anne ne l'a pas encore validée elle-même. C'est le point le plus important à lui soumettre.</div>
+  </div>
+  <div class="cap">
+    <div class="id">CAP-4</div><h3>Le Diagnostic 360°</h3>
+    <p>Un questionnaire de 17 écrans (15 questions affichées), strictement linéaire, qui note la préparation du vendeur sur 100 points en trois dimensions : préparation à la vente, visibilité et attractivité, efficacité commerciale. Le contenu est celui du ScoreApp actuel, récupéré et possédé — mais reconstruit dans le site, sans dépendre de ScoreApp.</p>
+    <p class="ok"><b>Réussi quand :</b> le quiz reproduit fidèlement le contenu documenté (barème, seuils, 9 textes de feedback), avec retour arrière possible et scores affichés en brut et en pourcentage.</p>
+  </div>
+  <div class="cap">
+    <div class="id">CAP-5</div><h3>Le résultat contre les coordonnées</h3>
+    <p>Un bouton « Diagnostic » visible en accueil. Les résultats complets s'obtiennent après avoir donné prénom, nom, email, <strong>téléphone</strong> et accepté la politique de confidentialité. La page de résultats n'est pas accessible par une adresse devinable ; le formulaire est protégé des robots sans que le visiteur le voie ; si l'envoi échoue, les réponses ne sont pas perdues.</p>
+    <p class="ok"><b>Réussi quand :</b> tout ce qui précède est vérifiable, et un renvoi ne crée jamais deux fois le même prospect.</p>
+    <div class="ask">Le téléphone obligatoire ici est ton choix (le résultat vaut un échange). Ça coûtera quelques abandons au moment du formulaire — assumé ?</div>
+  </div>
+  <div class="cap">
+    <div class="id">CAP-6</div><h3>Le contact direct</h3>
+    <p>Pour qui est déjà prêt à parler à Anne sans passer par le diagnostic : un formulaire court (prénom, nom, email, téléphone, message) atteignable depuis n'importe quelle page.</p>
+    <p class="ok"><b>Réussi quand :</b> ce chemin existe partout, et chaque envoi est enregistré côté site.</p>
+  </div>
+  <div class="cap">
+    <div class="id">CAP-7</div><h3>La suite, selon le profil</h3>
+    <p>Après le diagnostic, deux sorties. <strong>Sortie A</strong> — score 71-100 <em>et</em> envie d'être accompagné : « Réservez 30 minutes avec Anne ». <strong>Sortie B</strong> — tous les autres : le guide à télécharger, puis la newsletter hebdomadaire. Deux règles d'arbitrage : la réponse à « quelle offre vous intéresse » choisit l'offre présentée ; et quelqu'un qui déclare vouloir « minimiser les frais d'agence » va en sortie B quel que soit son score — on ne propose pas un rendez-vous à qui refuse la valeur d'un accompagnement.</p>
+    <p class="ok"><b>Réussi quand :</b> la page de résultats oriente selon ces règles, et la newsletter part via Resend avec un désabonnement qui fonctionne.</p>
+    <div class="ask">« Newsletter hebdomadaire » est écrit dans le contrat et tu l'as confirmée pour la v1. C'est un contenu à produire <strong>chaque semaine</strong>, par Anne. Est-ce réaliste, ou faut-il écrire « régulière » ?</div>
+  </div>
+  <div class="cap">
+    <div class="id">CAP-8</div><h3>Le guide à télécharger</h3>
+    <p>Depuis les résultats, un guide adapté au profil ; hors diagnostic, le guide « Les 10 erreurs fatales », contre prénom, nom, email — <strong>téléphone facultatif</strong> (sortie à faible engagement). Le PDF n'est jamais accessible par une adresse publique.</p>
+    <p class="ok"><b>Réussi quand :</b> le guide est téléchargeable des deux endroits, rebrandé à la charte.</p>
+    <div class="ask">Le guide PDF rebrandé est sur le chemin critique : sans lui, deux capacités (7 et 8) ne se livrent pas. Qui le refait, et quand ?</div>
+  </div>
+  <div class="cap">
+    <div class="id">CAP-9</div><h3>Le rendez-vous sans échange d'emails</h3>
+    <p>Un calendrier de disponibilités réelles (Cal.com, intégré), dans le fuseau du visiteur, avec confirmation aux deux et sans double réservation. La réservation comporte l'acceptation de la politique de confidentialité et est enregistrée côté site.</p>
+    <p class="ok"><b>Réussi quand :</b> un rendez-vous se prend depuis les résultats et depuis la page contact, de bout en bout.</p>
+  </div>
+  <div class="cap">
+    <div class="id">CAP-10</div><h3>Multilingue, pour de vrai</h3>
+    <p>La clientèle internationale du Léman lit le site dans sa langue — c'est un positionnement d'Anne, pas une commodité. Aucun texte codé en dur ; une adresse par langue ; et la règle stricte : <strong>une langue est complète ou n'existe pas</strong> — pas de page anglaise où traîne du français. Une story non traduite n'apparaît tout simplement pas dans l'index anglais.</p>
+    <p class="ok"><b>Réussi quand :</b> français et anglais sont livrés complets (interface, pages, diagnostic, emails, légal) ; espagnol et portugais s'ajoutent plus tard sans rien changer.</p>
+    <div class="ask">FR + EN au lancement : qui traduit l'anglais (8 à 10 000 mots) — Anne, ou un professionnel (800 à 1 200 €) relu par Anne ?</div>
+  </div>
+
+  <h2>Les garde-fous</h2>
+  <p>Des règles qui éliminent des options. Si l'une te semble fausse, c'est maintenant qu'il faut le dire.</p>
+  <ul>
+    <li><strong>Le diagnostic est reconstruit dans le site</strong>, ScoreApp n'est plus qu'une référence de vérification.</li>
+    <li><strong>Réalisation interne poussée au maximum</strong> avant tout prestataire (devis reçus : 7-10 k€). Claude Design pour la maquette ; Framer écarté ; le site est construit en Astro sur Cloudflare.</li>
+    <li><strong>La charte v1 est obligatoire</strong> pour tout visuel — palette, typographie Italiana, règles du logo.</li>
+    <li><strong>Pas de vitrine de biens</strong>, remplacée par les stories.</li>
+    <li><strong>RGPD</strong> : base légale par traitement, mentions légales, politique de confidentialité, opt-in newsletter séparé, désabonnement dans chaque email non transactionnel, données stockées en Europe.</li>
+    <li><strong>Chaque prospect est enregistré côté site</strong> avant toute autre chose ; un email à Anne n'est pas un stockage ; un renvoi ne crée jamais un doublon.</li>
+    <li><strong>Modelo</strong>, le CRM imposé par eXp : en v1, l'email de notification est formaté prêt à recopier dans la fiche contact, et une page admin permet de cocher « recopié ». L'import par fichier est écarté (il n'alimente pas la base contacts), l'API est hors de portée (clé eXp, 25 € HT/mois, adresse IP fixe).</li>
+    <li><strong>Mobile d'abord, rapide, local</strong> : l'accueil est utile en moins de 3 secondes sur mobile malgré la vidéo ; le référencement vise le Chablais et le bassin lémanique.</li>
+    <li><strong>Anne produit le contenu</strong> : drone, photos, témoignages, récits, guide rebrandé — c'est sur le chemin critique autant que le code.</li>
+  </ul>
+
+  <h2>Ce qu'on ne fait pas</h2>
+  <ul>
+    <li>Pas de galerie ni de vitrine de biens.</li>
+    <li>Pas d'estimation de prix sur le site — c'est le chantier Estimateur, à part. Le « diagnostic » parle de préparation, jamais de prix.</li>
+    <li>Pas d'intégration API avec Modelo.</li>
+    <li>Pas d'arbitrage interne-vs-prestataire maintenant — après la maquette validée.</li>
+  </ul>
+
+  <h2>Ce que le contrat suppose sans l'avoir vérifié</h2>
+  <ul>
+    <li>Les chiffres repris du diagnostic (« 9 vendeurs sur 10 », « +30 % de concrétisation ») ne sont pas sourcés — <strong>à revalider avant mise en ligne</strong>.</li>
+    <li>Les quatre cibles marketing (primo-accédants, investisseurs, cadres sup, seniors 60+) s'appliquent à tout le site, faute d'autre segmentation.</li>
+    <li>Le contenu du quiz est complet — aucune mécanique cachée à retrouver.</li>
+  </ul>
+
+  <h2>Ce qui reste à trancher</h2>
+  <div class="two">
+    <div>
+      <div class="who">Bloquant avant le build</div>
+      <ul>
+        <li><strong>Barème de la question 10</strong> (visites × offres) : le ScoreApp en ligne pose deux questions (12 combinaisons), la conception en documente une (5 options). Sans décision, la version « une question » s'applique.</li>
+        <li><strong>Interne ou prestataire</strong> — après la maquette validée. L'infrastructure coûte 80 €/an : la question, c'est ton temps.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="who">Différé, non bloquant</div>
+      <ul>
+        <li>Où placer le formulaire de contact dans le parcours (maquette).</li>
+        <li>« Système 360™ » ou « Méthode 360° ».</li>
+        <li>Positionnement : 360 ou « Expert Frontaliers ».</li>
+        <li>Validation du concept de stories par Anne.</li>
+      </ul>
+    </div>
+  </div>
+
+  <hr class="horizon">
+  <h2>Ce que je te demande de vérifier</h2>
+  <p>Huit questions. Une réponse d'une ligne chacune suffit ; ce qui change devient un amendement du contrat.</p>
+  <ol class="check">
+    <li>Les quatre chiffres de succès (20 diagnostics, 40 %, 8 RDV, 0 perdu) : crédibles ?</li>
+    <li>Les seuils de contenu (1 vidéo, 6 photos, 3 témoignages, 3 stories) : tenables par Anne avant le lancement ?</li>
+    <li>Les stories de biens vendus : Anne est-elle d'accord avec le principe ?</li>
+    <li>Le téléphone obligatoire pour le diagnostic et le contact, facultatif pour le guide : confirmé ?</li>
+    <li>La newsletter <em>hebdomadaire</em> : réaliste, ou « régulière » ?</li>
+    <li>Qui traduit l'anglais, et quand ?</li>
+    <li>Qui refait le guide PDF à la charte, et quand ?</li>
+    <li>Y a-t-il quelque chose que tu attendais du site et qui n'est dans aucune des dix capacités ?</li>
+  </ol>
+
+  <p class="footer">Source : <code>_bmad-output/specs/spec-anne-website/SPEC.md</code> v4 et ses compagnons (contenu du diagnostic, capture du ScoreApp, contexte existant, design system, spine d'architecture). Rien ici ne va au-delà de ce qu'ils disent.</p>
+</main>
