@@ -14,3 +14,7 @@ contenu-anne/videos/*
 contenu-anne/**/*.mp4
 contenu-anne/**/*.mov
 contenu-anne/**/*.m4v
+
+# coffre Obsidian d'Anne (contenu-anne ouvert comme vault)
+.obsidian/
+contenu-anne/.obsidian/

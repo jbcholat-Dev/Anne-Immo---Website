@@ -2,11 +2,13 @@
 
 Ce dossier est **ta boîte de dépôt**. Tu y poses tout ce que le site a besoin de toi : stories de ventes, photos, vidéos, témoignages, textes. JB et Claude transforment ensuite ce que tu déposes en pages du site — tu n'as rien à mettre en forme.
 
+**Commence par `_gabarits/`** : un modèle par type de contenu, à copier et remplir. Stratégie complète : `_bmad-output/planning-artifacts/strategie-contenu.md`.
+
 ## Où poser quoi
 
 | Dossier | Ce qu'on y met | Détail |
 |---|---|---|
-| `stories/` | Une story par bien vendu | voir `stories/README.md` — un sous-dossier par bien |
+| `stories/` | Une story par bien vendu | un sous-dossier par bien, `fr.md` depuis `_gabarits/story.md` ; tes brouillons dans `stories/_brouillons/` |
 | `photos/` | Photos de biens vendus, photos de toi en situation | originaux, non recadrés, non compressés |
 | `videos/` | Vidéo drone d'ouverture, autres séquences | ⚠️ **pas dans Git** — voir `videos/README.md` |
 | `temoignages/` | Témoignages d'acheteurs **non clients** (3 minimum) | un fichier texte par personne |
