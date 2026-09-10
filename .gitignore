@@ -18,3 +18,9 @@ contenu-anne/**/*.m4v
 # coffre Obsidian d'Anne (contenu-anne ouvert comme vault)
 .obsidian/
 contenu-anne/.obsidian/
+
+# Configuration locale Claude Code (ne pas commiter)
+.agents/
+.claude/skills/grill-me/
+.claude/skills/grill-with-docs/
+skills-lock.json

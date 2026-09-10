@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anne Vial-Tissot</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap">
+
+    <style>
+        :root {
+            --color-primary: #1F3A5C;
+            --color-accent: #C85A3A;
+            --color-bg: #F9F7F4;
+            --color-bg-alt: #FFFFFF;
+            --color-text: #4B5563;
+            --color-text-light: #7A8191;
+            --color-border: #E8E5E0;
+
+            --font-display: 'Lora', serif;
+            --font-body: 'Inter', sans-serif;
+
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 1.5rem;
+            --spacing-lg: 2rem;
+            --spacing-xl: 3rem;
+            --spacing-2xl: 4rem;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --color-bg: #1A1F28;
+                --color-bg-alt: #252D38;
+                --color-text: #E8E8E8;
+                --color-text-light: #B8BCC4;
+                --color-border: #3A414D;
+            }
+        }
+
+        :root[data-theme="dark"] {
+            --color-bg: #1A1F28;
+            --color-bg-alt: #252D38;
+            --color-text: #E8E8E8;
+            --color-text-light: #B8BCC4;
+            --color-border: #3A414D;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            font-family: var(--font-body);
+            color: var(--color-text);
+            background: var(--color-bg);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 600px;
+            padding: var(--spacing-lg);
+        }
+
+        .card {
+            background: var(--color-bg-alt);
+            padding: var(--spacing-xl);
+            border-radius: 12px;
+            border: 1px solid var(--color-border);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .name {
+            font-family: var(--font-display);
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .intro-text {
+            font-size: 1rem;
+            line-height: 1.8;
+            color: var(--color-text);
+            margin-bottom: var(--spacing-lg);
+            max-width: 70ch;
+        }
+
+        .languages {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+            flex-wrap: wrap;
+        }
+
+        .language {
+            font-size: 0.875rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+        }
+
+        .cta-link {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-md) var(--spacing-lg);
+            background: var(--color-primary);
+            color: #FFFFFF;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-family: var(--font-body);
+        }
+
+        .cta-link:hover {
+            background: #2D5A7B;
+            transform: translateX(4px);
+        }
+
+        .arrow {
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--spacing-md);
+            }
+
+            .card {
+                padding: var(--spacing-lg);
+            }
+
+            .name {
+                font-size: 1.5rem;
+            }
+
+            .intro-text {
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="name">Anne</div>
+
+            <p class="intro-text">
+                Dix ans de finance d'entreprise — Danone à Évian, Bel au Brésil — avant l'immobilier. Chaque vente est menée comme un projet : un dossier complet, un calendrier tenu, des points réguliers. Sur le Chablais et le bassin lémanique, au service d'une clientèle locale et internationale.
+            </p>
+
+            <div class="languages">
+                <span class="language">FRANÇAIS</span>
+                <span class="language">ENGLISH</span>
+                <span class="language">ESPAÑOL</span>
+                <span class="language">PORTUGUÊS</span>
+            </div>
+
+            <a href="#" class="cta-link">
+                Qui suis-je
+                <span class="arrow">→</span>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
