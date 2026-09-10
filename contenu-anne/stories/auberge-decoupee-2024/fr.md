@@ -1,3 +1,22 @@
+---
+commune:
+type_bien: Propriété bâtie et terrain (ancienne auberge, à diviser)
+annee_vente: 2024
+delai_vente:
+particularite: >
+  Propriété de 6 000 m² avec trois bâtiments, restée sans repreneur un an :
+  aucun acheteur capable d'absorber l'ensemble en bloc.
+photo_principale:
+photos: []
+temoignage:
+  prenom:
+  contexte:
+  citation:
+  portrait:
+statut: brouillon
+autorisations: false
+---
+
 # De l'impasse à l'opportunité : transformer un bien invendable en projet stratégique
 
 ## Le défi
@@ -31,11 +50,3 @@ Au lieu de chercher un acquéreur unique, j'ai structuré le projet pour les **m
 Là où il y avait une impasse immobilière, il existe maintenant une **cascade de transactions**. Mes clients ont obtenu la meilleure valorisation possible de leur propriété, le bien a trouvé ses acheteurs finaux selon des logiques cohérentes, et un projet qui aurait pu rester invendu pendant des années s'est transformé en moteur économique.
 
 **C'est ça, la vraie expertise immobilière** : ne pas chercher l'acheteur, mais créer les conditions stratégiques pour qu'il existe.
-
----
-
-### Informations clés
-- **Année** : 2024
-- **Bien** : 6 000 m² avec 3 bâtiments (ancienne auberge)
-- **Approche** : Audit stratégique + découpage géométrique + repositionnement investisseur
-- **Résultat** : Valorisation maximisée, structure d'investissement créée, transactions multiples finalisées

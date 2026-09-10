@@ -1,6 +1,10 @@
-# Ma méthode : Bon sens, rigueur et pragmatisme
-
-Je ne réinvente pas les choses. Je fais simplement ce qui doit être fait — complètement.
+---
+titre: 'Ma méthode : Bon sens, rigueur et pragmatisme'
+sous_titre: >
+  Je ne réinvente pas les choses. Je fais simplement ce qui doit être fait —
+  complètement.
+statut: brouillon
+---
 
 ## Les trois piliers
 
@@ -9,8 +13,6 @@ Je ne réinvente pas les choses. Je fais simplement ce qui doit être fait — c
 **Rigueur :** Appliquer la même discipline qu'en finance à chaque dossier immobilier. Préparer, anticiper, documenter. Pas d'improvisation, pas de surprise à la dernière minute.
 
 **Pragmatisme :** Les solutions théoriques, c'est bien. Les solutions qui marchent vraiment, c'est mieux. Je fais ce qui fonctionne dans la réalité — et j'adapte selon le contexte.
-
----
 
 ## Concrètement, cela se traduit par :
 
@@ -33,8 +35,6 @@ Parce que j'ai vu les pièges récurrents, je les vois venir. Je les règle avan
 
 ### 4. Accompagnement du début à la fin
 Un interlocuteur unique qui connaît toute la situation. Pas juste des infos détachées, mais une vraie présence.
-
----
 
 ## Mon engagement
 

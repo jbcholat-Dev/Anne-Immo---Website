@@ -1,6 +1,25 @@
+---
+commune:
+type_bien: Appartement (années 70)
+annee_vente: 2024
+delai_vente:
+particularite: >
+  Vente et achat d'un nouveau logement synchronisés pour se conclure le même
+  jour, deux notaires, deux calendriers.
+photo_principale:
+photos: []
+temoignage:
+  prenom:
+  contexte:
+  citation:
+  portrait:
+statut: brouillon
+autorisations: false
+---
+
 # Vente en cascade : l'expertise qui synchronise deux projets de vie
 
-L'appartement de Madame Valsic restait sans offre depuis plusieurs mois. Elle sentait qu'il manquait quelque chose.
+L'appartement de ma cliente restait sans offre depuis plusieurs mois. Elle sentait qu'il manquait quelque chose.
 
 Quand elle m'a contactée, j'ai réalisé un **audit complet** : quel était le positionnement du bien ? Quels outils étaient utilisés ? Comment était-il présenté ?
 
@@ -20,7 +39,7 @@ C'était une refonte complète. Pas juste du cosmétique — une vraie stratégi
 
 ## Le vrai défi : la vente en cascade
 
-Madame Valsic voulait aussi changer de vie. Un nouvel appartement, critères précis. Pas de location intermédiaire, pas de vide entre la vente et l'achat.
+Ma cliente voulait aussi changer de vie. Un nouvel appartement, critères précis. Pas de location intermédiaire, pas de vide entre la vente et l'achat.
 
 **Une vente en cascade**. Il fallait orchestrer deux transactions en parallèle : vendre tout en achetant ailleurs. Deux notaires, deux calendriers, une synchronisation critique.
 
@@ -30,14 +49,6 @@ Ensuite, la vraie orchestration : faire en sorte que vente et achat se ferment l
 
 ## Le résultat
 
-Madame Valsic a vendu ET acheté son appartement **le même jour**.
+Ma cliente a vendu ET acheté son appartement **le même jour**.
 
 De plusieurs mois sans offre à une vente en cascade réussie. C'est une question de stratégie commerciale, puis d'orchestration complexe.
-
----
-
-### Informations clés
-- **Année** : 2024
-- **Bien** : Appartement (années 70)
-- **Approche** : Audit commercial + stratégie de mise en valeur + orchestration vente en cascade
-- **Résultat** : De plusieurs mois de statu quo à vente + achat le même jour
