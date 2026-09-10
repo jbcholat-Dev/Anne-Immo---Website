@@ -1,41 +1,42 @@
 # 📋 Suivi des Stories - Anne Immo
 
+> Ce tableau est **le** point de vue d'ensemble sur les 22 stories prévues — les fichiers individuels (`<slug>/fr.md`) ne montrent que l'état d'une story à la fois. Deux statuts, à ne pas confondre : **rédigée** (Anne a écrit le texte) et **publiable** (commune, photo, témoignage de l'acheteur et autorisation écrite réunis — champ `statut`/`autorisations` du fichier).
+
 ## État du projet
-- **Total stories** : 22 à rédiger
-- **Stories complétées** : 2/22
-- **En cours** : -
-- **À faire** : 20
+
+- **Total stories prévues** : 22
+- **Rédigées** : 3/22
+- **Publiables côté site** : 0/22 (il manque au moins la commune, le témoignage et la photo sur chacune)
+- **À rédiger** : 19
 
 ---
 
-## ✅ STORIES COMPLÉTÉES
+## ✅ STORIES RÉDIGÉES (3)
 
-### 1. PEILLEX RHL (2024) ✓
-- **Fichier** : `auberge-decoupee-2024/fr.md` (renommé le 2026-09-10, sans nom de client — voir note ci-dessous)
-- **Titre** : "De l'impasse à l'opportunité : transformer un bien invendable en projet stratégique"
-- **Format** : Mix Narrative + Professionnelle
-- **Longueur** : ~550 mots
-- **Statut** : Validé par Anne, mais `brouillon` côté site — il manque la commune, le témoignage de l'acheteur, une photo et l'autorisation écrite
-- **Notes** : Exemple de bien invendable → projet stratégique via découpage géométrique
+### 1. PEILLEX RHL (2024)
+- **Fichier** : `auberge-decoupee-2024/fr.md`
+- **Titre** : « De l'impasse à l'opportunité : transformer un bien invendable en projet stratégique »
+- **Format** : Mix Narrative + Professionnelle · ~550 mots
+- **Écrite** : ✅ — **Publiable** : ❌ (commune, photo, témoignage de l'acheteur, autorisation écrite à ajouter)
+- **Notes** : Bien invendable → projet stratégique via découpage géométrique
 
-### 2. VALCIC BLIEZ (2024) ✓
-- **Fichier** : `appartement-cascade-2024/fr.md` (renommé le 2026-09-10 ; « Madame Valsic » remplacé par « ma cliente » dans le texte)
-- **Titre** : "Vente en cascade : l'expertise qui synchronise deux projets de vie"
-- **Format** : Narrative & Progressive
-- **Longueur** : ~450 mots
-- **Statut** : Validé par Anne, mais `brouillon` côté site — mêmes manques que ci-dessus
+### 2. VALCIC BLIEZ (2024)
+- **Fichier** : `appartement-cascade-2024/fr.md`
+- **Titre** : « Vente en cascade : l'expertise qui synchronise deux projets de vie »
+- **Format** : Narrative & Progressive · ~450 mots
+- **Écrite** : ✅ — **Publiable** : ❌ (mêmes manques ; le nom de la cliente a été retiré du texte le 2026-09-10)
 - **Notes** : Audit commercial + stratégie de mise en valeur + orchestration vente en cascade
 
-### 3. MORAND MUFFAT (2025 ?) — rédigée, pas encore cochée ici
-- **Fichier** : `maison-premium-2025/fr.md` (renommé le 2026-09-10, sans nom de client — année reprise de cette liste, à confirmer)
-- **Titre** : "Maison premium en stagnation"
-- **Statut** : `brouillon` côté site — ce fichier existait déjà rédigé alors que cette liste la classait encore « à rédiger » ; à recaler avec Anne (année réelle, commune, témoignage, photos, autorisation)
-
-> **Note du 2026-09-10** : ces trois stories ont été reformatées pour le site (dossier + champs en tête + `statut`/`autorisations`) et renommées sans nom de famille — un identifiant de story devient une adresse publique du site, jamais un nom de client. Le contenu et le ton d'Anne sont inchangés. Détail : `_bmad-output/planning-artifacts/strategie-contenu.md`.
+### 3. MORAND MUFFAT (2025 ?)
+- **Fichier** : `maison-premium-2025/fr.md`
+- **Titre** : « Maison premium en stagnation »
+- **Format** : Narrative + tableaux/emoji (ton plus marketing que les deux précédentes — à harmoniser à la relecture)
+- **Écrite** : ✅ (confirmé par JB le 2026-09-10, malgré cette liste qui la donnait encore « à rédiger ») — **Publiable** : ❌ (mêmes manques + **année de vente à confirmer**, non écrite dans le texte)
+- **Notes** : Objection silencieuse (pas de piscine) + présentation insuffisante → repositionnement complet
 
 ---
 
-## 📅 STORIES À RÉDIGER (20 restantes)
+## 📅 STORIES À RÉDIGER (19 restantes)
 
 ### 2024 (8 restantes)
 - [ ] BOEGLI BRAIZE
@@ -47,11 +48,10 @@
 - [ ] RHL FILLEULE
 - [ ] RHL TOTY
 
-### 2025 (9)
+### 2025 (8 restantes)
 - [ ] BALISTRERI RHL
 - [ ] BURNET PINET HOUSSARD
 - [ ] LOIEZ BRAIZE
-- [ ] MORAND MUFFAT
 - [ ] RHL AIT DRAOUCH
 - [ ] RHL DE FANTI BORDET
 - [ ] RHL KORKUT
@@ -69,9 +69,18 @@
 
 **Principes respectés** :
 - ✅ Pas de critique d'autres agences - focus sur la stratégie
-- ✅ Format : Narratif + Professionnel (équilibré)
-- ✅ Longueur : 400-550 mots (web-friendly)
+- ✅ Format : Narratif + Professionnel (équilibré) — sauf Morand Muffat, plus emoji/marketing, à harmoniser
+- ✅ Longueur : 400-600 mots (web-friendly)
 - ✅ Titres impactants et informatifs
 - ✅ Relationnel : socle de la réussite, pas exagéré
 
-**Prochaine étape** : Attendre l'histoire suivante de l'utilisateur
+**Convention de nommage (ajoutée le 2026-09-10)** : le nom du fichier/dossier d'une story ne porte jamais de nom de client — c'est une adresse publique du site. On utilise `commune-type-annee` (ex. `maison-thonon-2025`) ; sans commune connue, un identifiant descriptif provisoire (`type-descriptif-annee`), renommé dès que la commune est précisée. Ce tableau, lui, reste interne : les noms de clients ici servent à ta mémoire, ils ne sont jamais publiés tels quels.
+
+**Pour rendre une story publiable** (les 3 rédigées en ont besoin) :
+1. Commune du bien (case `commune` du fichier — permet aussi de renommer le dossier correctement).
+2. Photo principale + 4 à 6 photos secondaires (`../../photos/` ou dans le dossier de la story).
+3. Témoignage de l'acheteur : prénom, contexte en une ligne, citation.
+4. Autorisation écrite du vendeur (photos) et de l'acheteur (témoignage) — un e-mail suffit.
+5. Repasser `statut` à `a-relire` puis `publie` une fois tout réuni et relu par JB.
+
+**Prochaine étape** : réunir les 4 manques ci-dessus sur les 3 stories rédigées avant d'attaquer la suivante — plus rentable que d'accumuler des brouillons non publiables.
