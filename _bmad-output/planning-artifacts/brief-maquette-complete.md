@@ -131,24 +131,42 @@ Pour les textes : les libellés de `quiz-contenu.md` pour le diagnostic, les 9 f
 
 ## 8. Prompt prêt à coller
 
+Le canvas du lot 3 existe déjà et la majorité de ses artboards sont bons : ce prompt commande une **mise à jour**, pas une regénération. Il est écrit pour être collé dans la conversation du canvas lot 3, dépôt connecté.
+
 ```
-Tu produis la maquette complète du site d'Anne VIAL-TISSOT, consultante en immobilier (Chablais / Léman), en canvas Claude Design.
+Tu mets à jour le canvas existant de la maquette du site d'Anne VIAL-TISSOT (lot 3). Tu ne repars pas de zéro : la majorité des artboards ont été validés en séance le 2026-09-13. Tu passes sur chaque artboard existant, tu modifies uniquement ce qu'une décision impose, tu conserves tout le reste tel quel (composition, textes, images, états). Tu ajoutes les artboards qui manquent. Tu ne supprimes un artboard que si la liste ci-dessous le dit.
 
 Lis d'abord, dans cet ordre :
-1. maquettes/lot-3-complet/DECISIONS.md (les décisions D-1 à D-12 de la séance du 2026-09-13 — elles priment sur tout le reste)
-2. _bmad-output/planning-artifacts/brief-maquette-complete.md v2 (ce brief : livrables, courbe de sentiment, actifs, refus)
-3. _bmad-output/planning-artifacts/structure-site.md v4 (les 11 pages, sections, états, actifs)
-4. _bmad-output/planning-artifacts/brief-scrollcraft-fora.md (la mécanique mesurée — ATTENTION : sa spec du hero à quatre plans, § 2, est périmée ; seuls la pile sticky, les entrées de sections et Lenis restent valables)
-5. design-system/tokens/tokens.css et design-system/README.md (les seules couleurs et polices)
-6. contenu-anne/videos/liens.md (les vraies vidéos : l'ouverture en est une, et toutes les photos en sont des images fixes)
+1. maquettes/lot-3-complet/DECISIONS.md — les décisions D-1 à D-12 ; elles priment sur tout le reste
+2. _bmad-output/planning-artifacts/structure-site.md v4 — les 11 pages, sections, états, actifs
+3. _bmad-output/planning-artifacts/brief-maquette-complete.md v2 — § 3 (livrables), § 4 (courbe à 8 actes), § 7 (refus)
+4. design-system/tokens/tokens.css — les seules couleurs et polices
 
-Direction : un hero vidéo drone plein cadre (une vente réelle, sans son, titre lisible par-dessus), puis la sensation de fora.so pour le reste de la page — cartes de ventes empilées en sticky, entrées de sections, défilement inertiel — dans le monde de la charte v1 : écru, Klein, terracotta, Italiana. Pas de hero à plans superposés, pas de parallaxe dans le hero. Standard de conception : scroll-craft (courbe de sentiment à 8 actes, un seul sommet = la pile des ventes, mobile art-directé à part, liste de refus).
+Ce qui change, artboard par artboard :
 
-Livre : les artboards listés au § 3 du brief (11 pages × desktop 1440 + mobile 390, plus les états, plus l'annexe Légal), l'artboard Navigation avec le menu « À propos » ouvert (desktop et accordéon mobile) et les deux variantes de réseaux sociaux (nav / pied de page), l'artboard « Décisions à trancher » (les cinq points ouverts du § 9), un artboard « Composants ». Aucune image de banque : images fixes des vidéos d'Anne, ou blocs réservés « Actif attendu A-xx ». Aucun texte en dur inventé pour le diagnostic : libellés de quiz-contenu.md, feedbacks de quiz-conception-notion.md.
+NAVIGATION (tous les artboards qui montrent l'en-tête, desktop et mobile) : cinq entrées « À propos ▾ · Réalisation · Vendre · Acheter · Contact », puis la bascule FR/EN et le bouton « Diagnostic » (inchangés). « À propos » ouvre au survol un menu à trois sous-entrées : Qui suis-je ? · Ma méthode · Cible. Ajoute un artboard avec ce menu ouvert (desktop) et un avec le menu mobile déplié, « À propos » en accordéon. Ajoute deux variantes de la nav : réseaux sociaux à gauche du logo (A) et réseaux sociaux en pied de page seulement (B). Ne touche pas au logo, à la pilule, à la bascule.
 
-Points de vigilance issus de la séance : pas de liste de communes dans le hero (le secteur est dit une fois, dans le sous-titre) ; la section « Ils l'ont rencontrée » n'existe plus — à sa place « Ils ont travaillé avec Anne », trois avis Immodvisor entiers mêlant vendeurs et acheteurs, dont au moins un relié à une story avec sa photo ; « À propos » est UNE page longue à ancres (Qui suis-je ? / Ma méthode / Cible), avec et sans le bloc vidéo méthode ; Vendre et Acheter sont deux nouvelles pages, Vendre porte le formulaire d'estimation et tous ses états.
+01 ACCUEIL, desktop et mobile : (a) hero — supprime la liste de communes en bas à droite (Thonon · Évian · …) ; le secteur reste dit une seule fois, dans le sous-titre. Le hero vidéo plein cadre est déjà bon, garde-le. (b) le lien « La méthode en détail » de « Ma méthode, en un coup d'œil » pointe vers À propos, ancre Méthode. (c) remplace la section « Ils l'ont rencontrée » par « Ils ont travaillé avec Anne » : trois avis Immodvisor entiers, vendeurs ET acheteurs, signés d'un prénom et d'un rôle (vendeur / acheteur), dont au moins un relié à une story avec la photo du bien et un lien « Voir cette vente » ; les autres en citation seule. Pas de portraits inventés. Aucune autre section de l'accueil ne bouge.
 
-Avant de rendre : passe la liste de refus du § 7 sur chaque artboard, vérifie le contraste (y compris celui du titre sur l'image la plus claire de la vidéo d'ouverture), vérifie que le CTA du hero tient au-dessus de la ligne de flottaison en 390 px, et que deux sections adjacentes de l'accueil ne portent pas la même émotion (§ 4).
+05 RÉALISATION (index) : inchangé.
+
+06 STORY : la fiche porte jusqu'à deux témoignages, vendeur et acheteur, avec le rôle affiché. Ajoute une variante à un seul témoignage. Le reste de la fiche ne bouge pas.
+
+07 MÉTHODE + 08 ANNE → fusionne en UN artboard « À propos » (desktop et mobile) : une page longue avec trois ancres, Qui suis-je ? (contenu de l'ancien artboard Anne), Ma méthode (contenu de l'ancien artboard Méthode), Cible (section courte, profils : primo-accédants, investisseurs, cadres, seniors — à marquer « point ouvert 1 »). Dans la section Méthode, un bloc vidéo « Anne présente sa méthode » ; livre la page avec ce bloc ET sans (sans = pas de trou, pas de placeholder : la page est complète). Les anciens artboards Méthode et Anne sont retirés une fois la fusion faite.
+
+VENDRE (nouveau, desktop et mobile) : page hub à deux portes — « Faire le point sur votre vente » (vers la landing Diagnostic, qui reste une page autonome) et « Faire estimer mon bien ». Sous la seconde, le formulaire de demande d'estimation : prénom, nom, téléphone (obligatoire), e-mail, commune du bien, type de bien, message facultatif, case de consentement. Une ligne au-dessus du formulaire dit que l'estimation n'est pas faite en ligne : Anne rappelle, puis visite. États : au repos, rempli, erreurs de champ, envoi en cours, confirmation (« Anne vous rappelle », pas de document ni de chiffre), échec d'envoi.
+
+ACHETER (nouveau, desktop et mobile) : le parcours acheteur — primo-accédants et investisseurs — et le service de recherche accompagnée (Anne repère, visite en premier, présélectionne, accompagne après l'achat). CTA « Parler de votre projet » qui ouvre le formulaire de contact existant avec un champ « votre projet : vente / achat » préréglé sur achat. Textes courts, à marquer « contenu à écrire par Anne ».
+
+CONTACT : ajoute le champ « votre projet : vente / achat » au formulaire. Rien d'autre.
+
+LÉGAL : la politique de confidentialité mentionne la demande d'estimation parmi les finalités. Rien d'autre.
+
+DIAGNOSTIC (landing, parcours), RÉSULTATS, GUIDE : inchangés. Ne les régénère pas.
+
+Ajoute ou mets à jour l'artboard « Décisions à trancher » avec les cinq points ouverts, côte à côte : (1) Cible, page ou absorbée par Vendre/Acheter ; (2) réseaux sociaux, nav ou pied de page ; (3) champs du formulaire d'estimation ; (4) formulaire Acheter, partagé ou dédié ; (5) quels trois avis Immodvisor.
+
+Avant de rendre : liste-moi les artboards que tu as modifiés, ceux que tu as ajoutés, ceux que tu as retirés, et ceux que tu n'as pas touchés — je vérifie que cette dernière liste contient bien Diagnostic, Résultats, Guide et Réalisation. Passe la liste de refus du § 7 sur les artboards nouveaux ou modifiés seulement. Vérifie que deux sections adjacentes de l'accueil ne portent pas la même émotion (§ 4, 8 actes).
 ```
 
 ## 9. Protocole de validation avec Anne
