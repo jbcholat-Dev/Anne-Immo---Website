@@ -1,12 +1,12 @@
 # 📋 Suivi des Stories - Anne Immo
 
-> Ce tableau est **le** point de vue d'ensemble sur les 22 stories prévues — les fichiers individuels (`<slug>/fr.md`) ne montrent que l'état d'une story à la fois. Deux statuts, à ne pas confondre : **rédigée** (Anne a écrit le texte) et **publiable** (commune, photo, témoignage de l'acheteur et autorisation écrite réunis — champ `statut`/`autorisations` du fichier).
+> Ce tableau est **le** point de vue d'ensemble sur les 22 stories prévues — les fichiers individuels (`<slug>/fr.md`) ne montrent que l'état d'une story à la fois. Deux statuts, à ne pas confondre : **rédigée** (Anne a écrit le texte) et **publiable** (commune, photo, au moins un témoignage — vendeur ou acheteur, les deux idéalement — et autorisation écrite réunis — champ `statut`/`autorisations` du fichier).
 
 ## État du projet
 
 - **Total stories prévues** : 22
 - **Rédigées** : 3/22
-- **Publiables côté site** : 0/22 (il manque au moins la commune, le témoignage et la photo sur chacune)
+- **Publiables côté site** : 0/22 (il manque au moins la commune, un témoignage et la photo sur chacune)
 - **À rédiger** : 19
 
 ---
@@ -79,8 +79,8 @@
 **Pour rendre une story publiable** (les 3 rédigées en ont besoin) :
 1. Commune du bien (case `commune` du fichier — permet aussi de renommer le dossier correctement).
 2. Photo principale + 4 à 6 photos secondaires (`../../photos/` ou dans le dossier de la story).
-3. Témoignage de l'acheteur : prénom, contexte en une ligne, citation.
-4. Autorisation écrite du vendeur (photos) et de l'acheteur (témoignage) — un e-mail suffit.
+3. Au moins un témoignage, **le vendeur d'abord** (c'est ton client, son avis Immodvisor fait l'affaire) ; celui de l'acheteur en plus quand tu l'as : prénom, contexte en une ligne, citation, rôle.
+4. Autorisation écrite du vendeur (photos + témoignage) et de chaque personne citée — un e-mail suffit.
 5. Repasser `statut` à `a-relire` puis `publie` une fois tout réuni et relu par JB.
 
 **Prochaine étape** : réunir les 4 manques ci-dessus sur les 3 stories rédigées avant d'attaquer la suivante — plus rentable que d'accumuler des brouillons non publiables.

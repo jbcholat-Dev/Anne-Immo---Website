@@ -1,5 +1,7 @@
 # Brief « scroll-craft » — reproduire la sensation de fora.so sur le site d'Anne
 
+> ⚠️ **Périmé partiellement (2026-09-13)** : la spec du hero à quatre plans (**§ 2 « Les actifs à produire »**, ainsi que **§ 2.3** l'objet pris en sandwich, **§ 3.1** l'implémentation du hero, la **fermeture « les plans reviennent »** du § 3.3, les priorités de chargement des plans du § 3.4, les **points de contrôle du hero** du § 4.2, et les décisions ouvertes **1, 2 et 4** du § 5) est **abandonnée** — le hero de l'accueil est désormais une **vidéo drone plein cadre**, voir `maquettes/lot-3-complet/DECISIONS.md` **D-1**. Le § 1.2 reste valable comme *analyse de fora.so*, plus comme spec à reproduire ; la fermeture de l'accueil se fait avec une image fixe du lac et non avec un plan découpé. Le reste (cartes empilées en sticky § 1.3 et § 3.2, entrées de sections § 1.4 et § 3.3, Lenis, analyse de fora.so, protocole de vérification § 4) **reste la référence**.
+
 > Rédigé le 2026-09-04 à partir de : (1) l'inspection technique de <https://fora.so/> (DOM, styles calculés, transforms mesurées au défilement, captures desktop + mobile) ; (2) le transcript de Nate Herk *« Fable 5.1 FINALLY Kills AI Website Slop »* (2026-09-02) et sa fiche dans le Vault ; (3) l'état du chantier Website (`structure-site.md`, design system, maquettes lot 2).
 > **Destinataire : la session Claude Code qui implémente.** Tout ce qui est chiffré ci-dessous a été mesuré sur le site réel, pas estimé.
 

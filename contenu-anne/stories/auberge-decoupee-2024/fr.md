@@ -8,11 +8,17 @@ particularite: >
   aucun acheteur capable d'absorber l'ensemble en bloc.
 photo_principale:
 photos: []
-temoignage:
-  prenom:
-  contexte:
-  citation:
-  portrait:
+temoignages:          # vendeur et/ou acheteur ; un seul suffit pour publier
+  - role: vendeur
+    prenom:
+    contexte:
+    citation:
+    portrait:
+  - role: acheteur
+    prenom:
+    contexte:
+    citation:
+    portrait:
 statut: brouillon
 autorisations: false
 ---

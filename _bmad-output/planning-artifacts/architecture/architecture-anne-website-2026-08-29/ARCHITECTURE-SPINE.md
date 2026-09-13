@@ -7,12 +7,13 @@ paradigm: 'Islands sur site statique à contenu typé, avec un noyau serveur min
 scope: 'Fondations du site annevialtissot.fr : contenu, langues, capture et stockage des leads, hébergement, propriété, SEO, mesure, surveillance, coût. Vague 2 (champs des objets, composants, go/no-go prestataire) hors périmètre.'
 status: final
 created: '2026-08-29'
-updated: '2026-09-07'
-binds: [CAP-1, CAP-2, CAP-3, CAP-4, CAP-5, CAP-6, CAP-7, CAP-8, CAP-9, CAP-10]
+updated: '2026-09-13'
+binds: [CAP-1, CAP-2, CAP-3, CAP-4, CAP-5, CAP-6, CAP-7, CAP-8, CAP-9, CAP-10, CAP-11]
 sources:
   - ../../architecture-brief.md — cadrage vague 1, réponses de JB, faisabilité Modelo (2026-08-29/30)
-  - ../../../specs/spec-anne-website/SPEC.md — contrat v3 (2026-08-29)
-  - ../../structure-site.md — brief de maquette v2 (2026-08-29)
+  - ../../../specs/spec-anne-website/SPEC.md — contrat v5 (2026-09-13)
+  - ../../structure-site.md — brief de maquette v4 (2026-09-13)
+  - ../../../../maquettes/lot-3-complet/DECISIONS.md — décisions de la séance maquette (2026-09-13) : hero vidéo, nav, Vendre/Acheter, source `estimation`, preuve sociale
   - ../../brief-scrollcraft-fora.md — référence de sensation, îlots de scroll (2026-09-04)
   - .memlog.md — journal des décisions et de leurs raisons
   - reviews/ — relectures du reviewer gate (rubrique, fraîcheur, adversariale, RGPD/sécurité)
@@ -57,7 +58,7 @@ Sens des dépendances : le contenu ne dépend de rien ; le rendu lit le contenu 
 
 - **Binds:** CAP-1, CAP-2, CAP-3, CAP-4, CAP-8, CAP-10, toutes les pages
 - **Prevents:** du texte éditorial dans les gabarits ; deux pages qui rangent le contenu différemment ; un CMS futur qui impose une refonte ; des réponses de quiz illisibles quand un libellé change
-- **Rule:** Tout texte, image ou donnée éditoriale vit dans `src/content/` sous l'un des types de l'inventaire, chacun avec un schéma déclaré **avant le premier objet** ; une propriété non déclarée fait échouer le build. Les gabarits ne contiennent aucune chaîne éditoriale — seulement des clés du dictionnaire d'interface. Le CMS de moyen terme se branche sur les schémas, jamais sur les pages. Inventaire fixé (relations et clés seulement ; autres champs en vague 2) : `StoryDeVente` (un bien vendu ; contient un `TemoignageAcheteur` ; référence n `Media` dont une photo maîtresse) · `TemoignageNonClient` (autonome) · `AvisImmodvisor` (instantané local : note, nombre, extraits, URL de la fiche source) · `SequenceEmail` (un e-mail de la séquence de nurturing : `step` 1…n, `delay_days` depuis l'inscription, sujet et corps par langue ; contenu distillé du guide) · `Guide` (PDF ; clé `band` ∈ {`0-40`, `41-70`, `71-100`, `null`} — `null` = le guide générique accessible hors diagnostic) · `PageEditoriale` (méthode, Anne, légal) · `ContenuDiagnostic` (**identifiants immuables** : questions `q01`…`q17` et options `q01.a`… partagés par toutes les langues ; libellés et feedbacks par langue ; `bareme.json` et seuils indexés par ces identifiants) · `Identite` (nom, téléphone, adresse web, zone, RSAC, réseau — source unique, AD-13) · `Media` (identifiant stable, original non recadré, formats dérivés produits au build). Chaque objet porte un identifiant stable indépendant de la langue. Écart assumé au brief (qui proposait de fixer aussi tous les champs en vague 1) : décision de JB du 2026-09-07, option « règle + inventaire maintenant, champs en vague 2 avant le build ».
+- **Rule:** Tout texte, image ou donnée éditoriale vit dans `src/content/` sous l'un des types de l'inventaire, chacun avec un schéma déclaré **avant le premier objet** ; une propriété non déclarée fait échouer le build. Les gabarits ne contiennent aucune chaîne éditoriale — seulement des clés du dictionnaire d'interface. Le CMS de moyen terme se branche sur les schémas, jamais sur les pages. Inventaire fixé (relations et clés seulement ; autres champs en vague 2) : `StoryDeVente` (un bien vendu ; contient 0 à 2 `Temoignage` de `role` ∈ {`vendeur`, `acheteur`}, au moins un pour publier ; référence n `Media` dont une photo maîtresse) · `AvisImmodvisor` (instantané local : note, nombre, extraits attribués avec rôle vendeur/acheteur, URL de la fiche source ; un extrait peut référencer une `StoryDeVente`) — l'objet `TemoignageNonClient` est **retiré** (2026-09-13, D-8 : contenu non collectable) · `SequenceEmail` (un e-mail de la séquence de nurturing : `step` 1…n, `delay_days` depuis l'inscription, sujet et corps par langue ; contenu distillé du guide) · `Guide` (PDF ; clé `band` ∈ {`0-40`, `41-70`, `71-100`, `null`} — `null` = le guide générique accessible hors diagnostic) · `PageEditoriale` (à propos — Anne + méthode sur une page à ancres, avec un `Media` vidéo facultatif « méthode » qui n'est rendu que s'il existe —, vendre, acheter, légal) · `ContenuDiagnostic` (**identifiants immuables** : questions `q01`…`q17` et options `q01.a`… partagés par toutes les langues ; libellés et feedbacks par langue ; `bareme.json` et seuils indexés par ces identifiants) · `Identite` (nom, téléphone, adresse web, zone, RSAC, réseau — source unique, AD-13) · `Media` (identifiant stable, original non recadré, formats dérivés produits au build). Chaque objet porte un identifiant stable indépendant de la langue. Écart assumé au brief (qui proposait de fixer aussi tous les champs en vague 1) : décision de JB du 2026-09-07, option « règle + inventaire maintenant, champs en vague 2 avant le build ».
 
 ### AD-2 — Une langue livrée est complète ou n'existe pas [ADOPTED]
 
@@ -85,16 +86,20 @@ Sens des dépendances : le contenu ne dépend de rien ; le rendu lit le contenu 
 
 ### AD-6 — Forme du lead : une table, un contrat par source [ADOPTED]
 
-- **Binds:** CAP-5, CAP-6, CAP-7, CAP-8, CAP-9, admin, e-mails, purge, droits
-- **Prevents:** quatre formulaires qui définissent quatre leads ; un consentement non prouvable ; un lead sans langue ; un champ obligatoire que la source ne peut pas fournir ; un jeton unique qui bloque un deuxième contact
-- **Rule:** Une seule table `lead`, une ligne par capture ; colonnes communes : `id` (ULID), `submission_id` (unique), `created_at`, `last_activity_at`, `lang`, `source` ∈ {`diagnostic`, `contact`, `guide`, `rdv`}, `email`, `privacy_accepted_at`, `newsletter_opt_in_at` (nullable, opt-in distinct), `newsletter_unsubscribed_at` (nullable), `utm` (JSON nullable), `is_test`. Contrat par source :
+- **Binds:** CAP-5, CAP-6, CAP-7, CAP-8, CAP-9, CAP-11, admin, e-mails, purge, droits
+- **Prevents:** cinq formulaires qui définissent cinq leads ; un consentement non prouvable ; un lead sans langue ; un champ obligatoire que la source ne peut pas fournir ; un jeton unique qui bloque un deuxième contact
+- **Rule:** Une seule table `lead`, une ligne par capture ; colonnes communes : `id` (ULID), `submission_id` (unique), `created_at`, `last_activity_at`, `lang`, `source` ∈ {`diagnostic`, `contact`, `guide`, `rdv`, `estimation`}, `email`, `privacy_accepted_at`, `newsletter_opt_in_at` (nullable, opt-in distinct), `newsletter_unsubscribed_at` (nullable), `utm` (JSON nullable), `is_test`. Contrat par source :
 
-| Champ | `diagnostic` | `contact` | `guide` | `rdv` |
-| --- | --- | --- | --- | --- |
-| `prenom`, `nom` | obligatoires | obligatoires | obligatoires | `nom` = nom complet Cal.com, `prenom` null |
-| `telephone` (E.164) | obligatoire | obligatoire | facultatif | si fourni par Cal.com |
-| `privacy_accepted_at` | case cochée | case cochée | case cochée | question obligatoire du formulaire Cal.com, horodatée à la réservation |
-| `token`, `answers` (JSON par identifiants), `scores` (global + 3 catégories, brut et %), `band`, `orientation` ∈ {`A`, `B`}, `message` (≤ 1 000 car.) | obligatoires (`message` facultatif) | null (`message` obligatoire) | null | null |
+| Champ | `diagnostic` | `contact` | `guide` | `rdv` | `estimation` |
+| --- | --- | --- | --- | --- | --- |
+| `prenom`, `nom` | obligatoires | obligatoires | obligatoires | `nom` = nom complet Cal.com, `prenom` null | obligatoires |
+| `telephone` (E.164) | obligatoire | obligatoire | facultatif | si fourni par Cal.com | obligatoire |
+| `privacy_accepted_at` | case cochée | case cochée | case cochée | question obligatoire du formulaire Cal.com, horodatée à la réservation | case cochée |
+| `token`, `answers` (JSON par identifiants), `scores` (global + 3 catégories, brut et %), `band`, `orientation` ∈ {`A`, `B`}, `message` (≤ 1 000 car.) | obligatoires (`message` facultatif) | null (`message` obligatoire) | null | null | null (`message` facultatif) |
+| `projet` ∈ {`vente`, `achat`} | null | obligatoire | null | null | null |
+| `commune_bien`, `type_bien` | null | null | null | null | obligatoires |
+
+Source `estimation` (CAP-11, D-4, 2026-09-13) : le site ne produit aucune estimation ; le lead déclenche `notify_anne` et `confirm_prospect` comme le contact. `projet` sur le contact qualifie le parcours vendeur / acheteur (D-5) sans créer de source.
 
 Index unique **partiel** sur `token` (`source = 'diagnostic'`). `lead_delivery` (`lead_id`, `channel` ∈ {`notify_anne`, `confirm_prospect`, `sequence:<step>`, `modelo`}, `due_at`, `status`, `attempts`, `delivered_at`, `last_error`) — les lignes `sequence:<step>` sont créées à l'opt-in avec `due_at` = inscription + `delay_days`, et exécutées par le cron quotidien remplace tout marqueur dans `lead` ; `funnel_event` (`journey_id`, `event`, `screen`, `lang`, `is_test`, `at`) ne contient aucune donnée personnelle et ne référence jamais `lead`. Écart assumé au SPEC (CAP-8 « mêmes coordonnées que CAP-5 ») : téléphone facultatif pour le guide, décision de JB du 2026-09-07.
 
@@ -102,7 +107,7 @@ Index unique **partiel** sur `token` (`source = 'diagnostic'`). `lead_delivery` 
 
 - **Binds:** CAP-5, CAP-6, CAP-8, CAP-9, webhooks
 - **Prevents:** une protection contournable en désactivant le JS ; des leads fantômes ; une route de webhook publique qui écrit en base ; une limite imposée seulement par le composant client
-- **Rule:** *Origine visiteur* (diagnostic, contact, guide) : dans cet ordre, avant AD-4 — jeton Turnstile (mode invisible) validé côté serveur, champ piège vide, limite de fréquence par adresse, puis validation contre un schéma serveur (formats d'AD-6, réponses conformes aux identifiants du `ContenuDiagnostic`, longueurs). *Origine service* (Cal.com, Resend) : signature du webhook vérifiée avec le secret partagé, rejet sinon ; idempotence par identifiant de l'événement. Un échec renvoie une erreur neutre ; rien n'est écrit.
+- **Rule:** *Origine visiteur* (diagnostic, contact, guide, estimation) : dans cet ordre, avant AD-4 — jeton Turnstile (mode invisible) validé côté serveur, champ piège vide, limite de fréquence par adresse, puis validation contre un schéma serveur (formats d'AD-6, réponses conformes aux identifiants du `ContenuDiagnostic`, longueurs). *Origine service* (Cal.com, Resend) : signature du webhook vérifiée avec le secret partagé, rejet sinon ; idempotence par identifiant de l'événement. Un échec renvoie une erreur neutre ; rien n'est écrit.
 
 ### AD-8 — Un fournisseur par fonction, derrière un adaptateur unique ; e-mail délivrable ; fichiers non publics [ADOPTED]
 
@@ -245,7 +250,7 @@ Website/
   src/
     content/            # AD-1 · objets typés par langue, schémas (content.config)
       ventes/<id>/fr.md · en.md
-      temoignages/…  avis/…  guides/…  pages/…  media/…
+      avis/…  guides/…  pages/…  media/…    # témoignages : dans ventes/<id>, pas de collection à part (D-8/D-9)
       diagnostic/       # bareme.json (partagé, ids qNN) · fr.json · en.json
       ui/fr.json · en.json
       identite.json     # AD-13 · source unique nom/tel/zone/RSAC/eXp
@@ -269,8 +274,8 @@ Website/
 | Capability / Area | Lives in | Governed by |
 | --- | --- | --- |
 | CAP-1 Visuels | `content/media`, accueil, îlot scroll-craft | AD-1, AD-15, AD-17 |
-| CAP-2 Preuve sociale | `AvisImmodvisor`, `TemoignageNonClient` | AD-1, AD-2, AD-13 |
-| CAP-3 Stories | `StoryDeVente` + pages Ventes | AD-1, AD-2, AD-3 |
+| CAP-2 Preuve sociale | `AvisImmodvisor` (vendeurs et acheteurs, reliés aux `StoryDeVente`) | AD-1, AD-2, AD-13 |
+| CAP-3 Stories | `StoryDeVente` (0-2 `Temoignage`) + pages Ventes | AD-1, AD-2, AD-3 |
 | CAP-4 Diagnostic | `ContenuDiagnostic`, îlot parcours, `server/scoring` | AD-1, AD-2, AD-5 |
 | CAP-5 Capture | `api/diagnostic`, `server/leads` | AD-4, AD-5, AD-6, AD-7, AD-11, AD-16 |
 | CAP-6 Contact direct | `api/contact` | AD-4, AD-6, AD-7 |
@@ -278,6 +283,7 @@ Website/
 | CAP-8 Guide | `Guide`, `api/guide`, lien signé | AD-1, AD-4, AD-6, AD-8, AD-13 |
 | CAP-9 Rendez-vous | `adapters/booking`, `api/webhook-cal` | AD-4, AD-7, AD-8, AD-11 |
 | CAP-10 Multilingue | `content/*/<id>/<lang>`, `ui/`, `i18n/` | AD-2, AD-3, AD-5 |
+| CAP-11 Demande d'estimation | `api/estimation`, `server/leads` (source `estimation`) | AD-4, AD-6, AD-7, AD-16 |
 | Propriété & reprise | comptes, `RUNBOOK.md` | AD-9, AD-10 |
 | Surveillance | cron, Better Stack | AD-12 |
 | Modelo | e-mail formaté, `/admin` | AD-14 |
@@ -302,7 +308,9 @@ Website/
 
 **Sorti de l'équation.** Notion n'est plus une pièce d'architecture (JB, 2026-09-07) : ni miroir des leads, ni source de contenu. La cible aval est Modelo (AD-14).
 
-**Amendements à porter au SPEC v3** (à faire via `bmad-spec`) : CAP-8 — téléphone facultatif pour le guide (AD-6) · CAP-10 — un objet optionnel non traduit n'est pas publié, pas de repli systématique (AD-2) · CAP-7 — la sortie B est une séquence d'e-mails préparée, envoyée par le site (AD-1, AD-8, AD-16) · Constraints — ajouter la clé d'idempotence et le contrat par source comme critères testables de « 0 lead perdu ».
+**Amendement du 2026-09-13** (séance maquette, `maquettes/lot-3-complet/DECISIONS.md`) : source `estimation` ajoutée à AD-6/AD-7 (CAP-11) · `TemoignageNonClient` retiré de l'inventaire AD-1, `StoryDeVente` porte 0-2 témoignages typés · `PageEditoriale` à propos = Anne + méthode sur une page à ancres, vidéo méthode facultative · hero de l'accueil = vidéo plein cadre (sans effet d'architecture : AD-15 s'applique, poster + repli image). Portés au SPEC v5 et à `structure-site.md` v4 le même jour.
+
+**Amendements portés au SPEC v4 le 2026-09-07** (via `bmad-spec`) : CAP-8 — téléphone facultatif pour le guide (AD-6) · CAP-10 — un objet optionnel non traduit n'est pas publié, pas de repli systématique (AD-2) · CAP-7 — la sortie B est une séquence d'e-mails préparée, envoyée par le site (AD-1, AD-8, AD-16) · Constraints — ajouter la clé d'idempotence et le contrat par source comme critères testables de « 0 lead perdu ».
 
 **Corrections à reporter dans le brief de maquette (`structure-site.md`)** : §5 « UTM ⇒ traceur ⇒ consentement » est faux sous AD-11 ; §10 le bandeau est conditionnel, dessiner les deux variantes ; §8 le formulaire Cal.com porte une question obligatoire d'acceptation de la politique de confidentialité.
 

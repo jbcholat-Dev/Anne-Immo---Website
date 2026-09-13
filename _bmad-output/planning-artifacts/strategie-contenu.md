@@ -27,11 +27,9 @@ contenu-anne/
       photo-principale.jpg
       photo-2.jpg …
       autorisations/
-  temoignages/
-    marie-evian/fr.md
   avis-immodvisor/instantane.md
   guide/sequence-emails/etape-1/fr.md …
-  pages/methode/fr.md · anne/fr.md · legal/…
+  pages/a-propos/fr.md · vendre/fr.md · acheter/fr.md · legal/…   ← témoignages : dans la story, pas de dossier à part (2026-09-13)
   identite.md                  ← nom, téléphone, RSAC… (source unique, AD-13)
 ```
 
