@@ -1,0 +1,51 @@
+{
+  "_genere_par": "scripts/preparer-photos — ne pas modifier à la main",
+  "story": "auberge-decoupee-2024",
+  "dossier_photos": "ARMOY_PEILLEX_projet marchands",
+  "photos": [
+    {
+      "id": "auberge-decoupee-2024/photo-003",
+      "fichier": "photos/photo-003.jpg",
+      "role": "principale",
+      "choix": "003",
+      "source": "ARMOY_PEILLEX_projet marchands/Armoy (EXP Immo) - 003 - HD.jpg",
+      "largeur": 3200,
+      "hauteur": 2133,
+      "orientation": "paysage",
+      "ko": 1533
+    },
+    {
+      "id": "auberge-decoupee-2024/photo-020",
+      "fichier": "photos/photo-020.jpg",
+      "role": "secondaire",
+      "choix": "020",
+      "source": "ARMOY_PEILLEX_projet marchands/Armoy (EXP Immo) - 020 - HD.jpg",
+      "largeur": 3200,
+      "hauteur": 2133,
+      "orientation": "paysage",
+      "ko": 934
+    },
+    {
+      "id": "auberge-decoupee-2024/photo-030",
+      "fichier": "photos/photo-030.jpg",
+      "role": "secondaire",
+      "choix": "030",
+      "source": "ARMOY_PEILLEX_projet marchands/Armoy (EXP Immo) - 030 - HD.jpg",
+      "largeur": 3200,
+      "hauteur": 2134,
+      "orientation": "paysage",
+      "ko": 1744
+    },
+    {
+      "id": "auberge-decoupee-2024/photo-031",
+      "fichier": "photos/photo-031.jpg",
+      "role": "secondaire",
+      "choix": "031",
+      "source": "ARMOY_PEILLEX_projet marchands/Armoy (EXP Immo) - 031 - HD.jpg",
+      "largeur": 3200,
+      "hauteur": 2133,
+      "orientation": "paysage",
+      "ko": 2339
+    }
+  ]
+}

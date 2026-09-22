@@ -1,0 +1,8 @@
+{
+  "name": "preparer-photos",
+  "private": true,
+  "type": "module",
+  "description": "Tire les versions web des photos choisies par Anne (Stories photos, HD hors Git) vers stories/<id>/photos/",
+  "scripts": { "photos": "node index.mjs" },
+  "dependencies": { "js-yaml": "^4.1.0", "sharp": "^0.34.0" }
+}

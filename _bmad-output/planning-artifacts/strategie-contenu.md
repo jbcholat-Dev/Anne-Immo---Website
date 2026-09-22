@@ -24,10 +24,10 @@ contenu-anne/
     maison-thonon-2025/        ← l'identifiant stable de l'objet (slug français, jamais renommé)
       fr.md                    ← champs en tête + récit dans le corps
       en.md                    ← facultatif ; absent = non publié en anglais
-      photo-principale.jpg
-      photo-2.jpg …
+      photos/                  ← produit par scripts/preparer-photos (versions web + photos.json), jamais à la main
       autorisations/
-  avis-immodvisor/instantane.md
+  avis-immodvisor/instantane.md · AAAA-MM-JJ-pseudonyme.md (un fichier par avis, 2026-09-22)
+  Stories  photos/<VENTE>/     ← photos HD d'Anne classées par vente, HORS Git (1,4 Go)
   guide/sequence-emails/etape-1/fr.md …
   pages/a-propos/fr.md · vendre/fr.md · acheter/fr.md · legal/…   ← témoignages : dans la story, pas de dossier à part (2026-09-13)
   identite.md                  ← nom, téléphone, RSAC… (source unique, AD-13)
@@ -42,8 +42,9 @@ type_bien: Maison
 annee_vente: 2025
 delai_vente: 3 mois
 particularite: Succession, trois héritiers, deux pays
-photo_principale: photo-principale.jpg
-photos: [photo-2.jpg, photo-3.jpg]
+dossier_photos: THONON_VALCIC_T3
+photo_principale: "0303"     # numéro ou nom de la photo dans dossier_photos
+photos: ["0256", "0286"]
 temoignage:
   prenom: Claire
   contexte: couple, premier achat, frontaliers
@@ -57,6 +58,8 @@ Le récit d'Anne, à la première personne, 10 à 15 lignes…
 ```
 
 Règles : les **champs** sont fixés par un schéma (celui d'Astro, en vague 2 — la liste ci-dessus est la v0, elle peut gagner ou perdre une case, jamais changer de forme) ; le **corps** est libre ; `statut` décide de la publication (`publie` seulement, et `autorisations: true` obligatoire pour une story) ; les photos vivent **à côté** du texte, jamais dans un dossier central. Une story qui ne passe pas le schéma ne casse rien : elle n'est pas publiée, et le build dit pourquoi.
+
+**Photos (règle du 2026-09-22)** — les HD d'Anne (135 photos, 1,4 Go, photographe pro Canon + drone) restent **hors Git** dans `contenu-anne/Stories  photos/<VENTE>/`, classées par Anne une vente par dossier : c'est l'archive, jamais publiée telle quelle. Anne **choisit** dans `fr.md` (`dossier_photos`, `photo_principale`, `photos` — le numéro de la photo suffit). `scripts/preparer-photos` (Node + sharp, la chaîne d'Astro) en tire la **version web** dans `stories/<id>/photos/` : 3 200 px au plus grand côté, JPEG 85, sRGB, **toutes métadonnées retirées** (EXIF, appareil, GPS éventuel), nommée par le numéro d'origine (`photo-047.jpg`, stable si la sélection change d'ordre), + `photos.json` = les objets `Media` de la story (id stable, source HD, dimensions, rôle). C'est ce fichier que le site traite comme « original » (AD-1 : formats dérivés au build). Poids mesuré : 0,5-2,3 Mo par photo, ≈ 150 Mo pour 22 stories — supportable par Git. Écartés : **Git LFS** (quota gratuit GitHub 1 Go < 1,4 Go), **stockage externe type R2** (un service de plus, et la story ne tient plus dans un dossier ; Decap CMS, porte 2, range justement les médias dans le dépôt), **HD dans Git** (≈ 1,5 Go à terme). À la porte 2, les photos déposées via Decap devront passer par la même réduction (à régler à ce moment-là).
 
 ## Les trois portes, dans l'ordre
 

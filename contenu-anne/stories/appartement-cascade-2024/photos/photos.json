@@ -1,0 +1,51 @@
+{
+  "_genere_par": "scripts/preparer-photos — ne pas modifier à la main",
+  "story": "appartement-cascade-2024",
+  "dossier_photos": "THONON_VALCIC_T3",
+  "photos": [
+    {
+      "id": "appartement-cascade-2024/photo-0303",
+      "fichier": "photos/photo-0303.jpg",
+      "role": "principale",
+      "choix": "0303",
+      "source": "THONON_VALCIC_T3/DSC_0303.jpg",
+      "largeur": 2997,
+      "hauteur": 2000,
+      "orientation": "paysage",
+      "ko": 724
+    },
+    {
+      "id": "appartement-cascade-2024/photo-0256",
+      "fichier": "photos/photo-0256.jpg",
+      "role": "secondaire",
+      "choix": "0256",
+      "source": "THONON_VALCIC_T3/DSC_0256.jpg",
+      "largeur": 2997,
+      "hauteur": 2000,
+      "orientation": "paysage",
+      "ko": 696
+    },
+    {
+      "id": "appartement-cascade-2024/photo-0286",
+      "fichier": "photos/photo-0286.jpg",
+      "role": "secondaire",
+      "choix": "0286",
+      "source": "THONON_VALCIC_T3/DSC_0286.jpg",
+      "largeur": 2997,
+      "hauteur": 2000,
+      "orientation": "paysage",
+      "ko": 657
+    },
+    {
+      "id": "appartement-cascade-2024/photo-0292",
+      "fichier": "photos/photo-0292.jpg",
+      "role": "secondaire",
+      "choix": "0292",
+      "source": "THONON_VALCIC_T3/DSC_0292.jpg",
+      "largeur": 2997,
+      "hauteur": 2000,
+      "orientation": "paysage",
+      "ko": 641
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "_genere_par": "scripts/preparer-photos — ne pas modifier à la main",
+  "story": "maison-premium-2025",
+  "dossier_photos": "ALLINGES_MORAND_villa",
+  "photos": [
+    {
+      "id": "maison-premium-2025/photo-047",
+      "fichier": "photos/photo-047.jpg",
+      "role": "principale",
+      "choix": "047",
+      "source": "ALLINGES_MORAND_villa/Allinges (EXP Immo) - 047 - HD.jpg",
+      "largeur": 3200,
+      "hauteur": 2130,
+      "orientation": "paysage",
+      "ko": 666
+    },
+    {
+      "id": "maison-premium-2025/photo-002",
+      "fichier": "photos/photo-002.jpg",
+      "role": "secondaire",
+      "choix": "002",
+      "source": "ALLINGES_MORAND_villa/Allinges (EXP Immo) - 002 - HD.jpg",
+      "largeur": 3200,
+      "hauteur": 2133,
+      "orientation": "paysage",
+      "ko": 829
+    },
+    {
+      "id": "maison-premium-2025/photo-004",
+      "fichier": "photos/photo-004.jpg",
+      "role": "secondaire",
+      "choix": "004",
+      "source": "ALLINGES_MORAND_villa/Allinges (EXP Immo) - 004 - HD.jpg",
+      "largeur": 3200,
+      "hauteur": 2133,
+      "orientation": "paysage",
+      "ko": 781
+    },
+    {
+      "id": "maison-premium-2025/photo-019",
+      "fichier": "photos/photo-019.jpg",
+      "role": "secondaire",
+      "choix": "019",
+      "source": "ALLINGES_MORAND_villa/Allinges (EXP Immo) - 019 - HD.jpg",
+      "largeur": 3200,
+      "hauteur": 2133,
+      "orientation": "paysage",
+      "ko": 560
+    },
+    {
+      "id": "maison-premium-2025/photo-038",
+      "fichier": "photos/photo-038.jpg",
+      "role": "secondaire",
+      "choix": "038",
+      "source": "ALLINGES_MORAND_villa/Allinges (EXP Immo) - 038 - HD.jpg",
+      "largeur": 3200,
+      "hauteur": 2135,
+      "orientation": "paysage",
+      "ko": 498
+    }
+  ]
+}
