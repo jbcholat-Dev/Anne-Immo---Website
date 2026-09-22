@@ -1,0 +1,83 @@
+{
+  "_ecart_q14": "L'option a du live cite le « Système 360™ (voir vidéo explicative) », nom retiré (D-15) : le descripteur vient de la conception Notion (prise en charge totale…).",
+  "_source": "Libellés et options : quiz-contenu.md (capture du ScoreApp en ligne, 2026-08-29). Ordre du live : 17 écrans, 15 numéros (Q10 et Q11 scindées). Identifiants immuables qNN / qNN.x (AD-1). Catégories affichées : quiz-contenu (Question n : …).",
+  "categories": {
+    "preparation": { "libelle": "Préparation à la vente", "resultat": "Préparation à la Vente", "max": 40 },
+    "visibilite": { "libelle": "Visibilité & attractivité", "resultat": "Visibilité & Attractivité", "max": 40 },
+    "efficacite": { "libelle": "Efficacité commerciale", "resultat": "Efficacité Commerciale", "max": 20 },
+    "situation": { "libelle": "Situation actuelle" },
+    "objectifs": { "libelle": "Objectifs" },
+    "obstacles": { "libelle": "Obstacles" },
+    "solution": { "libelle": "Solution préférée" },
+    "ouverte": { "libelle": "" }
+  },
+  "ecrans": [
+    { "id": "q01", "numero": 1, "categorie": "preparation", "type": "unique", "question": "Comment avez-vous déterminé le prix de vente de votre bien ?", "options": [
+      { "id": "q01.a", "libelle": "Avis d'un ou plusieurs agents immobiliers" },
+      { "id": "q01.b", "libelle": "Estimateur en ligne + ajustements personnels" },
+      { "id": "q01.c", "libelle": "Estimation personnelle (basé sur le prix d'achat)" },
+      { "id": "q01.d", "libelle": "Je n'ai pas encore défini de prix" } ] },
+    { "id": "q02", "numero": 2, "categorie": "preparation", "type": "unique", "question": "Où en êtes-vous avec vos diagnostics immobiliers obligatoires ?", "options": [
+      { "id": "q02.a", "libelle": "Tous à jour" },
+      { "id": "q02.b", "libelle": "Certains diagnostics à refaire" },
+      { "id": "q02.c", "libelle": "Aucun diagnostic réalisé" } ] },
+    { "id": "q03", "numero": 3, "categorie": "preparation", "type": "unique", "question": "Disposez-vous d'un dossier administratif complet pour accélérer la vente ?", "options": [
+      { "id": "q03.a", "libelle": "Oui (diagnostics + autorisations d'urbanisme + documents travaux si <10 ans)" },
+      { "id": "q03.b", "libelle": "Partiellement (quelques documents manquants)" },
+      { "id": "q03.c", "libelle": "Je ne sais pas quels documents préparer" } ] },
+    { "id": "q04", "numero": 4, "categorie": "preparation", "type": "unique", "question": "Avez-vous désencombré et rangé votre logement pour permettre aux visiteurs de se projeter facilement ?", "options": [
+      { "id": "q04.a", "libelle": "Oui, entièrement dépersonnalisé et rangé" },
+      { "id": "q04.b", "libelle": "Partiellement, quelques pièces seulement" },
+      { "id": "q04.c", "libelle": "Non, le bien est présenté en l'état" } ] },
+    { "id": "q05", "numero": 5, "categorie": "visibilite", "type": "unique", "question": "Comment avez-vous valorisé visuellement votre bien ?", "options": [
+      { "id": "q05.a", "libelle": "Photos professionnelles + visite virtuelle + vidéo" },
+      { "id": "q05.b", "libelle": "Photos professionnelles + visite virtuelle" },
+      { "id": "q05.c", "libelle": "Photos professionnelles uniquement" },
+      { "id": "q05.d", "libelle": "Photos amateur de qualité" },
+      { "id": "q05.e", "libelle": "Photos basiques au smartphone" } ] },
+    { "id": "q06", "numero": 6, "categorie": "visibilite", "type": "unique", "question": "Votre annonce immobilière est-elle optimisée pour attirer les bons acquéreurs ?", "options": [
+      { "id": "q06.a", "libelle": "Oui, titre accrocheur + description détaillée + points forts mis en avant" },
+      { "id": "q06.b", "libelle": "Description standard sans optimisation particulière" },
+      { "id": "q06.c", "libelle": "Annonce minimale (surface, prix, localisation)" },
+      { "id": "q06.d", "libelle": "Je ne sais pas ce qu'est une annonce optimisée" } ] },
+    { "id": "q07", "numero": 7, "categorie": "visibilite", "type": "multiple", "question": "Sur quelles plateformes diffusez-vous actuellement votre annonce ?", "aide": "Plusieurs réponses possibles.", "autre": "Autre (préciser)", "aucune": "q07.i", "note_suivant": "Sans sélection, « Suivant » enregistre « Aucune diffusion ».", "options": [
+      { "id": "q07.a", "libelle": "Le BonCoin" }, { "id": "q07.b", "libelle": "Se Loger" }, { "id": "q07.c", "libelle": "Bien Ici" }, { "id": "q07.d", "libelle": "PAP (Particulier à Particulier)" },
+      { "id": "q07.e", "libelle": "Logic-Immo" }, { "id": "q07.f", "libelle": "ParuVendu" }, { "id": "q07.g", "libelle": "Facebook" }, { "id": "q07.h", "libelle": "Instagram" },
+      { "id": "q07.i", "libelle": "Aucune diffusion active pour le moment" } ] },
+    { "id": "q08", "numero": 8, "categorie": "visibilite", "type": "unique", "question": "Rafraîchissez-vous régulièrement votre annonce pour maintenir sa visibilité dans les classements ?", "options": [
+      { "id": "q08.a", "libelle": "Oui, au moins 1 fois par semaine" },
+      { "id": "q08.b", "libelle": "Occasionnellement (1 fois par mois)" },
+      { "id": "q08.c", "libelle": "Rarement ou jamais" },
+      { "id": "q08.d", "libelle": "Je ne savais pas qu'il fallait le faire" } ] },
+    { "id": "q09", "numero": 9, "categorie": "efficacite", "type": "unique", "question": "Comment filtrez-vous les appels et demandes de visite des acquéreurs potentiels ?", "options": [
+      { "id": "q09.a", "libelle": "Je vérifie systématiquement capacité financière + critères de recherche" },
+      { "id": "q09.b", "libelle": "Je pose quelques questions de base" },
+      { "id": "q09.c", "libelle": "J'accepte toutes les demandes de visite sans filtrage" } ] },
+    { "id": "q10a", "numero": 10, "categorie": "efficacite", "type": "unique", "question": "Depuis la mise en vente, combien de visites avez-vous réalisées ?", "options": [
+      { "id": "q10a.a", "libelle": "Moins de 5 visites" }, { "id": "q10a.b", "libelle": "5 à 10 visites" }, { "id": "q10a.c", "libelle": "Plus de 10 visites" }, { "id": "q10a.d", "libelle": "Aucune visite pour le moment" } ] },
+    { "id": "q10b", "numero": 10, "categorie": "efficacite", "type": "unique", "question": "Depuis la mise en vente, combien d'offres avez-vous reçues ?", "options": [
+      { "id": "q10b.a", "libelle": "1 offre" }, { "id": "q10b.b", "libelle": "Plusieurs offres" }, { "id": "q10b.c", "libelle": "Aucune offre pour le moment" } ] },
+    { "id": "q11a", "numero": 11, "categorie": "situation", "type": "unique", "question": "Depuis combien de temps votre bien est-il en vente ?", "options": [
+      { "id": "q11a.a", "libelle": "Pas encore mis en vente" }, { "id": "q11a.b", "libelle": "Moins de 3 mois" }, { "id": "q11a.c", "libelle": "3 à 6 mois" }, { "id": "q11a.d", "libelle": "6 à 12 mois" }, { "id": "q11a.e", "libelle": "Plus d'un an" } ] },
+    { "id": "q11b", "numero": 11, "categorie": "situation", "type": "unique", "question": "Êtes-vous actuellement accompagné(e) dans votre vente ?", "options": [
+      { "id": "q11b.a", "libelle": "Je vends seul(e) sans accompagnement" }, { "id": "q11b.b", "libelle": "Accompagné(e) par une agence traditionnelle" }, { "id": "q11b.c", "libelle": "Accompagné(e) par plusieurs agences traditionnelles" }, { "id": "q11b.d", "libelle": "Accompagné(e) par une agence low-cost/en ligne" }, { "id": "q11b.e", "libelle": "J'hésite encore entre vendre seul(e) ou avec une agence" } ] },
+    { "id": "q12", "numero": 12, "categorie": "objectifs", "type": "unique", "question": "Quel est votre objectif principal pour cette vente ?", "options": [
+      { "id": "q12.a", "libelle": "Vendre rapidement (moins de 3 mois), même si légèrement en dessous du prix espéré" },
+      { "id": "q12.b", "libelle": "Obtenir le meilleur prix possible, même si cela prend plus de temps" },
+      { "id": "q12.c", "libelle": "Vendre sereinement avec un accompagnement professionnel de qualité" },
+      { "id": "q12.d", "libelle": "Minimiser les frais d'agence en gérant moi-même la transaction" } ] },
+    { "id": "q13", "numero": 13, "categorie": "obstacles", "type": "multiple", "question": "Quelles difficultés avez-vous rencontrées ou anticipez-vous dans votre vente ?", "aide": "Plusieurs réponses possibles.", "aucune": "q13.g", "note_suivant": "Sans sélection, « Suivant » enregistre « Aucune difficulté ».", "options": [
+      { "id": "q13.a", "libelle": "Peu ou pas de demandes de visites / annonce peu vue" },
+      { "id": "q13.b", "libelle": "Beaucoup de visites mais aucune offre concrète" },
+      { "id": "q13.c", "libelle": "Offres trop basses par rapport au prix souhaité" },
+      { "id": "q13.d", "libelle": "Transactions avortées en cours de route (crédit refusé, acquéreur se désiste)" },
+      { "id": "q13.e", "libelle": "Manque de temps pour gérer les visites et les relances" },
+      { "id": "q13.f", "libelle": "Difficulté lors des visites : présenter le bien, gérer les objections" },
+      { "id": "q13.g", "libelle": "Aucune difficulté pour le moment" } ] },
+    { "id": "q14", "numero": 14, "categorie": "solution", "type": "unique", "question": "Quel type d'accompagnement correspondrait le mieux à vos besoins ?", "options": [
+      { "id": "q14.a", "libelle": "Accompagnement premium complet : prise en charge totale (photos pro, diffusion multi-canal, qualification acquéreurs, gestion administrative, négociation)" },
+      { "id": "q14.b", "libelle": "Forfait estimation + conseils : j'ai besoin d'un diagnostic expert pour débloquer ma situation" },
+      { "id": "q14.c", "libelle": "Vente 100% autonome : je préfère gérer seul(e), j'ai juste besoin de ressources/formations" } ] },
+    { "id": "q15", "numero": 15, "categorie": "ouverte", "type": "texte", "question": "Y a-t-il autre chose que vous aimeriez nous faire savoir sur votre projet de vente ou votre situation ?", "aide": "Facultatif", "max": 1000 }
+  ]
+}

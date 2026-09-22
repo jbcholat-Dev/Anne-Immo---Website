@@ -1,0 +1,62 @@
+---
+// 08 Vendre (D-4) : hub à deux portes — le diagnostic (page autonome) et la demande d'estimation (formulaire sur cette page).
+import Page from '../layouts/Page.astro';
+import FormulaireEstimation from '../components/FormulaireEstimation.astro';
+import { r } from '../i18n';
+---
+<Page titre="Vendre — Anne VIAL-TISSOT" description="Deux façons de commencer : mesurer où en est votre vente en trois minutes, ou faire estimer votre bien — Anne vous rappelle, puis visite." courante="vendre">
+  <div class="v-tete">
+    <h1>Vendre</h1>
+    <p class="seulement-desktop">Deux façons de commencer : mesurer où en est votre vente, ou faire estimer votre bien.</p>
+    <p class="seulement-mobile">Mesurer où en est votre vente, ou faire estimer votre bien.</p>
+  </div>
+  <div class="v-portes">
+    <section class="v-porte v-porte-brume">
+      <h2><span class="seulement-desktop">Faire le point sur votre vente</span><span class="seulement-mobile">Faire le point</span></h2>
+      <p class="seulement-desktop">Quinze questions, trois minutes. Un score sur 100, un diagnostic par axe, un plan d'action. Rien à installer, aucun engagement.</p>
+      <p class="seulement-mobile">Quinze questions, trois minutes. Un score, un diagnostic par axe, un plan d'action.</p>
+      <a href={r('diagnostic')} class="btn btn-primaire v-porte-cta">Démarrer le diagnostic</a>
+    </section>
+    <section class="v-porte v-porte-galet">
+      <h2>Faire estimer mon bien</h2>
+      <p class="seulement-desktop">Un rappel d'Anne, puis une visite sur place. Le formulaire ci-dessous suffit à lancer la démarche.</p>
+      <p class="seulement-mobile">Un rappel d'Anne, puis une visite sur place.</p>
+      <a href="#estimation" class="btn btn-secondaire v-porte-cta">Aller au formulaire</a>
+    </section>
+  </div>
+  <section id="estimation" class="v-estimation" aria-labelledby="estimation-titre">
+    <div class="v-estimation-tete"><h2 id="estimation-titre">Demander une estimation</h2><span class="marqueur">Point ouvert 2 · champs du formulaire</span></div>
+    <p class="v-estimation-intro">L'estimation ne se fait pas en ligne. Anne vous rappelle sous un jour ouvré, pose ses questions, puis se déplace pour voir le bien. Le chiffre vient après la visite, jamais avant.</p>
+    <FormulaireEstimation />
+  </section>
+  <script src="../islands/formulaires.ts"></script>
+</Page>
+<style>
+  .v-tete { padding: 88px var(--marge) 40px; }
+  .v-tete h1 { font-size: 84px; line-height: 1; margin-bottom: 18px; }
+  .v-tete p { font-size: 19px; line-height: 1.6; max-width: 56ch; }
+  .v-portes { padding: 32px var(--marge) 96px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: stretch; }
+  .v-porte { border-radius: 16px; padding: 44px 48px; display: flex; flex-direction: column; gap: 18px; align-items: flex-start; }
+  .v-porte-brume { background: var(--avt-brume); }
+  .v-porte-galet { background: var(--avt-galet); }
+  .v-porte h2 { font-size: 40px; }
+  .v-porte p { font-size: 17px; line-height: 1.6; max-width: 46ch; }
+  .v-porte-cta { margin-top: auto; padding: 15px 30px; font-size: 15.5px; }
+  .v-estimation { background: var(--avt-galet); padding: 96px var(--marge); scroll-margin-top: var(--nav-h); }
+  .v-estimation-tete { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+  .v-estimation h2 { font-size: 52px; }
+  .v-estimation-intro { font-size: 16.5px; line-height: 1.6; margin-bottom: 28px; max-width: 64ch; border-left: 2.5px solid var(--avt-terra); padding-left: 20px; }
+  @media (max-width: 899px) {
+    .v-tete { padding: 40px var(--marge-m) 24px; }
+    .v-tete h1 { font-size: 52px; margin-bottom: 12px; }
+    .v-tete p { font-size: 16px; }
+    .v-portes { padding: 0 16px 36px; grid-template-columns: 1fr; gap: 14px; }
+    .v-porte { padding: 26px 22px; gap: 14px; }
+    .v-porte h2 { font-size: 30px; }
+    .v-porte p { font-size: 15.5px; }
+    .v-porte-cta { padding: 15px 24px; }
+    .v-estimation { padding: 40px var(--marge-m) 48px; }
+    .v-estimation h2 { font-size: 34px; }
+    .v-estimation-intro { font-size: 15px; padding-left: 14px; margin-bottom: 20px; }
+  }
+</style>

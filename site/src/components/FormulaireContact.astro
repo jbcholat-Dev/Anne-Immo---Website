@@ -1,0 +1,55 @@
+---
+// § 9 Écrire à Anne (CAP-6, D-5) : prénom, nom, e-mail, téléphone obligatoire, « votre projet » vente / achat (préréglé sur achat depuis Acheter), message, deux cases.
+import Champ from './Champ.astro';
+import Case from './Case.astro';
+interface Props { projet?: 'vente' | 'achat'; titre?: string; compact?: boolean }
+const { projet = 'vente', titre = 'Écrire à Anne', compact = false } = Astro.props;
+---
+<section aria-label={titre} class={`fc ${compact ? 'fc-compact' : ''}`} id="ecrire">
+  <h2 class="fc-titre">{titre}</h2>
+  <form data-formulaire="contact" novalidate>
+    <div class="fc-grille">
+      <div class="fc-deux">
+        <Champ nom="prenom" label="Prénom" requis autocomplete="given-name" erreur="Indiquez votre prénom." />
+        <Champ nom="nom" label="Nom" requis autocomplete="family-name" erreur="Indiquez votre nom." />
+      </div>
+      <Champ nom="email" label="E-mail" type="email" requis autocomplete="email" erreur="Indiquez votre adresse e-mail." />
+      <Champ nom="telephone" label="Téléphone" type="tel" obligatoire requis autocomplete="tel" inputmode="tel" erreur="Dix chiffres attendus." />
+      <fieldset class="fc-projet">
+        <legend>Votre projet</legend>
+        <div class="fc-projet-options">
+          <label class="fc-radio"><input type="radio" name="projet" value="vente" checked={projet === 'vente'} />Vente</label>
+          <label class="fc-radio"><input type="radio" name="projet" value="achat" checked={projet === 'achat'} />Achat</label>
+        </div>
+      </fieldset>
+      <Champ nom="message" label="Message" type="textarea" requis rows={5} erreur="Écrivez un message." placeholder={projet === 'achat' ? 'Ce que vous cherchez' : undefined} />
+      <Case nom="privacy" requis message="Nécessaire pour envoyer.">J'accepte la <a href="/confidentialite">politique de confidentialité</a>. Obligatoire.</Case>
+      <Case nom="newsletter">Recevoir la séquence d'e-mails d'Anne. Facultatif.</Case>
+      <div class="alerte-douce" data-erreurs-globales hidden role="alert"></div>
+      <div data-echec hidden tabindex="-1"><div class="alerte" role="alert">L'envoi n'a pas abouti. Votre message est conservé : rien à ressaisir.</div></div>
+      <button type="submit" class="btn btn-primaire fc-bouton">Envoyer</button>
+    </div>
+  </form>
+  <div class="confirmation" data-confirmation="contact" hidden>
+    <div class="confirmation-titre">Message envoyé</div>
+    <p>Anne vous répond sous un jour ouvré, à <span data-champ="email"></span> ou au <span data-champ="telephone"></span>.</p>
+  </div>
+</section>
+<style>
+  .fc-titre { font-size: 32px; margin-bottom: 20px; }
+  .fc-grille { display: flex; flex-direction: column; gap: 14px; }
+  .fc-deux { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .fc-projet { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .fc-projet legend { font-size: 13.5px; padding: 0; margin: 0 0 2px; }
+  .fc-projet-options { display: flex; gap: 10px; }
+  .fc-radio { flex: 1; min-height: 52px; display: flex; align-items: center; gap: 10px; padding: 0 16px; border: 1.5px solid var(--avt-brun); border-radius: 12px; font-size: 15px; cursor: pointer; }
+  .fc-radio input { width: 20px; height: 20px; accent-color: var(--avt-klein); margin: 0; }
+  .fc-radio:has(input:checked) { border-color: var(--avt-klein); background: var(--avt-brume); }
+  .fc-bouton { min-height: 56px; align-self: flex-start; padding: 0 32px; }
+  .confirmation p { font-size: 15px; line-height: 1.5; }
+  @media (max-width: 899px) {
+    .fc-titre { font-size: 26px; margin-bottom: 12px; }
+    .fc-grille { gap: 12px; }
+    .fc-bouton { align-self: stretch; }
+  }
+</style>

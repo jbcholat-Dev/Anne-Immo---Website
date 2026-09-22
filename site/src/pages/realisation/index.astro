@@ -1,0 +1,65 @@
+---
+// 05 Réalisation — index des stories (D-3, D-26) : photo, commune, une phrase. État vide si aucune story.
+import Page from '../../layouts/Page.astro';
+import Picture from '../../components/Picture.astro';
+import Reserve from '../../components/Reserve.astro';
+import { stories, photoPrincipale } from '../../lib/contenu';
+import { tiret } from '../../lib/texte';
+import { r } from '../../i18n';
+const liste = await stories();
+---
+<Page titre="Réalisation — Anne VIAL-TISSOT" description="Chaque bien vendu raconté par Anne : ce qui bloquait, ce qui a été fait, comment cela s'est terminé." courante="realisation">
+  <div class="index-tete">
+    <h1>Réalisation</h1>
+    <p class="seulement-desktop">Chaque bien vendu raconté par Anne : ce qui bloquait, ce qui a été fait, comment cela s'est terminé. Pas de prix, pas de surface.</p>
+    <p class="seulement-mobile">Chaque bien vendu raconté par Anne. Pas de prix, pas de surface.</p>
+  </div>
+  {liste.length === 0 ? (
+    <div class="index-vide">
+      <h2>Les premières stories arrivent</h2>
+      <p>Anne rédige les récits de ses dernières ventes. En attendant, la méthode est détaillée, et le diagnostic est ouvert.</p>
+      <div class="index-vide-boutons"><a href={r('methode')} class="btn btn-secondaire btn-m">La méthode</a><a href={r('diagnostic')} class="btn btn-primaire btn-m">Démarrer le diagnostic</a></div>
+    </div>
+  ) : (
+    <div class="index-grille">
+      {liste.map((s) => {
+        const photo = photoPrincipale(s.id);
+        return (
+          <article>
+            <a href={`${r('realisation')}/${s.id}`} class="index-photo" aria-hidden="true" tabindex="-1">
+              {photo ? <Picture id={photo} alt="" sizes="(max-width: 899px) 100vw, 33vw" /> : <Reserve label={`A-02 · ${s.data.commune} · 4:3`} style="height:100%" />}
+            </a>
+            <h2>{tiret(s.data.commune)}</h2>
+            <p>{(s.data.particularite ?? '').trim()}</p>
+            <a href={`${r('realisation')}/${s.id}`} class="lien">Lire la story</a>
+          </article>
+        );
+      })}
+    </div>
+  )}
+</Page>
+<style>
+  .index-tete { padding: 96px var(--marge) 40px; }
+  .index-tete h1 { font-size: 72px; margin-bottom: 16px; }
+  .index-tete p { font-size: 18px; line-height: 1.6; max-width: 56ch; }
+  .index-grille { padding: 0 var(--marge) 120px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px 32px; }
+  article { display: flex; flex-direction: column; gap: 14px; }
+  .index-photo { display: block; height: 300px; border-radius: 12px; overflow: hidden; background: var(--avt-galet); }
+  .index-photo :global(picture), .index-photo :global(img) { width: 100%; height: 100%; }
+  .index-photo :global(img) { object-fit: cover; }
+  article h2 { font-size: 30px; }
+  article p { font-size: 16px; line-height: 1.55; }
+  .index-vide { padding: 0 var(--marge) 120px; max-width: 48ch; }
+  .index-vide h2 { font-size: 44px; margin-bottom: 14px; }
+  .index-vide p { font-size: 15px; line-height: 1.6; margin-bottom: 24px; }
+  .index-vide-boutons { display: flex; gap: 12px; flex-wrap: wrap; }
+  @media (max-width: 899px) {
+    .index-tete { padding: 48px var(--marge-m) 28px; }
+    .index-tete h1 { font-size: 48px; margin-bottom: 12px; }
+    .index-tete p { font-size: 16px; }
+    .index-grille { padding: 0 var(--marge-m) 56px; grid-template-columns: 1fr; gap: 36px; }
+    .index-photo { height: 240px; }
+    article h2 { font-size: 28px; }
+    .index-vide { padding: 0 var(--marge-m) 64px; }
+  }
+</style>

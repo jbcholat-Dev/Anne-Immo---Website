@@ -1,0 +1,98 @@
+---
+// 04 Résultats (§ 8.2, D-23) : score global, profil (Klein / terra-deep / brun), 3 sous-scores brut + %, 9 feedbacks, sortie A ou B, guide. États : guide parti, séquence confirmée, lien expiré.
+// v1 : rendu par l'îlot depuis sessionStorage (TODO backend : page rendue par le noyau sous jeton, 404 sinon).
+import Quiz from '../../layouts/Quiz.astro';
+---
+<Quiz titre="Vos résultats — Diagnostic — Anne VIAL-TISSOT" mode="resultats">
+  <div class="rs" data-resultats>
+    <div class="rs-expire" data-expire hidden>
+      <h1>Ce lien n'est plus valable</h1>
+      <p>Les résultats restent disponibles 30 jours. Redemandez-les à l'adresse utilisée, ou refaites le diagnostic.</p>
+      <a href="/diagnostic/questions" class="btn btn-primaire">Recevoir un nouveau lien</a>
+      <a href="/diagnostic/questions" class="rs-refaire">Refaire le diagnostic</a>
+    </div>
+    <div data-contenu></div>
+  </div>
+  <script src="../../islands/resultats.ts"></script>
+</Quiz>
+<style is:global>
+  .rs-expire { max-width: 560px; margin: 0 auto; padding: 48px var(--marge-m) 80px; display: flex; flex-direction: column; gap: 14px; }
+  .rs-expire h1 { font-size: 28px; }
+  .rs-expire p { font-size: 15px; line-height: 1.5; }
+  .rs-refaire { text-align: center; font-size: 15px; }
+  .rs-tete { padding: 64px var(--marge) 56px; display: grid; grid-template-columns: 420px 1fr; gap: 96px; align-items: center; border-bottom: 1px solid rgba(38, 32, 26, .1); }
+  .rs-score { display: flex; align-items: baseline; gap: 8px; }
+  .rs-score b { font-family: var(--avt-font-display); font-weight: 400; font-size: 160px; line-height: .9; }
+  .rs-score span { font-size: 24px; }
+  .rs-pastille { display: inline-block; border-radius: 999px; padding: 8px 16px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; font-weight: 500; margin-bottom: 18px; }
+  .rs-profil-texte { font-family: var(--avt-font-display); font-size: 34px; line-height: 1.3; max-width: 30ch; }
+  [data-ton="klein"] .rs-score b, [data-ton="klein"] .rs-barre > div { background-color: transparent; color: var(--avt-klein); }
+  [data-ton="klein"] .rs-barre > div { background-color: var(--avt-klein); }
+  [data-ton="klein"] .rs-pastille { background: var(--avt-brume); color: var(--avt-klein); }
+  [data-ton="terra"] .rs-score b { color: var(--avt-terra-deep); }
+  [data-ton="terra"] .rs-barre > div { background-color: var(--avt-terra-deep); }
+  [data-ton="terra"] .rs-pastille { background: var(--avt-galet); color: var(--avt-terra-deep); }
+  [data-ton="brun"] .rs-score b { color: var(--avt-brun); }
+  [data-ton="brun"] .rs-barre > div { background-color: var(--avt-brun); }
+  [data-ton="brun"] .rs-pastille { background: var(--avt-brun); color: var(--avt-ecru); }
+  .rs-axes { padding: 56px var(--marge); display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; }
+  .rs-axe { display: flex; flex-direction: column; gap: 18px; }
+  .rs-axe .chapeau { margin-bottom: 8px; }
+  .rs-sous { display: flex; align-items: baseline; gap: 8px; }
+  .rs-sous b { font-family: var(--avt-font-display); font-weight: 400; font-size: 48px; line-height: 1; }
+  .rs-sous span { font-size: 15px; color: var(--avt-text-muted); }
+  .rs-barre { height: 4px; background: var(--avt-galet); border-radius: 2px; margin-top: 8px; }
+  .rs-barre > div { height: 100%; border-radius: 2px; }
+  .rs-insight { font-size: 15.5px; line-height: 1.6; }
+  .rs-impact { background: var(--avt-brume); border-radius: 12px; padding: 18px 20px; }
+  .rs-impact .chapeau-muet { margin-bottom: 6px; }
+  .rs-impact p { font-size: 15px; line-height: 1.5; }
+  .rs-sortie { margin: 0 var(--marge) 40px; background: var(--avt-klein); color: var(--avt-ecru); border-radius: 16px; padding: 56px; display: grid; grid-template-columns: 1fr auto; gap: 48px; align-items: center; }
+  .rs-sortie h2 { font-size: 40px; color: var(--avt-ecru); margin-bottom: 16px; }
+  .rs-sortie p { font-size: 17px; line-height: 1.6; max-width: 60ch; }
+  .rs-sortie-boutons { display: flex; flex-direction: column; gap: 12px; }
+  .rs-guide { margin: 0 var(--marge) 96px; display: flex; align-items: center; justify-content: space-between; gap: 32px; border: 1px solid var(--filet-brun-fort); border-radius: 16px; padding: 28px 36px; }
+  .rs-guide-int { display: flex; align-items: center; gap: 24px; }
+  .rs-guide-couv { width: 64px; height: 84px; background: var(--avt-galet); border-radius: 4px; flex: none; }
+  .rs-guide-titre { font-family: var(--avt-font-display); font-size: 26px; }
+  .rs-guide-sous { font-size: 14px; color: var(--avt-text-muted); }
+  .rs-sequence { margin: 0 var(--marge) 96px; display: flex; align-items: center; justify-content: space-between; gap: 32px; border: 1px solid var(--filet-brun-fort); border-radius: 16px; padding: 28px 36px; font-size: 16px; line-height: 1.5; }
+  .rs-sequence p { max-width: 60ch; }
+  .rs-etats { margin: 0 var(--marge) 96px; display: flex; flex-direction: column; gap: 14px; max-width: 560px; }
+  .rs-etat-guide { background: var(--avt-brume); border-radius: 14px; padding: 20px; display: flex; gap: 16px; align-items: flex-start; }
+  .rs-etat-guide .rs-guide-couv { width: 44px; height: 58px; background: var(--avt-placeholder); }
+  .rs-etat-guide b { font-family: var(--avt-font-display); font-weight: 400; font-size: 22px; display: block; margin-bottom: 6px; }
+  .rs-etat-guide p { font-size: 14px; line-height: 1.5; }
+  .rs-etat-sequence { border: 1px solid var(--filet-brun-fort); border-radius: 14px; padding: 18px 20px; font-size: 14.5px; line-height: 1.5; }
+  @media (max-width: 899px) {
+    .rs-tete { padding: 24px var(--marge-m) 28px; display: block; border-bottom: 0; }
+    .rs-score b { font-size: 96px; }
+    .rs-score span { font-size: 18px; }
+    .rs-pastille { padding: 7px 14px; font-size: 12px; margin: 18px 0 12px; }
+    .rs-profil-texte { font-family: var(--avt-font-text); font-size: 16px; line-height: 1.5; }
+    .rs-axes { padding: 0; display: block; }
+    .rs-resume { padding: 0 var(--marge-m) 28px; display: flex; flex-direction: column; gap: 14px; }
+    .rs-resume > div { border-top: 1px solid rgba(38, 32, 26, .1); padding-top: 12px; }
+    .rs-resume-rang { display: flex; justify-content: space-between; align-items: baseline; }
+    .rs-resume-rang span { font-size: 14px; }
+    .rs-resume-rang b { font-family: var(--avt-font-display); font-weight: 400; font-size: 26px; }
+    .rs-resume-rang b small { font: 400 13px var(--avt-font-text); color: var(--avt-text-muted); }
+    .rs-axe { padding: 28px var(--marge-m); gap: 14px; }
+    .rs-axe:nth-child(odd) { background: var(--avt-galet); }
+    .rs-axe:nth-child(odd) .rs-impact { background: var(--avt-ecru); }
+    .rs-axe .rs-sous, .rs-axe .rs-barre { display: none; }
+    .rs-axe .chapeau { margin-bottom: 0; }
+    .rs-insight { font-size: 15px; line-height: 1.55; }
+    .rs-impact { padding: 14px 16px; }
+    .rs-impact p { font-size: 14.5px; }
+    .rs-sortie { margin: 28px var(--marge-m); padding: 28px 22px; display: flex; flex-direction: column; gap: 14px; }
+    .rs-sortie h2 { font-size: 28px; margin-bottom: 0; }
+    .rs-sortie p { font-size: 15.5px; line-height: 1.55; }
+    .rs-guide, .rs-sequence { margin: 0 var(--marge-m) 32px; border-radius: 14px; padding: 20px; flex-direction: column; align-items: stretch; gap: 14px; }
+    .rs-guide-int { gap: 14px; }
+    .rs-guide-couv { width: 44px; height: 58px; }
+    .rs-guide-titre { font-size: 20px; }
+    .rs-etats { margin: 0 var(--marge-m) 40px; }
+  }
+  @media (min-width: 900px) { .rs-resume { display: none; } }
+</style>

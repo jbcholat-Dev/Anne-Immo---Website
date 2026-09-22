@@ -1,0 +1,68 @@
+---
+// 11 Guide (CAP-8) : couverture (A-10 réservée), cinq lignes, capture — téléphone facultatif —, confirmation. Le PDF n'a pas d'adresse publique (lien signé, TODO backend).
+import Page from '../layouts/Page.astro';
+import Reserve from '../components/Reserve.astro';
+import Case from '../components/Case.astro';
+const erreurs = ['Le prix fixé sans comparables', 'Le dossier incomplet au compromis', 'Les diagnostics périmés', 'Les visites non qualifiées', 'Le financement vérifié trop tard'];
+---
+<Page titre="Le guide — Les 10 erreurs fatales des vendeurs particuliers — Anne VIAL-TISSOT" description="Un guide court pour vendre sans mauvaise surprise, écrit par Anne. Envoyé par e-mail, lien valable 48 heures." courante="guide">
+  <div class="g-corps">
+    <Reserve label="A-10 · couverture du guide rebrandé · A4" class="g-couv" />
+    <div class="g-texte">
+      <div class="g-tete-m seulement-mobile"><Reserve label="A-10 couverture" class="g-couv-m" /><div><h1>Les 10 erreurs fatales des vendeurs particuliers</h1><p class="g-intro">Un guide court pour vendre sans mauvaise surprise.</p></div></div>
+      <h1 class="seulement-desktop">Les 10 erreurs fatales des vendeurs particuliers</h1>
+      <p class="g-intro seulement-desktop">Un guide court pour vendre sans mauvaise surprise, écrit par Anne.</p>
+      <ul>{erreurs.map((e) => <li>{e}</li>)}</ul>
+    </div>
+    <form class="g-form" data-formulaire="guide" novalidate>
+      <h2>Recevoir le guide</h2>
+      <div class="g-deux">
+        <label class="champ"><span class="sr-only">Prénom</span><input type="text" name="prenom" placeholder="Prénom" required autocomplete="given-name" data-erreur="Indiquez votre prénom." aria-describedby="g-e1" /><span class="champ-erreur" id="g-e1"></span></label>
+        <label class="champ"><span class="sr-only">Nom</span><input type="text" name="nom" placeholder="Nom" required autocomplete="family-name" data-erreur="Indiquez votre nom." aria-describedby="g-e2" /><span class="champ-erreur" id="g-e2"></span></label>
+      </div>
+      <label class="champ"><span class="sr-only">E-mail</span><input type="email" name="email" placeholder="E-mail" required autocomplete="email" data-erreur="Indiquez votre adresse e-mail." aria-describedby="g-e3" /><span class="champ-erreur" id="g-e3"></span></label>
+      <label class="champ"><span class="sr-only">Téléphone (facultatif)</span><input type="tel" name="telephone" placeholder="Téléphone (facultatif)" autocomplete="tel" inputmode="tel" class="g-facultatif" aria-describedby="g-e4" /><span class="champ-erreur" id="g-e4"></span></label>
+      <Case nom="privacy" requis message="Nécessaire pour recevoir le guide.">J'accepte la <a href="/confidentialite">politique de confidentialité</a>. Obligatoire.</Case>
+      <Case nom="newsletter">Recevoir la séquence d'e-mails d'Anne. Facultatif.</Case>
+      <div class="alerte-douce" data-erreurs-globales hidden role="alert"></div>
+      <div data-echec hidden tabindex="-1"><div class="alerte" role="alert">L'envoi n'a pas abouti. Vos informations sont conservées : rien à ressaisir.</div></div>
+      <button type="submit" class="btn btn-primaire g-bouton">Télécharger le guide</button>
+      <p class="texte-muet g-note">Le lien arrive par e-mail et reste valable 48 heures.</p>
+    </form>
+    <div class="confirmation g-confirmation" data-confirmation="guide" hidden>
+      <div class="confirmation-titre">Le guide est en route</div>
+      <p>Le lien de téléchargement est dans votre boîte (<span data-champ="email"></span>), valable 48 heures.</p>
+      <a href="/guide" class="lien" style="font-size:14.5px">Je n'ai rien reçu</a>
+    </div>
+  </div>
+  <script src="../islands/formulaires.ts"></script>
+</Page>
+<style>
+  .g-corps { padding: 80px var(--marge) 96px; display: grid; grid-template-columns: 420px 1fr 480px; gap: 72px; align-items: start; }
+  .g-corps :global(.g-couv) { height: 560px; border-radius: 6px; }
+  .g-texte h1 { font-size: 56px; line-height: 1.05; margin-bottom: 20px; }
+  .g-intro { font-size: 17px; line-height: 1.6; margin-bottom: 24px; max-width: 44ch; }
+  .g-texte ul { padding-left: 20px; font-size: 16px; line-height: 1.7; display: flex; flex-direction: column; gap: 4px; }
+  .g-form { background: var(--avt-galet); border-radius: 16px; padding: 32px; display: flex; flex-direction: column; gap: 14px; }
+  .g-form h2 { font-size: 28px; margin-bottom: 4px; }
+  .g-deux { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .g-form .champ input { font-size: 15px; }
+  .g-form .champ input.g-facultatif { border-color: var(--avt-text-muted); }
+  .g-bouton { min-height: 56px; }
+  .g-note { font-size: 12.5px; line-height: 1.5; }
+  .g-confirmation { grid-column: 3; }
+  .g-confirmation p { font-size: 15px; line-height: 1.5; margin-bottom: 10px; }
+  @media (max-width: 899px) {
+    .g-corps { padding: 32px 0 32px; display: block; }
+    .g-corps > :global(.g-couv) { display: none; }
+    .g-texte { padding: 0 var(--marge-m); }
+    .g-tete-m { display: flex; gap: 18px; align-items: flex-start; margin-bottom: 20px; }
+    .g-tete-m :global(.g-couv-m) { width: 110px; height: 150px; flex: none; border-radius: 4px; font-size: 9px; padding: 8px; }
+    .g-texte h1 { font-size: 30px; line-height: 1.08; margin-bottom: 10px; }
+    .g-intro { font-size: 14.5px; margin-bottom: 0; }
+    .g-texte ul { margin: 0 0 28px; font-size: 15px; }
+    .g-form { margin: 0 16px; border-radius: 14px; padding: 22px 18px; gap: 12px; }
+    .g-form .champ input { font-size: 16px; }
+    .g-confirmation { margin: 16px; }
+  }
+</style>

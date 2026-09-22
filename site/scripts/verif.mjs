@@ -17,8 +17,8 @@ const TYPES = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascrip
 const serveur = createServer((req, res) => {
   let p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
   let f = path.join(DIST, p);
-  if (fs.existsSync(f) && fs.statSync(f).isDirectory()) f = path.join(f, 'index.html');
-  if (!fs.existsSync(f) && fs.existsSync(f + '.html')) f = f + '.html';
+  if (fs.existsSync(f + '.html')) f = f + '.html';
+  else if (fs.existsSync(f) && fs.statSync(f).isDirectory()) f = path.join(f, 'index.html');
   if (!fs.existsSync(f)) { f = path.join(DIST, '404.html'); res.statusCode = 404; }
   if (!fs.existsSync(f)) { res.statusCode = 404; return res.end('404'); }
   res.setHeader('Content-Type', TYPES[path.extname(f)] ?? 'application/octet-stream');
@@ -30,10 +30,11 @@ const navigateur = await chromium.launch({ executablePath: process.env.CHROMIUM_
 const erreurs = [];
 
 async function page(vue, largeur, hauteur, opts = {}) {
-  const ctx = await navigateur.newContext({ viewport: { width: largeur, height: hauteur }, deviceScaleFactor: 1, reducedMotion: opts.reduit ? 'reduce' : 'no-preference', locale: 'fr-FR' });
+  const ctx = await navigateur.newContext({ viewport: { width: largeur, height: hauteur }, deviceScaleFactor: 1, reducedMotion: opts.reduit ? 'reduce' : 'no-preference', locale: 'fr-FR', ignoreHTTPSErrors: true });
   const p = await ctx.newPage();
   p.on('console', (m) => { if (m.type() === 'error') erreurs.push(`${vue} : ${m.text()}`); });
   p.on('pageerror', (e) => erreurs.push(`${vue} : ${e.message}`));
+  p.on('response', (r) => { if (r.status() >= 400 && r.url().startsWith(base)) erreurs.push(`${vue} : ${r.status()} ${r.url()}`); });
   await p.goto(base + vue, { waitUntil: 'networkidle' });
   await p.evaluate(() => document.fonts.ready);
   return { p, ctx };
@@ -52,8 +53,13 @@ async function captureScroll(vue, largeur, hauteur, positions, prefixe) {
 async function capturePleine(vue, largeur, hauteur, suffixe, opts = {}) {
   const { p, ctx } = await page(vue, largeur, hauteur, opts);
   // révéler toutes les sections avant la capture pleine page
-  await p.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 600) { window.scrollTo(0, y); await new Promise((r) => setTimeout(r, 40)); } window.scrollTo(0, 0); });
-  await p.waitForTimeout(600);
+  await p.evaluate(async () => {
+    document.querySelectorAll('img[loading="lazy"]').forEach((i) => { i.loading = 'eager'; });
+    for (let y = 0; y < document.body.scrollHeight; y += 600) { window.scrollTo(0, y); await new Promise((r) => setTimeout(r, 60)); }
+    window.scrollTo(0, 0);
+    await Promise.all([...document.images].map((i) => i.complete ? null : new Promise((r) => { i.onload = i.onerror = r; })));
+  });
+  await p.waitForTimeout(1200);
   await p.screenshot({ path: nom(vue, suffixe), fullPage: true });
   await ctx.close();
 }

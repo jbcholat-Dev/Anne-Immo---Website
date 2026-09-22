@@ -1,0 +1,39 @@
+---
+// § 4 Demande d'estimation (D-4, CAP-11) : 8 champs, téléphone obligatoire, deux cases séparées. États : erreurs, envoi, confirmation « Anne vous rappelle », échec.
+import Champ from './Champ.astro';
+import Case from './Case.astro';
+---
+<form data-formulaire="estimation" class="form-estimation" novalidate>
+  <div class="form-grille">
+    <Champ nom="prenom" label="Prénom" requis autocomplete="given-name" erreur="Indiquez votre prénom." />
+    <Champ nom="nom" label="Nom" requis autocomplete="family-name" erreur="Indiquez votre nom." />
+    <Champ nom="telephone" label="Téléphone" type="tel" obligatoire requis autocomplete="tel" inputmode="tel" erreur="Dix chiffres attendus." />
+    <Champ nom="email" label="E-mail" type="email" requis autocomplete="email" erreur="Indiquez votre adresse e-mail." />
+    <Champ nom="commune_bien" label="Commune du bien" requis erreur="Indiquez la commune du bien." />
+    <Champ nom="type_bien" label="Type de bien" options={['Maison', 'Appartement', 'Chalet', 'Terrain', 'Autre']} />
+    <Champ nom="message" label="Message" type="textarea" facultatif classe="form-large" />
+    <div class="form-large"><Case nom="privacy" requis message="Nécessaire pour être rappelé.">J'accepte la <a href="/confidentialite">politique de confidentialité</a>. Obligatoire pour être rappelé.</Case></div>
+    <div class="form-large"><Case nom="newsletter">Recevoir la séquence d'e-mails d'Anne. Facultatif.</Case></div>
+    <div class="form-large alerte-douce" data-erreurs-globales hidden role="alert"></div>
+    <div class="form-large" data-echec hidden tabindex="-1">
+      <div class="alerte" role="alert">L'envoi n'a pas abouti. Vos informations sont conservées dans le formulaire : rien à ressaisir.</div>
+      <a href="/contact" class="lien form-echec-lien">Ou appeler Anne directement</a>
+    </div>
+    <button type="submit" class="btn btn-primaire form-large form-bouton">Demander une estimation</button>
+  </div>
+</form>
+<div class="form-confirmation" data-confirmation="estimation" hidden>
+  <div class="confirmation-titre">Anne vous rappelle</div>
+  <p>Sous un jour ouvré, au <span data-champ="telephone"></span>. Elle posera quelques questions sur le bien, puis fixera une visite. Aucun chiffre n'est donné par écrit avant cette visite.</p>
+  <div class="texte-muet form-confirmation-note">Aucun document à télécharger, aucune estimation automatique.</div>
+</div>
+<style>
+  .form-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; max-width: 840px; }
+  .form-grille :global(.form-large) { grid-column: 1 / -1; }
+  .form-bouton { min-height: 56px; }
+  .form-echec-lien { display: block; text-align: center; margin-top: 12px; }
+  .form-confirmation { max-width: 560px; background: var(--avt-ecru); border: 1px solid var(--filet-brun-fort); border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+  .form-confirmation p { font-size: 15.5px; line-height: 1.55; }
+  .form-confirmation-note { font-size: 13.5px; }
+  @media (max-width: 899px) { .form-grille { grid-template-columns: 1fr; } }
+</style>

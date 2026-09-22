@@ -10,7 +10,9 @@ let svg = fs.readFileSync(path.resolve(process.cwd(), '../design-system/assets',
 const uid = `lk${variante}${Math.random().toString(36).slice(2, 7)}`;
 svg = svg
   .replace(/<\?xml[^>]*>\s*/g, '')
-  .replace(/<style>[\s\S]*?<\/style>/, '<style>.nm{font-family:\'Italiana\',serif;font-size:52px;letter-spacing:1.6px;fill:' + (variante === 'negatif' ? '#F7F2EA' : '#26201A') + '}</style>')
+  .replace('Anne VIAL-TISSOT', 'Anne VIAL\u2011TISSOT')
+  .replace(/<style>[\s\S]*?<\/style>/, '')
+  .replace('class="nm"', `style="font-family:'Italiana',serif;font-size:52px;letter-spacing:1.6px;fill:${variante === 'negatif' ? '#F7F2EA' : '#26201A'}"`)
   .replace(/<circle cx="78" cy="80" r="56\.5"[^>]*\/>\s*/, '')
   .replace(/id="sym"/g, `id="${uid}"`)
   .replace(/url\(#sym\)/g, `url(#${uid})`)

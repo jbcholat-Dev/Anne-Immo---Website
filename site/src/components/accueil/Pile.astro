@@ -6,6 +6,7 @@ import Reserve from '../Reserve.astro';
 import { t, r, type Lang } from '../../i18n';
 import { stories, photoPrincipale, avisDeStory, avisParId, roleLibelle } from '../../lib/contenu';
 import { accueil, phrasesStories } from '../../config/site';
+import { tiret } from '../../lib/texte';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const d = t(lang);
@@ -52,7 +53,7 @@ function premierePhrase(texte: string) {
       <article class="carte" data-pile data-carte={i + 1}>
         <div class="carte-texte">
           {c.sousTitre && <div class="chapeau-muet carte-etiquette">{c.sousTitre}</div>}
-          <h3>{c.titre}</h3>
+          <h3>{tiret(c.titre)}</h3>
           <p class="carte-phrase">{c.lien ? `« ${c.phrase} »` : c.phrase}</p>
           {c.citation && <p class="carte-citation">« {c.citation.texte} » <span>{c.citation.auteur} · {c.citation.role}</span></p>}
           {c.lien && <a href={c.lien} class="lien">{d.accueil.voir_vente}</a>}

@@ -1,0 +1,19 @@
+---
+// Champ de formulaire (Composants : repos, focus, erreur, désactivé). Le message d'erreur est rempli par l'îlot formulaires.
+interface Props { nom: string; label: string; type?: string; requis?: boolean; facultatif?: boolean; obligatoire?: boolean; placeholder?: string; autocomplete?: string; rows?: number; options?: string[]; classe?: string; erreur?: string; inputmode?: string; sansLabel?: boolean }
+const { nom, label, type = 'text', requis = false, facultatif = false, obligatoire = false, placeholder, autocomplete, rows = 4, options, classe = '', erreur, inputmode, sansLabel = false } = Astro.props;
+const id = `f-${nom}-${Math.random().toString(36).slice(2, 6)}`;
+const eid = `${id}-e`;
+---
+<label class={`champ ${classe}`} for={id}>
+  {!sansLabel && <span>{label}{obligatoire && <span class="texte-muet"> · obligatoire</span>}{facultatif && <span class="texte-muet"> · facultatif</span>}</span>}
+  {sansLabel && <span class="sr-only">{label}</span>}
+  {options ? (
+    <select id={id} name={nom} required={requis} aria-describedby={eid} data-erreur={erreur}>{options.map((o) => <option value={o}>{o}</option>)}</select>
+  ) : type === 'textarea' ? (
+    <textarea id={id} name={nom} rows={rows} required={requis} placeholder={placeholder} aria-describedby={eid} data-erreur={erreur} maxlength="1000"></textarea>
+  ) : (
+    <input id={id} name={nom} type={type} required={requis} placeholder={placeholder} autocomplete={autocomplete} inputmode={inputmode} aria-describedby={eid} data-erreur={erreur} />
+  )}
+  <span class="champ-erreur" id={eid} aria-live="polite"></span>
+</label>
