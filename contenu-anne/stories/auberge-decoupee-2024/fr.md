@@ -1,12 +1,13 @@
 ---
-commune:
+commune: Armoy
 type_bien: Propriété bâtie et terrain (ancienne auberge, à diviser)
 annee_vente: 2024
 delai_vente:
 particularite: >
   Propriété de 6 000 m² avec trois bâtiments, restée sans repreneur un an :
   aucun acheteur capable d'absorber l'ensemble en bloc.
-photo_principale:
+photo_principale:      # nom du fichier dans dossier_photos
+dossier_photos: "ARMOY_PEILLEX_projet marchands"   # dossier HD dans « Stories  photos » (hors Git)
 photos: []
 temoignages:          # vendeur et/ou acheteur ; un seul suffit pour publier
   - role: vendeur

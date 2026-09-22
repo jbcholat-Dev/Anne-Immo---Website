@@ -5,6 +5,7 @@ annee_vente:
 delai_vente:          # de la mise en vente à l'offre acceptée, ex. « 3 mois »
 particularite:        # ce qui rendait cette vente difficile ou intéressante, une ligne
 photo_principale: photo-principale.jpg
+dossier_photos:       # le dossier de la vente dans « Stories  photos » (photos HD, hors Git), ex. « SCIEZ_BURNET_Villa »
 photos: []            # ex. [photo-2.jpg, photo-3.jpg] — 4 à 6, dont une en portrait
 temoignages:          # jusqu'à deux : le vendeur (ton client) et l'acheteur. Un seul suffit pour publier ; les deux, c'est l'idéal. Supprime le bloc que tu n'as pas.
   - role: vendeur

@@ -1,12 +1,13 @@
 ---
-commune:
+commune: Allinges
 type_bien: Maison
 annee_vente:
 delai_vente:
 particularite: >
   Bien premium resté un an sans offre : une objection silencieuse (pas de
   piscine) et une présentation insuffisante pour la gamme de prix.
-photo_principale:
+photo_principale:      # nom du fichier dans dossier_photos
+dossier_photos: "ALLINGES_MORAND_villa"   # dossier HD dans « Stories  photos » (hors Git)
 photos: []
 temoignages:          # vendeur et/ou acheteur ; un seul suffit pour publier
   - role: vendeur
