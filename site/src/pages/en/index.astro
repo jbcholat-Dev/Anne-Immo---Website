@@ -1,0 +1,25 @@
+---
+// EN home (AD-2, AD-3) : same composition as the French home. No story is translated yet, so § 1.3 (the sticky pile) is not published in English
+// (« aucune story publiée — la section disparaît »). Reviews are quoted in their original language, marked as such.
+import Page from '../../layouts/Page.astro';
+import Hero from '../../components/accueil/Hero.astro';
+import BandePreuve from '../../components/accueil/BandePreuve.astro';
+import Methode from '../../components/accueil/Methode.astro';
+import Avis from '../../components/accueil/Avis.astro';
+import Diagnostic from '../../components/accueil/Diagnostic.astro';
+import Anne from '../../components/accueil/Anne.astro';
+import Fermeture from '../../components/accueil/Fermeture.astro';
+import { t } from '../../i18n';
+import { image } from '../../lib/images';
+import { hero } from '../../config/site';
+const d = t('en');
+---
+<Page titre={d.accueil.titre_page} description={d.accueil.description} lang="en" courante="accueil" sombre sansPadding ogImage={image(hero.poster)!.jpg}>
+  <Hero lang="en" />
+  <BandePreuve lang="en" />
+  <Methode lang="en" />
+  <Avis lang="en" />
+  <Diagnostic lang="en" />
+  <Anne lang="en" />
+  <Fermeture lang="en" />
+</Page>

@@ -35,8 +35,11 @@ async function page(vue, largeur, hauteur, opts = {}) {
   p.on('console', (m) => { if (m.type() === 'error') erreurs.push(`${vue} : ${m.text()}`); });
   p.on('pageerror', (e) => erreurs.push(`${vue} : ${e.message}`));
   p.on('response', (r) => { if (r.status() >= 400 && r.url().startsWith(base)) erreurs.push(`${vue} : ${r.status()} ${r.url()}`); });
-  await p.goto(base + vue, { waitUntil: 'networkidle' });
-  await p.evaluate(() => document.fonts.ready);
+  for (let essai = 0; essai < 3; essai++) {
+    await p.goto(base + vue, { waitUntil: 'networkidle' });
+    await p.evaluate(() => document.fonts.ready);
+    if (await p.evaluate(() => document.fonts.check('16px Italiana') && document.fonts.check('16px "DM Sans"'))) break;
+  }
   return { p, ctx };
 }
 const nom = (vue, suffixe) => path.join(OUT, `${(vue === '/' ? 'accueil' : vue.replace(/^\//, '').replace(/\//g, '_')).replace(/[#?].*$/, '')}-${suffixe}.png`);

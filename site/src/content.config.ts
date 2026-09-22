@@ -50,7 +50,7 @@ const avis = defineCollection({
 const instantane = defineCollection({
   loader: glob({ pattern: 'instantane.md', base: `${CONTENU}/avis-immodvisor` }),
   schema: z.object({
-    url_fiche: z.string().url(),
+    url_fiche: z.url(),
     note: z.number(),
     nombre_avis: z.number(),
     date_releve: z.coerce.date(),

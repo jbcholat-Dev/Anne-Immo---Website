@@ -18,7 +18,7 @@ const liste = await Promise.all(accueil.avis.map(async (id) => {
 const contexte = (x: (typeof liste)[number]) => [roleLibelle(x.a, lang), x.story?.data.commune, dateLibelle(x.a.data.date, lang)].filter(Boolean).join(' · ');
 ---
 <section class="avis" data-sec="avis" aria-labelledby="avis-titre">
-  <div class="avis-tete" data-reveal="titre"><h2 id="avis-titre">{d.accueil.avis_titre}</h2></div>
+  <div class="avis-tete" data-reveal="titre"><h2 id="avis-titre">{d.accueil.avis_titre}</h2>{lang === 'en' && <p class="texte-muet avis-note">Verified Immodvisor reviews, quoted in full in their original language (French).</p>}</div>
   <div class="avis-grille" data-reveal="bloc">
     {liste.map((x, i) => (
       <figure class={i === 0 ? 'avis-relie' : 'avis-seul'} lang="fr">
@@ -27,7 +27,7 @@ const contexte = (x: (typeof liste)[number]) => [roleLibelle(x.a, lang), x.story
         )}
         <blockquote>{paragraphes(x.a.body).map((p) => <p>{p}</p>)}</blockquote>
         <figcaption>{x.a.data.auteur} <span class="texte-muet">· {contexte(x)}</span>
-          {x.slug && x.story && <div class="avis-lien"><a href={`${r('realisation', lang)}/${x.slug}`}>{d.accueil.voir_vente}</a></div>}
+          {x.slug && x.story && <div class="avis-lien"><a href={`${r('realisation', 'fr')}/${x.slug}`} hreflang="fr">{d.accueil.voir_vente}{lang === 'en' && ' (in French)'}</a></div>}
         </figcaption>
       </figure>
     ))}
@@ -38,6 +38,7 @@ const contexte = (x: (typeof liste)[number]) => [roleLibelle(x.a, lang), x.story
   .avis { position: relative; background: var(--avt-brume); padding: 96px var(--marge); }
   .avis-tete { margin: 0 0 48px; }
   .avis-tete h2 { font-size: 40px; }
+  .avis-note { font-size: 14px; margin-top: 10px; }
   .avis-grille { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 40px; align-items: start; }
   figure { display: flex; flex-direction: column; gap: 16px; }
   .avis-relie { gap: 18px; }

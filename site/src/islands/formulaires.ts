@@ -38,7 +38,7 @@ function afficher(c: Champ, msg: string | null) {
 }
 
 export function valider(form: HTMLFormElement): boolean {
-  let premier: Champ | null = null;
+  let premier: Champ | null = null as Champ | null;
   let n = 0;
   form.querySelectorAll<Champ>('input, select, textarea').forEach((c) => {
     if (c.type === 'hidden' || c.type === 'radio') return;
@@ -48,7 +48,7 @@ export function valider(form: HTMLFormElement): boolean {
   });
   const global = form.querySelector<HTMLElement>('[data-erreurs-globales]');
   if (global) { global.hidden = n === 0; global.textContent = n === 1 ? 'Un champ à corriger avant d’envoyer.' : `${n} champs à corriger avant d’envoyer.`; }
-  premier?.focus();
+  if (premier) (premier as Champ).focus();
   return n === 0;
 }
 
@@ -74,11 +74,11 @@ function brancher(form: HTMLFormElement) {
     const donnees = Object.fromEntries(new FormData(form).entries());
     form.setAttribute('data-envoi', '1');
     if (bouton) { bouton.setAttribute('aria-busy', 'true'); bouton.disabled = true; bouton.textContent = 'Envoi en cours…'; }
-    form.querySelectorAll<Champ>('input, select, textarea').forEach((c) => (c.readOnly = true));
+    form.querySelectorAll<Champ>('input, select, textarea').forEach((c) => { if ('readOnly' in c) c.readOnly = true; });
     const res = await envoyer(source, donnees);
     form.removeAttribute('data-envoi');
     if (bouton) { bouton.removeAttribute('aria-busy'); bouton.disabled = false; bouton.textContent = libelle; }
-    form.querySelectorAll<Champ>('input, select, textarea').forEach((c) => (c.readOnly = false));
+    form.querySelectorAll<Champ>('input, select, textarea').forEach((c) => { if ('readOnly' in c) c.readOnly = false; });
     if (res.ok) {
       form.dispatchEvent(new CustomEvent('avt:envoye', { detail: donnees, bubbles: true }));
       if (confirmation) {
