@@ -167,7 +167,7 @@ Index unique **partiel** sur `token` (`source = 'diagnostic'`). `lead_delivery` 
 
 - **Binds:** CAP-1, tous les composants, e-mails, PDF du guide
 - **Prevents:** une couleur ou une police en dur dans un composant ; une maquette et un site qui divergent du design system ; un e-mail hors charte
-- **Rule:** Les composants, gabarits d'e-mail et îlots ne consomment que les tokens de `design-system/` (palette, typographies, espacements, règles du logo) ; aucune valeur visuelle littérale hors de ce dossier. `design-system/` est la source locale du design system claude.ai/design : toute évolution se fait localement puis est re-poussée, jamais l'inverse. Aucune image de banque (CAP-1) : tout `Media` est un actif d'Anne.
+- **Rule:** Les composants, gabarits d'e-mail et îlots ne consomment que les tokens de `design-system/` (palette, typographies, espacements, règles du logo) ; aucune valeur visuelle littérale hors de ce dossier. `design-system/` est la source locale du design system claude.ai/design : toute évolution se fait localement puis est re-poussée, jamais l'inverse. Aucune image de banque (CAP-1) : tout `Media` est un actif d'Anne. **Logos eXp (ajout 2026-09-22)** : actifs de marque externes et intouchables, consommés tels quels depuis `design-system/assets/` (lockups `lockup-exp-*.svg`, originaux `eXp_Logo_Black/White.svg`), jamais recolorés par un token ni régénérés ; le noir et le blanc purs du logo eXp sont la seule valeur visuelle admise hors tokens, parce qu'imposés par le réseau.
 
 ### AD-18 — Les droits des personnes s'exercent depuis l'admin, sans JB [ADOPTED]
 

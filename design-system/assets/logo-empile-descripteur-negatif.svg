@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 330" role="img" aria-label="Anne VIAL-TISSOT — version empilée avec descripteur, négative pour fonds sombres">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Italiana&amp;family=DM+Sans:wght@500&amp;display=swap');
+      .nm{font-family:'Italiana',serif; font-size:50px; letter-spacing:1.5px; fill:#F7F2EA}
+      .st{font-family:'DM Sans',sans-serif; font-size:12.5px; font-weight:500; letter-spacing:3.2px; fill:#F7F2EA; opacity:.92}
+    </style>
+    <clipPath id="sym"><circle cx="280" cy="88" r="60"/></clipPath>
+  </defs>
+  <circle cx="280" cy="88" r="62.5" fill="none" stroke="#F7F2EA" stroke-width="2.5"/>
+  <g clip-path="url(#sym)">
+    <rect x="220" y="28" width="120" height="120" fill="#002FA7"/>
+    <path d="M 220 87 C 242 80, 260 92, 280 86 C 300 80, 320 89, 340 84 L 340 148 L 220 148 Z" fill="#C4623E"/>
+  </g>
+  <text class="nm" x="280" y="212" text-anchor="middle">Anne VIAL-TISSOT</text>
+  <path d="M 198 231 C 260 225, 400 233, 478 228" fill="none" stroke="#C4623E" stroke-width="4.4" stroke-linecap="round"/>
+  <text class="st" x="280" y="263" text-anchor="middle">CONSEIL IMMOBILIER — LÉMAN &amp; CHABLAIS</text>
+</svg>

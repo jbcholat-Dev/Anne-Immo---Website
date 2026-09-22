@@ -32,7 +32,7 @@ La spec vit dans le repo (`Website/SPEC.md`) — c'est elle que les outils conso
 ### Étape 2 — Pousser la charte dans Claude Design (une fois) — ~1 h
 Deux voies, cumulables :
 - **Voie fidèle (recommandée)** : depuis Claude Code, je construis le **design system « Anne VIAL-TISSOT »** à partir de la Charte v1 (tokens de couleurs, typos, cartes de composants : logo, boutons pilule, cartes galet, encarts brume, séparateur horizon) et je le pousse via l'outil **DesignSync** dans un projet *Design System* de ton compte claude.ai/design. Tu actives ensuite « **Published** » pour qu'il devienne le défaut.
-- **Voie simple** : dans claude.ai/design, uploader la charte (le .md exporté en PDF + les 6 SVG) — Claude Design extrait couleurs/typos/composants automatiquement et génère un UI kit ; « Remix » pour affiner.
+- **Voie simple** : dans claude.ai/design, uploader la charte (le .md exporté en PDF + les 14 SVG, logos primaires **sans sous-titre** par défaut — charte § 2, 2026-09-22) — Claude Design extrait couleurs/typos/composants automatiquement et génère un UI kit ; « Remix » pour affiner.
 
 Résultat dans les deux cas : **tout ce qui sera généré dans Claude Design respecte la charte automatiquement** — l'outil vérifie ses sorties contre le design system avant de te les montrer. C'est LA réponse à « comment j'utilise les éléments qu'on a définis ».
 

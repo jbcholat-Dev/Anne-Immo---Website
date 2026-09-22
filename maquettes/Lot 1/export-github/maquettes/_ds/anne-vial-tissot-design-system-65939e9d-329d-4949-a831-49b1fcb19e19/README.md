@@ -1,5 +1,7 @@
 # Design system « Anne VIAL-TISSOT » — bundle DesignSync
 
+> ⚠️ **Instantané historique (lot 1, 6 cartes) — périmé.** La source vivante est `Website/design-system/` (7 cartes, co-branding eXp inclus depuis le 2026-09-22) et le projet claude.ai/design. Ne rien reprendre d'ici.
+
 Bundle prêt à pousser vers un projet **Design System** du compte claude.ai/design (étape ② de la méthode Website). Source de vérité : `Identité Visuelle/Charte/Charte v1 — Anne Vial-Tissot.md`.
 
 ## Contenu

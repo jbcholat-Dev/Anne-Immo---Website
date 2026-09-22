@@ -7,46 +7,68 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=DM+Sans:wght@400;500;700&display=swap">
 <style>
   body{margin:0; background:#F7F2EA; color:#26201A; font-family:'DM Sans',sans-serif; padding:28px; display:flex; flex-direction:column; gap:26px}
-  .row{display:flex; align-items:center; gap:40px; flex-wrap:wrap}
+  .row{display:flex; align-items:center; gap:36px; flex-wrap:wrap}
   .lbl{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#8a8177; margin-bottom:8px; font-weight:500}
-  .nm{font-family:Italiana,serif; color:#26201A}
-  .sub{font-family:'DM Sans',sans-serif; font-weight:500; font-size:10px; letter-spacing:.26em; color:#002FA7; margin-top:10px}
-  .uline{position:relative; display:inline-block}
-  .uline svg{position:absolute; left:0; bottom:-.24em; width:100%; height:.24em}
+  .nm{font-family:'Italiana',serif; font-size:52px; letter-spacing:1.6px; fill:#26201A}
+  .st{font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; letter-spacing:3.6px; fill:#002FA7}
+  .avt{font-family:'Italiana',serif; font-size:64px; letter-spacing:3px}
+  .sizes{display:flex; align-items:flex-end; gap:18px; flex-wrap:wrap}
+  .sizes small{display:block; text-align:center; font-size:10px; color:#8a8177; margin-top:4px}
+  .rules{font-size:12px; color:#6E6354; line-height:1.6; max-width:78ch}
+  .rules b{color:#26201A}
 </style>
 </head>
 <body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <clipPath id="cH"><circle cx="78" cy="80" r="54"/></clipPath>
+      <clipPath id="cM"><circle cx="88" cy="86" r="52"/></clipPath>
+      <clipPath id="cMo"><path clip-rule="evenodd" d="M0 0 H200 V200 H0 Z M 140 86 A 52 52 0 1 0 36 86 A 52 52 0 1 0 140 86"/></clipPath>
+    </defs>
+    <symbol id="hz" viewBox="0 0 680 160">
+      <g clip-path="url(#cH)"><rect x="24" y="26" width="108" height="108" fill="#002FA7"/><path d="M 24 79 C 44 73, 60 84, 78 78 C 96 72, 114 81, 132 76 L 132 134 L 24 134 Z" fill="#C4623E"/></g>
+      <text class="nm" x="158" y="90">Anne VIAL-TISSOT</text>
+      <path d="M 280 109 C 350 103, 490 111, 576 106" fill="none" stroke="#C4623E" stroke-width="4.5" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="hzD" viewBox="0 0 680 170">
+      <g clip-path="url(#cH)"><rect x="24" y="26" width="108" height="108" fill="#002FA7"/><path d="M 24 79 C 44 73, 60 84, 78 78 C 96 72, 114 81, 132 76 L 132 134 L 24 134 Z" fill="#C4623E"/></g>
+      <text class="nm" x="158" y="96">Anne VIAL-TISSOT</text>
+      <path d="M 280 115 C 350 109, 490 117, 576 112" fill="none" stroke="#C4623E" stroke-width="4.5" stroke-linecap="round"/>
+      <text class="st" x="158" y="140">CONSEIL IMMOBILIER — LÉMAN &amp; CHABLAIS</text>
+    </symbol>
+    <symbol id="mo" viewBox="0 0 200 200">
+      <g transform="translate(-4 8)">
+        <g clip-path="url(#cM)"><rect x="36" y="34" width="104" height="104" fill="#002FA7"/><path d="M 36 85 C 54 79, 70 90, 88 84 C 106 78, 122 87, 140 82 L 140 138 L 36 138 Z" fill="#C4623E"/></g>
+        <g clip-path="url(#cM)"><text class="avt" x="116" y="146" text-anchor="middle" fill="#F7F2EA">AVT</text></g>
+        <g clip-path="url(#cMo)"><text class="avt" x="116" y="146" text-anchor="middle" fill="#26201A">AVT</text></g>
+      </g>
+    </symbol>
+  </svg>
+
   <div>
-    <div class="lbl">Logo principal (horizontal) — fichier : assets/logo-horizontal.svg</div>
-    <div class="row">
-      <svg width="84" height="84" viewBox="0 0 100 100" aria-label="Symbole cercle-horizon">
-        <defs><clipPath id="s1"><circle cx="50" cy="50" r="46"/></clipPath></defs>
-        <g clip-path="url(#s1)"><rect x="4" y="4" width="92" height="92" fill="#002FA7"/><path d="M 4 56 C 22 50, 38 61, 52 55 C 66 49, 82 57, 96 52 L 96 96 L 4 96 Z" fill="#C4623E"/></g>
-      </svg>
-      <div>
-        <div class="nm" style="font-size:38px; letter-spacing:.03em">Anne <span class="uline">VIAL-TISSOT<svg viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true"><path d="M4 8 C 60 2, 140 10, 196 5" fill="none" stroke="#C4623E" stroke-width="3.6" stroke-linecap="round"/></svg></span></div>
-        <div class="sub">CONSEIL IMMOBILIER — LÉMAN &amp; CHABLAIS</div>
-      </div>
+    <div class="lbl">Logo primaire — horizontal, sans sous-titre · assets/logo-horizontal.svg · site (header), signature, documents, panneaux</div>
+    <svg viewBox="0 0 680 160" style="width:100%; max-width:480px; display:block"><use href="#hz"/></svg>
+  </div>
+
+  <div>
+    <div class="lbl">Version avec descripteur · assets/logo-horizontal-descripteur.svg · seulement si le descripteur ≥ 1,5 mm print / logo ≥ ~300 px écran (papeterie, recto carte, couvertures RS, affiche) — jamais sur le site</div>
+    <svg viewBox="0 0 680 170" style="width:100%; max-width:480px; display:block"><use href="#hzD"/></svg>
+  </div>
+
+  <div>
+    <div class="lbl">Monogramme AVT — sans texte, composition libre sans cercle englobant · assets/monogramme-avatar.svg · avatars, favicon riche</div>
+    <div class="sizes">
+      <div><svg width="140" height="140" viewBox="0 0 200 200"><use href="#mo"/></svg><small>140 px</small></div>
+      <div><svg width="64" height="64" viewBox="0 0 200 200"><use href="#mo"/></svg><small>64 px</small></div>
+      <div><svg width="40" height="40" viewBox="0 0 200 200"><use href="#mo"/></svg><small>40 px</small></div>
+      <div><svg width="24" height="24" viewBox="0 0 200 200"><use href="#mo"/></svg><small>24 px (min)</small></div>
     </div>
   </div>
-  <div>
-    <div class="lbl">Monogramme réseaux sociaux (composition libre, sans cercle englobant) — assets/monogramme-avatar.svg</div>
-    <svg width="150" height="150" viewBox="0 0 200 200" aria-label="Monogramme AVT">
-      <defs>
-        <clipPath id="mc"><circle cx="88" cy="86" r="52"/></clipPath>
-        <clipPath id="mo"><path clip-rule="evenodd" d="M0 0 H200 V200 H0 Z M 140 86 A 52 52 0 1 0 36 86 A 52 52 0 1 0 140 86"/></clipPath>
-        <path id="vt" d="M 24 86 A 64 64 0 0 1 152 86"/>
-      </defs>
-      <g clip-path="url(#mc)"><rect x="36" y="34" width="104" height="104" fill="#002FA7"/><path d="M 36 85 C 54 79, 70 90, 88 84 C 106 78, 122 87, 140 82 L 140 138 L 36 138 Z" fill="#C4623E"/></g>
-      <g clip-path="url(#mc)"><text x="116" y="146" text-anchor="middle" font-family="Italiana,serif" font-size="64" fill="#F7F2EA" letter-spacing="3">AVT</text></g>
-      <g clip-path="url(#mo)"><text x="116" y="146" text-anchor="middle" font-family="Italiana,serif" font-size="64" fill="#26201A" letter-spacing="3">AVT</text></g>
-      <text font-family="'DM Sans',sans-serif" font-size="10.5" font-weight="500" fill="#002FA7" letter-spacing="3"><textPath href="#vt" startOffset="50%" text-anchor="middle">LÉMAN &amp; CHABLAIS</textPath></text>
-      <text x="114" y="166" text-anchor="middle" font-family="'DM Sans',sans-serif" font-size="8.6" font-weight="500" fill="#26201A" letter-spacing="1.5">CONSEIL IMMOBILIER</text>
-    </svg>
-  </div>
-  <div style="font-size:12px; color:#6E6354; line-height:1.6">
-    Autres fichiers dans <b>assets/</b> : logo-empile.svg (formats carrés/verticaux) · symbole-seul.svg (favicon, puces) · logo-horizontal-negatif.svg (fonds sombres, texte écru + liseré) · logo-horizontal-mono-brun.svg (tampon, 1 couleur).
-    Règles : zone de protection ≥ ½ hauteur du symbole · nom jamais coupé ni abrégé · pas d'ombre, pas de déformation, pas de recoloration.
+
+  <div class="rules">
+    <b>Règle sous-titre (décision 2026-09-22)</b> : le logo est <b>sans sous-titre par défaut</b> — deux éléments, le symbole et le nom signé. Le descripteur « Conseil immobilier — Léman &amp; Chablais » se dit <b>en texte</b> : sous-titre du hero, ligne de statut du pied de page, balise titre, bio. La version avec descripteur existe en 4 fichiers (horizontal / empilé × positif / négatif) et ne s'emploie qu'au-dessus du seuil de lisibilité, une seule fois par support.<br>
+    <b>Autres fichiers dans assets/</b> : logo-empile.svg (formats carrés/verticaux) · logo-horizontal-negatif.svg (fonds sombres, texte écru + liseré) · logo-horizontal-mono-brun.svg (tampon, 1 couleur) · symbole-seul.svg (favicon, puces) · logo-*-descripteur*.svg (4) · lockup-exp-*.svg (4, carte Co-branding eXp).<br>
+    <b>Règles</b> : zone de protection ≥ ½ hauteur du symbole · horizontal ≥ 140 px de large, monogramme ≥ 24 px, en dessous symbole seul · nom jamais coupé ni abrégé · pas d'ombre, pas de déformation, pas de recoloration.
   </div>
 </body>
 </html>

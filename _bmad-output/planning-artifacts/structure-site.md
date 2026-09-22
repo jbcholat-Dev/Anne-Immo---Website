@@ -93,7 +93,7 @@ Toutes traduites (CAP-10).
 **Rôle :** rendre le contact atteignable depuis toute page (CAP-6) et porter le changement de langue (CAP-10).
 
 **En-tête, desktop** — **cinq entrées, une bascule de langue, un bouton** (D-2 à D-7).
-- Logo à gauche (déclinaison horizontale de la charte).
+- Logo à gauche (déclinaison horizontale de la charte, **sans sous-titre** — charte § 2, 2026-09-22) — **logo Anne seul : pas de logo eXp en en-tête** (charte § 2.4, le co-branding vit en pied de page). Le secteur (Léman & Chablais) n'est pas redit ici : il vit dans le sous-titre du hero et la ligne de statut du pied de page.
 - Entrées, dans cet ordre : **À propos ▾** · Réalisation · Vendre · Acheter · Contact.
 - **« À propos » porte un menu déroulant** (au survol sur desktop, au tap sur les appareils tactiles) avec trois sous-entrées, qui sont les ancres de la page À propos (§3) : « Qui suis-je ? » (`#qui-suis-je`) · « Ma méthode » (`#methode`) · « Cible » (`#cible`). ⚠️ **« Cible » est à trancher** (D-2, point ouvert 1) : dessiner le menu **en deux variantes**, à trois et à deux sous-entrées. L'entrée « À propos » reste elle-même cliquable et mène en haut de la page.
 - Sélecteur de langue à droite, discret (code de langue, **pas de drapeau** — un drapeau désigne un pays, pas une langue).
@@ -107,7 +107,7 @@ Toutes traduites (CAP-10).
 
 **Pendant les 17 écrans du diagnostic : navigation masquée.** Seuls subsistent le logo (non cliquable ou avec confirmation d'abandon), la barre de progression et le retour arrière. C'est une décision de taux de complétion, pas de style — le déployé fait ce choix et il a raison.
 
-**Pied de page** — plan du site, mentions légales, politique de confidentialité, gestion des cookies, sélecteur de langue, co-branding eXp France selon les règles de la charte, lien vers le guide, réseaux sociaux (variante B de D-6 : ils y restent seuls si l'en-tête ne les prend pas).
+**Pied de page** — plan du site, mentions légales, politique de confidentialité, gestion des cookies, sélecteur de langue, une **ligne de statut** (« consultante indépendante — Léman & Chablais — eXp France ») qui porte le secteur en texte, **co-branding eXp** : le lockup officiel « Anne VIAL-TISSOT | eXp » (disposition horizontale avec ligne, version négative sur le fond brun — fichier `design-system/assets/lockup-exp-horizontal-negatif.svg`, logo Anne **sans sous-titre** — charte § 2, 2026-09-22) posé en bas, à côté des liens légaux, sur toutes les pages (charte § 2.4, 2026-09-22), lien vers le guide, réseaux sociaux (variante B de D-6 : ils y restent seuls si l'en-tête ne les prend pas).
 
 ---
 
@@ -433,7 +433,7 @@ Quatre corrections obligatoires par rapport au déployé :
 
 **Rôle :** la conformité, et elle se dessine.
 
-**Mentions légales** — identité d'Anne, statut de mandataire indépendante, **numéro RSAC**, réseau eXp France et référence de la carte professionnelle du réseau, coordonnées, hébergeur, directeur de publication.
+**Mentions légales** — identité d'Anne, statut de mandataire indépendante, **numéro RSAC**, réseau eXp France et référence de la carte professionnelle du réseau, coordonnées, hébergeur, directeur de publication. Le lockup co-brandé Anne + eXp y figure aussi (en plus du pied de page), avec la phrase de statut « consultante indépendante — eXp France » (charte § 2.4).
 **Politique de confidentialité** — finalité de chaque collecte (diagnostic, contact, **demande d'estimation**, guide, séquence d'e-mails), base légale, durée de conservation, destinataires, droits et modalités d'exercice.
 **Politique cookies** — explique qu'aucun traceur non essentiel n'est déposé : mesure d'audience sans cookie, paramètres de campagne sans dépôt, seule la sauvegarde des réponses du diagnostic (strictement nécessaire) est conservée localement (AD-11).
 
@@ -524,7 +524,7 @@ Une maquette qui ne montre que le cas nominal ment sur le travail restant. Trois
 | **A-10** | Guide PDF rebrandé | 1 | « Les 10 erreurs fatales », à la charte v1. Sur le chemin critique (CAP-8). |
 | **A-11** | Avis Immodvisor | **3 sélectionnés** (vendeurs **et** acheteurs) + la note globale | Les trois avis de la section « Ils ont travaillé avec Anne » (§1.5) : texte entier, prénom, rôle, date, lien vers la fiche source. Conservés en **instantané local** (objet `AvisImmodvisor`), pas rechargés depuis la plateforme à l'affichage. 🔄 **Choix des trois avis à faire** (point ouvert 5) : idéalement deux vendeurs + un acheteur, dont au moins un relié à une story rédigée. |
 | **A-12** | Autorisations de publication | 1 par bien + 1 par personne citée | Modèle à rédiger. Accord des vendeurs pour les photos, accord nominatif des acheteurs. |
-| **A-13** | Contenu des mentions légales | 1 | Numéro RSAC, référence de carte professionnelle eXp, hébergeur. |
+| **A-13** | Contenu des mentions légales | 1 | Numéro RSAC, référence de carte professionnelle eXp, hébergeur. **Les logos eXp sont déjà fournis** (`Identité Visuelle/Charte/Logos eXp/`, lockups prêts dans `design-system/assets/`) — rien à demander à Anne sur ce point. |
 | **A-14** | Image d'ouverture | 1, **requise** | **Poster de la vidéo du hero et repli** (mobile, connexion lente, mouvement réduit) — extraite de la vidéo ou cadrée à l'identique. Paysage, 2400 px minimum, **Chablais ou Léman reconnaissable** — pas une montagne générique. Recadrage portrait pour le mobile. |
 | **A-15** | Vidéo « Anne présente sa méthode » | 1, **facultative** | Anne face caméra, quelques minutes, sur la section Méthode de §3 (D-12). **À tourner après le lancement** : la page est complète sans elle et le bloc n'apparaît pas tant qu'elle n'existe pas. Image d'ouverture fournie avec. |
 
