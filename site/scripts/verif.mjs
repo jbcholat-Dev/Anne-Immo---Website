@@ -35,11 +35,13 @@ async function page(vue, largeur, hauteur, opts = {}) {
   p.on('console', (m) => { if (m.type() === 'error') erreurs.push(`${vue} : ${m.text()}`); });
   p.on('pageerror', (e) => erreurs.push(`${vue} : ${e.message}`));
   p.on('response', (r) => { if (r.status() >= 400 && r.url().startsWith(base)) erreurs.push(`${vue} : ${r.status()} ${r.url()}`); });
-  for (let essai = 0; essai < 3; essai++) {
-    await p.goto(base + vue, { waitUntil: 'networkidle' });
-    await p.evaluate(() => document.fonts.ready);
+  // Google Fonts peut être lent ou bloqué (proxy) : attente bornée, un second essai au plus
+  for (let essai = 0; essai < 2; essai++) {
+    await p.goto(base + vue, { waitUntil: 'load', timeout: 30000 });
+    await Promise.race([p.evaluate(() => document.fonts.ready), p.waitForTimeout(6000)]);
     if (await p.evaluate(() => document.fonts.check('16px Italiana') && document.fonts.check('16px "DM Sans"'))) break;
   }
+  await p.waitForTimeout(300);
   return { p, ctx };
 }
 const nom = (vue, suffixe) => path.join(OUT, `${(vue === '/' ? 'accueil' : vue.replace(/^\//, '').replace(/\//g, '_')).replace(/[#?].*$/, '')}-${suffixe}.png`);
