@@ -1,0 +1,12 @@
+---
+// Image dérivée (scripts/images.mjs) en <picture> WebP + repli JPEG, dimensions intrinsèques, lazy par défaut.
+import { image, srcset } from '../lib/images';
+interface Props { id: string; alt: string; sizes?: string; class?: string; loading?: 'lazy' | 'eager'; fetchpriority?: 'high' | 'auto'; style?: string }
+const { id, alt, sizes = '100vw', class: cls = 'photo', loading = 'lazy', fetchpriority, style } = Astro.props;
+const img = image(id);
+if (!img) throw new Error(`Image dérivée absente : ${id} — lancer npm run images`);
+---
+<picture>
+  <source type="image/webp" srcset={srcset(img)} sizes={sizes} />
+  <img src={img.jpg} width={img.largeur} height={img.hauteur} alt={alt} class={cls} loading={loading} decoding="async" fetchpriority={fetchpriority} style={style} />
+</picture>

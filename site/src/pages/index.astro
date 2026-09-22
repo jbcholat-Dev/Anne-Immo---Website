@@ -1,0 +1,25 @@
+---
+import Page from '../layouts/Page.astro';
+import Hero from '../components/accueil/Hero.astro';
+import BandePreuve from '../components/accueil/BandePreuve.astro';
+import Pile from '../components/accueil/Pile.astro';
+import Methode from '../components/accueil/Methode.astro';
+import Avis from '../components/accueil/Avis.astro';
+import Diagnostic from '../components/accueil/Diagnostic.astro';
+import Anne from '../components/accueil/Anne.astro';
+import Fermeture from '../components/accueil/Fermeture.astro';
+import { t } from '../i18n';
+import { image } from '../lib/images';
+import { hero } from '../config/site';
+const d = t('fr');
+---
+<Page titre={d.accueil.titre_page} description={d.accueil.description} lang="fr" courante="accueil" sombre sansPadding ogImage={image(hero.poster)!.jpg}>
+  <Hero lang="fr" />
+  <BandePreuve lang="fr" />
+  <Pile lang="fr" />
+  <Methode lang="fr" />
+  <Avis lang="fr" />
+  <Diagnostic lang="fr" />
+  <Anne lang="fr" />
+  <Fermeture lang="fr" />
+</Page>

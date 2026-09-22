@@ -1,0 +1,282 @@
+{
+  "stories/appartement-cascade-2024/photo-0303": {
+    "largeur": 2997,
+    "hauteur": 2000,
+    "ratio": 1.4985,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/appartement-cascade-2024/photo-0303-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/appartement-cascade-2024/photo-0303-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/appartement-cascade-2024/photo-0303-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/appartement-cascade-2024/photo-0303-1280.jpg"
+  },
+  "stories/appartement-cascade-2024/photo-0256": {
+    "largeur": 2997,
+    "hauteur": 2000,
+    "ratio": 1.4985,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/appartement-cascade-2024/photo-0256-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/appartement-cascade-2024/photo-0256-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/appartement-cascade-2024/photo-0256-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/appartement-cascade-2024/photo-0256-1280.jpg"
+  },
+  "stories/appartement-cascade-2024/photo-0286": {
+    "largeur": 2997,
+    "hauteur": 2000,
+    "ratio": 1.4985,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/appartement-cascade-2024/photo-0286-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/appartement-cascade-2024/photo-0286-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/appartement-cascade-2024/photo-0286-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/appartement-cascade-2024/photo-0286-1280.jpg"
+  },
+  "stories/appartement-cascade-2024/photo-0292": {
+    "largeur": 2997,
+    "hauteur": 2000,
+    "ratio": 1.4985,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/appartement-cascade-2024/photo-0292-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/appartement-cascade-2024/photo-0292-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/appartement-cascade-2024/photo-0292-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/appartement-cascade-2024/photo-0292-1280.jpg"
+  },
+  "stories/auberge-decoupee-2024/photo-003": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/auberge-decoupee-2024/photo-003-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/auberge-decoupee-2024/photo-003-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/auberge-decoupee-2024/photo-003-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/auberge-decoupee-2024/photo-003-1280.jpg"
+  },
+  "stories/auberge-decoupee-2024/photo-020": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/auberge-decoupee-2024/photo-020-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/auberge-decoupee-2024/photo-020-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/auberge-decoupee-2024/photo-020-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/auberge-decoupee-2024/photo-020-1280.jpg"
+  },
+  "stories/auberge-decoupee-2024/photo-030": {
+    "largeur": 3200,
+    "hauteur": 2134,
+    "ratio": 1.4995,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/auberge-decoupee-2024/photo-030-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/auberge-decoupee-2024/photo-030-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/auberge-decoupee-2024/photo-030-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/auberge-decoupee-2024/photo-030-1280.jpg"
+  },
+  "stories/auberge-decoupee-2024/photo-031": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/auberge-decoupee-2024/photo-031-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/auberge-decoupee-2024/photo-031-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/auberge-decoupee-2024/photo-031-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/auberge-decoupee-2024/photo-031-1280.jpg"
+  },
+  "stories/maison-premium-2025/photo-047": {
+    "largeur": 3200,
+    "hauteur": 2130,
+    "ratio": 1.5023,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/maison-premium-2025/photo-047-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/maison-premium-2025/photo-047-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/maison-premium-2025/photo-047-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/maison-premium-2025/photo-047-1280.jpg"
+  },
+  "stories/maison-premium-2025/photo-002": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/maison-premium-2025/photo-002-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/maison-premium-2025/photo-002-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/maison-premium-2025/photo-002-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/maison-premium-2025/photo-002-1280.jpg"
+  },
+  "stories/maison-premium-2025/photo-004": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/maison-premium-2025/photo-004-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/maison-premium-2025/photo-004-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/maison-premium-2025/photo-004-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/maison-premium-2025/photo-004-1280.jpg"
+  },
+  "stories/maison-premium-2025/photo-019": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/maison-premium-2025/photo-019-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/maison-premium-2025/photo-019-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/maison-premium-2025/photo-019-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/maison-premium-2025/photo-019-1280.jpg"
+  },
+  "stories/maison-premium-2025/photo-038": {
+    "largeur": 3200,
+    "hauteur": 2135,
+    "ratio": 1.4988,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/maison-premium-2025/photo-038-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/maison-premium-2025/photo-038-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/maison-premium-2025/photo-038-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/maison-premium-2025/photo-038-1280.jpg"
+  },
+  "photos/essert-romand-013-hd": {
+    "largeur": 5472,
+    "hauteur": 3650,
+    "ratio": 1.4992,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/photos/essert-romand-013-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/photos/essert-romand-013-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/photos/essert-romand-013-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/photos/essert-romand-013-hd-1280.jpg"
+  }
+}

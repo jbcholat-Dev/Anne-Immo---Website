@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Symbole cercle-horizon Anne Vial-Tissot">
+  <defs><clipPath id="s"><circle cx="50" cy="50" r="46"/></clipPath></defs>
+  <g clip-path="url(#s)">
+    <rect x="4" y="4" width="92" height="92" fill="#002FA7"/>
+    <path d="M 4 56 C 22 50, 38 61, 52 55 C 66 49, 82 57, 96 52 L 96 96 L 4 96 Z" fill="#C4623E"/>
+  </g>
+</svg>

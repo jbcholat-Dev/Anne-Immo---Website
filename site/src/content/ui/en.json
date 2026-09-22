@@ -1,0 +1,40 @@
+{
+  "lang": "en",
+  "nav": {
+    "apropos": "About", "qui": "Who I am", "methode": "My method", "cible": "Who I work with",
+    "realisation": "Track record", "vendre": "Sell", "acheter": "Buy", "contact": "Contact",
+    "diagnostic": "Assessment", "guide": "The guide", "menu": "Menu", "fermer": "Close", "principale": "Main",
+    "reseaux": "Social", "langue": "Language", "accueil": "Home"
+  },
+  "footer": {
+    "plan": "Site map", "legal": "Legal", "ailleurs": "Elsewhere",
+    "mentions": "Legal notice", "confidentialite": "Privacy", "cookies": "Cookies",
+    "statut": "Independent real-estate consultant — Lake Geneva & Chablais — eXp France network.",
+    "copyright": "© 2026 Anne Vial-Tissot · independent sales agent · RSAC to be completed (A-13)"
+  },
+  "accueil": {
+    "titre_page": "Anne VIAL-TISSOT — Real-estate consultant, Chablais and Lake Geneva",
+    "description": "Real-estate consultant in the Chablais and the Lake Geneva area. Homes sold, not listings.",
+    "hero_ligne": "Real-estate consultant. Chablais and Lake Geneva area.",
+    "hero_cta": "Assess your sale · 3 minutes",
+    "hero_cta_m": "Assess your sale · 3 min",
+    "preuve_sur": "/ 5 ·", "preuve_avis": "reviews · Immodvisor", "preuve_lien": "See the Immodvisor page",
+    "ventes_titre": "Homes sold, not listings", "ventes_lien": "All sales", "voir_vente": "Read the story",
+    "story_a_venir": "Story coming soon", "vendu": "Sold",
+    "methode_titre": "My method, at a glance", "methode_lien": "The method in detail",
+    "avis_titre": "They worked with Anne", "avis_tous": "See all {n} reviews on Immodvisor",
+    "diag_titre": "Where does your sale stand?",
+    "diag_texte": "A score out of 100, a diagnosis per axis, concrete recommendations. Three minutes, free.",
+    "diag_texte_m": "A score out of 100, a diagnosis per axis, recommendations. Three minutes, free.",
+    "diag_cta": "Start the assessment",
+    "diag_score": "Readiness score", "diag_axes": "Axes assessed", "diag_plan": "Action plan",
+    "anne_titre": "Anne",
+    "anne_texte": "Ten years in corporate finance, Danone in Évian then Bel in Brazil, before real estate. Every sale is run like a project: a complete file, a schedule that holds, regular check-ins.",
+    "anne_texte_m": "Ten years in corporate finance, Danone in Évian then Bel in Brazil, before real estate. Every sale is run like a project.",
+    "anne_langues": "FRANÇAIS · ENGLISH · ESPAÑOL · PORTUGUÊS", "anne_langues_m": "FR · EN · ES · PT",
+    "anne_lien": "Read more", "anne_portrait": "Expected asset A-04 · portrait · 1600 px, vertical", "anne_portrait_m": "Expected asset A-04 · portrait 4:5",
+    "parler_titre": "Talk to Anne", "parler_texte": "A project, a question? The simplest is to talk about it.",
+    "parler_rdv": "Book a call", "parler_ecrire": "Write to Anne"
+  },
+  "roles": { "vendeur": "seller", "vendeuse": "seller", "acheteur": "buyer", "acheteuse": "buyer" }
+}

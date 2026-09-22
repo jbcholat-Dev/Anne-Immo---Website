@@ -1,0 +1,23 @@
+{
+  "name": "anne-vial-tissot-site",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Site d'Anne VIAL-TISSOT — consultante en immobilier, Chablais / Léman (réseau eXp France). v1 statique.",
+  "engines": { "node": ">=22.12" },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "images": "node scripts/images.mjs",
+    "verif": "node scripts/verif.mjs"
+  },
+  "dependencies": {
+    "astro": "^7.3.4"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0",
+    "sharp": "^0.35.4"
+  }
+}

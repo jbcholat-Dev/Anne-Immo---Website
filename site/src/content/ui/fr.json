@@ -1,0 +1,40 @@
+{
+  "lang": "fr",
+  "nav": {
+    "apropos": "À propos", "qui": "Qui suis-je ?", "methode": "Ma méthode", "cible": "Cible",
+    "realisation": "Réalisation", "vendre": "Vendre", "acheter": "Acheter", "contact": "Contact",
+    "diagnostic": "Diagnostic", "guide": "Le guide", "menu": "Menu", "fermer": "Fermer", "principale": "Principale",
+    "reseaux": "Réseaux", "langue": "Langue", "accueil": "Accueil"
+  },
+  "footer": {
+    "plan": "Plan du site", "legal": "Légal", "ailleurs": "Ailleurs",
+    "mentions": "Mentions légales", "confidentialite": "Confidentialité", "cookies": "Cookies",
+    "statut": "Consultante indépendante en immobilier — Léman & Chablais — réseau eXp France.",
+    "copyright": "© 2026 Anne Vial-Tissot · agent commercial indépendant · RSAC à compléter (A-13)"
+  },
+  "accueil": {
+    "titre_page": "Anne VIAL-TISSOT — Consultante en immobilier, Chablais et bassin lémanique",
+    "description": "Consultante en immobilier sur le Chablais et le bassin lémanique. Des maisons vendues, pas des annonces.",
+    "hero_ligne": "Consultante en immobilier. Chablais et bassin lémanique.",
+    "hero_cta": "Faire le point sur votre vente · 3 minutes",
+    "hero_cta_m": "Faire le point sur votre vente · 3 min",
+    "preuve_sur": "/ 5 ·", "preuve_avis": "avis · Immodvisor", "preuve_lien": "Voir la fiche Immodvisor",
+    "ventes_titre": "Des maisons vendues, pas des annonces", "ventes_lien": "Toutes les ventes", "voir_vente": "Voir cette vente",
+    "story_a_venir": "Story à venir", "vendu": "Vendu",
+    "methode_titre": "Ma méthode, en un coup d'œil", "methode_lien": "La méthode en détail",
+    "avis_titre": "Ils ont travaillé avec Anne", "avis_tous": "Voir les {n} avis sur Immodvisor",
+    "diag_titre": "Où en est votre vente ?",
+    "diag_texte": "Un score sur 100, un diagnostic par axe, des recommandations concrètes. Trois minutes, gratuit.",
+    "diag_texte_m": "Un score sur 100, un diagnostic par axe, des recommandations. Trois minutes, gratuit.",
+    "diag_cta": "Démarrer le diagnostic",
+    "diag_score": "Score de maturité", "diag_axes": "Axes diagnostiqués", "diag_plan": "Plan d'action",
+    "anne_titre": "Anne",
+    "anne_texte": "Dix ans de finance d'entreprise, Danone à Évian puis Bel au Brésil, avant l'immobilier. Chaque vente est menée comme un projet : un dossier complet, un calendrier tenu, des points réguliers.",
+    "anne_texte_m": "Dix ans de finance d'entreprise, Danone à Évian puis Bel au Brésil, avant l'immobilier. Chaque vente est menée comme un projet.",
+    "anne_langues": "FRANÇAIS · ENGLISH · ESPAÑOL · PORTUGUÊS", "anne_langues_m": "FR · EN · ES · PT",
+    "anne_lien": "En savoir plus", "anne_portrait": "Actif attendu A-04 · portrait · 1600 px, vertical", "anne_portrait_m": "Actif attendu A-04 · portrait 4:5",
+    "parler_titre": "Parler à Anne", "parler_texte": "Un projet, une question ? Le plus simple est d'en parler.",
+    "parler_rdv": "Réserver un créneau", "parler_ecrire": "Écrire à Anne"
+  },
+  "roles": { "vendeur": "vendeur", "vendeuse": "vendeuse", "acheteur": "acheteur", "acheteuse": "acheteuse" }
+}

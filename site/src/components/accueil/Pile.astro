@@ -1,0 +1,96 @@
+---
+// § 1.3 Ventes récentes (D-16) : six cartes collantes — top = nav + 24 px, sans scale ni flou, gardée en mobile, en flux sous mouvement réduit.
+// 3 stories réelles + 3 ventes réelles « à venir » (même gabarit, photo = bloc réservé A-02). Citation courte quand un avis est relié.
+import Picture from '../Picture.astro';
+import Reserve from '../Reserve.astro';
+import { t, r, type Lang } from '../../i18n';
+import { stories, photoPrincipale, avisDeStory, avisParId, roleLibelle } from '../../lib/contenu';
+import { accueil, phrasesStories } from '../../config/site';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const d = t(lang);
+const toutes = await stories();
+type Carte = { titre: string; phrase: string; citation?: { texte: string; auteur: string; role: string }; photo: string | null; alt: string; lien: string | null; sousTitre?: string };
+const cartes: Carte[] = [];
+for (const s of toutes) {
+  const avis = await avisDeStory(s.id);
+  const a = avis[0];
+  cartes.push({
+    titre: s.data.commune,
+    phrase: phrasesStories[s.id] ?? s.data.particularite ?? '',
+    citation: a ? { texte: premierePhrase(a.body ?? ''), auteur: a.data.auteur, role: roleLibelle(a, lang) } : undefined,
+    photo: photoPrincipale(s.id),
+    alt: `${s.data.type_bien} vendu à ${s.data.commune}`,
+    lien: `${r('realisation', lang)}/${s.id}`,
+  });
+}
+for (const v of accueil.aVenir) {
+  const a = v.avis ? await avisParId(v.avis) : null;
+  cartes.push({
+    titre: v.commune,
+    phrase: `${v.type} · ${d.accueil.vendu.toLowerCase()} ${v.annee}`,
+    sousTitre: d.accueil.story_a_venir,
+    citation: a && a.data.confiance === 'forte' ? { texte: premierePhrase(a.body ?? ''), auteur: a.data.auteur, role: roleLibelle(a, lang) } : undefined,
+    photo: null,
+    alt: '',
+    lien: null,
+  });
+}
+function premierePhrase(texte: string) {
+  const t = texte.trim().replace(/\s+/g, ' ');
+  const m = t.match(/^[^.!?]{20,220}[.!?]/);
+  return (m ? m[0] : t.slice(0, 200)).trim();
+}
+---
+<section class="ventes" data-sec="ventes" aria-labelledby="ventes-titre">
+  <div class="ventes-tete" data-reveal="titre">
+    <h2 id="ventes-titre">{d.accueil.ventes_titre}</h2>
+    <a href={r('realisation', lang)} class="lien">{d.accueil.ventes_lien}</a>
+  </div>
+  <div class="pile">
+    {cartes.map((c, i) => (
+      <article class="carte" data-pile data-carte={i + 1}>
+        <div class="carte-texte">
+          {c.sousTitre && <div class="chapeau-muet carte-etiquette">{c.sousTitre}</div>}
+          <h3>{c.titre}</h3>
+          <p class="carte-phrase">{c.lien ? `« ${c.phrase} »` : c.phrase}</p>
+          {c.citation && <p class="carte-citation">« {c.citation.texte} » <span>{c.citation.auteur} · {c.citation.role}</span></p>}
+          {c.lien && <a href={c.lien} class="lien">{d.accueil.voir_vente}</a>}
+        </div>
+        <div class="carte-photo">
+          {c.photo ? <Picture id={c.photo} alt={c.alt} sizes="(max-width: 899px) 100vw, 60vw" /> : <Reserve label={`Actif attendu A-02 · ${c.titre} · photo maîtresse · 2400 px`} ton="placement" lecture={i === 3} style="height:100%;border-radius:12px" />}
+        </div>
+      </article>
+    ))}
+  </div>
+</section>
+
+<style>
+  .ventes { position: relative; background: var(--avt-ecru); padding: 120px 0 0; }
+  .ventes-tete { display: flex; align-items: baseline; justify-content: space-between; padding: 0 var(--marge); margin-bottom: 56px; gap: 24px; }
+  .ventes-tete h2 { font-size: 56px; }
+  .pile { position: relative; padding: 0 var(--marge) 60px; }
+  .carte { position: sticky; top: calc(var(--nav-h) + 24px); height: 600px; margin-bottom: 30px; display: grid; grid-template-columns: 1fr 1.25fr; gap: 48px; background: var(--avt-galet); border-radius: 16px; padding: 48px 56px; z-index: 1; }
+  .carte-texte { display: flex; flex-direction: column; justify-content: flex-end; gap: 18px; }
+  .carte-etiquette { margin-bottom: -6px; }
+  .carte h3 { font-size: 44px; }
+  .carte-phrase { font-size: 18px; line-height: 1.55; max-width: 38ch; }
+  .carte-citation { font-size: 14.5px; line-height: 1.5; max-width: 38ch; border-left: 2px solid var(--avt-terra); padding-left: 12px; color: var(--avt-brun); }
+  .carte-citation span { color: var(--avt-text-muted); }
+  .carte-photo { position: relative; margin-top: -70px; border-radius: 12px; overflow: hidden; background: var(--avt-placeholder); }
+  .carte-photo :global(picture), .carte-photo :global(img) { width: 100%; height: 100%; }
+  .carte-photo :global(img) { object-fit: cover; }
+  @media (prefers-reduced-motion: reduce) { .carte { position: relative; top: auto; } }
+  @media (max-width: 899px) {
+    .ventes { padding-top: 64px; }
+    .ventes-tete { flex-direction: column; gap: 6px; margin-bottom: 28px; }
+    .ventes-tete h2 { font-size: 36px; line-height: 1.1; }
+    .pile { padding: 0 16px 40px; }
+    .carte { top: calc(var(--nav-h-mobile) + 12px); height: auto; margin-bottom: 14px; display: flex; flex-direction: column; gap: 14px; border-radius: 14px; padding: 16px 16px 22px; }
+    .carte-texte { order: 2; gap: 14px; }
+    .carte-photo { order: 1; height: 240px; border-radius: 10px; margin-top: -30px; }
+    .carte h3 { font-size: 30px; }
+    .carte-phrase { font-size: 16px; line-height: 1.5; }
+    .carte-citation { font-size: 14px; }
+  }
+</style>

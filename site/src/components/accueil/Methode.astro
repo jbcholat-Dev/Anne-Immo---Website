@@ -1,0 +1,61 @@
+---
+// § 1.4 Ma méthode, en un coup d'œil (D-15) : trois piliers, puis le refrain révélé ligne par ligne (seul texte animé de la page).
+import { t, r, type Lang } from '../../i18n';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const d = t(lang);
+const piliers = lang === 'fr'
+  ? [
+      { titre: 'Bon sens', texte: 'Comprendre vraiment la situation avant de bouger. Écouter, poser les bonnes questions.' },
+      { titre: 'Rigueur', texte: 'La même discipline qu’en finance sur chaque dossier : préparer, anticiper, documenter.' },
+      { titre: 'Pragmatisme', texte: 'Faire ce qui fonctionne dans la réalité, et adapter selon le contexte.' },
+    ]
+  : [
+      { titre: 'Common sense', texte: 'Truly understand the situation before moving. Listen, ask the right questions.' },
+      { titre: 'Rigour', texte: 'The same discipline as in finance on every file: prepare, anticipate, document.' },
+      { titre: 'Pragmatism', texte: 'Do what works in the real world, and adapt to the context.' },
+    ];
+const refrain = lang === 'fr'
+  ? ['Pas de mauvaise surprise.', 'Pas de dossier qui traîne.', 'Des ventes qui vont au bout.']
+  : ['No bad surprises.', 'No file left dragging.', 'Sales that go all the way.'];
+---
+<section class="methode" data-sec="methode" aria-labelledby="methode-titre">
+  <div class="methode-tete" data-reveal="titre">
+    <h2 id="methode-titre">{d.accueil.methode_titre}</h2>
+    <a href={r('methode', lang)} class="lien seulement-desktop">{d.accueil.methode_lien}</a>
+  </div>
+  <div class="piliers" data-reveal="bloc">
+    {piliers.map((p) => (
+      <div class="pilier"><div class="chapeau">{p.titre}</div><p>{p.texte}</p></div>
+    ))}
+  </div>
+  <div class="refrain" data-refrain aria-label={lang === 'fr' ? 'Refrain de la marque' : 'Brand refrain'}>
+    {refrain.map((l) => <div data-ligne>{l}</div>)}
+  </div>
+  <a href={r('methode', lang)} class="lien seulement-mobile methode-lien-m">{d.accueil.methode_lien}</a>
+</section>
+<style>
+  .methode { position: relative; background: var(--avt-ecru); padding: 100px var(--marge) 110px; }
+  .methode-tete { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 48px; gap: 24px; }
+  .methode-tete h2 { font-size: 48px; }
+  .piliers { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; margin-bottom: 96px; }
+  .pilier { border-top: 1px solid var(--avt-brun); padding-top: 20px; }
+  .pilier .chapeau { margin-bottom: 12px; }
+  .pilier p { font-size: 17px; line-height: 1.6; }
+  .refrain { font-family: var(--avt-font-display); font-size: 64px; line-height: 1.15; max-width: 22ch; }
+  .refrain div { color: var(--avt-placeholder); transition: color .6s ease; }
+  .refrain div[data-on] { color: var(--avt-brun); }
+  html:not([data-js]) .refrain div { color: var(--avt-brun); }
+  @media (prefers-reduced-motion: reduce) { .refrain div { color: var(--avt-brun); } }
+  @media (max-width: 899px) {
+    .methode { padding: 48px var(--marge-m) 64px; }
+    .methode-tete { margin-bottom: 28px; }
+    .methode-tete h2 { font-size: 32px; }
+    .piliers { grid-template-columns: 1fr; gap: 22px; margin-bottom: 48px; }
+    .pilier { padding-top: 14px; }
+    .pilier .chapeau { font-size: 12px; margin-bottom: 8px; }
+    .pilier p { font-size: 16px; line-height: 1.55; }
+    .refrain { font-size: 36px; }
+    .methode-lien-m { display: inline-block; margin-top: 28px; }
+  }
+</style>
