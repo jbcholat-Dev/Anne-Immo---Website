@@ -1,6 +1,6 @@
 # Brief de maquette complète — Claude Design
 
-**Version 2** (2026-09-13). Remplace le cadrage des lots 1 et 2 (`maquettes/`) comme **commande de maquette**. Ne remplace pas `structure-site.md` (le *quoi* : pages, sections, états) ni `brief-scrollcraft-fora.md` (la mécanique mesurée de la référence) : il les assemble en une commande unique.
+**Version 2.1** (2026-09-22 — revue maquette ↔ CDC, D-15 à D-26 : plus de geste signature, plus de bouton Diagnostic en nav, fermeture sans image, méthode renommée). **Version 2** (2026-09-13). Remplace le cadrage des lots 1 et 2 (`maquettes/`) comme **commande de maquette**. Ne remplace pas `structure-site.md` (le *quoi* : pages, sections, états) ni `brief-scrollcraft-fora.md` (la mécanique mesurée de la référence) : il les assemble en une commande unique.
 
 > **Note de version — v2 (2026-09-13).** Cette version porte les décisions **D-1 à D-12** de [`maquettes/lot-3-complet/DECISIONS.md`](../../maquettes/lot-3-complet/DECISIONS.md) (séance Anne + JB du 2026-09-13, sur la maquette lot 3 générée). Les quatre écarts structurants avec la v1 (2026-09-08) : **hero vidéo drone plein cadre** au lieu du hero à quatre plans (D-1) · **nav à 5 entrées** dont « À propos ▾ », Vendre et Acheter (D-2, D-4, D-5) · **11 pages** au lieu de 10, Méthode et Anne fusionnées en une page « À propos » à ancres (D-11) · section **« Ils ont travaillé avec Anne »** à la place de « Ils l'ont rencontrée », supprimée faute de contenu (D-8, D-9). `DECISIONS.md` fait foi en cas de divergence ; ce brief en est la projection en commande de maquette.
 >
@@ -34,7 +34,7 @@ Le skill [scroll-craft](https://github.com/nateherkai/scroll-craft) (Nate Herk) 
 |---|---|
 | **La courbe de sentiment avant les sections** — une émotion par section, deux sections adjacentes ne portent jamais la même | § 4 ci-dessous, à respecter et à faire sentir dans les artboards |
 | **Un seul sommet** — le moment que le visiteur raconte ; il reçoit le meilleur actif, le silence avant lui et le plus d'espace | Le sommet de l'accueil reste **la pile des ventes** (§ 1.3). Le hero vidéo est l'ouverture, pas le sommet : il ne doit pas lui voler la vedette (voir § 4) |
-| **Un geste signature** — une interaction qui n'existe que sur ce site, pas un réglage d'un effet connu | Proposition § 5, à trancher par JB |
+| **Un geste signature** — une interaction qui n'existe que sur ce site, pas un réglage d'un effet connu | **Écarté (D-18, 2026-09-22)** : un site sobre sans geste vaut mieux qu'un gadget. § 5 conservé pour mémoire |
 | **Le hero planifié avant les actifs** — profondeur, lisibilité du titre | Le hero est une **vidéo plein cadre** (D-1) : dessiner le voile qui garantit le contraste du titre, l'image de repli (poster, mobile, connexion lente, mouvement réduit), le cadrage mobile. **Pas d'artboard « Hero — plans »** |
 | **Mobile art-directé à part** — pas une réduction du desktop | Chaque page a son artboard mobile *composé*, pas redimensionné |
 | **Plancher typographique** — deux familles, mesure 45-75 caractères, interlignage inverse de la mesure | Italiana + DM Sans (charte), rien d'autre ; le corps de texte tient dans 65 caractères |
@@ -75,11 +75,11 @@ Une émotion par section, dans l'ordre de `structure-site.md` § 1 (v4). La maqu
 | 1.1 | Ouverture | **Reconnaissance** | La vidéo drone plein cadre — le lac, un vrai bien vendu —, le nom en Italiana par-dessus, un seul bouton. « C'est chez nous. » Le secteur est dit **une seule fois**, dans le sous-titre : **pas de liste de communes** (D-10) |
 | 1.2 | La preuve, tout de suite | **Confiance** | La note Immodvisor, des chiffres réels, pas de superlatif |
 | 1.3 | Ventes récentes | **Projection** — *le sommet* | Les maisons vendues qui s'empilent sous la main, grandes photos, une phrase d'Anne par bien |
-| 1.4 | Le Système 360™ | **Clarté** | Le refrain révélé ligne par ligne, seul texte animé de la page. Le lien « La méthode en détail » mène à l'ancre Méthode de la page À propos (D-11) |
+| 1.4 | Ma méthode (bon sens, rigueur, pragmatisme — D-15) | **Clarté** | Le refrain révélé ligne par ligne, seul texte animé de la page. Le lien « La méthode en détail » mène à l'ancre Méthode de la page À propos (D-11) |
 | 1.5 | Ils ont travaillé avec Anne | **Assurance** | Trois avis Immodvisor **entiers**, vendeurs *et* acheteurs, signés d'un prénom ; au moins un montré avec la photo du bien et le lien vers sa story. « Des gens réels, une vente réelle derrière chaque mot » (D-9) |
 | 1.6 | Le diagnostic | **Curiosité** | Trois livrables, une durée, le bouton |
 | 1.7 | Anne | **Proximité** | Un portrait, quatre langues, deux lignes |
-| 1.8 | Parler à Anne | **Résolution** | Une bande basse reprend l'image du lac (fixe extraite de la vidéo d'ouverture) — la page se ferme, elle ne s'éteint pas |
+| 1.8 | Parler à Anne | **Résolution** | Une bande basse Klein, sans image (D-22 : les plans qui reviennent, puis l'image du lac, sont abandonnés) — la page se ferme, elle ne s'éteint pas |
 
 **Vérification de la règle** « deux sections adjacentes ne portent jamais la même émotion » : Reconnaissance → Confiance → Projection → Clarté → **Assurance** → Curiosité → Proximité → Résolution. Aucune répétition adjacente. *Assurance* (1.5) est volontairement tenue à distance de *Confiance* (1.2), non adjacente : 1.2 est un chiffre qu'on croit, 1.5 est une personne qu'on écoute.
 
@@ -87,7 +87,7 @@ Une émotion par section, dans l'ordre de `structure-site.md` § 1 (v4). La maqu
 
 **La phrase à faire dire au visiteur** (test « c'est le site où… ») : *« C'est le site où les maisons vendues s'empilent sous tes doigts, après un survol du lac. »*
 
-## 5. Le geste signature — proposition
+## 5. Le geste signature — proposition (écartée le 2026-09-22, D-18 — conservée pour mémoire)
 
 **La ligne-signature qui se trace.** La ligne d'horizon terracotta du logo (charte : « ligne-signature ») devient un trait fin fixé en bas de l'écran, présent sur toute la page d'accueil. Le défilement la dessine ; à chaque section passée, un point s'y pose (le cercle-horizon du symbole, en miniature). Au pied de page, la ligne est complète et sert de navigation : cliquer un point ramène à la section. C'est le motif de la marque devenu instrument, pas une décoration. **À trancher par JB** ; la maquette le montre sur trois positions de scroll. Alternative si refusé : rien — un site sobre sans geste vaut mieux qu'un gadget.
 
@@ -123,7 +123,7 @@ Pour les textes : les libellés de `quiz-contenu.md` pour le diagnostic, les 9 f
 - **Charte v1** : Italiana pour les titres (jamais < 22 px), DM Sans pour le reste ; écru dominant, brun pour le texte, Klein pour les liens et titres-clés, terracotta pour les CTA et accents, **jamais en texte courant** ; boutons pilule ; pas de dégradé Klein → terracotta ; texte sur fond sombre = écru, jamais blanc pur.
 - **`structure-site.md` v4** fait foi pour l'ordre des sections, les CTA, les états, et la table des actifs. En cas de divergence avec ce brief, c'est `DECISIONS.md` qui tranche.
 - **Hero vidéo (D-1)** : **jamais de son**, pas de contrôle de lecture visible, boucle courte, chargement différé après le premier rendu, **repli image** sur mobile, connexion lente et `prefers-reduced-motion` ; le titre reste lisible sur **chaque** image de la boucle (voile, jamais d'ombre portée) ; le CTA unique reste au-dessus de la ligne de flottaison en 390 px.
-- **Navigation (D-2, D-7)** : 5 entrées — **À propos ▾** (menu : Qui suis-je ? · Ma méthode · Cible) · Réalisation · Vendre · Acheter · Contact — plus la bascule **FR / EN** (codes, pas de drapeaux) et le **bouton « Diagnostic »** en pilule terracotta. La nav ne disparaît jamais. Réseaux sociaux : **deux variantes à dessiner** (nav / pied de page), non tranché (D-6).
+- **Navigation (D-2, D-17)** : 5 entrées — **À propos ▾** (menu : Qui suis-je ? · Ma méthode · Cible) · Réalisation · Vendre · Acheter · Contact — plus la bascule **FR / EN** (codes, pas de drapeaux). **Pas de bouton « Diagnostic » dans la barre** (D-17, 2026-09-22). La nav ne disparaît jamais. Réseaux sociaux : **variante A, à gauche du logo** (D-6 ✅).
 - **Architecture** : le sélecteur de langue existe partout ; les UTM n'imposent pas de bandeau ; le bandeau est conditionnel (variantes A et B) ; téléphone obligatoire diagnostic, contact **et demande d'estimation**, facultatif guide ; deux cases séparées (politique / séquence d'e-mails) ; l'index anglais peut être plus court que le français.
 - **Mobile d'abord** : 390 px, le CTA du hero au-dessus de la ligne de flottaison, la pile gardée en mobile (carte pleine largeur, photo au-dessus), la nav qui ne disparaît jamais, le menu « À propos » en accordéon.
 - **Accessibilité** : contraste ≥ 4,5:1 sur le texte, focus visible, cibles tactiles ≥ 44 px, `prefers-reduced-motion` = tout statique et complet (un artboard « accueil, mouvement réduit », hero en image fixe).

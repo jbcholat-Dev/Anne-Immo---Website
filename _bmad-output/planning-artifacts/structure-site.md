@@ -1,6 +1,6 @@
 # Structure du site — brief de maquette
 
-**Version 4** (2026-09-13) — alignée sur les décisions de la séance maquette du 2026-09-13 ([DECISIONS.md](../../maquettes/lot-3-complet/DECISIONS.md), D-1 à D-12) : hero vidéo plein cadre, nav à 5 entrées, fusion Méthode + Anne en « À propos », pages Vendre et Acheter, section « Ils l'ont rencontrée » supprimée au profit de « Ils ont travaillé avec Anne ». Version 3 (2026-09-07) : alignée sur l'architecture vague 1 ([ARCHITECTURE-SPINE.md](architecture/architecture-anne-website-2026-08-29/ARCHITECTURE-SPINE.md)) — les UTM n'imposent pas de consentement · formulaire et réservation avec acceptation de la politique · téléphone facultatif pour le guide · bandeau conditionnel, deux variantes à dessiner · langues v1 tranchées. Version 2 (2026-08-29) : corrigée après `bmad-review` (20 findings adversarial + 12 structure, rapport : [review-structure-site.md](review-structure-site.md)).
+**Version 5** (2026-09-22) — alignée sur la revue maquette ↔ cahier des charges du 2026-09-22 ([DECISIONS.md](../../maquettes/lot-3-complet/DECISIONS.md), D-15 à D-26) : pile collante à la place du carrousel (D-16), méthode renommée (D-15), bouton Diagnostic retiré de la nav (D-17), symbole seul en en-tête (D-21), fermeture sans image (D-22), profils de score Klein / terra-deep / brun (D-23), inventaire des pages aligné sur le brief lot 3 (D-26). Version 4 (2026-09-13) — alignée sur les décisions de la séance maquette du 2026-09-13 ([DECISIONS.md](../../maquettes/lot-3-complet/DECISIONS.md), D-1 à D-12) : hero vidéo plein cadre, nav à 5 entrées, fusion Méthode + Anne en « À propos », pages Vendre et Acheter, section « Ils l'ont rencontrée » supprimée au profit de « Ils ont travaillé avec Anne ». Version 3 (2026-09-07) : alignée sur l'architecture vague 1 ([ARCHITECTURE-SPINE.md](architecture/architecture-anne-website-2026-08-29/ARCHITECTURE-SPINE.md)) — les UTM n'imposent pas de consentement · formulaire et réservation avec acceptation de la politique · téléphone facultatif pour le guide · bandeau conditionnel, deux variantes à dessiner · langues v1 tranchées. Version 2 (2026-08-29) : corrigée après `bmad-review` (20 findings adversarial + 12 structure, rapport : [review-structure-site.md](review-structure-site.md)).
 
 **Statut : input de l'étape ③ (maquette).** Ce document dit **quelles pages, quelles sections, dans quel ordre, avec quel contenu, quels états et quel appel à l'action**. Il prescrit la *composition et la hiérarchie*, pas le style — palette, typographie et composants viennent du design system (`Website/design-system/`, projet claude.ai/design « Anne VIAL-TISSOT — Design System »).
 
@@ -65,13 +65,13 @@ Conséquence : **la page Diagnostic est une landing autonome**, pas une sous-pag
 
 ## Inventaire des pages
 
-**Onze pages** (D-11 fusionne Méthode et Anne, D-4 et D-5 ajoutent Vendre et Acheter : 10 − 1 + 2 = 11).
+**Onze pages** (D-11 fusionne Méthode et Anne, D-4 et D-5 ajoutent Vendre et Acheter : 10 − 1 + 2 = 11). **Numérotation de référence pour les artboards et les documents : celle du brief lot 3 v2 § 3** (00 Navigation · 01 Accueil · 02 Diagnostic landing · 03 Parcours · 04 Résultats · 05 Réalisation · 06 Story · 07 À propos · 08 Vendre · 09 Acheter · 10 Contact · 11 Guide · Légal en annexe) — D-26. La table ci-dessous garde l'ordre de lecture du site.
 
 | # | Page | Rôle | Capacités |
 |---|---|---|---|
 | 0 | **Navigation** (transverse) | En-tête, pied de page, langue | CAP-6, CAP-10 |
 | 1 | **Accueil** | Installer la crédibilité, orienter vers les parcours | CAP-1, 2, 3, 5, 6 |
-| 2 | **Réalisation** (index des stories + fiche story) | La preuve détaillée, une story par bien vendu | CAP-3 |
+| 2 | **Réalisation** (index des stories + fiche story — page titrée « Réalisation », D-26) | La preuve détaillée, une story par bien vendu | CAP-3 |
 | 3 | **À propos** (ancres : Qui suis-je ? · Ma méthode · Cible) | Le parcours, la méthode, les langues, la posture | CAP-2 |
 | 4 | **Vendre** | Hub vendeur : diagnostic ou demande d'estimation | CAP-5, CAP-11 |
 | 5 | **Acheter** | Parcours acheteur et recherche accompagnée | CAP-6 |
@@ -93,16 +93,16 @@ Toutes traduites (CAP-10).
 **Rôle :** rendre le contact atteignable depuis toute page (CAP-6) et porter le changement de langue (CAP-10).
 
 **En-tête, desktop** — **cinq entrées, une bascule de langue, un bouton** (D-2 à D-7).
-- Logo à gauche (déclinaison horizontale de la charte, **sans sous-titre** — charte § 2, 2026-09-22) — **logo Anne seul : pas de logo eXp en en-tête** (charte § 2.4, le co-branding vit en pied de page). Le secteur (Léman & Chablais) n'est pas redit ici : il vit dans le sous-titre du hero et la ligne de statut du pied de page.
+- Logo à gauche : **le symbole seul** (cercle Klein + strate terracotta, D-21) — le nom vit dans le hero et dans le lockup du pied de page ; sans sous-titre (charte § 2, 2026-09-22) — **logo Anne seul : pas de logo eXp en en-tête** (charte § 2.4, le co-branding vit en pied de page). Le secteur (Léman & Chablais) n'est pas redit ici : il vit dans le sous-titre du hero et la ligne de statut du pied de page.
 - Entrées, dans cet ordre : **À propos ▾** · Réalisation · Vendre · Acheter · Contact.
 - **« À propos » porte un menu déroulant** (au survol sur desktop, au tap sur les appareils tactiles) avec trois sous-entrées, qui sont les ancres de la page À propos (§3) : « Qui suis-je ? » (`#qui-suis-je`) · « Ma méthode » (`#methode`) · « Cible » (`#cible`). ⚠️ **« Cible » est à trancher** (D-2, point ouvert 1) : dessiner le menu **en deux variantes**, à trois et à deux sous-entrées. L'entrée « À propos » reste elle-même cliquable et mène en haut de la page.
 - Sélecteur de langue à droite, discret (code de langue, **pas de drapeau** — un drapeau désigne un pays, pas une langue).
-- Un CTA en en-tête : « Diagnostic », en pilule terracotta, visuellement distinct des entrées de menu (D-7).
+- **Pas de bouton dans l'en-tête** (D-17, 2026-09-22 — annule D-7) : le diagnostic est atteint par le CTA du hero, § 1.6, la page Vendre, le menu mobile et le pied de page.
 - **Réseaux sociaux : position à trancher** (D-6, point ouvert 2). Anne les veut dans la barre de navigation, à gauche du logo ; JB les préfère en pied de page pour ne pas charger l'en-tête. **Dessiner les deux variantes** : A — icônes à gauche du logo, en-tête ; B — pied de page seul (état actuel).
 - Au scroll : l'en-tête se réduit et reste accessible. Il ne disparaît jamais complètement — CAP-6 exige le contact atteignable partout.
 
 **En-tête, mobile**
-- Logo + bouton menu. Le CTA « Diagnostic » reste **visible hors du menu**, c'est le parcours principal.
+- Logo + bouton menu, rien d'autre (D-17). Le parcours principal est porté par le CTA du hero, au-dessus de la ligne de flottaison.
 - Menu déplié, en plein écran : les 5 entrées, le sélecteur de langue, le contact. **Pas de survol sur mobile** : « À propos » se déplie **en accordéon dans le menu**, ses sous-entrées apparaissent indentées dessous, et le libellé « À propos » reste actionnable pour aller en haut de la page. Un seul niveau d'accordéon, jamais de sous-menu superposé.
 
 **Pendant les 17 écrans du diagnostic : navigation masquée.** Seuls subsistent le logo (non cliquable ou avec confirmation d'abandon), la barre de progression et le retour arrière. C'est une décision de taux de complétion, pas de style — le déployé fait ce choix et il a raison.
@@ -139,27 +139,27 @@ Huit sections. L'ordre est délibéré : **la preuve arrive avant l'argumentaire
 **Sur mobile :** la note et le nombre d'avis restent ; l'extrait peut passer en défilement horizontal.
 
 ### 1.3 — Ventes récentes · [PREUVE]
-**Rôle :** le cœur visuel du site, et le remplacement de la vitrine de biens.
-**Contenu :** **six photographies de biens vendus, en carrousel.** Six photos empilées mangent une hauteur d'écran impraticable — constat du premier prototype. Le carrousel les fait tenir sans sacrifier la taille de chacune, qui reste le point important : ces photos sont le cœur visuel du site, pas des vignettes.
+**Rôle :** le cœur visuel du site, et le remplacement de la vitrine de biens. **C'est le sommet de la page** (brief lot 3 § 4).
+**Contenu :** **six cartes de biens vendus, empilées en défilement collant** (D-16, 2026-09-22 ; mécanique mesurée dans `brief-scrollcraft-fora.md` § 1.3 et § 3.2) : chaque carte se colle sous la barre de navigation et la suivante vient la recouvrir. Le visiteur manipule les ventes au lieu de les faire défiler, et chaque photo reste grande — ces photos sont le cœur visuel du site, pas des vignettes. Le carrousel de la v4 est abandonné.
 
 Chaque vue porte la photo en grand, la commune, et une phrase extraite du récit d'Anne. **Quand la story porte un témoignage, la vue peut aussi porter une citation courte** — vendeur ou acheteur, attribuée avec son rôle (D-9). C'est un complément, pas un remplacement : la phrase d'Anne reste. Une story sans témoignage s'affiche sans citation, la vue reste complète. Pas de prix, pas de surface, pas de caractéristiques : ce n'est pas une annonce.
 
-**Pourquoi six :** CAP-1 exige au minimum 1 vidéo et 6 photographies de biens réellement traités sur l'accueil. La vidéo est portée par l'ouverture (§1.1, D-1) ; le carrousel porte les six photos.
+**Pourquoi six :** CAP-1 exige au minimum 1 vidéo et 6 photographies de biens réellement traités sur l'accueil. La vidéo est portée par l'ouverture (§1.1, D-1) ; la pile porte les six photos — six cartes, pas quatre plus un index.
 
-**Règles du carrousel** — un carrousel mal fait cache le contenu au lieu de l'économiser :
-- **Défilement manuel par défaut.** Si rotation automatique il y a, elle s'arrête au survol et au focus, et un contrôle de pause est visible.
-- Indicateurs de position visibles : le visiteur doit voir qu'il y a six vues, sinon il n'en verra qu'une.
-- La première vue est complète et autonome — elle doit tenir seule si personne ne fait défiler.
-- Navigable au clavier, et arrêtée pour les visiteurs qui ont demandé la réduction des animations.
-- **Sur mobile : balayage tactile**, une vue à la fois, photo toujours grande.
+**Règles de la pile** :
+- Cartes sœurs en `position: sticky`, `top` = hauteur réelle de la nav + 24 px, pas de défilement ≈ 70 vh par carte ; fond galet, rayon 16 px, sans ombre ni bordure.
+- **Aucune transformation sur les cartes recouvertes** : pas de scale, pas de fondu, pas de flou. Les six cartes quittent l'écran ensemble ; la section suivante monte sans trou.
+- Chaque carte est un `article` avec titre ; la pile reste lisible sans CSS ; « Voir cette vente » atteignable au clavier.
+- Pour les visiteurs qui ont demandé la réduction des animations : cartes en flux simple, pas de sticky.
+- **Sur mobile : la pile est gardée** (carte pleine largeur, photo au-dessus du texte, `top` = barre mobile + 12 px, pas ≈ 80 vh) ; la carte entière tient sous la barre en 390 px.
 
 **CTA :** « Voir cette vente » par vue, plus un lien vers l'index complet.
 **Volume :** une phrase par vue, plus une citation courte quand elle existe.
 **Actif requis :** A-02, A-03, et A-07 pour les citations.
 
-### 1.4 — Le Système 360™, en un coup d'œil · [QUI]
-**Rôle :** nommer la méthode sans la dérouler.
-**Contenu :** les trois axes (Vendeur 360° / Marché 360° / Partenaires 360°) en trois blocs courts appuyés visuellement, une phrase chacun. Puis le refrain de la marque.
+### 1.4 — Ma méthode, en un coup d'œil · [QUI]
+**Rôle :** nommer la méthode sans la dérouler. **La méthode s'appelle « Bon sens, rigueur et pragmatisme »** (D-15, 2026-09-22) ; le « Système 360™ » n'est plus utilisé.
+**Contenu :** les trois piliers (Bon sens / Rigueur / Pragmatisme) en trois blocs courts appuyés visuellement, une phrase chacun. Puis le refrain de la marque.
 **CTA :** « La méthode en détail » → **l'ancre Méthode de la page À propos** (`/a-propos#methode`, §3). Il n'y a plus de page Méthode autonome (D-11).
 **Volume :** trois phrases plus le refrain. Le développement vit dans la section Méthode de la page À propos.
 
@@ -219,7 +219,7 @@ Grille de toutes les stories : photo, commune, une phrase. Pas de filtre tant qu
 
 **Une seule page longue** (D-11). Les pages Méthode et Anne de la v3 fusionnent : leurs contenus deviennent des sections de cette page, et les sous-entrées du menu « À propos ▾ » en sont les ancres. Le visiteur qui vient du menu atterrit directement dans la bonne section ; celui qui vient de l'accueil lit la page en continu.
 
-**Rôle :** installer la confiance par le parcours, puis développer le Système 360™ pour qui veut comprendre avant de s'engager.
+**Rôle :** installer la confiance par le parcours, puis développer la méthode (D-15) pour qui veut comprendre avant de s'engager.
 **Volume :** développé — c'est la page de fond du site.
 **Ancres :** `#qui-suis-je` · `#methode` · `#cible` (conditionnelle, voir ci-dessous).
 **Repère de lecture :** sur desktop, un sommaire latéral ou collant signale où l'on est dans la page — sans lui, une page longue à trois sections se parcourt mal. Sur mobile, il se réduit à un fil de sections en haut de page.
@@ -231,7 +231,7 @@ Grille de toutes les stories : photo, commune, une phrase. Pas de filtre tant qu
 1. **Portrait** en ouverture.
 2. **Le parcours** — dix ans d'opérations internationales, Danone (Évian) et Bel au Brésil, la finance d'entreprise.
 3. **Le choc de l'immobilier** — les ventes qui s'effondrent après le compromis : financement refusé au dernier moment, formalités découvertes trop tard, acquéreurs mal accompagnés, coordination inexistante. C'est le passage le plus fort du corpus : il explique *pourquoi* la méthode existe.
-4. **La naissance du Système 360™** — un réseau d'experts, chaque vente traitée comme un projet d'entreprise. C'est la charnière : elle enchaîne sur la section Méthode.
+4. **La naissance de la méthode** — un réseau d'experts, chaque vente traitée comme un projet d'entreprise ; « bon sens, rigueur et pragmatisme ». C'est la charnière : elle enchaîne sur la section Méthode.
 5. **Le refrain de la marque.**
 6. **Les quatre langues** et l'ancrage Chablais / Léman.
 
@@ -242,8 +242,8 @@ Grille de toutes les stories : photo, commune, une phrase. Pas de filtre tant qu
 
 **Cible du lien « La méthode en détail » de l'accueil** (§1.4).
 
-**Contenu :** les trois axes détaillés, ce que chacun couvre concrètement, le réseau de partenaires (courtier bancaire, courtier travaux, géomètre, notaire) et le rôle de chef d'orchestre. Puis le refrain de la marque.
-**Source du texte :** le corpus rédigé existe dans Notion (`ea0787ebf88c46e9bf4dc2b71725b55d`). À **resserrer**, pas à coller.
+**Contenu :** les trois piliers (bon sens, rigueur, pragmatisme), puis « concrètement, cela se traduit par » : audit patrimonial complet, coordination d'expertise intégrée (expert-comptable, géomètre, diagnostiqueurs, notaire, urbanisme, gestion de projet — « je coordonne »), anticipation des obstacles, accompagnement du début à la fin ; « Mon engagement ». Puis le refrain de la marque.
+**Source du texte :** `contenu-anne/pages/a-propos/fr.md`, section « Ma méthode » (D-15). À **resserrer**, pas à coller.
 **Sur mobile :** les trois axes en pile.
 
 **Bloc vidéo — Anne présente sa méthode** (D-12). Anne face caméra, qui explique sa méthode en quelques minutes. **Prévu en maquette, facultatif en production** :
@@ -391,7 +391,7 @@ Quatre corrections obligatoires par rapport au déployé :
 - **Les résultats ne doivent pas exister côté client avant soumission.** Le déployé se contente d'un flou CSS : le contenu est dans la page avant que le formulaire soit rempli. Le gate doit être serveur, adossé à un jeton.
 
 ### 8.2 — Le résultat
-1. **Score global** sur 100, avec le profil (Stratégie à risque / Bases solides / Bien préparé) et son diagnostic. Profils codés par la palette de la charte.
+1. **Score global** sur 100, avec le profil (Stratégie à risque / Bases solides / Bien préparé) et son diagnostic. Profils codés par la palette de la charte : **brun / terra-deep / Klein**, du plus grave au plus serein (D-23) — ni rouge ni ambre.
 2. **Trois scores par catégorie**, en brut et en pourcentage (les maximums diffèrent : 40/40/20).
 3. **Pour chaque catégorie** : l'insight de sa bande, puis l'encart « Impact chiffré ». Neuf blocs possibles, tous rédigés dans le companion.
 4. **L'orientation**, selon la sortie :
@@ -547,8 +547,8 @@ Une maquette qui ne montre que le cas nominal ment sur le travail restant. Trois
 **Le reste :**
 
 - ~~Ouverture de l'accueil : photo fixe ou vidéo drone~~ — **tranché le 2026-09-13 (D-1) : vidéo drone plein cadre**, image d'ouverture en poster et en repli. Les plans en parallaxe sont abandonnés.
-- Le nom de la méthode : « Système 360™ » ou « Méthode 360° ». La maquette utilise **Système 360™** ; un changement est un remplacement de chaîne.
-- Le positionnement (Système 360 vs « Expert Frontaliers »).
+- ~~Le nom de la méthode : « Système 360™ » ou « Méthode 360° »~~ — **tranché le 2026-09-22 (D-15) : « Ma méthode : bon sens, rigueur et pragmatisme »**, sans marque déposée.
+- Le positionnement (la méthode vs « Expert Frontaliers »).
 - ~~Les langues effectivement livrées en v1~~ — **tranché le 2026-09-07 : FR + EN**. La maquette prévoit le sélecteur quel que soit le nombre ; une story non traduite n'apparaît pas dans l'index anglais (AD-2) — l'état « index anglais plus court que le français » est normal, pas un bug.
 - Le barème de la question sur la performance commerciale (visites × offres) — sans effet sur la maquette.
 - La réconciliation des deux sources du quiz — sans effet sur les gabarits.
