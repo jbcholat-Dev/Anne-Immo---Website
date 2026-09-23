@@ -97,6 +97,8 @@ const estCourante = (k: RouteKey) => courante === k || (k === 'apropos' && ['qui
   .nav-logo-svg { transition: width .35s ease, height .35s ease; }
   .nav-desktop { display: flex; align-items: center; gap: 32px; font-size: 14px; font-weight: 500; }
   .nav-lien { color: inherit; }
+  .nav-lien:hover { text-decoration: none; color: var(--avt-klein); }
+  .nav[data-sombre]:not([data-reduit]) .nav-lien:hover { color: var(--avt-ecru); opacity: .8; }
   .nav-lien[aria-current="page"] { color: var(--avt-klein); }
   .nav-chevron { font-size: 10px; }
   .nav-item { position: relative; display: flex; align-items: center; height: var(--nav-h); }

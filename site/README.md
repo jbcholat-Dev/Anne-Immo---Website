@@ -94,8 +94,9 @@ Chaque endroit est marqué `TODO(backend)` dans le code (`grep -rn "TODO(backend
 - **Accueil EN sans la pile** (aucune story traduite, AD-2) ; avis cités en français, signalés comme tels ; entrées de nav EN vers les pages FR.
 - Les vignettes de la pile en mobile gardent le débord de 30 px de la photo au-dessus de la carte (maquette) ; le pas de la pile est la hauteur de carte + 30 px (desktop 630 px), les cartes sont en flux sous `prefers-reduced-motion`.
 - Marqueurs « Point ouvert » / « Contenu à écrire par Anne » affichés (pastilles de la maquette) pour que JB les repère ; à supprimer en production.
+- **Contrastes** vérifiés sur chaque paire de tokens employée (≥ 4,5:1) — deux écarts à la maquette : la pastille « Bases solides » passe du fond galet (4,35:1) à l'écru bordé ; les dates indisponibles du gabarit Cal.com gardent le token `--avt-disabled` de la maquette (1,7:1, information non essentielle — l'embed Cal.com les remplacera).
 - Pages légales : textes de structure conformes à AD-16 (finalités, bases légales, 3 ans), **à faire valider par Anne** avant publication ; les valeurs A-13 sont des pastilles « à compléter ».
 
 ## Vérification faite (voir `.verif/`)
 
-`npm run build` sans erreur (19 pages) · `node scripts/liens.mjs` : 0 lien cassé · `node scripts/e2e-diagnostic.mjs` : sorties A, B et profil à risque, abandon/reprise, erreurs du gate, lien expiré, aucune erreur console · `npm run verif` : captures 1440 / 390 de chaque page, accueil à 5 positions (hero, pile 3 positions, fermeture) et en mouvement réduit.
+`npm run build` sans erreur (19 pages) · `npm run check` : 0 erreur · `npm run dev` : les 17 routes répondent 200, une route inconnue 404 · `node scripts/liens.mjs` : 0 lien cassé · `node scripts/e2e-diagnostic.mjs` : sorties A, B et profil à risque, abandon/reprise, erreurs du gate, lien expiré, aucune erreur console · `npm run verif` : captures 1440 / 390 de chaque page, accueil à 5 positions (hero, pile 3 positions, fermeture) et en mouvement réduit.
