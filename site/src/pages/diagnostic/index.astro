@@ -1,0 +1,106 @@
+---
+// 02 Diagnostic — landing autonome (§ 6) : l'offre au-dessus de la ligne de flottaison, ligne de transparence, trois blocs de crédibilité, sortie basse vers le guide.
+import Page from '../../layouts/Page.astro';
+import Picture from '../../components/Picture.astro';
+import Reserve from '../../components/Reserve.astro';
+import { instantane, avisParId, roleLibelle, photoPrincipale } from '../../lib/contenu';
+import { accueil } from '../../config/site';
+import { getEntry } from 'astro:content';
+import { r } from '../../i18n';
+const inst = await instantane();
+const a = await avisParId(accueil.extrait.avis);
+const storyVignette = await getEntry('stories', 'appartement-cascade-2024');
+const vignette = photoPrincipale('appartement-cascade-2024');
+const imageSobre = photoPrincipale('maison-premium-2025');
+const note = String(inst.note).replace('.', ',');
+---
+<Page titre="Diagnostic — Découvrez en 3 minutes si votre stratégie de vente va réellement fonctionner" description="Quinze questions sur votre bien, votre annonce et vos visites. Un score de maturité sur 100, un diagnostic sur trois axes, des recommandations concrètes. Trois minutes, gratuit." courante="diagnostic" ogImage="/img/stories/maison-premium-2025/photo-047-1280.jpg">
+  <div class="dl-offre">
+    <div>
+      <h1><span class="seulement-desktop">Découvrez en 3 minutes si votre stratégie de vente va réellement fonctionner</span><span class="seulement-mobile">Découvrez en 3 minutes si votre stratégie de vente va fonctionner</span></h1>
+      <p class="dl-intro seulement-desktop">Quinze questions sur votre bien, votre annonce et vos visites. À la fin :</p>
+      <ul class="dl-livrables">
+        <li><span>1</span>Un score de maturité sur 100</li>
+        <li><span>2</span><span class="seulement-desktop">Un diagnostic personnalisé sur trois axes</span><span class="seulement-mobile">Un diagnostic sur trois axes</span></li>
+        <li><span>3</span>Des recommandations concrètes</li>
+      </ul>
+      <div class="dl-cta"><a href={r('questions')} class="btn btn-primaire dl-bouton">Démarrer le diagnostic</a><span class="dl-duree">3 minutes · gratuit</span></div>
+      <p class="dl-transparence">Le résultat complet s'obtient contre vos coordonnées, téléphone compris. <a href={r('confidentialite')}>Ce que nous en faisons</a>.</p>
+    </div>
+    <div class="dl-image">
+      {imageSobre ? <Picture id={imageSobre} alt="Un bien vendu par Anne à Allinges" sizes="(max-width: 899px) 100vw, 520px" /> : <Reserve label="A-02 · image sobre · un bien vendu, sans incrustation" style="height:100%" />}
+    </div>
+  </div>
+  <div class="dl-blocs">
+    <div class="dl-bloc">
+      <Reserve label="A-04" class="dl-portrait" />
+      <h2>Qui pose ces questions</h2>
+      <p><span class="seulement-desktop">Anne Vial-Tissot, consultante en immobilier sur le Chablais. Dix ans de finance d'entreprise avant l'immobilier.</span><span class="seulement-mobile">Anne Vial-Tissot, consultante en immobilier sur le Chablais. Dix ans de finance avant l'immobilier.</span></p>
+      <p class="dl-langues">FR · EN · ES · PT</p>
+    </div>
+    <div class="dl-bloc">
+      <div class="dl-note"><b>{note}</b><span>/ 5 · {inst.nombre_avis} avis Immodvisor</span></div>
+      <p>« {accueil.extrait.phrase} » <span class="texte-muet">{a.data.auteur}, {roleLibelle(a)}</span></p>
+      {storyVignette && vignette && <div class="dl-vignette"><div class="dl-vignette-photo"><Picture id={vignette} alt="" sizes="96px" /></div><a href={`${r('realisation')}/${storyVignette.id}`} class="lien" style="font-size:14.5px">{storyVignette.data.commune}, la story</a></div>}
+    </div>
+    <div class="dl-bloc dl-bloc-klein">
+      <h2>Trois minutes, un score, un plan d'action.</h2>
+      <a href={r('questions')} class="btn btn-ecru btn-m dl-bouton-klein">Démarrer le diagnostic</a>
+    </div>
+  </div>
+  <div class="dl-sortie"><a href={r('guide')} class="lien">Pas envie de répondre à 15 questions ? Le guide des 10 erreurs, sans le diagnostic.</a></div>
+</Page>
+<style>
+  .dl-offre { padding: 80px var(--marge) 96px; display: grid; grid-template-columns: 1fr 520px; gap: 96px; align-items: center; }
+  .dl-offre h1 { font-size: 64px; line-height: 1.05; margin-bottom: 22px; }
+  .dl-intro { font-size: 19px; line-height: 1.6; max-width: 52ch; margin-bottom: 32px; }
+  .dl-livrables { list-style: none; margin-bottom: 36px; display: flex; flex-direction: column; gap: 14px; font-size: 17px; }
+  .dl-livrables li { display: flex; gap: 14px; align-items: baseline; }
+  .dl-livrables li > span:first-child { font-family: var(--avt-font-display); font-size: 26px; color: var(--avt-klein); min-width: 28px; }
+  .dl-cta { display: flex; align-items: center; gap: 22px; margin-bottom: 18px; }
+  .dl-bouton { padding: 17px 34px; font-size: 17px; }
+  .dl-duree { font-size: 14.5px; color: var(--avt-text-muted); }
+  .dl-transparence { font-size: 13.5px; line-height: 1.55; color: var(--avt-text-muted); max-width: 60ch; }
+  .dl-image { height: 560px; border-radius: 12px; overflow: hidden; background: var(--avt-galet); }
+  .dl-image :global(picture), .dl-image :global(img) { width: 100%; height: 100%; }
+  .dl-image :global(img) { object-fit: cover; }
+  .dl-blocs { padding: 0 var(--marge) 80px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; }
+  .dl-bloc { background: var(--avt-galet); border-radius: 16px; padding: 32px; display: flex; flex-direction: column; gap: 16px; }
+  .dl-bloc :global(.dl-portrait) { width: 72px; height: 72px; border-radius: 999px; background: var(--avt-placeholder); font-size: 9px; padding: 0; letter-spacing: .08em; }
+  .dl-bloc h2 { font-size: 28px; }
+  .dl-bloc p { font-size: 15.5px; line-height: 1.6; }
+  .dl-langues { font-size: 12.5px; letter-spacing: .1em; color: var(--avt-text-muted); }
+  .dl-note { display: flex; align-items: baseline; gap: 8px; }
+  .dl-note b { font-family: var(--avt-font-display); font-weight: 400; font-size: 44px; line-height: 1; }
+  .dl-note span { font-size: 14px; color: var(--avt-text-muted); }
+  .dl-vignette { display: flex; gap: 14px; align-items: center; margin-top: auto; }
+  .dl-vignette-photo { width: 96px; height: 64px; border-radius: 8px; overflow: hidden; flex: none; background: var(--avt-placeholder); }
+  .dl-vignette-photo :global(picture), .dl-vignette-photo :global(img) { width: 100%; height: 100%; }
+  .dl-vignette-photo :global(img) { object-fit: cover; }
+  .dl-bloc-klein { background: var(--avt-klein); color: var(--avt-ecru); justify-content: space-between; }
+  .dl-bloc-klein h2 { color: var(--avt-ecru); }
+  .dl-bouton-klein { align-self: flex-start; }
+  .dl-sortie { padding: 0 var(--marge) 96px; font-size: 15px; }
+  @media (max-width: 899px) {
+    .dl-offre { padding: 32px var(--marge-m) 40px; display: block; }
+    .dl-offre h1 { font-size: 38px; line-height: 1.08; margin-bottom: 16px; }
+    .dl-livrables { margin-bottom: 24px; gap: 10px; font-size: 16px; }
+    .dl-livrables li > span:first-child { font-size: 24px; min-width: 22px; }
+    .dl-cta { flex-direction: column; align-items: stretch; gap: 12px; margin-bottom: 20px; }
+    .dl-bouton { padding: 17px 24px; font-size: 16px; }
+    .dl-duree { text-align: center; font-size: 13.5px; }
+    .dl-transparence { font-size: 13px; }
+    .dl-image { height: 260px; margin-top: 40px; }
+    .dl-blocs { padding: 0 var(--marge-m) 40px; grid-template-columns: 1fr; gap: 14px; }
+    .dl-bloc { border-radius: 14px; padding: 22px; gap: 10px; }
+    .dl-bloc :global(.dl-portrait) { display: none; }
+    .dl-bloc h2 { font-size: 24px; }
+    .dl-bloc p { font-size: 15px; }
+    .dl-note b { font-size: 36px; }
+    .dl-vignette { display: none; }
+    .dl-bloc-klein { padding: 0; background: transparent; }
+    .dl-bloc-klein h2 { display: none; }
+    .dl-bouton-klein { align-self: stretch; background: var(--avt-klein); color: var(--avt-ecru); border-color: var(--avt-klein); padding: 17px 24px; font-size: 16px; }
+    .dl-sortie { padding: 0 var(--marge-m) 48px; font-size: 14.5px; line-height: 1.5; }
+  }
+</style>

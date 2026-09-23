@@ -1,0 +1,65 @@
+---
+// Pied de page 00-footer, appliqué à toutes les pages : plan du site, légal, ailleurs (dont YouTube), lockup Anne + eXp négatif, FR/EN, ligne de statut, ©.
+import Lockup from './Lockup.astro';
+import { t, r, bascule, type Lang, type RouteKey } from '../i18n';
+import { reseaux, identite } from '../config/site';
+interface Props { lang?: Lang; courante?: RouteKey }
+const { lang = 'fr', courante } = Astro.props;
+const d = t(lang);
+const plan: RouteKey[] = ['apropos', 'realisation', 'vendre', 'acheter', 'diagnostic', 'guide', 'contact'];
+const legal: { key: RouteKey; label: string }[] = [
+  { key: 'mentions', label: d.footer.mentions }, { key: 'confidentialite', label: d.footer.confidentialite }, { key: 'cookies', label: d.footer.cookies },
+];
+---
+<footer class="pied">
+  <div class="pied-colonnes">
+    <nav aria-label={d.footer.plan} class="pied-nav">
+      {plan.map((k) => <a href={r(k, lang)}>{d.nav[k as keyof typeof d.nav]}</a>)}
+    </nav>
+    <nav aria-label={d.footer.legal} class="pied-nav pied-nav-muet">
+      {legal.map((l) => <a href={r(l.key, lang)} aria-current={courante === l.key ? 'page' : undefined}>{l.label}</a>)}
+    </nav>
+    <nav aria-label={d.footer.ailleurs} class="pied-nav pied-nav-muet">
+      <a href={identite.immodvisor} rel="noopener" target="_blank">Immodvisor</a>
+      {reseaux.map((s) => <a href={s.url} rel="noopener" target="_blank">{s.label}</a>)}
+    </nav>
+  </div>
+  <div class="pied-bas">
+    <div class="pied-lockup-rang">
+      <Lockup variante="negatif" largeur={488} class="pied-lockup" />
+      <span class="pied-langues" aria-label={d.nav.langue}>
+        <a href={bascule(courante ?? null, 'fr')} aria-current={lang === 'fr' ? 'true' : undefined} lang="fr">FR</a>
+        <a href={bascule(courante ?? null, 'en')} aria-current={lang === 'en' ? 'true' : undefined} lang="en">EN</a>
+      </span>
+    </div>
+    <div class="pied-statut">
+      <div class="pied-statut-ligne">{d.footer.statut}</div>
+      {d.footer.copyright}
+    </div>
+  </div>
+</footer>
+
+<style>
+  .pied { background: var(--avt-brun); color: var(--avt-ecru); padding: 48px var(--marge) 32px; }
+  .pied-colonnes { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 72px; margin-bottom: 40px; }
+  .pied-nav { display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
+  .pied-nav a { color: var(--avt-ecru); }
+  .pied-nav-muet a { color: var(--avt-text-on-dark-muted); }
+  .pied-nav a[aria-current="page"] { color: var(--avt-ecru); }
+  .pied-bas { border-top: 1px solid var(--filet-ecru); padding-top: 26px; display: flex; flex-direction: column; gap: 24px; }
+  .pied-lockup-rang { display: flex; align-items: center; justify-content: space-between; gap: 56px; padding: 12px 0; }
+  .pied-langues { display: inline-flex; gap: 8px; letter-spacing: .06em; font-size: 13px; }
+  .pied-langues a { color: var(--avt-text-on-dark-muted); }
+  .pied-langues a[aria-current] { color: var(--avt-ecru); }
+  .pied-statut { font-size: 13px; color: var(--avt-text-on-dark-muted); }
+  .pied-statut-ligne { color: var(--avt-ecru); margin-bottom: 4px; }
+  @media (max-width: 899px) {
+    .pied { padding: 36px var(--marge-m) 28px; }
+    .pied-colonnes { grid-template-columns: 1fr 1fr; gap: 22px 12px; margin-bottom: 22px; }
+    .pied-nav { gap: 12px; }
+    .pied-nav:first-child { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; }
+    .pied-lockup-rang { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .pied-lockup-rang :global(.pied-lockup) { width: 100% !important; max-width: 350px; height: auto !important; }
+    .pied-statut { font-size: 12.5px; }
+  }
+</style>

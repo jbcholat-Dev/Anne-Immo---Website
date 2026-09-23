@@ -1,0 +1,23 @@
+Erreurs console :
+ - / : Failed to load resource: net::ERR_TOO_MANY_RETRIES
+ - /realisation : Failed to load resource: net::ERR_TOO_MANY_RETRIES
+ - /realisation/appartement-cascade-2024 : Failed to load resource: net::ERR_TOO_MANY_RETRIES
+ - /a-propos : Failed to load resource: net::ERR_TOO_MANY_RETRIES
+ - /a-propos : Failed to load resource: net::ERR_TOO_MANY_RETRIES
+ - /vendre : Failed to load resource: net::ERR_TOO_MANY_RETRIES
+ - /vendre : Failed to load resource: net::ERR_TOO_MANY_RETRIES
+ - /vendre : Failed to load resource: net::ERR_TOO_MANY_RETRIES
+ - /vendre : Failed to load resource: net::ERR_TOO_MANY_RETRIES
+ - /acheter : Failed to load resource: net::ERR_TOO_MANY_RETRIES
+ - /acheter : Failed to load resource: net::ERR_TOO_MANY_RETRIES
+ - /guide : Failed to load resource: net::ERR_TOO_MANY_RETRIES
+ - /mentions-legales : Failed to load resource: net::ERR_TOO_MANY_RETRIES
+ - /mentions-legales : Failed to load resource: net::ERR_TOO_MANY_RETRIES
+ - /cookies : Failed to load resource: net::ERR_TOO_MANY_RETRIES
+ - /cookies : Failed to load resource: net::ERR_TOO_MANY_RETRIES
+ - /en/track-record : Failed to load resource: net::ERR_TOO_MANY_RETRIES
+ - /en/track-record : Failed to load resource: net::ERR_TOO_MANY_RETRIES
+ - /en/track-record : Failed to load resource: net::ERR_TOO_MANY_RETRIES
+ - /404 : Failed to load resource: net::ERR_TOO_MANY_RETRIES
+Captures dans /home/claude/Anne-Immo---Website/site/.verif
+exit 0

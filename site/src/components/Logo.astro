@@ -1,0 +1,5 @@
+---
+interface Props { taille?: number; class?: string; label?: string }
+const { taille = 38, class: cls = '', label = 'Anne VIAL-TISSOT' } = Astro.props;
+---
+<svg width={taille} height={taille} class={cls} role="img" aria-label={label}><use href="#avt-symbole"></use></svg>

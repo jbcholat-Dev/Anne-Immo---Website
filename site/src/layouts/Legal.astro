@@ -1,0 +1,49 @@
+---
+// Gabarit des trois pages légales (10-legal-mentions) : sommaire collant à gauche, lockup positif en tête des mentions, valeurs A-13 à compléter.
+import Page from './Page.astro';
+import Lockup from '../components/Lockup.astro';
+import { r, type RouteKey } from '../i18n';
+interface Props { titre: string; courante: RouteKey; lockup?: boolean; description?: string }
+const { titre, courante, lockup = false, description } = Astro.props;
+const pages: { key: RouteKey; label: string }[] = [
+  { key: 'mentions', label: 'Mentions légales' }, { key: 'confidentialite', label: 'Politique de confidentialité' }, { key: 'cookies', label: 'Cookies' },
+];
+---
+<Page titre={`${titre} — Anne VIAL-TISSOT`} description={description} courante={courante}>
+  <div class="legal">
+    <nav aria-label="Pages légales" class="legal-nav">
+      {pages.map((p) => <a href={r(p.key)} aria-current={courante === p.key ? 'page' : undefined}>{p.label}</a>)}
+    </nav>
+    <div class="legal-corps">
+      {lockup && <div class="legal-lockup"><Lockup variante="positif" largeur={420} /></div>}
+      <h1>{titre}</h1>
+      <slot />
+    </div>
+  </div>
+</Page>
+<style>
+  .legal { padding: 72px var(--marge) 96px; display: grid; grid-template-columns: 280px 1fr; gap: 96px; align-items: start; }
+  .legal-nav { position: sticky; top: calc(var(--nav-h) + 24px); display: flex; flex-direction: column; gap: 12px; font-size: 15px; }
+  .legal-nav a { color: var(--avt-brun); }
+  .legal-nav a[aria-current="page"] { color: var(--avt-klein); font-weight: 500; }
+  .legal-corps { max-width: 68ch; font-size: 16px; line-height: 1.7; }
+  .legal-lockup { margin-bottom: 28px; }
+  .legal-corps h1 { font-size: 56px; margin-bottom: 36px; }
+  .legal-corps :global(h2) { font-family: var(--avt-font-text); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--avt-klein); font-weight: 500; margin: 0 0 10px; }
+  .legal-corps :global(h2 + p), .legal-corps :global(p) { margin: 0 0 28px; }
+  .legal-corps :global(h2.espace) { margin-top: 48px; }
+  .legal-corps :global(.a-completer) { background: var(--avt-galet); padding: 2px 8px; border-radius: 4px; font-size: 13px; letter-spacing: .04em; }
+  .legal-corps :global(.finalites) { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 14px; line-height: 1.5; margin-bottom: 16px; }
+  .legal-corps :global(.finalites > div) { background: var(--avt-galet); border-radius: 10px; padding: 14px; }
+  .legal-corps :global(.finalites b) { font-weight: 500; display: block; margin-bottom: 4px; }
+  .legal-corps :global(ul) { padding-left: 20px; margin: 0 0 28px; display: flex; flex-direction: column; gap: 6px; }
+  @media (max-width: 899px) {
+    .legal { padding: 32px var(--marge-m) 40px; display: block; font-size: 15px; }
+    .legal-nav { position: static; flex-direction: row; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+    .legal-nav a { min-height: 44px; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 999px; border: 1px solid var(--avt-brun); color: var(--avt-brun); font-size: 13px; }
+    .legal-nav a[aria-current="page"] { background: var(--avt-brun); color: var(--avt-ecru); font-weight: 400; }
+    .legal-corps h1 { font-size: 38px; margin-bottom: 18px; }
+    .legal-lockup :global(.lockup) { width: 100% !important; max-width: 320px; height: auto !important; }
+    .legal-corps :global(.finalites) { grid-template-columns: 1fr; }
+  }
+</style>

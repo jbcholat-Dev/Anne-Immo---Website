@@ -1,0 +1,72 @@
+---
+// 03 Diagnostic — le parcours (17 écrans, 15 numéros) : rendu par l'îlot diagnostic (choix unique → avance auto, multiple → Suivant, texte libre Q15 → compteur + Passer), reprise localStorage, gate de capture.
+import Quiz from '../../layouts/Quiz.astro';
+---
+<Quiz titre="Diagnostic — vos 15 questions — Anne VIAL-TISSOT" mode="parcours">
+  <div class="qz" data-diagnostic>
+    <div class="qz-progression" role="progressbar" aria-valuemin="0" aria-valuemax="17" aria-valuenow="1" aria-label="Progression"><div data-progression-barre></div></div>
+    <div class="qz-ecran" data-ecran>
+      <noscript><p class="qz-noscript">Le diagnostic a besoin de JavaScript pour fonctionner. Vous pouvez aussi <a href="/contact">écrire à Anne</a> ou <a href="/guide">recevoir le guide</a>.</p></noscript>
+    </div>
+  </div>
+  <dialog class="qz-dialogue" data-dialogue-abandon aria-labelledby="ab-t">
+    <h2 id="ab-t">Quitter le diagnostic ?</h2>
+    <p data-abandon-texte>Vos réponses sont gardées sur cet appareil. Vous pourrez reprendre là où vous en étiez.</p>
+    <button type="button" class="btn btn-primaire" data-abandon-continuer>Continuer le diagnostic</button>
+    <a href="/" class="qz-dialogue-quitter">Quitter</a>
+  </dialog>
+  <script src="../../islands/diagnostic.ts"></script>
+</Quiz>
+<style is:global>
+  .qz { max-width: 640px; margin: 0 auto; padding: 0 var(--marge-m) 40px; display: flex; flex-direction: column; min-height: calc(100vh - 72px - 120px); }
+  .qz-progression { height: 3px; background: var(--avt-galet); flex: none; }
+  .qz-progression > div { height: 100%; background: var(--avt-terra); width: 0; transition: width .4s ease; }
+  .qz-ecran { flex: 1; display: flex; flex-direction: column; padding-top: 24px; }
+  .qz-noscript { padding: 40px 0; font-size: 16px; }
+  .qz-retour { font-size: 14px; color: var(--avt-brun); display: inline-flex; align-items: center; gap: 6px; min-height: 44px; align-self: flex-start; background: none; border: 0; padding: 0; font-family: inherit; }
+  .qz-question:focus { outline: none; }
+  .qz-categorie { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--avt-klein); font-weight: 500; margin: 14px 0 14px; }
+  .qz-question { font-size: 32px; line-height: 1.15; margin: 0 0 32px; }
+  .qz-question-long { font-size: 25px; line-height: 1.12; margin-bottom: 4px; }
+  .qz-aide { font-size: 13.5px; color: var(--avt-text-muted); margin: 0 0 14px; }
+  .qz-options { display: flex; flex-direction: column; gap: 10px; }
+  .qz-options-serre { gap: 6px; }
+  .qz-option { min-height: 56px; text-align: left; background: var(--avt-ecru); border: 1.5px solid var(--avt-brun); border-radius: 14px; padding: 16px 18px; font: 400 16px/1.4 var(--avt-font-text); color: var(--avt-brun); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .qz-options-serre .qz-option { min-height: 44px; border-radius: 12px; padding: 10px 16px; font-size: 15px; line-height: 1.3; }
+  .qz-option:hover { background: var(--avt-galet); }
+  .qz-option:active { background: var(--avt-brun); color: var(--avt-ecru); }
+  .qz-option[aria-checked="true"] { background: var(--avt-brume); border-color: var(--avt-klein); }
+  .qz-option svg { width: 16px; height: 12px; flex: none; color: var(--avt-klein); display: none; }
+  .qz-option[aria-checked="true"] svg { display: block; }
+  .qz-autre { min-height: 44px; background: var(--avt-ecru); border: 1.5px dashed var(--avt-text-muted); border-radius: 12px; padding: 10px 16px; font: 400 15px var(--avt-font-text); color: var(--avt-brun); width: 100%; }
+  .qz-note { padding: 20px 0 0; font-size: 13px; color: var(--avt-text-muted); }
+  .qz-pied-ecran { padding: 14px 0 0; margin-top: auto; display: flex; flex-direction: column; gap: 12px; position: sticky; bottom: 0; background: linear-gradient(180deg, rgba(247, 242, 234, 0), var(--avt-ecru) 30%); padding-bottom: 16px; }
+  .qz-suivant { min-height: 56px; }
+  .qz-passer { text-align: center; font-size: 15px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+  .qz-texte { width: 100%; resize: none; background: var(--avt-ecru); border: 1.5px solid var(--avt-brun); border-radius: 14px; padding: 16px; font: 400 16px/1.5 var(--avt-font-text); color: var(--avt-brun); min-height: 190px; }
+  .qz-compteur { text-align: right; font-size: 12.5px; color: var(--avt-text-muted); margin-top: 8px; }
+  .qz-libelle { font-size: 13px; color: var(--avt-text-muted); margin-bottom: 8px; display: block; }
+  .qz-reprise { padding: 40px 0; display: flex; flex-direction: column; gap: 14px; }
+  .qz-reprise h1 { font-size: 28px; }
+  .qz-reprise p { font-size: 15px; line-height: 1.5; }
+  .qz-reprise .btn { margin-top: 16px; }
+  .qz-recommencer { text-align: center; font-size: 15px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+  .qz-dialogue { border: 0; border-radius: 16px; padding: 24px; background: var(--avt-ecru); color: var(--avt-brun); width: min(100% - 32px, 420px); display: none; flex-direction: column; gap: 14px; }
+  .qz-dialogue[open] { display: flex; }
+  .qz-dialogue::backdrop { background: rgba(38, 32, 26, .55); }
+  .qz-dialogue h2 { font-size: 26px; }
+  .qz-dialogue p { font-size: 15px; line-height: 1.5; }
+  .qz-dialogue-quitter { text-align: center; font-size: 15px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+  /* gate de capture (07-resultats-gate) */
+  .qz-gate-tete { padding: 24px 0 28px; border-bottom: 1px solid rgba(38, 32, 26, .1); margin-bottom: 28px; }
+  .qz-gate-score { display: flex; align-items: baseline; gap: 6px; }
+  .qz-gate-score b { font-family: var(--avt-font-display); font-weight: 400; font-size: 72px; line-height: 1; color: var(--avt-klein); }
+  .qz-gate-score span { font-size: 18px; }
+  .qz-gate-tete p { font-size: 15px; line-height: 1.5; margin-top: 12px; }
+  .qz-gate form { display: flex; flex-direction: column; gap: 14px; }
+  .qz-tel { display: flex; gap: 8px; }
+  .qz-tel select { width: 110px; flex: none; }
+  .qz-tel input { width: auto; flex: 1; min-width: 0; }
+  .qz-mention { font-size: 12.5px; line-height: 1.5; color: var(--avt-text-muted); }
+  @media (min-width: 900px) { .qz-question { font-size: 34px; } .qz-ecran { padding-top: 32px; } }
+</style>

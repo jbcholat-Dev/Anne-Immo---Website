@@ -1,0 +1,38 @@
+---
+// § 1.7 Anne : portrait (bloc réservé A-04), trois lignes, les quatre langues, « En savoir plus » → /a-propos#qui-suis-je.
+import Reserve from '../Reserve.astro';
+import Signature from '../Signature.astro';
+import { t, r, type Lang } from '../../i18n';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const d = t(lang);
+---
+<section class="anne" data-sec="anne" aria-labelledby="anne-titre">
+  <div class="anne-portrait" data-reveal="bloc">
+    <Reserve label={d.accueil.anne_portrait} class="seulement-desktop anne-reserve" />
+    <Reserve label={d.accueil.anne_portrait_m} class="seulement-mobile anne-reserve-m" />
+  </div>
+  <div data-reveal="titre">
+    <h2 id="anne-titre">{d.accueil.anne_titre}</h2>
+    <Signature largeur={150} hauteur={9} class="anne-signature" />
+    <p class="anne-texte"><span class="seulement-desktop">{d.accueil.anne_texte}</span><span class="seulement-mobile">{d.accueil.anne_texte_m}</span></p>
+    <p class="anne-langues"><span class="seulement-desktop">{d.accueil.anne_langues}</span><span class="seulement-mobile">{d.accueil.anne_langues_m}</span></p>
+    <a href={r('qui', lang)} class="lien">{d.accueil.anne_lien}</a>
+  </div>
+</section>
+<style>
+  .anne { position: relative; display: grid; grid-template-columns: 420px 1fr; gap: 64px; padding: 40px var(--marge) 120px; align-items: center; background: var(--avt-ecru); }
+  .anne-portrait :global(.anne-reserve) { height: 520px; }
+  .anne h2 { font-size: 48px; }
+  .anne-signature { margin-top: 8px; }
+  .anne-texte { font-size: 17px; line-height: 1.7; max-width: 56ch; margin: 22px 0 18px; }
+  .anne-langues { font-size: 13.5px; letter-spacing: .1em; color: var(--avt-text-muted); margin-bottom: 22px; }
+  @media (max-width: 899px) {
+    .anne { grid-template-columns: 1fr; gap: 22px; padding: 0 var(--marge-m) 64px; }
+    .anne-portrait :global(.anne-reserve-m) { height: 360px; }
+    .anne h2 { font-size: 34px; }
+    .anne-signature { display: none; }
+    .anne-texte { font-size: 16px; line-height: 1.6; margin: 14px 0 12px; }
+    .anne-langues { font-size: 12.5px; margin-bottom: 16px; }
+  }
+</style>

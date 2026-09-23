@@ -1,0 +1,32 @@
+---
+// § 1.2 La preuve, tout de suite (D-20) : bande Klein compacte — note, nombre d'avis (instantané), un extrait attribué, lien vers la fiche.
+import { t, type Lang } from '../../i18n';
+import { instantane, avisParId, roleLibelle } from '../../lib/contenu';
+import { accueil } from '../../config/site';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const d = t(lang);
+const inst = await instantane();
+const a = await avisParId(accueil.extrait.avis);
+const note = String(inst.note).replace('.', ',');
+---
+<section class="preuve" data-sec="preuve" aria-label="Avis Immodvisor">
+  <div class="preuve-note"><b>{note}</b><span>{d.accueil.preuve_sur} {inst.nombre_avis} {d.accueil.preuve_avis}</span></div>
+  <p class="preuve-extrait">« {accueil.extrait.phrase} » <span class="preuve-auteur">{a.data.auteur}, {roleLibelle(a, lang)}</span></p>
+  <a href={inst.url_fiche} class="lien-souligne-ecru preuve-lien" rel="noopener" target="_blank">{d.accueil.preuve_lien}</a>
+</section>
+<style>
+  .preuve { display: flex; align-items: center; gap: 32px; padding: 26px var(--marge); background: var(--avt-klein); color: var(--avt-ecru); }
+  .preuve-note { display: flex; align-items: baseline; gap: 8px; flex: none; }
+  .preuve-note b { font-family: var(--avt-font-display); font-weight: 400; font-size: 44px; font-variant-numeric: tabular-nums; line-height: 1; }
+  .preuve-note span { font-size: 15px; color: var(--avt-text-on-dark-muted); }
+  .preuve-extrait { flex: 1; font-size: 15.5px; line-height: 1.55; max-width: 64ch; }
+  .preuve-auteur { color: var(--avt-text-on-dark-muted); font-size: 13.5px; }
+  .preuve-lien { flex: none; font-size: 14.5px; }
+  @media (max-width: 899px) {
+    .preuve { flex-direction: column; align-items: flex-start; gap: 10px; padding: 20px var(--marge-m); }
+    .preuve-note b { font-size: 36px; }
+    .preuve-note span, .preuve-extrait { font-size: 14.5px; }
+    .preuve-lien { font-size: 14px; border-bottom-color: var(--avt-terra); }
+  }
+</style>

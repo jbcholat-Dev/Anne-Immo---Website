@@ -1,0 +1,37 @@
+---
+// § 1.8 Parler à Anne (D-22) : vague puis bande Klein, sans image, deux boutons — la page se ferme, elle ne s'éteint pas.
+import { t, r, type Lang } from '../../i18n';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const d = t(lang);
+---
+<section class="parler" data-sec="parler" aria-labelledby="parler-titre">
+  <div class="parler-vague" aria-hidden="true"><svg><use href="#avt-vague"></use></svg></div>
+  <div class="parler-bande">
+    <div class="parler-int" data-reveal="titre">
+      <h2 id="parler-titre">{d.accueil.parler_titre}</h2>
+      <p>{d.accueil.parler_texte}</p>
+      <div class="parler-boutons">
+        <a href={`${r('contact', lang)}#reserver`} class="btn btn-ecru btn-m">{d.accueil.parler_rdv}</a>
+        <a href={`${r('contact', lang)}#ecrire`} class="btn btn-contour-ecru btn-m">{d.accueil.parler_ecrire}</a>
+      </div>
+    </div>
+  </div>
+</section>
+<style>
+  .parler { position: relative; overflow: hidden; background: var(--avt-ecru); }
+  .parler-vague { position: relative; height: 96px; }
+  .parler-vague svg { position: absolute; left: 0; top: 0; width: 100%; height: 96px; fill: var(--avt-klein); }
+  .parler-bande { position: relative; background: var(--avt-klein); color: var(--avt-ecru); padding: 44px var(--marge) 84px; text-align: center; }
+  .parler-int { max-width: 640px; margin: 0 auto; }
+  .parler h2 { font-size: 52px; color: var(--avt-ecru); margin-bottom: 12px; }
+  .parler p { font-size: 17px; margin-bottom: 30px; }
+  .parler-boutons { display: flex; gap: 16px; justify-content: center; }
+  @media (max-width: 899px) {
+    .parler-vague, .parler-vague svg { height: 52px; }
+    .parler-bande { padding: 24px var(--marge-m) 52px; }
+    .parler h2 { font-size: 34px; margin-bottom: 8px; }
+    .parler p { font-size: 16px; margin-bottom: 24px; }
+    .parler-boutons { flex-direction: column; gap: 12px; }
+  }
+</style>

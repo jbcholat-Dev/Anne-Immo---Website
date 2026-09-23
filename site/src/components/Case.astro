@@ -1,0 +1,10 @@
+---
+// Case à cocher (consentement obligatoire, séquence d'e-mails facultative).
+interface Props { nom: string; requis?: boolean; message?: string; coche?: boolean }
+const { nom, requis = false, message, coche = false } = Astro.props;
+const id = `c-${nom}-${Math.random().toString(36).slice(2, 6)}`;
+---
+<label class="case" for={id} data-case>
+  <input type="checkbox" id={id} name={nom} required={requis} checked={coche} data-message={message} />
+  <span><slot /><span class="case-message" data-case-message hidden></span></span>
+</label>

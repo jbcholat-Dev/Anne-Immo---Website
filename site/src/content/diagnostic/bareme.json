@@ -1,0 +1,34 @@
+{
+  "_source": "quiz-conception-notion.md (page Scoring, nov. 2025, fait autorité). 100 points : Préparation 40 (q01 prix, q02 diagnostics, q03 dossier, q04 présentation) · Visibilité 40 (q05 visuel, q06 annonce, q07 plateformes, q08 rafraîchissement) · Efficacité 20 (q09 qualification, q10 visites × offres).",
+  "_ecarts": [
+    "q02 : le live a 3 options (conception : 4). « Certains diagnostics à refaire » = 5 (entre 5 « élec/gaz à refaire » et 2 « plusieurs à refaire ») — à confirmer.",
+    "q05 : le live ajoute « + vidéo » au-dessus de « + visite virtuelle » : les deux valent 10 (le maximum de la conception).",
+    "q09 : 3 options live (conception : 4) — 10 / 5 / 1.",
+    "q10 : barème NON TRANCHÉ (SPEC, Open Questions). Matrice visites × offres reconstruite depuis les 5 combinaisons de la conception — TODO(barème Q10) à valider avec Anne."
+  ],
+  "categories": { "preparation": ["q01", "q02", "q03", "q04"], "visibilite": ["q05", "q06", "q07", "q08"], "efficacite": ["q09", "q10"] },
+  "points": {
+    "q01.a": 8, "q01.b": 10, "q01.c": 3, "q01.d": 0,
+    "q02.a": 10, "q02.b": 5, "q02.c": 0,
+    "q03.a": 10, "q03.b": 5, "q03.c": 0,
+    "q04.a": 10, "q04.b": 5, "q04.c": 0,
+    "q05.a": 10, "q05.b": 10, "q05.c": 7, "q05.d": 4, "q05.e": 0,
+    "q06.a": 10, "q06.b": 5, "q06.c": 2, "q06.d": 0,
+    "q08.a": 10, "q08.b": 5, "q08.c": 1, "q08.d": 0,
+    "q09.a": 10, "q09.b": 5, "q09.c": 1
+  },
+  "q07_par_nombre": { "0": 0, "1": 2, "2": 4, "3": 4, "4": 7, "5": 7, "6+": 10 },
+  "q10_matrice": {
+    "q10a.a": { "q10b.a": 7, "q10b.b": 10, "q10b.c": 3 },
+    "q10a.b": { "q10b.a": 3, "q10b.b": 7, "q10b.c": 3 },
+    "q10a.c": { "q10b.a": 3, "q10b.b": 7, "q10b.c": 1 },
+    "q10a.d": { "q10b.a": 0, "q10b.b": 0, "q10b.c": 0 }
+  },
+  "profils": [
+    { "id": "risque", "min": 0, "max": 40, "libelle": "Stratégie à risque", "ton": "brun", "texte": "Votre stratégie actuelle présente des lacunes importantes qui risquent de prolonger considérablement votre délai de vente ou de vous faire brader votre bien." },
+    { "id": "solide", "min": 41, "max": 70, "libelle": "Bases solides, optimisations nécessaires", "ton": "terra", "texte": "Vous avez posé des fondations correctes, mais plusieurs axes d'optimisation peuvent accélérer votre vente et maximiser votre prix." },
+    { "id": "prepare", "min": 71, "max": 100, "libelle": "Bien préparé", "ton": "klein", "texte": "Votre approche est professionnelle et méthodique. Quelques ajustements tactiques suffiront pour optimiser vos résultats." }
+  ],
+  "bandes_pourcent": [ { "id": "faible", "max": 40 }, { "id": "moyen", "max": 70 }, { "id": "eleve", "max": 100 } ],
+  "orientation": { "_regle": "CAP-7 : sortie A si score ≥ 71 ET q14 = premium (q14.a) ET q12 ≠ « minimiser les frais » (q12.d) ; sinon sortie B.", "premium": "q14.a", "force_b": "q12.d", "seuil_a": 71 }
+}

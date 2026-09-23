@@ -1,0 +1,115 @@
+---
+// 06 Story — fiche d'une vente : photo maîtresse, contexte, récit d'Anne, témoignages (vendeur / acheteur, rôle affiché), galerie, CTA.
+import Page from '../../layouts/Page.astro';
+import Picture from '../../components/Picture.astro';
+import Reserve from '../../components/Reserve.astro';
+import CtaFin from '../../components/CtaFin.astro';
+import { render } from 'astro:content';
+import { stories, photosDeStory, cleImage, avisDeStory, roleLibelle, paragraphes } from '../../lib/contenu';
+import { images } from '../../lib/images';
+import { tiret } from '../../lib/texte';
+import { r } from '../../i18n';
+export async function getStaticPaths() {
+  return (await stories()).map((s) => ({ params: { slug: s.id }, props: { story: s } }));
+}
+const { story } = Astro.props;
+const { Content } = await render(story);
+const photos = photosDeStory(story.id).filter((p) => images[cleImage(story.id, p)]);
+const principale = photos.find((p) => p.role === 'principale');
+const secondaires = photos.filter((p) => p.role === 'secondaire');
+// Témoignages : ceux du front matter (A-07) d'abord ; sinon les avis Immodvisor reliés (v1) ; sinon bloc réservé.
+const propres = story.data.temoignages.filter((t) => t.citation);
+const avis = propres.length ? [] : await avisDeStory(story.id);
+const temoignages = propres.length
+  ? propres.map((t) => ({ role: t.role === 'vendeur' ? 'vendeur' : 'acheteur', prenom: t.prenom ?? '', texte: [t.citation!], source: null as string | null }))
+  : avis.map((a) => ({ role: roleLibelle(a), prenom: a.data.auteur, texte: paragraphes(a.body), source: 'Avis Immodvisor' }));
+const titreTemoignages = temoignages.length === 1 ? (temoignages[0].role.startsWith('vendeu') ? (temoignages[0].role === 'vendeuse' ? 'Ce qu’elle en dit' : 'Ce qu’il en dit') : 'Ce qu’il en dit') : 'Ce qu’ils en disent';
+const alt = `${story.data.type_bien} vendu à ${story.data.commune}`;
+---
+<Page titre={`${story.data.commune} — Réalisation — Anne VIAL-TISSOT`} description={(story.data.particularite ?? '').trim()} courante="realisation">
+  <div class="story-photo">
+    {principale ? <Picture id={cleImage(story.id, principale)} alt={alt} sizes="100vw" loading="eager" fetchpriority="high" /> : <Reserve label={`A-02 · photo maîtresse · ${story.data.commune} · 16:9 plein cadre`} style="height:100%" />}
+  </div>
+  <div class="story-corps">
+    <aside class="story-contexte">
+      <a href={r('realisation')} class="story-retour">← Toutes les ventes</a>
+      <div><div class="chapeau-muet">Commune</div>{story.data.commune}</div>
+      <div><div class="chapeau-muet">Type de bien</div>{story.data.type_bien}</div>
+      {story.data.delai_vente && <div><div class="chapeau-muet">Délai de vente</div>{story.data.delai_vente}</div>}
+      {story.data.annee_vente && <div><div class="chapeau-muet">Vendu</div>{story.data.annee_vente}</div>}
+    </aside>
+    <div class="story-texte">
+      <a href={r('realisation')} class="story-retour seulement-mobile">← Toutes les ventes</a>
+      <h1>{tiret(story.data.commune)}</h1>
+      <div class="story-meta seulement-mobile">
+        <span class="texte-muet">{story.data.type_bien}</span>
+        {story.data.annee_vente && <span>Vendu {story.data.annee_vente}</span>}
+        {story.data.delai_vente && <span>{story.data.delai_vente}</span>}
+      </div>
+      <h2 class="chapeau">Le récit d'Anne</h2>
+      <div class="recit"><Content /></div>
+      <h2 class="chapeau">{titreTemoignages}</h2>
+      <div class="temoignages">
+        {temoignages.length === 0 && <Reserve label="Actif attendu A-07 · témoignage, cité et attribué (vendeur ou acheteur)" style="height:160px" />}
+        {temoignages.map((t) => (
+          <blockquote class="temoignage">
+            <div class="temoignage-texte">{t.texte.map((p) => <p>{p}</p>)}</div>
+            <footer>{t.prenom} <span class="texte-muet">· {t.role}{t.source && ` · ${t.source}`}</span></footer>
+          </blockquote>
+        ))}
+      </div>
+    </div>
+  </div>
+  {secondaires.length > 0 && (
+    <div class="story-galerie" aria-label="Galerie">
+      {secondaires.map((p) => <div class="story-galerie-photo"><Picture id={cleImage(story.id, p)} alt={alt} sizes="(max-width: 899px) 240px, 25vw" /></div>)}
+    </div>
+  )}
+  <CtaFin titre="Et votre vente ?" texte="Trois minutes pour savoir où elle en est, ou un créneau pour en parler." />
+</Page>
+<style>
+  .story-photo { height: 640px; background: var(--avt-galet); overflow: hidden; }
+  .story-photo :global(picture), .story-photo :global(img) { width: 100%; height: 100%; }
+  .story-photo :global(img) { object-fit: cover; }
+  .story-corps { padding: 72px var(--marge) 0; display: grid; grid-template-columns: 360px 1fr; gap: 80px; }
+  .story-contexte { display: flex; flex-direction: column; gap: 22px; font-size: 15px; }
+  .story-contexte .chapeau-muet { margin-bottom: 6px; }
+  .story-retour { font-size: 14px; }
+  .story-texte { max-width: 64ch; }
+  .story-texte h1 { font-size: 64px; line-height: 1.05; margin-bottom: 36px; }
+  .story-texte h2.chapeau { font-family: var(--avt-font-text); margin: 0 0 14px; }
+  .recit { font-size: 17px; line-height: 1.7; margin-bottom: 48px; }
+  .recit :global(h1) { font-size: 30px; line-height: 1.2; margin: 0 0 24px; }
+  .recit :global(h2) { font-size: 26px; margin: 32px 0 12px; }
+  .recit :global(h3) { font-size: 22px; margin: 24px 0 8px; }
+  .recit :global(p) { margin: 0 0 16px; }
+  .recit :global(ul), .recit :global(ol) { padding-left: 20px; margin: 0 0 16px; display: flex; flex-direction: column; gap: 6px; }
+  .recit :global(strong) { font-weight: 500; }
+  .recit :global(em) { font-style: italic; }
+  .temoignages { display: flex; flex-direction: column; gap: 36px; margin-bottom: 56px; }
+  .temoignage { font-family: var(--avt-font-display); font-size: 32px; line-height: 1.3; }
+  .temoignage + .temoignage { border-top: 1px solid rgba(38, 32, 26, .15); padding-top: 32px; }
+  .temoignage-texte { display: flex; flex-direction: column; gap: 12px; }
+  .temoignage-texte p:first-child::before { content: '« '; }
+  .temoignage-texte p:last-child::after { content: ' »'; }
+  .temoignage footer { font: 400 14px var(--avt-font-text); margin-top: 12px; }
+  .story-galerie { padding: 0 var(--marge) 80px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .story-galerie-photo { height: 220px; border-radius: 12px; overflow: hidden; background: var(--avt-galet); }
+  .story-galerie-photo :global(picture), .story-galerie-photo :global(img) { width: 100%; height: 100%; }
+  .story-galerie-photo :global(img) { object-fit: cover; }
+  @media (max-width: 899px) {
+    .story-photo { height: 300px; }
+    .story-corps { padding: 28px var(--marge-m) 0; display: block; }
+    .story-contexte { display: none; }
+    .story-texte h1 { font-size: 40px; margin: 16px 0 14px; }
+    .story-meta { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 14px; margin-bottom: 28px; }
+    .story-texte h2.chapeau { font-size: 12px; margin-bottom: 12px; }
+    .recit { font-size: 16px; line-height: 1.65; margin-bottom: 36px; }
+    .recit :global(h1) { font-size: 26px; }
+    .temoignage { font-size: 26px; }
+    .temoignage + .temoignage { padding-top: 24px; }
+    .temoignages { gap: 24px; margin-bottom: 36px; }
+    .story-galerie { display: flex; gap: 10px; padding: 0 var(--marge-m) 36px; overflow-x: auto; }
+    .story-galerie-photo { height: 180px; min-width: 240px; flex: none; }
+  }
+</style>

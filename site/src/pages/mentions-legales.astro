@@ -1,0 +1,15 @@
+---
+import Legal from '../layouts/Legal.astro';
+import { identite } from '../config/site';
+const ac = (v: string | null, libelle: string) => v ?? libelle;
+---
+<Legal titre="Mentions légales" courante="mentions" lockup description="Éditeur, coordonnées et hébergeur du site d'Anne Vial-Tissot, agent commercial indépendant, réseau eXp France.">
+  <h2>Éditeur</h2>
+  <p>{identite.nomCourt}, {identite.statut}. RSAC n° <span class="a-completer">{ac(identite.rsac, 'à compléter · A-13')}</span>, greffe de <span class="a-completer">ville</span>. Carte professionnelle du réseau eXp France n° <span class="a-completer">{ac(identite.cartePro, 'référence')}</span>. Directrice de la publication : {identite.nomCourt}.</p>
+  <h2>Coordonnées</h2>
+  <p>Adresse professionnelle, téléphone, e-mail : <span class="a-completer">{ac(identite.telephone, 'les mêmes que sur la fiche Google Business et le pied de page · A-13')}</span>.</p>
+  <h2>Hébergeur</h2>
+  <p><span class="a-completer">{ac(identite.hebergeur, "Nom, adresse, téléphone de l'hébergeur · A-13")}</span></p>
+  <h2>Propriété intellectuelle</h2>
+  <p>Les textes, photographies et vidéos de ce site sont la propriété d'Anne Vial-Tissot ou de ses clients, publiés avec leur accord. Les logos eXp sont la propriété d'eXp France et sont utilisés dans leurs versions officielles.</p>
+</Legal>

@@ -1,0 +1,53 @@
+---
+// § 1.1 Ouverture (D-1, D-19, D-10) : vidéo drone plein cadre 900 px, voile, bloc nom + positionnement + CTA posé en bas (84 px).
+// v1 : <video> sans source (A-01 attendue), poster = photo de story ; le <picture> derrière est le repli (mobile, connexion lente, mouvement réduit).
+import Picture from '../Picture.astro';
+import Signature from '../Signature.astro';
+import { image } from '../../lib/images';
+import { hero } from '../../config/site';
+import { t, r, type Lang } from '../../i18n';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const d = t(lang);
+const poster = image(hero.poster)!;
+---
+<section class="hero" data-sec="ouverture" aria-labelledby="hero-titre">
+  <div class="hero-fond" aria-hidden="true">
+    <Picture id={hero.poster} alt="" sizes="100vw" loading="eager" fetchpriority="high" class="hero-poster" />
+    <video class="hero-video" poster={poster.jpg} muted autoplay loop playsinline preload="none" tabindex="-1" aria-hidden="true">
+      <!-- TODO(contenu A-01) : <source src="/video/ouverture.mp4" type="video/mp4"> + <source … type="video/webm"> — 1080p, 8-12 s, sans audio, < 6 Mo -->
+    </video>
+    <div class="hero-voile"></div>
+  </div>
+  <div class="hero-contenu">
+    <h1 id="hero-titre" data-reveal="titre">Anne <span class="hero-nom">VIAL‑TISSOT</span></h1>
+    <Signature largeur={260} hauteur={10} class="hero-signature" />
+    <p class="hero-ligne" data-reveal="petit">{d.accueil.hero_ligne}</p>
+    <a href={r('diagnostic', lang)} class="btn btn-primaire hero-cta" data-reveal="petit"><span class="seulement-desktop">{d.accueil.hero_cta}</span><span class="seulement-mobile">{d.accueil.hero_cta_m}</span></a>
+  </div>
+</section>
+
+<style>
+  .hero { position: relative; height: 900px; overflow: hidden; background: var(--avt-brun); color: var(--avt-ecru); }
+  .hero-fond { position: absolute; inset: 0; }
+  .hero-fond :global(.hero-poster), .hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .hero-video { object-position: center; }
+  .hero-video:not([src]) { display: none; } /* pas de source : le poster <picture> suffit */
+  .hero-voile { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(38, 32, 26, .34) 0%, rgba(38, 32, 26, .22) 34%, rgba(38, 32, 26, .58) 72%, rgba(38, 32, 26, .88) 100%); pointer-events: none; }
+  .hero-contenu { position: absolute; left: var(--marge); right: var(--marge); bottom: 84px; max-width: 760px; }
+  .hero h1 { font-size: 96px; letter-spacing: .02em; line-height: 1; color: var(--avt-ecru); white-space: nowrap; }
+  .hero-signature { margin-top: 14px; }
+  .hero-ligne { font-size: 19px; line-height: 1.5; margin-top: 18px; color: var(--avt-ecru); max-width: 44ch; }
+  .hero-cta { margin-top: 32px; }
+  @media (prefers-reduced-motion: reduce) { .hero-video { display: none; } }
+  @media (max-width: 899px) {
+    .hero { height: 780px; }
+    .hero-voile { background: linear-gradient(180deg, rgba(38, 32, 26, .62) 0%, rgba(38, 32, 26, .54) 30%, rgba(38, 32, 26, .32) 56%, rgba(38, 32, 26, .48) 78%, rgba(38, 32, 26, .88) 100%); }
+    .hero-contenu { bottom: auto; top: 110px; left: var(--marge-m); right: var(--marge-m); }
+    .hero h1 { font-size: 48px; white-space: normal; }
+    .hero-nom { display: block; }
+    .hero-signature { width: 150px !important; height: 8px !important; margin-top: 10px; }
+    .hero-ligne { font-size: 16px; margin-top: 14px; }
+    .hero-cta { margin-top: 22px; }
+  }
+</style>

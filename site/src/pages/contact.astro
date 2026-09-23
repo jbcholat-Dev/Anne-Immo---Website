@@ -1,0 +1,123 @@
+---
+// 10 Contact / Rendez-vous (§ 9, CAP-9) : deux chemins — Cal.com en gabarit statique à la charte (avec sa case d'acceptation) et « Écrire à Anne ».
+import Page from '../layouts/Page.astro';
+import FormulaireContact from '../components/FormulaireContact.astro';
+const jours = [
+  { n: 1, dispo: false }, { n: 2, dispo: false }, { n: 3, dispo: false }, { n: 4, dispo: false }, { n: 5, dispo: false }, { n: 6, dispo: false }, { n: 7, dispo: false },
+  { n: 8, dispo: false }, { n: 9, dispo: false }, { n: 10, dispo: true }, { n: 11, dispo: true }, { n: 12, dispo: false }, { n: 13, dispo: false }, { n: 14, dispo: true },
+  { n: 15, dispo: true, choisi: true }, { n: 16, dispo: true }, { n: 17, dispo: true }, { n: 18, dispo: true }, { n: 19, dispo: false }, { n: 20, dispo: false }, { n: 21, dispo: true },
+  { n: 22, dispo: true }, { n: 23, dispo: true }, { n: 24, dispo: true }, { n: 25, dispo: true },
+];
+const heures = ['09:30', '11:00', '14:00', '17:30'];
+---
+<Page titre="Contact — Parler à Anne — Anne VIAL-TISSOT" description="Un créneau de trente minutes, ou un message. Réponse sous un jour ouvré." courante="contact">
+  <div class="ct-tete">
+    <h1>Parler à Anne</h1>
+    <p><span class="seulement-desktop">Un créneau de trente minutes, ou un message. Réponse sous un jour ouvré.</span><span class="seulement-mobile">Un créneau de trente minutes, ou un message.</span></p>
+  </div>
+  <div class="ct-corps">
+    <section aria-label="Réserver un créneau" class="ct-rdv" id="reserver" data-rdv>
+      <h2>Réserver un créneau</h2>
+      <p class="ct-rdv-sous seulement-desktop">Heure de Paris (UTC+2), détectée depuis votre appareil. Cal.com intégré.</p>
+      <!-- TODO(backend / CAP-9) : remplacer ce gabarit statique par l'embed Cal.com (chargé après action du visiteur, AD-11), avec la question obligatoire d'acceptation de la politique. -->
+      <div class="ct-rdv-grille" data-rdv-etat="repos">
+        <div>
+          <div class="ct-mois"><b>Septembre 2026</b><span><button type="button" aria-label="Mois précédent">‹</button><button type="button" aria-label="Mois suivant">›</button></span></div>
+          <div class="ct-cal" role="grid">
+            {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((j) => <span class="ct-cal-j" aria-hidden="true">{j}</span>)}
+            <span></span>
+            {jours.map((j) => j.dispo ? <button type="button" aria-pressed={j.choisi ? 'true' : 'false'} data-jour={j.n}>{j.n}</button> : <span class="ct-cal-off">{j.n}</span>)}
+          </div>
+        </div>
+        <div class="ct-heures">
+          <div class="ct-heures-jour" data-rdv-jour>Mardi 15 septembre</div>
+          {heures.map((h) => <button type="button" aria-pressed={h === '11:00' ? 'true' : 'false'} data-heure={h}>{h}</button>)}
+        </div>
+      </div>
+      <form class="ct-rdv-form" data-formulaire="rdv" novalidate>
+        <label class="champ"><span class="sr-only">Prénom et nom</span><input type="text" name="nom" placeholder="Prénom et nom" required autocomplete="name" data-erreur="Indiquez votre nom." aria-describedby="rdv-e1" /><span class="champ-erreur" id="rdv-e1"></span></label>
+        <label class="champ"><span class="sr-only">E-mail</span><input type="email" name="email" placeholder="E-mail" required autocomplete="email" data-erreur="Indiquez votre adresse e-mail." aria-describedby="rdv-e2" /><span class="champ-erreur" id="rdv-e2"></span></label>
+        <label class="champ ct-large"><span class="sr-only">Téléphone</span><input type="tel" name="telephone" placeholder="Téléphone · obligatoire" required autocomplete="tel" inputmode="tel" data-erreur="Dix chiffres attendus." aria-describedby="rdv-e3" /><span class="champ-erreur" id="rdv-e3"></span></label>
+        <label class="case ct-large" data-case><input type="checkbox" name="privacy" required data-message="Nécessaire pour réserver." /><span>J'accepte la <a href="/confidentialite">politique de confidentialité</a>. Obligatoire pour réserver.<span class="case-message" data-case-message hidden></span></span></label>
+        <div class="alerte-douce ct-large" data-erreurs-globales hidden role="alert"></div>
+        <div class="ct-large" data-echec hidden tabindex="-1"><div class="alerte" role="alert">La réservation n'a pas abouti. Vos informations sont conservées : rien à ressaisir.</div></div>
+        <button type="submit" class="btn btn-primaire ct-large ct-rdv-bouton" data-rdv-bouton>Confirmer le mardi 15 à 11:00</button>
+      </form>
+      <div class="ct-rdv-confirmation" data-confirmation="rdv" hidden>
+        <div class="confirmation-titre" data-rdv-recap>Mardi 15 septembre, 11:00</div>
+        <p>Trente minutes par téléphone avec Anne. Une invitation est dans votre boîte e-mail ; vous pouvez la déplacer depuis ce message.</p>
+        <div class="texte-muet ct-rdv-suite">Ensuite : Anne prépare un premier regard sur votre bien à partir de l'adresse.</div>
+      </div>
+    </section>
+    <FormulaireContact projet="vente" />
+  </div>
+  <script src="../islands/formulaires.ts"></script>
+  <script>
+    // Gabarit Cal.com : choix du jour et de l'heure (pur affichage, v1). ?projet=achat prérègle le formulaire (arrivée depuis Acheter).
+    const rdv = document.querySelector<HTMLElement>('[data-rdv]');
+    if (rdv) {
+      const bouton = rdv.querySelector<HTMLButtonElement>('[data-rdv-bouton]');
+      const recap = rdv.querySelector<HTMLElement>('[data-rdv-recap]');
+      const jourLbl = rdv.querySelector<HTMLElement>('[data-rdv-jour]');
+      const noms = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+      let jour = 15, heure = '11:00';
+      const maj = () => {
+        const d = new Date(2026, 8, jour);
+        const nomJour = noms[d.getDay()];
+        if (jourLbl) jourLbl.textContent = `${nomJour[0].toUpperCase()}${nomJour.slice(1)} ${jour} septembre`;
+        if (bouton) bouton.textContent = `Confirmer le ${nomJour} ${jour} à ${heure}`;
+        if (recap) recap.textContent = `${nomJour[0].toUpperCase()}${nomJour.slice(1)} ${jour} septembre, ${heure}`;
+      };
+      rdv.querySelectorAll<HTMLButtonElement>('[data-jour]').forEach((b) => b.addEventListener('click', () => { rdv.querySelectorAll('[data-jour]').forEach((x) => x.setAttribute('aria-pressed', 'false')); b.setAttribute('aria-pressed', 'true'); jour = Number(b.dataset.jour); maj(); }));
+      rdv.querySelectorAll<HTMLButtonElement>('[data-heure]').forEach((b) => b.addEventListener('click', () => { rdv.querySelectorAll('[data-heure]').forEach((x) => x.setAttribute('aria-pressed', 'false')); b.setAttribute('aria-pressed', 'true'); heure = b.dataset.heure!; maj(); }));
+    }
+    if (new URLSearchParams(location.search).get('projet') === 'achat') {
+      const r = document.querySelector<HTMLInputElement>('input[name="projet"][value="achat"]');
+      if (r) r.checked = true;
+    }
+  </script>
+</Page>
+<style>
+  .ct-tete { padding: 80px var(--marge) 32px; }
+  .ct-tete h1 { font-size: 72px; margin-bottom: 14px; }
+  .ct-tete p { font-size: 18px; line-height: 1.6; max-width: 56ch; }
+  .ct-corps { padding: 32px var(--marge) 96px; display: grid; grid-template-columns: 1.15fr 1fr; gap: 64px; align-items: start; }
+  .ct-rdv { background: var(--avt-galet); border-radius: 16px; padding: 36px; scroll-margin-top: calc(var(--nav-h) + 24px); }
+  .ct-rdv h2 { font-size: 32px; margin-bottom: 6px; }
+  .ct-rdv-sous { font-size: 14px; color: var(--avt-text-muted); margin-bottom: 24px; }
+  .ct-rdv-grille { display: grid; grid-template-columns: 1fr 200px; gap: 28px; }
+  .ct-mois { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 15px; }
+  .ct-mois b { font-weight: 500; }
+  .ct-mois span { display: inline-flex; gap: 8px; }
+  .ct-mois button { width: 36px; height: 36px; border: 1px solid var(--avt-brun); background: transparent; border-radius: 999px; color: var(--avt-brun); font-size: 18px; }
+  .ct-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; font-size: 13px; text-align: center; color: var(--avt-text-muted); }
+  .ct-cal-off { height: 44px; line-height: 44px; color: var(--avt-disabled); }
+  .ct-cal button { height: 44px; border: 0; background: var(--avt-ecru); border-radius: 8px; color: var(--avt-brun); font: 500 14px var(--avt-font-text); }
+  .ct-cal button[aria-pressed="true"] { background: var(--avt-klein); color: var(--avt-ecru); }
+  .ct-heures { display: flex; flex-direction: column; gap: 8px; }
+  .ct-heures-jour { font-size: 14px; margin-bottom: 4px; }
+  .ct-heures button { min-height: 44px; border: 1.5px solid var(--avt-brun); background: transparent; border-radius: 999px; font: 400 15px var(--avt-font-text); color: var(--avt-brun); }
+  .ct-heures button[aria-pressed="true"] { border-color: var(--avt-klein); background: var(--avt-brume); color: var(--avt-klein); font-weight: 500; }
+  .ct-rdv-form { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--filet-brun-fort); display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .ct-rdv-form .champ input { font-size: 15px; }
+  .ct-large { grid-column: 1 / -1; }
+  .ct-rdv-bouton { min-height: 56px; }
+  .ct-rdv-confirmation { margin-top: 24px; background: var(--avt-ecru); border: 1px solid var(--filet-brun-fort); border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+  .ct-rdv-confirmation p { font-size: 15px; line-height: 1.5; }
+  .ct-rdv-suite { font-size: 13.5px; }
+  @media (max-width: 899px) {
+    .ct-tete { padding: 40px var(--marge-m) 24px; }
+    .ct-tete h1 { font-size: 44px; margin-bottom: 10px; }
+    .ct-tete p { font-size: 16px; }
+    .ct-corps { padding: 0 0 40px; display: block; }
+    .ct-rdv { margin: 0 16px 28px; border-radius: 14px; padding: 22px 18px; }
+    .ct-rdv h2 { font-size: 26px; margin-bottom: 14px; }
+    .ct-rdv-grille { grid-template-columns: 1fr; gap: 16px; }
+    .ct-mois button { width: 44px; height: 44px; }
+    .ct-cal { gap: 4px; }
+    .ct-heures { display: grid; grid-template-columns: 1fr 1fr; }
+    .ct-heures-jour { grid-column: 1 / -1; }
+    .ct-rdv-form { margin-top: 18px; padding-top: 18px; grid-template-columns: 1fr; gap: 12px; }
+    .ct-corps :global(.fc) { padding: 0 var(--marge-m); }
+  }
+</style>

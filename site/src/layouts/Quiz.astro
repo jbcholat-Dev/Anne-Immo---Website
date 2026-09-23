@@ -1,0 +1,40 @@
+---
+// Gabarit du parcours et des résultats : navigation masquée (§ 0) — logo (abandon avec confirmation), repère « Question n / 15 » ou FR · EN. Pied de page réduit.
+import Base from './Base.astro';
+import Logo from '../components/Logo.astro';
+import Lockup from '../components/Lockup.astro';
+interface Props { titre: string; description?: string; noindex?: boolean; mode: 'parcours' | 'resultats' }
+const { titre, description, noindex = true, mode } = Astro.props;
+---
+<Base titre={titre} description={description} noindex={noindex}>
+  <header class="qz-tete">
+    <a href="/" class="qz-logo" aria-label="Accueil" data-abandon={mode === 'parcours' ? '1' : undefined}><Logo taille={32} /></a>
+    {mode === 'parcours' ? <span class="qz-repere" data-repere-question aria-live="polite"></span> : <span class="qz-langue"><span>FR</span> · <span class="texte-muet">EN</span></span>}
+  </header>
+  <main id="contenu" class="qz-main"><slot /></main>
+  <footer class="qz-pied">
+    <div class="qz-pied-int">
+      <Lockup variante="negatif" largeur={350} class="qz-lockup" />
+      <span>© 2026 Anne Vial-Tissot · eXp France</span>
+      <span class="qz-pied-liens"><a href="/mentions-legales">Mentions légales</a><a href="/confidentialite">Confidentialité</a><a href="/cookies">Cookies</a></span>
+    </div>
+  </footer>
+</Base>
+<style>
+  .qz-tete { height: 72px; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--marge); }
+  .qz-logo { display: block; }
+  .qz-repere { font-size: 13px; color: var(--avt-text-muted); }
+  .qz-langue { font-size: 13px; letter-spacing: .06em; }
+  .qz-main { min-height: calc(100vh - 72px - 120px); }
+  .qz-pied { background: var(--avt-brun); color: var(--avt-text-on-dark-muted); padding: 22px var(--marge); font-size: 13px; }
+  .qz-pied-int { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  .qz-pied-liens { display: inline-flex; gap: 20px; }
+  .qz-pied-liens a { color: var(--avt-text-on-dark-muted); }
+  @media (max-width: 899px) {
+    .qz-tete { height: var(--nav-h-mobile); padding: 0 var(--marge-m); }
+    .qz-pied { padding: 20px var(--marge-m); font-size: 12.5px; }
+    .qz-pied-int { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .qz-pied-int :global(.qz-lockup) { width: 100% !important; max-width: 300px; height: auto !important; }
+    .qz-pied-liens { gap: 14px; flex-wrap: wrap; }
+  }
+</style>

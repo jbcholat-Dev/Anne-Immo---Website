@@ -1,0 +1,9 @@
+---
+// Bloc réservé « Actif attendu A-xx » aux dimensions réelles — jamais un trou (brief lot 3 § 6).
+interface Props { label: string; lecture?: boolean; ton?: 'galet' | 'placement'; class?: string; style?: string; hauteur?: number }
+const { label, lecture = false, ton = 'galet', class: cls = '', style = '', hauteur } = Astro.props;
+---
+<div class={`reserve ${ton === 'placement' ? 'reserve-placement' : ''} ${cls}`} style={`${hauteur ? `height:${hauteur}px;` : ''}${style}`} role="img" aria-label={label}>
+  {lecture && <div class="reserve-lecture"><svg aria-hidden="true"><use href="#ico-lecture"></use></svg></div>}
+  <div>{label}</div>
+</div>

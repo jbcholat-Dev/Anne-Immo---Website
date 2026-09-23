@@ -1,0 +1,161 @@
+---
+// Barre de navigation (D-2, D-6 variante A, D-17, D-21) : fixe dès le premier pixel, réduite au défilement, jamais masquée.
+// Desktop : réseaux · filet · symbole seul | À propos ▾ (Qui suis-je ? · Ma méthode · Cible) · Réalisation · Vendre · Acheter · Contact · FR EN.
+// Mobile : symbole + bouton menu ; menu plein écran, « À propos » en accordéon (libellé cliquable + chevron).
+import Logo from './Logo.astro';
+import { t, r, bascule, type Lang, type RouteKey } from '../i18n';
+import { reseaux } from '../config/site';
+interface Props { lang?: Lang; courante?: RouteKey; sombre?: boolean }
+const { lang = 'fr', courante, sombre = false } = Astro.props;
+const d = t(lang);
+const autre: Lang = lang === 'fr' ? 'en' : 'fr';
+const entrees: { key: RouteKey; label: string }[] = [
+  { key: 'realisation', label: d.nav.realisation },
+  { key: 'vendre', label: d.nav.vendre },
+  { key: 'acheter', label: d.nav.acheter },
+  { key: 'contact', label: d.nav.contact },
+];
+const sous: { key: RouteKey; label: string }[] = [
+  { key: 'qui', label: d.nav.qui },
+  { key: 'methode', label: d.nav.methode },
+  { key: 'cible', label: d.nav.cible },
+];
+const estCourante = (k: RouteKey) => courante === k || (k === 'apropos' && ['qui', 'methode', 'cible'].includes(courante ?? ''));
+---
+<header class="nav" data-nav data-sombre={sombre ? '1' : undefined}>
+  <div class="nav-int">
+    <div class="nav-gauche">
+      <div class="nav-reseaux">
+        {reseaux.map((s) => (
+          <a href={s.url} aria-label={s.label} class="nav-social" rel="noopener" target="_blank"><svg width="19" height="19" aria-hidden="true"><use href={`#ico-${s.id}`}></use></svg></a>
+        ))}
+      </div>
+      <span class="nav-filet" aria-hidden="true"></span>
+      <a href={r('accueil', lang)} class="nav-logo" aria-label={d.nav.accueil}><Logo taille={38} class="nav-logo-svg" /></a>
+    </div>
+    <nav aria-label={d.nav.principale} class="nav-desktop">
+      <div class="nav-item nav-apropos">
+        <a href={r('apropos', lang)} aria-current={estCourante('apropos') ? 'page' : undefined} aria-haspopup="true" class="nav-lien">{d.nav.apropos} <span aria-hidden="true" class="nav-chevron">▾</span></a>
+        <div class="nav-menu" role="menu" aria-label={d.nav.apropos}>
+          {sous.map((s) => <a role="menuitem" href={r(s.key, lang)}>{s.label}</a>)}
+        </div>
+      </div>
+      {entrees.map((e) => <a class="nav-lien" href={r(e.key, lang)} aria-current={estCourante(e.key) ? 'page' : undefined}>{e.label}</a>)}
+      <span class="nav-langue" aria-label={d.nav.langue}>
+        <a href={bascule(courante ?? null, 'fr')} aria-current={lang === 'fr' ? 'true' : undefined} lang="fr" hreflang="fr">FR</a>
+        <a href={bascule(courante ?? null, 'en')} aria-current={lang === 'en' ? 'true' : undefined} lang="en" hreflang="en">EN</a>
+      </span>
+    </nav>
+    <button class="nav-burger" type="button" aria-label={d.nav.menu} aria-expanded="false" aria-controls="menu-mobile" data-burger>
+      <span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="menu-mobile" id="menu-mobile" data-menu-mobile hidden>
+  <div class="menu-mobile-tete">
+    <a href={r('accueil', lang)} aria-label={d.nav.accueil}><Logo taille={32} /></a>
+    <button type="button" class="menu-mobile-fermer" aria-label={d.nav.fermer} data-menu-fermer>×</button>
+  </div>
+  <nav class="menu-mobile-nav" aria-label={d.nav.principale}>
+    <div class="menu-mobile-apropos">
+      <div class="menu-mobile-rang">
+        <a href={r('apropos', lang)} class="menu-mobile-lien">{d.nav.apropos}</a>
+        <button type="button" class="menu-mobile-chevron" aria-expanded="false" aria-controls="menu-mobile-sous" aria-label={d.nav.apropos} data-accordeon><span aria-hidden="true">▾</span></button>
+      </div>
+      <div class="menu-mobile-sous" id="menu-mobile-sous" hidden>
+        {sous.map((s) => <a href={r(s.key, lang)}>{s.label}</a>)}
+      </div>
+    </div>
+    {entrees.map((e) => <a class="menu-mobile-lien" href={r(e.key, lang)}>{e.label}</a>)}
+  </nav>
+  <div class="menu-mobile-pied">
+    <div class="menu-mobile-langues">
+      <a href={bascule(courante ?? null, 'fr')} aria-current={lang === 'fr' ? 'true' : undefined} lang="fr">FR</a>
+      <a href={bascule(courante ?? null, 'en')} aria-current={lang === 'en' ? 'true' : undefined} lang="en">EN</a>
+    </div>
+    <div class="menu-mobile-reseaux">
+      <span class="chapeau-muet" style="letter-spacing:.1em">{d.nav.reseaux}</span>
+      {reseaux.map((s) => (
+        <a href={s.url} aria-label={s.label} rel="noopener" target="_blank"><svg width="23" height="23" aria-hidden="true"><use href={`#ico-${s.id}`}></use></svg></a>
+      ))}
+    </div>
+  </div>
+</div>
+
+<script src="../islands/nav.ts"></script>
+
+<style>
+  .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 40; height: var(--nav-h); background: var(--avt-ecru); border-bottom: 1px solid var(--filet-brun); color: var(--avt-brun); transition: height .35s ease, background .35s ease, color .35s ease; }
+  .nav-int { height: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--marge); }
+  .nav-gauche { display: flex; align-items: center; gap: 18px; }
+  .nav-reseaux { display: flex; gap: 10px; }
+  .nav-social { width: 36px; height: 36px; border-radius: 999px; border: 1.5px solid currentColor; display: inline-flex; align-items: center; justify-content: center; color: inherit; }
+  .nav-social:hover { text-decoration: none; background: rgba(38, 32, 26, .06); }
+  .nav-filet { width: 1px; height: 28px; background: rgba(38, 32, 26, .15); }
+  .nav-logo { display: block; color: inherit; }
+  .nav-logo-svg { transition: width .35s ease, height .35s ease; }
+  .nav-desktop { display: flex; align-items: center; gap: 32px; font-size: 14px; font-weight: 500; }
+  .nav-lien { color: inherit; }
+  .nav-lien:hover { text-decoration: none; color: var(--avt-klein); }
+  .nav[data-sombre]:not([data-reduit]) .nav-lien:hover { color: var(--avt-ecru); opacity: .8; }
+  .nav-lien[aria-current="page"] { color: var(--avt-klein); }
+  .nav-chevron { font-size: 10px; }
+  .nav-item { position: relative; display: flex; align-items: center; height: var(--nav-h); }
+  .nav-menu { position: absolute; left: -16px; top: 100%; width: 300px; background: var(--avt-ecru); border: 1px solid rgba(38, 32, 26, .1); border-top: 0; border-radius: 0 0 14px 14px; padding: 8px; box-shadow: 0 18px 40px rgba(38, 32, 26, .14); display: none; flex-direction: column; color: var(--avt-brun); }
+  .nav-menu a { display: block; padding: 14px 16px; border-radius: 10px; font-size: 15px; font-weight: 400; color: var(--avt-brun); }
+  .nav-menu a:hover, .nav-menu a:focus-visible { background: var(--avt-brume); text-decoration: none; }
+  .nav-item:hover .nav-menu, .nav-item:focus-within .nav-menu { display: flex; }
+  .nav-item:hover > .nav-lien, .nav-item:focus-within > .nav-lien { color: var(--avt-klein); }
+  .nav-langue { display: inline-flex; gap: 6px; font-size: 13px; letter-spacing: .06em; margin-left: 8px; }
+  .nav-langue a { color: var(--avt-text-muted); padding-bottom: 2px; border-bottom: 1.5px solid transparent; }
+  .nav-langue a[aria-current] { color: inherit; border-bottom-color: var(--avt-terra); }
+  .nav-burger { display: none; width: 44px; height: 44px; border: 0; background: transparent; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 0; color: inherit; }
+  .nav-burger span { width: 22px; height: 1.5px; background: currentColor; display: block; }
+
+  /* Sur le hero (accueil) : transparente, tout en écru, jusqu'au premier défilement */
+  .nav[data-sombre]:not([data-reduit]) { background: transparent; border-bottom-color: transparent; color: var(--avt-ecru); }
+  .nav[data-sombre]:not([data-reduit]) .nav-filet { background: rgba(247, 242, 234, .3); }
+  .nav[data-sombre]:not([data-reduit]) .nav-lien[aria-current="page"] { color: var(--avt-ecru); }
+  .nav[data-sombre]:not([data-reduit]) .nav-langue a { color: rgba(247, 242, 234, .7); }
+  .nav[data-sombre]:not([data-reduit]) .nav-langue a[aria-current] { color: var(--avt-ecru); }
+  .nav[data-sombre]:not([data-reduit]) .nav-social:hover { background: rgba(247, 242, 234, .12); }
+
+  /* Réduite au défilement : 56 px, écru 86 % + flou 8 px, sans les réseaux (00-nav-reduit) */
+  .nav[data-reduit] { height: 56px; background: var(--voile-ecru); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom-color: var(--filet-brun); }
+  .nav[data-reduit] .nav-reseaux, .nav[data-reduit] .nav-filet { display: none; }
+  .nav[data-reduit] .nav-logo-svg { width: 30px; height: 30px; }
+  .nav[data-reduit] .nav-desktop { gap: 28px; font-size: 13.5px; }
+  .nav[data-reduit] .nav-item { height: 56px; }
+
+  /* Menu mobile plein écran */
+  .menu-mobile { position: fixed; inset: 0; z-index: 50; background: var(--avt-ecru); display: flex; flex-direction: column; overflow-y: auto; }
+  .menu-mobile-tete { height: var(--nav-h-mobile); display: flex; align-items: center; justify-content: space-between; padding: 0 var(--marge-m); border-bottom: 1px solid var(--filet-brun); flex: none; }
+  .menu-mobile-fermer { width: 44px; height: 44px; border: 0; background: transparent; font-size: 26px; color: var(--avt-brun); padding: 0; line-height: 1; }
+  .menu-mobile-nav { padding: 20px var(--marge-m) 0; display: flex; flex-direction: column; }
+  .menu-mobile-lien { font-family: var(--avt-font-display); font-size: 34px; color: var(--avt-brun); padding: 14px 0; border-bottom: 1px solid rgba(38, 32, 26, .1); display: block; min-height: 44px; }
+  .menu-mobile-lien:hover { text-decoration: none; }
+  .menu-mobile-rang { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid rgba(38, 32, 26, .1); }
+  .menu-mobile-rang .menu-mobile-lien { border-bottom: 0; flex: 1; }
+  .menu-mobile-chevron { width: 44px; height: 44px; border: 0; background: transparent; color: var(--avt-klein); font-size: 16px; padding: 0; }
+  .menu-mobile-chevron[aria-expanded="true"] span { display: inline-block; transform: rotate(180deg); }
+  .menu-mobile-chevron[aria-expanded="true"] ~ * , .menu-mobile-apropos[data-ouvert] .menu-mobile-lien { color: var(--avt-klein); }
+  .menu-mobile-sous { display: flex; flex-direction: column; background: var(--avt-brume); border-radius: 12px; margin: 10px 0 6px; padding: 4px 14px; }
+  .menu-mobile-sous a { min-height: 48px; display: flex; align-items: center; font-size: 17px; color: var(--avt-brun); border-bottom: 1px solid var(--filet-brun); }
+  .menu-mobile-sous a:last-child { border-bottom: 0; }
+  .menu-mobile-pied { margin-top: auto; padding: 24px var(--marge-m); display: flex; flex-direction: column; gap: 18px; }
+  .menu-mobile-langues { display: flex; gap: 10px; }
+  .menu-mobile-langues a { min-width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; border: 1px solid var(--avt-brun); color: var(--avt-brun); font-size: 13px; letter-spacing: .06em; }
+  .menu-mobile-langues a[aria-current] { background: var(--avt-brun); color: var(--avt-ecru); }
+  .menu-mobile-reseaux { display: flex; align-items: center; gap: 12px; }
+  .menu-mobile-reseaux a { width: 44px; height: 44px; border-radius: 999px; border: 1.5px solid var(--avt-brun); display: inline-flex; align-items: center; justify-content: center; color: var(--avt-brun); }
+  body[data-menu-ouvert] { overflow: hidden; }
+
+  @media (max-width: 899px) {
+    .nav { height: var(--nav-h-mobile); }
+    .nav[data-reduit] { height: var(--nav-h-mobile); }
+    .nav-reseaux, .nav-filet, .nav-desktop { display: none !important; }
+    .nav-logo-svg, .nav[data-reduit] .nav-logo-svg { width: 32px; height: 32px; }
+    .nav-burger { display: flex; }
+  }
+</style>

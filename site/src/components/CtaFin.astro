@@ -1,0 +1,26 @@
+---
+// Encart de fin de page (brume) : « Et votre vente ? » / « Où en est votre vente ? » → diagnostic + Parler à Anne.
+import { r, type Lang } from '../i18n';
+interface Props { titre: string; texte?: string; lang?: Lang; primaire?: string; secondaire?: string; cadre?: boolean }
+const { titre, texte, lang = 'fr', primaire = 'Démarrer le diagnostic', secondaire = 'Parler à Anne', cadre = false } = Astro.props;
+---
+<div class={`cta-fin ${cadre ? 'cta-fin-cadre' : ''}`}>
+  <div><h2>{titre}</h2>{texte && <p>{texte}</p>}</div>
+  <div class="cta-fin-boutons">
+    <a href={r('diagnostic', lang)} class="btn btn-primaire btn-m">{primaire}</a>
+    <a href={r('contact', lang)} class="btn btn-secondaire btn-m">{secondaire}</a>
+  </div>
+</div>
+<style>
+  .cta-fin { margin: 0 var(--marge) 96px; background: var(--avt-brume); border-radius: 16px; padding: 48px 56px; display: flex; align-items: center; justify-content: space-between; gap: 32px; }
+  .cta-fin-cadre { background: var(--avt-ecru); border: 1px solid var(--filet-brun-fort); }
+  .cta-fin h2 { font-size: 36px; margin-bottom: 8px; }
+  .cta-fin p { font-size: 16px; }
+  .cta-fin-boutons { display: flex; gap: 14px; flex: none; }
+  @media (max-width: 899px) {
+    .cta-fin { margin: 0 16px 40px; border-radius: 14px; padding: 24px 20px; flex-direction: column; align-items: stretch; gap: 12px; }
+    .cta-fin h2 { font-size: 28px; }
+    .cta-fin p { display: none; }
+    .cta-fin-boutons { flex-direction: column; gap: 12px; }
+  }
+</style>

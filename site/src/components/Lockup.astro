@@ -1,0 +1,21 @@
+---
+// Lockup co-brandé Anne + eXp (AD-17 : consommé tel quel depuis design-system/assets, jamais recoloré).
+// D-21 : version négative sans le cercle écru → le cercle (liseré) est retiré à l'inclusion. Les ids internes sont rendus uniques.
+import fs from 'node:fs';
+import path from 'node:path';
+interface Props { variante?: 'negatif' | 'positif'; largeur?: number; class?: string }
+const { variante = 'negatif', largeur = 488, class: cls = '' } = Astro.props;
+const fichier = variante === 'negatif' ? 'lockup-exp-horizontal-negatif.svg' : 'lockup-exp-horizontal.svg';
+let svg = fs.readFileSync(path.resolve(process.cwd(), '../design-system/assets', fichier), 'utf8');
+const uid = `lk${variante}${Math.random().toString(36).slice(2, 7)}`;
+svg = svg
+  .replace(/<\?xml[^>]*>\s*/g, '')
+  .replace('Anne VIAL-TISSOT', 'Anne VIAL\u2011TISSOT')
+  .replace(/<style>[\s\S]*?<\/style>/, '')
+  .replace('class="nm"', `style="font-family:'Italiana',serif;font-size:52px;letter-spacing:1.6px;fill:${variante === 'negatif' ? '#F7F2EA' : '#26201A'}"`)
+  .replace(/<circle cx="78" cy="80" r="56\.5"[^>]*\/>\s*/, '')
+  .replace(/id="sym"/g, `id="${uid}"`)
+  .replace(/url\(#sym\)/g, `url(#${uid})`)
+  .replace(/<svg xmlns="http:\/\/www.w3.org\/2000\/svg" viewBox="0 0 1206 144"/, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1206 144" class="lockup ${cls}" style="width:${largeur}px;height:${Math.round((largeur * 144) / 1206)}px"`);
+---
+<Fragment set:html={svg} />

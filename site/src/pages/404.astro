@@ -1,0 +1,22 @@
+---
+import Page from '../layouts/Page.astro';
+import { r } from '../i18n';
+---
+<Page titre="Page introuvable — Anne VIAL-TISSOT" courante="accueil" noindex>
+  <div class="p404">
+    <h1>Cette page n'existe pas</h1>
+    <p>L'adresse a peut-être changé. Les ventes racontées, la méthode et le diagnostic sont à portée de main.</p>
+    <div class="p404-boutons">
+      <a href={r('accueil')} class="btn btn-secondaire btn-m">Retour à l'accueil</a>
+      <a href={r('realisation')} class="btn btn-secondaire btn-m">Réalisation</a>
+      <a href={r('diagnostic')} class="btn btn-primaire btn-m">Démarrer le diagnostic</a>
+    </div>
+  </div>
+</Page>
+<style>
+  .p404 { padding: 120px var(--marge) 160px; max-width: 64ch; }
+  .p404 h1 { font-size: 56px; line-height: 1.1; margin-bottom: 16px; }
+  .p404 p { font-size: 17px; line-height: 1.6; margin-bottom: 28px; }
+  .p404-boutons { display: flex; gap: 12px; flex-wrap: wrap; }
+  @media (max-width: 899px) { .p404 { padding: 64px var(--marge-m) 80px; } .p404 h1 { font-size: 40px; } }
+</style>

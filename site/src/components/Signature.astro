@@ -1,0 +1,5 @@
+---
+interface Props { largeur?: number; hauteur?: number; class?: string }
+const { largeur = 260, hauteur = 10, class: cls = '' } = Astro.props;
+---
+<svg class={`signature ${cls}`} style={`width:${largeur}px;height:${hauteur}px`} aria-hidden="true"><use href="#avt-signature"></use></svg>

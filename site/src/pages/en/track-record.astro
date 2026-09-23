@@ -1,0 +1,31 @@
+---
+// EN index of sales (05, « Track record ») : shorter than the French one — a story that is not translated is not published (AD-2). None yet → empty state.
+import Page from '../../layouts/Page.astro';
+import { r } from '../../i18n';
+---
+<Page titre="Track record — Anne VIAL-TISSOT" description="Every sold property, told by Anne. No prices, no floor areas." lang="en" courante="realisation">
+  <div class="tr-tete">
+    <h1>Track record</h1>
+    <p>Every sold property, told by Anne. No prices, no floor areas.</p>
+  </div>
+  <div class="tr-vide">
+    <h2>The first stories are on their way</h2>
+    <p>Anne's sale stories are being translated. In the meantime, they can be read <a href={r('realisation', 'fr')} hreflang="fr" lang="fr">in French</a>, the method is detailed, and the assessment is open.</p>
+    <div class="tr-vide-boutons"><a href={r('realisation', 'fr')} class="btn btn-secondaire btn-m" hreflang="fr">Read the stories in French</a><a href={r('diagnostic', 'en')} class="btn btn-primaire btn-m">Start the assessment</a></div>
+  </div>
+</Page>
+<style>
+  .tr-tete { padding: 96px var(--marge) 40px; }
+  .tr-tete h1 { font-size: 72px; margin-bottom: 16px; }
+  .tr-tete p { font-size: 18px; line-height: 1.6; max-width: 56ch; }
+  .tr-vide { padding: 0 var(--marge) 120px; max-width: 52ch; }
+  .tr-vide h2 { font-size: 44px; margin-bottom: 14px; }
+  .tr-vide p { font-size: 15px; line-height: 1.6; margin-bottom: 24px; }
+  .tr-vide-boutons { display: flex; gap: 12px; flex-wrap: wrap; }
+  @media (max-width: 899px) {
+    .tr-tete { padding: 48px var(--marge-m) 28px; }
+    .tr-tete h1 { font-size: 48px; }
+    .tr-vide { padding: 0 var(--marge-m) 64px; }
+    .tr-vide h2 { font-size: 32px; }
+  }
+</style>

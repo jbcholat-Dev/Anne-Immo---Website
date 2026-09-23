@@ -1,0 +1,34 @@
+---
+// § 1.6 Le diagnostic : une phrase, la durée, le bouton ; trois livrables en encarts galet.
+import { t, r, type Lang } from '../../i18n';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const d = t(lang);
+---
+<section class="diag" data-sec="diagnostic" aria-labelledby="diag-titre">
+  <div data-reveal="titre">
+    <h2 id="diag-titre">{d.accueil.diag_titre}</h2>
+    <p class="diag-texte"><span class="seulement-desktop">{d.accueil.diag_texte}</span><span class="seulement-mobile">{d.accueil.diag_texte_m}</span></p>
+    <a href={r('diagnostic', lang)} class="btn btn-primaire">{d.accueil.diag_cta}</a>
+  </div>
+  <div class="diag-livrables" data-reveal="bloc">
+    <div class="diag-livrable"><b>/100</b><span>{d.accueil.diag_score}</span></div>
+    <div class="diag-livrable"><b>3</b><span>{d.accueil.diag_axes}</span></div>
+    <div class="diag-livrable"><b>1</b><span>{d.accueil.diag_plan}</span></div>
+  </div>
+</section>
+<style>
+  .diag { position: relative; background: var(--avt-ecru); padding: 120px var(--marge); display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+  .diag h2 { font-size: 48px; margin-bottom: 20px; }
+  .diag-texte { font-size: 17px; line-height: 1.6; margin-bottom: 28px; max-width: 44ch; }
+  .diag-livrables { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  .diag-livrable { background: var(--avt-galet); border-radius: 12px; padding: 24px; min-height: 150px; display: flex; flex-direction: column; justify-content: space-between; }
+  .diag-livrable b { font-family: var(--avt-font-display); font-weight: 400; font-size: 40px; color: var(--avt-klein); line-height: 1; }
+  .diag-livrable span { font-size: 14px; }
+  @media (max-width: 899px) {
+    .diag { padding: 64px var(--marge-m); grid-template-columns: 1fr; gap: 28px; }
+    .diag h2 { font-size: 34px; margin-bottom: 12px; }
+    .diag-texte { font-size: 16px; margin-bottom: 20px; }
+    .diag-livrables { display: none; }
+  }
+</style>

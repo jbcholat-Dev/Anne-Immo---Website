@@ -1,0 +1,111 @@
+---
+// 09 Acheter (D-5) : primo-accédants et investisseurs, la recherche accompagnée en quatre temps, les avis d'acheteurs (§ 5.4), « Parler de votre projet » → contact préréglé Achat.
+import Page from '../layouts/Page.astro';
+import { avisParId, storyDeAvis, roleLibelle, dateLibelle, paragraphes, instantane } from '../lib/contenu';
+import { acheter } from '../config/site';
+import { getEntry } from 'astro:content';
+import { r } from '../i18n';
+const inst = await instantane();
+const avis = await Promise.all(acheter.avis.map(async (id) => { const a = await avisParId(id); const slug = storyDeAvis(a); const story = slug ? await getEntry('stories', slug) : null; return { a, slug, story }; }));
+const temps = [
+  ['Elle repère', 'Le réseau local, les ventes qui se préparent, celles qui ne sont pas encore en ligne.', 'Le réseau local, les ventes qui ne sont pas encore en ligne.'],
+  ['Elle visite en premier', 'Seule, avec vos critères en tête. Vous ne déplacez pas votre semaine pour rien.', 'Seule, avec vos critères en tête.'],
+  ['Elle présélectionne', 'Trois ou quatre biens, avec ce qui va et ce qui ne va pas dit avant la visite.', 'Trois ou quatre biens, le pour et le contre dits avant la visite.'],
+  ['Elle reste après l’achat', 'Artisans, syndic, formalités : le dossier ne se referme pas à la remise des clés.', 'Artisans, syndic, formalités.'],
+];
+---
+<Page titre="Acheter — Anne VIAL-TISSOT" description="Primo-accédants et investisseurs : la recherche accompagnée — Anne repère, visite en premier, présélectionne, et reste après l'achat." courante="acheter">
+  <div class="ac-tete">
+    <div class="ac-tete-rang"><h1>Acheter</h1><span class="marqueur">Contenu à écrire par Anne</span></div>
+    <p class="seulement-desktop">Un premier achat et un investissement ne se préparent pas de la même façon. Dans les deux cas, le travail commence avant la première visite.</p>
+    <p class="seulement-mobile">Le travail commence avant la première visite.</p>
+    <a href={`${r('contact')}?projet=achat#ecrire`} class="btn btn-primaire seulement-mobile ac-cta-haut">Parler de votre projet</a>
+  </div>
+  <div class="ac-profils">
+    <section><h2 class="chapeau">Primo-accédants</h2><h3>Un premier achat tenu</h3><p class="seulement-desktop">Budget réel, capacité d'emprunt validée avec un courtier, charges et travaux chiffrés avant l'offre. Rien ne part avant que le financement tienne.</p><p class="seulement-mobile">Budget réel, capacité d'emprunt validée, charges et travaux chiffrés avant l'offre.</p></section>
+    <section><h2 class="chapeau">Investisseurs</h2><h3>Un actif, pas un coup de cœur</h3><p class="seulement-desktop">Rendement, fiscalité, revente, saisonnalité du bassin lémanique. Le bien est regardé sur dix ans, pas sur une visite.</p><p class="seulement-mobile">Rendement, fiscalité, revente, saisonnalité du bassin lémanique.</p></section>
+  </div>
+  <section class="ac-recherche" aria-labelledby="recherche-titre">
+    <h2 id="recherche-titre">La recherche accompagnée</h2>
+    <p class="ac-recherche-intro"><span class="seulement-desktop">Quatre temps, dans cet ordre. Anne travaille pour l'acheteur, pas pour le bien.</span><span class="seulement-mobile">Quatre temps, dans cet ordre.</span></p>
+    <div class="ac-temps">
+      {temps.map(([t, d, m], i) => (
+        <div class="ac-temp"><div class="ac-num">{i + 1}</div><div><h3>{t}</h3><p class="seulement-desktop">{d}</p><p class="seulement-mobile">{m}</p></div></div>
+      ))}
+    </div>
+  </section>
+  <section class="ac-avis" aria-labelledby="ac-avis-titre">
+    <h2 id="ac-avis-titre">Ils ont acheté avec Anne</h2>
+    <p class="ac-avis-intro"><span class="seulement-desktop">Avis Immodvisor d'acheteurs, repris entiers — la même source vérifiable que sur l'accueil.</span><span class="seulement-mobile">Avis Immodvisor d'acheteurs, entiers.</span></p>
+    <div class="ac-avis-grille">
+      {avis.map((x) => (
+        <figure>
+          <blockquote>{paragraphes(x.a.body).map((p) => <p>{p}</p>)}</blockquote>
+          <figcaption>{x.a.data.auteur} <span class="texte-muet">· {[roleLibelle(x.a), x.story?.data.commune, dateLibelle(x.a.data.date)].filter(Boolean).join(' · ')}</span>
+            {x.slug && <div class="ac-avis-lien"><a href={`${r('realisation')}/${x.slug}`}>Voir cette vente</a></div>}
+          </figcaption>
+        </figure>
+      ))}
+    </div>
+    <div class="ac-avis-tous"><a href={inst.url_fiche} rel="noopener" target="_blank">Voir les {inst.nombre_avis} avis sur Immodvisor</a></div>
+  </section>
+  <div class="ac-cta"><a href={`${r('contact')}?projet=achat#ecrire`} class="btn btn-primaire">Parler de votre projet</a></div>
+</Page>
+<style>
+  .ac-tete { padding: 88px var(--marge) 40px; }
+  .ac-tete-rang { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+  .ac-tete h1 { font-size: 84px; line-height: 1; }
+  .ac-tete p { font-size: 19px; line-height: 1.6; max-width: 56ch; }
+  .ac-profils { padding: 0 var(--marge) 96px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+  .ac-profils section { border-top: 1px solid var(--avt-brun); padding-top: 24px; }
+  .ac-profils h2 { font-family: var(--avt-font-text); margin-bottom: 12px; }
+  .ac-profils h3 { font-size: 36px; margin-bottom: 14px; }
+  .ac-profils p { font-size: 17px; line-height: 1.7; max-width: 52ch; }
+  .ac-recherche { background: var(--avt-brume); padding: 96px var(--marge); }
+  .ac-recherche h2 { font-size: 52px; margin-bottom: 16px; }
+  .ac-recherche-intro { font-size: 17px; line-height: 1.6; margin-bottom: 56px; max-width: 58ch; }
+  .ac-temps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; }
+  .ac-temp { display: flex; flex-direction: column; gap: 12px; }
+  .ac-num { font-family: var(--avt-font-display); font-size: 44px; line-height: 1; color: var(--avt-terra); }
+  .ac-temp h3 { font-size: 28px; margin-bottom: 12px; }
+  .ac-temp p { font-size: 16px; line-height: 1.6; }
+  .ac-avis { padding: 96px var(--marge) 0; }
+  .ac-avis h2 { font-size: 40px; margin-bottom: 10px; }
+  .ac-avis-intro { font-size: 15px; color: var(--avt-text-muted); margin-bottom: 40px; max-width: 64ch; }
+  .ac-avis-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+  figure { display: flex; flex-direction: column; gap: 16px; border-top: 1px solid var(--avt-brun); padding-top: 20px; }
+  blockquote { display: flex; flex-direction: column; gap: 10px; font-size: 17px; line-height: 1.6; }
+  blockquote p:first-child::before { content: '« '; }
+  blockquote p:last-child::after { content: ' »'; }
+  figcaption { font-size: 14px; }
+  .ac-avis-lien { margin-top: 10px; font-size: 14.5px; }
+  .ac-avis-tous { margin-top: 32px; font-size: 13.5px; }
+  .ac-cta { padding: 56px var(--marge) 96px; }
+  @media (max-width: 899px) {
+    .ac-tete { padding: 40px var(--marge-m) 24px; }
+    .ac-tete-rang { margin-bottom: 14px; }
+    .ac-tete h1 { font-size: 52px; }
+    .ac-tete p { font-size: 16px; margin-bottom: 18px; }
+    .ac-profils { padding: 0 var(--marge-m) 40px; grid-template-columns: 1fr; gap: 28px; }
+    .ac-profils section { padding-top: 18px; }
+    .ac-profils h2 { font-size: 12px; margin-bottom: 8px; }
+    .ac-profils h3 { font-size: 30px; margin-bottom: 10px; }
+    .ac-profils p { font-size: 16px; line-height: 1.6; }
+    .ac-recherche { padding: 48px var(--marge-m); }
+    .ac-recherche h2 { font-size: 34px; margin-bottom: 10px; }
+    .ac-recherche-intro { font-size: 15.5px; margin-bottom: 32px; }
+    .ac-temps { grid-template-columns: 1fr; gap: 26px; }
+    .ac-temp { flex-direction: row; gap: 16px; }
+    .ac-num { font-size: 34px; flex: none; width: 32px; }
+    .ac-temp h3 { font-size: 24px; margin-bottom: 6px; }
+    .ac-temp p { font-size: 15.5px; line-height: 1.55; }
+    .ac-avis { padding: 48px var(--marge-m) 0; }
+    .ac-avis h2 { font-size: 30px; margin-bottom: 8px; }
+    .ac-avis-intro { font-size: 14px; margin-bottom: 24px; }
+    .ac-avis-grille { grid-template-columns: 1fr; gap: 22px; }
+    figure { padding-top: 16px; }
+    blockquote { font-size: 16px; line-height: 1.55; }
+    .ac-cta { padding: 36px var(--marge-m) 48px; }
+    .ac-cta .btn { display: flex; width: 100%; }
+  }
+</style>

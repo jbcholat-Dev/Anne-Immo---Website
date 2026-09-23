@@ -1,0 +1,18 @@
+---
+// Gabarit de page courante : nav fixe (écru), contenu, pied de page complet (00-footer) partout.
+import Base from './Base.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import type { Lang, RouteKey } from '../i18n';
+interface Props { titre: string; description?: string; lang?: Lang; courante?: RouteKey; sombre?: boolean; sansPadding?: boolean; noindex?: boolean; ogImage?: string }
+const { titre, description, lang = 'fr', courante, sombre = false, sansPadding = false, noindex, ogImage } = Astro.props;
+---
+<Base titre={titre} description={description} lang={lang} noindex={noindex} ogImage={ogImage}>
+  <slot name="head" slot="head" />
+  <Nav lang={lang} courante={courante} sombre={sombre} />
+  <main id="contenu" class={sansPadding ? '' : 'page-int'}>
+    <slot />
+  </main>
+  <Footer lang={lang} courante={courante} />
+  <script src="../islands/scroll-craft.ts"></script>
+</Base>
