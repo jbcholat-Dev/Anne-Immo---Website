@@ -1,14 +1,21 @@
 {
-  // Configuration Cloudflare (story 9.2) : sert le dossier dist (le site construit) comme site statique.
-  // Aucun secret ici : les réglages sensibles passent par « wrangler secret » (AD-8).
+  // Configuration Cloudflare (stories 9.2 et 9.6) : sert le dossier dist (le site construit) comme site statique,
+  // et route /api/* vers worker.ts (retours de l'aperçu).
+  // Aucun secret ici : GITHUB_TOKEN est un secret Cloudflare (projet → Settings → Variables and Secrets), voir RUNBOOK.md.
   // L'indexation se règle à la construction, par la variable de build PUBLIC_INDEXATION du projet Cloudflare
   // (absente = aperçu non indexé ; « oui » = production, story 12.4). Voir .env.example.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "anne-vial-tissot-site",
+  "main": "worker.ts",
   "compatibility_date": "2026-09-01",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     "not_found_handling": "404-page",
-    "html_handling": "auto-trailing-slash"
+    "html_handling": "auto-trailing-slash",
+    "run_worker_first": ["/api/*"]
+  },
+  "vars": {
+    "GITHUB_REPO": "jbcholat-Dev/Anne-Immo---Website"
   }
 }

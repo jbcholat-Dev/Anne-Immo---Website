@@ -36,6 +36,15 @@ Mots de passe : jamais dans ce dépôt, jamais manipulés par Claude. Coffre par
 4. Access : retirer la protection sur `annevialtissot.fr` (la garder sur l'adresse `workers.dev`, ou éteindre cette adresse).
 5. Critères de lancement de la story 12.5 tous cochés avant l'étape 3.
 
+## 4 bis. Retours sur l'aperçu (story 9.6)
+
+- Le bouton « Un retour ? » de l'aperçu crée des tickets GitHub étiquetés `retour-apercu` : https://github.com/jbcholat-Dev/Anne-Immo---Website/issues?q=is%3Aissue+is%3Aopen+label%3Aretour-apercu
+- Il a besoin d'une clé GitHub, secret `GITHUB_TOKEN` du projet Cloudflare. Pour la créer : GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token ; nom `cloudflare-retours-apercu` ; expiration 1 an ; Repository access : Only select repositories → `Anne-Immo---Website` ; Permissions → Repository permissions → Issues : Read and write (rien d'autre). Copier la clé une seule fois.
+- Pour la poser : Cloudflare → Workers & Pages → anne-vial-tissot-site → Settings → Variables and Secrets → Add → type Secret, nom `GITHUB_TOKEN`, valeur = la clé → Deploy. Aucun redéploiement du code n'est nécessaire.
+- Pour la retirer ou la remplacer : même écran (supprimer, ou Edit) ; côté GitHub, révoquer l'ancienne clé.
+- Sans clé, le bouton répond « L'envoi n'est pas encore branché » ; rien n'est perdu côté site, la remarque est à envoyer à JB.
+- Fin de vie : le bouton n'existe pas en production ; `worker.ts` est remplacé par le noyau serveur de l'epic 10.
+
 ## 5. Pièges irréversibles
 
 - Ne jamais mettre `PUBLIC_INDEXATION=oui` sur une adresse d'aperçu : Google mémoriserait une version incomplète.
@@ -44,4 +53,4 @@ Mots de passe : jamais dans ce dépôt, jamais manipulés par Claude. Coffre par
 
 ## 6. Journal des changements de ce document
 
-- 2026-09-26 : version 0, aperçu en ligne et protégé (stories 9.1 à 9.5). Vérifié par JB : page de connexion, accueil, `/robots.txt` = `Disallow: /`.
+- 2026-09-26 : version 0, aperçu en ligne et protégé (stories 9.1 à 9.5) ; § 4 bis retours (story 9.6). Vérifié par JB : page de connexion, accueil, `/robots.txt` = `Disallow: /`.

@@ -1,0 +1,4 @@
+# Secrets pour `npx wrangler dev` en local (copier en .dev.vars ; .dev.vars n'est jamais commité).
+# En ligne, le même secret se règle dans Cloudflare : projet → Settings → Variables and Secrets (voir RUNBOOK.md § Retours).
+# Clé GitHub à portée réduite : ce dépôt seulement, droit « Issues : lecture et écriture ».
+GITHUB_TOKEN=
