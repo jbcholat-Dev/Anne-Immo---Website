@@ -44,4 +44,4 @@ Mots de passe : jamais dans ce dépôt, jamais manipulés par Claude. Coffre par
 
 ## 6. Journal des changements de ce document
 
-- 2026-09-26 : version 0, aperçu en ligne et protégé (stories 9.1 à 9.4).
+- 2026-09-26 : version 0, aperçu en ligne et protégé (stories 9.1 à 9.5). Vérifié par JB : page de connexion, accueil, `/robots.txt` = `Disallow: /`.
