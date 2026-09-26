@@ -39,7 +39,7 @@ Mots de passe : jamais dans ce dépôt, jamais manipulés par Claude. Coffre par
 ## 4 bis. Retours sur l'aperçu (story 9.6)
 
 - Le bouton « Un retour ? » de l'aperçu crée des tickets GitHub étiquetés `retour-apercu` : https://github.com/jbcholat-Dev/Anne-Immo---Website/issues?q=is%3Aissue+is%3Aopen+label%3Aretour-apercu
-- Il a besoin d'une clé GitHub, secret `GITHUB_TOKEN` du projet Cloudflare. Pour la créer : GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token ; nom `cloudflare-retours-apercu` ; expiration 1 an ; Repository access : Only select repositories → `Anne-Immo---Website` ; Permissions → Repository permissions → Issues : Read and write (rien d'autre). Copier la clé une seule fois.
+- Il a besoin d'une clé GitHub, secret `GITHUB_TOKEN` du projet Cloudflare. **Clé créée le 2026-09-26, à renouveler avant le 2026-09-26 + 1 an** (action à prévoir dans le tableau de bord un mois avant). Pour la créer : GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token ; nom `cloudflare-retours-apercu` ; expiration 1 an ; Repository access : Only select repositories → `Anne-Immo---Website` ; Permissions → Repository permissions → Issues : Read and write (rien d'autre). Copier la clé une seule fois.
 - Pour la poser : Cloudflare → Workers & Pages → anne-vial-tissot-site → Settings → Variables and Secrets → Add → type Secret, nom `GITHUB_TOKEN`, valeur = la clé → Deploy. Aucun redéploiement du code n'est nécessaire.
 - Pour la retirer ou la remplacer : même écran (supprimer, ou Edit) ; côté GitHub, révoquer l'ancienne clé.
 - Sans clé, le bouton répond « L'envoi n'est pas encore branché » ; rien n'est perdu côté site, la remarque est à envoyer à JB.
