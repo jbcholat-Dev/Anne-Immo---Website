@@ -5,6 +5,9 @@ import type { Lang } from '../i18n';
 interface Props { titre: string; description?: string; lang?: Lang; classe?: string; noindex?: boolean; ogImage?: string }
 const { titre, description = '', lang = 'fr', classe = '', noindex = false, ogImage } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
+// Réglage d'indexation (story 9.2) : tant que PUBLIC_INDEXATION n'est pas « oui », aucune page n'est indexable (aperçu).
+const indexable = import.meta.env.PUBLIC_INDEXATION === 'oui';
+const robots = noindex || !indexable;
 ---
 <!doctype html>
 <html lang={lang}>
@@ -13,7 +16,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{titre}</title>
     {description && <meta name="description" content={description} />}
-    {noindex && <meta name="robots" content="noindex" />}
+    {robots && <meta name="robots" content="noindex, nofollow" />}
     <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta property="og:title" content={titre} />

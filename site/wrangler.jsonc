@@ -1,0 +1,14 @@
+{
+  // Configuration Cloudflare (story 9.2) : sert le dossier dist (le site construit) comme site statique.
+  // Aucun secret ici : les réglages sensibles passent par « wrangler secret » (AD-8).
+  // L'indexation se règle à la construction, par la variable de build PUBLIC_INDEXATION du projet Cloudflare
+  // (absente = aperçu non indexé ; « oui » = production, story 12.4). Voir .env.example.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "anne-vial-tissot-site",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash"
+  }
+}

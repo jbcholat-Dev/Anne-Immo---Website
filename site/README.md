@@ -85,6 +85,10 @@ Chaque endroit est marqué `TODO(backend)` dans le code (`grep -rn "TODO(backend
 6. Adaptateur Cloudflare (`@astrojs/cloudflare`, `worker.ts` pour le cron), D1 `eu`, migrations, admin, mesure d'audience, `funnel_event` (AD-10 → AD-18). `astro.config.mjs` reste `output: 'static'` jusque-là.
 7. Données structurées `RealEstateAgent` depuis `identite` (AD-13) une fois A-13 fourni.
 
+## Mise en ligne (story 9.2)
+
+`wrangler.jsonc` sert `dist` comme site statique chez Cloudflare (Workers Builds : dossier racine `site`, construction `npm ci && npm run build`, mise en ligne `npx wrangler deploy`). Tant que le réglage de construction `PUBLIC_INDEXATION` ne vaut pas `oui`, toutes les pages portent `noindex, nofollow` et `robots.txt` interdit tout : c'est l'aperçu. La production passe ce réglage à `oui` (story 12.4). Voir `.env.example`.
+
 ## Écarts assumés avec la maquette / les briefs
 
 - **Pas de Lenis** (défilement inertiel du brief scroll-craft) : JS minimal, défilement natif ; à ajouter en îlot si JB le souhaite (≈ 10 Ko).
