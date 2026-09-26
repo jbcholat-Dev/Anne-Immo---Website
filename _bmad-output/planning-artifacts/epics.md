@@ -1217,6 +1217,29 @@ afin de considérer l'aperçu comme « fait » au sens de CLAUDE.md (un travail 
 
 **État :** à faire — responsable : Claude (script de vérification et compte rendu dans la story), JB (test depuis son téléphone et celui d'Anne), prérequis : stories 9.1 à 9.4, durée estimée : 1 h.
 
+### Story 9.6: Boucle de retours sur l'aperçu
+
+En tant qu'Anne ou JB,
+je veux laisser une remarque depuis n'importe quelle page de l'aperçu, sur mon téléphone,
+afin que rien ne se perde entre ce que je vois et ce que Claude corrige.
+
+**Critères d'acceptation :**
+
+**Étant donné** l'aperçu ouvert après connexion par code e-mail
+**Quand** je clique sur « Un retour ? », j'écris une remarque et j'envoie
+**Alors** un ticket GitHub (une fiche de suivi dans le dépôt) est créé avec la page, mon adresse e-mail, la taille d'écran, la date et ma remarque, étiqueté « retour-apercu »
+**Et** la page me confirme le numéro du ticket.
+
+**Étant donné** le site construit pour la production (réglage `PUBLIC_INDEXATION` = `oui`)
+**Quand** j'ouvre une page
+**Alors** le bouton n'existe pas.
+
+**Étant donné** un ticket ouvert
+**Quand** Claude commence une session
+**Alors** il le lit, le traite comme une story (ou répond pourquoi non) et le ferme en citant le commit.
+
+**État :** en revue — code et test local faits le 2026-09-26 (worker.ts, composant RetourApercu, routes testées avec wrangler dev) ; l'essai réel attend la clé GitHub que JB colle dans Cloudflare (action J15).
+
 ## Epic 10: Capture des leads et backend
 
 Un prospect qui remplit un formulaire ou termine le diagnostic est enregistré côté site, Anne est prévenue, et rien n'est perdu ni exposé (AD-4 « écrire d'abord, diffuser ensuite »). Aujourd'hui tout est simulé dans le navigateur (voir `site/README.md`, section « TODO(backend) ») ; cet epic remplace chaque simulation par le noyau serveur décrit dans le spine, une story à la fois, sans jamais casser le site en ligne.

@@ -42,6 +42,10 @@ Il lit une petite base de données attachée à l'artefact, que Claude met à jo
 - document `etat/projet` : `phase`, `prochaine_action`, `derniere_mise_a_jour`, `apercu_url`, `site_url` ;
 - collection `actions` : ce que JB et Anne doivent faire eux-mêmes (comptes, achats, décisions, contenu). Un document par action (`qui` ∈ jb · anne, `ordre`, `titre`, `pourquoi`, `quand`, `duree`, `story`, `prix` (texte), `prix_detail`, `prix_annuel` (nombre, €/an), `recurrent` (booléen), `lien`, `lien_libelle`, `statut` ∈ a-faire · en-cours · fait · plus-tard, `notes`, `maj`). JB change le statut depuis la page ; Claude ajoute une action dès qu'une story en fait apparaître une nouvelle, et passe une action en `fait` quand la story correspondante le constate.
 
+### Retours d'Anne et de JB sur l'aperçu
+
+Le bouton « Un retour ? » de l'aperçu crée des **tickets GitHub étiquetés `retour-apercu`** dans ce dépôt. Règle : **au début de chaque session, lire les tickets ouverts** (outil `list_issues`, étiquette `retour-apercu`), les traiter comme des stories (une correction = une story, vérifiée, commitée), puis **fermer le ticket en citant le commit**, ou répondre en une ligne pourquoi ce n'est pas fait. Le nombre de tickets ouverts est reporté dans `etat/projet.retours_ouverts` du tableau de bord.
+
 **Règle : à chaque changement d'état** (story terminée ou créée, epic ouvert ou clos, fusion dans `main`, mise en ligne), Claude met à jour les documents concernés **dans la même session**, et `etat/projet.derniere_mise_a_jour` prend la date du jour. Le fichier de statut de sprint dans `_bmad-output/implementation-artifacts/` reste la source ; le tableau de bord en est le reflet. S'ils divergent, corriger le tableau de bord.
 
 Le repère de vérité en cas de contradiction : la **spec v5** pour ce que le site doit faire, le **spine d'architecture** pour comment il est construit, les **décisions D-1 à D-26** de la maquette pour l'apparence, `site/README.md` pour l'état réel du code.
@@ -50,6 +54,7 @@ Le repère de vérité en cas de contradiction : la **spec v5** pour ce que le s
 
 | Dossier | Rôle |
 |---|---|
+| `RUNBOOK.md` | La notice de secours : comptes, adresse d'aperçu, comment remettre en ligne, bascule en production, pièges irréversibles. |
 | `site/` | Le code du site (Astro 7, sortie statique). `site/README.md` décrit l'état réel, `site/PLAN.md` le plan de construction. |
 | `contenu-anne/` | Boîte de dépôt d'Anne : stories, avis Immodvisor, photos, légal, guide. Les vidéos et photos HD sont hors Git (trop lourdes). |
 | `design-system/` | Charte : couleurs, typographies, logos, composants. `tokens/tokens.css` est copié dans le site. |

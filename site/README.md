@@ -89,6 +89,10 @@ Chaque endroit est marqué `TODO(backend)` dans le code (`grep -rn "TODO(backend
 
 `wrangler.jsonc` sert `dist` comme site statique chez Cloudflare (Workers Builds : dossier racine `site`, construction `npm ci && npm run build`, mise en ligne `npx wrangler deploy`). Tant que le réglage de construction `PUBLIC_INDEXATION` ne vaut pas `oui`, toutes les pages portent `noindex, nofollow` et `robots.txt` interdit tout : c'est l'aperçu. La production passe ce réglage à `oui` (story 12.4). Voir `.env.example`.
 
+## Retours sur l'aperçu (story 9.6)
+
+Sur l'aperçu (site non indexable), chaque page porte un bouton « Un retour ? » (`src/components/RetourApercu.astro`, inclus par `Base.astro`). La remarque part en POST vers `/api/retour`, servie par `worker.ts` (point d'entrée Cloudflare, `main` de `wrangler.jsonc`, `run_worker_first: ["/api/*"]`), qui crée un ticket GitHub étiqueté `retour-apercu` avec la page, l'auteur (en-tête `cf-access-authenticated-user-email` posé par Cloudflare Access), l'écran et la date. Secret `GITHUB_TOKEN` côté Cloudflare, jamais dans le dépôt (`.dev.vars` en local, ignoré ; modèle `.dev.vars.example`). En production le bouton n'est pas rendu. Le bouton est masqué quand `navigator.webdriver` est vrai (captures Playwright). `worker.ts` sera remplacé par le noyau serveur de l'epic 10.
+
 ## Écarts assumés avec la maquette / les briefs
 
 - **Pas de Lenis** (défilement inertiel du brief scroll-craft) : JS minimal, défilement natif ; à ajouter en îlot si JB le souhaite (≈ 10 Ko).
