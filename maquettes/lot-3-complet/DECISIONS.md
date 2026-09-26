@@ -45,6 +45,12 @@ La nav passe de 4 entrées + bouton à **5 entrées (À propos ▾ · Réalisati
 | D-25 | **Contraste des boutons : point ouvert.** Terra-deep #A34E30 (5,3:1) appliqué à titre provisoire dans la maquette ; terracotta #C4623E (charte) fait 3,6:1 sur écru à 15 px. À trancher avec Anne (point ouvert 5). | 🔄 | charte § boutons · `design-system/components/boutons.html`. |
 | D-26 | **Table des pages = celle du brief lot 3 v2 § 3** (00 Navigation, 01 Accueil, 02 Diagnostic landing, 03 Parcours, 04 Résultats, 05 Réalisation, 06 Story, 07 À propos, 08 Vendre, 09 Acheter, 10 Contact, 11 Guide, Légal en annexe). L'index des ventes est titré **« Réalisation »** (EN : « Track record »), comme l'entrée de nav (D-3). | ✅ | `structure-site.md` inventaire · ce fichier (table de validation) · maquette (h1). |
 
+## Décision du 2026-09-26 (JB, à l'intégration de la vidéo d'ouverture — story 8.3)
+
+| # | Décision | Statut | À propager |
+|---|---|---|---|
+| D-27 | **Le hero, c'est le montage d'Anne, en entier (95 s), en boucle, sans son** (D-1 précisée). Le montage a été fait exprès pour le site : on ne le découpe pas, on ne le recadre pas (le logo eXp incrusté reste). **Le poster A-14 devient la première image de la vidéo** (Anne face caméra dans un pré du Chablais) : image d'attente pendant le chargement et repli si la lecture automatique est refusée (mouvement réduit, économie de données), sans saut visuel au démarrage. La photo d'Armoy quitte le hero. Poids : 1440 px, ≈ 15 Mo MP4 — écart assumé au budget « 12 s, < 6 Mo » (voir `site/README.md` § Écarts). | ✅ | `site/README.md` · `scripts/video.mjs` · story 8.3. |
+
 Écarts maquette ↔ CDC corrigés dans le canvas le 2026-09-22 (export `maquettes/lot-3-complet/`) : section « Ils ont acheté avec Anne » sur Acheter (§ 5.4) · case « séquence d'e-mails » sur l'estimation (§ 4) · citations sur deux cartes de la pile (D-16) · fiche story mobile · sortie A mobile, sortie B desktop, profil « Stratégie à risque » · YouTube et ligne de statut dans le pied de page (§ 0) · téléphone obligatoire sur Contact (§ 9) · dates des avis (A-11) · hamburger mobile invisible sur 4 pages, `clipPath` cassé, libellé A-01 périmé, réglage « 4 cartes » retiré (CAP-1). Restent au build : menu « À propos » à deux sous-entrées, story sans photo secondaire, 404, footer complet sur toutes les pages, nav fixe dès le premier pixel.
 
 ### Points laissés ouverts (mis à jour le 2026-09-22)
