@@ -50,6 +50,7 @@ Le repère de vérité en cas de contradiction : la **spec v5** pour ce que le s
 
 | Dossier | Rôle |
 |---|---|
+| `RUNBOOK.md` | La notice de secours : comptes, adresse d'aperçu, comment remettre en ligne, bascule en production, pièges irréversibles. |
 | `site/` | Le code du site (Astro 7, sortie statique). `site/README.md` décrit l'état réel, `site/PLAN.md` le plan de construction. |
 | `contenu-anne/` | Boîte de dépôt d'Anne : stories, avis Immodvisor, photos, légal, guide. Les vidéos et photos HD sont hors Git (trop lourdes). |
 | `design-system/` | Charte : couleurs, typographies, logos, composants. `tokens/tokens.css` est copié dans le site. |
