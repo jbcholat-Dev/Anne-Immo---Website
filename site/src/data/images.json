@@ -278,5 +278,21 @@
       }
     ],
     "jpg": "/img/photos/essert-romand-013-hd-1280.jpg"
+  },
+  "photos/ouverture-poster": {
+    "largeur": 1440,
+    "hauteur": 810,
+    "ratio": 1.7778,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/photos/ouverture-poster-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/photos/ouverture-poster-1280.webp"
+      }
+    ],
+    "jpg": "/img/photos/ouverture-poster-1280.jpg"
   }
 }
