@@ -30,6 +30,8 @@ Le fichier vidéo est sur le PC de JB (`C:\Users\JBCHOLAT\Anne Immo\Website\VIDE
 | Image de poster (première image de la vidéo) | `contenu-anne/photos/ouverture-poster.jpg`, dérivée par `npm run images` en `public/img/photos/ouverture-poster-*.{webp,jpg}`, identifiant `photos/ouverture-poster` | source oui, dérivés oui (comme les autres photos) |
 | Script d'encodage | `site/scripts/video.mjs`, commande `npm run video` | oui |
 
+**Intention de JB, confirmée le 2026-09-26 : le hero, c'est la vidéo qui tourne en boucle (D-1).** Le « poster » n'est pas une alternative à la vidéo : c'est l'image fixe affichée pendant la fraction de seconde où la vidéo se charge, et le repli si le navigateur refuse la lecture automatique (mode économie d'énergie, « réduire les animations »). Il doit donc ressembler à la vidéo.
+
 Décision à journaliser dans `maquettes/lot-3-complet/DECISIONS.md` comme **D-27 (JB, 2026-09-26)** : le poster du hero (A-14) devient la première image de la vidéo, pour qu'il n'y ait aucun saut visuel au démarrage ; la photo d'Armoy n'est plus utilisée dans le hero. Si JB préfère garder Armoy, il le dit et D-27 le note.
 
 ## Étapes
