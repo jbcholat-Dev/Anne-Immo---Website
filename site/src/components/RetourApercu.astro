@@ -1,0 +1,98 @@
+---
+// Bouton « Un retour ? » de l'aperçu (story 9.6). Rendu seulement quand le site n'est pas indexable (voir Base.astro) :
+// il n'existe pas en production. La remarque part vers /api/retour (worker.ts), qui crée un ticket GitHub
+// étiqueté « retour-apercu » ; JB et Claude le traitent comme une story. Masqué pendant les captures Playwright.
+---
+<div class="retour" data-retour>
+  <button type="button" class="retour-btn" data-retour-ouvrir aria-haspopup="dialog">Un retour ?</button>
+  <dialog class="retour-dialog" data-retour-dialog aria-labelledby="retour-titre">
+    <form class="retour-form" data-retour-form novalidate>
+      <h2 id="retour-titre" class="retour-h2">Un retour sur cette page</h2>
+      <p class="retour-page">Page : <span data-retour-page></span></p>
+      <label class="retour-label" for="retour-texte">Votre remarque</label>
+      <textarea id="retour-texte" name="texte" rows="5" maxlength="2000" required placeholder="Ce qui cloche, ce que vous aimeriez, à quel endroit de la page…"></textarea>
+      <div class="retour-actions">
+        <button type="button" class="btn btn-secondaire" data-retour-fermer>Fermer</button>
+        <button type="submit" class="btn btn-primaire" data-retour-envoyer>Envoyer</button>
+      </div>
+      <p class="retour-etat" data-retour-etat aria-live="polite"></p>
+    </form>
+  </dialog>
+</div>
+
+<style>
+  .retour { position: fixed; right: 16px; bottom: 16px; z-index: 60; }
+  :global([data-webdriver]) .retour { display: none; }
+  .retour-btn { font: inherit; font-size: 14px; font-weight: 500; border-radius: 999px; padding: 10px 18px; min-height: 44px;
+    background: var(--avt-terra-deep); color: var(--avt-ecru); border: 1.5px solid var(--avt-terra-deep); cursor: pointer;
+    box-shadow: 0 6px 20px rgba(38, 32, 26, .25); }
+  .retour-btn:hover { background: var(--avt-brun); border-color: var(--avt-brun); }
+  .retour-btn:focus-visible { outline: 2px solid var(--avt-klein); outline-offset: 2px; }
+  .retour-dialog { border: 0; border-radius: 12px; padding: 0; width: min(440px, calc(100vw - 32px)); background: var(--avt-ecru); color: var(--avt-brun); box-shadow: 0 20px 60px rgba(38, 32, 26, .35); }
+  .retour-dialog::backdrop { background: rgba(38, 32, 26, .45); }
+  .retour-form { display: grid; gap: 10px; padding: 22px 22px 18px; font-family: var(--avt-font-text); }
+  .retour-h2 { font-family: var(--avt-font-display); font-weight: 400; font-size: 26px; margin: 0; color: var(--avt-brun); }
+  .retour-page { margin: 0; font-size: 13px; color: var(--avt-text-muted); overflow-wrap: anywhere; }
+  .retour-label { font-size: 14px; font-weight: 500; }
+  .retour-form textarea { font: inherit; font-size: 15px; padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--avt-galet); background: #fff; color: var(--avt-brun); resize: vertical; min-height: 120px; }
+  .retour-form textarea:focus-visible { outline: 2px solid var(--avt-klein); outline-offset: 1px; }
+  .retour-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 4px; }
+  .retour-actions .btn { padding: 10px 20px; min-height: 40px; font-size: 14px; }
+  .retour-etat { margin: 0; font-size: 14px; min-height: 1.4em; color: var(--avt-text-muted); }
+  .retour-etat[data-ton="ok"] { color: var(--avt-klein); }
+  .retour-etat[data-ton="erreur"] { color: var(--avt-terra-deep); }
+  @media (max-width: 899px) { .retour { right: 12px; bottom: 12px; } .retour-btn { padding: 9px 14px; font-size: 13px; } }
+</style>
+
+<script>
+  const racine = document.querySelector<HTMLElement>('[data-retour]');
+  if (racine) {
+    const dialog = racine.querySelector<HTMLDialogElement>('[data-retour-dialog]')!;
+    const form = racine.querySelector<HTMLFormElement>('[data-retour-form]')!;
+    const texte = form.querySelector<HTMLTextAreaElement>('textarea')!;
+    const etat = racine.querySelector<HTMLElement>('[data-retour-etat]')!;
+    const envoyer = racine.querySelector<HTMLButtonElement>('[data-retour-envoyer]')!;
+    racine.querySelector<HTMLElement>('[data-retour-page]')!.textContent = location.pathname;
+
+    const dire = (message: string, ton: 'ok' | 'erreur' | '') => { etat.textContent = message; etat.dataset.ton = ton; };
+    const MESSAGES: Record<string, string> = {
+      cle_absente: "L'envoi n'est pas encore branché (clé GitHub absente côté Cloudflare). Envoyez votre remarque à JB.",
+      github: "GitHub n'a pas accepté le ticket. Réessayez dans un instant, ou envoyez votre remarque à JB.",
+      reseau: 'Pas de réseau. Réessayez dans un instant.',
+      texte: 'Écrivez une remarque (2 000 caractères maximum).',
+    };
+
+    racine.querySelector('[data-retour-ouvrir]')!.addEventListener('click', () => {
+      dire('', '');
+      if (typeof dialog.showModal === 'function') dialog.showModal(); else dialog.setAttribute('open', '');
+      texte.focus();
+    });
+    racine.querySelector('[data-retour-fermer]')!.addEventListener('click', () => dialog.close());
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const contenu = texte.value.trim();
+      if (!contenu) { dire(MESSAGES.texte, 'erreur'); texte.focus(); return; }
+      envoyer.disabled = true; envoyer.setAttribute('aria-busy', 'true');
+      dire('Envoi…', '');
+      try {
+        const reponse = await fetch('/api/retour', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ page: location.pathname, texte: contenu, ecran: `${window.innerWidth}×${window.innerHeight}` }),
+        });
+        const data = await reponse.json().catch(() => ({ ok: false, error: { code: 'github' } }));
+        if (data.ok) {
+          texte.value = '';
+          dire(`Retour n° ${data.numero} enregistré. Merci ! JB et Claude le voient dans GitHub.`, 'ok');
+        } else {
+          dire(MESSAGES[data.error?.code] || MESSAGES.github, 'erreur');
+        }
+      } catch {
+        dire(MESSAGES.reseau, 'erreur');
+      } finally {
+        envoyer.disabled = false; envoyer.removeAttribute('aria-busy');
+      }
+    });
+  }
+</script>
