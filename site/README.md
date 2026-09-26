@@ -45,9 +45,9 @@ Navigation (D-2, D-6 A, D-17, D-21) : réseaux · symbole seul | À propos ▾ (
 
 ## Réel vs placeholder
 
-**Réel** : les 3 récits d'Anne (Thonon, Armoy, Allinges) et leurs 13 photos ; la vue du Léman depuis Armoy en poster du hero ; la note 5/5 et les 18 avis Immodvisor (`instantane.md`, avis cités tels quels, jamais corrigés) ; les textes d'À propos, de la méthode, du diagnostic (libellés live + barème + 9 feedbacks) ; les logos et lockups eXp du design system.
+**Réel** : **la vidéo d'ouverture A-01** (montage d'Anne, 95 s, en boucle, sans son ; son poster = sa première image, D-27 — voir § Vidéo d'ouverture) ; les 3 récits d'Anne (Thonon, Armoy, Allinges) et leurs 13 photos ; la note 5/5 et les 18 avis Immodvisor (`instantane.md`, avis cités tels quels, jamais corrigés) ; les textes d'À propos, de la méthode, du diagnostic (libellés live + barème + 9 feedbacks) ; les logos et lockups eXp du design system.
 
-**Blocs réservés « Actif attendu »** (galet, dimensions réelles, jamais un trou) : A-01 vidéo d'ouverture (le `<video>` est en place avec son poster, source à ajouter dans `src/components/accueil/Hero.astro`) · A-02 photos des trois ventes « à venir » de la pile (Sciez, Essert-Romand, Anthy — ventes réelles du registre sans story rédigée) · A-04 portrait (accueil, À propos, landing) · A-05 Anne en situation · A-07 témoignages de story quand aucun avis n'est relié · A-10 couverture du guide · A-13 RSAC, carte pro, hébergeur, coordonnées (`src/config/site.ts`, `identite`) · A-15 vidéo méthode (bloc absent, D-12).
+**Blocs réservés « Actif attendu »** (galet, dimensions réelles, jamais un trou) : A-02 photos des trois ventes « à venir » de la pile (Sciez, Essert-Romand, Anthy — ventes réelles du registre sans story rédigée) · A-04 portrait (accueil, À propos, landing) · A-05 Anne en situation · A-07 témoignages de story quand aucun avis n'est relié · A-10 couverture du guide · A-13 RSAC, carte pro, hébergeur, coordonnées (`src/config/site.ts`, `identite`) · A-15 vidéo méthode (bloc absent, D-12).
 
 **Textes marqués « Point ouvert » / « Contenu à écrire par Anne »** (pastille terra-deep, comme dans la maquette) : Acheter (D-5), section Cible (point ouvert 1), champs de l'estimation (point ouvert 2). À retirer avec le contenu définitif.
 
@@ -92,8 +92,16 @@ Chaque endroit est marqué `TODO(backend)` dans le code (`grep -rn "TODO(backend
 ## Retours sur l'aperçu (story 9.6)
 
 Sur l'aperçu (site non indexable), chaque page porte un bouton « Un retour ? » (`src/components/RetourApercu.astro`, inclus par `Base.astro`). La remarque part en POST vers `/api/retour`, servie par `worker.ts` (point d'entrée Cloudflare, `main` de `wrangler.jsonc`, `run_worker_first: ["/api/*"]`), qui crée un ticket GitHub étiqueté `retour-apercu` avec la page, l'auteur (en-tête `cf-access-authenticated-user-email` posé par Cloudflare Access), l'écran et la date. Secret `GITHUB_TOKEN` côté Cloudflare, jamais dans le dépôt (`.dev.vars` en local, ignoré ; modèle `.dev.vars.example`). En production le bouton n'est pas rendu. Le bouton est masqué quand `navigator.webdriver` est vrai (captures Playwright). `worker.ts` sera remplacé par le noyau serveur de l'epic 10.
+## Vidéo d'ouverture (stories 7.4 et 8.3)
+
+- **Source** : `contenu-anne/videos/ouverture-source.mp4` (hors Git, 88 Mo, 1080p, 95 s, montage d'Anne). Inventaire : `contenu-anne/videos/liens.md`.
+- **Encodage** : `npm run video` (`scripts/video.mjs`, binaire `ffmpeg-static`) → `public/video/ouverture.mp4` (H.264, 1440 px, 30 i/s, sans son, faststart) + `ouverture.webm` (VP9) + `contenu-anne/photos/ouverture-poster.jpg` (première image) ; puis `npm run images` dérive le poster (`photos/ouverture-poster`). Options : `--debut`, `--duree`, `--crf`, `--largeur`, `--recadrage`.
+- **Dans la page** (`src/components/accueil/Hero.astro`) : `<video muted autoplay loop playsinline preload="metadata">` avec deux `<source>` (WebM puis MP4), écrites seulement si `public/video/ouverture.mp4` existe au build (sinon la balise est masquée par `.hero-video-absente` et le poster `<picture>` reste). Vidéo masquée sous `prefers-reduced-motion` ; non chargée si le navigateur annonce l'économie de données (`navigator.connection.saveData`).
+- **Poids finaux** : voir la story 8.3 (`_bmad-output/implementation-artifacts/8-3-vidéo-d-ouverture-intégrée.md`).
 
 ## Écarts assumés avec la maquette / les briefs
+
+- **Vidéo d'ouverture au-dessus du budget** « 8-12 s, < 6 Mo » : JB a décidé (D-27) de diffuser le montage d'Anne en entier (95 s). Compromis : 1440 px au lieu de 1920 (le hero fait 900 px de haut, différence invisible), crf 30, ≈ 15 Mo MP4 / ≈ 10 Mo WebM. Le fichier est lu en flux (faststart + `preload="metadata"`) : la lecture démarre après les premières secondes reçues, le poster couvre l'attente, et le LCP (plus grand élément affiché) reste le poster, chargé en priorité. À remesurer sur l'aperçu (story 10.8).
 
 - **Pas de Lenis** (défilement inertiel du brief scroll-craft) : JS minimal, défilement natif ; à ajouter en îlot si JB le souhaite (≈ 10 Ko).
 - **Tiret des titres Italiana** : la police n'a pas de glyphe visible pour le tiret ASCII ; les titres (« VIAL‑TISSOT », communes) emploient le tiret insécable U+2011 (`src/lib/texte.ts`).

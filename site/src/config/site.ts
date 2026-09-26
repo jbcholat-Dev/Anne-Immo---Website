@@ -55,7 +55,7 @@ export const phrasesStories: Record<string, string> = {
 
 /** Accroche courte par story pour l'index Réalisation (dérivée de la particularité du front matter). */
 export const hero = {
-  /** Poster du hero (A-14, repli de la vidéo A-01) : la vue du Léman depuis Armoy, la seule photo de story où le lac est reconnaissable. */
-  poster: 'stories/auberge-decoupee-2024/photo-003',
-  posterAlt: 'Le lac Léman et la rive suisse vus depuis les hauteurs d’Armoy',
+  /** Poster du hero (A-14) = première image de la vidéo d'ouverture A-01 (D-27), produite par `npm run video` : pas de saut visuel au démarrage. */
+  poster: 'photos/ouverture-poster',
+  posterAlt: 'Anne, debout dans un pré du Chablais, les montagnes derrière elle, s’adresse au visiteur',
 };

@@ -1,6 +1,9 @@
 ---
 // § 1.1 Ouverture (D-1, D-19, D-10) : vidéo drone plein cadre 900 px, voile, bloc nom + positionnement + CTA posé en bas (84 px).
-// v1 : <video> sans source (A-01 attendue), poster = photo de story ; le <picture> derrière est le repli (mobile, connexion lente, mouvement réduit).
+// A-01 réelle (story 8.3, D-27) : le montage d'Anne (95 s) tourne en boucle, sans son ; le poster est sa première image, affichée
+// pendant le chargement ; le <picture> derrière est le repli (mouvement réduit, échec de chargement, économie de données).
+// Les fichiers vidéo sont produits par `npm run video` (scripts/video.mjs) ; s'ils manquent, la balise <video> est masquée.
+import fs from 'node:fs';
 import Picture from '../Picture.astro';
 import Signature from '../Signature.astro';
 import { image } from '../../lib/images';
@@ -10,12 +13,14 @@ interface Props { lang: Lang }
 const { lang } = Astro.props;
 const d = t(lang);
 const poster = image(hero.poster)!;
+const videoDispo = fs.existsSync(new URL('../../../public/video/ouverture.mp4', import.meta.url));
 ---
 <section class="hero" data-sec="ouverture" aria-labelledby="hero-titre">
   <div class="hero-fond" aria-hidden="true">
     <Picture id={hero.poster} alt="" sizes="100vw" loading="eager" fetchpriority="high" class="hero-poster" />
-    <video class="hero-video" poster={poster.jpg} muted autoplay loop playsinline preload="none" tabindex="-1" aria-hidden="true">
-      <!-- TODO(contenu A-01) : <source src="/video/ouverture.mp4" type="video/mp4"> + <source … type="video/webm"> — 1080p, 8-12 s, sans audio, < 6 Mo -->
+    <video class:list={['hero-video', !videoDispo && 'hero-video-absente']} poster={poster.jpg} muted autoplay loop playsinline preload="metadata" tabindex="-1" aria-hidden="true">
+      {videoDispo && <source src="/video/ouverture.webm" type="video/webm" />}
+      {videoDispo && <source src="/video/ouverture.mp4" type="video/mp4" />}
     </video>
     <div class="hero-voile"></div>
   </div>
@@ -32,7 +37,7 @@ const poster = image(hero.poster)!;
   .hero-fond { position: absolute; inset: 0; }
   .hero-fond :global(.hero-poster), .hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .hero-video { object-position: center; }
-  .hero-video:not([src]) { display: none; } /* pas de source : le poster <picture> suffit */
+  .hero-video-absente { display: none; } /* fichiers vidéo absents : le poster <picture> suffit */
   .hero-voile { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(38, 32, 26, .34) 0%, rgba(38, 32, 26, .22) 34%, rgba(38, 32, 26, .58) 72%, rgba(38, 32, 26, .88) 100%); pointer-events: none; }
   .hero-contenu { position: absolute; left: var(--marge); right: var(--marge); bottom: 84px; max-width: 760px; }
   .hero h1 { font-size: 96px; letter-spacing: .02em; line-height: 1; color: var(--avt-ecru); white-space: nowrap; }
@@ -51,3 +56,10 @@ const poster = image(hero.poster)!;
     .hero-cta { margin-top: 22px; }
   }
 </style>
+
+<script>
+  // AD-15 (budget de vitesse) : si le visiteur a demandé l'économie de données, on ne charge pas la vidéo, le poster reste.
+  const v = document.querySelector<HTMLVideoElement>('.hero-video');
+  const c = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+  if (v && c?.saveData) { v.querySelectorAll('source').forEach((s) => s.remove()); v.removeAttribute('src'); v.load(); v.classList.add('hero-video-absente'); }
+</script>

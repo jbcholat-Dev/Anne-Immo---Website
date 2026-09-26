@@ -15,7 +15,8 @@ Fichiers **locaux, hors Git** (ignorés). Source : Google Drive d'Anne, téléch
 | `sciez-sur-leman-4k-2m04.mp4` | 699 Mo | 00:02:04 | 3840×2160 | |
 | `sciez-sur-leman-1080-fhd-a.mp4` | 93 Mo | 00:01:51 | 1920×1080 | |
 | `thonon-les-bains-4k.mp4` | 231 Mo | 00:01:18 | 3840×2160 | |
+| `ouverture-source.mp4` | 88 Mo | 00:01:35 | 1920×1080, 30 i/s, piste audio | |
 
 Total : 3.5 Go, 11 fichiers. Les quatre « sciez-sur-leman » sont des montages différents de la même vente : deux exports 1080p de 1:51 (a et b, contenus distincts) et deux 4K (1:51 et 2:04) — à trier avec Anne, garder les 4K comme originaux.
 
-**Pour l'ouverture du site (A-01)** : 10-20 s en boucle, sans incrustation ni logo, 1920 px minimum, Léman reconnaissable — à extraire de Thonon, Anthy, Sciez ou Évian.
+**Ouverture du site (A-01) — fait le 2026-09-26** : `ouverture-source.mp4` est le montage qu'Anne a fait exprès pour le site (reçu de JB sous le nom « VIDEO SITE INTERNET (2).mp4 ») : Anne face caméra dans un pré du Chablais (0-22 s), village de montagne vu du ciel, chalet et intérieurs, rives du Léman et Évian vus du ciel, chalet sous la neige. **Diffusé en entier, en boucle, sans son** (décision JB, D-27). Les versions web sont produites par `cd site && npm run video` (voir `README.md` ici). Le logo eXp incrusté par le montage est conservé : c'est le montage d'Anne.
