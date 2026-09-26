@@ -32,6 +32,17 @@ La spec (`_bmad-output/specs/spec-anne-website/SPEC.md`) exige que le site soit 
 - **Tout ce que la v1 simule** (formulaires, gate du diagnostic, envoi du guide) est marqué `TODO(backend)` dans le code et listé dans `site/README.md`. Ne pas en ajouter sans mettre la liste à jour.
 - **Un travail est « fait » quand il est vérifié** : `npm run build`, `npm run check`, liens (`scripts/liens.mjs`), captures (`npm run verif`) pour tout changement visuel. Le résultat de la vérification est cité dans la story.
 
+### Tableau de bord de JB
+
+Le suivi visuel du projet est un artefact claude.ai : **https://claude.ai/artifact/4HmS8AdWcXACwVpgQSrMRB** (tableau de bord « Site Anne »).
+Il lit une petite base de données attachée à l'artefact, que Claude met à jour avec l'outil `ArtifactData` :
+
+- collection `epics` : un document par epic (`numero`, `famille` ∈ site · contenu · mise-en-ligne · backend · visibilite, `titre`, `resume`, `statut` ∈ fait · en-cours · a-faire · a-definir, `stories_total`, `stories_faites`, `reste`) ;
+- collection `publications` : un document par publication (`date`, `type` ∈ git · apercu · production, `titre`, `detail`, `url`) ;
+- document `etat/projet` : `phase`, `prochaine_action`, `derniere_mise_a_jour`, `apercu_url`, `site_url`.
+
+**Règle : à chaque changement d'état** (story terminée ou créée, epic ouvert ou clos, fusion dans `main`, mise en ligne), Claude met à jour les documents concernés **dans la même session**, et `etat/projet.derniere_mise_a_jour` prend la date du jour. Le fichier de statut de sprint dans `_bmad-output/implementation-artifacts/` reste la source ; le tableau de bord en est le reflet. S'ils divergent, corriger le tableau de bord.
+
 Le repère de vérité en cas de contradiction : la **spec v5** pour ce que le site doit faire, le **spine d'architecture** pour comment il est construit, les **décisions D-1 à D-26** de la maquette pour l'apparence, `site/README.md` pour l'état réel du code.
 
 ## 3. Carte du dépôt
