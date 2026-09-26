@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-26-2026 15:10
-last_updated: 09-26-2026 20:00
+last_updated: 09-26-2026 22:05
 project: Site Anne Vial-Tissot
 project_key: NOKEY
 tracking_system: file-system
@@ -94,7 +94,7 @@ development_status:
   epic-8-retrospective: optional
 
   epic-9: in-progress
-  9-1-comptes-et-connexion-du-dépôt: backlog
+  9-1-comptes-et-connexion-du-dépôt: done
   9-2-configuration-de-mise-en-ligne-statique-et-non-indexation: done
   9-3-accès-protégé-de-l-aperçu: backlog
   9-4-runbook-v0: backlog
