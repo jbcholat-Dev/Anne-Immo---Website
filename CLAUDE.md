@@ -39,7 +39,8 @@ Il lit une petite base de données attachée à l'artefact, que Claude met à jo
 
 - collection `epics` : un document par epic (`numero`, `famille` ∈ site · contenu · mise-en-ligne · backend · visibilite, `titre`, `resume`, `statut` ∈ fait · en-cours · a-faire · a-definir, `stories_total`, `stories_faites`, `reste`) ;
 - collection `publications` : un document par publication (`date`, `type` ∈ git · apercu · production, `titre`, `detail`, `url`) ;
-- document `etat/projet` : `phase`, `prochaine_action`, `derniere_mise_a_jour`, `apercu_url`, `site_url`.
+- document `etat/projet` : `phase`, `prochaine_action`, `derniere_mise_a_jour`, `apercu_url`, `site_url` ;
+- collection `actions` : ce que JB et Anne doivent faire eux-mêmes (comptes, achats, décisions, contenu). Un document par action (`qui` ∈ jb · anne, `ordre`, `titre`, `pourquoi`, `quand`, `duree`, `story`, `prix` (texte), `prix_detail`, `prix_annuel` (nombre, €/an), `recurrent` (booléen), `lien`, `lien_libelle`, `statut` ∈ a-faire · en-cours · fait · plus-tard, `notes`, `maj`). JB change le statut depuis la page ; Claude ajoute une action dès qu'une story en fait apparaître une nouvelle, et passe une action en `fait` quand la story correspondante le constate.
 
 **Règle : à chaque changement d'état** (story terminée ou créée, epic ouvert ou clos, fusion dans `main`, mise en ligne), Claude met à jour les documents concernés **dans la même session**, et `etat/projet.derniere_mise_a_jour` prend la date du jour. Le fichier de statut de sprint dans `_bmad-output/implementation-artifacts/` reste la source ; le tableau de bord en est le reflet. S'ils divergent, corriger le tableau de bord.
 
