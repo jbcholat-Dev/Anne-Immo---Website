@@ -9,4 +9,7 @@ email:
 url_immodvisor:
 zone:                 # ex. Chablais, bassin lémanique (Thonon, Évian, Sciez…)
 langues: [fr, en, es, pt]
+url_instagram:        # adresse complète du profil, ou « pas de profil »
+url_youtube:
+url_linkedin:
 ---

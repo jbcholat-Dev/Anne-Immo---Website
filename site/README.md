@@ -47,7 +47,7 @@ Navigation (D-2, D-6 A, D-17, D-21) : réseaux · symbole seul | À propos ▾ (
 
 **Réel** : **la vidéo d'ouverture A-01** (montage d'Anne, 95 s, en boucle, sans son ; son poster = sa première image, D-27 — voir § Vidéo d'ouverture) ; les 3 récits d'Anne (Thonon, Armoy, Allinges) et leurs 13 photos ; la note 5/5 et les 18 avis Immodvisor (`instantane.md`, avis cités tels quels, jamais corrigés) ; les textes d'À propos, de la méthode, du diagnostic (libellés live + barème + 9 feedbacks) ; les logos et lockups eXp du design system.
 
-**Blocs réservés « Actif attendu »** (galet, dimensions réelles, jamais un trou) : A-02 photos des trois ventes « à venir » de la pile (Sciez, Essert-Romand, Anthy — ventes réelles du registre sans story rédigée) · A-04 portrait (accueil, À propos, landing) · A-05 Anne en situation · A-07 témoignages de story quand aucun avis n'est relié · A-10 couverture du guide · A-13 RSAC, carte pro, hébergeur, coordonnées (`src/config/site.ts`, `identite`) · A-15 vidéo méthode (bloc absent, D-12).
+**Blocs réservés « Actif attendu »** (galet, dimensions réelles, jamais un trou) : A-02 photos des trois ventes « à venir » de la pile (Sciez, Essert-Romand, Anthy — ventes réelles du registre sans story rédigée) · A-04 portrait (accueil, À propos, landing) · A-05 Anne en situation · A-07 témoignages de story quand aucun avis n'est relié · A-10 couverture du guide · A-13 RSAC, carte pro, coordonnées (l'hébergeur, Cloudflare, est renseigné depuis le 2026-10-04) (`src/config/site.ts`, `identite`) · A-15 vidéo méthode (bloc absent, D-12).
 
 **Textes marqués « Point ouvert » / « Contenu à écrire par Anne »** (pastille terra-deep, comme dans la maquette) : Acheter (D-5), section Cible (point ouvert 1), champs de l'estimation (point ouvert 2). À retirer avec le contenu définitif.
 
@@ -112,6 +112,12 @@ Sur l'aperçu (site non indexable), chaque page porte un bouton « Un retour ? �
 - Marqueurs « Point ouvert » / « Contenu à écrire par Anne » affichés (pastilles de la maquette) pour que JB les repère ; à supprimer en production.
 - **Contrastes** vérifiés sur chaque paire de tokens employée (≥ 4,5:1) — deux écarts à la maquette : la pastille « Bases solides » passe du fond galet (4,35:1) à l'écru bordé ; les dates indisponibles du gabarit Cal.com gardent le token `--avt-disabled` de la maquette (1,7:1, information non essentielle — l'embed Cal.com les remplacera).
 - Pages légales : textes de structure conformes à AD-16 (finalités, bases légales, 3 ans), **à faire valider par Anne** avant publication ; les valeurs A-13 sont des pastilles « à compléter ».
+
+## Garde-fous de contenu (stories 6.2 et 7.9)
+
+- **Anglais complet ou rien** (AD-2) : `src/i18n/index.ts` fait échouer la construction si `en.json` n'a pas exactement les clés de `fr.json` ou laisse un texte vide, en nommant les clés en cause.
+- **Pas de story publiée sans autorisation** : `src/content.config.ts` fait échouer la construction si une story est en `statut: publie` sans `autorisations: true`.
+- Ce qu'Anne doit fournir est listé dans `contenu-anne/A-FOURNIR.md`.
 
 ## Vérification faite (voir `.verif/`)
 

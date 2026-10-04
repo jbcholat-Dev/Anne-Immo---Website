@@ -11,7 +11,7 @@ Chaque fichier ici est un modèle. Pour créer un contenu :
 | `avis-immodvisor.md` | `avis-immodvisor/` (un fichier par avis ; `instantane.md` garde la note et le nombre) | `AAAA-MM-JJ-pseudonyme.md` |
 | `email-sequence.md` | `guide/sequence-emails/etape-N/` | `fr.md` |
 | `page.md` | `pages/<nom-de-page>/` — `a-propos` (qui suis-je + méthode), `vendre`, `acheter` | `fr.md` |
-| `identite.md` | racine de `contenu-anne/` | `identite.md` |
+| `identite.md` | `legal/` (déjà créé et pré-rempli : complète `legal/identite.md`) | `identite.md` |
 
 **La version anglaise** d'un contenu = le même fichier traduit, nommé `en.md`, dans le même dossier. Pas de `en.md` = pas de version anglaise, c'est normal.
 

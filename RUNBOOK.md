@@ -54,3 +54,4 @@ Mots de passe : jamais dans ce dépôt, jamais manipulés par Claude. Coffre par
 ## 6. Journal des changements de ce document
 
 - 2026-09-26 : version 0, aperçu en ligne et protégé (stories 9.1 à 9.5) ; § 4 bis retours (story 9.6). Vérifié par JB : page de connexion, accueil, `/robots.txt` = `Disallow: /`.
+- 2026-10-04 : rien ne change dans les comptes. Pour mémoire, l'hébergeur déclaré dans les mentions légales est Cloudflare, Inc. (101 Townsend Street, San Francisco) ; il change si l'hébergement change. Deux garde-fous de contenu bloquent désormais la mise en ligne : une story publiée sans autorisation écrite, un texte anglais manquant (voir `site/README.md`).
