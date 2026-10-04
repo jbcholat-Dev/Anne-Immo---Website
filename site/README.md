@@ -99,6 +99,10 @@ Sur l'aperçu (site non indexable), chaque page porte un bouton « Un retour ? �
 - **Dans la page** (`src/components/accueil/Hero.astro`) : `<video muted autoplay loop playsinline preload="metadata">` avec deux `<source>` (WebM puis MP4), écrites seulement si `public/video/ouverture.mp4` existe au build (sinon la balise est masquée par `.hero-video-absente` et le poster `<picture>` reste). Vidéo masquée sous `prefers-reduced-motion` ; non chargée si le navigateur annonce l'économie de données (`navigator.connection.saveData`).
 - **Poids finaux** : voir la story 8.3 (`_bmad-output/implementation-artifacts/8-3-vidéo-d-ouverture-intégrée.md`).
 
+## Polices (story 8.1)
+
+Italiana (titres) et DM Sans (texte) sont servies par le site lui-même depuis `public/fonts/` (format `woff2`, sous-ensemble latin, licence OFL jointe). Google Fonts est retiré : aucune requête ne part chez Google (AD-11), et `npm run verif` signale toute requête vers `fonts.googleapis.com` ou `fonts.gstatic.com` comme une erreur. Graisses : Italiana 400 ; DM Sans 400, 500, 700 et 400 italique (les mêmes qu'avant ; la seule règle en 600 s'affiche en 700, comme avant). Les déclarations `@font-face` sont en tête de `src/styles/global.css` ; `Base.astro` télécharge en priorité Italiana et DM Sans 400. Les fichiers viennent des paquets npm Fontsource 5.3.0 (`@fontsource/italiana`, `@fontsource/dm-sans`), copiés une fois : aucun paquet ajouté au projet.
+
 ## Écarts assumés avec la maquette / les briefs
 
 - **Vidéo d'ouverture au-dessus du budget** « 8-12 s, < 6 Mo » : JB a décidé (D-27) de diffuser le montage d'Anne en entier (95 s). Compromis : 1440 px au lieu de 1920 (le hero fait 900 px de haut, différence invisible), crf 30, ≈ 15 Mo MP4 / ≈ 10 Mo WebM. Le fichier est lu en flux (faststart + `preload="metadata"`) : la lecture démarre après les premières secondes reçues, le poster couvre l'attente, et le LCP (plus grand élément affiché) reste le poster, chargé en priorité. À remesurer sur l'aperçu (story 10.8).

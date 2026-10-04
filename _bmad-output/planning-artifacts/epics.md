@@ -988,7 +988,7 @@ afin de lire une page stable, et sans qu'un serveur de Google soit appelé à mo
 **Quand** on compare les captures à celles d'avant
 **Alors** titres et textes sont identiques (Italiana partout où la maquette la prévoit, tiret insécable U+2011 des titres conservé), aucune erreur console, et `site/README.md` note le changement (polices hébergées, Google Fonts retiré).
 
-**État :** à faire. Responsable : Claude ; prérequis : aucun. À faire en premier dans l'epic : les décalages de rendu que JB a vus peuvent venir du chargement tardif des polices, il faut les stabiliser avant de corriger les écrans.
+**État :** fait (2026-10-04, `implementation-artifacts/8-1-polices-hébergées-sur-le-site.md`). Responsable : Claude ; prérequis : aucun. À faire en premier dans l'epic : les décalages de rendu que JB a vus peuvent venir du chargement tardif des polices, il faut les stabiliser avant de corriger les écrans.
 
 ### Story 8.2: Adaptation aux écrans page par page
 

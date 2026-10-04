@@ -20,7 +20,7 @@ Que le visiteur revienne à l'accueil sans deviner que le symbole y mène. Retou
 ## Vérification
 - `npm run build` : 19 pages. `npm run check` : 0 erreur. `node scripts/liens.mjs` : 0 lien cassé.
 - HTML construit : « Accueil » porte `aria-current="page"` sur `/` et `/en`, pas sur `/404` ni `/vendre`.
-- Captures Playwright de la barre (900, 1 024, 1 440 px ; FR et EN) et du menu mobile ouvert (390 px) : aucun débordement (largeur de défilement = largeur visible), tous les liens sur une ligne, 72 px d'air entre symbole et « Accueil » à 900 px en FR, 136 px en EN.
+- Captures Playwright de la barre (900, 1 024, 1 440 px ; FR et EN) et du menu mobile ouvert (390 px) : aucun débordement (largeur de défilement = largeur visible), tous les liens sur une ligne, 55 px d'air entre symbole et « Accueil » à 900 px en FR, 123 px en EN (mesuré avec les vraies polices, story 8.1).
 
 ## Ce qui reste
 Rien. Le ticket n° 3 est fermé en citant le commit.
