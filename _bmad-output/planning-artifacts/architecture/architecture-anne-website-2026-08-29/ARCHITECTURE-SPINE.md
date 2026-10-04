@@ -7,7 +7,7 @@ paradigm: 'Islands sur site statique à contenu typé, avec un noyau serveur min
 scope: 'Fondations du site annevialtissot.fr : contenu, langues, capture et stockage des leads, hébergement, propriété, SEO, mesure, surveillance, coût. Vague 2 (champs des objets, composants, go/no-go prestataire) hors périmètre.'
 status: final
 created: '2026-08-29'
-updated: '2026-09-13'
+updated: '2026-10-04'
 binds: [CAP-1, CAP-2, CAP-3, CAP-4, CAP-5, CAP-6, CAP-7, CAP-8, CAP-9, CAP-10, CAP-11]
 sources:
   - ../../architecture-brief.md — cadrage vague 1, réponses de JB, faisabilité Modelo (2026-08-29/30)
@@ -204,6 +204,8 @@ Index unique **partiel** sur `token` (`source = 'diagnostic'`). `lead_delivery` 
 
 **Point non-défaut vérifié :** l'adaptateur Cloudflare n'expose pas de gestionnaire `scheduled()` ; le cron (AD-12, AD-16) passe par un point d'entrée Worker personnalisé (`worker.ts`, option `workerEntryPoint`) qui délègue le HTTP à Astro et porte `scheduled`.
 
+**Correction du 2026-10-04 (story 10.1, essai local) :** l'option `workerEntryPoint` n'existe pas dans `@astrojs/cloudflare` 14.3.3. Le même résultat s'obtient en pointant `main` de `wrangler.jsonc` sur `worker.ts`, qui exporte `fetch: handle` (`@astrojs/cloudflare/handler`) et `scheduled`. Vérifié avec Astro 7.3.4 et wrangler 4.147.0 : pages prérendues servies, D1 lu depuis une route serveur, `scheduled` exécuté et écrit en base.
+
 **Coût récurrent consolidé v1 : ≈ 6,50 €/mois (≈ 80 €/an)** — Cloudflare Paid ≈ 4,60 € + domaines ≈ 1,80 € ; Resend, Cal.com, Better Stack, Google Business à 0 €. Enveloppe actée : 20-50 €/mois ; marge ≈ 40 €/mois réservée au CMS de moyen terme. Hors récurrent : production d'Anne, traduction EN (800-1 200 € si confiée à un pro), temps de JB.
 
 ## Structural Seed
@@ -324,3 +326,5 @@ Website/
 - `workerEntryPoint` de `@astrojs/cloudflare` 14 accepte un point d'entrée portant `fetch` + `scheduled` sans perte de fonctionnalité Astro (bindings D1, assets).
 
 **Amendement du 2026-09-26 (JB) — AD-9, titulaire du compte Cloudflare.** Le compte Cloudflare est celui de JB (connexion via GitHub), pas un compte au nom d'Anne. Raison : Anne ne s'y connectera jamais, et un compte à son nom imposerait de créer et de partager une adresse e-mail à elle pour la reprise. Conséquence : la transférabilité (AD-10) repose sur le RUNBOOK et sur le dépôt, pas sur la propriété du compte ; Anne pourra être invitée comme membre à tout moment ; le domaine (Infomaniak) et les comptes de services (Resend, Cal.com, Better Stack) restent à traiter au cas par cas, même logique par défaut. Trace : story 9.2, tableau de bord (action J02).
+
+**Amendement du 2026-10-04 (story 10.1, en cours).** Faits établis : (1) `workerEntryPoint` remplacé par `main` → `worker.ts` (voir Stack), vérifié en local, la mise en ligne sur `*.workers.dev` reste à faire en 10.2 ; (2) Resend : région d'envoi Irlande disponible au plan gratuit, mais les données du compte restent aux États-Unis : le transfert hors UE sera documenté dans la politique de confidentialité (AD-16) ; (3) Cal.com signe ses webhooks (`X-Cal-Signature-256`, HMAC SHA-256), le reste de l'hypothèse attend l'essai réel. Verdicts proposés pour la table Deferred, en attente de décision : CMS reporté au 2027-01 (JB), pas de bandeau sous réserve du relevé réel (JB), Lighthouse CI en local (JB), matrice Q10 conservée (Anne), go/no-go sans objet. Détail et preuves : `_bmad-output/implementation-artifacts/10-1-architecture-vague-2-consolidée.md`.
