@@ -41,7 +41,7 @@ Les scripts Playwright utilisent `/opt/pw-browsers/chromium` s'il existe, sinon 
 | `/404` | page introuvable | — |
 | `/en`, `/en/track-record` | accueil EN et index « Track record » (vide : aucune story traduite, AD-2). Les autres entrées EN renvoient aux pages FR pour cette v1, sans écran mi-traduit. | `src/content/ui/en.json` |
 
-Navigation (D-2, D-6 A, D-17, D-21) : réseaux · symbole seul | À propos ▾ (Qui suis-je ? · Ma méthode · Cible) · Réalisation · Vendre · Acheter · Contact · FR EN. Fixe dès le premier pixel, réduite à 56 px au défilement, jamais masquée ; menu mobile plein écran avec « À propos » en accordéon (lien + chevron). Pied de page `00-footer` partout.
+Navigation (D-2, D-6 A, D-17, D-21, D-28) : réseaux · symbole seul | Accueil · À propos ▾ (Qui suis-je ? · Ma méthode · Cible) · Réalisation · Vendre · Acheter · Contact · FR EN. Fixe dès le premier pixel, réduite à 56 px au défilement, jamais masquée ; menu mobile plein écran avec Accueil puis « À propos » en accordéon (lien + chevron). Pied de page `00-footer` partout.
 
 ## Réel vs placeholder
 

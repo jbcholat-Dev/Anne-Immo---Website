@@ -1073,6 +1073,21 @@ afin qu'aucune pastille de chantier ni écart non décidé ne parte en ligne.
 
 **État :** à faire. Responsable : Anne (D-25, points ouverts 1, 2, 6, texte d'Acheter), JB (revue des écarts, arbitrage Lenis), Claude (retouches, journal, captures) ; prérequis : story 8.2 (les écrans d'abord, les retouches ensuite) ; le retrait de la pastille d'Acheter dépend du texte d'Anne (D-5). Les pastilles « à compléter · A-13 » des pages légales relèvent de la story 7.6.
 
+### Story 8.5: Lien « Accueil » dans la navigation
+
+En tant que visiteur,
+je veux un lien « Accueil » écrit en toutes lettres dans la barre de navigation,
+afin de revenir à la page d'accueil sans deviner que le symbole y mène.
+
+**Critères d'acceptation :**
+
+**Étant donné** le retour d'aperçu n° 3 de JB (2026-09-26 : « pour revenir à la page d'accueil, il faut cliquer sur le logo […] pas très intuitif »)
+**Quand** la barre est affichée (desktop, réduite, menu mobile, FR et EN)
+**Alors** « Accueil » (« Home ») est la première entrée, avant « À propos ▾ », marqué page en cours sur l'accueil seulement, et le symbole ramène toujours à l'accueil (D-28)
+**Et** la barre ne déborde pas à 900 px, la plus petite largeur desktop.
+
+**État :** fait (2026-10-04). Responsable : Claude ; origine : ticket GitHub n° 3 (`retour-apercu`).
+
 
 # Mise en ligne d'aperçu, référencement et lancement public (epics 9, 11 et 12)
 
