@@ -117,6 +117,10 @@ Italiana (titres) et DM Sans (texte) sont servies par le site lui-même depuis `
 - **Contrastes** vérifiés sur chaque paire de tokens employée (≥ 4,5:1) — deux écarts à la maquette : la pastille « Bases solides » passe du fond galet (4,35:1) à l'écru bordé ; les dates indisponibles du gabarit Cal.com gardent le token `--avt-disabled` de la maquette (1,7:1, information non essentielle — l'embed Cal.com les remplacera).
 - Pages légales : textes de structure conformes à AD-16 (finalités, bases légales, 3 ans), **à faire valider par Anne** avant publication ; les valeurs A-13 sont des pastilles « à compléter ».
 
+## Largeurs intermédiaires (story 8.2)
+
+La maquette dessine 1 440 px (ordinateur) et 390 px (téléphone). Entre 900 et 1 399 px, quatre pages ont une plage de largeur dédiée (colonnes proportionnelles, titres réduits) : À propos, fiche de vente, landing du diagnostic (900 à 1 199 px), guide (900 à 1 399 px, couverture masquée sous 1 100 px). `node scripts/ecrans.mjs` contrôle l'absence de débordement à chaque largeur.
+
 ## Vérification faite (voir `.verif/`)
 
 `npm run build` sans erreur (19 pages) · `npm run check` : 0 erreur · `npm run dev` : les 17 routes répondent 200, une route inconnue 404 · `node scripts/liens.mjs` : 0 lien cassé · `node scripts/e2e-diagnostic.mjs` : sorties A, B et profil à risque, abandon/reprise, erreurs du gate, lien expiré, aucune erreur console · `npm run verif` : captures 1440 / 390 de chaque page, accueil à 5 positions (hero, pile 3 positions, fermeture) et en mouvement réduit.
