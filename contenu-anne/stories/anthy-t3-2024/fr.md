@@ -28,7 +28,7 @@ temoignages:
     contexte: ''
     citation: ''
     portrait: null
-statut: brouillon
+statut: publie
 autorisations: false
 ---
 
