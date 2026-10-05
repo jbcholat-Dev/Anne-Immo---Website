@@ -10,7 +10,7 @@
 | Cloudflare, projet Workers `anne-vial-tissot-site` | héberge le site, le construit à chaque changement de `main` | JB, connexion via GitHub (décision du 2026-09-26, amende AD-9) | 0 € (plan gratuit) |
 | Cloudflare Zero Trust, équipe `dry-truth-5a0d` | protège l'aperçu par un code envoyé par e-mail | même compte | 0 € (plan Free, 50 utilisateurs) |
 | Google Drive, dossier partagé « Contenu site Anne » | boîte de dépôt d'Anne : photos HD, vidéos, textes, accords écrits des clients ; Claude le lit par le connecteur Google Drive et range dans `contenu-anne/` par PR | JB (propriétaire), Anne (modification) | 0 € (espace gratuit de 15 Go) |
-| Infomaniak | nom de domaine `annevialtissot.fr` et `.com` | à créer (action J06) | ≈ 21 €/an |
+| Infomaniak | noms de domaine `annevialtissot.fr` et `.com` | JB (son adresse e-mail) ; **propriétaire légal des deux domaines : Anne** (décision du 2026-10-05, amende AD-9), JB contact administrateur. Sans option Domain Plus. Expiration 2027-10-05. | 17,52 € TTC la 1re année, ≈ 21 €/an ensuite |
 
 Mots de passe : jamais dans ce dépôt, jamais manipulés par Claude. Coffre partagé à deux : à ouvrir (action J03).
 
@@ -46,6 +46,12 @@ Mots de passe : jamais dans ce dépôt, jamais manipulés par Claude. Coffre par
 - Sans clé, le bouton répond « L'envoi n'est pas encore branché » ; rien n'est perdu côté site, la remarque est à envoyer à JB.
 - Fin de vie : le bouton n'existe pas en production ; `worker.ts` est remplacé par le noyau serveur de l'epic 10.
 
+## 4 ter. Si JB quitte le projet : reprendre les domaines
+
+Anne est déjà propriétaire légale des domaines ; seule la gestion est sur le compte Infomaniak de JB. Pour la lui rendre : Anne crée un compte Infomaniak (gratuit) ; JB, dans son Manager Infomaniak, ouvre le domaine et utilise le transfert vers une autre organisation Infomaniak (libellé exact à vérifier le jour venu ; le titulaire ne change pas) vers le compte d'Anne ; Anne accepte. Les serveurs de noms Cloudflare ne changent pas, le site reste en ligne pendant l'opération. Vérifier ensuite le renouvellement automatique et la carte bancaire sur le compte d'Anne.
+
+État au 2026-10-05 : les deux domaines sont dans le compte Cloudflare (plan gratuit), serveurs de noms `camilo.ns.cloudflare.com` et `elly.ns.cloudflare.com`, actifs. Reste : DNSSEC à activer (Cloudflare → domaine → DNS → Settings → DNSSEC, puis copier l'enregistrement DS chez Infomaniak), validation en deux étapes sur le compte Infomaniak.
+
 ## 5. Pièges irréversibles
 
 - Ne jamais mettre `PUBLIC_INDEXATION=oui` sur une adresse d'aperçu : Google mémoriserait une version incomplète.
@@ -56,4 +62,5 @@ Mots de passe : jamais dans ce dépôt, jamais manipulés par Claude. Coffre par
 
 - 2026-09-26 : version 0, aperçu en ligne et protégé (stories 9.1 à 9.5) ; § 4 bis retours (story 9.6). Vérifié par JB : page de connexion, accueil, `/robots.txt` = `Disallow: /`.
 - 2026-10-04 : rien ne change dans les comptes. Pour mémoire, l'hébergeur déclaré dans les mentions légales est Cloudflare, Inc. (101 Townsend Street, San Francisco) ; il change si l'hébergement change. Deux garde-fous de contenu bloquent désormais la mise en ligne : une story publiée sans autorisation écrite, un texte anglais manquant (voir `site/README.md`).
+- 2026-10-05 : domaines `.fr` et `.com` achetés chez Infomaniak depuis le compte de JB, Anne propriétaire légale (amende AD-9) ; § 4 ter ajouté (reprise des domaines, serveurs de noms Cloudflare actifs).
 - 2026-10-05 : Anne dépose son contenu dans le dossier Google Drive « Contenu site Anne » et ne fait plus de commit (décision de JB). Les originaux lourds restent sur Drive ; Claude range les versions utiles dans `contenu-anne/` par PR. Si Claude ne peut plus lire le dossier : reconnecter le connecteur Google Drive dans claude.ai (Réglages → Connecteurs) puis l'activer dans les réglages du projet.
