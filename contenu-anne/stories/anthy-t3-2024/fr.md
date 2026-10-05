@@ -4,7 +4,7 @@ type_bien: Appartement (T3, rez-de-jardin)
 annee_vente: 2024
 delai_vente: 2 mois
 particularite: "Un appartement encombré où les acquéreurs ne se projetaient pas : tout s'est joué sur la préparation avant la remise en vente."
-photo_principale: /photos/anthy-sur-leman-exp-immo-014-hd.webp
+photo_principale: photos/anthy-sur-leman-exp-immo-014-hd.webp
 photos:
   - photos/anthy-sur-leman-exp-immo-002-hd.webp
   - photos/anthy-sur-leman-exp-immo-006-hd.webp
@@ -28,7 +28,7 @@ temoignages:
     contexte: ''
     citation: ''
     portrait: null
-statut: publie
+statut: a-relire
 autorisations: false
 ---
 

@@ -106,7 +106,7 @@ collections:
         label: Autorisations écrites reçues
         widget: boolean
         default: false
-        hint: "À cocher seulement quand les accords écrits des clients (photos, témoignages) sont reçus. Sans cette case, une fiche « Publiée » bloque la mise en ligne."
+        hint: "À cocher seulement quand les accords écrits des clients (photos, témoignages) sont reçus. Sans cette case, une fiche « Publiée » reste traitée comme « À relire » et n'apparaît pas sur le site public. L'aperçu montre toutes les fiches, quel que soit le statut."
       - { name: body, label: Récit, widget: markdown, hint: "À la première personne. Des intertitres courts (« Le résultat ») aident la lecture." }
 
   - name: pages
