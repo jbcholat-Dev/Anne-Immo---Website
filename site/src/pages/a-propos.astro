@@ -142,12 +142,13 @@ const cibles = [
   .ap-zone { font-size: 14px; }
   .ap-texte { max-width: 62ch; font-size: 17px; line-height: 1.75; }
   .ap-nom { font-size: 64px; line-height: 1.02; margin-bottom: 8px; }
-  .ap-signature { margin-bottom: 36px; }
+  .ap-signature { margin: 14px 0 36px; }
   .ap-texte h3.chapeau { font-family: var(--avt-font-text); margin: 0 0 12px; }
   .ap-texte p { margin-bottom: 40px; }
   .ap-texte p.ap-intro-liste { margin-bottom: 16px; }
   .ap-texte ul { padding-left: 20px; margin-bottom: 40px; display: flex; flex-direction: column; gap: 8px; }
-  .ap-refrain { font-family: var(--avt-font-display); font-size: 40px; line-height: 1.2; margin-bottom: 40px; }
+  .ap-refrain { font-family: var(--avt-font-display); font-size: 40px; line-height: 1.15; letter-spacing: -.02em; margin-bottom: 40px; }
+  .ap-refrain div:last-child, .ap-refrain-grand div:last-child { font-style: italic; color: var(--avt-klein); }
   .ap-boutons { display: flex; gap: 14px; flex-wrap: wrap; }
   .ap-methode { border-top: 1px solid var(--filet-brun-fort); padding-top: 8px; }
   .ap-video { margin: 0 var(--marge); background: var(--avt-galet); border-radius: 16px; padding: 40px 48px; }
@@ -170,7 +171,7 @@ const cibles = [
   .ap-partenaires { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
   .ap-partenaires div { background: var(--avt-galet); border-radius: 10px; padding: 16px; font-size: 14px; line-height: 1.4; }
   .ap-coordonne { font-weight: 500; color: var(--avt-klein); }
-  .ap-refrain-grand { padding: 0 var(--marge) 96px; font-family: var(--avt-font-display); font-size: 56px; line-height: 1.15; max-width: 22ch; }
+  .ap-refrain-grand { padding: 0 var(--marge) 96px; font-family: var(--avt-font-display); font-size: 72px; line-height: 1.02; letter-spacing: -.03em; max-width: 22ch; }
   .ap-cible { background: var(--avt-brume); padding: 96px var(--marge); }
   .ap-cible-tete { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
   .ap-cible h2 { font-size: 48px; }

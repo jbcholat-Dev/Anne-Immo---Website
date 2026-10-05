@@ -1120,6 +1120,25 @@ afin de revenir à la page d'accueil sans deviner que le symbole y mène.
 
 **État :** fait (2026-10-04). Responsable : Claude ; origine : ticket GitHub n° 3 (`retour-apercu`).
 
+### Story 8.6: Audit de design et expérience « Éditorial du lac »
+
+En tant que JB,
+je veux un audit du design actuel tiré des bonnes pratiques de mon wiki, et une version d'essai qui sort de la charte (en gardant le logo, le bleu Klein et le terracotta),
+afin de voir ce qui manque à la version actuelle avant de décider quoi que ce soit.
+
+**Critères d'acceptation :**
+
+**Étant donné** le site de `main` du 2026-10-05
+**Quand** il est relu page par page (1 440 et 390 px) avec la grille d'Apple et celle d'Impeccable
+**Alors** les constats sont classés par gravité dans le fichier de la story.
+
+**Étant donné** la consigne de JB (expérience, pas décision)
+**Quand** la version d'essai est construite sur une branche à part
+**Alors** le logo, le Klein et le terracotta sont inchangés, le contenu et les parcours sont identiques, `design-system/` et `DECISIONS.md` ne sont pas modifiés
+**Et** build, types, liens, écrans, diagnostic et captures passent.
+
+**État :** en revue (2026-10-05), branche `claude/project-thread-lnd0sf`. Responsable : Claude ; décision de garder ou non : JB et Anne.
+
 
 # Mise en ligne d'aperçu, référencement et lancement public (epics 9, 11 et 12)
 
