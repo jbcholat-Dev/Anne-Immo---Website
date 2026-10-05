@@ -1,12 +1,11 @@
 ---
 // 09 Acheter (D-5) : primo-accédants et investisseurs, la recherche accompagnée en quatre temps, les avis d'acheteurs (§ 5.4), « Parler de votre projet » → contact préréglé Achat.
 import Page from '../layouts/Page.astro';
-import { avisParId, storyDeAvis, roleLibelle, dateLibelle, paragraphes, instantane } from '../lib/contenu';
+import { avisParId, storyDeAvis, storyVisible, roleLibelle, dateLibelle, paragraphes, instantane } from '../lib/contenu';
 import { acheter } from '../config/site';
-import { getEntry } from 'astro:content';
 import { r } from '../i18n';
 const inst = await instantane();
-const avis = await Promise.all(acheter.avis.map(async (id) => { const a = await avisParId(id); const slug = storyDeAvis(a); const story = slug ? await getEntry('stories', slug) : null; return { a, slug, story }; }));
+const avis = await Promise.all(acheter.avis.map(async (id) => { const a = await avisParId(id); const slug = storyDeAvis(a); const story = await storyVisible(slug); return { a, slug, story }; }));
 const temps = [
   ['Elle repère', 'Le réseau local, les ventes qui se préparent, celles qui ne sont pas encore en ligne.', 'Le réseau local, les ventes qui ne sont pas encore en ligne.'],
   ['Elle visite en premier', 'Seule, avec vos critères en tête. Vous ne déplacez pas votre semaine pour rien.', 'Seule, avec vos critères en tête.'],
@@ -42,7 +41,7 @@ const temps = [
         <figure>
           <blockquote>{paragraphes(x.a.body).map((p) => <p>{p}</p>)}</blockquote>
           <figcaption>{x.a.data.auteur} <span class="texte-muet">· {[roleLibelle(x.a), x.story?.data.commune, dateLibelle(x.a.data.date)].filter(Boolean).join(' · ')}</span>
-            {x.slug && <div class="ac-avis-lien"><a href={`${r('realisation')}/${x.slug}`}>Voir cette vente</a></div>}
+            {x.slug && x.story && <div class="ac-avis-lien"><a href={`${r('realisation')}/${x.slug}`}>Voir cette vente</a></div>}
           </figcaption>
         </figure>
       ))}

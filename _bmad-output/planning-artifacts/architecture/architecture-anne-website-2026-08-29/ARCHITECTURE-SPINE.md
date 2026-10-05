@@ -297,7 +297,7 @@ Website/
 | Liste des champs de chaque objet de contenu (dont `meta`/Open Graph obligatoires pour `PageEditoriale` et `StoryDeVente`) | La maquette validée par Anne peut encore en faire bouger ; règle, inventaire et clés (AD-1) suffisent à empêcher la divergence | Vague 2, avant le build |
 | Composants, gabarits, rendu des objets ; placement du contact direct dans la navigation (CAP-6) ; accessibilité | Dépend de la maquette | Vague 2 |
 | Go/no-go interne vs prestataire | Se joue sur le temps de JB, pas sur l'infrastructure (~80 €/an) | Vague 2, avec la maquette |
-| Choix du CMS de moyen terme | Keystatic (git, gratuit, natif Astro) est le candidat mais sa gestion du multilingue est jugée immature ; marge ≈ 40 €/mois réservée | Vague 2 : évaluation contre AD-1 et AD-2 |
+| Choix du CMS de moyen terme | **Tranché le 2026-10-05 (JB) : Sveltia CMS** (git, gratuit, page statique `/admin`, connexion GitHub via un petit Worker `sveltia-cms-auth`, brouillons en demandes de fusion, photos réduites en WebP dans le navigateur avant l'envoi). Écartés : Pages CMS (pas de réduction des photos, contenu via un service tiers), Keystatic (multilingue immature, serveur requis), TinaCMS et CloudCannon (payants), Decap (ne réduit pas les photos ; reste le repli, même configuration). Coût : 0 €. Story 7.13. | Fait |
 | Langues ES et PT | Un dossier + un dictionnaire ; le build dit ce qui manque (AD-2) | Quand Anne a le temps |
 | Barème de Q10 (visites × offres) | Sans effet sur l'architecture ; le noyau lit `bareme.json` quel qu'il soit | Avant le build du diagnostic |
 | Nom de la méthode, positionnement, chiffres publics du diagnostic (stat PAP.fr, « +30 % ») | Chaînes de contenu (AD-1) | Avant lancement |

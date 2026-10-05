@@ -6,9 +6,8 @@ delai_vente:
 particularite: >
   Propriété de 6 000 m² avec trois bâtiments, restée sans repreneur un an :
   aucun acheteur capable d'absorber l'ensemble en bloc.
-photo_principale: "003"   # numéro (ou nom) de la photo dans dossier_photos — proposition Claude, à ajuster
-dossier_photos: "ARMOY_PEILLEX_projet marchands"   # dossier HD dans « Stories  photos » (hors Git)
-photos: ["020", "030", "031"]   # 4 à 6 photos, même règle
+photo_principale: "photos/photo-003.jpg"   # photo de tête (chemin dans le dossier de la story)
+photos: ["photos/photo-020.jpg", "photos/photo-030.jpg", "photos/photo-031.jpg"]
 temoignages:          # vendeur et/ou acheteur ; un seul suffit pour publier
   - role: vendeur
     prenom:

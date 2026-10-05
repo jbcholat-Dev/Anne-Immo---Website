@@ -23,7 +23,7 @@ const liste = await stories();
   ) : (
     <div class="index-grille">
       {liste.map((s) => {
-        const photo = photoPrincipale(s.id);
+        const photo = photoPrincipale(s);
         return (
           <article>
             <a href={`${r('realisation')}/${s.id}`} class="index-photo" aria-hidden="true" tabindex="-1">

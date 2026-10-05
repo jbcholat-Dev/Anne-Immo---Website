@@ -3,15 +3,15 @@
 import Page from '../../layouts/Page.astro';
 import Picture from '../../components/Picture.astro';
 import Reserve from '../../components/Reserve.astro';
-import { instantane, avisParId, roleLibelle, photoPrincipale } from '../../lib/contenu';
+import { instantane, avisParId, roleLibelle, photoPrincipale, storyVisible } from '../../lib/contenu';
 import { accueil } from '../../config/site';
-import { getEntry } from 'astro:content';
 import { r } from '../../i18n';
 const inst = await instantane();
 const a = await avisParId(accueil.extrait.avis);
-const storyVignette = await getEntry('stories', 'appartement-cascade-2024');
-const vignette = photoPrincipale('appartement-cascade-2024');
-const imageSobre = photoPrincipale('maison-premium-2025');
+const storyVignette = await storyVisible('appartement-cascade-2024');
+const storySobre = await storyVisible('maison-premium-2025');
+const vignette = storyVignette ? photoPrincipale(storyVignette) : null;
+const imageSobre = storySobre ? photoPrincipale(storySobre) : null;
 const note = String(inst.note).replace('.', ',');
 ---
 <Page titre="Diagnostic — Découvrez en 3 minutes si votre stratégie de vente va réellement fonctionner" description="Quinze questions sur votre bien, votre annonce et vos visites. Un score de maturité sur 100, un diagnostic sur trois axes, des recommandations concrètes. Trois minutes, gratuit." courante="diagnostic" ogImage="/img/stories/maison-premium-2025/photo-047-1280.jpg">

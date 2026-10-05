@@ -1,0 +1,190 @@
+# Espace d'édition du site d'Anne (Sveltia CMS) — story 7.13, décision du 2026-10-05.
+# Chaque enregistrement devient un fichier de contenu-anne/ dans le dépôt, via une demande de fusion que JB valide.
+# Réglage complet : https://sveltiacms.app/en/docs — à modifier par PR, jamais depuis l'espace d'édition.
+
+backend:
+  name: github
+  repo: jbcholat-Dev/Anne-Immo---Website
+  branch: main
+  # Petit programme de connexion « Se connecter avec GitHub », hébergé sur Cloudflare (RUNBOOK § 1).
+  base_url: https://sveltia-cms-auth.jbcholat.workers.dev
+  commit_messages:
+    create: "Contenu ({{author-login}}) : nouvelle fiche {{collection}} « {{slug}} »"
+    update: "Contenu ({{author-login}}) : {{collection}} « {{slug}} » modifiée"
+    delete: "Contenu ({{author-login}}) : {{collection}} « {{slug}} » supprimée"
+    uploadMedia: "Contenu ({{author-login}}) : photo « {{path}} » ajoutée"
+    deleteMedia: "Contenu ({{author-login}}) : photo « {{path}} » supprimée"
+
+# Brouillons : chaque modification part sur une branche avec sa demande de fusion ;
+# Cloudflare en construit un aperçu protégé ; JB fusionne sur GitHub pour mettre en ligne (bouton « Publier » masqué : publish: false).
+publish_mode: editorial_workflow
+
+site_url: https://annevialtissot.fr
+display_url: https://annevialtissot.fr
+
+# Dossier par défaut (inutilisé par les fiches, qui rangent leurs photos dans leur propre dossier).
+media_folder: contenu-anne/photos
+public_folder: photos
+
+media_libraries:
+  default:
+    config:
+      max_file_size: 52428800   # 50 Mo avant réduction
+      slugify_filename: true
+      # Les photos sont réduites dans le navigateur avant l'envoi : WebP, 3 200 px maximum.
+      # L'original HD n'entre jamais dans le dépôt (règle : photos HD hors Git).
+      transformations:
+        raster_image:
+          format: webp
+          quality: 85
+          width: 3200
+          height: 3200
+
+slug:
+  encoding: ascii
+  clean_accents: true
+
+collections:
+  - name: stories
+    label: Ventes racontées
+    label_singular: Vente
+    description: >
+      Une fiche par vente : le récit d'Anne, à la première personne. Ni prix, ni nom de client.
+      Une fiche n'est visible sur le site public qu'en statut « Publiée », avec les autorisations écrites.
+    folder: contenu-anne/stories
+    path: "{{slug}}/fr"
+    extension: md
+    format: frontmatter
+    create: true
+    delete: false
+    publish: false   # la mise en ligne se fait en fusionnant la demande sur GitHub (JB), pas depuis l'espace d'édition
+    slug: "{{commune}}-{{annee_vente}}"
+    identifier_field: commune
+    summary: "{{commune}} · {{type_bien}} · {{annee_vente}} · {{statut}}"
+    sortable_fields: [annee_vente, commune, statut]
+    media_folder: photos
+    public_folder: photos
+    fields:
+      - { name: commune, label: Commune, widget: string }
+      - { name: type_bien, label: Type de bien, widget: string, hint: "Ex. « Appartement (T3) », « Chalet ». Sans nom de résidence." }
+      - { name: annee_vente, label: Année de la vente, widget: number, value_type: int, required: false }
+      - { name: delai_vente, label: Délai de vente, widget: string, required: false, hint: "Ex. « 2 mois ». Laisser vide si on ne le dit pas." }
+      - { name: particularite, label: En une phrase, widget: text, required: false, hint: "Ce qui rend cette vente particulière. Affiché sous la photo dans la liste des ventes." }
+      - name: photo_principale
+        label: Photo principale
+        widget: image
+        required: false
+        hint: "La photo en tête de la fiche, au format paysage de préférence. Elle est réduite automatiquement à l'envoi."
+      - name: photos
+        label: Autres photos (4 à 6)
+        widget: image
+        multiple: true
+        required: false
+        hint: "Envoyer 5 à 10 photos au plus par enregistrement."
+      - name: temoignages
+        label: Témoignages
+        widget: list
+        required: false
+        collapsed: true
+        summary: "{{role}} · {{prenom}}"
+        hint: "Un seul suffit pour publier. Chaque témoignage demande l'accord écrit de la personne."
+        fields:
+          - { name: role, label: Rôle, widget: select, options: [{ label: Vendeur, value: vendeur }, { label: Acheteur, value: acheteur }] }
+          - { name: prenom, label: Prénom, widget: string, required: false }
+          - { name: contexte, label: Contexte, widget: string, required: false }
+          - { name: citation, label: Citation, widget: text, required: false }
+          - { name: portrait, label: Portrait, widget: image, required: false }
+      - name: statut
+        label: Statut
+        widget: select
+        default: brouillon
+        options:
+          - { label: "Brouillon (visible seulement sur l'aperçu)", value: brouillon }
+          - { label: "À relire", value: a-relire }
+          - { label: "Publiée (visible sur le site public)", value: publie }
+      - name: autorisations
+        label: Autorisations écrites reçues
+        widget: boolean
+        default: false
+        hint: "À cocher seulement quand les accords écrits des clients (photos, témoignages) sont reçus. Sans cette case, une fiche « Publiée » bloque la mise en ligne."
+      - { name: body, label: Récit, widget: markdown, hint: "À la première personne. Des intertitres courts (« Le résultat ») aident la lecture." }
+
+  - name: pages
+    label: Pages
+    label_singular: Page
+    folder: contenu-anne/pages
+    path: "{{slug}}/fr"
+    extension: md
+    format: frontmatter
+    create: false
+    delete: false
+    publish: false
+    identifier_field: titre
+    fields:
+      - { name: titre, label: Titre, widget: string }
+      - { name: sous_titre, label: Sous-titre, widget: text, required: false }
+      - { name: video, label: Vidéo, widget: string, required: false, hint: "Laisser vide : pas de bloc vidéo." }
+      - { name: statut, label: Statut, widget: select, options: [brouillon, a-relire, publie], default: brouillon }
+      - { name: body, label: Texte, widget: markdown }
+
+  - name: avis
+    label: Avis Immodvisor
+    label_singular: Avis
+    description: >
+      Les avis sont recopiés tels quels depuis Immodvisor et ne se corrigent pas.
+      Seuls deux champs sont à remplir : la vente concernée et « cité sur l'accueil ».
+    folder: contenu-anne/avis-immodvisor
+    filter: { field: id, pattern: "^20" }
+    extension: md
+    format: frontmatter
+    create: false
+    delete: false
+    publish: false
+    identifier_field: id
+    summary: "{{date}} · {{auteur}} · {{role}}"
+    fields:
+      - { name: id, label: Identifiant, widget: string, readonly: true }
+      - { name: auteur, label: Auteur, widget: string, readonly: true }
+      - { name: date, label: Date, widget: string, readonly: true }
+      - { name: note, label: Note, widget: number, readonly: true }
+      - { name: role, label: Rôle, widget: string, readonly: true }
+      - { name: titre, label: Titre, widget: string, readonly: true }
+      - { name: vente_candidate, label: Vente proposée par Claude, widget: string, readonly: true, required: false }
+      - { name: dossier_photos, label: Ancien dossier photos, widget: string, readonly: true, required: false }
+      - { name: confiance, label: Confiance du rapprochement, widget: string, readonly: true, required: false }
+      - { name: indice, label: Indice du rapprochement, widget: text, readonly: true, required: false }
+      - name: story
+        label: Vente concernée
+        widget: relation
+        collection: stories
+        value_field: "{{slug}}"
+        search_fields: [commune, type_bien]
+        display_fields: ["{{commune}} · {{type_bien}} · {{annee_vente}}"]
+        required: false
+        hint: "La vente que cet avis concerne. C'est ce champ que le site lit."
+      - { name: retenu, label: Cité en entier sur l'accueil, widget: boolean, default: false, required: false }
+      - { name: body, label: Texte de l'avis (tel quel), widget: markdown, readonly: true }
+
+  - name: legal
+    label: Coordonnées
+    publish: false
+    files:
+      - name: identite
+        label: Coordonnées légales et réseaux
+        file: contenu-anne/legal/identite.md
+        format: frontmatter
+        fields:
+          - { name: nom_complet, label: Nom complet, widget: string }
+          - { name: statut_juridique, label: Statut, widget: string }
+          - { name: rsac, label: Numéro RSAC et ville du greffe, widget: string, required: false }
+          - { name: carte_professionnelle, label: Carte professionnelle (référence eXp), widget: string, required: false }
+          - { name: adresse_professionnelle, label: Adresse professionnelle, widget: string, required: false, hint: "Affichée seulement dans les mentions légales." }
+          - { name: telephone, label: Téléphone, widget: string, required: false, hint: "Format international, ex. +33 6 …" }
+          - { name: email, label: E-mail, widget: string, required: false }
+          - { name: url_immodvisor, label: Fiche Immodvisor, widget: string }
+          - { name: zone, label: Zone, widget: string }
+          - { name: langues, label: Langues, widget: list, required: false }
+          - { name: url_instagram, label: Instagram, widget: string, required: false }
+          - { name: url_youtube, label: YouTube, widget: string, required: false }
+          - { name: url_linkedin, label: LinkedIn, widget: string, required: false }
+          - { name: body, label: Note, widget: markdown, required: false }

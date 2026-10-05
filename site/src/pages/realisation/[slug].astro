@@ -5,8 +5,7 @@ import Picture from '../../components/Picture.astro';
 import Reserve from '../../components/Reserve.astro';
 import CtaFin from '../../components/CtaFin.astro';
 import { render } from 'astro:content';
-import { stories, photosDeStory, cleImage, avisDeStory, roleLibelle, paragraphes } from '../../lib/contenu';
-import { images } from '../../lib/images';
+import { stories, photosDeStory, avisDeStory, roleLibelle, paragraphes } from '../../lib/contenu';
 import { tiret } from '../../lib/texte';
 import { r } from '../../i18n';
 export async function getStaticPaths() {
@@ -14,7 +13,7 @@ export async function getStaticPaths() {
 }
 const { story } = Astro.props;
 const { Content } = await render(story);
-const photos = photosDeStory(story.id).filter((p) => images[cleImage(story.id, p)]);
+const photos = photosDeStory(story);
 const principale = photos.find((p) => p.role === 'principale');
 const secondaires = photos.filter((p) => p.role === 'secondaire');
 // Témoignages : ceux du front matter (A-07) d'abord ; sinon les avis Immodvisor reliés (v1) ; sinon bloc réservé.
@@ -28,7 +27,7 @@ const alt = `${story.data.type_bien} vendu à ${story.data.commune}`;
 ---
 <Page titre={`${story.data.commune} — Réalisation — Anne VIAL-TISSOT`} description={(story.data.particularite ?? '').trim()} courante="realisation">
   <div class="story-photo">
-    {principale ? <Picture id={cleImage(story.id, principale)} alt={alt} sizes="100vw" loading="eager" fetchpriority="high" /> : <Reserve label={`A-02 · photo maîtresse · ${story.data.commune} · 16:9 plein cadre`} style="height:100%" />}
+    {principale ? <Picture id={principale.cle} alt={alt} sizes="100vw" loading="eager" fetchpriority="high" /> : <Reserve label={`A-02 · photo maîtresse · ${story.data.commune} · 16:9 plein cadre`} style="height:100%" />}
   </div>
   <div class="story-corps">
     <aside class="story-contexte">
@@ -62,7 +61,7 @@ const alt = `${story.data.type_bien} vendu à ${story.data.commune}`;
   </div>
   {secondaires.length > 0 && (
     <div class="story-galerie" aria-label="Galerie">
-      {secondaires.map((p) => <div class="story-galerie-photo"><Picture id={cleImage(story.id, p)} alt={alt} sizes="(max-width: 899px) 240px, 25vw" /></div>)}
+      {secondaires.map((p) => <div class="story-galerie-photo"><Picture id={p.cle} alt={alt} sizes="(max-width: 899px) 240px, 25vw" /></div>)}
     </div>
   )}
   <CtaFin titre="Et votre vente ?" texte="Trois minutes pour savoir où elle en est, ou un créneau pour en parler." />
