@@ -47,7 +47,7 @@ Navigation (D-2, D-6 A, D-17, D-21, D-28) : réseaux · symbole seul | Accueil �
 
 **Réel** : **la vidéo d'ouverture A-01** (montage d'Anne, 95 s, en boucle, sans son ; son poster = sa première image, D-27 — voir § Vidéo d'ouverture) ; les 3 récits d'Anne (Thonon, Armoy, Allinges) et leurs 13 photos ; la note 5/5 et les 18 avis Immodvisor (`instantane.md`, avis cités tels quels, jamais corrigés) ; les textes d'À propos, de la méthode, du diagnostic (libellés live + barème + 9 feedbacks) ; les logos et lockups eXp du design system.
 
-**Blocs réservés « Actif attendu »** (galet, dimensions réelles, jamais un trou) : A-02 photos des trois ventes « à venir » de la pile (Sciez, Essert-Romand, Anthy — ventes réelles du registre sans story rédigée) · A-04 portrait (accueil, À propos, landing) · A-05 Anne en situation · A-07 témoignages de story quand aucun avis n'est relié · A-10 couverture du guide · A-13 RSAC, carte pro, hébergeur, coordonnées (`src/config/site.ts`, `identite`) · A-15 vidéo méthode (bloc absent, D-12).
+**Blocs réservés « Actif attendu »** (galet, dimensions réelles, jamais un trou) : A-02 photos des trois ventes « à venir » de la pile (Sciez, Essert-Romand, Anthy — ventes réelles du registre sans story rédigée) · A-04 portrait (accueil, À propos, landing) · A-05 Anne en situation · A-07 témoignages de story quand aucun avis n'est relié · A-10 couverture du guide · A-13 RSAC, carte pro, coordonnées (l'hébergeur, Cloudflare, est renseigné depuis le 2026-10-04) (`src/config/site.ts`, `identite`) · A-15 vidéo méthode (bloc absent, D-12).
 
 **Textes marqués « Point ouvert » / « Contenu à écrire par Anne »** (pastille terra-deep, comme dans la maquette) : Acheter (D-5), section Cible (point ouvert 1), champs de l'estimation (point ouvert 2). À retirer avec le contenu définitif.
 
@@ -120,6 +120,12 @@ Italiana (titres) et DM Sans (texte) sont servies par le site lui-même depuis `
 ## Largeurs intermédiaires (story 8.2)
 
 La maquette dessine 1 440 px (ordinateur) et 390 px (téléphone). Entre 900 et 1 399 px, quatre pages ont une plage de largeur dédiée (colonnes proportionnelles, titres réduits) : À propos, fiche de vente, landing du diagnostic (900 à 1 199 px), guide (900 à 1 399 px, couverture masquée sous 1 100 px). `node scripts/ecrans.mjs` contrôle l'absence de débordement à chaque largeur.
+
+## Garde-fous de contenu (stories 6.2 et 7.9)
+
+- **Anglais complet ou rien** (AD-2) : `src/i18n/index.ts` fait échouer la construction si `en.json` n'a pas exactement les clés de `fr.json` ou laisse un texte vide, en nommant les clés en cause.
+- **Pas de story publiée sans autorisation** : `src/content.config.ts` fait échouer la construction si une story est en `statut: publie` sans `autorisations: true`.
+- Ce qu'Anne doit fournir est listé dans `contenu-anne/A-FOURNIR.md`.
 
 ## Vérification faite (voir `.verif/`)
 

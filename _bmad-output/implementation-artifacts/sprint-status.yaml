@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-26-2026 15:10
-last_updated: 10-04-2026 20:00
+last_updated: 10-05-2026 09:40
 project: Site Anne Vial-Tissot
 project_key: NOKEY
 tracking_system: file-system
@@ -68,7 +68,7 @@ development_status:
 
   epic-6: in-progress
   6-1-accueil-en-et-index-track-record: done
-  6-2-pages-éditoriales-et-légales-en-anglais: backlog
+  6-2-pages-éditoriales-et-légales-en-anglais: in-progress
   6-3-diagnostic-en-anglais: backlog
   6-4-stories-et-avis-en-anglais: backlog
   epic-6-retrospective: optional
@@ -79,11 +79,12 @@ development_status:
   7-3-photos-web-des-trois-stories: done
   7-4-vidéo-d-ouverture-du-hero: done
   7-5-portrait-et-photos-en-situation: backlog
-  7-6-coordonnées-légales-et-professionnelles: backlog
-  7-7-adresses-des-réseaux-sociaux: backlog
-  7-8-guide-10-erreurs-pdf-à-la-charte: backlog
-  7-9-autorisations-écrites-et-passage-des-stories-en-publie: backlog
-  7-10-séquence-d-e-mails-de-la-sortie-b-rédigée: backlog
+  7-6-coordonnées-légales-et-professionnelles: in-progress
+  7-7-adresses-des-réseaux-sociaux: in-progress
+  7-8-guide-10-erreurs-pdf-à-la-charte: in-progress
+  7-9-autorisations-écrites-et-passage-des-stories-en-publie: in-progress
+  7-10-séquence-d-e-mails-de-la-sortie-b-rédigée: in-progress
+  7-11-boîte-de-dépôt-google-drive-pour-anne: in-progress
   epic-7-retrospective: optional
 
   epic-8: in-progress
@@ -122,8 +123,8 @@ development_status:
   11-5-publicité-locale-test-à-petit-budget-après-lancement: backlog
   epic-11-retrospective: optional
 
-  epic-12: backlog
-  12-1-nom-de-domaine-acheté-et-dns-chez-cloudflare: backlog
+  epic-12: in-progress
+  12-1-nom-de-domaine-acheté-et-dns-chez-cloudflare: in-progress
   12-2-mentions-légales-et-politique-de-confidentialité-validées-pa: backlog
   12-3-propriété-et-transfert: backlog
   12-4-bascule-en-production: backlog

@@ -7,7 +7,7 @@ export const identite = {
   langues: ['Français', 'English', 'Español', 'Português'],
   rsac: null as string | null,          // A-13 attendu
   cartePro: null as string | null,      // A-13 attendu
-  hebergeur: null as string | null,     // A-13 attendu
+  hebergeur: 'Cloudflare, Inc., 101 Townsend Street, San Francisco, CA 94107, États-Unis · +1 650 319 8930 · www.cloudflare.com' as string | null, // choisi par l'architecture (story 7.6), à relire par JB
   telephone: null as string | null,     // A-13 attendu
   email: null as string | null,         // A-13 attendu
   immodvisor: 'https://www.immodvisor.com/professionnels/mandataire-immobilier/pro/exp-france-anne-vial-tissot-70511',
