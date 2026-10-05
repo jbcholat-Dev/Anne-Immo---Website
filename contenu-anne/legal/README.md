@@ -14,3 +14,5 @@ Lien fiche Immodvisor :
 ```
 
 Ces valeurs servent aussi à ta fiche Google Business et au pied de page : elles doivent être **exactement les mêmes partout**.
+
+Le fichier est déjà créé et pré-rempli : `legal/identite.md`. Il porte aussi les adresses de tes profils Instagram, YouTube et LinkedIn (ou « pas de profil »).

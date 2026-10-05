@@ -6,6 +6,25 @@ export const dictionnaires = { fr, en } as const;
 export type Dico = typeof fr;
 export const t = (lang: Lang): Dico => dictionnaires[lang] as Dico;
 
+/** AD-2 : jamais d'écran mi-traduit. Le build échoue si `en.json` n'a pas exactement les clés de `fr.json` ou laisse un texte vide (story 6.2). */
+function cles(o: object, prefixe = ''): string[] {
+  return Object.entries(o).flatMap(([k, v]) =>
+    v && typeof v === 'object' && !Array.isArray(v) ? cles(v, `${prefixe}${k}.`) : [`${prefixe}${k}`]);
+}
+function valeur(o: any, cle: string) { return cle.split('.').reduce((x, k) => x?.[k], o); }
+{
+  const cFr = cles(fr), cEn = new Set(cles(en));
+  const manquantes = cFr.filter((k) => !cEn.has(k));
+  const enTrop = [...cEn].filter((k) => !cFr.includes(k));
+  const vides = cFr.filter((k) => cEn.has(k) && valeur(en, k) === '');
+  if (manquantes.length || enTrop.length || vides.length) {
+    throw new Error(`Dictionnaire anglais incomplet (src/content/ui/en.json, AD-2) :`
+      + (manquantes.length ? `\n  clés absentes : ${manquantes.join(', ')}` : '')
+      + (enTrop.length ? `\n  clés inconnues en français : ${enTrop.join(', ')}` : '')
+      + (vides.length ? `\n  textes vides : ${vides.join(', ')}` : ''));
+  }
+}
+
 /** Routes par langue (AD-3 : FR sans préfixe, EN préfixé). Une page EN absente renvoie vers l'accueil EN ou la page FR (v1). */
 export const routes = {
   accueil: { fr: '/', en: '/en' },
