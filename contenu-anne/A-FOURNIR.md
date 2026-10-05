@@ -1,6 +1,6 @@
 # Ce qu'Anne doit fournir pour le site
 
-> **Où déposer :** dans le dossier partagé Google Drive « Contenu site Anne » (voir `README.md`, « Comment envoyer »), pas dans GitHub. Les chemins cités plus bas (`stories/…`, `legal/…`) sont l'endroit où Claude range ensuite tes fichiers ; pour les textes, un Google Doc suffit.
+> **Où déposer :** dans le dossier partagé Google Drive « Contenu site Anne » (voir `README.md`, « Comment envoyer »), pas dans GitHub. Il est rangé comme ici : les chemins cités plus bas (`stories/…`, `legal/…`, `guide/…`) sont les mêmes sur le Drive. Corrige directement dans les fichiers ; pour un texte nouveau, un Google Doc suffit.
 >
 > Mis à jour le 2026-10-05. Claude coche au fur et à mesure de tes dépôts. Dans l'ordre : ce qui bloque la mise en ligne publique d'abord. Chaque ligne renvoie à la story qui la suit dans `_bmad-output/planning-artifacts/epics.md`.
 
