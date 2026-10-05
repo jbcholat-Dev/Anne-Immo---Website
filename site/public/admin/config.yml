@@ -16,7 +16,7 @@ backend:
     deleteMedia: "Contenu ({{author-login}}) : photo « {{path}} » supprimée"
 
 # Brouillons : chaque modification part sur une branche avec sa demande de fusion ;
-# Cloudflare en construit un aperçu protégé ; JB fusionne pour mettre en ligne.
+# Cloudflare en construit un aperçu protégé ; JB fusionne sur GitHub pour mettre en ligne (bouton « Publier » masqué : publish: false).
 publish_mode: editorial_workflow
 
 site_url: https://annevialtissot.fr
@@ -57,6 +57,7 @@ collections:
     format: frontmatter
     create: true
     delete: false
+    publish: false   # la mise en ligne se fait en fusionnant la demande sur GitHub (JB), pas depuis l'espace d'édition
     slug: "{{commune}}-{{annee_vente}}"
     identifier_field: commune
     summary: "{{commune}} · {{type_bien}} · {{annee_vente}} · {{statut}}"
@@ -117,6 +118,7 @@ collections:
     format: frontmatter
     create: false
     delete: false
+    publish: false
     identifier_field: titre
     fields:
       - { name: titre, label: Titre, widget: string }
@@ -137,6 +139,7 @@ collections:
     format: frontmatter
     create: false
     delete: false
+    publish: false
     identifier_field: id
     summary: "{{date}} · {{auteur}} · {{role}}"
     fields:
@@ -164,6 +167,7 @@ collections:
 
   - name: legal
     label: Coordonnées
+    publish: false
     files:
       - name: identite
         label: Coordonnées légales et réseaux

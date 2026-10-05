@@ -17,7 +17,8 @@ Qu'Anne (et JB) modifient eux-mêmes les ventes, les pages, les coordonnées et 
 - Site : `photo_principale` / `photos` acceptent un chemin (`photos/x.webp`) ou un ancien numéro (lu via `photos.json`) ; `scripts/images.mjs` dérive tous les `photo-*.jpg`, `*.webp`, `*.png` du dossier `photos/` de chaque story et tourne avant chaque construction (`npm run build`).
 - Brouillons : le site public (`PUBLIC_INDEXATION=oui`) ne montre que les stories « publie » ; aucun lien ni photo d'une story non publiée n'y apparaît (`storyVisible`, accueil, Acheter, Diagnostic). L'aperçu montre tout.
 - Les 4 stories avec photos web ont leurs champs photo convertis en chemins ; les 4 sans photos web ont un champ vide (la photo HD proposée est notée en commentaire, à envoyer depuis l'espace d'édition).
-- Documents : RUNBOOK § 1 et § 6, `site/README.md` (§ Espace d'édition), `contenu-anne/README.md`, gabarit story, `scripts/preparer-photos/README.md`, `CLAUDE.md`, spine, stratégie de contenu, `.memlog.md`, epics, statut de sprint. Guide pas à pas pour JB et Anne : document Google « Mise en place de l'espace d'édition » dans le Drive « Contenu site Anne ».
+- Documents : RUNBOOK § 1 et § 6, `site/README.md` (§ Espace d'édition), `contenu-anne/README.md`, gabarit story, `scripts/preparer-photos/README.md`, `CLAUDE.md`, spine, stratégie de contenu, `.memlog.md`, epics, statut de sprint. Guide pas à pas pour JB et Anne : document Google « Mise en place de l'espace d'édition du site » à la racine du Drive « Contenu site Anne » (https://docs.google.com/document/d/10RtCluMzvjWi--rheyTH34FaGj_EjfKRwHilRBJ4UK4/edit).
+- Bouton « Publier » masqué dans l'espace d'édition (`publish: false` sur chaque collection) : la mise en ligne passe toujours par la fusion de la demande sur GitHub par JB, y compris pour ses propres modifications.
 
 ## Vérification
 - `npm run build` : 24 pages (aperçu) ; avec `PUBLIC_INDEXATION=oui` : 16 pages, aucune story en brouillon.
