@@ -1,25 +1,33 @@
 ---
-commune: Anthy-sur-Léman   # proposition Claude, à confirmer
-type_bien: Appartement (T3, rez-de-jardin)   # proposition Claude, à ajuster
+commune: Anthy-sur-Léman
+type_bien: Appartement (T3, rez-de-jardin)
 annee_vente: 2024
 delai_vente: 2 mois
-particularite: >
-  Un appartement encombré où les acquéreurs ne se projetaient pas : tout
-  s'est joué sur la préparation avant la remise en vente.
-photo_principale:   # à envoyer depuis l'espace d'édition — photo HD proposée par Claude : n° 002 du dossier Drive
-photos: []
-# Avis Immodvisor rapproché (confiance forte) : avis-immodvisor/2024-07-20-jcbanthy.md (JcbAnthy, vendeur)
-temoignages:          # vendeur et/ou acheteur ; un seul suffit pour publier
+particularite: "Un appartement encombré où les acquéreurs ne se projetaient pas : tout s'est joué sur la préparation avant la remise en vente."
+photo_principale: /photos/anthy-sur-leman-exp-immo-014-hd.webp
+photos:
+  - photos/anthy-sur-leman-exp-immo-002-hd.webp
+  - photos/anthy-sur-leman-exp-immo-006-hd.webp
+  - photos/anthy-sur-leman-exp-immo-008-hd.webp
+  - photos/anthy-sur-leman-exp-immo-010-hd.webp
+  - photos/anthy-sur-leman-exp-immo-011-hd.webp
+  - photos/anthy-sur-leman-exp-immo-013-hd.webp
+  - photos/anthy-sur-leman-exp-immo-014-hd.webp
+  - photos/anthy-sur-leman-exp-immo-016-hd.webp
+  - photos/anthy-sur-leman-exp-immo-018-hd.webp
+  - photos/anthy-sur-leman-exp-immo-019-hd.webp
+  - photos/anthy-sur-leman-exp-immo-020-hd.webp
+temoignages:
   - role: vendeur
-    prenom:
-    contexte:
-    citation:
-    portrait:
+    prenom: ''
+    contexte: ''
+    citation: ''
+    portrait: null
   - role: acheteur
-    prenom:
-    contexte:
-    citation:
-    portrait:
+    prenom: ''
+    contexte: ''
+    citation: ''
+    portrait: null
 statut: brouillon
 autorisations: false
 ---
