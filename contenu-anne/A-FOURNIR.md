@@ -1,6 +1,8 @@
 # Ce qu'Anne doit fournir pour le site
 
-> Mis à jour le 2026-10-04. Coche au fur et à mesure (`[x]`). Dans l'ordre : ce qui bloque la mise en ligne publique d'abord. Chaque ligne renvoie à la story qui la suit dans `_bmad-output/planning-artifacts/epics.md`.
+> **Où déposer :** dans le dossier partagé Google Drive « Contenu site Anne » (voir `README.md`, « Comment envoyer »), pas dans GitHub. Les chemins cités plus bas (`stories/…`, `legal/…`) sont l'endroit où Claude range ensuite tes fichiers ; pour les textes, un Google Doc suffit.
+>
+> Mis à jour le 2026-10-05. Claude coche au fur et à mesure de tes dépôts. Dans l'ordre : ce qui bloque la mise en ligne publique d'abord. Chaque ligne renvoie à la story qui la suit dans `_bmad-output/planning-artifacts/epics.md`.
 
 ## 1. Les trois stories de vente (story 7.9) — bloque la mise en ligne
 

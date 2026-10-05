@@ -9,6 +9,7 @@
 | GitHub, dépôt `jbcholat-Dev/Anne-Immo---Website` | le code, le contenu, la documentation | JB (transfert vers une organisation à deux propriétaires prévu, story 12.3) | 0 € |
 | Cloudflare, projet Workers `anne-vial-tissot-site` | héberge le site, le construit à chaque changement de `main` | JB, connexion via GitHub (décision du 2026-09-26, amende AD-9) | 0 € (plan gratuit) |
 | Cloudflare Zero Trust, équipe `dry-truth-5a0d` | protège l'aperçu par un code envoyé par e-mail | même compte | 0 € (plan Free, 50 utilisateurs) |
+| Google Drive, dossier partagé « Contenu site Anne » | boîte de dépôt d'Anne : photos HD, vidéos, textes, accords écrits des clients ; Claude le lit par le connecteur Google Drive et range dans `contenu-anne/` par PR | JB (propriétaire), Anne (modification) | 0 € (espace gratuit de 15 Go) |
 | Infomaniak | noms de domaine `annevialtissot.fr` et `.com` | JB (son adresse e-mail) ; **propriétaire légal des deux domaines : Anne** (décision du 2026-10-05, amende AD-9), JB contact administrateur. Sans option Domain Plus. Expiration 2027-10-05. | 17,52 € TTC la 1re année, ≈ 21 €/an ensuite |
 
 Mots de passe : jamais dans ce dépôt, jamais manipulés par Claude. Coffre partagé à deux : à ouvrir (action J03).
@@ -62,3 +63,4 @@ Anne est déjà propriétaire légale des domaines ; seule la gestion est sur le
 - 2026-09-26 : version 0, aperçu en ligne et protégé (stories 9.1 à 9.5) ; § 4 bis retours (story 9.6). Vérifié par JB : page de connexion, accueil, `/robots.txt` = `Disallow: /`.
 - 2026-10-04 : rien ne change dans les comptes. Pour mémoire, l'hébergeur déclaré dans les mentions légales est Cloudflare, Inc. (101 Townsend Street, San Francisco) ; il change si l'hébergement change. Deux garde-fous de contenu bloquent désormais la mise en ligne : une story publiée sans autorisation écrite, un texte anglais manquant (voir `site/README.md`).
 - 2026-10-05 : domaines `.fr` et `.com` achetés chez Infomaniak depuis le compte de JB, Anne propriétaire légale (amende AD-9) ; § 4 ter ajouté (reprise des domaines, serveurs de noms Cloudflare actifs).
+- 2026-10-05 : Anne dépose son contenu dans le dossier Google Drive « Contenu site Anne » et ne fait plus de commit (décision de JB). Les originaux lourds restent sur Drive ; Claude range les versions utiles dans `contenu-anne/` par PR. Si Claude ne peut plus lire le dossier : reconnecter le connecteur Google Drive dans claude.ai (Réglages → Connecteurs) puis l'activer dans les réglages du projet.

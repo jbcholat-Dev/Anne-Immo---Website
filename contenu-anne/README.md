@@ -27,4 +27,16 @@ Les témoignages vivent **dans la story** du bien concerné (vendeur et/ou achet
 
 ## Comment envoyer
 
-Tu as le dépôt sur ton ordinateur : dépose les fichiers dans ces dossiers, puis **commit + push**. JB est prévenu. Pour les vidéos (trop lourdes pour Git), voir `videos/README.md`.
+**Tu ne touches pas à GitHub.** Ta boîte de dépôt est le dossier partagé Google Drive **« Contenu site Anne »** (décision du 2026-10-05). Tu y glisses tes fichiers depuis ton ordinateur ou ton téléphone, comme dans n'importe quel dossier :
+
+| Sous-dossier Drive | Ce que tu y mets |
+|---|---|
+| `Photos des ventes/<commune-type-annee>/` | les photos HD d'une vente, telles qu'elles sortent de l'appareil |
+| `Portrait/` | ton portrait et tes photos en situation |
+| `Vidéos/` | les vidéos originales (drone, montages) |
+| `Textes/` | tes récits, corrections, coordonnées : un simple Google Doc ou un fichier Word suffit, pas besoin d'en-tête de champs |
+| `Autorisations/<commune-type-annee>/` | les accords écrits de tes clients (un e-mail enregistré en PDF suffit) |
+
+Ensuite, Claude lit le dossier, range chaque chose ici au bon format (en-têtes de champs, versions web des photos), et le propose à JB dans une demande de fusion. JB valide, le site se met à jour. Les originaux lourds (photos HD, vidéos) restent sur Drive : ils n'entrent jamais dans GitHub.
+
+Les dossiers ci-dessus (`stories/`, `portrait/`…) restent la forme rangée que lit le site ; c'est Claude qui les remplit.
