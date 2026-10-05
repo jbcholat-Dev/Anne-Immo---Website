@@ -6,8 +6,8 @@ delai_vente: 2 mois
 particularite: >
   Un avis de valeur pour une succession, sans projet de vente : le
   propriétaire est revenu un an plus tard pour vendre.
-photo_principale: "038"   # numéro de la photo dans le dossier photos/ de cette story (sur Drive) — proposition Claude (façade), à ajuster
-photos: []            # 4 à 6 autres, même règle, ex. ["002", "006", "009"]
+photo_principale:   # à envoyer depuis l'espace d'édition — photo HD proposée par Claude : n° 038 du dossier Drive
+photos: []
 # Aucun avis Immodvisor rapproché pour l'instant (voir stories/_suivi-stories.md).
 temoignages:          # vendeur et/ou acheteur ; un seul suffit pour publier
   - role: vendeur

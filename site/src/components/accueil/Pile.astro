@@ -21,7 +21,7 @@ for (const s of toutes) {
     titre: s.data.commune,
     phrase: phrasesStories[s.id] ?? s.data.particularite ?? '',
     citation: a ? { texte: premierePhrase(a.body ?? ''), auteur: a.data.auteur, role: roleLibelle(a, lang) } : undefined,
-    photo: photoPrincipale(s.id),
+    photo: photoPrincipale(s),
     alt: `${s.data.type_bien} vendu à ${s.data.commune}`,
     lien: `${r('realisation', lang)}/${s.id}`,
   });

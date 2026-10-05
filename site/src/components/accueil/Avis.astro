@@ -2,9 +2,8 @@
 // § 1.5 Ils ont travaillé avec Anne (D-8, D-9) : trois avis Immodvisor entiers, vendeurs et acheteurs, le premier relié à sa story avec la photo du bien.
 import Picture from '../Picture.astro';
 import { t, r, type Lang } from '../../i18n';
-import { avisParId, storyDeAvis, photoPrincipale, roleLibelle, dateLibelle, paragraphes, instantane } from '../../lib/contenu';
+import { avisParId, storyDeAvis, storyVisible, photoPrincipale, roleLibelle, dateLibelle, paragraphes, instantane } from '../../lib/contenu';
 import { accueil } from '../../config/site';
-import { getEntry } from 'astro:content';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const d = t(lang);
@@ -12,8 +11,8 @@ const inst = await instantane();
 const liste = await Promise.all(accueil.avis.map(async (id) => {
   const a = await avisParId(id);
   const slug = storyDeAvis(a);
-  const story = slug ? await getEntry('stories', slug) : null;
-  return { a, slug, story, photo: slug ? photoPrincipale(slug) : null };
+  const story = await storyVisible(slug);
+  return { a, slug, story, photo: story ? photoPrincipale(story) : null };
 }));
 const contexte = (x: (typeof liste)[number]) => [roleLibelle(x.a, lang), x.story?.data.commune, dateLibelle(x.a.data.date, lang)].filter(Boolean).join(' · ');
 ---

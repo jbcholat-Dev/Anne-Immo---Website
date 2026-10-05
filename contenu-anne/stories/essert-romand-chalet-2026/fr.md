@@ -6,8 +6,8 @@ delai_vente:
 particularite: >
   Six mois en vente ailleurs sans une seule visite : un prix jamais expliqué
   et une présentation absente.
-photo_principale: "036"   # numéro de la photo dans le dossier photos/ de cette story (sur Drive) — proposition Claude (drone, chalet sous la neige) ; cette photo n'est pas encore dans le dossier photos/ du Drive. ⚠️ Les photos portent le logo eXp incrusté : demander la version sans logo avant de publier.
-photos: []            # 4 à 6 autres, même règle
+photo_principale:   # à envoyer depuis l'espace d'édition — photo HD proposée par Claude : n° 036 du dossier Drive
+photos: []
 # Avis Immodvisor rapproché (confiance forte) : avis-immodvisor/2026-08-30-sabine-francois.md (Sabine/François, vendeurs)
 temoignages:          # vendeur et/ou acheteur ; un seul suffit pour publier
   - role: vendeur

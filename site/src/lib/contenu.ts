@@ -7,23 +7,47 @@ import path from 'node:path';
 export type Story = CollectionEntry<'stories'>;
 export type Avis = CollectionEntry<'avis'>;
 
-/** Manifeste des photos d'une story (produit par scripts/preparer-photos dans contenu-anne). */
-export type PhotoStory = { id: string; fichier: string; role: 'principale' | 'secondaire'; largeur: number; hauteur: number; orientation: string };
-export function photosDeStory(slug: string): PhotoStory[] {
+/**
+ * Photos d'une story, dans l'ordre de l'en-tête de fr.md : `photo_principale` puis `photos`.
+ * Une valeur est soit un chemin relatif au dossier de la story (« photos/sejour.webp », écrit par l'espace d'édition, story 7.13),
+ * soit un ancien numéro de photo HD (« 6965 »), retrouvé dans photos.json produit par scripts/preparer-photos.
+ * Seules les photos dont les formats web existent (src/data/images.json, `npm run images`) sont rendues.
+ */
+export type PhotoStory = { cle: string; role: 'principale' | 'secondaire' };
+function manifesteHistorique(slug: string): { fichier: string; choix: string }[] {
   const f = path.resolve(process.cwd(), '../contenu-anne/stories', slug, 'photos/photos.json');
-  if (!fs.existsSync(f)) return [];
-  return JSON.parse(fs.readFileSync(f, 'utf8')).photos as PhotoStory[];
+  return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')).photos : [];
 }
-export const cleImage = (slug: string, p: PhotoStory) => `stories/${slug}/${path.basename(p.fichier, '.jpg')}`;
-export function photoPrincipale(slug: string) {
-  const p = photosDeStory(slug).find((x) => x.role === 'principale');
-  return p && images[cleImage(slug, p)] ? cleImage(slug, p) : null;
+function cleDePhoto(slug: string, valeur: string | null | undefined): string | null {
+  if (valeur == null || String(valeur).trim() === '') return null;
+  const v = String(valeur).trim();
+  const fichier = /[/.]/.test(v) ? v : manifesteHistorique(slug).find((p) => p.choix === v)?.fichier;
+  if (!fichier) return null;
+  const cle = `stories/${slug}/${path.basename(fichier).replace(/\.[^.]+$/, '')}`;
+  return images[cle] ? cle : null;
+}
+export function photosDeStory(story: Story): PhotoStory[] {
+  const principale = cleDePhoto(story.id, story.data.photo_principale);
+  const autres = story.data.photos.map((v) => cleDePhoto(story.id, v)).filter((c): c is string => c !== null && c !== principale);
+  return [...(principale ? [{ cle: principale, role: 'principale' as const }] : []), ...autres.map((cle) => ({ cle, role: 'secondaire' as const }))];
+}
+export const photoPrincipale = (story: Story) => photosDeStory(story).find((p) => p.role === 'principale')?.cle ?? null;
+
+/**
+ * Les stories, triées par année décroissante puis slug.
+ * Aperçu : toutes, brouillons compris, pour relire. Site public (PUBLIC_INDEXATION = « oui ») : seulement les « publie »,
+ * qui ont forcément leurs autorisations (règle du schéma, story 7.9).
+ */
+export async function stories(): Promise<Story[]> {
+  const publiques = import.meta.env.PUBLIC_INDEXATION === 'oui';
+  const all = (await getCollection('stories')).filter((s) => !publiques || s.data.statut === 'publie');
+  return all.sort((a, b) => (Number(b.data.annee_vente ?? 0) - Number(a.data.annee_vente ?? 0)) || a.id.localeCompare(b.id));
 }
 
-/** Les stories, triées par année décroissante puis slug. v1 : toutes les stories rédigées sont affichées (statut brouillon accepté — voir README). */
-export async function stories(): Promise<Story[]> {
-  const all = await getCollection('stories');
-  return all.sort((a, b) => (Number(b.data.annee_vente ?? 0) - Number(a.data.annee_vente ?? 0)) || a.id.localeCompare(b.id));
+/** Une story par son slug, seulement si elle est visible dans cette construction (sinon ni lien ni photo : rien d'un brouillon sur le site public). */
+export async function storyVisible(slug: string | null | undefined): Promise<Story | null> {
+  if (!slug) return null;
+  return (await stories()).find((s) => s.id === slug) ?? null;
 }
 
 /** Story reliée à un avis : le champ `story` d'Anne d'abord, sinon la liaison assumée v1. */

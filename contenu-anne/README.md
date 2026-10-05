@@ -18,13 +18,18 @@ Ce dossier est **ta boîte de dépôt**. Tu y poses tout ce que le site a besoin
 
 ## Trois règles
 
-1. **Originaux seulement.** Le fichier tel qu'il sort de l'appareil photo ou du drone (ou du photographe). Pour une vente : dans `stories/<bien>/photos/`, puis tu **choisis** tes photos dans la story par leur numéro (`photo_principale: "047"`). Le site fabrique lui-même ses formats.
+1. **Originaux seulement.** Le fichier tel qu'il sort de l'appareil photo ou du drone (ou du photographe). Dans l'espace d'édition, tu les envoies tels quels : ils sont réduits avant l'envoi, et l'en-tête de la story garde leur chemin (`photo_principale: "photos/sejour.webp"`). Le site fabrique lui-même ses formats.
 2. **Nomme simplement.** `maison-thonon-2026.jpg`, pas `IMG_4521.jpg`. Minuscules, tirets, sans accents.
 3. **Une autorisation par personne citée et par bien photographié.** Un mot écrit (un e-mail suffit) du vendeur pour les photos et son témoignage, de l'acheteur pour le sien. Dépose-les dans `stories/<bien>/autorisations/`.
 
 Les témoignages vivent **dans la story** du bien concerné (vendeur et/ou acheteur), pas dans un dossier à part. Les témoignages de personnes accompagnées sans vente ne sont plus demandés (décision du 2026-09-13).
 
 ## Comment envoyer
+
+**Depuis le 2026-10-05 (story 7.13) : l'espace d'édition du site.** Tu ouvres `annevialtissot.fr/admin`, tu te connectes avec ton compte GitHub, et tu modifies tes ventes, tes pages, tes coordonnées ou le rapprochement de tes avis dans des formulaires. Tes photos y sont envoyées directement : elles sont réduites automatiquement avant l'envoi, tu peux donc déposer les originaux. Chaque enregistrement est un brouillon que tu vois sur l'aperçu ; JB le valide pour le mettre en ligne. Mode d'emploi : le document « Mise en place de l'espace d'édition » dans le Drive.
+
+Le Drive reste l'archive de tes photos HD et de tes vidéos. Le paragraphe suivant décrit l'ancien circuit, encore valable pour les vidéos et pour un dépôt en masse.
+
 
 **Tu ne touches pas à GitHub.** Ta boîte de dépôt est le dossier partagé Google Drive **« Contenu site Anne »** (décision du 2026-10-05). Il est rangé **exactement comme ce dossier-ci** : mêmes noms, mêmes sous-dossiers (`stories/<bien>/`, `avis-immodvisor/`, `guide/`, `legal/`, `portrait/`, `videos/`…). Tu y travailles directement, depuis ton ordinateur (Google Drive pour ordinateur) ou ton téléphone.
 

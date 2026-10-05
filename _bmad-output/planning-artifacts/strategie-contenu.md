@@ -78,7 +78,7 @@ Règles : les **champs** sont fixés par un schéma (celui d'Astro, en vague 2 �
 
 ### Porte 2 — quand Anne le demande : une interface web, sans Git
 
-- **Decap CMS** (ex-Netlify CMS), git-based, gratuit, open source : une page d'administration à `annevialtissot.fr/admin-contenu`, formulaires générés depuis la configuration, aperçu, **et surtout une gestion des langues native** (`i18n: multiple_files` = exactement notre `fr.md` / `en.md` par dossier). Chaque enregistrement est un commit sur GitHub, au nom d'Anne. Il tourne en statique + un petit relais d'authentification GitHub sur un Worker Cloudflare (implémentations communautaires existantes, vérifiées).
+- *Mise à jour 2026-10-05 : Sveltia CMS, réécriture moderne de Decap avec la même configuration, est retenu à la place (il réduit les photos dans le navigateur avant l'envoi) ; voir le spine d'architecture, « Choix du CMS ».* **Decap CMS** (ex-Netlify CMS), git-based, gratuit, open source : une page d'administration à `annevialtissot.fr/admin-contenu`, formulaires générés depuis la configuration, aperçu, **et surtout une gestion des langues native** (`i18n: multiple_files` = exactement notre `fr.md` / `en.md` par dossier). Chaque enregistrement est un commit sur GitHub, au nom d'Anne. Il tourne en statique + un petit relais d'authentification GitHub sur un Worker Cloudflare (implémentations communautaires existantes, vérifiées).
 - **Keystatic écarté** : plus joli et natif Astro, mais **pas de multilingue** (demande ouverte depuis des années) et des problèmes rapportés sur Cloudflare Workers (« too many subrequests », mode hybride requis). Il ne tient pas AD-2.
 - Réserves honnêtes sur Decap : interface datée, développement communautaire lent. C'est un outil stable, pas un outil vivant. Comme il n'écrit que du Markdown dans Git, **l'abandonner un jour ne coûte rien** — les fichiers restent. C'est précisément pour ça qu'un CMS git-based est le bon pari et un CMS hébergé (Sanity, Contentful) le mauvais : avec eux, le contenu quitte le dépôt.
 - Décision formelle en **vague 2** (le spine l'a différée) ; ce document en est la recommandation argumentée.
@@ -98,7 +98,7 @@ Règles : les **champs** sont fixés par un schéma (celui d'Astro, en vague 2 �
 | Ranger les brouillons d'Anne dans les gabarits | 30 min (Claude) | dès qu'ils sont poussés |
 | Schéma Astro + loader `glob` sur `contenu-anne/` | 2-3 h | epic fondations |
 | Prévisualisation par branche | 0 (Cloudflare Workers Builds le fait) | idem |
-| Decap CMS + relais OAuth | ½ journée | quand Anne le demande, après vague 2 |
+| ~~Decap CMS + relais OAuth~~ → **Sveltia CMS** (décision JB du 2026-10-05, story 7.13) | ½ journée + séance d'essai | avancé au 2026-10-05 : le dépôt par Drive ne permettait pas de traiter les photos HD |
 
 ## Ce qu'on demande à Anne, en pratique
 

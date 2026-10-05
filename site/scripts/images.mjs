@@ -1,6 +1,8 @@
 // Dérive les formats web des photos réelles de contenu-anne/ (AD-15 : formats produits au build, jamais d'original > 500 Ko en double).
-// Entrée : contenu-anne/stories/<slug>/photos/photos.json (objets Media produits par scripts/preparer-photos)
+// Entrée : contenu-anne/stories/<slug>/photos/ — photos web de chaque story : photo-*.jpg (scripts/preparer-photos)
+//          et *.webp / *.png (envoyées par l'espace d'édition, déjà réduites, story 7.13) ;
 //          + contenu-anne/photos/*.jpg (photos hors story).
+// Lancé avant chaque construction (`npm run build`), pour que les photos envoyées depuis l'espace d'édition apparaissent.
 // Sortie : public/img/<groupe>/<nom>-<largeur>.{webp,jpg} + src/data/images.json (dimensions, srcset).
 //   npm run images
 import fs from 'node:fs';
@@ -47,12 +49,12 @@ async function deriver(groupe, nom, source) {
 // 1. stories
 const stories = path.join(CONTENU, 'stories');
 for (const slug of fs.readdirSync(stories)) {
-  const manif = path.join(stories, slug, 'photos', 'photos.json');
-  if (!fs.existsSync(manif)) continue;
-  const { photos } = JSON.parse(fs.readFileSync(manif, 'utf8'));
-  for (const p of photos) {
-    const nom = path.basename(p.fichier, '.jpg');
-    await deriver(`stories/${slug}`, nom, path.join(stories, slug, p.fichier));
+  const dossier = path.join(stories, slug, 'photos');
+  if (!fs.existsSync(dossier)) continue;
+  // Les autres .jpg du dossier seraient des HD posées là par erreur (ignorées par Git) : on ne les prend pas.
+  const web = fs.readdirSync(dossier).filter((f) => /^photo-.*\.jpe?g$/i.test(f) || /\.(webp|png)$/i.test(f)).sort();
+  for (const f of web) {
+    await deriver(`stories/${slug}`, f.replace(/\.[^.]+$/, ''), path.join(dossier, f));
   }
 }
 // 2. photos hors story

@@ -21,11 +21,12 @@ const stories = defineCollection({
     type_bien: z.string(),
     annee_vente: vide,
     delai_vente: vide,
-    particularite: z.string().optional(),
-    photo_principale: z.string(),
+    particularite: vide,
+    // Chemin relatif au dossier de la story (« photos/x.webp », espace d'édition) ou ancien numéro de photo HD (« 6965 »).
+    photo_principale: vide,
     dossier_photos: z.string().optional(),
-    photos: z.array(z.string()).default([]),
-    temoignages: z.array(temoignage).default([]),
+    photos: z.array(z.union([z.string(), z.number()]).transform(String)).nullish().transform((v) => v ?? []),
+    temoignages: z.array(temoignage).nullish().transform((v) => v ?? []),
     statut: z.enum(['brouillon', 'a-relire', 'publie']).default('brouillon'),
     autorisations: z.boolean().default(false),
   }).refine((d) => d.statut !== 'publie' || d.autorisations, {

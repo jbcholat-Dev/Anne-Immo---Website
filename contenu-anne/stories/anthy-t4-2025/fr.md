@@ -6,8 +6,8 @@ delai_vente:
 particularite: >
   Un voisin d'un précédent client, dans le même immeuble : la connaissance de
   la copropriété a rassuré les acquéreurs dès la première visite.
-photo_principale: "025"   # numéro de la photo dans le dossier photos/ de cette story (sur Drive) — proposition Claude (drone, vue lac), à ajuster
-photos: []            # 4 à 6 autres, même règle, ex. ["009", "011", "013"]
+photo_principale:   # à envoyer depuis l'espace d'édition — photo HD proposée par Claude : n° 025 du dossier Drive
+photos: []
 # Aucun avis Immodvisor rapproché pour l'instant (voir stories/_suivi-stories.md).
 temoignages:          # vendeur et/ou acheteur ; un seul suffit pour publier
   - role: vendeur

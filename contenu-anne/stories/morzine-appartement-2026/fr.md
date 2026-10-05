@@ -7,8 +7,8 @@ particularite: >
   Grande bâtisse familiale ancienne divisée en trois lots, jamais mise en copropriété :
   la structure juridique était à créer avant toute mise en vente. Appartement avec
   box-garage et grande terrasse.
-photo_principale: "6965"   # numéro de la photo dans le dossier photos/ de cette story (sur Drive) — proposition Claude (séjour, terrasse et montagnes), à ajuster
-photos: ["6969", "6987", "7006", "7027"]   # proposition Claude ; la façade (7029) est écartée pour ne pas identifier le bâtiment
+photo_principale: "photos/photo-6965.jpg"   # photo de tête (chemin dans le dossier de la story)
+photos: ["photos/photo-6969.jpg", "photos/photo-6987.jpg", "photos/photo-7006.jpg", "photos/photo-7027.jpg"]
 temoignages:          # vendeur et/ou acheteur ; un seul suffit pour publier
   - role: vendeur
     prenom:

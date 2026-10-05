@@ -1,24 +1,4 @@
 {
-  "stories/appartement-cascade-2024/photo-0303": {
-    "largeur": 2997,
-    "hauteur": 2000,
-    "ratio": 1.4985,
-    "webp": [
-      {
-        "w": 640,
-        "src": "/img/stories/appartement-cascade-2024/photo-0303-640.webp"
-      },
-      {
-        "w": 1280,
-        "src": "/img/stories/appartement-cascade-2024/photo-0303-1280.webp"
-      },
-      {
-        "w": 1920,
-        "src": "/img/stories/appartement-cascade-2024/photo-0303-1920.webp"
-      }
-    ],
-    "jpg": "/img/stories/appartement-cascade-2024/photo-0303-1280.jpg"
-  },
   "stories/appartement-cascade-2024/photo-0256": {
     "largeur": 2997,
     "hauteur": 2000,
@@ -78,6 +58,26 @@
       }
     ],
     "jpg": "/img/stories/appartement-cascade-2024/photo-0292-1280.jpg"
+  },
+  "stories/appartement-cascade-2024/photo-0303": {
+    "largeur": 2997,
+    "hauteur": 2000,
+    "ratio": 1.4985,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/appartement-cascade-2024/photo-0303-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/appartement-cascade-2024/photo-0303-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/appartement-cascade-2024/photo-0303-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/appartement-cascade-2024/photo-0303-1280.jpg"
   },
   "stories/auberge-decoupee-2024/photo-003": {
     "largeur": 3200,
@@ -159,26 +159,6 @@
     ],
     "jpg": "/img/stories/auberge-decoupee-2024/photo-031-1280.jpg"
   },
-  "stories/maison-premium-2025/photo-047": {
-    "largeur": 3200,
-    "hauteur": 2130,
-    "ratio": 1.5023,
-    "webp": [
-      {
-        "w": 640,
-        "src": "/img/stories/maison-premium-2025/photo-047-640.webp"
-      },
-      {
-        "w": 1280,
-        "src": "/img/stories/maison-premium-2025/photo-047-1280.webp"
-      },
-      {
-        "w": 1920,
-        "src": "/img/stories/maison-premium-2025/photo-047-1920.webp"
-      }
-    ],
-    "jpg": "/img/stories/maison-premium-2025/photo-047-1280.jpg"
-  },
   "stories/maison-premium-2025/photo-002": {
     "largeur": 3200,
     "hauteur": 2133,
@@ -258,6 +238,26 @@
       }
     ],
     "jpg": "/img/stories/maison-premium-2025/photo-038-1280.jpg"
+  },
+  "stories/maison-premium-2025/photo-047": {
+    "largeur": 3200,
+    "hauteur": 2130,
+    "ratio": 1.5023,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/maison-premium-2025/photo-047-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/maison-premium-2025/photo-047-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/maison-premium-2025/photo-047-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/maison-premium-2025/photo-047-1280.jpg"
   },
   "stories/morzine-appartement-2026/photo-6965": {
     "largeur": 2997,

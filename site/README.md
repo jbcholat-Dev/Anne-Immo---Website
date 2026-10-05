@@ -121,6 +121,14 @@ Italiana (titres) et DM Sans (texte) sont servies par le site lui-même depuis `
 
 La maquette dessine 1 440 px (ordinateur) et 390 px (téléphone). Entre 900 et 1 399 px, quatre pages ont une plage de largeur dédiée (colonnes proportionnelles, titres réduits) : À propos, fiche de vente, landing du diagnostic (900 à 1 199 px), guide (900 à 1 399 px, couverture masquée sous 1 100 px). `node scripts/ecrans.mjs` contrôle l'absence de débordement à chaque largeur.
 
+## Espace d'édition (story 7.13)
+
+- `public/admin/` : Sveltia CMS (version figée dans `index.html`) et sa configuration `config.yml`. Collections : ventes (`contenu-anne/stories/<id>/fr.md`, photos dans `photos/` de la story), pages, avis Immodvisor (lecture seule sauf `story` et `retenu`), coordonnées (`legal/identite.md`). L'anglais ne s'édite pas dans le CMS (traduction par Claude, epic 6).
+- Les photos envoyées sont réduites dans le navigateur en WebP 3 200 px ; `scripts/images.mjs` (lancé par `npm run build`) en tire les formats web. Il prend dans `stories/<id>/photos/` les `photo-*.jpg` (ancien circuit, `scripts/preparer-photos`) et les `*.webp` / `*.png`.
+- `photo_principale` et `photos` portent un chemin relatif à la story (`photos/x.webp`) ; un ancien numéro (`"047"`) est encore lu via `photos.json`.
+- Brouillons : l'aperçu montre toutes les stories ; le site public (`PUBLIC_INDEXATION=oui`) seulement les « publie ».
+- Écart assumé : les commentaires de l'en-tête YAML (« proposition Claude… ») disparaissent quand une fiche est enregistrée depuis l'espace d'édition ; les consignes sont dans les aides des champs.
+
 ## Garde-fous de contenu (stories 6.2 et 7.9)
 
 - **Anglais complet ou rien** (AD-2) : `src/i18n/index.ts` fait échouer la construction si `en.json` n'a pas exactement les clés de `fr.json` ou laisse un texte vide, en nommant les clés en cause.

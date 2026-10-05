@@ -972,6 +972,23 @@ afin de juger de sa méthode sur des cas variés (CAP-2).
 
 **État :** en cours (2026-10-05). Responsable : Claude (rédaction proposée, photos), Anne (relecture, témoignages, textes de Bernex et Sciez), JB (photos HD de plus de 10 Mo, que le connecteur Drive ne transfère pas).
 
+### Story 7.13: Espace d'édition d'Anne (Sveltia CMS)
+
+En tant qu'Anne,
+je veux modifier mes ventes, mes textes et mes photos moi-même dans une page du site,
+afin de ne plus dépendre d'un passage par le Drive et par Claude pour chaque correction.
+
+**Critères d'acceptation :**
+
+**Étant donné** l'adresse `/admin` du site et un compte GitHub collaborateur du dépôt
+**Quand** Anne (ou JB) se connecte et enregistre une fiche
+**Alors** le changement part sur une branche avec sa demande de fusion, Cloudflare en construit un aperçu protégé, et rien n'est en ligne tant que JB n'a pas fusionné
+**Et** les photos envoyées sont réduites dans le navigateur (WebP, 3 200 px au plus) avant d'entrer dans le dépôt ; les HD n'y entrent jamais
+**Et** le site public ne montre que les stories « publie », qui exigent les autorisations écrites ; l'aperçu montre aussi les brouillons
+**Et** les avis Immodvisor restent en lecture seule, sauf la vente concernée et « cité sur l'accueil ».
+
+**État :** en cours (2026-10-05). Responsable : Claude (configuration, adaptation du site, guide), JB (Worker de connexion, autorisation GitHub, invitation d'Anne), Anne (compte GitHub, séance d'essai).
+
 ## Epic 8: Finition visuelle
 
 Le site rend comme la maquette sur tous les écrans, avec des polices stables, une vidéo d'ouverture réelle et plus aucune pastille de chantier.

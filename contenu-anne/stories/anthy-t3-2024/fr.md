@@ -6,8 +6,8 @@ delai_vente: 2 mois
 particularite: >
   Un appartement encombré où les acquéreurs ne se projetaient pas : tout
   s'est joué sur la préparation avant la remise en vente.
-photo_principale: "002"   # numéro de la photo dans le dossier photos/ de cette story (sur Drive) — proposition Claude (jardin), à ajuster
-photos: []            # 4 à 6 autres, même règle, ex. ["006", "011", "016"]
+photo_principale:   # à envoyer depuis l'espace d'édition — photo HD proposée par Claude : n° 002 du dossier Drive
+photos: []
 # Avis Immodvisor rapproché (confiance forte) : avis-immodvisor/2024-07-20-jcbanthy.md (JcbAnthy, vendeur)
 temoignages:          # vendeur et/ou acheteur ; un seul suffit pour publier
   - role: vendeur
