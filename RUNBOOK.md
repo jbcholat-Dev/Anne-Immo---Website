@@ -9,7 +9,7 @@
 | GitHub, dépôt `jbcholat-Dev/Anne-Immo---Website` | le code, le contenu, la documentation | JB (transfert vers une organisation à deux propriétaires prévu, story 12.3) | 0 € |
 | Cloudflare, projet Workers `anne-vial-tissot-site` | héberge le site, le construit à chaque changement de `main` | JB, connexion via GitHub (décision du 2026-09-26, amende AD-9) | 0 € (plan gratuit) |
 | Cloudflare Zero Trust, équipe `dry-truth-5a0d` | protège l'aperçu par un code envoyé par e-mail | même compte | 0 € (plan Free, 50 utilisateurs) |
-| Infomaniak | noms de domaine `annevialtissot.fr` et `.com` | JB (son adresse e-mail) ; **propriétaire légal des deux domaines : Anne** (décision du 2026-10-05, amende AD-9). Sans option Domain Plus. | ≈ 21 €/an TTC |
+| Infomaniak | noms de domaine `annevialtissot.fr` et `.com` | JB (son adresse e-mail) ; **propriétaire légal des deux domaines : Anne** (décision du 2026-10-05, amende AD-9), JB contact administrateur. Sans option Domain Plus. Expiration 2027-10-05. | 17,52 € TTC la 1re année, ≈ 21 €/an ensuite |
 
 Mots de passe : jamais dans ce dépôt, jamais manipulés par Claude. Coffre partagé à deux : à ouvrir (action J03).
 
@@ -49,6 +49,8 @@ Mots de passe : jamais dans ce dépôt, jamais manipulés par Claude. Coffre par
 
 Anne est déjà propriétaire légale des domaines ; seule la gestion est sur le compte Infomaniak de JB. Pour la lui rendre : Anne crée un compte Infomaniak (gratuit) ; JB, dans son Manager Infomaniak, ouvre le domaine et utilise le transfert vers une autre organisation Infomaniak (libellé exact à vérifier le jour venu ; le titulaire ne change pas) vers le compte d'Anne ; Anne accepte. Les serveurs de noms Cloudflare ne changent pas, le site reste en ligne pendant l'opération. Vérifier ensuite le renouvellement automatique et la carte bancaire sur le compte d'Anne.
 
+État au 2026-10-05 : les deux domaines sont dans le compte Cloudflare (plan gratuit), serveurs de noms `camilo.ns.cloudflare.com` et `elly.ns.cloudflare.com`, actifs. Reste : DNSSEC à activer (Cloudflare → domaine → DNS → Settings → DNSSEC, puis copier l'enregistrement DS chez Infomaniak), validation en deux étapes sur le compte Infomaniak.
+
 ## 5. Pièges irréversibles
 
 - Ne jamais mettre `PUBLIC_INDEXATION=oui` sur une adresse d'aperçu : Google mémoriserait une version incomplète.
@@ -59,4 +61,4 @@ Anne est déjà propriétaire légale des domaines ; seule la gestion est sur le
 
 - 2026-09-26 : version 0, aperçu en ligne et protégé (stories 9.1 à 9.5) ; § 4 bis retours (story 9.6). Vérifié par JB : page de connexion, accueil, `/robots.txt` = `Disallow: /`.
 - 2026-10-04 : rien ne change dans les comptes. Pour mémoire, l'hébergeur déclaré dans les mentions légales est Cloudflare, Inc. (101 Townsend Street, San Francisco) ; il change si l'hébergement change. Deux garde-fous de contenu bloquent désormais la mise en ligne : une story publiée sans autorisation écrite, un texte anglais manquant (voir `site/README.md`).
-- 2026-10-05 : domaines `.fr` et `.com` achetés chez Infomaniak depuis le compte de JB, Anne propriétaire légale (amende AD-9) ; § 4 ter ajouté (reprise des domaines).
+- 2026-10-05 : domaines `.fr` et `.com` achetés chez Infomaniak depuis le compte de JB, Anne propriétaire légale (amende AD-9) ; § 4 ter ajouté (reprise des domaines, serveurs de noms Cloudflare actifs).
