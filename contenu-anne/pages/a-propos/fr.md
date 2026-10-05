@@ -1,13 +1,8 @@
 ---
 titre: À propos
-sous_titre: >
-  Dix ans de finance d'entreprise — Danone à Évian, Bel au Brésil — avant
-  l'immobilier. Chaque vente est menée comme un projet : un dossier complet,
-  un calendrier tenu, des points réguliers. Sur le Chablais et le bassin
-  lémanique, au service d'une clientèle locale et internationale. Français,
-  anglais, espagnol, portugais.
-video:                # vidéo « Anne présente sa méthode », à tourner après le lancement (D-12). Vide = pas de bloc vidéo.
-statut: brouillon
+sous_titre: "Dix ans de finance d'entreprise — Danone à Évian, Bel au Brésil — avant l'immobilier. Chaque vente est menée comme un projet : un dossier complet, un calendrier tenu, des points réguliers. Sur le Chablais et le bassin lémanique, au service d'une clientèle locale et internationale. Français, anglais, espagnol, portugais."
+video: ''
+statut: publie
 ---
 
 <!-- Page à ancres (D-11, 2026-09-13) : « Qui suis-je ? » = #qui-suis-je · « Ma méthode » = #methode · « Cible » (#cible) si retenue.
