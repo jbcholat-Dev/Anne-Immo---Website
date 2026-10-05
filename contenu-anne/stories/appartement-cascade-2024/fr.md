@@ -2,25 +2,31 @@
 commune: Thonon-les-Bains
 type_bien: Appartement (années 70)
 annee_vente: 2024
-delai_vente:
-particularite: >
-  Vente et achat d'un nouveau logement synchronisés pour se conclure le même
-  jour, deux notaires, deux calendriers.
-photo_principale: "photos/photo-0303.jpg"   # photo de tête (chemin dans le dossier de la story)
-photos: ["photos/photo-0256.jpg", "photos/photo-0286.jpg", "photos/photo-0292.jpg"]
-temoignages:          # vendeur et/ou acheteur ; un seul suffit pour publier
-  - role: vendeur
-    prenom:
-    contexte:
-    citation:
-    portrait:
-  - role: acheteur
-    prenom:
-    contexte:
-    citation:
-    portrait:
+delai_vente: ''
+particularite: Vente et achat d'un nouveau logement synchronisés pour se conclure le même jour, deux notaires, deux calendriers.
+photo_principale: photos/dsc_0286.webp
+photos:
+  - photos/dsc_0256.webp
+  - photos/dsc_0265.webp
+  - photos/dsc_0277.webp
+  - photos/dsc_0289.webp
+  - photos/dsc_0292.webp
+  - photos/dsc_0299.webp
+  - photos/dsc_0300.webp
+  - photos/dsc_0303.webp
 statut: brouillon
 autorisations: false
+temoignages:
+  - citation: null
+    contexte: null
+    portrait: null
+    prenom: null
+    role: vendeur
+  - citation: null
+    contexte: null
+    portrait: null
+    prenom: null
+    role: acheteur
 ---
 
 # Vente en cascade : l'expertise qui synchronise deux projets de vie
