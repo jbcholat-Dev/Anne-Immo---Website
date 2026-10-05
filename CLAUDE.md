@@ -56,7 +56,7 @@ Le repère de vérité en cas de contradiction : la **spec v5** pour ce que le s
 |---|---|
 | `RUNBOOK.md` | La notice de secours : comptes, adresse d'aperçu, comment remettre en ligne, bascule en production, pièges irréversibles. |
 | `site/` | Le code du site (Astro 7, sortie statique). `site/README.md` décrit l'état réel, `site/PLAN.md` le plan de construction. |
-| `contenu-anne/` | Boîte de dépôt d'Anne : stories, avis Immodvisor, photos, légal, guide. Les vidéos et photos HD sont hors Git (trop lourdes). |
+| `contenu-anne/` | Contenu d'Anne rangé au format du site : stories, avis Immodvisor, photos web, légal, guide. Anne ne dépose pas ici : elle dépose dans le dossier Google Drive « Contenu site Anne », Claude range ici par PR (décision du 2026-10-05, RUNBOOK § 1). Les vidéos et photos HD restent sur Drive, hors Git. |
 | `design-system/` | Charte : couleurs, typographies, logos, composants. `tokens/tokens.css` est copié dans le site. |
 | `maquettes/lot-3-complet/` | Maquette de référence (61 écrans) et `DECISIONS.md` (D-1 → D-26). |
 | `_bmad-output/specs/spec-anne-website/` | La spec (contrat, 11 capacités CAP-1 → CAP-11) et son journal `.memlog.md`. |
