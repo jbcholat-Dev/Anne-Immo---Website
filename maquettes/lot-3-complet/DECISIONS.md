@@ -49,7 +49,7 @@ La nav passe de 4 entrées + bouton à **5 entrées (À propos ▾ · Réalisati
 
 | # | Décision | Statut | À propager |
 |---|---|---|---|
-| D-27 | **Le hero, c'est le montage d'Anne, en entier (95 s), en boucle, sans son** (D-1 précisée). Le montage a été fait exprès pour le site : on ne le découpe pas, on ne le recadre pas (le logo eXp incrusté reste). **Le poster A-14 devient la première image de la vidéo** (Anne face caméra dans un pré du Chablais) : image d'attente pendant le chargement et repli si la lecture automatique est refusée (mouvement réduit, économie de données), sans saut visuel au démarrage. La photo d'Armoy quitte le hero. Poids : 1440 px, ≈ 15 Mo MP4 — écart assumé au budget « 12 s, < 6 Mo » (voir `site/README.md` § Écarts). | ✅ | `site/README.md` · `scripts/video.mjs` · story 8.3. |
+| D-27 | **Le hero, c'est le montage d'Anne, en entier (95 s), en boucle, sans son** (D-1 précisée). Le 2026-10-05, JB remplace le montage par une nouvelle version d'Anne (52 s, story 7.15) ; la règle reste la même. Le montage a été fait exprès pour le site : on ne le découpe pas, on ne le recadre pas (le logo eXp incrusté reste). **Le poster A-14 devient la première image de la vidéo** (Anne face caméra dans un pré du Chablais) : image d'attente pendant le chargement et repli si la lecture automatique est refusée (mouvement réduit, économie de données), sans saut visuel au démarrage. La photo d'Armoy quitte le hero. Poids : 1440 px, ≈ 15 Mo MP4 — écart assumé au budget « 12 s, < 6 Mo » (voir `site/README.md` § Écarts). | ✅ | `site/README.md` · `scripts/video.mjs` · story 8.3. |
 
 ## Décision du 2026-10-04 (JB, retour d'aperçu n° 3 — story 8.5)
 
