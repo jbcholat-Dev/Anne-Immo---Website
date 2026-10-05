@@ -1,27 +1,24 @@
 ---
-commune: Essert-Romand   # proposition Claude, à confirmer
-type_bien: Chalet   # proposition Claude, à ajuster
+commune: Essert-Romand
+type_bien: Chalet
 annee_vente: 2026
-delai_vente:
-particularite: >
-  Six mois en vente ailleurs sans une seule visite : un prix jamais expliqué
-  et une présentation absente.
-photo_principale:   # à envoyer depuis l'espace d'édition — photo HD proposée par Claude : n° 036 du dossier Drive
+delai_vente: ''
+particularite: 'Six mois en vente ailleurs sans une seule visite : un prix jamais expliqué et une présentation absente.'
+photo_principale: photos/essert-romand-exp-immo-logo-041-hd.webp
 photos: []
-# Avis Immodvisor rapproché (confiance forte) : avis-immodvisor/2026-08-30-sabine-francois.md (Sabine/François, vendeurs)
-temoignages:          # vendeur et/ou acheteur ; un seul suffit pour publier
-  - role: vendeur
-    prenom:
-    contexte:
-    citation:
-    portrait:
-  - role: acheteur
-    prenom:
-    contexte:
-    citation:
-    portrait:
 statut: brouillon
 autorisations: false
+temoignages:
+  - citation: null
+    contexte: null
+    portrait: null
+    prenom: null
+    role: vendeur
+  - citation: null
+    contexte: null
+    portrait: null
+    prenom: null
+    role: acheteur
 ---
 
 # Six mois sans visite, puis deux offres
