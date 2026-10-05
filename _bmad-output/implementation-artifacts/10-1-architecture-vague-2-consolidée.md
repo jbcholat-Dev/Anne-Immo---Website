@@ -35,7 +35,10 @@ Copie du site hors du dépôt (aucun fichier de `site/` ne change), avec `@astro
 - **Resend** : la région d'envoi UE (Irlande, `eu-west-1`) est ouverte au plan gratuit, choisie par domaine. **Mais** les données du compte (journaux, métadonnées des e-mails, appels) restent aux États-Unis quelle que soit la région. Verdict proposé : choisir l'Irlande, et documenter le transfert hors UE dans la politique de confidentialité (repli prévu par le spine). Sources : [Resend, régions](https://resend.com/docs/dashboard/domains/regions), [multi-région pour tous](https://resend.com/changelog/multi-region-for-everyone).
 - **Cal.com** : les webhooks portent une signature `X-Cal-Signature-256` (HMAC SHA-256 calculée avec le secret saisi dans Cal.com). Disponibilité au plan gratuit, question case à cocher, fuseau, verrouillage du créneau et confirmations : seul l'essai réel le dira. Source : [Nango, webhooks Cal.com](https://nango.dev/docs/api-integrations/cal-com-oauth/webhook).
 - **Turnstile** : Cloudflare le présente sans cookie de suivi, mais un cookie `cf.turnstile.u` est signalé par des utilisateurs. L'essai instrumenté tranchera. Source : [forum Webflow](https://discourse.webflow.com/t/cookie-consent-compliance-cf-turnstile-u-cookie-loading-before-consent/326947).
-- **Blocage** : le réseau de ce conteneur refuse `cal.com`, `app.cal.com`, `resend.com`, `api.resend.com`, `challenges.cloudflare.com`, `developers.cloudflare.com`. Les essais instrumentés (relevé des cookies, réservation test) demandent que JB les autorise dans l'environnement cloud.
+- **Resend, 2026-10-05** : compte créé par JB (son adresse), domaine `annevialtissot.fr` ajouté en région Irlande ; trois enregistrements DNS posés automatiquement dans Cloudflare (`resend._domainkey` TXT, `send` et `rsend` CNAME vers `*.forge.rmta.net`, « DNS only ») ; suivi des clics et des ouvertures désactivé (AD-11) ; réception désactivée ; vérification en attente. Pas de DMARC à ce stade.
+- **Turnstile, essai instrumenté du 2026-10-05 (partiel)** : page locale avec la clé de test Cloudflare `1x00000000000000000000BB` (invisible), Chromium headless via le proxy. Le chargement du script `api.js` ne dépose **rien** sur l'origine du site (0 cookie, 0 clé `localStorage`/`sessionStorage`, 0 base IndexedDB). Le défi lui-même (iframe `challenges.cloudflare.com`) ne s'exécute pas en navigateur sans écran derrière le proxy (`ERR_TOO_MANY_RETRIES`) : le relevé de ce que dépose l'iframe reste à faire dans un vrai navigateur.
+- **Réseau ouvert le 2026-10-05** (action J17) : `cal.com`, `*.cal.com`, `resend.com`, `*.resend.com`, `challenges.cloudflare.com`, `developers.cloudflare.com`.
+- **Blocage levé le 2026-10-05, constat initial** : le réseau de ce conteneur refusait `cal.com`, `app.cal.com`, `resend.com`, `api.resend.com`, `challenges.cloudflare.com`, `developers.cloudflare.com`. Les essais instrumentés (relevé des cookies, réservation test) demandent que JB les autorise dans l'environnement cloud.
 
 ### 3. Verdicts proposés pour la table « Deferred » du spine
 | Décision | Verdict proposé (2026-10-04) | Qui tranche |
@@ -51,8 +54,8 @@ Copie du site hors du dépôt (aucun fichier de `site/` ne change), avec `@astro
 - Essai local ci-dessus (sorties citées). `npm run build` du dépôt inchangé : aucun fichier de `site/` modifié.
 
 ## Ce qui reste (story ouverte)
-1. JB : autoriser les domaines bloqués dans l'environnement cloud (action J17).
-2. JB : créer les comptes Resend et Cal.com, et un widget Turnstile (actions J11, J12, J18).
+1. ~~JB : autoriser les domaines bloqués (J17)~~ fait le 2026-10-05.
+2. JB : créer le compte Cal.com et le widget Turnstile (J12, J18) ; Resend (J11) en attente de vérification du domaine.
 3. Claude : essai réel Cal.com (webhook signé, case à cocher, fuseau, créneau pris, confirmations), relevé des cookies Turnstile et Cal.com, verdict bandeau.
 4. JB : trancher CMS, outil d'audit, bandeau ; Anne : Q10.
 5. Claude : amendement final du spine (table Deferred close, « Hypothèses vérifiées »).
