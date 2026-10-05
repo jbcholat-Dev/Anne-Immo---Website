@@ -957,6 +957,21 @@ afin d'avancer sur ma vente et, le moment venu, de contacter Anne (CAP-7).
 
 **État :** à faire. Responsable : Anne (rédaction et revalidation), JB (relecture, offres citées), Claude (objets, libellés) ; prérequis : story 7.8 (le guide, dont la séquence distille le contenu) ; les stories publiées (7.9) pour les liens. Note : `guide/README.md` demande un seul fichier `sequence-emails.md` alors que le gabarit prévoit un dossier par étape ; Anne peut déposer dans l'une ou l'autre forme, Claude range dans la seconde (c'est celle que le site lit).
 
+### Story 7.12: Nouvelles ventes d'Anne au format du site
+
+En tant que visiteur de la page Réalisation,
+je veux voir davantage de ventes d'Anne racontées de la même façon,
+afin de juger de sa méthode sur des cas variés (CAP-2).
+
+**Critères d'acceptation :**
+
+**Étant donné** les ventes qu'Anne a préparées dans le Drive (`stories/<id>/` : ancien texte « web » et photos HD)
+**Quand** Claude les range dans le dépôt
+**Alors** chaque story a un `fr.md` au gabarit (récit à la première personne, 10 à 15 lignes, sans prix ni nom de client ni nom de résidence), en `statut: brouillon`, et des photos web produites par `scripts/preparer-photos`
+**Et** les textes sources (qui citent des prix) et le registre restent sur le Drive, hors du dépôt.
+
+**État :** en cours (2026-10-05). Responsable : Claude (rédaction proposée, photos), Anne (relecture, témoignages, textes de Bernex et Sciez), JB (photos HD de plus de 10 Mo, que le connecteur Drive ne transfère pas).
+
 ## Epic 8: Finition visuelle
 
 Le site rend comme la maquette sur tous les écrans, avec des polices stables, une vidéo d'ouverture réelle et plus aucune pastille de chantier.

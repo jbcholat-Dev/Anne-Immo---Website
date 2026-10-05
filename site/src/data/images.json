@@ -259,6 +259,106 @@
     ],
     "jpg": "/img/stories/maison-premium-2025/photo-038-1280.jpg"
   },
+  "stories/morzine-appartement-2026/photo-6965": {
+    "largeur": 2997,
+    "hauteur": 2000,
+    "ratio": 1.4985,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/morzine-appartement-2026/photo-6965-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/morzine-appartement-2026/photo-6965-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/morzine-appartement-2026/photo-6965-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/morzine-appartement-2026/photo-6965-1280.jpg"
+  },
+  "stories/morzine-appartement-2026/photo-6969": {
+    "largeur": 2997,
+    "hauteur": 2000,
+    "ratio": 1.4985,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/morzine-appartement-2026/photo-6969-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/morzine-appartement-2026/photo-6969-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/morzine-appartement-2026/photo-6969-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/morzine-appartement-2026/photo-6969-1280.jpg"
+  },
+  "stories/morzine-appartement-2026/photo-6987": {
+    "largeur": 2997,
+    "hauteur": 2000,
+    "ratio": 1.4985,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/morzine-appartement-2026/photo-6987-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/morzine-appartement-2026/photo-6987-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/morzine-appartement-2026/photo-6987-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/morzine-appartement-2026/photo-6987-1280.jpg"
+  },
+  "stories/morzine-appartement-2026/photo-7006": {
+    "largeur": 2997,
+    "hauteur": 2000,
+    "ratio": 1.4985,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/morzine-appartement-2026/photo-7006-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/morzine-appartement-2026/photo-7006-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/morzine-appartement-2026/photo-7006-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/morzine-appartement-2026/photo-7006-1280.jpg"
+  },
+  "stories/morzine-appartement-2026/photo-7027": {
+    "largeur": 2997,
+    "hauteur": 2000,
+    "ratio": 1.4985,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/morzine-appartement-2026/photo-7027-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/morzine-appartement-2026/photo-7027-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/morzine-appartement-2026/photo-7027-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/morzine-appartement-2026/photo-7027-1280.jpg"
+  },
   "photos/essert-romand-013-hd": {
     "largeur": 5472,
     "hauteur": 3650,

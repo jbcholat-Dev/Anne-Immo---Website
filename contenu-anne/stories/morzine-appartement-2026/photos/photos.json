@@ -1,0 +1,61 @@
+{
+  "_genere_par": "scripts/preparer-photos — ne pas modifier à la main",
+  "story": "morzine-appartement-2026",
+  "photos": [
+    {
+      "id": "morzine-appartement-2026/photo-6965",
+      "fichier": "photos/photo-6965.jpg",
+      "role": "principale",
+      "choix": "6965",
+      "source": "morzine-appartement-2026/photos/DSC_6965.jpg",
+      "largeur": 2997,
+      "hauteur": 2000,
+      "orientation": "paysage",
+      "ko": 869
+    },
+    {
+      "id": "morzine-appartement-2026/photo-6969",
+      "fichier": "photos/photo-6969.jpg",
+      "role": "secondaire",
+      "choix": "6969",
+      "source": "morzine-appartement-2026/photos/DSC_6969.jpg",
+      "largeur": 2997,
+      "hauteur": 2000,
+      "orientation": "paysage",
+      "ko": 746
+    },
+    {
+      "id": "morzine-appartement-2026/photo-6987",
+      "fichier": "photos/photo-6987.jpg",
+      "role": "secondaire",
+      "choix": "6987",
+      "source": "morzine-appartement-2026/photos/DSC_6987.jpg",
+      "largeur": 2997,
+      "hauteur": 2000,
+      "orientation": "paysage",
+      "ko": 677
+    },
+    {
+      "id": "morzine-appartement-2026/photo-7006",
+      "fichier": "photos/photo-7006.jpg",
+      "role": "secondaire",
+      "choix": "7006",
+      "source": "morzine-appartement-2026/photos/DSC_7006.jpg",
+      "largeur": 2997,
+      "hauteur": 2000,
+      "orientation": "paysage",
+      "ko": 876
+    },
+    {
+      "id": "morzine-appartement-2026/photo-7027",
+      "fichier": "photos/photo-7027.jpg",
+      "role": "secondaire",
+      "choix": "7027",
+      "source": "morzine-appartement-2026/photos/DSC_7027.jpg",
+      "largeur": 2997,
+      "hauteur": 2000,
+      "orientation": "paysage",
+      "ko": 1308
+    }
+  ]
+}

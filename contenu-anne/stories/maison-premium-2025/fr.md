@@ -6,8 +6,7 @@ delai_vente:
 particularite: >
   Bien premium resté un an sans offre : une objection silencieuse (pas de
   piscine) et une présentation insuffisante pour la gamme de prix.
-photo_principale: "047"   # numéro (ou nom) de la photo dans dossier_photos — proposition Claude, à ajuster
-dossier_photos: "ALLINGES_MORAND_villa"   # dossier HD dans « Stories  photos » (hors Git)
+photo_principale: "047"   # numéro de la photo dans le dossier photos/ de cette story (sur Drive) — proposition Claude, à ajuster
 photos: ["002", "004", "019", "038"]   # 4 à 6 photos, même règle
 temoignages:          # vendeur et/ou acheteur ; un seul suffit pour publier
   - role: vendeur

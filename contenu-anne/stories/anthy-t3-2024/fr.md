@@ -1,0 +1,43 @@
+---
+commune: Anthy-sur-Léman   # proposition Claude, à confirmer
+type_bien: Appartement (T3, rez-de-jardin)   # proposition Claude, à ajuster
+annee_vente: 2024
+delai_vente: 2 mois
+particularite: >
+  Un appartement encombré où les acquéreurs ne se projetaient pas : tout
+  s'est joué sur la préparation avant la remise en vente.
+photo_principale: "002"   # numéro de la photo dans le dossier photos/ de cette story (sur Drive) — proposition Claude (jardin), à ajuster
+photos: []            # 4 à 6 autres, même règle, ex. ["006", "011", "016"]
+# Avis Immodvisor rapproché (confiance forte) : avis-immodvisor/2024-07-20-jcbanthy.md (JcbAnthy, vendeur)
+temoignages:          # vendeur et/ou acheteur ; un seul suffit pour publier
+  - role: vendeur
+    prenom:
+    contexte:
+    citation:
+    portrait:
+  - role: acheteur
+    prenom:
+    contexte:
+    citation:
+    portrait:
+statut: brouillon
+autorisations: false
+---
+
+# Révéler un appartement que personne ne voyait
+
+Un couple de retraités m'a appelée pour vendre leur appartement. Il était en vente depuis longtemps, les visites ne donnaient rien : les acquéreurs repartaient sans s'être projetés.
+
+En passant la porte, j'ai compris pourquoi. L'appartement était encombré au point qu'on ne voyait plus ni les murs ni la lumière, et les pièces paraissaient petites. Le bien, lui, avait du potentiel ; c'est sa présentation qui le cachait.
+
+## Préparer avant de montrer
+
+Nous avons commencé par le désencombrement. J'ai accompagné mes clients, pièce par pièce, pour libérer l'espace sans les brusquer. Les murs sont réapparus, les fenêtres ont retrouvé leur lumière, et chaque pièce a repris son caractère.
+
+Ensuite seulement, j'ai fait réaliser les visuels avec un professionnel : photos, vidéo, visite virtuelle et vues au drone pour montrer l'environnement. L'annonce racontait enfin un lieu de vie, plus seulement un appartement.
+
+## Le résultat
+
+Deux mois après la remise en vente, la deuxième visite s'est conclue par une offre au prix visé, sans négociation.
+
+Ici, rien n'a été retouché sur le bien lui-même : tout s'est joué dans la préparation et dans la façon de le montrer.

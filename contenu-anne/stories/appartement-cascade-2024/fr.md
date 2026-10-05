@@ -6,8 +6,7 @@ delai_vente:
 particularite: >
   Vente et achat d'un nouveau logement synchronisés pour se conclure le même
   jour, deux notaires, deux calendriers.
-photo_principale: "0303"   # numéro (ou nom) de la photo dans dossier_photos — proposition Claude, à ajuster
-dossier_photos: "THONON_VALCIC_T3"   # dossier HD dans « Stories  photos » (hors Git)
+photo_principale: "0303"   # numéro de la photo dans le dossier photos/ de cette story (sur Drive) — proposition Claude, à ajuster
 photos: ["0256", "0286", "0292"]   # 4 à 6 photos, même règle
 temoignages:          # vendeur et/ou acheteur ; un seul suffit pour publier
   - role: vendeur
