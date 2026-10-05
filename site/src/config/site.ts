@@ -26,11 +26,9 @@ export const accueil = {
   avis: ['2025-01-14-alexandra-v', '2024-07-20-jcbanthy', '2025-01-13-remi'],
   /** L'extrait court de la bande preuve (§ 1.2) : une phrase d'un avis, attribuée. */
   extrait: { avis: '2025-01-14-alexandra-v', phrase: "Elle est une professionnelle de qualité, qui traite l'entier du dossier avec sérieux et rigueur durant toutes les étapes du projet." },
-  /** Cartes 4 à 6 de la pile : ventes réelles du registre (_suivi-stories.md) sans story rédigée. Photo = bloc réservé A-02. */
+  /** Complément de la pile (six cartes, D-16) : ventes réelles du registre (_suivi-stories.md) sans story rédigée. Photo = bloc réservé A-02. Une vente dont la story existe est ignorée. */
   aVenir: [
     { slug: 'sciez-villa-2025', commune: 'Sciez-sur-Léman', type: 'Villa', annee: 2025, avis: '2026-09-10-isalinep' },
-    { slug: 'essert-romand-chalet-2026', commune: 'Essert-Romand', type: 'Chalet', annee: 2026, avis: '2026-08-30-sabine-francois' },
-    { slug: 'anthy-t3-2024', commune: 'Anthy-sur-Léman', type: 'Appartement', annee: 2024, avis: '2024-07-20-jcbanthy' },
   ],
 };
 

@@ -27,6 +27,12 @@ Ranger dans le dépôt les ventes qu'Anne a préparées dans le Drive, pour qu'e
 - `npm run images` : 20 images ; `npm run build` : 24 pages (5 fiches de plus) ; `npm run check` : 0 erreur ; `node scripts/liens.mjs` : 1 478 liens, 0 cassé ; `npm run verif` : aucune erreur console.
 - Capture de la page Réalisation : les 4 stories sans photo affichent proprement le cadre réservé A-02.
 
+### Correction du 2026-10-05 après-midi : doublons sur l'accueil (retour de JB)
+
+JB a vu Essert-Romand et Anthy-sur-Léman deux fois dans la pile « Ventes récentes » de l'accueil. Cause : la pile ajoutait aux stories trois cartes « Story à venir » tirées de `accueil.aVenir` (`site/src/config/site.ts`), dont Essert-Romand et Anthy T3, qui ont désormais leur story. Correction (`site/src/components/accueil/Pile.astro`) : une vente « à venir » dont la story existe n'est plus reprise, et la pile revient à six cartes (D-16), stories d'abord. Essert-Romand et Anthy T3 sont retirés de `aVenir` ; Sciez y reste (pas encore de texte). Les deux cartes Anthy-sur-Léman restantes sont deux ventes distinctes (T3 2024, T4 2025). Avec huit stories, les six plus récentes occupent la pile ; Armoy et Allinges restent sur la page Réalisation.
+
+Vérification : `npm run build` 24 pages ; `npm run check` 0 erreur ; `scripts/liens.mjs` 1476 liens, 0 cassé ; pile de l'accueil = 6 cartes (Essert-Romand, Évian-les-Bains, Morzine, Anthy-sur-Léman ×2, Thonon-les-Bains) ; `npm run verif` sans erreur console.
+
 ## Ce qui reste
 - Photos d'Anthy T3 (002), Anthy T4 (025), Évian (038) et Essert-Romand (036) : les HD font plus de 8 Mo, le connecteur Drive refuse de les transférer (limite 10 Mo, coupure au-delà de 8 Mo). Il faut lancer `scripts/preparer-photos` sur un ordinateur où le Drive est synchronisé (`PHOTOS_HD=".../Contenu site Anne/stories"`). Essert-Romand 036 et Évian 038 ne sont pas dans le dossier `photos/` de leur story sur le Drive. Les photos d'Essert-Romand portent le logo eXp.
 - Anne : relire les 5 récits, confirmer commune, type de bien et délais ; écrire Bernex et Sciez ; témoignages et autorisations (story 7.9).
