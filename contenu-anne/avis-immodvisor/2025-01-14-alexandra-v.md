@@ -9,7 +9,7 @@ vente_candidate: appartement-cascade-2024      # vente rapprochée (registre : s
 dossier_photos: "THONON_VALCIC_T3"
 confiance: moyenne               # forte | moyenne | faible | aucun
 indice: "« Projet vente et achat d'un bien », famille ; initiale V ↔ VALCIC, dont la story est justement une vente et un achat synchronisés (suivi : VALCIC BLIEZ + RABIER VALCIC)."
-story:                           # la vente confirmée par Anne (slug) — seul champ lu par le site
+story: appartement-cascade-2024   # la vente confirmée par Anne (slug) — seul champ lu par le site
 retenu: false               # true = cité en entier dans « Ils ont travaillé avec Anne »
 ---
 

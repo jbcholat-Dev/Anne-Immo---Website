@@ -8,7 +8,7 @@ Ce dossier est **ta boîte de dépôt**. Tu y poses tout ce que le site a besoin
 
 | Dossier | Ce qu'on y met | Détail |
 |---|---|---|
-| `stories/<bien>/` | **Tout ce qui concerne une vente, au même endroit** : le récit (`fr.md`, depuis `_gabarits/story.md`), tes notes, les photos HD dans `photos/`, les accords écrits dans `autorisations/` | un sous-dossier par bien (`commune-type-annee`) ; tes brouillons dans `stories/_brouillons/` |
+| `stories/<bien>/` | **Tout ce qui concerne une vente, au même endroit** : le récit (`fr.md`, depuis `_gabarits/story.md`), tes notes, les photos HD dans `photos/` | un sous-dossier par bien (`commune-type-annee`) ; tes brouillons dans `stories/_brouillons/` |
 | `photos/` | Photos de toi en situation, et celles qui ne se rattachent à aucune vente | originaux, non recadrés, non compressés |
 | `videos/` | Vidéo drone d'ouverture, autres séquences | ⚠️ **pas dans Git** — voir `videos/README.md` |
 | `avis-immodvisor/` | Tes avis Immodvisor, **un fichier par avis** (relevé du 2026-09-22 : 18 avis) — confirme à quelle vente chacun correspond (champ `story`) | |
@@ -20,9 +20,9 @@ Ce dossier est **ta boîte de dépôt**. Tu y poses tout ce que le site a besoin
 
 1. **Originaux seulement.** Le fichier tel qu'il sort de l'appareil photo ou du drone (ou du photographe). Dans l'espace d'édition, tu les envoies tels quels : ils sont réduits avant l'envoi, et l'en-tête de la story garde leur chemin (`photo_principale: "photos/sejour.webp"`). Le site fabrique lui-même ses formats.
 2. **Nomme simplement.** `maison-thonon-2026.jpg`, pas `IMG_4521.jpg`. Minuscules, tirets, sans accents.
-3. **Une autorisation par personne citée et par bien photographié.** Un mot écrit (un e-mail suffit) du vendeur pour les photos et son témoignage, de l'acheteur pour le sien. Dépose-les dans `stories/<bien>/autorisations/`.
+3. **L'accord des clients avant « Publiée ».** Les clients des ventes actuelles ont tous donné leur accord (2026-10-05). Pour une nouvelle vente, obtiens l'accord du vendeur avant de la passer en « Publiée ».
 
-Les témoignages vivent **dans la story** du bien concerné (vendeur et/ou acheteur), pas dans un dossier à part. Les témoignages de personnes accompagnées sans vente ne sont plus demandés (décision du 2026-09-13).
+Le témoignage d'une vente est **son avis Immodvisor**, cité tel quel : dans l'espace d'édition, rubrique Avis, choisis la vente dans « Vente concernée » (décision du 2026-10-05, story 7.14). Les témoignages de personnes accompagnées sans vente ne sont plus demandés (décision du 2026-09-13).
 
 ## Comment envoyer
 

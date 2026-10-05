@@ -60,7 +60,7 @@ Tous dans `src/config/site.ts` :
 - **Bande preuve** : une phrase d'Alexandra V. — Acheter : RHL + JamesW.
 - **Cartes 4-6 de la pile** : Sciez villa 2025, Essert-Romand chalet 2026, Anthy T3 2024 (registre `_suivi-stories.md`), photo réservée, citation de l'avis rapproché quand la confiance est « forte ».
 - **Phrase d'Anne par carte** (`phrasesStories`) : extraite telle quelle du récit.
-- **Stories affichées malgré `statut: brouillon` / `autorisations: false`** — pour que JB voie le site plein. Avant mise en ligne : filtrer sur `statut === 'publie' && autorisations` dans `src/lib/contenu.ts` (`stories()`), et obtenir la version sans logo eXp des photos d'Essert-Romand.
+- **Stories affichées malgré `statut: brouillon`** sur l'aperçu, pour que JB voie le site plein ; le site public filtre sur `statut === 'publie'` (`stories()` dans `src/lib/contenu.ts`). Reste à obtenir la version sans logo eXp des photos d'Essert-Romand.
 - **Réseaux sociaux** : URLs des profils inconnues → liens vers les plateformes en attendant (`reseaux`).
 
 ## Diagnostic — règles appliquées
@@ -132,7 +132,8 @@ La maquette dessine 1 440 px (ordinateur) et 390 px (téléphone). Entre 900 et 
 ## Garde-fous de contenu (stories 6.2 et 7.9)
 
 - **Anglais complet ou rien** (AD-2) : `src/i18n/index.ts` fait échouer la construction si `en.json` n'a pas exactement les clés de `fr.json` ou laisse un texte vide, en nommant les clés en cause.
-- **Pas de story publiée sans autorisation** : `src/content.config.ts` ramène à `a-relire` (avec un avertissement dans le journal de construction) toute story en `statut: publie` sans `autorisations: true` ; elle n'apparaît donc pas sur le site public. Jusqu'au 2026-10-05 la construction échouait : un simple choix « Publiée » dans l'espace d'édition bloquait alors toute la mise en ligne de l'aperçu (story 7.13).
+- **Plus de vérification d'autorisation dans le code** (décision de JB du 2026-10-05, story 7.14) : les clients des ventes actuelles ont donné leur accord ; « publie » suffit. Le champ `autorisations` des anciennes fiches est toléré mais ignoré.
+- **Témoignage d'une vente = son avis Immodvisor** (story 7.14) : la fiche affiche les avis dont le champ `story` désigne la vente, vendeur d'abord, cités tels quels. La liste `temoignages` de l'en-tête n'est plus proposée dans l'espace d'édition ; si une citation y est écrite à la main, elle passe avant l'avis.
 - Ce qu'Anne doit fournir est listé dans `contenu-anne/A-FOURNIR.md`.
 
 ## Vérification faite (voir `.verif/`)
