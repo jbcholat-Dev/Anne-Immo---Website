@@ -75,6 +75,7 @@ npm run build        # construit le site dans site/dist
 npm run check        # vérification des types
 npm run verif        # captures d'écran de chaque page (ordinateur + téléphone) dans site/.verif
 node scripts/liens.mjs         # vérifie que chaque lien mène quelque part
+node scripts/ecrans.mjs        # signale tout débordement ou bouton trop petit, page par page et largeur par largeur
 node scripts/e2e-diagnostic.mjs # parcourt le diagnostic de bout en bout
 ```
 

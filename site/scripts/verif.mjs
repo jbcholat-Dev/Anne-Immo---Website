@@ -12,7 +12,7 @@ const DIST = path.resolve(ICI, '../dist');
 const OUT = path.resolve(ICI, '../.verif');
 fs.mkdirSync(OUT, { recursive: true });
 const args = Object.fromEntries(process.argv.slice(2).map((a) => a.replace(/^--/, '').split('=')));
-const TYPES = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png' };
+const TYPES = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png', '.woff2': 'font/woff2' };
 
 const serveur = createServer((req, res) => {
   let p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
@@ -35,12 +35,10 @@ async function page(vue, largeur, hauteur, opts = {}) {
   p.on('console', (m) => { if (m.type() === 'error') erreurs.push(`${vue} : ${m.text()}`); });
   p.on('pageerror', (e) => erreurs.push(`${vue} : ${e.message}`));
   p.on('response', (r) => { if (r.status() >= 400 && r.url().startsWith(base)) erreurs.push(`${vue} : ${r.status()} ${r.url()}`); });
-  // Google Fonts peut être lent ou bloqué (proxy) : attente bornée, un second essai au plus
-  for (let essai = 0; essai < 2; essai++) {
-    await p.goto(base + vue, { waitUntil: 'load', timeout: 30000 });
-    await Promise.race([p.evaluate(() => document.fonts.ready), p.waitForTimeout(6000)]);
-    if (await p.evaluate(() => document.fonts.check('16px Italiana') && document.fonts.check('16px "DM Sans"'))) break;
-  }
+  // Polices hébergées sur le site (story 8.1) : aucune requête ne doit partir chez Google
+  p.on('request', (q) => { if (/fonts\.(googleapis|gstatic)\.com/.test(q.url())) erreurs.push(`${vue} : requête Google Fonts ${q.url()}`); });
+  await p.goto(base + vue, { waitUntil: 'load', timeout: 30000 });
+  await p.evaluate(() => document.fonts.ready);
   await p.waitForTimeout(300);
   return { p, ctx };
 }

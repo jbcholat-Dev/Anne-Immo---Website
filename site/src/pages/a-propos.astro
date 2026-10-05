@@ -180,6 +180,12 @@ const cibles = [
   .ap-cibles h3 { font-family: var(--avt-font-text); margin: 0 0 10px; }
   .ap-cibles p { font-size: 16px; line-height: 1.6; }
   .ap-espace { height: 96px; }
+  /* Largeurs intermédiaires (900 à 1199 px, sans artboard) : colonnes proportionnelles, sinon le texte déborde (story 8.2) */
+  @media (min-width: 900px) and (max-width: 1199px) {
+    .ap-qui { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; }
+    .ap-portrait :global(.ap-portrait-reserve) { height: 520px; }
+    .ap-nom { font-size: 48px; }
+  }
   @media (max-width: 899px) {
     .ap-tete { padding: 48px var(--marge-m) 28px; }
     .ap-tete h1 { font-size: 52px; margin-bottom: 12px; }

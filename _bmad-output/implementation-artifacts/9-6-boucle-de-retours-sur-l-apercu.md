@@ -1,8 +1,9 @@
 ---
 story: 9.6
 epic: 9 — Mise en ligne d'aperçu
-statut: review
+statut: done
 date: 2026-09-26
+close: 2026-10-04
 ---
 
 # Story 9.6 — Boucle de retours sur l'aperçu
@@ -21,10 +22,11 @@ Qu'Anne et JB puissent noter une remarque depuis n'importe quelle page de l'aper
 - `npm run build` : 19 pages ; le bouton est présent dans chaque page de l'aperçu (`data-retour`) et absent quand `PUBLIC_INDEXATION=oui`.
 - `npm run check` : 0 erreur.
 - `npx wrangler dev` en local, routes exercées avec curl : `/robots.txt` et `/` servis (200), page inconnue 404, `GET /api/retour` 405, corps vide 400, corps non JSON 400, `/api/autre` 404, sans clé 503 `cle_absente`, avec une clé fausse : GitHub répond 401 et le site renvoie 502 `github` (donc l'appel GitHub part bien et l'erreur est propre).
-- Non vérifié ici : la création réelle d'un ticket (exige la clé de JB) et le rendu du bouton sur téléphone. C'est l'essai de JB après l'action J15 : ouvrir l'aperçu, envoyer « test », voir le ticket dans GitHub.
+- ~~Non vérifié ici : la création réelle d'un ticket~~ **Vérifié en réel le 2026-09-26** : JB a envoyé une remarque depuis l'aperçu (accueil, Chrome Windows, écran 1920×911) ; le ticket GitHub n° 3 a été créé avec l'étiquette `retour-apercu`, la page, l'auteur lu dans Cloudflare Access, l'écran, la date et le navigateur. La chaîne complète fonctionne (clé posée, action J15 faite). Ce ticket a ensuite été traité comme une story (8.5) et fermé en citant le commit.
+- Reste non vérifié sur un vrai téléphone : l'envoi depuis mobile. Le bouton est présent dans les captures mobiles ; à confirmer au prochain retour envoyé depuis un téléphone.
 
 ## Ce qui reste
-- JB : créer la clé GitHub et la poser dans Cloudflare (action J15, 10 min, RUNBOOK § 4 bis).
+- ~~JB : créer la clé GitHub et la poser dans Cloudflare (action J15)~~ fait.
 - Claude : à chaque session, lire les tickets ouverts et les traiter (règle CLAUDE.md).
 - Epic 10 : `worker.ts` est remplacé par le noyau serveur ; la route `/api/retour` y migre ou disparaît au lancement.
 
