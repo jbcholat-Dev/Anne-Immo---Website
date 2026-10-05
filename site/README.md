@@ -132,7 +132,7 @@ La maquette dessine 1 440 px (ordinateur) et 390 px (téléphone). Entre 900 et 
 ## Garde-fous de contenu (stories 6.2 et 7.9)
 
 - **Anglais complet ou rien** (AD-2) : `src/i18n/index.ts` fait échouer la construction si `en.json` n'a pas exactement les clés de `fr.json` ou laisse un texte vide, en nommant les clés en cause.
-- **Pas de story publiée sans autorisation** : `src/content.config.ts` fait échouer la construction si une story est en `statut: publie` sans `autorisations: true`.
+- **Pas de story publiée sans autorisation** : `src/content.config.ts` ramène à `a-relire` (avec un avertissement dans le journal de construction) toute story en `statut: publie` sans `autorisations: true` ; elle n'apparaît donc pas sur le site public. Jusqu'au 2026-10-05 la construction échouait : un simple choix « Publiée » dans l'espace d'édition bloquait alors toute la mise en ligne de l'aperçu (story 7.13).
 - Ce qu'Anne doit fournir est listé dans `contenu-anne/A-FOURNIR.md`.
 
 ## Vérification faite (voir `.verif/`)
