@@ -1,11 +1,13 @@
 // Prépare les photos des stories pour le site.
-// Source : contenu-anne/Stories  photos/<dossier>/ (HD, hors Git).
-// Sélection : l'en-tête de contenu-anne/stories/<id>/fr.md (dossier_photos, photo_principale, photos).
+// Source : une copie locale du dossier `stories/` du Drive « Contenu site Anne » (HD, hors Git),
+//          où les HD d'une story sont dans <id>/photos/. Chemin : réglage PHOTOS_HD,
+//          sinon contenu-anne/.photos-hd/ (ignoré par Git).
+// Sélection : l'en-tête de contenu-anne/stories/<id>/fr.md (photo_principale, photos).
 // Sortie : contenu-anne/stories/<id>/photos/ — version web (3 200 px max, sRGB, sans métadonnées)
 //          + photos.json (le manifeste = les objets Media de la story).
-// Le dossier photos/ appartient au script : ce qui n'est plus sélectionné y est supprimé.
+// Le dossier photos/ appartient au script : une photo-*.jpg qui n'est plus sélectionnée y est supprimée.
 //
-//   npm run photos              toutes les stories qui ont un dossier_photos
+//   npm run photos              toutes les stories qui ont des photos HD
 //   npm run photos -- <id>…     seulement ces stories
 
 import fs from 'node:fs';
@@ -16,8 +18,9 @@ import yaml from 'js-yaml';
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const CONTENU = path.resolve(ICI, '../../contenu-anne');
-const SOURCES = path.join(CONTENU, 'Stories  photos');
 const STORIES = path.join(CONTENU, 'stories');
+const SOURCES = path.resolve(process.env.PHOTOS_HD || path.join(CONTENU, '.photos-hd'));
+if (SOURCES === STORIES) throw new Error('PHOTOS_HD doit pointer vers la copie du Drive, pas vers contenu-anne/stories du dépôt');
 const COTE_MAX = 3200;   // plus grand côté ; marge pour le plein cadre sur écran retina
 const QUALITE = 85;
 
@@ -47,9 +50,8 @@ const nomWeb = (source) => {
 async function preparer(id) {
   const fr = path.join(STORIES, id, 'fr.md');
   const h = enTete(fr);
-  if (!h.dossier_photos) return console.log(`– ${id} : pas de dossier_photos, ignorée`);
-  const dossier = path.join(SOURCES, h.dossier_photos);
-  if (!fs.existsSync(dossier)) throw new Error(`${id} : dossier introuvable « ${h.dossier_photos} » dans Stories  photos`);
+  const dossier = path.join(SOURCES, id, 'photos');
+  if (!fs.existsSync(dossier)) return console.log(`– ${id} : pas de photos HD dans ${path.relative(process.cwd(), dossier)}, ignorée`);
   const dispo = fs.readdirSync(dossier).filter((f) => /\.jpe?g$/i.test(f));
   const choix = [h.photo_principale, ...(h.photos ?? [])].filter((v) => v != null && String(v).trim() !== '');
   if (!choix.length) return console.log(`– ${id} : aucune photo choisie, rien à faire`);
@@ -77,7 +79,7 @@ async function preparer(id) {
       fichier: `photos/${fichier}`,
       role: i === 0 ? 'principale' : 'secondaire',
       choix: String(valeur),
-      source: `${h.dossier_photos}/${source}`,
+      source: `${id}/photos/${source}`,
       largeur: width,
       hauteur: height,
       orientation: width > height ? 'paysage' : width < height ? 'portrait' : 'carre',
@@ -85,11 +87,11 @@ async function preparer(id) {
     });
   }
   const gardes = new Set(media.map((m) => path.basename(m.fichier)));
-  const orphelins = fs.readdirSync(sortie).filter((f) => f.endsWith('.jpg') && !gardes.has(f));
+  const orphelins = fs.readdirSync(sortie).filter((f) => f.startsWith('photo-') && f.endsWith('.jpg') && !gardes.has(f));
   orphelins.forEach((f) => fs.unlinkSync(path.join(sortie, f)));
   fs.writeFileSync(path.join(sortie, 'photos.json'), JSON.stringify({
     _genere_par: 'scripts/preparer-photos — ne pas modifier à la main',
-    story: id, dossier_photos: h.dossier_photos, photos: media,
+    story: id, photos: media,
   }, null, 2) + '\n');
   const total = media.reduce((s, m) => s + m.ko, 0);
   console.log(`✓ ${id} : ${media.length} photo(s), ${(total / 1024).toFixed(1)} Mo${orphelins.length ? `, ${orphelins.length} retirée(s)` : ''}`);
