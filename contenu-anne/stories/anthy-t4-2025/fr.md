@@ -1,27 +1,24 @@
 ---
-commune: Anthy-sur-Léman   # proposition Claude, à confirmer
-type_bien: Appartement (T4)   # proposition Claude, à ajuster
+commune: Anthy-sur-Léman
+type_bien: Appartement (T4)
 annee_vente: 2025
-delai_vente:
-particularite: >
-  Un voisin d'un précédent client, dans le même immeuble : la connaissance de
-  la copropriété a rassuré les acquéreurs dès la première visite.
-photo_principale:   # à envoyer depuis l'espace d'édition — photo HD proposée par Claude : n° 025 du dossier Drive
+delai_vente: ''
+particularite: "Un voisin d'un précédent client, dans le même immeuble : la connaissance de la copropriété a rassuré les acquéreurs dès la première visite."
+photo_principale: photos/anthy-sur-leman-exp-immo-028-hd.webp
 photos: []
-# Aucun avis Immodvisor rapproché pour l'instant (voir stories/_suivi-stories.md).
-temoignages:          # vendeur et/ou acheteur ; un seul suffit pour publier
-  - role: vendeur
-    prenom:
-    contexte:
-    citation:
-    portrait:
-  - role: acheteur
-    prenom:
-    contexte:
-    citation:
-    portrait:
 statut: brouillon
 autorisations: false
+temoignages:
+  - citation: null
+    contexte: null
+    portrait: null
+    prenom: null
+    role: vendeur
+  - citation: null
+    contexte: null
+    portrait: null
+    prenom: null
+    role: acheteur
 ---
 
 # Quand on connaît déjà l'immeuble
