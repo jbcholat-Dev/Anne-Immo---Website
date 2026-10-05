@@ -957,6 +957,38 @@ afin d'avancer sur ma vente et, le moment venu, de contacter Anne (CAP-7).
 
 **État :** à faire. Responsable : Anne (rédaction et revalidation), JB (relecture, offres citées), Claude (objets, libellés) ; prérequis : story 7.8 (le guide, dont la séquence distille le contenu) ; les stories publiées (7.9) pour les liens. Note : `guide/README.md` demande un seul fichier `sequence-emails.md` alors que le gabarit prévoit un dossier par étape ; Anne peut déposer dans l'une ou l'autre forme, Claude range dans la seconde (c'est celle que le site lit).
 
+### Story 7.12: Nouvelles ventes d'Anne au format du site
+
+En tant que visiteur de la page Réalisation,
+je veux voir davantage de ventes d'Anne racontées de la même façon,
+afin de juger de sa méthode sur des cas variés (CAP-2).
+
+**Critères d'acceptation :**
+
+**Étant donné** les ventes qu'Anne a préparées dans le Drive (`stories/<id>/` : ancien texte « web » et photos HD)
+**Quand** Claude les range dans le dépôt
+**Alors** chaque story a un `fr.md` au gabarit (récit à la première personne, 10 à 15 lignes, sans prix ni nom de client ni nom de résidence), en `statut: brouillon`, et des photos web produites par `scripts/preparer-photos`
+**Et** les textes sources (qui citent des prix) et le registre restent sur le Drive, hors du dépôt.
+
+**État :** en cours (2026-10-05). Responsable : Claude (rédaction proposée, photos), Anne (relecture, témoignages, textes de Bernex et Sciez), JB (photos HD de plus de 10 Mo, que le connecteur Drive ne transfère pas).
+
+### Story 7.13: Espace d'édition d'Anne (Sveltia CMS)
+
+En tant qu'Anne,
+je veux modifier mes ventes, mes textes et mes photos moi-même dans une page du site,
+afin de ne plus dépendre d'un passage par le Drive et par Claude pour chaque correction.
+
+**Critères d'acceptation :**
+
+**Étant donné** l'adresse `/admin` du site et un compte GitHub collaborateur du dépôt
+**Quand** Anne (ou JB) se connecte et enregistre une fiche
+**Alors** le changement part sur une branche avec sa demande de fusion, Cloudflare en construit un aperçu protégé, et rien n'est en ligne tant que JB n'a pas fusionné
+**Et** les photos envoyées sont réduites dans le navigateur (WebP, 3 200 px au plus) avant d'entrer dans le dépôt ; les HD n'y entrent jamais
+**Et** le site public ne montre que les stories « publie », qui exigent les autorisations écrites ; l'aperçu montre aussi les brouillons
+**Et** les avis Immodvisor restent en lecture seule, sauf la vente concernée et « cité sur l'accueil ».
+
+**État :** en cours (2026-10-05). Responsable : Claude (configuration, adaptation du site, guide), JB (Worker de connexion, autorisation GitHub, invitation d'Anne), Anne (compte GitHub, séance d'essai).
+
 ## Epic 8: Finition visuelle
 
 Le site rend comme la maquette sur tous les écrans, avec des polices stables, une vidéo d'ouverture réelle et plus aucune pastille de chantier.
@@ -988,7 +1020,7 @@ afin de lire une page stable, et sans qu'un serveur de Google soit appelé à mo
 **Quand** on compare les captures à celles d'avant
 **Alors** titres et textes sont identiques (Italiana partout où la maquette la prévoit, tiret insécable U+2011 des titres conservé), aucune erreur console, et `site/README.md` note le changement (polices hébergées, Google Fonts retiré).
 
-**État :** à faire. Responsable : Claude ; prérequis : aucun. À faire en premier dans l'epic : les décalages de rendu que JB a vus peuvent venir du chargement tardif des polices, il faut les stabiliser avant de corriger les écrans.
+**État :** fait (2026-10-04, `implementation-artifacts/8-1-polices-hébergées-sur-le-site.md`). Responsable : Claude ; prérequis : aucun. À faire en premier dans l'epic : les décalages de rendu que JB a vus peuvent venir du chargement tardif des polices, il faut les stabiliser avant de corriger les écrans.
 
 ### Story 8.2: Adaptation aux écrans page par page
 
@@ -1072,6 +1104,21 @@ afin qu'aucune pastille de chantier ni écart non décidé ne parte en ligne.
 **Alors** elle les valide ou demande une modification, `DECISIONS.md` passe D-13 en « tranché », et `npm run verif` fournit les captures finales des pages touchées.
 
 **État :** à faire. Responsable : Anne (D-25, points ouverts 1, 2, 6, texte d'Acheter), JB (revue des écarts, arbitrage Lenis), Claude (retouches, journal, captures) ; prérequis : story 8.2 (les écrans d'abord, les retouches ensuite) ; le retrait de la pastille d'Acheter dépend du texte d'Anne (D-5). Les pastilles « à compléter · A-13 » des pages légales relèvent de la story 7.6.
+
+### Story 8.5: Lien « Accueil » dans la navigation
+
+En tant que visiteur,
+je veux un lien « Accueil » écrit en toutes lettres dans la barre de navigation,
+afin de revenir à la page d'accueil sans deviner que le symbole y mène.
+
+**Critères d'acceptation :**
+
+**Étant donné** le retour d'aperçu n° 3 de JB (2026-09-26 : « pour revenir à la page d'accueil, il faut cliquer sur le logo […] pas très intuitif »)
+**Quand** la barre est affichée (desktop, réduite, menu mobile, FR et EN)
+**Alors** « Accueil » (« Home ») est la première entrée, avant « À propos ▾ », marqué page en cours sur l'accueil seulement, et le symbole ramène toujours à l'accueil (D-28)
+**Et** la barre ne déborde pas à 900 px, la plus petite largeur desktop.
+
+**État :** fait (2026-10-04). Responsable : Claude ; origine : ticket GitHub n° 3 (`retour-apercu`).
 
 
 # Mise en ligne d'aperçu, référencement et lancement public (epics 9, 11 et 12)

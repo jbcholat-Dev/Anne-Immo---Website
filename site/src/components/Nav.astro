@@ -1,7 +1,8 @@
 ---
 // Barre de navigation (D-2, D-6 variante A, D-17, D-21) : fixe dès le premier pixel, réduite au défilement, jamais masquée.
-// Desktop : réseaux · filet · symbole seul | À propos ▾ (Qui suis-je ? · Ma méthode · Cible) · Réalisation · Vendre · Acheter · Contact · FR EN.
-// Mobile : symbole + bouton menu ; menu plein écran, « À propos » en accordéon (libellé cliquable + chevron).
+// Desktop : réseaux · filet · symbole seul | Accueil · À propos ▾ (Qui suis-je ? · Ma méthode · Cible) · Réalisation · Vendre · Acheter · Contact · FR EN.
+// Mobile : symbole + bouton menu ; menu plein écran, Accueil puis « À propos » en accordéon (libellé cliquable + chevron).
+// « Accueil » en toutes lettres (D-28, retour d'aperçu n° 3) : le logo seul ne suffisait pas à dire « revenir à l'accueil ».
 import Logo from './Logo.astro';
 import { t, r, bascule, type Lang, type RouteKey } from '../i18n';
 import { reseaux } from '../config/site';
@@ -20,6 +21,8 @@ const sous: { key: RouteKey; label: string }[] = [
   { key: 'methode', label: d.nav.methode },
   { key: 'cible', label: d.nav.cible },
 ];
+// Accueil marqué « page en cours » seulement sur l'accueil lui-même (la 404 passe aussi courante="accueil" pour la bascule de langue).
+const surAccueil = courante === 'accueil' && !/404/.test(Astro.url.pathname);
 const estCourante = (k: RouteKey) => courante === k || (k === 'apropos' && ['qui', 'methode', 'cible'].includes(courante ?? ''));
 ---
 <header class="nav" data-nav data-sombre={sombre ? '1' : undefined}>
@@ -34,6 +37,7 @@ const estCourante = (k: RouteKey) => courante === k || (k === 'apropos' && ['qui
       <a href={r('accueil', lang)} class="nav-logo" aria-label={d.nav.accueil}><Logo taille={38} class="nav-logo-svg" /></a>
     </div>
     <nav aria-label={d.nav.principale} class="nav-desktop">
+      <a class="nav-lien" href={r('accueil', lang)} aria-current={surAccueil ? 'page' : undefined}>{d.nav.accueil}</a>
       <div class="nav-item nav-apropos">
         <a href={r('apropos', lang)} aria-current={estCourante('apropos') ? 'page' : undefined} aria-haspopup="true" class="nav-lien">{d.nav.apropos} <span aria-hidden="true" class="nav-chevron">▾</span></a>
         <div class="nav-menu" role="menu" aria-label={d.nav.apropos}>
@@ -58,6 +62,7 @@ const estCourante = (k: RouteKey) => courante === k || (k === 'apropos' && ['qui
     <button type="button" class="menu-mobile-fermer" aria-label={d.nav.fermer} data-menu-fermer>×</button>
   </div>
   <nav class="menu-mobile-nav" aria-label={d.nav.principale}>
+    <a class="menu-mobile-lien" href={r('accueil', lang)} aria-current={surAccueil ? 'page' : undefined}>{d.nav.accueil}</a>
     <div class="menu-mobile-apropos">
       <div class="menu-mobile-rang">
         <a href={r('apropos', lang)} class="menu-mobile-lien">{d.nav.apropos}</a>
@@ -150,6 +155,12 @@ const estCourante = (k: RouteKey) => courante === k || (k === 'apropos' && ['qui
   .menu-mobile-reseaux { display: flex; align-items: center; gap: 12px; }
   .menu-mobile-reseaux a { width: 44px; height: 44px; border-radius: 999px; border: 1.5px solid var(--avt-brun); display: inline-flex; align-items: center; justify-content: center; color: var(--avt-brun); }
   body[data-menu-ouvert] { overflow: hidden; }
+
+  /* Petits écrans d'ordinateur : avec « Accueil » (D-28), on resserre les entrées pour garder de l'air autour du symbole */
+  @media (min-width: 900px) and (max-width: 1099px) {
+    .nav-desktop, .nav[data-reduit] .nav-desktop { gap: 22px; }
+    .nav-gauche { gap: 14px; }
+  }
 
   @media (max-width: 899px) {
     .nav { height: var(--nav-h-mobile); }

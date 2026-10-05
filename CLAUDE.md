@@ -56,7 +56,7 @@ Le repère de vérité en cas de contradiction : la **spec v5** pour ce que le s
 |---|---|
 | `RUNBOOK.md` | La notice de secours : comptes, adresse d'aperçu, comment remettre en ligne, bascule en production, pièges irréversibles. |
 | `site/` | Le code du site (Astro 7, sortie statique). `site/README.md` décrit l'état réel, `site/PLAN.md` le plan de construction. |
-| `contenu-anne/` | Contenu d'Anne rangé au format du site : stories, avis Immodvisor, photos web, légal, guide. Anne ne dépose pas ici : elle dépose dans le dossier Google Drive « Contenu site Anne », Claude range ici par PR (décision du 2026-10-05, RUNBOOK § 1). Les vidéos et photos HD restent sur Drive, hors Git. |
+| `contenu-anne/` | Contenu d'Anne rangé au format du site : stories, avis Immodvisor, photos web, légal, guide. Anne modifie ce contenu par l'espace d'édition du site (`/admin`, Sveltia CMS, story 7.13) : chaque enregistrement est une demande de fusion que JB valide. Le dossier Google Drive « Contenu site Anne », rangé à l'identique, reste l'archive des photos HD et des vidéos (RUNBOOK § 1). Les vidéos et photos HD restent sur Drive, hors Git. |
 | `design-system/` | Charte : couleurs, typographies, logos, composants. `tokens/tokens.css` est copié dans le site. |
 | `maquettes/lot-3-complet/` | Maquette de référence (61 écrans) et `DECISIONS.md` (D-1 → D-26). |
 | `_bmad-output/specs/spec-anne-website/` | La spec (contrat, 11 capacités CAP-1 → CAP-11) et son journal `.memlog.md`. |
@@ -75,6 +75,7 @@ npm run build        # construit le site dans site/dist
 npm run check        # vérification des types
 npm run verif        # captures d'écran de chaque page (ordinateur + téléphone) dans site/.verif
 node scripts/liens.mjs         # vérifie que chaque lien mène quelque part
+node scripts/ecrans.mjs        # signale tout débordement ou bouton trop petit, page par page et largeur par largeur
 node scripts/e2e-diagnostic.mjs # parcourt le diagnostic de bout en bout
 ```
 

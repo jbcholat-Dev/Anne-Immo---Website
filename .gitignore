@@ -25,5 +25,9 @@ contenu-anne/.obsidian/
 .claude/skills/grill-with-docs/
 skills-lock.json
 
-# Photos HD des stories (1,4 Go) : hors Git, comme les videos — partage par lien
+# Photos HD des stories (1,4 Go) : hors Git, comme les videos. Elles vivent sur le Drive
+# « Contenu site Anne », dans stories/<bien>/photos/ ; ici, seules les versions web photo-*.jpg.
 contenu-anne/Stories  photos/
+contenu-anne/.photos-hd/
+contenu-anne/stories/*/photos/*.jpg
+!contenu-anne/stories/*/photos/photo-*.jpg

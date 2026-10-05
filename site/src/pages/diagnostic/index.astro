@@ -3,15 +3,15 @@
 import Page from '../../layouts/Page.astro';
 import Picture from '../../components/Picture.astro';
 import Reserve from '../../components/Reserve.astro';
-import { instantane, avisParId, roleLibelle, photoPrincipale } from '../../lib/contenu';
+import { instantane, avisParId, roleLibelle, photoPrincipale, storyVisible } from '../../lib/contenu';
 import { accueil } from '../../config/site';
-import { getEntry } from 'astro:content';
 import { r } from '../../i18n';
 const inst = await instantane();
 const a = await avisParId(accueil.extrait.avis);
-const storyVignette = await getEntry('stories', 'appartement-cascade-2024');
-const vignette = photoPrincipale('appartement-cascade-2024');
-const imageSobre = photoPrincipale('maison-premium-2025');
+const storyVignette = await storyVisible('appartement-cascade-2024');
+const storySobre = await storyVisible('maison-premium-2025');
+const vignette = storyVignette ? photoPrincipale(storyVignette) : null;
+const imageSobre = storySobre ? photoPrincipale(storySobre) : null;
 const note = String(inst.note).replace('.', ',');
 ---
 <Page titre="Diagnostic — Découvrez en 3 minutes si votre stratégie de vente va réellement fonctionner" description="Quinze questions sur votre bien, votre annonce et vos visites. Un score de maturité sur 100, un diagnostic sur trois axes, des recommandations concrètes. Trois minutes, gratuit." courante="diagnostic" ogImage="/img/stories/maison-premium-2025/photo-047-1280.jpg">
@@ -81,6 +81,12 @@ const note = String(inst.note).replace('.', ',');
   .dl-bloc-klein h2 { color: var(--avt-ecru); }
   .dl-bouton-klein { align-self: flex-start; }
   .dl-sortie { padding: 0 var(--marge) 96px; font-size: 15px; }
+  /* Largeurs intermédiaires (900 à 1199 px, sans artboard) : colonnes proportionnelles, sinon le texte déborde (story 8.2) */
+  @media (min-width: 900px) and (max-width: 1199px) {
+    .dl-offre { grid-template-columns: minmax(0, 1fr) minmax(0, 360px); gap: 48px; }
+    .dl-offre h1 { font-size: 48px; }
+    .dl-image { height: 460px; }
+  }
   @media (max-width: 899px) {
     .dl-offre { padding: 32px var(--marge-m) 40px; display: block; }
     .dl-offre h1 { font-size: 38px; line-height: 1.08; margin-bottom: 16px; }

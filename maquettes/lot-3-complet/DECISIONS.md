@@ -51,6 +51,12 @@ La nav passe de 4 entrées + bouton à **5 entrées (À propos ▾ · Réalisati
 |---|---|---|---|
 | D-27 | **Le hero, c'est le montage d'Anne, en entier (95 s), en boucle, sans son** (D-1 précisée). Le montage a été fait exprès pour le site : on ne le découpe pas, on ne le recadre pas (le logo eXp incrusté reste). **Le poster A-14 devient la première image de la vidéo** (Anne face caméra dans un pré du Chablais) : image d'attente pendant le chargement et repli si la lecture automatique est refusée (mouvement réduit, économie de données), sans saut visuel au démarrage. La photo d'Armoy quitte le hero. Poids : 1440 px, ≈ 15 Mo MP4 — écart assumé au budget « 12 s, < 6 Mo » (voir `site/README.md` § Écarts). | ✅ | `site/README.md` · `scripts/video.mjs` · story 8.3. |
 
+## Décision du 2026-10-04 (JB, retour d'aperçu n° 3 — story 8.5)
+
+| # | Décision | Statut | À propager |
+|---|---|---|---|
+| D-28 | **Un lien « Accueil » en toutes lettres ouvre la navigation** (desktop, réduite, menu mobile ; « Home » en anglais), avant « À propos ▾ ». Le symbole seul (D-21) ramène toujours à l'accueil, mais JB a relevé sur l'aperçu que ce n'était « pas très intuitif ». Le lien est marqué « page en cours » sur l'accueil seulement (pas sur la 404). Ce qu'on perd : une entrée de plus dans une barre déjà dense ; vérifié à 900 px, la plus petite largeur desktop, sans débordement (entrées resserrées de 32 à 22 px entre 900 et 1 099 px). | ✅ | `structure-site.md` § 0 · `site/README.md` · `site/src/components/Nav.astro` · story 8.5. |
+
 Écarts maquette ↔ CDC corrigés dans le canvas le 2026-09-22 (export `maquettes/lot-3-complet/`) : section « Ils ont acheté avec Anne » sur Acheter (§ 5.4) · case « séquence d'e-mails » sur l'estimation (§ 4) · citations sur deux cartes de la pile (D-16) · fiche story mobile · sortie A mobile, sortie B desktop, profil « Stratégie à risque » · YouTube et ligne de statut dans le pied de page (§ 0) · téléphone obligatoire sur Contact (§ 9) · dates des avis (A-11) · hamburger mobile invisible sur 4 pages, `clipPath` cassé, libellé A-01 périmé, réglage « 4 cartes » retiré (CAP-1). Restent au build : menu « À propos » à deux sous-entrées, story sans photo secondaire, 404, footer complet sur toutes les pages, nav fixe dès le premier pixel.
 
 ### Points laissés ouverts (mis à jour le 2026-09-22)

@@ -41,7 +41,7 @@ Les scripts Playwright utilisent `/opt/pw-browsers/chromium` s'il existe, sinon 
 | `/404` | page introuvable | — |
 | `/en`, `/en/track-record` | accueil EN et index « Track record » (vide : aucune story traduite, AD-2). Les autres entrées EN renvoient aux pages FR pour cette v1, sans écran mi-traduit. | `src/content/ui/en.json` |
 
-Navigation (D-2, D-6 A, D-17, D-21) : réseaux · symbole seul | À propos ▾ (Qui suis-je ? · Ma méthode · Cible) · Réalisation · Vendre · Acheter · Contact · FR EN. Fixe dès le premier pixel, réduite à 56 px au défilement, jamais masquée ; menu mobile plein écran avec « À propos » en accordéon (lien + chevron). Pied de page `00-footer` partout.
+Navigation (D-2, D-6 A, D-17, D-21, D-28) : réseaux · symbole seul | Accueil · À propos ▾ (Qui suis-je ? · Ma méthode · Cible) · Réalisation · Vendre · Acheter · Contact · FR EN. Fixe dès le premier pixel, réduite à 56 px au défilement, jamais masquée ; menu mobile plein écran avec Accueil puis « À propos » en accordéon (lien + chevron). Pied de page `00-footer` partout.
 
 ## Réel vs placeholder
 
@@ -99,6 +99,10 @@ Sur l'aperçu (site non indexable), chaque page porte un bouton « Un retour ? �
 - **Dans la page** (`src/components/accueil/Hero.astro`) : `<video muted autoplay loop playsinline preload="metadata">` avec deux `<source>` (WebM puis MP4), écrites seulement si `public/video/ouverture.mp4` existe au build (sinon la balise est masquée par `.hero-video-absente` et le poster `<picture>` reste). Vidéo masquée sous `prefers-reduced-motion` ; non chargée si le navigateur annonce l'économie de données (`navigator.connection.saveData`).
 - **Poids finaux** : voir la story 8.3 (`_bmad-output/implementation-artifacts/8-3-vidéo-d-ouverture-intégrée.md`).
 
+## Polices (story 8.1)
+
+Italiana (titres) et DM Sans (texte) sont servies par le site lui-même depuis `public/fonts/` (format `woff2`, sous-ensemble latin, licence OFL jointe). Google Fonts est retiré : aucune requête ne part chez Google (AD-11), et `npm run verif` signale toute requête vers `fonts.googleapis.com` ou `fonts.gstatic.com` comme une erreur. Graisses : Italiana 400 ; DM Sans 400, 500, 700 et 400 italique (les mêmes qu'avant ; la seule règle en 600 s'affiche en 700, comme avant). Les déclarations `@font-face` sont en tête de `src/styles/global.css` ; `Base.astro` télécharge en priorité Italiana et DM Sans 400. Les fichiers viennent des paquets npm Fontsource 5.3.0 (`@fontsource/italiana`, `@fontsource/dm-sans`), copiés une fois : aucun paquet ajouté au projet.
+
 ## Écarts assumés avec la maquette / les briefs
 
 - **Vidéo d'ouverture au-dessus du budget** « 8-12 s, < 6 Mo » : JB a décidé (D-27) de diffuser le montage d'Anne en entier (95 s). Compromis : 1440 px au lieu de 1920 (le hero fait 900 px de haut, différence invisible), crf 30, ≈ 15 Mo MP4 / ≈ 10 Mo WebM. Le fichier est lu en flux (faststart + `preload="metadata"`) : la lecture démarre après les premières secondes reçues, le poster couvre l'attente, et le LCP (plus grand élément affiché) reste le poster, chargé en priorité. À remesurer sur l'aperçu (story 10.8).
@@ -112,6 +116,18 @@ Sur l'aperçu (site non indexable), chaque page porte un bouton « Un retour ? �
 - Marqueurs « Point ouvert » / « Contenu à écrire par Anne » affichés (pastilles de la maquette) pour que JB les repère ; à supprimer en production.
 - **Contrastes** vérifiés sur chaque paire de tokens employée (≥ 4,5:1) — deux écarts à la maquette : la pastille « Bases solides » passe du fond galet (4,35:1) à l'écru bordé ; les dates indisponibles du gabarit Cal.com gardent le token `--avt-disabled` de la maquette (1,7:1, information non essentielle — l'embed Cal.com les remplacera).
 - Pages légales : textes de structure conformes à AD-16 (finalités, bases légales, 3 ans), **à faire valider par Anne** avant publication ; les valeurs A-13 sont des pastilles « à compléter ».
+
+## Largeurs intermédiaires (story 8.2)
+
+La maquette dessine 1 440 px (ordinateur) et 390 px (téléphone). Entre 900 et 1 399 px, quatre pages ont une plage de largeur dédiée (colonnes proportionnelles, titres réduits) : À propos, fiche de vente, landing du diagnostic (900 à 1 199 px), guide (900 à 1 399 px, couverture masquée sous 1 100 px). `node scripts/ecrans.mjs` contrôle l'absence de débordement à chaque largeur.
+
+## Espace d'édition (story 7.13)
+
+- `public/admin/` : Sveltia CMS (version figée dans `index.html`) et sa configuration `config.yml`. Collections : ventes (`contenu-anne/stories/<id>/fr.md`, photos dans `photos/` de la story), pages, avis Immodvisor (lecture seule sauf `story` et `retenu`), coordonnées (`legal/identite.md`). L'anglais ne s'édite pas dans le CMS (traduction par Claude, epic 6).
+- Les photos envoyées sont réduites dans le navigateur en WebP 3 200 px ; `scripts/images.mjs` (lancé par `npm run build`) en tire les formats web. Il prend dans `stories/<id>/photos/` les `photo-*.jpg` (ancien circuit, `scripts/preparer-photos`) et les `*.webp` / `*.png`.
+- `photo_principale` et `photos` portent un chemin relatif à la story (`photos/x.webp`) ; un ancien numéro (`"047"`) est encore lu via `photos.json`.
+- Brouillons : l'aperçu montre toutes les stories ; le site public (`PUBLIC_INDEXATION=oui`) seulement les « publie ».
+- Écart assumé : les commentaires de l'en-tête YAML (« proposition Claude… ») disparaissent quand une fiche est enregistrée depuis l'espace d'édition ; les consignes sont dans les aides des champs.
 
 ## Garde-fous de contenu (stories 6.2 et 7.9)
 

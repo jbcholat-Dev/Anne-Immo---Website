@@ -94,7 +94,7 @@ Toutes traduites (CAP-10).
 
 **En-tête, desktop** — **cinq entrées, une bascule de langue, un bouton** (D-2 à D-7).
 - Logo à gauche : **le symbole seul** (cercle Klein + strate terracotta, D-21) — le nom vit dans le hero et dans le lockup du pied de page ; sans sous-titre (charte § 2, 2026-09-22) — **logo Anne seul : pas de logo eXp en en-tête** (charte § 2.4, le co-branding vit en pied de page). Le secteur (Léman & Chablais) n'est pas redit ici : il vit dans le sous-titre du hero et la ligne de statut du pied de page.
-- Entrées, dans cet ordre : **À propos ▾** · Réalisation · Vendre · Acheter · Contact.
+- Entrées, dans cet ordre : Accueil · **À propos ▾** · Réalisation · Vendre · Acheter · Contact. « Accueil » ajouté le 2026-10-04 (D-28, retour d'aperçu n° 3) : le symbole seul ne disait pas assez qu'il ramène à l'accueil ; il y ramène toujours.
 - **« À propos » porte un menu déroulant** (au survol sur desktop, au tap sur les appareils tactiles) avec trois sous-entrées, qui sont les ancres de la page À propos (§3) : « Qui suis-je ? » (`#qui-suis-je`) · « Ma méthode » (`#methode`) · « Cible » (`#cible`). ⚠️ **« Cible » est à trancher** (D-2, point ouvert 1) : dessiner le menu **en deux variantes**, à trois et à deux sous-entrées. L'entrée « À propos » reste elle-même cliquable et mène en haut de la page.
 - Sélecteur de langue à droite, discret (code de langue, **pas de drapeau** — un drapeau désigne un pays, pas une langue).
 - **Pas de bouton dans l'en-tête** (D-17, 2026-09-22 — annule D-7) : le diagnostic est atteint par le CTA du hero, § 1.6, la page Vendre, le menu mobile et le pied de page.

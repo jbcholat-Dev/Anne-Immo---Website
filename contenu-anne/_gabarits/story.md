@@ -4,9 +4,8 @@ type_bien:            # Maison, Appartement, Chalet, Terrain…
 annee_vente:
 delai_vente:          # de la mise en vente à l'offre acceptée, ex. « 3 mois »
 particularite:        # ce qui rendait cette vente difficile ou intéressante, une ligne
-photo_principale:     # le numéro de la photo dans ton dossier de vente, entre guillemets, ex. "047"
-dossier_photos:       # le dossier de la vente dans « Stories  photos » (photos HD, hors Git), ex. « SCIEZ_BURNET_Villa »
-photos: []            # 4 à 6 autres, même règle, ex. ["002", "019", "038"] — une verticale si tu en as, sinon le site recadre
+photo_principale:     # choisie dans l'espace d'édition (/admin) : chemin dans le dossier de la story, ex. "photos/sejour.webp" ; ancien circuit : numéro de la photo HD, ex. "047"
+photos: []            # 4 à 6 autres, même règle — une verticale si tu en as, sinon le site recadre
 temoignages:          # jusqu'à deux : le vendeur (ton client) et l'acheteur. Un seul suffit pour publier ; les deux, c'est l'idéal. Supprime le bloc que tu n'as pas.
   - role: vendeur
     prenom:

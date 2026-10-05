@@ -1,14 +1,17 @@
 # preparer-photos
 
+> Depuis la story 7.13 (2026-10-05), Anne envoie ses photos par l'espace d'édition du site, qui les réduit lui-même. Ce script reste pour un dépôt en masse depuis le Drive ; il ne lit que les sélections par **numéro** (`"047"`), pas les chemins (`photos/x.webp`) écrits par l'espace d'édition.
+
 Tire les **versions web** des photos choisies par Anne. Règle complète : `_bmad-output/planning-artifacts/strategie-contenu.md` § Photos.
 
-- **Entrée** : `contenu-anne/Stories  photos/<VENTE>/` (HD, hors Git) + l'en-tête de `contenu-anne/stories/<id>/fr.md` : `dossier_photos`, `photo_principale`, `photos` (numéro de la photo, ex. `"047"`, ou nom exact).
-- **Sortie** : `contenu-anne/stories/<id>/photos/` — `photo-<numéro>.jpg` (3 200 px max, JPEG 85, sRGB, sans métadonnées) + `photos.json` (objets `Media`). Le dossier appartient au script : une photo désélectionnée y est supprimée. Ne rien y déposer à la main.
+- **Entrée** : les photos HD de la story, dans `stories/<id>/photos/` du dossier Google Drive « Contenu site Anne » (hors Git), recopié en local ; + l'en-tête de `contenu-anne/stories/<id>/fr.md` : `photo_principale`, `photos` (numéro de la photo, ex. `"047"`, ou nom exact).
+  Le script lit la copie locale à l'endroit donné par le réglage `PHOTOS_HD` (le dossier `stories` de la copie), sinon dans `contenu-anne/.photos-hd/` (ignoré par Git).
+- **Sortie** : `contenu-anne/stories/<id>/photos/` — `photo-<numéro>.jpg` (3 200 px max, JPEG 85, sRGB, sans métadonnées) + `photos.json` (objets `Media`). Le dossier appartient au script : une `photo-*.jpg` désélectionnée y est supprimée. Ne rien y déposer à la main.
 
 ```bash
 cd scripts/preparer-photos
 npm install          # une fois
-npm run photos                            # toutes les stories
+PHOTOS_HD="…/Contenu site Anne/stories" npm run photos   # toutes les stories
 npm run photos -- maison-premium-2025     # une seule
 ```
 
