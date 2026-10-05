@@ -33,13 +33,10 @@ export const accueil = {
 };
 
 /**
- * Liaisons avis → story assumées pour la v1 quand le champ `story` de la fiche d'avis est vide
- * (rapprochement de confiance moyenne ou forte dans la fiche). Anne confirme en remplissant `story` ; ce tableau est alors ignoré.
+ * Liaisons avis → story assumées quand le champ `story` de la fiche d'avis est vide.
+ * Vide depuis le 2026-10-05 (story 7.14) : les liaisons vivent dans le champ `story` de chaque avis, modifiable dans l'espace d'édition.
  */
-export const liaisonsAssumees: Record<string, string> = {
-  '2025-01-14-alexandra-v': 'appartement-cascade-2024',   // « projet vente et achat » = la vente en cascade de Thonon
-  '2024-09-09-rhl-achat': 'auberge-decoupee-2024',        // acheteur de l'auberge divisée (Armoy)
-};
+export const liaisonsAssumees: Record<string, string> = {};
 
 /** Page Acheter, § 5.4 : un ou deux avis d'acheteurs. */
 export const acheter = { avis: ['2024-09-09-rhl-achat', '2026-08-24-jamesw'] };

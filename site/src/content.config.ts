@@ -28,16 +28,8 @@ const stories = defineCollection({
     photos: z.array(z.union([z.string(), z.number()]).transform(String)).nullish().transform((v) => v ?? []),
     temoignages: z.array(temoignage).nullish().transform((v) => v ?? []),
     statut: z.enum(['brouillon', 'a-relire', 'publie']).default('brouillon'),
+    // Plus lu par le site depuis le 2026-10-05 (story 7.14) : les accords des clients sont obtenus avant de passer en « publie ».
     autorisations: z.boolean().default(false),
-  }).transform((d, ctx) => {
-    // Règle 3 de contenu-anne/README.md (story 7.9) : rien ne part en ligne sans accord écrit.
-    // Une fiche « publie » sans autorisations est ramenée à « a-relire » (donc absente du site public),
-    // au lieu de bloquer toute la construction : un clic dans l'espace d'édition ne doit pas casser l'aperçu (story 7.13).
-    if (d.statut === 'publie' && !d.autorisations) {
-      console.warn(`⚠ story « ${d.commune} » en « publie » sans « autorisations: true » : traitée comme « a-relire », absente du site public`);
-      return { ...d, statut: 'a-relire' as const };
-    }
-    return d;
   }),
 });
 

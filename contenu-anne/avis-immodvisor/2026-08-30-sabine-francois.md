@@ -9,7 +9,7 @@ vente_candidate: essert-romand-chalet-2026      # vente rapprochée (registre : 
 dossier_photos: "ESSERT_BAUD_chalet"
 confiance: forte                 # forte | moyenne | faible | aucun
 indice: "Vente d'un chalet d'environ 30 ans à remettre au goût du jour, dans un village peu équipé. Les photos le confirment : ESSERT_BAUD = chalet ancien à rafraîchir à Essert-Romand (photos de nov. 2025) ; BERNEX_HIGOUNENC = chalet haut de gamme très entretenu, ne colle pas."
-story:                           # la vente confirmée par Anne (slug) — seul champ lu par le site
+story: essert-romand-chalet-2026   # la vente confirmée par Anne (slug) — seul champ lu par le site
 retenu: true               # true = cité en entier dans « Ils ont travaillé avec Anne »
 ---
 

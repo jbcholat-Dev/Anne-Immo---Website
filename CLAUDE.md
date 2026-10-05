@@ -82,6 +82,6 @@ node scripts/e2e-diagnostic.mjs # parcourt le diagnostic de bout en bout
 ## 5. Règles de contenu et de sécurité
 
 - Les avis Immodvisor sont cités **tels quels**, jamais corrigés.
-- Aucune photo ni témoignage ne part en ligne publique sans autorisation écrite (`autorisations:` dans la story).
+- Une vente ne passe en « publie » qu'avec l'accord de ses clients (photos et avis cité). Décision de JB du 2026-10-05 : les clients des ventes actuelles ont tous donné leur accord ; le site ne vérifie plus de case « autorisations » (story 7.14). Le seul témoignage affiché sur une vente est son avis Immodvisor (champ `story` de l'avis).
 - Aucun secret (clé, mot de passe) dans le dépôt. Les mots de passe ne sont jamais manipulés par Claude (AD-9).
 - Les vidéos et photos HD restent hors Git ; ne pas les ajouter.

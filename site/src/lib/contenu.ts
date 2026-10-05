@@ -36,7 +36,7 @@ export const photoPrincipale = (story: Story) => photosDeStory(story).find((p) =
 /**
  * Les stories, triées par année décroissante puis slug.
  * Aperçu : toutes, brouillons compris, pour relire. Site public (PUBLIC_INDEXATION = « oui ») : seulement les « publie »,
- * qui ont forcément leurs autorisations (règle du schéma, story 7.9).
+ * (Anne ne passe une vente en « publie » qu'avec l'accord de ses clients, story 7.14).
  */
 export async function stories(): Promise<Story[]> {
   const publiques = import.meta.env.PUBLIC_INDEXATION === 'oui';

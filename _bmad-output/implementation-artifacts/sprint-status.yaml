@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-26-2026 15:10
-last_updated: 10-05-2026 14:45
+last_updated: 10-05-2026 15:05
 project: Site Anne Vial-Tissot
 project_key: NOKEY
 tracking_system: file-system
@@ -87,6 +87,7 @@ development_status:
   7-11-boîte-de-dépôt-google-drive-pour-anne: in-progress
   7-12-nouvelles-ventes-d-anne-au-format-du-site: in-progress
   7-13-espace-d-edition-d-anne-sveltia-cms: in-progress
+  7-14-temoignages-avis-immodvisor-et-fin-de-la-regle-d-autorisation: review
   epic-7-retrospective: optional
 
   epic-8: in-progress
