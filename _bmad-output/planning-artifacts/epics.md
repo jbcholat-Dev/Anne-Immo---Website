@@ -1864,3 +1864,16 @@ afin que les fiches se publient simplement maintenant que les clients ont tous d
 **Alors** la fiche de cette vente cite l'avis tel quel, vendeur d'abord
 **Et** une vente en « publie » est visible sur le site public sans autre condition
 **Et** l'espace d'édition ne propose plus de témoignage saisi à la main ni de case d'autorisation
+
+### Story 7.15: Nouvelle vidéo d'ouverture
+
+En tant qu'Anne,
+je veux que l'accueil montre mon nouveau montage vidéo,
+afin que la première impression du site soit à jour.
+
+**Critères d'acceptation :**
+
+**Étant donné** le montage déposé dans le Drive « Contenu site Anne »
+**Quand** il est encodé par `npm run video`
+**Alors** l'accueil le joue en entier, en boucle, sans son, avec pour image d'attente sa première image utile
+**Et** la source ne va pas dans Git, seules les versions web y vont

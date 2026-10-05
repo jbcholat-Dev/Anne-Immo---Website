@@ -1,7 +1,7 @@
 ---
 story: 7.14
 epic: 7 — Contenu d'Anne
-statut: review
+statut: done
 date: 2026-10-05
 autorisations: sans objet (décision de JB : accords des clients obtenus)
 ---
@@ -34,3 +34,5 @@ Décision de JB du 2026-10-05 (fil « Contenu du site ») :
 
 ## Ce qui reste
 - Anne ou JB : confirmer ou corriger les quatre liaisons dans l'espace d'édition (rubrique Avis).
+
+Fusionnée le 2026-10-05 (PR #14).

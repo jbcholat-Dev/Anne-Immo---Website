@@ -1,5 +1,5 @@
 // Encode la vidéo d'ouverture du hero (A-01, D-1) à partir de la source d'Anne, hors Git.
-// Entrée : ../contenu-anne/videos/ouverture-source.mp4 (1080p, 95 s : le montage qu'Anne a fait exprès pour le site,
+// Entrée : ../contenu-anne/videos/ouverture-source.mp4 (le montage qu'Anne a fait exprès pour le site, 4K 52 s depuis le 2026-10-05 — encodé avec --debut 0.1,
 // diffusé en entier et en boucle — décision JB 2026-09-26, D-27).
 // Sorties (suivies par Git) :
 //   public/video/ouverture.mp4   — H.264, 1440 px, 30 i/s, sans son, lecture progressive (faststart)
