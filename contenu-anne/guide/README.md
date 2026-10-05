@@ -2,7 +2,7 @@
 
 ## Le guide
 
-Le guide existe (site Gamma). Il doit être **refait à la charte v1** en PDF — c'est JB et Claude qui le produisent (tâche Notion « Rebrander le guide PDF »). Ce qu'on attend de toi ici : tes **corrections ou ajouts** au texte actuel, dans `corrections.md`. Si tu veux des versions par profil de vendeur (débutant / avancé / expert), dis-le ici — sinon un seul guide.
+Le guide existe (site Gamma). Il doit être **refait à la charte v1** en PDF — c'est JB et Claude qui le produisent (tâche Notion « Rebrander le guide PDF »). Ce qu'on attend de toi ici : tes **corrections ou ajouts** au texte actuel. Le texte du guide est recopié dans `texte-actuel.md` (corrige directement dedans) et les trois questions à trancher sont dans `corrections.md`. Si tu veux des versions par profil de vendeur (débutant / avancé / expert), dis-le ici — sinon un seul guide.
 
 ## La séquence d'e-mails
 
@@ -18,4 +18,4 @@ Après le diagnostic ou le téléchargement du guide, le site envoie **tout seul
 | J+12 | Où en êtes-vous aujourd'hui ? | point d'étape, accompagnement |
 | J+15 | On fait le point ? | récapitulatif + offre + audit gratuit |
 
-Le J+0 est l'e-mail de résultats (envoyé immédiatement) ; les six suivants forment la séquence. À revoir ensemble : le nombre d'étapes, les intervalles, les offres citées (les tarifs de 2025 sont périmés). Dépose ta version dans `sequence-emails.md`, un e-mail par section avec son jour d'envoi.
+Le J+0 est l'e-mail de résultats (envoyé immédiatement) ; les six suivants forment la séquence. À revoir ensemble : le nombre d'étapes, les intervalles, les offres citées (les tarifs de 2025 sont périmés). La base de 2025 est déjà rangée dans `sequence-emails/`, un dossier par e-mail (`etape-0` pour le J+0, puis `etape-1` à `etape-6`) : relis et corrige directement dans chaque `fr.md`. Ce qu'il faut vérifier est listé dans `sequence-emails/README.md`.

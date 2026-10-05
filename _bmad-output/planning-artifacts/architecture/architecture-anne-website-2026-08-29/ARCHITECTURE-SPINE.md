@@ -7,7 +7,7 @@ paradigm: 'Islands sur site statique à contenu typé, avec un noyau serveur min
 scope: 'Fondations du site annevialtissot.fr : contenu, langues, capture et stockage des leads, hébergement, propriété, SEO, mesure, surveillance, coût. Vague 2 (champs des objets, composants, go/no-go prestataire) hors périmètre.'
 status: final
 created: '2026-08-29'
-updated: '2026-10-04'
+updated: '2026-10-05'
 binds: [CAP-1, CAP-2, CAP-3, CAP-4, CAP-5, CAP-6, CAP-7, CAP-8, CAP-9, CAP-10, CAP-11]
 sources:
   - ../../architecture-brief.md — cadrage vague 1, réponses de JB, faisabilité Modelo (2026-08-29/30)
@@ -328,3 +328,5 @@ Website/
 **Amendement du 2026-09-26 (JB) — AD-9, titulaire du compte Cloudflare.** Le compte Cloudflare est celui de JB (connexion via GitHub), pas un compte au nom d'Anne. Raison : Anne ne s'y connectera jamais, et un compte à son nom imposerait de créer et de partager une adresse e-mail à elle pour la reprise. Conséquence : la transférabilité (AD-10) repose sur le RUNBOOK et sur le dépôt, pas sur la propriété du compte ; Anne pourra être invitée comme membre à tout moment ; le domaine (Infomaniak) et les comptes de services (Resend, Cal.com, Better Stack) restent à traiter au cas par cas, même logique par défaut. Trace : story 9.2, tableau de bord (action J02).
 
 **Amendement du 2026-10-04 (story 10.1, en cours).** Faits établis : (1) `workerEntryPoint` remplacé par `main` → `worker.ts` (voir Stack), vérifié en local, la mise en ligne sur `*.workers.dev` reste à faire en 10.2 ; (2) Resend : région d'envoi Irlande disponible au plan gratuit, mais les données du compte restent aux États-Unis : le transfert hors UE sera documenté dans la politique de confidentialité (AD-16) ; (3) Cal.com signe ses webhooks (`X-Cal-Signature-256`, HMAC SHA-256), le reste de l'hypothèse attend l'essai réel. Verdicts proposés pour la table Deferred, en attente de décision : CMS reporté au 2027-01 (JB), pas de bandeau sous réserve du relevé réel (JB), Lighthouse CI en local (JB), matrice Q10 conservée (Anne), go/no-go sans objet. Détail et preuves : `_bmad-output/implementation-artifacts/10-1-architecture-vague-2-consolidée.md`.
+
+**Amendement du 2026-10-05 (JB) — AD-9, compte Infomaniak.** Les domaines `annevialtissot.fr` et `annevialtissot.com` sont achetés depuis le compte Infomaniak de JB (son adresse e-mail), mais **Anne est inscrite comme propriétaire (titulaire) de chaque domaine** auprès du registre. Raison : praticité, même logique que le compte Cloudflare. Ce qui est préservé : la propriété légale des noms reste à Anne. Ce qu'on perd : si JB quitte le projet, la gestion des domaines doit être transférée vers un compte Infomaniak d'Anne (procédure au RUNBOOK). Options payantes « Domain Plus » (DNS Fast Anycast, Domain Privacy) non prises : le DNS est chez Cloudflare, et les coordonnées d'Anne sont publiques via les mentions légales. Trace : story 12.1, tableau de bord (action J06).

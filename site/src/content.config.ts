@@ -28,6 +28,10 @@ const stories = defineCollection({
     temoignages: z.array(temoignage).default([]),
     statut: z.enum(['brouillon', 'a-relire', 'publie']).default('brouillon'),
     autorisations: z.boolean().default(false),
+  }).refine((d) => d.statut !== 'publie' || d.autorisations, {
+    // Règle 3 de contenu-anne/README.md (story 7.9) : rien ne part en ligne sans accord écrit.
+    message: "story en « publie » sans « autorisations: true » : déposer les accords écrits dans autorisations/ avant de publier",
+    path: ['autorisations'],
   }),
 });
 

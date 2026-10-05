@@ -1,11 +1,11 @@
 # Vidéos
 
-Les vidéos vivent **ici, mais hors Git** (dossier ignoré : elles ne partent jamais sur GitHub). L'inventaire est dans `liens.md`, avec une colonne pour le lien de partage (OneDrive) quand une autre machine doit les récupérer.
+Les vidéos vivent **ici, mais hors Git** (dossier ignoré : elles ne partent jamais sur GitHub). L'inventaire est dans `liens.md`, avec une colonne pour le lien de partage. Depuis le 2026-10-05, les originaux se déposent dans le dossier Google Drive « Contenu site Anne », sous-dossier `Vidéos/` (voir `../README.md`).
 
 ## Pour déposer une nouvelle vidéo
 1. Copie le fichier original ici, nom en minuscules avec tirets : `commune-4k.mp4`.
 2. Ajoute une ligne dans `liens.md` (taille, durée, ce qu'on y voit).
-3. Si tu la partages par OneDrive, colle le lien dans la dernière colonne.
+3. Si elle est sur Google Drive, colle le lien de partage dans la dernière colonne.
 
 ## Pour l'ouverture du site
 La vidéo qui ouvre l'accueil est `ouverture-source.mp4` (ici, hors Git — c'est le montage d'Anne, 95 s, diffusé en entier et en boucle, sans son). Pour la remplacer :
