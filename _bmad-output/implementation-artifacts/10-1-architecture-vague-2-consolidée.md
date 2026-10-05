@@ -41,6 +41,9 @@ Copie du site hors du dépôt (aucun fichier de `site/` ne change), avec `@astro
 - **Réseau ouvert le 2026-10-05** (action J17) : `cal.com`, `*.cal.com`, `resend.com`, `*.resend.com`, `challenges.cloudflare.com`, `developers.cloudflare.com`.
 - **Blocage levé le 2026-10-05, constat initial** : le réseau de ce conteneur refusait `cal.com`, `app.cal.com`, `resend.com`, `api.resend.com`, `challenges.cloudflare.com`, `developers.cloudflare.com`. Les essais instrumentés (relevé des cookies, réservation test) demandent que JB les autorise dans l'environnement cloud.
 
+### 2 bis. Préparation de l'essai Cal.com (2026-10-05)
+Route provisoire `POST /api/essai-cal` ajoutée à `site/worker.ts` (voir `site/README.md`) : vérifie la signature `X-Cal-Signature-256` avec le secret `CAL_WEBHOOK_SECRET` (posé par JB dans Cloudflare, jamais dans le dépôt), puis consigne un ticket GitHub `essai-cal` sans données personnelles. Vérifié en local avec `wrangler dev` : sans signature → 401, signature fausse → 401, bonne signature → passe la vérification (puis 502, car la clé GitHub locale est factice). `npm run build` (24 pages), `npm run check` (0 erreur), `scripts/liens.mjs` (1477 liens, 0 cassé). Adresse visée : l'aperçu de la branche, `https://claude-project-thread-axo12t-anne-vial-tissot-site.jbcholat.workers.dev/api/essai-cal`. Reste à JB : le secret, l'ouverture de ce seul chemin dans Access, et le webhook dans Cal.com.
+
 ### 3. Verdicts proposés pour la table « Deferred » du spine
 | Décision | Verdict proposé (2026-10-04) | Qui tranche |
 |---|---|---|

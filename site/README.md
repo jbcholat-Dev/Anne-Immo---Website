@@ -92,6 +92,8 @@ Chaque endroit est marqué `TODO(backend)` dans le code (`grep -rn "TODO(backend
 ## Retours sur l'aperçu (story 9.6)
 
 Sur l'aperçu (site non indexable), chaque page porte un bouton « Un retour ? » (`src/components/RetourApercu.astro`, inclus par `Base.astro`). La remarque part en POST vers `/api/retour`, servie par `worker.ts` (point d'entrée Cloudflare, `main` de `wrangler.jsonc`, `run_worker_first: ["/api/*"]`), qui crée un ticket GitHub étiqueté `retour-apercu` avec la page, l'auteur (en-tête `cf-access-authenticated-user-email` posé par Cloudflare Access), l'écran et la date. Secret `GITHUB_TOKEN` côté Cloudflare, jamais dans le dépôt (`.dev.vars` en local, ignoré ; modèle `.dev.vars.example`). En production le bouton n'est pas rendu. Le bouton est masqué quand `navigator.webdriver` est vrai (captures Playwright). `worker.ts` sera remplacé par le noyau serveur de l'epic 10.
+**Essai provisoire du webhook Cal.com (story 10.1).** `worker.ts` sert aussi `POST /api/essai-cal` : Cal.com y envoie la réservation, la route vérifie la signature `X-Cal-Signature-256` (HMAC SHA-256 avec le secret Cloudflare `CAL_WEBHOOK_SECRET`) et, si elle est bonne, crée un ticket GitHub `essai-cal` avec les fuseaux, la case de confidentialité et les noms des champs, sans aucune donnée personnelle. Signature absente ou fausse : 401, rien d'écrit. À retirer quand la vraie route de la story 10.6 existe.
+
 ## Vidéo d'ouverture (stories 7.4 et 8.3)
 
 - **Source** : `contenu-anne/videos/ouverture-source.mp4` (hors Git, 88 Mo, 1080p, 95 s, montage d'Anne). Inventaire : `contenu-anne/videos/liens.md`.

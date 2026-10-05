@@ -12,6 +12,8 @@ interface Env {
   GITHUB_TOKEN?: string;
   /** Variable publique : dépôt qui reçoit les tickets. */
   GITHUB_REPO?: string;
+  /** Secret Cloudflare (jamais dans le dépôt) : le même texte que le champ « Secret » du webhook Cal.com. Essai de la story 10.1. */
+  CAL_WEBHOOK_SECRET?: string;
 }
 
 const REPO_DEFAUT = 'jbcholat-Dev/Anne-Immo---Website';
@@ -28,10 +30,95 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname === '/api/retour') return retour(request, env);
+    if (url.pathname === '/api/essai-cal') return essaiCal(request, env);
     if (url.pathname.startsWith('/api/')) return json({ ok: false, error: { code: 'inconnu' } }, 404);
     return env.ASSETS.fetch(request);
   },
 };
+
+// Essai du webhook Cal.com (story 10.1), provisoire : remplacé par la vraie route de la story 10.6.
+// Cal.com appelle cette adresse à chaque réservation. On vérifie la signature X-Cal-Signature-256
+// (HMAC SHA-256 du corps brut, calculé avec CAL_WEBHOOK_SECRET) et, si elle est bonne, on consigne
+// un ticket GitHub étiqueté `essai-cal` avec ce que l'essai doit constater (fuseaux, case de confidentialité,
+// statut). Aucun nom, e-mail ni téléphone n'est recopié : seulement les noms des champs et la case à cocher.
+// Signature absente ou fausse : réponse 401, aucun ticket (l'adresse est publique pendant l'essai).
+async function essaiCal(request: Request, env: Env): Promise<Response> {
+  if (request.method !== 'POST') return json({ ok: false, error: { code: 'methode' } }, 405);
+  if (!env.CAL_WEBHOOK_SECRET || !env.GITHUB_TOKEN) return json({ ok: false, error: { code: 'cle_absente' } }, 503);
+
+  const brut = await request.text();
+  const recue = (request.headers.get('x-cal-signature-256') || '').trim().toLowerCase();
+  const cle = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(env.CAL_WEBHOOK_SECRET),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const calcul = new Uint8Array(await crypto.subtle.sign('HMAC', cle, new TextEncoder().encode(brut)));
+  const attendue = [...calcul].map((o) => o.toString(16).padStart(2, '0')).join('');
+  let ecart = recue.length === attendue.length ? 0 : 1;
+  for (let i = 0; i < attendue.length; i++) ecart |= attendue.charCodeAt(i) ^ (recue.charCodeAt(i) || 0);
+  if (!recue || ecart !== 0) return json({ ok: false, error: { code: 'signature' } }, 401);
+
+  let corps: Record<string, any> = {};
+  try {
+    corps = JSON.parse(brut);
+  } catch {
+    corps = {};
+  }
+  const p = (corps.payload || {}) as Record<string, any>;
+  const reponses = (p.responses || {}) as Record<string, any>;
+  const conf = reponses.confidentialite;
+  const releve = {
+    evenement: corps.triggerEvent ?? null,
+    cree_le: corps.createdAt ?? null,
+    type: p.type ?? p.eventTypeSlug ?? null,
+    debut: p.startTime ?? null,
+    fin: p.endTime ?? null,
+    statut: p.status ?? null,
+    fuseau_anne: p.organizer?.timeZone ?? null,
+    fuseaux_prospect: Array.isArray(p.attendees) ? p.attendees.map((a: any) => a?.timeZone ?? null) : null,
+    lieu: typeof p.location === 'string' ? p.location.slice(0, 80) : null,
+    champs_du_formulaire: Object.keys(reponses),
+    case_confidentialite: conf && typeof conf === 'object' ? (conf.value ?? null) : (conf ?? null),
+    cles_payload: Object.keys(p),
+  };
+  const body = [
+    `Webhook Cal.com reçu le ${new Date().toISOString()} sur ${new URL(request.url).origin}.`,
+    '',
+    '**Signature X-Cal-Signature-256 : valide.**',
+    '',
+    '```json',
+    JSON.stringify(releve, null, 2),
+    '```',
+    '',
+    'Essai de la story 10.1, aucune donnée personnelle recopiée.',
+  ].join('\n');
+
+  const depot = env.GITHUB_REPO || REPO_DEFAUT;
+  const titre = `[Essai Cal.com] ${releve.evenement ?? 'webhook'}`;
+  const creer = (labels?: string[]) =>
+    fetch(`https://api.github.com/repos/${depot}/issues`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+        Accept: 'application/vnd.github+json',
+        'Content-Type': 'application/json',
+        'User-Agent': 'anne-vial-tissot-site/essai-cal',
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+      body: JSON.stringify(labels ? { title: titre, body, labels } : { title: titre, body }),
+    });
+  try {
+    let r = await creer(['essai-cal']);
+    if (r.status === 422) r = await creer(); // étiquette refusée : ticket sans elle
+    if (!r.ok) return json({ ok: false, error: { code: 'github', statut: r.status } }, 502);
+  } catch {
+    return json({ ok: false, error: { code: 'reseau' } }, 502);
+  }
+  return json({ ok: true });
+}
 
 async function retour(request: Request, env: Env): Promise<Response> {
   if (request.method !== 'POST') return json({ ok: false, error: { code: 'methode' } }, 405);
