@@ -1,34 +1,43 @@
 ---
 // § 1.6 Le diagnostic : une phrase, la durée, le bouton ; trois livrables en encarts galet.
 import { t, r, type Lang } from '../../i18n';
+import { accent, sansAccent } from '../../lib/texte';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const d = t(lang);
 ---
-<section class="diag" data-sec="diagnostic" aria-labelledby="diag-titre">
+<section class="diag sur-sombre" data-sec="diagnostic" aria-labelledby="diag-titre">
   <div data-reveal="titre">
-    <h2 id="diag-titre">{d.accueil.diag_titre}</h2>
+    <p class="surtitre"><b>04</b> {d.accueil.sur_diag}</p>
+    <h2 id="diag-titre" set:html={accent(d.accueil.diag_titre)} aria-label={sansAccent(d.accueil.diag_titre)} />
     <p class="diag-texte"><span class="seulement-desktop">{d.accueil.diag_texte}</span><span class="seulement-mobile">{d.accueil.diag_texte_m}</span></p>
-    <a href={r('diagnostic', lang)} class="btn btn-primaire">{d.accueil.diag_cta}</a>
+    <a href={r('diagnostic', lang)} class="btn btn-ecru">{d.accueil.diag_cta}</a>
   </div>
-  <div class="diag-livrables" data-reveal="bloc">
-    <div class="diag-livrable"><b>/100</b><span>{d.accueil.diag_score}</span></div>
-    <div class="diag-livrable"><b>3</b><span>{d.accueil.diag_axes}</span></div>
-    <div class="diag-livrable"><b>1</b><span>{d.accueil.diag_plan}</span></div>
-  </div>
+  <dl class="diag-livrables" data-reveal="bloc">
+    <div class="diag-livrable diag-score"><dt>{d.accueil.diag_score}</dt><dd><span>/</span>100</dd></div>
+    <div class="diag-livrable"><dt>{d.accueil.diag_axes}</dt><dd>3</dd></div>
+    <div class="diag-livrable"><dt>{d.accueil.diag_plan}</dt><dd>1</dd></div>
+  </dl>
 </section>
 <style>
-  .diag { position: relative; background: var(--avt-ecru); padding: 120px var(--marge); display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
-  .diag h2 { font-size: 48px; margin-bottom: 20px; }
-  .diag-texte { font-size: 17px; line-height: 1.6; margin-bottom: 28px; max-width: 44ch; }
-  .diag-livrables { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
-  .diag-livrable { background: var(--avt-galet); border-radius: 12px; padding: 24px; min-height: 150px; display: flex; flex-direction: column; justify-content: space-between; }
-  .diag-livrable b { font-family: var(--avt-font-display); font-weight: 400; font-size: 40px; color: var(--avt-klein); line-height: 1; }
-  .diag-livrable span { font-size: 14px; }
+  /* Expérience 8.6 : le diagnostic prend toute la largeur en aplat Klein — le seul grand moment bleu avant la fin de page. */
+  .diag { position: relative; background: var(--avt-klein); color: var(--avt-ecru); padding: 140px var(--marge); display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+  .diag h2 { font-size: clamp(44px, 5vw, 76px); margin-bottom: 24px; color: var(--avt-ecru); }
+  .diag h2 :global(em) { color: var(--avt-ecru); }
+  .diag-texte { font-size: 19px; line-height: 1.55; margin-bottom: 36px; max-width: 40ch; color: var(--avt-ecru); }
+  .diag-livrables { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin: 0; border-top: 1px solid rgba(251, 249, 245, .35); }
+  .diag-livrable { padding: 28px 0 0; display: flex; flex-direction: column-reverse; gap: 8px; }
+  .diag-score { grid-column: 1 / -1; padding-bottom: 28px; border-bottom: 1px solid rgba(251, 249, 245, .35); }
+  .diag-livrable dd { margin: 0; font-family: var(--avt-font-display); font-weight: 350; font-size: 96px; line-height: .9; letter-spacing: -.04em; }
+  .diag-score dd { font-size: 168px; }
+  .diag-score dd span { color: var(--avt-terra); }
+  .diag-livrable dt { font-size: 15px; color: var(--avt-text-on-dark-muted); }
   @media (max-width: 899px) {
-    .diag { padding: 64px var(--marge-m); grid-template-columns: 1fr; gap: 28px; }
-    .diag h2 { font-size: 34px; margin-bottom: 12px; }
-    .diag-texte { font-size: 16px; margin-bottom: 20px; }
-    .diag-livrables { display: none; }
+    .diag { padding: 72px var(--marge-m); grid-template-columns: 1fr; gap: 40px; }
+    .diag h2 { font-size: 40px; margin-bottom: 14px; }
+    .diag-texte { font-size: 17px; margin-bottom: 24px; }
+    .diag .btn { width: 100%; }
+    .diag-livrable dd { font-size: 64px; }
+    .diag-score dd { font-size: 104px; }
   }
 </style>

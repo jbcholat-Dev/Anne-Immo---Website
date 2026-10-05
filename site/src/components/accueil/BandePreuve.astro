@@ -11,22 +11,25 @@ const a = await avisParId(accueil.extrait.avis);
 const note = String(inst.note).replace('.', ',');
 ---
 <section class="preuve" data-sec="preuve" aria-label="Avis Immodvisor">
-  <div class="preuve-note"><b>{note}</b><span>{d.accueil.preuve_sur} {inst.nombre_avis} {d.accueil.preuve_avis}</span></div>
-  <p class="preuve-extrait">« {accueil.extrait.phrase} » <span class="preuve-auteur">{a.data.auteur}, {roleLibelle(a, lang)}</span></p>
-  <a href={inst.url_fiche} class="lien-souligne-ecru preuve-lien" rel="noopener" target="_blank">{d.accueil.preuve_lien}</a>
+  <div class="preuve-note" data-reveal="petit"><b>{note}<small>/5</small></b><span>{inst.nombre_avis} {d.accueil.preuve_avis}</span></div>
+  <figure class="preuve-citation" data-reveal="titre">
+    <blockquote>«&nbsp;{accueil.extrait.phrase}&nbsp;»</blockquote>
+    <figcaption>{a.data.auteur}, {roleLibelle(a, lang)} · <a href={inst.url_fiche} rel="noopener" target="_blank">{d.accueil.preuve_lien}</a></figcaption>
+  </figure>
 </section>
 <style>
-  .preuve { display: flex; align-items: center; gap: 32px; padding: 26px var(--marge); background: var(--avt-klein); color: var(--avt-ecru); }
-  .preuve-note { display: flex; align-items: baseline; gap: 8px; flex: none; }
-  .preuve-note b { font-family: var(--avt-font-display); font-weight: 400; font-size: 44px; font-variant-numeric: tabular-nums; line-height: 1; }
-  .preuve-note span { font-size: 15px; color: var(--avt-text-on-dark-muted); }
-  .preuve-extrait { flex: 1; font-size: 15.5px; line-height: 1.55; max-width: 64ch; }
-  .preuve-auteur { color: var(--avt-text-on-dark-muted); font-size: 13.5px; }
-  .preuve-lien { flex: none; font-size: 14.5px; }
+  /* Expérience 8.6 : la preuve devient une grande citation éditoriale, la note en chiffres Klein. */
+  .preuve { display: grid; grid-template-columns: 300px 1fr; gap: 64px; align-items: center; padding: 120px var(--marge); background: var(--avt-ecru); border-bottom: 1px solid var(--filet-brun-fort); }
+  .preuve-note { display: flex; flex-direction: column; gap: 10px; }
+  .preuve-note b { font-family: var(--avt-font-display); font-weight: 350; font-size: 128px; line-height: .85; letter-spacing: -.04em; color: var(--avt-klein); font-variant-numeric: lining-nums; }
+  .preuve-note small { font-size: 40px; letter-spacing: -.01em; color: var(--avt-text-muted); margin-left: 4px; }
+  .preuve-note span { font-size: 15px; color: var(--avt-text-muted); }
+  .preuve-citation blockquote { font-family: var(--avt-font-display); font-style: italic; font-size: 40px; line-height: 1.2; letter-spacing: -.012em; max-width: 30ch; }
+  .preuve-citation figcaption { margin-top: 22px; font-size: 15px; color: var(--avt-text-muted); }
   @media (max-width: 899px) {
-    .preuve { flex-direction: column; align-items: flex-start; gap: 10px; padding: 20px var(--marge-m); }
-    .preuve-note b { font-size: 36px; }
-    .preuve-note span, .preuve-extrait { font-size: 14.5px; }
-    .preuve-lien { font-size: 14px; border-bottom-color: var(--avt-terra); }
+    .preuve { grid-template-columns: 1fr; gap: 28px; padding: 64px var(--marge-m); }
+    .preuve-note b { font-size: 88px; }
+    .preuve-note small { font-size: 28px; }
+    .preuve-citation blockquote { font-size: 27px; line-height: 1.25; }
   }
 </style>

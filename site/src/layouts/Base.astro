@@ -25,9 +25,9 @@ const robots = noindex || !indexable;
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
     {ogImage && <meta property="og:image" content={new URL(ogImage, Astro.site)} />}
-    <!-- Polices hébergées sur le site (story 8.1, AD-11) : les deux visibles dès l'ouverture sont téléchargées en priorité -->
-    <link rel="preload" href="/fonts/italiana-400.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/fonts/dm-sans-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- Polices hébergées sur le site (story 8.1, AD-11) ; expérience 8.6 : Newsreader + Instrument Sans en priorité -->
+    <link rel="preload" href="/fonts/newsreader-opsz-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/instrument-sans-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
     <script is:inline>document.documentElement.setAttribute('data-js', '1'); if (navigator.webdriver) document.documentElement.setAttribute('data-webdriver', '1');</script>
     <slot name="head" />
   </head>

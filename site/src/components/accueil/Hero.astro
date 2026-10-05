@@ -5,7 +5,6 @@
 // Les fichiers vidéo sont produits par `npm run video` (scripts/video.mjs) ; s'ils manquent, la balise <video> est masquée.
 import fs from 'node:fs';
 import Picture from '../Picture.astro';
-import Signature from '../Signature.astro';
 import { image } from '../../lib/images';
 import { hero } from '../../config/site';
 import { t, r, type Lang } from '../../i18n';
@@ -25,35 +24,41 @@ const videoDispo = fs.existsSync(new URL('../../../public/video/ouverture.mp4', 
     <div class="hero-voile"></div>
   </div>
   <div class="hero-contenu">
-    <h1 id="hero-titre" data-reveal="titre">Anne <span class="hero-nom">VIAL‑TISSOT</span></h1>
-    <Signature largeur={260} hauteur={10} class="hero-signature" />
+    <p class="hero-surtitre" data-reveal="petit">{d.accueil.hero_surtitre}</p>
+    <h1 id="hero-titre" data-reveal="titre">Anne <span class="hero-nom">Vial‑Tissot</span></h1>
     <p class="hero-ligne" data-reveal="petit">{d.accueil.hero_ligne}</p>
-    <a href={r('diagnostic', lang)} class="btn btn-primaire hero-cta" data-reveal="petit"><span class="seulement-desktop">{d.accueil.hero_cta}</span><span class="seulement-mobile">{d.accueil.hero_cta_m}</span></a>
+    <div class="hero-boutons" data-reveal="petit">
+      <a href={r('diagnostic', lang)} class="btn btn-primaire"><span class="seulement-desktop">{d.accueil.hero_cta}</span><span class="seulement-mobile">{d.accueil.hero_cta_m}</span></a>
+      <a href={`${r('vendre', lang)}#estimation`} class="btn btn-contour-ecru">{d.accueil.hero_cta2}</a>
+    </div>
   </div>
 </section>
 
 <style>
-  .hero { position: relative; height: 900px; overflow: hidden; background: var(--avt-brun); color: var(--avt-ecru); }
+  /* Expérience 8.6 : la vidéo occupe tout l'écran, le titre devient une vraie signature éditoriale (Newsreader), deux portes d'entrée. */
+  .hero { position: relative; height: 100vh; min-height: 680px; max-height: 1000px; overflow: hidden; background: var(--avt-brun); color: var(--avt-ecru); }
   .hero-fond { position: absolute; inset: 0; }
   .hero-fond :global(.hero-poster), .hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .hero-video { object-position: center; }
   .hero-video-absente { display: none; } /* fichiers vidéo absents : le poster <picture> suffit */
-  .hero-voile { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(38, 32, 26, .34) 0%, rgba(38, 32, 26, .22) 34%, rgba(38, 32, 26, .58) 72%, rgba(38, 32, 26, .88) 100%); pointer-events: none; }
-  .hero-contenu { position: absolute; left: var(--marge); right: var(--marge); bottom: 84px; max-width: 760px; }
-  .hero h1 { font-size: 96px; letter-spacing: .02em; line-height: 1; color: var(--avt-ecru); white-space: nowrap; }
-  .hero-signature { margin-top: 14px; }
-  .hero-ligne { font-size: 19px; line-height: 1.5; margin-top: 18px; color: var(--avt-ecru); max-width: 44ch; }
-  .hero-cta { margin-top: 32px; }
+  .hero-voile { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(22, 24, 29, .38) 0%, rgba(22, 24, 29, .08) 30%, rgba(22, 24, 29, .30) 58%, rgba(22, 24, 29, .86) 100%); pointer-events: none; }
+  .hero-contenu { position: absolute; left: var(--marge); right: var(--marge); bottom: 80px; }
+  .hero-surtitre { font-size: 13px; letter-spacing: .16em; text-transform: uppercase; font-weight: 600; color: rgba(251, 249, 245, .85); margin-bottom: 18px; }
+  .hero h1 { font-size: clamp(56px, 9.4vw, 148px); font-weight: 350; letter-spacing: -.035em; line-height: .92; color: var(--avt-ecru); white-space: nowrap; }
+  .hero-nom { font-style: italic; }
+  .hero-ligne { font-size: 20px; line-height: 1.45; margin-top: 26px; color: var(--avt-ecru); max-width: 46ch; }
+  .hero-boutons { display: flex; gap: 14px; margin-top: 34px; flex-wrap: wrap; }
   @media (prefers-reduced-motion: reduce) { .hero-video { display: none; } }
   @media (max-width: 899px) {
-    .hero { height: 780px; }
-    .hero-voile { background: linear-gradient(180deg, rgba(38, 32, 26, .62) 0%, rgba(38, 32, 26, .54) 30%, rgba(38, 32, 26, .32) 56%, rgba(38, 32, 26, .48) 78%, rgba(38, 32, 26, .88) 100%); }
-    .hero-contenu { bottom: auto; top: 110px; left: var(--marge-m); right: var(--marge-m); }
-    .hero h1 { font-size: 48px; white-space: normal; }
+    .hero { height: 100svh; min-height: 640px; max-height: 820px; }
+    .hero-voile { background: linear-gradient(180deg, rgba(22, 24, 29, .45) 0%, rgba(22, 24, 29, .12) 30%, rgba(22, 24, 29, .45) 60%, rgba(22, 24, 29, .9) 100%); }
+    .hero-contenu { bottom: 40px; left: var(--marge-m); right: var(--marge-m); }
+    .hero-surtitre { font-size: 11.5px; letter-spacing: .12em; margin-bottom: 12px; }
+    .hero h1 { font-size: 58px; white-space: normal; line-height: .95; }
     .hero-nom { display: block; }
-    .hero-signature { width: 150px !important; height: 8px !important; margin-top: 10px; }
-    .hero-ligne { font-size: 16px; margin-top: 14px; }
-    .hero-cta { margin-top: 22px; }
+    .hero-ligne { font-size: 16.5px; margin-top: 16px; }
+    .hero-boutons { flex-direction: column; gap: 10px; margin-top: 22px; }
+    .hero-boutons .btn { width: 100%; }
   }
 </style>
 

@@ -1,5 +1,5 @@
 ---
-// § 1.3 Ventes récentes (D-16) : six cartes collantes — top = nav + 24 px, sans scale ni flou, gardée en mobile, en flux sous mouvement réduit.
+// § 1.3 Ventes récentes. Expérience 8.6 : la pile collante (D-16) devient une grille éditoriale — une vente à la une, puis six en vignettes.
 // Stories réelles d'abord, complétées par des ventes réelles « à venir » (même gabarit, photo = bloc réservé A-02) jusqu'à six cartes.
 // Une vente « à venir » dont la story existe n'est pas reprise (sinon la commune apparaît deux fois). Citation courte quand un avis est relié.
 import Picture from '../Picture.astro';
@@ -7,7 +7,7 @@ import Reserve from '../Reserve.astro';
 import { t, r, type Lang } from '../../i18n';
 import { stories, photoPrincipale, avisDeStory, avisParId, roleLibelle } from '../../lib/contenu';
 import { accueil, phrasesStories } from '../../config/site';
-import { tiret } from '../../lib/texte';
+import { tiret, accent, sansAccent } from '../../lib/texte';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const d = t(lang);
@@ -26,7 +26,7 @@ for (const s of toutes) {
     lien: `${r('realisation', lang)}/${s.id}`,
   });
 }
-const MAX_CARTES = 6; // D-16
+const MAX_CARTES = 7; // expérience 8.6 : une à la une + six vignettes
 cartes.splice(MAX_CARTES);
 const dejaRacontees = new Set(toutes.map((s) => s.id));
 for (const v of accueil.aVenir.filter((v) => !dejaRacontees.has(v.slug)).slice(0, MAX_CARTES - cartes.length)) {
@@ -49,53 +49,89 @@ function premierePhrase(texte: string) {
 ---
 <section class="ventes" data-sec="ventes" aria-labelledby="ventes-titre">
   <div class="ventes-tete" data-reveal="titre">
-    <h2 id="ventes-titre">{d.accueil.ventes_titre}</h2>
-    <a href={r('realisation', lang)} class="lien">{d.accueil.ventes_lien}</a>
+    <div>
+      <p class="surtitre"><b>01</b> {d.accueil.sur_ventes}</p>
+      <h2 id="ventes-titre" set:html={accent(d.accueil.ventes_titre)} aria-label={sansAccent(d.accueil.ventes_titre)} />
+    </div>
+    <a href={r('realisation', lang)} class="lien-fleche seulement-desktop">{d.accueil.ventes_lien}</a>
   </div>
-  <div class="pile">
-    {cartes.map((c, i) => (
-      <article class="carte" data-pile data-carte={i + 1}>
-        <div class="carte-texte">
-          {c.sousTitre && <div class="chapeau-muet carte-etiquette">{c.sousTitre}</div>}
-          <h3>{tiret(c.titre)}</h3>
-          <p class="carte-phrase">{c.lien ? `« ${c.phrase} »` : c.phrase}</p>
-          {c.citation && <p class="carte-citation">« {c.citation.texte} » <span>{c.citation.auteur} · {c.citation.role}</span></p>}
-          {c.lien && <a href={c.lien} class="lien">{d.accueil.voir_vente}</a>}
-        </div>
-        <div class="carte-photo">
-          {c.photo ? <Picture id={c.photo} alt={c.alt} sizes="(max-width: 899px) 100vw, 60vw" /> : <Reserve label={`Actif attendu A-02 · ${c.titre} · photo maîtresse · 2400 px`} ton="placement" lecture={i === 3} style="height:100%;border-radius:12px" />}
-        </div>
+  {cartes.slice(0, 1).map((c) => (
+    <article class="une" data-reveal="bloc">
+      <div class="une-photo">
+        {c.photo ? <Picture id={c.photo} alt={c.alt} sizes="(max-width: 899px) 100vw, 62vw" /> : <Reserve label={`Actif attendu A-02 · ${c.titre}`} ton="placement" style="height:100%" />}
+      </div>
+      <div class="une-texte">
+        {c.sousTitre && <div class="chapeau-muet">{c.sousTitre}</div>}
+        <h3>{tiret(c.titre)}</h3>
+        <p class="une-phrase">{c.lien ? `« ${c.phrase} »` : c.phrase}</p>
+        {c.citation && <p class="une-citation">« {c.citation.texte} » <span>{c.citation.auteur} · {c.citation.role}</span></p>}
+        {c.lien && <a href={c.lien} class="lien-fleche">{d.accueil.voir_vente}</a>}
+      </div>
+    </article>
+  ))}
+  <div class="vignettes">
+    {cartes.slice(1).map((c, i) => (
+      <article class="vignette" data-reveal="bloc">
+        {c.lien ? (
+          <a href={c.lien} class="vignette-lien">
+            <div class="vignette-photo">{c.photo ? <Picture id={c.photo} alt={c.alt} sizes="(max-width: 899px) 100vw, 30vw" /> : <Reserve label={`Actif attendu A-02 · ${c.titre}`} ton="placement" style="height:100%" />}</div>
+            <div class="vignette-num">{String(i + 2).padStart(2, '0')}</div>
+            <h3>{tiret(c.titre)}</h3>
+            <p>{c.phrase}</p>
+          </a>
+        ) : (
+          <div class="vignette-lien">
+            <div class="vignette-photo"><Reserve label={`Actif attendu A-02 · ${c.titre}`} ton="placement" style="height:100%" /></div>
+            {c.sousTitre && <div class="chapeau-muet">{c.sousTitre}</div>}
+            <h3>{tiret(c.titre)}</h3>
+            <p>{c.phrase}</p>
+          </div>
+        )}
       </article>
     ))}
   </div>
+  <div class="ventes-pied"><a href={r('realisation', lang)} class="lien-fleche">{d.accueil.ventes_lien}</a></div>
 </section>
 
 <style>
-  .ventes { position: relative; background: var(--avt-ecru); padding: 120px 0 0; }
-  .ventes-tete { display: flex; align-items: baseline; justify-content: space-between; padding: 0 var(--marge); margin-bottom: 56px; gap: 24px; }
-  .ventes-tete h2 { font-size: 56px; }
-  .pile { position: relative; padding: 0 var(--marge) 60px; }
-  .carte { position: sticky; top: calc(var(--nav-h) + 24px); height: 600px; margin-bottom: 30px; display: grid; grid-template-columns: 1fr 1.25fr; gap: 48px; background: var(--avt-galet); border-radius: 16px; padding: 48px 56px; z-index: 1; }
-  .carte-texte { display: flex; flex-direction: column; justify-content: flex-end; gap: 18px; }
-  .carte-etiquette { margin-bottom: -6px; }
-  .carte h3 { font-size: 44px; }
-  .carte-phrase { font-size: 18px; line-height: 1.55; max-width: 38ch; }
-  .carte-citation { font-size: 14.5px; line-height: 1.5; max-width: 38ch; border-left: 2px solid var(--avt-terra); padding-left: 12px; color: var(--avt-brun); }
-  .carte-citation span { color: var(--avt-text-muted); }
-  .carte-photo { position: relative; margin-top: -70px; border-radius: 12px; overflow: hidden; background: var(--avt-placeholder); }
-  .carte-photo :global(picture), .carte-photo :global(img) { width: 100%; height: 100%; }
-  .carte-photo :global(img) { object-fit: cover; }
-  @media (prefers-reduced-motion: reduce) { .carte { position: relative; top: auto; } }
+  .ventes { position: relative; background: var(--avt-ecru); padding: 140px var(--marge) 120px; }
+  .ventes-tete { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 64px; gap: 24px; }
+  .ventes-tete h2 { font-size: clamp(44px, 5.4vw, 80px); max-width: 16ch; }
+  .une { display: grid; grid-template-columns: 1.65fr 1fr; gap: 56px; align-items: end; margin-bottom: 96px; }
+  .une-photo { height: 640px; border-radius: var(--avt-radius-card); overflow: hidden; background: var(--avt-placeholder); }
+  .une-photo :global(picture), .une-photo :global(img), .vignette-photo :global(picture), .vignette-photo :global(img) { width: 100%; height: 100%; }
+  .une-photo :global(img), .vignette-photo :global(img) { object-fit: cover; transition: transform .8s var(--ease-bloc); }
+  .une-texte { display: flex; flex-direction: column; gap: 20px; padding-bottom: 8px; }
+  .une h3 { font-size: 60px; }
+  .une-phrase { font-family: var(--avt-font-display); font-size: 25px; line-height: 1.35; letter-spacing: -.005em; }
+  .une-citation { font-size: 15px; line-height: 1.55; border-left: 2px solid var(--avt-terra); padding-left: 14px; }
+  .une-citation span { color: var(--avt-text-muted); }
+  .une .lien-fleche { align-self: flex-start; margin-top: 8px; }
+  .vignettes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 64px 32px; }
+  .vignette-lien { display: flex; flex-direction: column; color: inherit; }
+  .vignette-lien:hover { text-decoration: none; }
+  .vignette-lien:hover :global(img) { transform: scale(1.03); }
+  .vignette-lien:hover h3 { color: var(--avt-klein); }
+  .vignette-photo { aspect-ratio: 4 / 5; border-radius: var(--avt-radius-card); overflow: hidden; background: var(--avt-placeholder); margin-bottom: 20px; }
+  .vignette-num { font-size: 13px; font-weight: 600; letter-spacing: .12em; color: var(--avt-terra-deep); margin-bottom: 6px; }
+  .vignette h3 { font-size: 34px; margin-bottom: 10px; transition: color .2s ease; }
+  .vignette p { font-size: 16px; line-height: 1.55; color: var(--avt-text-muted); max-width: 40ch; }
+  .ventes-pied { display: none; }
+  @media (min-width: 900px) and (max-width: 1199px) {
+    .une { grid-template-columns: 1fr; gap: 28px; }
+    .une-photo { height: 520px; }
+    .vignettes { grid-template-columns: repeat(2, 1fr); }
+  }
   @media (max-width: 899px) {
-    .ventes { padding-top: 64px; }
-    .ventes-tete { flex-direction: column; gap: 6px; margin-bottom: 28px; }
-    .ventes-tete h2 { font-size: 36px; line-height: 1.1; }
-    .pile { padding: 0 16px 40px; }
-    .carte { top: calc(var(--nav-h-mobile) + 12px); height: auto; margin-bottom: 14px; display: flex; flex-direction: column; gap: 14px; border-radius: 14px; padding: 16px 16px 22px; }
-    .carte-texte { order: 2; gap: 14px; }
-    .carte-photo { order: 1; height: 240px; border-radius: 10px; margin-top: -30px; }
-    .carte h3 { font-size: 30px; }
-    .carte-phrase { font-size: 16px; line-height: 1.5; }
-    .carte-citation { font-size: 14px; }
+    .ventes { padding: 72px var(--marge-m) 64px; }
+    .ventes-tete { margin-bottom: 32px; }
+    .ventes-tete h2 { font-size: 40px; }
+    .une { grid-template-columns: 1fr; gap: 20px; margin-bottom: 56px; }
+    .une-photo { height: 300px; }
+    .une h3 { font-size: 40px; }
+    .une-phrase { font-size: 20px; }
+    .vignettes { grid-template-columns: 1fr; gap: 44px; }
+    .vignette h3 { font-size: 30px; }
+    .ventes-pied { display: block; margin-top: 48px; }
   }
 </style>

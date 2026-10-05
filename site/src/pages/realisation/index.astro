@@ -10,6 +10,7 @@ const liste = await stories();
 ---
 <Page titre="Réalisation — Anne VIAL-TISSOT" description="Chaque bien vendu raconté par Anne : ce qui bloquait, ce qui a été fait, comment cela s'est terminé." courante="realisation">
   <div class="index-tete">
+    <p class="surtitre"><b>{String(liste.length).padStart(2, '0')}</b> ventes racontées</p>
     <h1>Réalisation</h1>
     <p class="seulement-desktop">Chaque bien vendu raconté par Anne : ce qui bloquait, ce qui a été fait, comment cela s'est terminé. Pas de prix, pas de surface.</p>
     <p class="seulement-mobile">Chaque bien vendu raconté par Anne. Pas de prix, pas de surface.</p>
@@ -31,7 +32,7 @@ const liste = await stories();
             </a>
             <h2>{tiret(s.data.commune)}</h2>
             <p>{(s.data.particularite ?? '').trim()}</p>
-            <a href={`${r('realisation')}/${s.id}`} class="lien">Lire la story</a>
+            <a href={`${r('realisation')}/${s.id}`} class="lien-fleche">Lire la story</a>
           </article>
         );
       })}
@@ -39,26 +40,29 @@ const liste = await stories();
   )}
 </Page>
 <style>
-  .index-tete { padding: 96px var(--marge) 40px; }
-  .index-tete h1 { font-size: 72px; margin-bottom: 16px; }
+  .index-tete { padding: 120px var(--marge) 64px; }
+  .index-tete h1 { font-size: clamp(64px, 8vw, 120px); margin-bottom: 20px; }
   .index-tete p { font-size: 18px; line-height: 1.6; max-width: 56ch; }
-  .index-grille { padding: 0 var(--marge) 120px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px 32px; }
+  .index-grille { padding: 0 var(--marge) 140px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 72px 32px; }
   article { display: flex; flex-direction: column; gap: 14px; }
-  .index-photo { display: block; height: 300px; border-radius: 12px; overflow: hidden; background: var(--avt-galet); }
+  .index-photo { display: block; aspect-ratio: 4 / 5; border-radius: var(--avt-radius-card); overflow: hidden; background: var(--avt-galet); margin-bottom: 6px; }
+  .index-photo :global(img) { transition: transform .8s var(--ease-bloc); }
+  article:hover .index-photo :global(img) { transform: scale(1.03); }
   .index-photo :global(picture), .index-photo :global(img) { width: 100%; height: 100%; }
   .index-photo :global(img) { object-fit: cover; }
-  article h2 { font-size: 30px; }
-  article p { font-size: 16px; line-height: 1.55; }
+  article h2 { font-size: 34px; }
+  article p { font-size: 16px; line-height: 1.55; color: var(--avt-text-muted); }
+  article .lien-fleche { align-self: flex-start; margin-top: 4px; }
   .index-vide { padding: 0 var(--marge) 120px; max-width: 48ch; }
   .index-vide h2 { font-size: 44px; margin-bottom: 14px; }
   .index-vide p { font-size: 15px; line-height: 1.6; margin-bottom: 24px; }
   .index-vide-boutons { display: flex; gap: 12px; flex-wrap: wrap; }
   @media (max-width: 899px) {
-    .index-tete { padding: 48px var(--marge-m) 28px; }
-    .index-tete h1 { font-size: 48px; margin-bottom: 12px; }
+    .index-tete { padding: 56px var(--marge-m) 32px; }
+    .index-tete h1 { font-size: 56px; margin-bottom: 12px; }
     .index-tete p { font-size: 16px; }
     .index-grille { padding: 0 var(--marge-m) 56px; grid-template-columns: 1fr; gap: 36px; }
-    .index-photo { height: 240px; }
+    .index-photo { aspect-ratio: 4 / 3; }
     article h2 { font-size: 28px; }
     .index-vide { padding: 0 var(--marge-m) 64px; }
   }

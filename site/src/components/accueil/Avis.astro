@@ -4,6 +4,7 @@ import Picture from '../Picture.astro';
 import { t, r, type Lang } from '../../i18n';
 import { avisParId, storyDeAvis, storyVisible, photoPrincipale, roleLibelle, dateLibelle, paragraphes, instantane } from '../../lib/contenu';
 import { accueil } from '../../config/site';
+import { accent, sansAccent } from '../../lib/texte';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const d = t(lang);
@@ -17,7 +18,7 @@ const liste = await Promise.all(accueil.avis.map(async (id) => {
 const contexte = (x: (typeof liste)[number]) => [roleLibelle(x.a, lang), x.story?.data.commune, dateLibelle(x.a.data.date, lang)].filter(Boolean).join(' · ');
 ---
 <section class="avis" data-sec="avis" aria-labelledby="avis-titre">
-  <div class="avis-tete" data-reveal="titre"><h2 id="avis-titre">{d.accueil.avis_titre}</h2>{lang === 'en' && <p class="texte-muet avis-note">Verified Immodvisor reviews, quoted in full in their original language (French).</p>}</div>
+  <div class="avis-tete" data-reveal="titre"><p class="surtitre"><b>03</b> {d.accueil.sur_avis}</p><h2 id="avis-titre" set:html={accent(d.accueil.avis_titre)} aria-label={sansAccent(d.accueil.avis_titre)} />{lang === 'en' && <p class="texte-muet avis-note">Verified Immodvisor reviews, quoted in full in their original language (French).</p>}</div>
   <div class="avis-grille" data-reveal="bloc">
     {liste.map((x, i) => (
       <figure class={i === 0 ? 'avis-relie' : 'avis-seul'} lang="fr">
@@ -31,36 +32,43 @@ const contexte = (x: (typeof liste)[number]) => [roleLibelle(x.a, lang), x.story
       </figure>
     ))}
   </div>
-  <div class="avis-tous"><a href={inst.url_fiche} rel="noopener" target="_blank">{d.accueil.avis_tous.replace('{n}', String(inst.nombre_avis))}</a></div>
+  <div class="avis-tous"><a href={inst.url_fiche} rel="noopener" target="_blank" class="lien-fleche">{d.accueil.avis_tous.replace('{n}', String(inst.nombre_avis))}</a></div>
 </section>
 <style>
-  .avis { position: relative; background: var(--avt-brume); padding: 96px var(--marge); }
-  .avis-tete { margin: 0 0 48px; }
-  .avis-tete h2 { font-size: 40px; }
+  /* Expérience 8.6 : avis cités en entier (règle inchangée), mais en serif éditoriale ; l'avis relié à sa vente mène la grille. */
+  .avis { position: relative; background: var(--avt-ecru); padding: 140px var(--marge); }
+  .avis-tete { margin: 0 0 72px; }
+  .avis-tete h2 { font-size: clamp(44px, 5vw, 72px); }
   .avis-note { font-size: 14px; margin-top: 10px; }
-  .avis-grille { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 40px; align-items: start; }
-  figure { display: flex; flex-direction: column; gap: 16px; }
-  .avis-relie { gap: 18px; }
-  .avis-seul { border-top: 1px solid var(--avt-brun); padding-top: 20px; }
-  .avis-photo { height: 300px; border-radius: 12px; overflow: hidden; background: var(--avt-galet); }
+  .avis-grille { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 56px; align-items: start; }
+  figure { display: flex; flex-direction: column; gap: 18px; }
+  .avis-seul { border-top: 1px solid var(--avt-brun); padding-top: 28px; }
+  .avis-seul::before, .avis-relie::before { content: '“'; font-family: var(--avt-font-display); font-size: 88px; line-height: .5; color: var(--avt-terra); height: 34px; }
+  .avis-relie::before { order: 1; }
+  .avis-photo { height: 340px; border-radius: var(--avt-radius-card); overflow: hidden; background: var(--avt-galet); margin-bottom: 18px; }
+  .avis-relie .avis-photo { order: 0; }
+  .avis-relie blockquote, .avis-relie figcaption { order: 2; }
   .avis-photo :global(picture), .avis-photo :global(img) { width: 100%; height: 100%; }
   .avis-photo :global(img) { object-fit: cover; }
-  blockquote { display: flex; flex-direction: column; gap: 10px; font-size: 17px; line-height: 1.6; }
-  .avis-relie blockquote { font-size: 18px; }
-  blockquote p:first-child::before { content: '« '; }
-  blockquote p:last-child::after { content: ' »'; }
-  figcaption { font-size: 14px; }
-  .avis-lien { margin-top: 10px; font-size: 14.5px; }
-  .avis-tous { margin-top: 40px; font-size: 13.5px; }
+  blockquote { display: flex; flex-direction: column; gap: 12px; font-family: var(--avt-font-display); font-size: 19px; line-height: 1.5; }
+  .avis-relie blockquote { font-size: 23px; line-height: 1.42; letter-spacing: -.005em; }
+  figcaption { font-size: 14.5px; font-weight: 600; }
+  figcaption .texte-muet { font-weight: 400; }
+  .avis-lien { margin-top: 10px; font-size: 15px; font-weight: 400; }
+  .avis-tous { margin-top: 72px; }
+  @media (min-width: 900px) and (max-width: 1199px) {
+    .avis-grille { grid-template-columns: 1fr 1fr; }
+    .avis-relie { grid-column: 1 / -1; }
+  }
   @media (max-width: 899px) {
-    .avis { padding: 56px var(--marge-m); }
-    .avis-tete { margin-bottom: 28px; }
-    .avis-tete h2 { font-size: 32px; }
-    .avis-grille { grid-template-columns: 1fr; gap: 32px; }
-    .avis-photo { height: 220px; }
-    blockquote, .avis-relie blockquote { font-size: 16.5px; line-height: 1.55; }
+    .avis { padding: 72px var(--marge-m); }
+    .avis-tete { margin-bottom: 36px; }
+    .avis-tete h2 { font-size: 38px; }
+    .avis-grille { grid-template-columns: 1fr; gap: 44px; }
+    .avis-photo { height: 240px; }
+    blockquote { font-size: 18px; line-height: 1.5; }
+    .avis-relie blockquote { font-size: 20px; }
     figcaption { font-size: 13.5px; }
-    .avis-seul { padding-top: 18px; }
-    .avis-tous { margin-top: 26px; }
+    .avis-tous { margin-top: 40px; }
   }
 </style>
