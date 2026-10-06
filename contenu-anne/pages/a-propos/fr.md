@@ -1,12 +1,9 @@
 ---
 titre: À propos
-sous_titre: >
-  Dix ans de finance d'entreprise — Danone à Évian, Bel au Brésil — avant
-  l'immobilier. Chaque vente est menée comme un projet : un dossier complet,
-  un calendrier tenu, des points réguliers. Sur le Chablais et le bassin
-  lémanique, au service d'une clientèle locale et internationale. Français,
-  anglais, espagnol, portugais.
-video:                # vidéo « Anne présente sa méthode », à tourner après le lancement (D-12). Vide = pas de bloc vidéo.
+sous_titre: |-
+  Dix ans dans la Finance d'entreprise en France et à l'étranger (Brésil) — Groupe BEL puis Danone — avant l'immobilier. Chaque vente est menée comme un projet : un audit de votre situation, une coordination des différents interlocuteurs, un accompagnement jusqu'à la réussite de votre projet. Sur le Chablais et le bassin lémanique, au service d'une clientèle locale et internationale. 
+  Langues parlées : Français, anglais, espagnol, portugais.
+video: ''
 statut: brouillon
 ---
 
@@ -17,13 +14,15 @@ statut: brouillon
 
 ## Mon parcours : comment j'en suis venue à l'immobilier
 
-Pendant 10 ans, j'ai construit ma carrière en finance d'entreprise. Groupe Bel (où j'ai travaillé à São Paulo, au Brésil). Danone Waters (au site d'Évian). Des environnements complexes, multiculturels, exigeants.
+Après des études en Finance et un parcours international d’une dizaine d’années dans des grands groupes agroalimentaires (au Vietnam et au Brésil) j’ai décidé de m'orienter vers l'immobilier.
 
-J'ai appris deux choses qui m'ont marquée : **construire des dossiers robustes** et **orchestrer des acteurs complexes**. Ces compétences m'ont donné une rigueur qui, bien des années plus tard, s'avérerait précieuse.
+Pourquoi l'immobilier?
 
-Cette expérience internationale m'a aussi apporté une aisance dans les relations humaines, une adaptabilité face aux contextes variés, et l'usage courant de trois langues (anglais, portugais, espagnol).
+En 2016, nous décidons avec mon frère architecte, de nous lancer dans l’investissement locatif. L’objectif, rénover et valoriser le parc immobilier ancien pour proposer à la location des appartements refaits à neuf. Début d’une aventure entreprenariale qui m’a fait découvrir le secteur de l’immobilier et ces multitudes facettes (financement, ces juridique, urbanisme, gestion administrative, optimisation fiscale). Mais aussi, mon goût pour la décoration et l’agencement intérieur, repenser et valoriser les espaces.
 
-Mais j'ai voulu autre chose. Petit à petit, j'ai basculé vers l'immobilier. D'abord comme cliente. Puis comme investisseuse. En vivant cette expérience de l'intérieur, j'ai observé des choses qui m'ont frappée — pas par la complexité du secteur, mais par ses **manquements récurrents**.
+C'est donc tout naturellement que j'ai décidé 
+
+J’aime le contact humain et je me sentais “enfermée” dans mes chiffres. Suivre des clients dans leur projet immobilier est une aventure à la fois humaine qui allie savoir-faire et savoir-être.
 
 ## Le problème : les fractures que j'ai observées
 
@@ -54,15 +53,19 @@ J'ai réalisé que ma formation en finance et mon expérience internationale pou
 Aujourd'hui, je me concentre sur :
 
 ### 1. Préparer les dossiers avec rigueur
+
 Comme en finance. Chaque élément doit être anticipé, documenté, clarifié dès le départ.
 
 ### 2. Anticiper les obstacles avant qu'ils ne deviennent des problèmes
+
 Les formalités administratives, les objections silencieuses, les doutes des acquéreurs. Je les vois venir.
 
 ### 3. Accompagner mes clients de manière cohérente
+
 Pas juste des informations, mais une véritable présence à chaque étape. Transparence, clarté, confiance.
 
 ### 4. Coordonner les différents acteurs
+
 L'agent immobilier, le banquier, le notaire, l'inspecteur. Nous avançons ensemble, comme une équipe. Pas isolés dans nos rôles respectifs.
 
 ## Formation
@@ -76,7 +79,7 @@ Master Grande École option Finance + MBA
 ## Ce que je propose
 
 | Aspect | Approche | Résultat |
-|---|---|---|
+| --- | --- | --- |
 | Préparation du dossier | Rigueur financière appliquée à l'immobilier | Dossier solide dès le départ |
 | Anticipation | Identifier les obstacles avant qu'ils bloquent | Pas de surprises à la dernière minute |
 | Accompagnement | Présence et clarté à chaque étape | Confiance et sérénité |
@@ -98,10 +101,13 @@ Je ne réinvente pas les choses. Je fais simplement ce qui doit être fait — c
 ## Concrètement, cela se traduit par :
 
 ### 1. Audit patrimonial complet
+
 Avant tout, je comprends vraiment votre situation : la valeur, le potentiel, les contraintes, les opportunités. Pas de zone grise.
 
 ### 2. Coordination d'expertise intégrée
+
 Selon vos besoins, je fais travailler ensemble les bons acteurs :
+
 - Expert-comptable (analyse financière)
 - Géomètre (relevés techniques)
 - Diagnostiqueurs (diagnostics obligatoires)
@@ -112,9 +118,11 @@ Selon vos besoins, je fais travailler ensemble les bons acteurs :
 Ils ne travaillent pas en silos. **Je coordonne.** Je m'assure que chacun sait où on va et que tout s'imbrique.
 
 ### 3. Anticipation des obstacles
+
 Parce que j'ai vu les pièges récurrents, je les vois venir. Je les règle avant qu'ils deviennent des blocages.
 
 ### 4. Accompagnement du début à la fin
+
 Un interlocuteur unique qui connaît toute la situation. Pas juste des infos détachées, mais une vraie présence.
 
 ## Mon engagement
