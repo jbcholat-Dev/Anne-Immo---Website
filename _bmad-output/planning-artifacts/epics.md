@@ -1903,3 +1903,16 @@ afin de ne pas dépendre de Claude pour changer mon parcours ou ma méthode.
 **Quand** le site est construit
 **Alors** la page À propos affiche ce texte, dans la mise en page de la maquette (colonne Qui suis-je ?, piliers, points concrets, grille des partenaires)
 **Et** aucun texte de la page n'est plus figé dans le code, hors refrain, langues, profils « Cible » et boutons
+
+### Story 7.18: Portrait rangé à côté de la page
+
+En tant qu'Anne,
+je veux que le portrait envoyé depuis l'espace d'édition s'affiche, où que l'outil l'ait rangé,
+afin de ne pas dépendre d'un réglage invisible.
+
+**Critères d'acceptation :**
+
+**Étant donné** un portrait enregistré par l'espace d'édition dans `contenu-anne/pages/a-propos/`
+**Quand** le site est construit
+**Alors** la photo remplace le bloc A-04 sur À propos, l'accueil et le diagnostic
+**Et** un chemin `photos/x.webp` (dossier `contenu-anne/photos/`) reste accepté

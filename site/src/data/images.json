@@ -794,5 +794,25 @@
       }
     ],
     "jpg": "/img/photos/ouverture-poster-1280.jpg"
+  },
+  "pages/a-propos/jyhell-2023-104": {
+    "largeur": 2133,
+    "hauteur": 3200,
+    "ratio": 0.6666,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/pages/a-propos/jyhell-2023-104-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/pages/a-propos/jyhell-2023-104-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/pages/a-propos/jyhell-2023-104-1920.webp"
+      }
+    ],
+    "jpg": "/img/pages/a-propos/jyhell-2023-104-1280.jpg"
   }
 }
