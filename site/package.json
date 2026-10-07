@@ -9,16 +9,14 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "node scripts/images.mjs && astro build",
+    "build": "node scripts/images.mjs && astro build && node scripts/migrations-ci.mjs",
     "preview": "astro preview",
     "check": "wrangler types && astro check && tsc -p tsconfig.worker.json",
     "images": "node scripts/images.mjs",
     "video": "node scripts/video.mjs",
     "verif": "node scripts/verif.mjs",
     "types": "wrangler types",
-    "base:local": "wrangler d1 migrations apply DB --local",
-    "deploy": "wrangler d1 migrations apply DB --remote && wrangler deploy",
-    "deploy:apercu": "wrangler d1 migrations apply DB --remote && wrangler versions upload"
+    "base:local": "wrangler d1 migrations apply DB --local"
   },
   "dependencies": {
     "astro": "^7.3.4"

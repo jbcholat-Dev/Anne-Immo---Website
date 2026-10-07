@@ -87,7 +87,7 @@ Chaque endroit est marqué `TODO(backend)` dans le code (`grep -rn "TODO(backend
 
 ## Mise en ligne (story 9.2)
 
-Cloudflare Workers Builds : dossier racine `site`, construction `npm ci && npm run build`, mise en ligne `npm run deploy` (branche `main`) et `npm run deploy:apercu` (autres branches) : chacune applique d'abord les migrations de la base, puis met en ligne. Tant que le réglage de construction `PUBLIC_INDEXATION` ne vaut pas `oui`, toutes les pages portent `noindex, nofollow` et `robots.txt` interdit tout : c'est l'aperçu. La production passe ce réglage à `oui` (story 12.4). Voir `.env.example`.
+Cloudflare Workers Builds : dossier racine `site`, construction `npm ci && npm run build`, mise en ligne `npx wrangler deploy` (branche `main`) et `npx wrangler versions upload` (autres branches). Depuis la story 10.2, `npm run build` se termine par `scripts/migrations-ci.mjs`, qui applique les migrations de la base quand la construction tourne chez Cloudflare (`WORKERS_CI=1`), et ne fait rien en local. Tant que le réglage de construction `PUBLIC_INDEXATION` ne vaut pas `oui`, toutes les pages portent `noindex, nofollow` et `robots.txt` interdit tout : c'est l'aperçu. La production passe ce réglage à `oui` (story 12.4). Voir `.env.example`.
 
 ## Noyau serveur et base des leads (story 10.2)
 

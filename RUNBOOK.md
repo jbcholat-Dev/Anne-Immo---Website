@@ -77,7 +77,7 @@ Ou depuis le tableau de bord : Cloudflare → Storage & Databases → D1 SQL Dat
 
 Créées le 2026-10-07 par JB, juridiction UE confirmée : `anne-leads` = `59b15fb0-cb56-45a7-a61a-378548fd6fe4`, `anne-leads-apercu` = `06a92884-c6f1-4d02-afbe-976d11543385`. Jusqu'au lancement, **toutes** les mises en ligne (y compris `main`) utilisent `anne-leads-apercu` ; `anne-leads` sera branchée à la story 12.4.
 
-Le schéma n'est modifié que par les fichiers numérotés de `site/migrations/`, jamais à la main (AD-10). Ils sont appliqués automatiquement à chaque mise en ligne par `npm run deploy` (branche `main`) et `npm run deploy:apercu` (autres branches) : Cloudflare → Workers & Pages → anne-vial-tissot-site → Settings → Build → **Deploy command** = `npm run deploy`, **Version command** (branches autres que `main`) = `npm run deploy:apercu` (réglé par JB le 2026-10-07, comme le Deploy command). À la main, depuis `site/` après `npm run build` : `npx wrangler d1 migrations apply DB --remote`.
+Le schéma n'est modifié que par les fichiers numérotés de `site/migrations/`, jamais à la main (AD-10). Ils sont appliqués automatiquement à chaque construction chez Cloudflare, par `scripts/migrations-ci.mjs` à la fin de `npm run build` (seulement quand `WORKERS_CI=1`, posé par Cloudflare) ; les réglages de construction du projet ne changent pas (Deploy command `npx wrangler deploy`, Version command `npx wrangler versions upload`). **Piège** : ces réglages valent pour toutes les branches, `main` compris ; ne jamais y mettre une commande qui n'existe que sur une branche (incident du 2026-10-07 : `main` n'a plus été mis en ligne pendant quelques minutes). À la main, depuis `site/` après `npm run build` : `npx wrangler d1 migrations apply DB --remote`.
 
 Contrôle : `GET /api/sante` répond `{"ok":true,"migrations":N}` (N = nombre de fichiers de `migrations/`), 503 si la base ne répond pas.
 
@@ -89,7 +89,7 @@ Contrôle : `GET /api/sante` répond `{"ok":true,"migrations":N}` (N = nombre de
 | `CAL_WEBHOOK_SECRET` | vérifier que les messages viennent de Cal.com | 2026-10-07 | inventer un nouveau texte, le mettre dans Cloudflare puis dans le webhook Cal.com |
 | `RESEND_API_KEY`, `TURNSTILE_SECRET_KEY` | e-mails (10.3), anti-robot (10.4) | à venir | à la création |
 
-**Redéployer depuis une machine vierge** (AD-10) : `git clone` du dépôt, `cd site && npm ci && npm run build && npx wrangler login && npm run deploy`.
+**Redéployer depuis une machine vierge** (AD-10) : `git clone` du dépôt, `cd site && npm ci && npm run build && npx wrangler login && npx wrangler d1 migrations apply DB --remote && npx wrangler deploy`.
 
 ## 5. Pièges irréversibles
 
