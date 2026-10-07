@@ -46,6 +46,20 @@ Route provisoire `POST /api/essai-cal` ajoutée à `site/worker.ts` (voir `site/
 
 2026-10-07 : secret `CAL_WEBHOOK_SECRET` posé par JB dans Cloudflare ; branche remise à jour avec main (conflits résolus en gardant la version de main pour le contenu ; construction 24 pages, 0 erreur de types, 1478 liens, 0 cassé). Reste : vérifier qu'Access laisse passer `/api/essai-cal`, déclarer le webhook dans Cal.com, réservation d'essai.
 
+### 2 ter. Essai réel Cal.com : réussi (2026-10-07)
+Webhook déclaré par JB sur le rendez-vous « Premier échange » (créée, annulée, replanifiée), même secret que `CAL_WEBHOOK_SECRET`. Premier essai bloqué : Cloudflare Access renvoyait Cal.com vers la page de connexion (code 302). Correction : application Zero Trust `essai-cal`, Bypass sur le seul chemin `/api/essai-cal` (voir RUNBOOK § 2) ; l'accueil de l'aperçu demande toujours le code e-mail en fenêtre privée (vérifié par JB).
+
+Résultats, tickets GitHub [#24](https://github.com/jbcholat-Dev/Anne-Immo---Website/issues/24) (ping), [#25](https://github.com/jbcholat-Dev/Anne-Immo---Website/issues/25) (réservation), [#26](https://github.com/jbcholat-Dev/Anne-Immo---Website/issues/26) (annulation) :
+- **Signature `X-Cal-Signature-256` : valide** sur les trois messages (HMAC SHA-256 du corps brut, hexadécimal) ; un message sans signature ou mal signé est refusé (essai local).
+- **Plan gratuit** : webhooks disponibles.
+- **Case de confidentialité** : transmise dans `payload.responses.confidentialite.value` (`true`).
+- **Fuseau** : `Europe/Paris` pour Anne et pour le prospect ; heures transmises en UTC (`07:00Z` pour 9 h à Paris).
+- **Statuts** : `BOOKING_CREATED` → `ACCEPTED` ; `BOOKING_CANCELLED` → `CANCELLED`, même `uid` pour relier les deux.
+- **Confirmations** : e-mail de Cal.com reçu par JB avec invitation d'agenda ; l'agenda Google d'Anne est relié (lieu `integrations:google:meet`).
+- **Champs du formulaire** : `name`, `email`, `attendeePhoneNumber`, `location`, `title`, `notes`, `guests`, `rescheduleReason`, `confidentialite`.
+- **Créneau pris** : non testé à part ; Cal.com retire de lui-même un créneau réservé (calendrier relié). À constater en 10.6.
+- À trancher avec Anne : lieu du rendez-vous (Google Meet actuellement, ou téléphone).
+
 ### 3. Verdicts proposés pour la table « Deferred » du spine
 | Décision | Verdict proposé (2026-10-04) | Qui tranche |
 |---|---|---|
@@ -62,6 +76,6 @@ Route provisoire `POST /api/essai-cal` ajoutée à `site/worker.ts` (voir `site/
 ## Ce qui reste (story ouverte)
 1. ~~JB : autoriser les domaines bloqués (J17)~~ fait le 2026-10-05.
 2. ~~JB : créer le compte Cal.com et le widget Turnstile (J12, J18)~~ faits le 2026-10-05 ; Resend (J11) en attente de vérification du domaine.
-3. Claude : essai réel Cal.com (webhook signé, case à cocher, fuseau, créneau pris, confirmations), relevé des cookies Turnstile et Cal.com, verdict bandeau.
+3. ~~Claude : essai réel Cal.com~~ fait le 2026-10-07 (§ 2 ter). Reste : relevé des cookies Turnstile et Cal.com dans un vrai navigateur, verdict bandeau.
 4. JB : trancher CMS, outil d'audit, bandeau ; Anne : Q10.
 5. Claude : amendement final du spine (table Deferred close, « Hypothèses vérifiées »).

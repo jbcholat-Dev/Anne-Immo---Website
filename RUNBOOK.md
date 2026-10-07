@@ -24,6 +24,8 @@ Mots de passe : jamais dans ce dépôt, jamais manipulés par Claude. Coffre par
 - Non indexé : toutes les pages portent `noindex, nofollow` et `/robots.txt` interdit tout, tant que la variable de construction `PUBLIC_INDEXATION` n'est pas à `oui`.
 - Mise à jour : automatique à chaque fusion dans `main` (Cloudflare Workers Builds). Réglages du projet : dossier racine `site`, construction `npm ci && npm run build`, mise en ligne `npx wrangler deploy`.
 - Voir un build : Cloudflare → Workers & Pages → anne-vial-tissot-site → Deployments.
+- **Ouverture provisoire (2026-10-07, story 10.1)** : l'application Zero Trust `essai-cal` laisse passer tout le monde (règle `Cal.com`, Bypass) sur le seul chemin `/api/essai-cal` de l'aperçu de la branche `claude/project-thread-axo12t`, pour recevoir les webhooks Cal.com. Le reste de l'aperçu reste protégé (vérifié en fenêtre privée). À supprimer quand la vraie route de la story 10.6 existe, en même temps que le webhook Cal.com d'essai.
+- Secret `CAL_WEBHOOK_SECRET` (posé par JB le 2026-10-07) : même texte que le champ « Secret » du webhook Cal.com. Cal.com est au nom d'Anne (compte Google avialtissot@gmail.com) ; Resend au nom de JB.
 
 ## 3. Refaire une mise en ligne
 
