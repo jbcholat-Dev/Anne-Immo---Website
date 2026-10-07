@@ -1,84 +1,75 @@
 ---
 commune: Allinges
-type_bien: Maison
-annee_vente:
-delai_vente:
-particularite: >
-  Bien premium resté un an sans offre : une objection silencieuse (pas de
-  piscine) et une présentation insuffisante pour la gamme de prix.
-photo_principale: "photos/photo-047.jpg"   # photo de tête (chemin dans le dossier de la story)
-photos: ["photos/photo-002.jpg", "photos/photo-004.jpg", "photos/photo-019.jpg", "photos/photo-038.jpg"]
-temoignages:          # vendeur et/ou acheteur ; un seul suffit pour publier
-  - role: vendeur
-    prenom:
-    contexte:
-    citation:
-    portrait:
-  - role: acheteur
-    prenom:
-    contexte:
-    citation:
-    portrait:
+type_bien: Villa de standing
+annee_vente: 2025
+delai_vente: ''
+particularite: 'Bien premium resté un an sur le marché, 0 offre : une présentation insuffisante pour la gamme de prix.'
+photo_principale: photos/allinges-exp-immo-018-hd.webp
+photos:
+  - photos/allinges-exp-immo-006-hd.webp
+  - photos/photo-002.jpg
+  - photos/photo-019.jpg
+  - photos/allinges-exp-immo-018-hd.webp
+  - photos/dji_0568.webp
 statut: brouillon
 autorisations: false
+temoignages:
+  - citation: null
+    contexte: null
+    portrait: null
+    prenom: null
+    role: vendeur
+  - citation: null
+    contexte: null
+    portrait: null
+    prenom: null
+    role: acheteur
 ---
 
 # Maison premium en stagnation
 
-## Le cas : Maison premium, 1 an sans acheteur
+## Le cas : Maison premium, 1 an sur le marché, 0 offre
 
-Une magnifique maison, bien positionnée, belle surface. Tout semblait réuni pour une vente rapide.
+Une maison de standing alliant modernité et charme de l'ancien, beaux volumes, belles surfaces, cadre premium, grand terrain (5000m2). 
 
-Mais après **un an en marché**, aucune offre. Les visites s'accumulaient, les acquéreurs repartaient sans engagement. Le propriétaire commençait à se demander : *"Qu'est-ce qui bloque ?"*
+2 agences, 1 an sur le marché et aucune offre. 
 
-C'est là qu'il nous a contacté. Et nous avons vite compris les trois obstacles invisibles.
+Le client m'a confié la vente de son bien en exclusivité car mon diagnostic lui semblait pertinent. Selon moi, il y avait trois obstacles à cette vente.
 
 ## Le problème : trois obstacles silencieux
 
 **1. La maison semblait vide**
-Partiellement meublée = impossible pour un acquéreur d'imaginer sa vie dedans. Quand on entre dans des pièces nues, on regarde le bien comme un objet, pas comme un *chez-soi*.
+Partiellement meublée = impossible pour un acquéreur d'imaginer sa vie dedans. Quand on entre dans des pièces nues, on regarde le bien comme un objet, pas comme un _chez-soi_.
 
-**2. La présentation était minimale**
+**2. La présentation du bien était minimale**
 Photos standards. Aucune vidéo. Aucune visite virtuelle. Pour une maison à ce prix, c'était clairement insuffisant pour séduire des acquéreurs sérieux.
 
 **3. L'objection silencieuse : pas de piscine**
-Pas demandée explicitement, mais présente. À chaque visite, les acquéreurs traversaient le jardin en se posant la question : *"Avec cette surface... pourquoi pas ?"*
+Pas demandée explicitement, mais présente. À chaque visite, les acquéreurs traversaient le jardin en se posant la question : _"Avec cette surface... pourquoi pas ?"_
 
-C'était une objection latente qui tuait discrètement chaque négociation.
+## Notre approche : 4 actions stratégiques
 
-## Notre approche : 5 actions stratégiques
+### 1. Dossier de déclaration préalable
 
-### 1. Dossier de déclaration préalable pour piscine
-Au lieu d'attendre que l'objection paralyse, nous l'avons **anticipée**. Nous avons lancé un dossier DP pour montrer que c'était faisable. Résultat : les acquéreurs voyaient soudain une *opportunité*, pas une *limite*.
+Au lieu d'attendre que l'objection paralyse, nous l'avons **anticipée**. Nous avons lancé un dossier DP piscine pour montrer la faisabilité du projet. Résultat : les acquéreurs voyaient soudain une _opportunité_, pas une _limite_.
 
-### 2. Diagnostic complet du bien
-Audit détaillé pour identifier les vrais points forts (et pas les surdire). Chaque élément de la maison a été contextualisé.
+### 2. Pack professionnel premium
 
-### 3. Arsenal commercial premium
-- **Photos professionnelles** : chaque pièce présentée comme un espace de vie
-- **Vidéo professionnelle** : circulation fluide, ambiance établie
+- **Photos professionnelles** 
+- **Vidéo professionnelle** 
 - **Drone** : vue aérienne pour montrer l'envergure et les possibilités
 - **Visite virtuelle immersive** : pour acquéreurs occupés ou internationaux
 
-### 4. Service de sélection de meubles
+### 3. Home Staging virtuel
+
 Crucial pour les biens partiellement meublés. Nous avons proposé **différentes options d'ameublement** (styles, budgets, enseignes) pour chaque pièce principale.
 
-Les acquéreurs cessaient d'imaginer (trop difficile). Ils commençaient à *voir*.
+### 4. Ajustement du prix
 
-### 5. Ajustement tarifaire stratégique
-Avec tous ces services, le prix a été repositionné. Non pas baissé — **justifié** maintenant par une stratégie complète.
+Le prix a été révisé pour répondre aux attentes du marché. Après une analyse comparative et concurrentielle du bien, il s'est avéré que le prix fixé préalablement était bien au-dessus du marché. 
 
 ## Le résultat : vente réussie
 
 **3 mois après ces ajustements : vente conclue.**
 
-L'acquéreur n'achetait pas juste une maison. Il achetait :
-- Un bien photographié avec professionnalisme
-- Un dossier DP qui lui donnait une option piscine
-- Des projections d'ameublement qui lui permettaient de se projeter
-- De la certitude, pas des surprises
-
-**Ce qui a changé**
-- De 50 visites sans offre → 1 offre sérieuse
-- Acquéreur enthousiaste (pas "c'est okay")
-- Vente finalisée sans négociation majeure
+La clé de la réussite a été notamment la relation de confiance que nous avons tissée avec le vendeur. Une vraie écoute et de la collaboration.
