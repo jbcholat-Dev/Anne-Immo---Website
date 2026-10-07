@@ -41,7 +41,7 @@ export default {
 // (HMAC SHA-256 du corps brut, calculé avec CAL_WEBHOOK_SECRET) et, si elle est bonne, on consigne
 // un ticket GitHub étiqueté `essai-cal` avec ce que l'essai doit constater (fuseaux, case de confidentialité,
 // statut). Aucun nom, e-mail ni téléphone n'est recopié : seulement les noms des champs et la case à cocher.
-// Signature absente : réponse 401, rien d'écrit. Signature fausse : 401 et un ticket de diagnostic sans contenu.
+// Signature absente ou fausse : 401 et un ticket de diagnostic sans contenu (noms des en-têtes, longueurs).
 async function essaiCal(request: Request, env: Env): Promise<Response> {
   // Visite dans un navigateur : dit seulement si les deux secrets sont posés (jamais leur valeur).
   if (request.method !== 'POST')
@@ -50,6 +50,7 @@ async function essaiCal(request: Request, env: Env): Promise<Response> {
       405,
     );
   if (!env.CAL_WEBHOOK_SECRET || !env.GITHUB_TOKEN) return json({ ok: false, error: { code: 'cle_absente' } }, 503);
+  console.log('essai-cal : message reçu');
 
   const brut = await request.text();
   const recue = (request.headers.get('x-cal-signature-256') || '').trim().toLowerCase();
@@ -65,9 +66,10 @@ async function essaiCal(request: Request, env: Env): Promise<Response> {
   let ecart = recue.length === attendue.length ? 0 : 1;
   for (let i = 0; i < attendue.length; i++) ecart |= attendue.charCodeAt(i) ^ (recue.charCodeAt(i) || 0);
   if (!recue || ecart !== 0) {
-    // Pendant l'essai, un refus venant de Cal.com (en-tête présent) est consigné pour en trouver la cause,
-    // sans le contenu du message.
-    if (recue) {
+    // Pendant l'essai, chaque refus est consigné pour en trouver la cause, sans le contenu du message
+    // (seulement les noms des en-têtes et des longueurs).
+    console.log('essai-cal : signature refusée', { recue: recue.length, corps: brut.length });
+    {
       let evenement = null;
       try {
         evenement = JSON.parse(brut).triggerEvent ?? null;
@@ -82,6 +84,7 @@ async function essaiCal(request: Request, env: Env): Promise<Response> {
           '',
           `- événement : ${evenement ?? 'illisible'}`,
           `- longueur de la signature reçue : ${recue.length} (attendu : 64)`,
+          `- en-têtes reçus : ${[...request.headers.keys()].join(', ')}`,
           `- longueur du corps : ${brut.length}`,
           `- longueur du secret posé côté Cloudflare : ${env.CAL_WEBHOOK_SECRET.length}`,
         ].join('\n'),
@@ -126,6 +129,7 @@ async function essaiCal(request: Request, env: Env): Promise<Response> {
   ].join('\n');
 
   const r = await ticketEssai(env, `[Essai Cal.com] ${releve.evenement ?? 'webhook'}`, body);
+  console.log('essai-cal : signature valide, ticket', r);
   if (!r.ok) return json({ ok: false, error: { code: r.code, statut: r.statut } }, 502);
   return json({ ok: true });
 }

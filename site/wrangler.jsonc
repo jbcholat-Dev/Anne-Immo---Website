@@ -15,6 +15,8 @@
     "html_handling": "auto-trailing-slash",
     "run_worker_first": ["/api/*"]
   },
+  // Journaux du Worker visibles dans Cloudflare (Workers → anne-vial-tissot-site → Logs), gratuits. Essai Cal.com, story 10.1.
+  "observability": { "enabled": true },
   "vars": {
     "GITHUB_REPO": "jbcholat-Dev/Anne-Immo---Website"
   }
