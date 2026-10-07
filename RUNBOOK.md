@@ -57,11 +57,31 @@ Anne est déjà propriétaire légale des domaines ; seule la gestion est sur le
 
 État au 2026-10-05 : les deux domaines sont dans le compte Cloudflare (plan gratuit), serveurs de noms `camilo.ns.cloudflare.com` et `elly.ns.cloudflare.com`, actifs. Reste : DNSSEC à activer (Cloudflare → domaine → DNS → Settings → DNSSEC, puis copier l'enregistrement DS chez Infomaniak), validation en deux étapes sur le compte Infomaniak.
 
+## 4 quater. Base des leads (backend, story 10.2)
+
+Deux bases Cloudflare D1 (base de données SQL hébergée par Cloudflare), **toutes deux en juridiction UE** : les données y restent dans l'Union européenne (AD-16). Le choix de la juridiction est **irréversible** : une base créée sans elle doit être supprimée et recréée.
+
+| Base | Sert à | Nom |
+|---|---|---|
+| production | les vrais leads, branche `main` | `anne-leads` |
+| aperçu | les essais des branches de travail | `anne-leads-apercu` |
+
+Commandes (depuis `site/`, après `npx wrangler login`) :
+
+```bash
+npx wrangler d1 create anne-leads --jurisdiction eu
+npx wrangler d1 create anne-leads-apercu --jurisdiction eu
+```
+
+Ou depuis le tableau de bord : Cloudflare → Storage & Databases → D1 SQL Database → Create → nom ci-dessus → Location : **Specify jurisdiction → European Union (EU)**.
+
+Chaque base a un identifiant (`database_id`), public, recopié dans `site/wrangler.jsonc`. Le schéma n'est modifié que par les fichiers numérotés de `site/migrations/`, jamais à la main (AD-10).
+
 ## 5. Pièges irréversibles
 
 - Ne jamais mettre `PUBLIC_INDEXATION=oui` sur une adresse d'aperçu : Google mémoriserait une version incomplète.
 - Ne jamais éteindre Access tant que des photos sans autorisation écrite sont sur le site.
-- Base de données (backend, epic 10) : elle se crée avec une juridiction UE irréversible ; la commande sera écrite ici avant d'être exécutée (AD-10).
+- Base de données (backend, epic 10) : elle se crée avec une juridiction UE irréversible ; commande et noms au § 4 quater, écrits avant la création (AD-10).
 
 ## 6. Journal des changements de ce document
 
@@ -71,3 +91,4 @@ Anne est déjà propriétaire légale des domaines ; seule la gestion est sur le
 - 2026-10-05 : Anne dépose son contenu dans le dossier Google Drive « Contenu site Anne » et ne fait plus de commit (décision de JB). Les originaux lourds restent sur Drive ; Claude range les versions utiles dans `contenu-anne/` par PR. Si Claude ne peut plus lire le dossier : reconnecter le connecteur Google Drive dans claude.ai (Réglages → Connecteurs) puis l'activer dans les réglages du projet.
 - 2026-10-05 (après-midi) : le dossier Drive est rangé comme `contenu-anne/` (mêmes noms, une vente = un dossier `stories/<bien>/` avec ses photos HD). L'ancien dossier « Site web - Anne Immo » est devenu « Contenu site Anne » ; le découpage en 5 sous-dossiers du matin est archivé sous « ARCHIVE - ancien Contenu site Anne (ne plus utiliser) ». Piège : sur Drive, seul le propriétaire d'un fichier peut le déplacer ou le supprimer ; les fichiers déposés par Anne ne peuvent être supprimés que par elle (Claude les renomme « À SUPPRIMER - … »).
 - 2026-10-05 (fin d'après-midi) : espace d'édition Sveltia CMS à `/admin` (décision de JB, story 7.13). Trois éléments à créer par JB : le Worker `sveltia-cms-auth`, l'autorisation OAuth GitHub, l'invitation d'Anne comme collaboratrice. Le Drive reste l'archive des photos HD et des vidéos. Pièges : une autorisation OAuth GitHub voit tous les dépôts du compte qui s'y connecte (sans risque pour Anne, dont le compte n'a que ce dépôt) ; si le Worker est supprimé ou son secret changé, plus personne ne peut se connecter à l'espace d'édition (le site, lui, continue de fonctionner).
+- 2026-10-07 : essai du webhook Cal.com (story 10.1) : ouverture provisoire du chemin `/api/essai-cal` dans Access et secret `CAL_WEBHOOK_SECRET` (§ 2). § 4 quater : création des bases D1 en juridiction UE (story 10.2), écrite avant d'être lancée.
