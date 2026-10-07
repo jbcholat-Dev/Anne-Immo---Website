@@ -25,7 +25,10 @@ Le site est servi par le Worker Cloudflare avec l'adaptateur Astro, une base D1 
 - `node scripts/liens.mjs` : 25 pages, 1478 liens, 0 cassé. `npm run verif` : aucune erreur console. `scripts/e2e-diagnostic.mjs` : parcours complet, aucune erreur.
 - `wrangler d1 migrations apply DB --local` : 2 migrations appliquées. `wrangler dev` : `/`, `/vendre`, `/contact`, `/diagnostic`, `/diagnostic/questions`, `/en`, `/guide`, `/realisation`, `/a-propos`, `/admin/`, `/robots.txt` → 200 ; adresse inconnue → 404 ; `/api/sante` → `{"ok":true,"migrations":2}` ; `/api/retour` et `/api/essai-cal` répondent comme avant (signature Cal.com vérifiée) ; tâche planifiée déclenchée → 200.
 
+## Ce qui est vérifié en ligne (2026-10-07)
+- Aperçu de la branche, après construction chez Cloudflare avec les commandes d'origine (commit 440fa57) : `/api/sante` → `{"ok":true,"migrations":2}` (capture de JB). Les migrations ont donc été appliquées pendant la construction sur `anne-leads-apercu` : la clé de construction de Cloudflare a les droits D1.
+
 ## Ce qui reste
 1. Incident du 2026-10-07 : les commandes `npm run deploy` / `deploy:apercu` réglées dans Cloudflare n'existaient que sur cette branche ; ce réglage étant commun à toutes les branches, les mises en ligne de `main` ont échoué. JB remet les commandes d'origine ; les migrations passent dans `npm run build` (`scripts/migrations-ci.mjs`, actif seulement chez Cloudflare).
-2. Vérifier en ligne sur l'aperçu de la branche : pages identiques, `/api/sante` → `migrations: 2`, bouton « Un retour ? » et webhook Cal.com toujours fonctionnels.
+2. Vérifier en ligne sur l'aperçu de la branche : ~~`/api/sante`~~ fait ; pages identiques, bouton « Un retour ? » et webhook Cal.com toujours fonctionnels.
 3. Après fusion : même contrôle sur l'aperçu principal.
