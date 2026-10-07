@@ -15,6 +15,6 @@ Chaque fichier ici est un modèle. Pour créer un contenu :
 
 **La version anglaise** d'un contenu = le même fichier traduit, nommé `en.md`, dans le même dossier. Pas de `en.md` = pas de version anglaise, c'est normal.
 
-**Les champs de l'en-tête** : ne supprime pas une ligne, laisse-la vide si tu n'as pas l'information. `statut` et `autorisations` décident de la publication.
+**Les champs de l'en-tête** : ne supprime pas une ligne, laisse-la vide si tu n'as pas l'information. `statut` décide de la publication.
 
 **Conseil d'outil** : ouvre le dossier `contenu-anne` dans **Obsidian** (gratuit) — tes fichiers apparaissent comme des notes, l'en-tête devient un petit formulaire « Propriétés », et tu vois le rendu en direct.

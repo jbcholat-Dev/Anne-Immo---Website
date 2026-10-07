@@ -1,6 +1,6 @@
 ---
-// § 1.7 Anne : portrait (bloc réservé A-04), trois lignes, les quatre langues, « En savoir plus » → /a-propos#qui-suis-je.
-import Reserve from '../Reserve.astro';
+// § 1.7 Anne : portrait (A-04, bloc réservé tant qu'aucun portrait n'est envoyé, story 7.16), trois lignes, les quatre langues, « En savoir plus » → /a-propos#qui-suis-je.
+import Portrait from '../Portrait.astro';
 import Signature from '../Signature.astro';
 import { t, r, type Lang } from '../../i18n';
 interface Props { lang: Lang }
@@ -9,8 +9,8 @@ const d = t(lang);
 ---
 <section class="anne" data-sec="anne" aria-labelledby="anne-titre">
   <div class="anne-portrait" data-reveal="bloc">
-    <Reserve label={d.accueil.anne_portrait} class="seulement-desktop anne-reserve" />
-    <Reserve label={d.accueil.anne_portrait_m} class="seulement-mobile anne-reserve-m" />
+    <Portrait label={d.accueil.anne_portrait} class="seulement-desktop anne-reserve" sizes="420px" />
+    <Portrait label={d.accueil.anne_portrait_m} class="seulement-mobile anne-reserve-m" sizes="100vw" />
   </div>
   <div data-reveal="titre">
     <h2 id="anne-titre">{d.accueil.anne_titre}</h2>

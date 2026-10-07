@@ -50,7 +50,7 @@ collections:
     label_singular: Vente
     description: >
       Une fiche par vente : le récit d'Anne, à la première personne. Ni prix, ni nom de client.
-      Une fiche n'est visible sur le site public qu'en statut « Publiée », avec les autorisations écrites.
+      Une fiche n'est visible sur le site public qu'en statut « Publiée ».
     folder: contenu-anne/stories
     path: "{{slug}}/fr"
     extension: md
@@ -81,19 +81,6 @@ collections:
         multiple: true
         required: false
         hint: "Envoyer 5 à 10 photos au plus par enregistrement."
-      - name: temoignages
-        label: Témoignages
-        widget: list
-        required: false
-        collapsed: true
-        summary: "{{role}} · {{prenom}}"
-        hint: "Un seul suffit pour publier. Chaque témoignage demande l'accord écrit de la personne."
-        fields:
-          - { name: role, label: Rôle, widget: select, options: [{ label: Vendeur, value: vendeur }, { label: Acheteur, value: acheteur }] }
-          - { name: prenom, label: Prénom, widget: string, required: false }
-          - { name: contexte, label: Contexte, widget: string, required: false }
-          - { name: citation, label: Citation, widget: text, required: false }
-          - { name: portrait, label: Portrait, widget: image, required: false }
       - name: statut
         label: Statut
         widget: select
@@ -102,11 +89,7 @@ collections:
           - { label: "Brouillon (visible seulement sur l'aperçu)", value: brouillon }
           - { label: "À relire", value: a-relire }
           - { label: "Publiée (visible sur le site public)", value: publie }
-      - name: autorisations
-        label: Autorisations écrites reçues
-        widget: boolean
-        default: false
-        hint: "À cocher seulement quand les accords écrits des clients (photos, témoignages) sont reçus. Sans cette case, une fiche « Publiée » reste traitée comme « À relire » et n'apparaît pas sur le site public. L'aperçu montre toutes les fiches, quel que soit le statut."
+        hint: "« Publiée » seulement quand les clients ont donné leur accord. L'aperçu montre toutes les fiches, quel que soit le statut. Le témoignage affiché est l'avis Immodvisor relié à cette vente (rubrique Avis, champ « Vente concernée »)."
       - { name: body, label: Récit, widget: markdown, hint: "À la première personne. Des intertitres courts (« Le résultat ») aident la lecture." }
 
   - name: pages
@@ -124,8 +107,9 @@ collections:
       - { name: titre, label: Titre, widget: string }
       - { name: sous_titre, label: Sous-titre, widget: text, required: false }
       - { name: video, label: Vidéo, widget: string, required: false, hint: "Laisser vide : pas de bloc vidéo." }
+      - { name: portrait, label: "Portrait d'Anne", widget: image, required: false, hint: "Photo verticale d'Anne (format portrait, 4:5 ou plus haute). Affichée sur À propos, l'accueil et le diagnostic. Laisser vide : emplacement réservé." }
       - { name: statut, label: Statut, widget: select, options: [brouillon, a-relire, publie], default: brouillon }
-      - { name: body, label: Texte, widget: markdown }
+      - { name: body, label: Texte, widget: markdown, hint: "Le site découpe ce texte selon ses titres : avant « Ma méthode » (titre 1), la colonne Qui suis-je ?, un bloc par titre 2 ; « Les trois piliers » : un paragraphe « **Nom :** texte » par pilier ; « Concrètement… » : un titre 3 « 1. Titre » par point. Garder ces titres." }
 
   - name: avis
     label: Avis Immodvisor

@@ -29,7 +29,7 @@ Les scripts Playwright utilisent `/opt/pw-browsers/chromium` s'il existe, sinon 
 |---|---|---|
 | `/` | Accueil — hero vidéo/poster, bande Klein, pile de 6 cartes collantes (D-16), méthode + refrain, « Ils ont travaillé avec Anne », diagnostic, Anne, fermeture Klein (D-22) | maquette `01-accueil-*`, `contenu-anne/` |
 | `/realisation`, `/realisation/<slug>` | Réalisation (index + 3 fiches story) | `contenu-anne/stories/*/fr.md` (récits d'Anne, tels quels) |
-| `/a-propos` `#qui-suis-je` `#methode` `#cible` | À propos, page longue à ancres, repère collant, **sans** bloc vidéo A-15 (D-12) | maquette `apropos-*` (condensé de `contenu-anne/pages/a-propos/fr.md`) |
+| `/a-propos` `#qui-suis-je` `#methode` `#cible` | À propos, page longue à ancres, repère collant, **sans** bloc vidéo A-15 (D-12) | maquette `apropos-*` ; textes lus dans `contenu-anne/pages/a-propos/fr.md` (story 7.17) |
 | `/vendre` (`#estimation`) | deux portes + formulaire d'estimation (8 champs, D-4) | maquette `04-vendre-*` |
 | `/acheter` | profils, recherche accompagnée, avis d'acheteurs (§ 5.4), CTA → contact préréglé Achat | maquette `04b-acheter-*` |
 | `/diagnostic` | landing autonome | maquette `05-diagnostic-*` |
@@ -45,9 +45,9 @@ Navigation (D-2, D-6 A, D-17, D-21, D-28) : réseaux · symbole seul | Accueil �
 
 ## Réel vs placeholder
 
-**Réel** : **la vidéo d'ouverture A-01** (montage d'Anne, 95 s, en boucle, sans son ; son poster = sa première image, D-27 — voir § Vidéo d'ouverture) ; les 3 récits d'Anne (Thonon, Armoy, Allinges) et leurs 13 photos ; la note 5/5 et les 18 avis Immodvisor (`instantane.md`, avis cités tels quels, jamais corrigés) ; les textes d'À propos, de la méthode, du diagnostic (libellés live + barème + 9 feedbacks) ; les logos et lockups eXp du design system.
+**Réel** : **la vidéo d'ouverture A-01** (montage d'Anne, 52 s depuis le 2026-10-05, en boucle, sans son ; son poster = sa première image, D-27 — voir § Vidéo d'ouverture) ; les 3 récits d'Anne (Thonon, Armoy, Allinges) et leurs 13 photos ; la note 5/5 et les 18 avis Immodvisor (`instantane.md`, avis cités tels quels, jamais corrigés) ; les textes d'À propos, de la méthode, du diagnostic (libellés live + barème + 9 feedbacks) ; les logos et lockups eXp du design system.
 
-**Blocs réservés « Actif attendu »** (galet, dimensions réelles, jamais un trou) : A-02 photos des trois ventes « à venir » de la pile (Sciez, Essert-Romand, Anthy — ventes réelles du registre sans story rédigée) · A-04 portrait (accueil, À propos, landing) · A-05 Anne en situation · A-07 témoignages de story quand aucun avis n'est relié · A-10 couverture du guide · A-13 RSAC, carte pro, coordonnées (l'hébergeur, Cloudflare, est renseigné depuis le 2026-10-04) (`src/config/site.ts`, `identite`) · A-15 vidéo méthode (bloc absent, D-12).
+**Blocs réservés « Actif attendu »** (galet, dimensions réelles, jamais un trou) : A-02 photos des trois ventes « à venir » de la pile (Sciez, Essert-Romand, Anthy — ventes réelles du registre sans story rédigée) · A-04 portrait (accueil, À propos, landing ; remplacé par la photo dès qu'elle est mise dans l'espace d'édition, story 7.16) · A-05 Anne en situation · A-07 témoignages de story quand aucun avis n'est relié · A-10 couverture du guide · A-13 RSAC, carte pro, coordonnées (l'hébergeur, Cloudflare, est renseigné depuis le 2026-10-04) (`src/config/site.ts`, `identite`) · A-15 vidéo méthode (bloc absent, D-12).
 
 **Textes marqués « Point ouvert » / « Contenu à écrire par Anne »** (pastille terra-deep, comme dans la maquette) : Acheter (D-5), section Cible (point ouvert 1), champs de l'estimation (point ouvert 2). À retirer avec le contenu définitif.
 
@@ -60,7 +60,7 @@ Tous dans `src/config/site.ts` :
 - **Bande preuve** : une phrase d'Alexandra V. — Acheter : RHL + JamesW.
 - **Cartes 4-6 de la pile** : Sciez villa 2025, Essert-Romand chalet 2026, Anthy T3 2024 (registre `_suivi-stories.md`), photo réservée, citation de l'avis rapproché quand la confiance est « forte ».
 - **Phrase d'Anne par carte** (`phrasesStories`) : extraite telle quelle du récit.
-- **Stories affichées malgré `statut: brouillon` / `autorisations: false`** — pour que JB voie le site plein. Avant mise en ligne : filtrer sur `statut === 'publie' && autorisations` dans `src/lib/contenu.ts` (`stories()`), et obtenir la version sans logo eXp des photos d'Essert-Romand.
+- **Stories affichées malgré `statut: brouillon`** sur l'aperçu, pour que JB voie le site plein ; le site public filtre sur `statut === 'publie'` (`stories()` dans `src/lib/contenu.ts`). Reste à obtenir la version sans logo eXp des photos d'Essert-Romand.
 - **Réseaux sociaux** : URLs des profils inconnues → liens vers les plateformes en attendant (`reseaux`).
 
 ## Diagnostic — règles appliquées
@@ -96,7 +96,7 @@ Sur l'aperçu (site non indexable), chaque page porte un bouton « Un retour ? �
 
 ## Vidéo d'ouverture (stories 7.4 et 8.3)
 
-- **Source** : `contenu-anne/videos/ouverture-source.mp4` (hors Git, 88 Mo, 1080p, 95 s, montage d'Anne). Inventaire : `contenu-anne/videos/liens.md`.
+- **Source** : `contenu-anne/videos/ouverture-source.mp4` (hors Git, 115 Mo, 4K, 52 s, montage d'Anne du 2026-10-05, story 7.15 ; encodé avec `--debut 0.1` pour sauter deux images blanches). Inventaire : `contenu-anne/videos/liens.md`.
 - **Encodage** : `npm run video` (`scripts/video.mjs`, binaire `ffmpeg-static`) → `public/video/ouverture.mp4` (H.264, 1440 px, 30 i/s, sans son, faststart) + `ouverture.webm` (VP9) + `contenu-anne/photos/ouverture-poster.jpg` (première image) ; puis `npm run images` dérive le poster (`photos/ouverture-poster`). Options : `--debut`, `--duree`, `--crf`, `--largeur`, `--recadrage`.
 - **Dans la page** (`src/components/accueil/Hero.astro`) : `<video muted autoplay loop playsinline preload="metadata">` avec deux `<source>` (WebM puis MP4), écrites seulement si `public/video/ouverture.mp4` existe au build (sinon la balise est masquée par `.hero-video-absente` et le poster `<picture>` reste). Vidéo masquée sous `prefers-reduced-motion` ; non chargée si le navigateur annonce l'économie de données (`navigator.connection.saveData`).
 - **Poids finaux** : voir la story 8.3 (`_bmad-output/implementation-artifacts/8-3-vidéo-d-ouverture-intégrée.md`).
@@ -107,7 +107,7 @@ Italiana (titres) et DM Sans (texte) sont servies par le site lui-même depuis `
 
 ## Écarts assumés avec la maquette / les briefs
 
-- **Vidéo d'ouverture au-dessus du budget** « 8-12 s, < 6 Mo » : JB a décidé (D-27) de diffuser le montage d'Anne en entier (95 s). Compromis : 1440 px au lieu de 1920 (le hero fait 900 px de haut, différence invisible), crf 30, ≈ 15 Mo MP4 / ≈ 10 Mo WebM. Le fichier est lu en flux (faststart + `preload="metadata"`) : la lecture démarre après les premières secondes reçues, le poster couvre l'attente, et le LCP (plus grand élément affiché) reste le poster, chargé en priorité. À remesurer sur l'aperçu (story 10.8).
+- **Vidéo d'ouverture au-dessus du budget** « 8-12 s, < 6 Mo » : JB a décidé (D-27) de diffuser le montage d'Anne en entier (52 s depuis le 2026-10-05, 95 s avant). Compromis : 1440 px au lieu de 1920 (le hero fait 900 px de haut, différence invisible), crf 30, 7,8 Mo MP4 / 6,4 Mo WebM (≈ 15 / 10 Mo avec l'ancien montage). Le fichier est lu en flux (faststart + `preload="metadata"`) : la lecture démarre après les premières secondes reçues, le poster couvre l'attente, et le LCP (plus grand élément affiché) reste le poster, chargé en priorité. À remesurer sur l'aperçu (story 10.8).
 
 - **Pas de Lenis** (défilement inertiel du brief scroll-craft) : JS minimal, défilement natif ; à ajouter en îlot si JB le souhaite (≈ 10 Ko).
 - **Tiret des titres Italiana** : la police n'a pas de glyphe visible pour le tiret ASCII ; les titres (« VIAL‑TISSOT », communes) emploient le tiret insécable U+2011 (`src/lib/texte.ts`).
@@ -129,12 +129,15 @@ La maquette dessine 1 440 px (ordinateur) et 390 px (téléphone). Entre 900 et 
 - Les photos envoyées sont réduites dans le navigateur en WebP 3 200 px ; `scripts/images.mjs` (lancé par `npm run build`) en tire les formats web. Il prend dans `stories/<id>/photos/` les `photo-*.jpg` (ancien circuit, `scripts/preparer-photos`) et les `*.webp` / `*.png`.
 - `photo_principale` et `photos` portent un chemin relatif à la story (`photos/x.webp`) ; un ancien numéro (`"047"`) est encore lu via `photos.json`.
 - Brouillons : l'aperçu montre toutes les stories ; le site public (`PUBLIC_INDEXATION=oui`) seulement les « publie ».
+- Page À propos (story 7.17) : le sous-titre et le texte de la page « À propos » de l'espace d'édition sont ceux du site. `aPropos()` (`src/lib/contenu.ts`) découpe le texte selon ses titres (voir l'aide du champ « Texte ») ; le refrain, la ligne des langues, les profils « Cible » et les boutons restent dans le gabarit.
+- Portrait d'Anne (story 7.16) : champ « Portrait d'Anne » de la page À propos. La photo va dans `contenu-anne/photos/` ; le site l'affiche dans les emplacements A-04 (À propos, accueil, diagnostic). Champ vide : le bloc réservé A-04 reste affiché.
 - Écart assumé : les commentaires de l'en-tête YAML (« proposition Claude… ») disparaissent quand une fiche est enregistrée depuis l'espace d'édition ; les consignes sont dans les aides des champs.
 
 ## Garde-fous de contenu (stories 6.2 et 7.9)
 
 - **Anglais complet ou rien** (AD-2) : `src/i18n/index.ts` fait échouer la construction si `en.json` n'a pas exactement les clés de `fr.json` ou laisse un texte vide, en nommant les clés en cause.
-- **Pas de story publiée sans autorisation** : `src/content.config.ts` ramène à `a-relire` (avec un avertissement dans le journal de construction) toute story en `statut: publie` sans `autorisations: true` ; elle n'apparaît donc pas sur le site public. Jusqu'au 2026-10-05 la construction échouait : un simple choix « Publiée » dans l'espace d'édition bloquait alors toute la mise en ligne de l'aperçu (story 7.13).
+- **Plus de vérification d'autorisation dans le code** (décision de JB du 2026-10-05, story 7.14) : les clients des ventes actuelles ont donné leur accord ; « publie » suffit. Le champ `autorisations` des anciennes fiches est toléré mais ignoré.
+- **Témoignage d'une vente = son avis Immodvisor** (story 7.14) : la fiche affiche les avis dont le champ `story` désigne la vente, vendeur d'abord, cités tels quels. La liste `temoignages` de l'en-tête n'est plus proposée dans l'espace d'édition ; si une citation y est écrite à la main, elle passe avant l'avis.
 - Ce qu'Anne doit fournir est listé dans `contenu-anne/A-FOURNIR.md`.
 
 ## Vérification faite (voir `.verif/`)

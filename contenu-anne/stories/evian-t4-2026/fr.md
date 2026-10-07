@@ -1,27 +1,24 @@
 ---
-commune: Évian-les-Bains   # proposition Claude, à confirmer
-type_bien: Appartement (T4)   # proposition Claude, à ajuster
+commune: Évian-les-Bains
+type_bien: Appartement (T4)
 annee_vente: 2026
 delai_vente: 2 mois
-particularite: >
-  Un avis de valeur pour une succession, sans projet de vente : le
-  propriétaire est revenu un an plus tard pour vendre.
-photo_principale:   # à envoyer depuis l'espace d'édition — photo HD proposée par Claude : n° 038 du dossier Drive
+particularite: 'Un avis de valeur pour une succession, sans projet de vente : le propriétaire est revenu un an plus tard pour vendre.'
+photo_principale: photos/evian-les-bains-exp-realty-017-hd.webp
 photos: []
-# Aucun avis Immodvisor rapproché pour l'instant (voir stories/_suivi-stories.md).
-temoignages:          # vendeur et/ou acheteur ; un seul suffit pour publier
-  - role: vendeur
-    prenom:
-    contexte:
-    citation:
-    portrait:
-  - role: acheteur
-    prenom:
-    contexte:
-    citation:
-    portrait:
 statut: brouillon
 autorisations: false
+temoignages:
+  - citation: null
+    contexte: null
+    portrait: null
+    prenom: null
+    role: vendeur
+  - citation: null
+    contexte: null
+    portrait: null
+    prenom: null
+    role: acheteur
 ---
 
 # Un avis de valeur, puis une vente un an plus tard

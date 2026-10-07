@@ -984,7 +984,7 @@ afin de ne plus dépendre d'un passage par le Drive et par Claude pour chaque co
 **Quand** Anne (ou JB) se connecte et enregistre une fiche
 **Alors** le changement part sur une branche avec sa demande de fusion, Cloudflare en construit un aperçu protégé, et rien n'est en ligne tant que JB n'a pas fusionné
 **Et** les photos envoyées sont réduites dans le navigateur (WebP, 3 200 px au plus) avant d'entrer dans le dépôt ; les HD n'y entrent jamais
-**Et** le site public ne montre que les stories « publie », qui exigent les autorisations écrites ; l'aperçu montre aussi les brouillons
+**Et** le site public ne montre que les stories « publie » ; l'aperçu montre aussi les brouillons
 **Et** les avis Immodvisor restent en lecture seule, sauf la vente concernée et « cité sur l'accueil ».
 
 **État :** en cours (2026-10-05). Responsable : Claude (configuration, adaptation du site, guide), JB (Worker de connexion, autorisation GitHub, invitation d'Anne), Anne (compte GitHub, séance d'essai).
@@ -1851,3 +1851,55 @@ Constats faits pendant la rédaction rétroactive (2026-09-26), à lire avant de
 - Le minimum du lancement (epic 12) est 10.1, 10.2 et 10.3 ; sans 10.7, une demande d'effacement RGPD exige encore JB (AD-18) et sans 10.8, une panne se verrait par Anne (AD-12) : à arbitrer avant la date de lancement.
 - Chaque story laisse le site utilisable seule ; deux transitoires sont explicites : en 10.3 Anne envoie le PDF du guide à la main jusqu'à 10.5, et en 10.4 le bouton guide de la page de résultats renvoie vers `/guide` jusqu'à 10.5.
 
+### Story 7.14: Témoignage d'une vente = son avis Immodvisor ; fin de la règle d'autorisation
+
+En tant que JB,
+je veux que chaque vente affiche comme témoignage l'avis Immodvisor de ses clients, et ne plus avoir de case « autorisations » à cocher,
+afin que les fiches se publient simplement maintenant que les clients ont tous donné leur accord.
+
+**Critères d'acceptation :**
+
+**Étant donné** un avis Immodvisor dont le champ « Vente concernée » désigne une vente
+**Quand** le site est construit
+**Alors** la fiche de cette vente cite l'avis tel quel, vendeur d'abord
+**Et** une vente en « publie » est visible sur le site public sans autre condition
+**Et** l'espace d'édition ne propose plus de témoignage saisi à la main ni de case d'autorisation
+
+### Story 7.15: Nouvelle vidéo d'ouverture
+
+En tant qu'Anne,
+je veux que l'accueil montre mon nouveau montage vidéo,
+afin que la première impression du site soit à jour.
+
+**Critères d'acceptation :**
+
+**Étant donné** le montage déposé dans le Drive « Contenu site Anne »
+**Quand** il est encodé par `npm run video`
+**Alors** l'accueil le joue en entier, en boucle, sans son, avec pour image d'attente sa première image utile
+**Et** la source ne va pas dans Git, seules les versions web y vont
+
+### Story 7.16: Portrait d'Anne dans l'espace d'édition
+
+En tant qu'Anne,
+je veux mettre ma photo dans l'emplacement du portrait depuis l'espace d'édition,
+afin que le site me montre sans passer par Claude.
+
+**Critères d'acceptation :**
+
+**Étant donné** la page À propos dans l'espace d'édition
+**Quand** une photo est mise dans le champ « Portrait d'Anne » et la demande de fusion acceptée
+**Alors** la photo remplace le bloc réservé A-04 sur À propos, l'accueil et le diagnostic, en ordinateur et en téléphone
+**Et** si le champ est vide, le bloc réservé reste affiché
+
+### Story 7.17: Page À propos lue depuis l'espace d'édition
+
+En tant qu'Anne,
+je veux que le texte de ma page À propos modifié dans l'espace d'édition soit celui du site,
+afin de ne pas dépendre de Claude pour changer mon parcours ou ma méthode.
+
+**Critères d'acceptation :**
+
+**Étant donné** une modification du sous-titre ou du texte de la page À propos, fusionnée
+**Quand** le site est construit
+**Alors** la page À propos affiche ce texte, dans la mise en page de la maquette (colonne Qui suis-je ?, piliers, points concrets, grille des partenaires)
+**Et** aucun texte de la page n'est plus figé dans le code, hors refrain, langues, profils « Cible » et boutons
