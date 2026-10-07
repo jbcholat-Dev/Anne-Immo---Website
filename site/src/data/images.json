@@ -219,26 +219,6 @@
     ],
     "jpg": "/img/stories/anthy-t3-2024/anthy-sur-leman-exp-immo-020-hd-1280.jpg"
   },
-  "stories/anthy-t4-2025/anthy-sur-leman-exp-immo-028-hd": {
-    "largeur": 3200,
-    "hauteur": 2133,
-    "ratio": 1.5002,
-    "webp": [
-      {
-        "w": 640,
-        "src": "/img/stories/anthy-t4-2025/anthy-sur-leman-exp-immo-028-hd-640.webp"
-      },
-      {
-        "w": 1280,
-        "src": "/img/stories/anthy-t4-2025/anthy-sur-leman-exp-immo-028-hd-1280.webp"
-      },
-      {
-        "w": 1920,
-        "src": "/img/stories/anthy-t4-2025/anthy-sur-leman-exp-immo-028-hd-1920.webp"
-      }
-    ],
-    "jpg": "/img/stories/anthy-t4-2025/anthy-sur-leman-exp-immo-028-hd-1280.jpg"
-  },
   "stories/appartement-cascade-2024/dsc_0256": {
     "largeur": 2997,
     "hauteur": 2000,
@@ -578,46 +558,6 @@
       }
     ],
     "jpg": "/img/stories/auberge-decoupee-2024/photo-031-1280.jpg"
-  },
-  "stories/essert-romand-chalet-2026/essert-romand-exp-immo-logo-041-hd": {
-    "largeur": 3200,
-    "hauteur": 2133,
-    "ratio": 1.5002,
-    "webp": [
-      {
-        "w": 640,
-        "src": "/img/stories/essert-romand-chalet-2026/essert-romand-exp-immo-logo-041-hd-640.webp"
-      },
-      {
-        "w": 1280,
-        "src": "/img/stories/essert-romand-chalet-2026/essert-romand-exp-immo-logo-041-hd-1280.webp"
-      },
-      {
-        "w": 1920,
-        "src": "/img/stories/essert-romand-chalet-2026/essert-romand-exp-immo-logo-041-hd-1920.webp"
-      }
-    ],
-    "jpg": "/img/stories/essert-romand-chalet-2026/essert-romand-exp-immo-logo-041-hd-1280.jpg"
-  },
-  "stories/evian-t4-2026/evian-les-bains-exp-realty-017-hd": {
-    "largeur": 3200,
-    "hauteur": 2133,
-    "ratio": 1.5002,
-    "webp": [
-      {
-        "w": 640,
-        "src": "/img/stories/evian-t4-2026/evian-les-bains-exp-realty-017-hd-640.webp"
-      },
-      {
-        "w": 1280,
-        "src": "/img/stories/evian-t4-2026/evian-les-bains-exp-realty-017-hd-1280.webp"
-      },
-      {
-        "w": 1920,
-        "src": "/img/stories/evian-t4-2026/evian-les-bains-exp-realty-017-hd-1920.webp"
-      }
-    ],
-    "jpg": "/img/stories/evian-t4-2026/evian-les-bains-exp-realty-017-hd-1280.jpg"
   },
   "stories/maison-premium-2025/photo-002": {
     "largeur": 3200,
