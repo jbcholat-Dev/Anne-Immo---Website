@@ -1,7 +1,7 @@
 {
   // Configuration Cloudflare. Le site est construit par Astro avec l'adaptateur Cloudflare (story 10.2) :
   // les pages prérendues sont servies telles quelles, /api/* passe par worker.ts.
-  // Aucun secret ici, seulement des identifiants publics. Secrets (GITHUB_TOKEN, CAL_WEBHOOK_SECRET…) :
+  // Aucun secret ici, seulement des identifiants publics. Secrets (GITHUB_TOKEN, CAL_WEBHOOK_SECRET, RESEND_API_KEY, TURNSTILE_SECRET_KEY, BOITE_TEST…) :
   // Cloudflare → Workers & Pages → anne-vial-tissot-site → Settings → Variables and Secrets, voir RUNBOOK.md.
   // L'indexation se règle à la construction, par la variable de build PUBLIC_INDEXATION du projet Cloudflare
   // (absente = aperçu non indexé ; « oui » = production, story 12.4). Voir .env.example.
@@ -28,9 +28,20 @@
       "migrations_dir": "migrations"
     }
   ],
+  // Limite de fréquence des formulaires (story 10.3, AD-7) : 5 envois par minute et par adresse IP.
+  // namespace_id : un numéro choisi librement, unique dans le compte Cloudflare.
+  "ratelimits": [{ "name": "LIMITE_FORMULAIRES", "namespace_id": "1001", "simple": { "limit": 5, "period": 60 } }],
+  // Tâche planifiée (worker.ts → scheduled) : toutes les 15 minutes, réessaie les e-mails qui ont échoué (story 10.3).
+  "triggers": { "crons": ["*/15 * * * *"] },
   // Journaux du Worker visibles dans Cloudflare (Workers → anne-vial-tissot-site → Logs), gratuits.
   "observability": { "enabled": true },
   "vars": {
-    "GITHUB_REPO": "jbcholat-Dev/Anne-Immo---Website"
+    "GITHUB_REPO": "jbcholat-Dev/Anne-Immo---Website",
+    // « apercu » : chaque lead est un test, tous les e-mails partent vers la boîte de test (secret BOITE_TEST).
+    // Passe à « production » au lancement seulement (story 12.4).
+    "ENVIRONNEMENT": "apercu",
+    // Boîte d'Anne (décision de JB du 2026-10-07) : reçoit les demandes en production, et reçoit les réponses des prospects
+    // (adresse de réponse des confirmations, car anne@annevialtissot.fr n'a pas encore de boîte de réception).
+    "BOITE_ANNE": "avialtissot@gmail.com"
   }
 }

@@ -6,16 +6,11 @@
 // - le reste est confié à Astro (handle), qui sert les routes de src/pages/api/ (ex. /api/sante).
 // Le site est protégé par Cloudflare Access : seules les personnes autorisées atteignent /api/retour,
 // et Access transmet leur adresse dans l'en-tête cf-access-authenticated-user-email.
-// `scheduled` : tâche planifiée (test quotidien, séquence d'e-mails, purge), vide jusqu'aux stories 10.5 et 10.8.
+// `scheduled` : tâche planifiée, toutes les 15 minutes (wrangler.jsonc) : réessaie les e-mails en échec (story 10.3) ;
+// la séquence d'e-mails, le test quotidien et la purge s'y ajouteront (stories 10.5, 10.7, 10.8).
 import { handle } from '@astrojs/cloudflare/handler';
-
-/** Secrets Cloudflare (jamais dans le dépôt), en plus des liaisons de wrangler.jsonc (DB, ASSETS, GITHUB_REPO). */
-interface EnvSite extends Env {
-  /** Clé GitHub limitée à ce dépôt, droits « Issues : lecture et écriture ». */
-  GITHUB_TOKEN?: string;
-  /** Le même texte que le champ « Secret » du webhook Cal.com. Essai de la story 10.1. */
-  CAL_WEBHOOK_SECRET?: string;
-}
+import { rejouer } from './src/server/delivery';
+import type { EnvSite } from './src/server/env';
 
 const REPO_DEFAUT = 'jbcholat-Dev/Anne-Immo---Website';
 const ETIQUETTE = 'retour-apercu';
@@ -34,8 +29,8 @@ export default {
     if (url.pathname === '/api/essai-cal') return essaiCal(request, env);
     return handle(request, env, ctx);
   },
-  async scheduled() {
-    // Rien pour l'instant (stories 10.5 et 10.8).
+  async scheduled(_controller, env, ctx) {
+    ctx.waitUntil(rejouer(env));
   },
 } satisfies ExportedHandler<EnvSite>;
 

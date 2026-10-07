@@ -4,7 +4,7 @@
 // (réponses + coordonnées + journey_id + utm), jeton serveur à usage unique, résultats rendus par le noyau, jamais dans le navigateur avant soumission.
 import contenu from '../content/diagnostic/questions.json';
 import { calculer, type Reponses } from '../lib/scoring';
-import { telephoneValide, emailValide, envoyer } from './formulaires';
+import { telephoneValide, emailValide, envoyerSimule as envoyer } from './formulaires';
 
 type Ecran = (typeof contenu.ecrans)[number];
 type Etat = { ecran: number; reponses: Reponses; autre: Record<string, string>; texte: string; journey_id: string; utm: Record<string, string> };
