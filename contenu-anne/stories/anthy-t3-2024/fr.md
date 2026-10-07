@@ -3,46 +3,41 @@ commune: Anthy-sur-Léman
 type_bien: Appartement (T3, rez-de-jardin)
 annee_vente: 2024
 delai_vente: 2 mois
-particularite: "Un appartement encombré où les acquéreurs ne se projetaient pas : tout s'est joué sur la préparation avant la remise en vente."
+particularite: "Un appartement encombré où les acquéreurs auraient eu du mal à se projetter : tout s'est joué sur la préparation avant la mise en vente."
 photo_principale: photos/anthy-sur-leman-exp-immo-014-hd.webp
 photos:
   - photos/anthy-sur-leman-exp-immo-002-hd.webp
-  - photos/anthy-sur-leman-exp-immo-006-hd.webp
   - photos/anthy-sur-leman-exp-immo-008-hd.webp
-  - photos/anthy-sur-leman-exp-immo-010-hd.webp
   - photos/anthy-sur-leman-exp-immo-011-hd.webp
-  - photos/anthy-sur-leman-exp-immo-013-hd.webp
-  - photos/anthy-sur-leman-exp-immo-014-hd.webp
-  - photos/anthy-sur-leman-exp-immo-016-hd.webp
   - photos/anthy-sur-leman-exp-immo-018-hd.webp
-  - photos/anthy-sur-leman-exp-immo-019-hd.webp
+  - photos/anthy-sur-leman-exp-immo-016-hd.webp
   - photos/anthy-sur-leman-exp-immo-020-hd.webp
-temoignages:
-  - role: vendeur
-    prenom: ''
-    contexte: ''
-    citation: ''
-    portrait: null
-  - role: acheteur
-    prenom: ''
-    contexte: ''
-    citation: ''
-    portrait: null
 statut: a-relire
 autorisations: false
+temoignages:
+  - citation: ''
+    contexte: ''
+    portrait: null
+    prenom: ''
+    role: vendeur
+  - citation: ''
+    contexte: ''
+    portrait: null
+    prenom: ''
+    role: acheteur
 ---
 
-# Révéler un appartement que personne ne voyait
+# Révéler l'appartement
 
-Un couple de retraités m'a appelée pour vendre leur appartement. Il était en vente depuis longtemps, les visites ne donnaient rien : les acquéreurs repartaient sans s'être projetés.
+Un couple de retraités m'a appelée pour vendre leur appartement les pieds dans l'eau. Ils avaient acheté cet appartement sur plan 25 ans auparavant. L'heure était venue pour eux de s'en séparer.
 
-En passant la porte, j'ai compris pourquoi. L'appartement était encombré au point qu'on ne voyait plus ni les murs ni la lumière, et les pièces paraissaient petites. Le bien, lui, avait du potentiel ; c'est sa présentation qui le cachait.
+Ils ne savaient pas par quel bout commencer. Ils ont eu besoin d'être guider dans tous le processus.
 
-## Préparer avant de montrer
+## Préparation de la mise en vente
 
 Nous avons commencé par le désencombrement. J'ai accompagné mes clients, pièce par pièce, pour libérer l'espace sans les brusquer. Les murs sont réapparus, les fenêtres ont retrouvé leur lumière, et chaque pièce a repris son caractère.
 
-Ensuite seulement, j'ai fait réaliser les visuels avec un professionnel : photos, vidéo, visite virtuelle et vues au drone pour montrer l'environnement. L'annonce racontait enfin un lieu de vie, plus seulement un appartement.
+Ensuite seulement, j'ai fait réaliser les visuels avec un professionnel (pack premium): photos, vidéo, visite virtuelle et vues au drone pour montrer l'environnement. L'annonce racontait enfin un lieu de vie, plus seulement un appartement.
 
 ## Le résultat
 
