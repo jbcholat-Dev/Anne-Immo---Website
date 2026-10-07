@@ -77,7 +77,7 @@ Ou depuis le tableau de bord : Cloudflare → Storage & Databases → D1 SQL Dat
 
 Créées le 2026-10-07 par JB, juridiction UE confirmée : `anne-leads` = `59b15fb0-cb56-45a7-a61a-378548fd6fe4`, `anne-leads-apercu` = `06a92884-c6f1-4d02-afbe-976d11543385`. Jusqu'au lancement, **toutes** les mises en ligne (y compris `main`) utilisent `anne-leads-apercu` ; `anne-leads` sera branchée à la story 12.4.
 
-Le schéma n'est modifié que par les fichiers numérotés de `site/migrations/`, jamais à la main (AD-10). Ils sont appliqués automatiquement à chaque mise en ligne par `npm run deploy` (branche `main`) et `npm run deploy:apercu` (autres branches) : Cloudflare → Workers & Pages → anne-vial-tissot-site → Settings → Build → **Deploy command** = `npm run deploy`, **Non-production branch deploy command** = `npm run deploy:apercu`. À la main, depuis `site/` après `npm run build` : `npx wrangler d1 migrations apply DB --remote`.
+Le schéma n'est modifié que par les fichiers numérotés de `site/migrations/`, jamais à la main (AD-10). Ils sont appliqués automatiquement à chaque mise en ligne par `npm run deploy` (branche `main`) et `npm run deploy:apercu` (autres branches) : Cloudflare → Workers & Pages → anne-vial-tissot-site → Settings → Build → **Deploy command** = `npm run deploy`, **Version command** (branches autres que `main`) = `npm run deploy:apercu` (réglé par JB le 2026-10-07, comme le Deploy command). À la main, depuis `site/` après `npm run build` : `npx wrangler d1 migrations apply DB --remote`.
 
 Contrôle : `GET /api/sante` répond `{"ok":true,"migrations":N}` (N = nombre de fichiers de `migrations/`), 503 si la base ne répond pas.
 

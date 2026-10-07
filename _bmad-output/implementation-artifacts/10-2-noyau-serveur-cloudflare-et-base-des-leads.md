@@ -26,6 +26,6 @@ Le site est servi par le Worker Cloudflare avec l'adaptateur Astro, une base D1 
 - `wrangler d1 migrations apply DB --local` : 2 migrations appliquées. `wrangler dev` : `/`, `/vendre`, `/contact`, `/diagnostic`, `/diagnostic/questions`, `/en`, `/guide`, `/realisation`, `/a-propos`, `/admin/`, `/robots.txt` → 200 ; adresse inconnue → 404 ; `/api/sante` → `{"ok":true,"migrations":2}` ; `/api/retour` et `/api/essai-cal` répondent comme avant (signature Cal.com vérifiée) ; tâche planifiée déclenchée → 200.
 
 ## Ce qui reste
-1. JB : régler les deux commandes de mise en ligne dans Cloudflare (`npm run deploy`, `npm run deploy:apercu`), RUNBOOK § 4 quater.
+1. ~~JB : régler les deux commandes de mise en ligne dans Cloudflare~~ fait le 2026-10-07 (Deploy command et Version command).
 2. Vérifier en ligne sur l'aperçu de la branche : pages identiques, `/api/sante` → `migrations: 2`, bouton « Un retour ? » et webhook Cal.com toujours fonctionnels.
 3. Après fusion : même contrôle sur l'aperçu principal.
