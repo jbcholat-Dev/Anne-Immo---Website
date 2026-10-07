@@ -1,7 +1,7 @@
 ---
 story: 10.1
 epic: 10 — Capture des leads et backend
-statut: in-progress
+statut: done
 date: 2026-10-04
 ---
 
@@ -65,15 +65,23 @@ Résultats, tickets GitHub [#24](https://github.com/jbcholat-Dev/Anne-Immo---Web
 |---|---|---|
 | Champs des objets de contenu | **Fixés** par `site/src/content.config.ts` (stories, avis, instantané, pages). `SequenceEmail` et `Guide` déclarés en 10.5. | constaté |
 | CMS de moyen terme | **Tranché le 2026-10-05 par JB : Sveltia CMS** (story 7.13), ce qui remplace ma proposition de report. Conséquence pour le backend : `/admin` est pris par l'espace d'édition ; l'administration des leads (10.7) passera par `/gestion` et `/api/gestion/*`. | fait (JB) |
-| Bandeau de consentement | **Provisoire : pas de bandeau**, car Turnstile et Cal.com ne se chargent qu'après une action du visiteur (AD-11) et relèvent de l'exemption CNIL « strictement nécessaire / service demandé ». À confirmer par le relevé réel. | JB, après l'essai |
-| Outil d'audit de performance | **Lighthouse CI lancé en local sur le site construit** (contourne Cloudflare Access, gratuit), plus une mesure PageSpeed sur la production au lancement (12.5). Perte : pas de mesure du réseau réel avant le lancement. | JB |
+| Bandeau de consentement | **Tranché le 2026-10-07 par JB : pas de bandeau**, car Turnstile et Cal.com ne se chargent qu'après une action du visiteur (AD-11) et relèvent de l'exemption CNIL « strictement nécessaire / service demandé ». Relevé de l'iframe Turnstile à faire en 10.4. | fait (JB) |
+| Outil d'audit de performance | **Lighthouse CI lancé en local sur le site construit** (contourne Cloudflare Access, gratuit), plus une mesure PageSpeed sur la production au lancement (12.5). Perte : pas de mesure du réseau réel avant le lancement. **Tranché le 2026-10-07 par JB.** | fait (JB) |
 | Barème Q10 | **Garder la matrice visites × offres** déjà codée (`bareme.json`, `q10_matrice`), à faire valider par Anne. Sans réponse, la spec impose la question unique combinée (refaire l'écran). | Anne (action A09) |
 | Go/no-go prestataire | **Sans objet** : le build interne est fait. | constaté |
 
 ## Ce qui est vérifié
 - Essai local ci-dessus (sorties citées). `npm run build` du dépôt inchangé : aucun fichier de `site/` modifié.
 
-## Ce qui reste (story ouverte)
+## Clôture (2026-10-07)
+Story close. Spine amendé (« Amendement du 2026-10-07 », hypothèses de build marquées vérifiées, table Deferred mise à jour). Reportés à des stories nommées :
+- relevé de l'iframe Turnstile dans un vrai navigateur → 10.4 ;
+- constat du créneau verrouillé par Cal.com, retrait de la route `/api/essai-cal`, de l'application Access `essai-cal` et du webhook d'essai → 10.6 ;
+- clé d'API Resend et DMARC → 10.3 ;
+- barème Q10 : validation d'Anne (action A09), avant 10.4 ;
+- lieu du rendez-vous (Google Meet ou téléphone) : à voir avec Anne avant 10.6.
+
+## Historique de ce qui restait
 1. ~~JB : autoriser les domaines bloqués (J17)~~ fait le 2026-10-05.
 2. ~~JB : créer le compte Cal.com et le widget Turnstile (J12, J18)~~ faits le 2026-10-05 ; Resend (J11) en attente de vérification du domaine.
 3. ~~Claude : essai réel Cal.com~~ fait le 2026-10-07 (§ 2 ter). Reste : relevé des cookies Turnstile et Cal.com dans un vrai navigateur, verdict bandeau.
