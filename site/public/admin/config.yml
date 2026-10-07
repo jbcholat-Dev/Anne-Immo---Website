@@ -109,7 +109,7 @@ collections:
       - { name: video, label: Vidéo, widget: string, required: false, hint: "Laisser vide : pas de bloc vidéo." }
       - { name: portrait, label: "Portrait d'Anne", widget: image, required: false, hint: "Photo verticale d'Anne (format portrait, 4:5 ou plus haute). Affichée sur À propos, l'accueil et le diagnostic. Laisser vide : emplacement réservé." }
       - { name: statut, label: Statut, widget: select, options: [brouillon, a-relire, publie], default: brouillon }
-      - { name: body, label: Texte, widget: markdown }
+      - { name: body, label: Texte, widget: markdown, hint: "Le site découpe ce texte selon ses titres : avant « Ma méthode » (titre 1), la colonne Qui suis-je ?, un bloc par titre 2 ; « Les trois piliers » : un paragraphe « **Nom :** texte » par pilier ; « Concrètement… » : un titre 3 « 1. Titre » par point. Garder ces titres." }
 
   - name: avis
     label: Avis Immodvisor

@@ -92,3 +92,73 @@ export async function portraitAnne(): Promise<string | null> {
   const cle = `photos/${path.basename(valeur).replace(/\.[^.]+$/, '')}`;
   return images[cle] ? cle : null;
 }
+
+/**
+ * Page À propos lue depuis contenu-anne/pages/a-propos/fr.md (story 7.17) : le texte modifié dans l'espace d'édition
+ * est celui que le site affiche. Le texte est découpé selon ses titres :
+ * - avant « # Ma méthode… » : la colonne « Qui suis-je ? », un bloc par titre « ## » ;
+ * - « # Ma méthode : sous-titre », son premier paragraphe en introduction ;
+ * - « ## …piliers » : un rang par paragraphe « **Nom :** texte » ;
+ * - « ## Concrètement… » : un rang par titre « ### 1. Titre » ; une liste « Nom (précision) » devient la grille des partenaires ;
+ * - tout autre « ## » : un rang simple (titre + texte).
+ */
+export type BlocTexte = { titre: string; html: string };
+export type RangMethode = { chapeau: string; titre: string; html: string; partenaires?: [string, string][]; niveau: 3 | 4 };
+export type APropos = { sousTitre?: string; qui: BlocTexte[]; methode: { titre: string; sous?: string; intro: string; rangs: RangMethode[]; concretement?: string } };
+
+const sansBalises = (h: string) => h.replace(/<[^>]+>/g, '').replace(/&#x27;|&#39;/g, '’').replace(/&quot;/g, '"').replace(/&amp;/g, '&').trim();
+function decouper(html: string, niveau: 1 | 2 | 3): { titre: string; html: string }[] {
+  const re = new RegExp(`<h${niveau}[^>]*>([\\s\\S]*?)</h${niveau}>`, 'g');
+  const morceaux: { titre: string; html: string }[] = [];
+  let dernier = 0, titre = '', m: RegExpExecArray | null;
+  while ((m = re.exec(html))) {
+    morceaux.push({ titre, html: html.slice(dernier, m.index) });
+    titre = sansBalises(m[1]);
+    dernier = m.index + m[0].length;
+  }
+  morceaux.push({ titre, html: html.slice(dernier) });
+  return morceaux;
+}
+// Les tableaux vides (une ligne « | | » laissée par l'éditeur) et les commentaires ne s'affichent pas.
+const nettoyer = (h: string) => h.replace(/<!--[\s\S]*?-->/g, '').replace(/<table>[\s\S]*?<\/table>/g, (t) => (sansBalises(t) ? t : '')).trim();
+
+export async function aPropos(): Promise<APropos | null> {
+  const page = await getEntry('pages', 'a-propos');
+  const html = page?.rendered?.html;
+  if (!page || !html) return null;
+  const parties = decouper(nettoyer(html), 1);
+  const iMethode = parties.findIndex((p) => /m[ée]thode/i.test(p.titre));
+  const avant = iMethode < 0 ? parties : parties.slice(0, iMethode);
+  const qui = avant.flatMap((p) => decouper(p.html, 2)).filter((b) => b.titre || nettoyer(b.html)).map((b) => ({ titre: b.titre, html: nettoyer(b.html) }));
+  const pm = iMethode < 0 ? { titre: 'Ma méthode', html: '' } : parties[iMethode];
+  const [titre, sous] = pm.titre.split(/\s*:\s*/, 2);
+  const [tete, ...sections] = decouper(pm.html, 2);
+  const rangs: RangMethode[] = [];
+  let concretement: string | undefined;
+  for (const s of sections) {
+    if (/piliers?/i.test(s.titre)) {
+      let n = 0;
+      for (const p of s.html.match(/<p>[\s\S]*?<\/p>/g) ?? []) {
+        const m = p.match(/^<p><strong>([\s\S]*?)<\/strong>\s*([\s\S]*)<\/p>$/);
+        if (!m) continue;
+        rangs.push({ chapeau: `Pilier ${++n}`, titre: sansBalises(m[1]).replace(/\s*:\s*$/, ''), html: `<p>${m[2].replace(/^:\s*/, '')}</p>`, niveau: 3 });
+      }
+    } else if (/concr[èe]tement/i.test(s.titre)) {
+      concretement = s.titre;
+      for (const c of decouper(s.html, 3).slice(1)) {
+        const m = c.titre.match(/^(\d+)\.?\s*(.*)$/);
+        const rang: RangMethode = { chapeau: m ? m[1].padStart(2, '0') : '', titre: m ? m[2] : c.titre, html: nettoyer(c.html), niveau: 4 };
+        const liste = rang.html.match(/<ul>([\s\S]*?)<\/ul>/);
+        const items = liste ? [...liste[1].matchAll(/<li>([\s\S]*?)<\/li>/g)].map((x) => sansBalises(x[1])) : [];
+        if (items.length && items.every((x) => /\(.+\)\s*$/.test(x))) {
+          rang.partenaires = items.map((x) => { const k = x.match(/^(.*?)\s*\((.*)\)\s*$/)!; return [k[1], k[2]]; });
+          rang.html = rang.html.replace(liste![0], '<!--grille-->');
+        }
+        rangs.push(rang);
+      }
+    } else {
+      rangs.push({ chapeau: /engagement/i.test(s.titre) ? 'Engagement' : '', titre: s.titre, html: nettoyer(s.html), niveau: 3 });
+    }
+  }
+  return { sousTitre: page.data.sous_titre?.trim() || undefined, qui, methode: { titre: titre || 'Ma méthode', sous, intro: nettoyer(tete.html), rangs, concretement } };
+}

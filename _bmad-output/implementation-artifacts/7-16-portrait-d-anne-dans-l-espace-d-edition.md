@@ -1,7 +1,7 @@
 ---
 story: 7.16
 epic: 7 — Contenu d'Anne
-statut: review
+statut: done
 date: 2026-10-07
 ---
 
