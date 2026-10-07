@@ -7,7 +7,7 @@ paradigm: 'Islands sur site statique à contenu typé, avec un noyau serveur min
 scope: 'Fondations du site annevialtissot.fr : contenu, langues, capture et stockage des leads, hébergement, propriété, SEO, mesure, surveillance, coût. Vague 2 (champs des objets, composants, go/no-go prestataire) hors périmètre.'
 status: final
 created: '2026-08-29'
-updated: '2026-09-13'
+updated: '2026-10-07'
 binds: [CAP-1, CAP-2, CAP-3, CAP-4, CAP-5, CAP-6, CAP-7, CAP-8, CAP-9, CAP-10, CAP-11]
 sources:
   - ../../architecture-brief.md — cadrage vague 1, réponses de JB, faisabilité Modelo (2026-08-29/30)
@@ -204,6 +204,8 @@ Index unique **partiel** sur `token` (`source = 'diagnostic'`). `lead_delivery` 
 
 **Point non-défaut vérifié :** l'adaptateur Cloudflare n'expose pas de gestionnaire `scheduled()` ; le cron (AD-12, AD-16) passe par un point d'entrée Worker personnalisé (`worker.ts`, option `workerEntryPoint`) qui délègue le HTTP à Astro et porte `scheduled`.
 
+**Correction du 2026-10-04 (story 10.1, essai local) :** l'option `workerEntryPoint` n'existe pas dans `@astrojs/cloudflare` 14.3.3. Le même résultat s'obtient en pointant `main` de `wrangler.jsonc` sur `worker.ts`, qui exporte `fetch: handle` (`@astrojs/cloudflare/handler`) et `scheduled`. Vérifié avec Astro 7.3.4 et wrangler 4.147.0 : pages prérendues servies, D1 lu depuis une route serveur, `scheduled` exécuté et écrit en base.
+
 **Coût récurrent consolidé v1 : ≈ 6,50 €/mois (≈ 80 €/an)** — Cloudflare Paid ≈ 4,60 € + domaines ≈ 1,80 € ; Resend, Cal.com, Better Stack, Google Business à 0 €. Enveloppe actée : 20-50 €/mois ; marge ≈ 40 €/mois réservée au CMS de moyen terme. Hors récurrent : production d'Anne, traduction EN (800-1 200 € si confiée à un pro), temps de JB.
 
 ## Structural Seed
@@ -294,17 +296,17 @@ Website/
 
 | Décision | Pourquoi ça peut attendre | Revisite |
 | --- | --- | --- |
-| Liste des champs de chaque objet de contenu (dont `meta`/Open Graph obligatoires pour `PageEditoriale` et `StoryDeVente`) | La maquette validée par Anne peut encore en faire bouger ; règle, inventaire et clés (AD-1) suffisent à empêcher la divergence | Vague 2, avant le build |
+| Liste des champs de chaque objet de contenu (dont `meta`/Open Graph obligatoires pour `PageEditoriale` et `StoryDeVente`) | **Fixé (2026-10-07, story 10.1)** par `site/src/content.config.ts` ; `SequenceEmail` et `Guide` déclarés en 10.5 | Fait |
 | Composants, gabarits, rendu des objets ; placement du contact direct dans la navigation (CAP-6) ; accessibilité | Dépend de la maquette | Vague 2 |
-| Go/no-go interne vs prestataire | Se joue sur le temps de JB, pas sur l'infrastructure (~80 €/an) | Vague 2, avec la maquette |
+| Go/no-go interne vs prestataire | **Sans objet (2026-10-07)** : le build interne est fait | Fait |
 | Choix du CMS de moyen terme | **Tranché le 2026-10-05 (JB) : Sveltia CMS** (git, gratuit, page statique `/admin`, connexion GitHub via un petit Worker `sveltia-cms-auth`, brouillons en demandes de fusion, photos réduites en WebP dans le navigateur avant l'envoi). Écartés : Pages CMS (pas de réduction des photos, contenu via un service tiers), Keystatic (multilingue immature, serveur requis), TinaCMS et CloudCannon (payants), Decap (ne réduit pas les photos ; reste le repli, même configuration). Coût : 0 €. Story 7.13. | Fait |
 | Langues ES et PT | Un dossier + un dictionnaire ; le build dit ce qui manque (AD-2) | Quand Anne a le temps |
-| Barème de Q10 (visites × offres) | Sans effet sur l'architecture ; le noyau lit `bareme.json` quel qu'il soit | Avant le build du diagnostic |
+| Barème de Q10 (visites × offres) | Sans effet sur l'architecture ; le noyau lit `bareme.json` quel qu'il soit. **Proposé (2026-10-07)** : garder la matrice visites × offres déjà codée ; en attente de la validation d'Anne (action A09) | Avant la story 10.4 (gate serveur) |
 | Nom de la méthode, positionnement, chiffres publics du diagnostic (stat PAP.fr, « +30 % ») | Chaînes de contenu (AD-1) | Avant lancement |
 | Validation des stories par Anne | Concept produit, pas architecture | Avec la maquette |
-| Bandeau de consentement : nécessaire ou non | Dépend de ce que déposent Turnstile et Cal.com (AD-11) | Au build, vérification instrumentée ; la maquette dessine les deux variantes |
+| Bandeau de consentement : nécessaire ou non | **Tranché le 2026-10-07 (JB) : pas de bandeau.** Turnstile et Cal.com ne se chargent qu'après une action du visiteur (AD-11), exemption CNIL « service demandé ». Le chargement de `api.js` ne dépose rien sur l'origine du site (essai du 2026-10-05). Relevé de l'iframe Turnstile dans un vrai navigateur à faire en 10.4 ; s'il montre un traceur non essentiel, bandeau sur les pages concernées | Contrôle en 10.4 |
 | Transfert du dépôt GitHub | Choix de JB ; opération native | Avant le lancement public (AD-9) |
-| Outil d'audit de performance (AD-15) | Lighthouse CI ou équivalent — outillage, pas invariant | Au build |
+| Outil d'audit de performance (AD-15) | **Tranché le 2026-10-07 (JB) : Lighthouse lancé en local sur le site construit** (contourne Cloudflare Access, gratuit), plus une mesure PageSpeed sur la production au lancement (12.5). Perte assumée : pas de mesure en conditions réseau réelles avant le lancement | Fait |
 
 **Sorti de l'équation.** Notion n'est plus une pièce d'architecture (JB, 2026-09-07) : ni miroir des leads, ni source de contenu. La cible aval est Modelo (AD-14).
 
@@ -318,11 +320,15 @@ Website/
 
 ## Hypothèses à vérifier au build
 
-- Cal.com plan gratuit : webhooks `BOOKING_CREATED` signés (probable), question de formulaire obligatoire de type case à cocher, fuseau, verrouillage de créneau et confirmations aux deux parties — démontrés par un test réel avant le build de CAP-9 ; sinon le lead RDV est capté par notre formulaire avant redirection.
-- Resend : région de données UE disponible pour le compte (sinon transfert hors UE documenté dans la politique). Volume : 100 e-mails/jour en gratuit suffisent (séquence + transactionnel à notre échelle) ; sinon plan Pro 20 $/mois.
-- Turnstile invisible et l'intégration Cal.com ne déposent rien de non essentiel — sinon chargement après action (AD-11) et bandeau sur ces pages seulement.
-- `workerEntryPoint` de `@astrojs/cloudflare` 14 accepte un point d'entrée portant `fetch` + `scheduled` sans perte de fonctionnalité Astro (bindings D1, assets).
+- ~~Cal.com plan gratuit : webhooks signés, case à cocher obligatoire, fuseau, confirmations~~ **Vérifié le 2026-10-07** par un essai réel (tickets #24 à #26) : signature `X-Cal-Signature-256` valide, `payload.responses.confidentialite.value = true`, fuseau `Europe/Paris` des deux côtés, heures en UTC, statuts `ACCEPTED` puis `CANCELLED` sur le même `uid`, invitation d'agenda reçue. Verrouillage du créneau : natif à Cal.com, à constater en 10.6. Le webhook doit passer Cloudflare Access : chemin ouvert en Bypass (RUNBOOK § 2).
+- ~~Resend : région UE~~ **Vérifié le 2026-10-05** : envoi depuis l'Irlande, mais données du compte aux États-Unis ; transfert hors UE à documenter dans la politique de confidentialité (AD-16). Domaine `annevialtissot.fr` ajouté, vérification DNS en cours. Volume : 100 e-mails/jour en gratuit.
+- Turnstile invisible et l'intégration Cal.com ne déposent rien de non essentiel : **partiellement vérifié** (le script Turnstile ne dépose rien sur l'origine du site, 2026-10-05) ; relevé de l'iframe à faire en 10.4. Mode invisible : la politique de confidentialité doit citer le « Turnstile Privacy Addendum » de Cloudflare.
+- ~~`workerEntryPoint`~~ **Vérifié le 2026-10-04, autre réglage** : `main` de `wrangler.jsonc` → `worker.ts` (`fetch: handle` + `scheduled`). Hypothèse d'origine : `workerEntryPoint` de `@astrojs/cloudflare` 14 accepte un point d'entrée portant `fetch` + `scheduled` sans perte de fonctionnalité Astro (bindings D1, assets).
 
 **Amendement du 2026-09-26 (JB) — AD-9, titulaire du compte Cloudflare.** Le compte Cloudflare est celui de JB (connexion via GitHub), pas un compte au nom d'Anne. Raison : Anne ne s'y connectera jamais, et un compte à son nom imposerait de créer et de partager une adresse e-mail à elle pour la reprise. Conséquence : la transférabilité (AD-10) repose sur le RUNBOOK et sur le dépôt, pas sur la propriété du compte ; Anne pourra être invitée comme membre à tout moment ; le domaine (Infomaniak) et les comptes de services (Resend, Cal.com, Better Stack) restent à traiter au cas par cas, même logique par défaut. Trace : story 9.2, tableau de bord (action J02).
 
+**Amendement du 2026-10-04 (story 10.1, en cours).** Faits établis : (1) `workerEntryPoint` remplacé par `main` → `worker.ts` (voir Stack), vérifié en local, la mise en ligne sur `*.workers.dev` reste à faire en 10.2 ; (2) Resend : région d'envoi Irlande disponible au plan gratuit, mais les données du compte restent aux États-Unis : le transfert hors UE sera documenté dans la politique de confidentialité (AD-16) ; (3) Cal.com signe ses webhooks (`X-Cal-Signature-256`, HMAC SHA-256), le reste de l'hypothèse attend l'essai réel. Verdicts proposés pour la table Deferred, en attente de décision : CMS (proposition dépassée : tranché le 2026-10-05 pour Sveltia, voir Deferred), pas de bandeau sous réserve du relevé réel (JB), Lighthouse CI en local (JB), matrice Q10 conservée (Anne), go/no-go sans objet. Détail et preuves : `_bmad-output/implementation-artifacts/10-1-architecture-vague-2-consolidée.md`. **Conséquence du choix Sveltia (2026-10-05) :** l'adresse `/admin` est prise par l'espace d'édition d'Anne ; l'administration des leads de la story 10.7 (AD-18) prendra une autre adresse, proposée : `/gestion` et `/api/gestion/*`, toujours derrière Cloudflare Access.
+
 **Amendement du 2026-10-05 (JB) — AD-9, compte Infomaniak.** Les domaines `annevialtissot.fr` et `annevialtissot.com` sont achetés depuis le compte Infomaniak de JB (son adresse e-mail), mais **Anne est inscrite comme propriétaire (titulaire) de chaque domaine** auprès du registre. Raison : praticité, même logique que le compte Cloudflare. Ce qui est préservé : la propriété légale des noms reste à Anne. Ce qu'on perd : si JB quitte le projet, la gestion des domaines doit être transférée vers un compte Infomaniak d'Anne (procédure au RUNBOOK). Options payantes « Domain Plus » (DNS Fast Anycast, Domain Privacy) non prises : le DNS est chez Cloudflare, et les coordonnées d'Anne sont publiques via les mentions légales. Trace : story 12.1, tableau de bord (action J06).
+
+**Amendement du 2026-10-07 (story 10.1, close).** Toutes les hypothèses de build sont vérifiées ou reportées à une story nommée (voir ci-dessus) ; la table Deferred est close sauf le barème Q10 (Anne, avant 10.4), les langues ES/PT, le transfert du dépôt et les chaînes de contenu, qui ne bloquent pas le backend. Décisions de JB du jour : pas de bandeau (contrôle en 10.4), Lighthouse en local. Détail et preuves : `_bmad-output/implementation-artifacts/10-1-architecture-vague-2-consolidée.md`.

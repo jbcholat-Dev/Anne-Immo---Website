@@ -3,24 +3,27 @@
   "private": true,
   "type": "module",
   "version": "0.1.0",
-  "description": "Site d'Anne VIAL-TISSOT — consultante en immobilier, Chablais / Léman (réseau eXp France). v1 statique.",
+  "description": "Site d'Anne VIAL-TISSOT — consultante en immobilier, Chablais / Léman (réseau eXp France). Pages prérendues + noyau serveur Cloudflare (epic 10).",
   "engines": {
     "node": ">=22.12"
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "node scripts/images.mjs && astro build",
+    "build": "node scripts/images.mjs && astro build && node scripts/migrations-ci.mjs",
     "preview": "astro preview",
-    "check": "astro check",
+    "check": "wrangler types && astro check && tsc -p tsconfig.worker.json",
     "images": "node scripts/images.mjs",
     "video": "node scripts/video.mjs",
-    "verif": "node scripts/verif.mjs"
+    "verif": "node scripts/verif.mjs",
+    "types": "wrangler types",
+    "base:local": "wrangler d1 migrations apply DB --local"
   },
   "dependencies": {
     "astro": "^7.3.4"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@astrojs/cloudflare": "^14.3.3",
     "@types/node": "^26.6.2",
     "ffmpeg-static": "^5.3.0",
     "ffprobe-static": "^3.1.0",

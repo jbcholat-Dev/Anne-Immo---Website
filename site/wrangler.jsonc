@@ -1,20 +1,35 @@
 {
-  // Configuration Cloudflare (stories 9.2 et 9.6) : sert le dossier dist (le site construit) comme site statique,
-  // et route /api/* vers worker.ts (retours de l'aperçu).
-  // Aucun secret ici : GITHUB_TOKEN est un secret Cloudflare (projet → Settings → Variables and Secrets), voir RUNBOOK.md.
+  // Configuration Cloudflare. Le site est construit par Astro avec l'adaptateur Cloudflare (story 10.2) :
+  // les pages prérendues sont servies telles quelles, /api/* passe par worker.ts.
+  // Aucun secret ici, seulement des identifiants publics. Secrets (GITHUB_TOKEN, CAL_WEBHOOK_SECRET…) :
+  // Cloudflare → Workers & Pages → anne-vial-tissot-site → Settings → Variables and Secrets, voir RUNBOOK.md.
   // L'indexation se règle à la construction, par la variable de build PUBLIC_INDEXATION du projet Cloudflare
   // (absente = aperçu non indexé ; « oui » = production, story 12.4). Voir .env.example.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "anne-vial-tissot-site",
-  "main": "worker.ts",
+  "main": "./worker.ts",
   "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
   "assets": {
-    "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "404-page",
     "html_handling": "auto-trailing-slash",
     "run_worker_first": ["/api/*"]
   },
+  // Base des leads (D1, juridiction UE, RUNBOOK § 4 quater). Tant que le site n'est pas lancé, toutes les
+  // mises en ligne (main comme branches) utilisent la base d'aperçu ; la base de production `anne-leads`
+  // (59b15fb0-cb56-45a7-a61a-378548fd6fe4) sera branchée au lancement (story 12.4).
+  // Le schéma n'évolue que par les fichiers de migrations/ (AD-10).
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "anne-leads-apercu",
+      "database_id": "06a92884-c6f1-4d02-afbe-976d11543385",
+      "migrations_dir": "migrations"
+    }
+  ],
+  // Journaux du Worker visibles dans Cloudflare (Workers → anne-vial-tissot-site → Logs), gratuits.
+  "observability": { "enabled": true },
   "vars": {
     "GITHUB_REPO": "jbcholat-Dev/Anne-Immo---Website"
   }

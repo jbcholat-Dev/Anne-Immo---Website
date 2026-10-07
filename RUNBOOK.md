@@ -24,6 +24,8 @@ Mots de passe : jamais dans ce dépôt, jamais manipulés par Claude. Coffre par
 - Non indexé : toutes les pages portent `noindex, nofollow` et `/robots.txt` interdit tout, tant que la variable de construction `PUBLIC_INDEXATION` n'est pas à `oui`.
 - Mise à jour : automatique à chaque fusion dans `main` (Cloudflare Workers Builds). Réglages du projet : dossier racine `site`, construction `npm ci && npm run build`, mise en ligne `npx wrangler deploy`.
 - Voir un build : Cloudflare → Workers & Pages → anne-vial-tissot-site → Deployments.
+- **Ouverture provisoire (2026-10-07, story 10.1)** : l'application Zero Trust `essai-cal` laisse passer tout le monde (règle `Cal.com`, Bypass) sur le seul chemin `/api/essai-cal` de l'aperçu de la branche `claude/project-thread-axo12t`, pour recevoir les webhooks Cal.com. Le reste de l'aperçu reste protégé (vérifié en fenêtre privée). À supprimer quand la vraie route de la story 10.6 existe, en même temps que le webhook Cal.com d'essai.
+- Secret `CAL_WEBHOOK_SECRET` (posé par JB le 2026-10-07) : même texte que le champ « Secret » du webhook Cal.com. Cal.com est au nom d'Anne (compte Google avialtissot@gmail.com) ; Resend au nom de JB.
 
 ## 3. Refaire une mise en ligne
 
@@ -55,11 +57,45 @@ Anne est déjà propriétaire légale des domaines ; seule la gestion est sur le
 
 État au 2026-10-05 : les deux domaines sont dans le compte Cloudflare (plan gratuit), serveurs de noms `camilo.ns.cloudflare.com` et `elly.ns.cloudflare.com`, actifs. Reste : DNSSEC à activer (Cloudflare → domaine → DNS → Settings → DNSSEC, puis copier l'enregistrement DS chez Infomaniak), validation en deux étapes sur le compte Infomaniak.
 
+## 4 quater. Base des leads (backend, story 10.2)
+
+Deux bases Cloudflare D1 (base de données SQL hébergée par Cloudflare), **toutes deux en juridiction UE** : les données y restent dans l'Union européenne (AD-16). Le choix de la juridiction est **irréversible** : une base créée sans elle doit être supprimée et recréée.
+
+| Base | Sert à | Nom |
+|---|---|---|
+| production | les vrais leads, branche `main` | `anne-leads` |
+| aperçu | les essais des branches de travail | `anne-leads-apercu` |
+
+Commandes (depuis `site/`, après `npx wrangler login`) :
+
+```bash
+npx wrangler d1 create anne-leads --jurisdiction eu
+npx wrangler d1 create anne-leads-apercu --jurisdiction eu
+```
+
+Ou depuis le tableau de bord : Cloudflare → Storage & Databases → D1 SQL Database → Create → nom ci-dessus → Location : **Specify jurisdiction → European Union (EU)**.
+
+Créées le 2026-10-07 par JB, juridiction UE confirmée : `anne-leads` = `59b15fb0-cb56-45a7-a61a-378548fd6fe4`, `anne-leads-apercu` = `06a92884-c6f1-4d02-afbe-976d11543385`. Jusqu'au lancement, **toutes** les mises en ligne (y compris `main`) utilisent `anne-leads-apercu` ; `anne-leads` sera branchée à la story 12.4.
+
+Le schéma n'est modifié que par les fichiers numérotés de `site/migrations/`, jamais à la main (AD-10). Ils sont appliqués automatiquement à chaque construction chez Cloudflare, par `scripts/migrations-ci.mjs` à la fin de `npm run build` (seulement quand `WORKERS_CI=1`, posé par Cloudflare) ; les réglages de construction du projet ne changent pas (Deploy command `npx wrangler deploy`, Version command `npx wrangler versions upload`). **Piège** : ces réglages valent pour toutes les branches, `main` compris ; ne jamais y mettre une commande qui n'existe que sur une branche (incident du 2026-10-07 : `main` n'a plus été mis en ligne pendant quelques minutes). À la main, depuis `site/` après `npm run build` : `npx wrangler d1 migrations apply DB --remote`.
+
+Contrôle : `GET /api/sante` répond `{"ok":true,"migrations":N}` (N = nombre de fichiers de `migrations/`), 503 si la base ne répond pas.
+
+**Secrets du Worker** (Cloudflare → Workers & Pages → anne-vial-tissot-site → Settings → Variables and Secrets ; jamais dans le dépôt) :
+
+| Nom | Sert à | Posé | Rotation |
+|---|---|---|---|
+| `GITHUB_TOKEN` | bouton « Un retour ? » de l'aperçu, tickets d'essai | 2026-09-26 | avant le 2026-09-26 + 1 an (§ 4 bis) |
+| `CAL_WEBHOOK_SECRET` | vérifier que les messages viennent de Cal.com | 2026-10-07 | inventer un nouveau texte, le mettre dans Cloudflare puis dans le webhook Cal.com |
+| `RESEND_API_KEY`, `TURNSTILE_SECRET_KEY` | e-mails (10.3), anti-robot (10.4) | à venir | à la création |
+
+**Redéployer depuis une machine vierge** (AD-10) : `git clone` du dépôt, `cd site && npm ci && npm run build && npx wrangler login && npx wrangler d1 migrations apply DB --remote && npx wrangler deploy`.
+
 ## 5. Pièges irréversibles
 
 - Ne jamais mettre `PUBLIC_INDEXATION=oui` sur une adresse d'aperçu : Google mémoriserait une version incomplète.
 - Ne jamais éteindre Access tant que des photos sans autorisation écrite sont sur le site.
-- Base de données (backend, epic 10) : elle se crée avec une juridiction UE irréversible ; la commande sera écrite ici avant d'être exécutée (AD-10).
+- Base de données (backend, epic 10) : elle se crée avec une juridiction UE irréversible ; commande et noms au § 4 quater, écrits avant la création (AD-10).
 
 ## 6. Journal des changements de ce document
 
@@ -69,3 +105,4 @@ Anne est déjà propriétaire légale des domaines ; seule la gestion est sur le
 - 2026-10-05 : Anne dépose son contenu dans le dossier Google Drive « Contenu site Anne » et ne fait plus de commit (décision de JB). Les originaux lourds restent sur Drive ; Claude range les versions utiles dans `contenu-anne/` par PR. Si Claude ne peut plus lire le dossier : reconnecter le connecteur Google Drive dans claude.ai (Réglages → Connecteurs) puis l'activer dans les réglages du projet.
 - 2026-10-05 (après-midi) : le dossier Drive est rangé comme `contenu-anne/` (mêmes noms, une vente = un dossier `stories/<bien>/` avec ses photos HD). L'ancien dossier « Site web - Anne Immo » est devenu « Contenu site Anne » ; le découpage en 5 sous-dossiers du matin est archivé sous « ARCHIVE - ancien Contenu site Anne (ne plus utiliser) ». Piège : sur Drive, seul le propriétaire d'un fichier peut le déplacer ou le supprimer ; les fichiers déposés par Anne ne peuvent être supprimés que par elle (Claude les renomme « À SUPPRIMER - … »).
 - 2026-10-05 (fin d'après-midi) : espace d'édition Sveltia CMS à `/admin` (décision de JB, story 7.13). Trois éléments à créer par JB : le Worker `sveltia-cms-auth`, l'autorisation OAuth GitHub, l'invitation d'Anne comme collaboratrice. Le Drive reste l'archive des photos HD et des vidéos. Pièges : une autorisation OAuth GitHub voit tous les dépôts du compte qui s'y connecte (sans risque pour Anne, dont le compte n'a que ce dépôt) ; si le Worker est supprimé ou son secret changé, plus personne ne peut se connecter à l'espace d'édition (le site, lui, continue de fonctionner).
+- 2026-10-07 : essai du webhook Cal.com (story 10.1) : ouverture provisoire du chemin `/api/essai-cal` dans Access et secret `CAL_WEBHOOK_SECRET` (§ 2). § 4 quater : création des bases D1 en juridiction UE (story 10.2), écrite avant d'être lancée.

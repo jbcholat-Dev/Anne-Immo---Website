@@ -6,7 +6,7 @@ import { chromium } from 'playwright';
 import { createServer } from 'node:http';
 import fs from 'node:fs'; import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-const DIST=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../dist');
+const DIST=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../dist/client');
 const T={'.html':'text/html','.css':'text/css','.js':'text/javascript','.svg':'image/svg+xml','.webp':'image/webp','.jpg':'image/jpeg','.woff2':'font/woff2','.mp4':'video/mp4','.webm':'video/webm'};
 const s=createServer((q,r)=>{let p=decodeURIComponent(new URL(q.url,'http://x').pathname);let f=path.join(DIST,p);if(fs.existsSync(f+'.html'))f+='.html';else if(fs.existsSync(f)&&fs.statSync(f).isDirectory())f=path.join(f,'index.html');if(!fs.existsSync(f)){f=path.join(DIST,'404.html');r.statusCode=404}r.setHeader('Content-Type',T[path.extname(f)]??'application/octet-stream');fs.createReadStream(f).pipe(r)});
 await new Promise(o=>s.listen(4398,o));

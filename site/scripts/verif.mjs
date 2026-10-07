@@ -8,7 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
-const DIST = path.resolve(ICI, '../dist');
+const DIST = path.resolve(ICI, '../dist/client');
 const OUT = path.resolve(ICI, '../.verif');
 fs.mkdirSync(OUT, { recursive: true });
 const args = Object.fromEntries(process.argv.slice(2).map((a) => a.replace(/^--/, '').split('=')));

@@ -1,6 +1,6 @@
 # Site d'Anne VIAL-TISSOT — v1 (build statique)
 
-Astro 7, sortie statique, CSS sur les seuls tokens de `design-system/tokens/tokens.css`, trois îlots JS (scroll-craft, formulaires, diagnostic). Aucun backend : tout ce qui écrit un lead est **simulé** (voir « TODO(backend) »). La référence visuelle est la maquette lot 3 (`maquettes/lot-3-complet/`), les décisions D-1 → D-26 priment.
+Astro 7, pages prérendues servies par un Worker Cloudflare (adaptateur `@astrojs/cloudflare`, story 10.2), CSS sur les seuls tokens de `design-system/tokens/tokens.css`, trois îlots JS (scroll-craft, formulaires, diagnostic). Le noyau serveur existe (base D1, route `/api/sante`), mais aucun formulaire n'écrit encore en base : tout ce qui écrit un lead est **simulé** (voir « TODO(backend) »). La référence visuelle est la maquette lot 3 (`maquettes/lot-3-complet/`), les décisions D-1 → D-26 priment.
 
 ## Lancer
 
@@ -87,11 +87,22 @@ Chaque endroit est marqué `TODO(backend)` dans le code (`grep -rn "TODO(backend
 
 ## Mise en ligne (story 9.2)
 
-`wrangler.jsonc` sert `dist` comme site statique chez Cloudflare (Workers Builds : dossier racine `site`, construction `npm ci && npm run build`, mise en ligne `npx wrangler deploy`). Tant que le réglage de construction `PUBLIC_INDEXATION` ne vaut pas `oui`, toutes les pages portent `noindex, nofollow` et `robots.txt` interdit tout : c'est l'aperçu. La production passe ce réglage à `oui` (story 12.4). Voir `.env.example`.
+Cloudflare Workers Builds : dossier racine `site`, construction `npm ci && npm run build`, mise en ligne `npx wrangler deploy` (branche `main`) et `npx wrangler versions upload` (autres branches). Depuis la story 10.2, `npm run build` se termine par `scripts/migrations-ci.mjs`, qui applique les migrations de la base quand la construction tourne chez Cloudflare (`WORKERS_CI=1`), et ne fait rien en local. Tant que le réglage de construction `PUBLIC_INDEXATION` ne vaut pas `oui`, toutes les pages portent `noindex, nofollow` et `robots.txt` interdit tout : c'est l'aperçu. La production passe ce réglage à `oui` (story 12.4). Voir `.env.example`.
+
+## Noyau serveur et base des leads (story 10.2)
+
+- **Construction** : `npm run build` produit `dist/client/` (les pages, servies telles quelles) et `dist/server/` (le Worker et sa configuration `wrangler.json`, générée depuis `wrangler.jsonc`). Les scripts de vérification lisent `dist/client/`.
+- **Point d'entrée** : `worker.ts` (`main` de `wrangler.jsonc`). Il sert lui-même `/api/retour` et `/api/essai-cal`, et confie le reste à Astro (`handle`), donc les routes de `src/pages/api/` (`export const prerender = false`). `scheduled` est vide jusqu'aux stories 10.5 et 10.8. Toutes les pages restent prérendues.
+- **Base** : liaison `DB`, base D1 `anne-leads-apercu` (juridiction UE) pour toutes les mises en ligne tant que le site n'est pas lancé ; la base de production `anne-leads` sera branchée à la story 12.4. Schéma : `migrations/0001-lead.sql` (table `lead`, AD-6) et `0002-lead-delivery.sql`. En local : `npm run base:local`, puis `npx wrangler dev` (après `npm run build`).
+- **Santé** : `GET /api/sante` répond `{ "ok": true, "migrations": 2 }` si la base répond, 503 sinon. Aucune donnée personnelle.
+- **Réglages écartés** : pas de sessions Astro (`session: false`, donc pas de stockage KV créé automatiquement) ; images en `passthrough` (le site prépare ses images lui-même), donc pas de liaison Cloudflare Images.
+- **Types** : `npm run check` génère d'abord les types Cloudflare (`wrangler types`, fichier `worker-configuration.d.ts` non versionné), vérifie le site avec `astro check`, puis le code serveur à part avec `tsconfig.worker.json` (les types du Worker et ceux du navigateur ne cohabitent pas).
 
 ## Retours sur l'aperçu (story 9.6)
 
 Sur l'aperçu (site non indexable), chaque page porte un bouton « Un retour ? » (`src/components/RetourApercu.astro`, inclus par `Base.astro`). La remarque part en POST vers `/api/retour`, servie par `worker.ts` (point d'entrée Cloudflare, `main` de `wrangler.jsonc`, `run_worker_first: ["/api/*"]`), qui crée un ticket GitHub étiqueté `retour-apercu` avec la page, l'auteur (en-tête `cf-access-authenticated-user-email` posé par Cloudflare Access), l'écran et la date. Secret `GITHUB_TOKEN` côté Cloudflare, jamais dans le dépôt (`.dev.vars` en local, ignoré ; modèle `.dev.vars.example`). En production le bouton n'est pas rendu. Le bouton est masqué quand `navigator.webdriver` est vrai (captures Playwright). `worker.ts` sera remplacé par le noyau serveur de l'epic 10.
+**Essai provisoire du webhook Cal.com (story 10.1).** `worker.ts` sert aussi `POST /api/essai-cal` : Cal.com y envoie la réservation, la route vérifie la signature `X-Cal-Signature-256` (HMAC SHA-256 avec le secret Cloudflare `CAL_WEBHOOK_SECRET`) et, si elle est bonne, crée un ticket GitHub `essai-cal` avec les fuseaux, la case de confidentialité et les noms des champs, sans aucune donnée personnelle. Signature absente ou fausse : 401 et un ticket de diagnostic (noms des en-têtes et longueurs seulement). Journaux du Worker activés (`observability` dans `wrangler.jsonc`). Une visite dans un navigateur indique si les deux secrets sont posés, jamais leur valeur. À retirer quand la vraie route de la story 10.6 existe.
+
 ## Vidéo d'ouverture (stories 7.4 et 8.3)
 
 - **Source** : `contenu-anne/videos/ouverture-source.mp4` (hors Git, 115 Mo, 4K, 52 s, montage d'Anne du 2026-10-05, story 7.15 ; encodé avec `--debut 0.1` pour sauter deux images blanches). Inventaire : `contenu-anne/videos/liens.md`.
@@ -115,6 +126,7 @@ Italiana (titres) et DM Sans (texte) sont servies par le site lui-même depuis `
 - Les vignettes de la pile en mobile gardent le débord de 30 px de la photo au-dessus de la carte (maquette) ; le pas de la pile est la hauteur de carte + 30 px (desktop 630 px), les cartes sont en flux sous `prefers-reduced-motion`.
 - Marqueurs « Point ouvert » / « Contenu à écrire par Anne » affichés (pastilles de la maquette) pour que JB les repère ; à supprimer en production.
 - **Contrastes** vérifiés sur chaque paire de tokens employée (≥ 4,5:1) — deux écarts à la maquette : la pastille « Bases solides » passe du fond galet (4,35:1) à l'écru bordé ; les dates indisponibles du gabarit Cal.com gardent le token `--avt-disabled` de la maquette (1,7:1, information non essentielle — l'embed Cal.com les remplacera).
+- **Écarts d'architecture de la story 10.2** : `main` → `worker.ts` au lieu de l'option `workerEntryPoint` (absente de l'adaptateur 14) ; une seule base (aperçu) pour toutes les mises en ligne jusqu'au lancement, la base de production étant branchée en 12.4 ; plan Cloudflare gratuit tant qu'il n'y a pas de vrais leads (la restauration sur 30 jours du plan payant attendra, action J10).
 - Pages légales : textes de structure conformes à AD-16 (finalités, bases légales, 3 ans), **à faire valider par Anne** avant publication ; les valeurs A-13 sont des pastilles « à compléter ».
 
 ## Largeurs intermédiaires (story 8.2)

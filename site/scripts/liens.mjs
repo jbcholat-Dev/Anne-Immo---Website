@@ -1,6 +1,6 @@
 // Vérifie que chaque lien interne des pages construites mène quelque part (fichier ou ancre) — « chaque lien de la nav et du footer mène quelque part ».
 import fs from 'node:fs'; import path from 'node:path';
-const DIST = path.resolve('dist');
+const DIST = path.resolve('dist/client');
 const pages = []; (function walk(d) { for (const f of fs.readdirSync(d)) { const p = path.join(d, f); fs.statSync(p).isDirectory() ? walk(p) : p.endsWith('.html') && pages.push(p); } })(DIST);
 const existe = (u) => { const p = u.replace(/^\//, ''); return fs.existsSync(path.join(DIST, p + '.html')) || fs.existsSync(path.join(DIST, p, 'index.html')) || fs.existsSync(path.join(DIST, p)) || (p === '' && fs.existsSync(path.join(DIST, 'index.html'))); };
 const ids = (html) => new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]));
