@@ -75,7 +75,21 @@ npx wrangler d1 create anne-leads-apercu --jurisdiction eu
 
 Ou depuis le tableau de bord : Cloudflare → Storage & Databases → D1 SQL Database → Create → nom ci-dessus → Location : **Specify jurisdiction → European Union (EU)**.
 
-Chaque base a un identifiant (`database_id`), public, recopié dans `site/wrangler.jsonc`. Le schéma n'est modifié que par les fichiers numérotés de `site/migrations/`, jamais à la main (AD-10).
+Créées le 2026-10-07 par JB, juridiction UE confirmée : `anne-leads` = `59b15fb0-cb56-45a7-a61a-378548fd6fe4`, `anne-leads-apercu` = `06a92884-c6f1-4d02-afbe-976d11543385`. Jusqu'au lancement, **toutes** les mises en ligne (y compris `main`) utilisent `anne-leads-apercu` ; `anne-leads` sera branchée à la story 12.4.
+
+Le schéma n'est modifié que par les fichiers numérotés de `site/migrations/`, jamais à la main (AD-10). Ils sont appliqués automatiquement à chaque mise en ligne par `npm run deploy` (branche `main`) et `npm run deploy:apercu` (autres branches) : Cloudflare → Workers & Pages → anne-vial-tissot-site → Settings → Build → **Deploy command** = `npm run deploy`, **Non-production branch deploy command** = `npm run deploy:apercu`. À la main, depuis `site/` après `npm run build` : `npx wrangler d1 migrations apply DB --remote`.
+
+Contrôle : `GET /api/sante` répond `{"ok":true,"migrations":N}` (N = nombre de fichiers de `migrations/`), 503 si la base ne répond pas.
+
+**Secrets du Worker** (Cloudflare → Workers & Pages → anne-vial-tissot-site → Settings → Variables and Secrets ; jamais dans le dépôt) :
+
+| Nom | Sert à | Posé | Rotation |
+|---|---|---|---|
+| `GITHUB_TOKEN` | bouton « Un retour ? » de l'aperçu, tickets d'essai | 2026-09-26 | avant le 2026-09-26 + 1 an (§ 4 bis) |
+| `CAL_WEBHOOK_SECRET` | vérifier que les messages viennent de Cal.com | 2026-10-07 | inventer un nouveau texte, le mettre dans Cloudflare puis dans le webhook Cal.com |
+| `RESEND_API_KEY`, `TURNSTILE_SECRET_KEY` | e-mails (10.3), anti-robot (10.4) | à venir | à la création |
+
+**Redéployer depuis une machine vierge** (AD-10) : `git clone` du dépôt, `cd site && npm ci && npm run build && npx wrangler login && npm run deploy`.
 
 ## 5. Pièges irréversibles
 

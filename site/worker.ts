@@ -1,18 +1,19 @@
-// Point d'entrée Cloudflare du site (story 9.6).
-// Tout ce qui n'est pas /api/* est servi directement depuis les fichiers construits (dist) par Cloudflare,
-// sans passer par ce code (réglage run_worker_first dans wrangler.jsonc).
-// /api/retour : reçoit une remarque faite depuis l'aperçu et l'enregistre comme ticket GitHub.
-// Le site est protégé par Cloudflare Access : seules les personnes autorisées atteignent cette route,
+// Point d'entrée Cloudflare du site (stories 9.6 et 10.2).
+// Les pages prérendues sont servies directement par Cloudflare, sans passer par ce code.
+// /api/* passe ici (run_worker_first dans wrangler.jsonc) :
+// - /api/retour : remarque faite depuis l'aperçu, enregistrée comme ticket GitHub (story 9.6) ;
+// - /api/essai-cal : essai provisoire du webhook Cal.com (story 10.1), retiré en 10.6 ;
+// - le reste est confié à Astro (handle), qui sert les routes de src/pages/api/ (ex. /api/sante).
+// Le site est protégé par Cloudflare Access : seules les personnes autorisées atteignent /api/retour,
 // et Access transmet leur adresse dans l'en-tête cf-access-authenticated-user-email.
-// Ce fichier disparaîtra au profit du noyau serveur de l'epic 10 (adaptateur Astro + worker.ts, AD-4 à AD-8).
+// `scheduled` : tâche planifiée (test quotidien, séquence d'e-mails, purge), vide jusqu'aux stories 10.5 et 10.8.
+import { handle } from '@astrojs/cloudflare/handler';
 
-interface Env {
-  ASSETS: { fetch(request: Request): Promise<Response> };
-  /** Secret Cloudflare (jamais dans le dépôt) : clé GitHub limitée à ce dépôt, droits « Issues : lecture et écriture ». */
+/** Secrets Cloudflare (jamais dans le dépôt), en plus des liaisons de wrangler.jsonc (DB, ASSETS, GITHUB_REPO). */
+interface EnvSite extends Env {
+  /** Clé GitHub limitée à ce dépôt, droits « Issues : lecture et écriture ». */
   GITHUB_TOKEN?: string;
-  /** Variable publique : dépôt qui reçoit les tickets. */
-  GITHUB_REPO?: string;
-  /** Secret Cloudflare (jamais dans le dépôt) : le même texte que le champ « Secret » du webhook Cal.com. Essai de la story 10.1. */
+  /** Le même texte que le champ « Secret » du webhook Cal.com. Essai de la story 10.1. */
   CAL_WEBHOOK_SECRET?: string;
 }
 
@@ -27,14 +28,16 @@ const json = (data: unknown, status = 200) =>
   });
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (url.pathname === '/api/retour') return retour(request, env);
     if (url.pathname === '/api/essai-cal') return essaiCal(request, env);
-    if (url.pathname.startsWith('/api/')) return json({ ok: false, error: { code: 'inconnu' } }, 404);
-    return env.ASSETS.fetch(request);
+    return handle(request, env, ctx);
   },
-};
+  async scheduled() {
+    // Rien pour l'instant (stories 10.5 et 10.8).
+  },
+} satisfies ExportedHandler<EnvSite>;
 
 // Essai du webhook Cal.com (story 10.1), provisoire : remplacé par la vraie route de la story 10.6.
 // Cal.com appelle cette adresse à chaque réservation. On vérifie la signature X-Cal-Signature-256
@@ -42,7 +45,7 @@ export default {
 // un ticket GitHub étiqueté `essai-cal` avec ce que l'essai doit constater (fuseaux, case de confidentialité,
 // statut). Aucun nom, e-mail ni téléphone n'est recopié : seulement les noms des champs et la case à cocher.
 // Signature absente ou fausse : 401 et un ticket de diagnostic sans contenu (noms des en-têtes, longueurs).
-async function essaiCal(request: Request, env: Env): Promise<Response> {
+async function essaiCal(request: Request, env: EnvSite): Promise<Response> {
   // Visite dans un navigateur : dit seulement si les deux secrets sont posés (jamais leur valeur).
   if (request.method !== 'POST')
     return json(
@@ -134,7 +137,7 @@ async function essaiCal(request: Request, env: Env): Promise<Response> {
   return json({ ok: true });
 }
 
-async function ticketEssai(env: Env, titre: string, body: string): Promise<{ ok: boolean; code?: string; statut?: number }> {
+async function ticketEssai(env: EnvSite, titre: string, body: string): Promise<{ ok: boolean; code?: string; statut?: number }> {
   const depot = env.GITHUB_REPO || REPO_DEFAUT;
   const creer = (labels?: string[]) =>
     fetch(`https://api.github.com/repos/${depot}/issues`, {
@@ -157,7 +160,7 @@ async function ticketEssai(env: Env, titre: string, body: string): Promise<{ ok:
   }
 }
 
-async function retour(request: Request, env: Env): Promise<Response> {
+async function retour(request: Request, env: EnvSite): Promise<Response> {
   if (request.method !== 'POST') return json({ ok: false, error: { code: 'methode' } }, 405);
   if (!env.GITHUB_TOKEN) return json({ ok: false, error: { code: 'cle_absente' } }, 503);
 

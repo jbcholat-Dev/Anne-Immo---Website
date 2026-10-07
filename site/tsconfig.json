@@ -1,5 +1,7 @@
 {
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist"]
+  // Le code serveur (Worker) a ses propres types, incompatibles avec ceux du navigateur : vérifié à part,
+  // par tsconfig.worker.json (npm run check).
+  "exclude": ["dist", "worker.ts", "src/pages/api", "worker-configuration.d.ts"]
 }
