@@ -44,6 +44,8 @@ Copie du site hors du dépôt (aucun fichier de `site/` ne change), avec `@astro
 ### 2 bis. Préparation de l'essai Cal.com (2026-10-05)
 Route provisoire `POST /api/essai-cal` ajoutée à `site/worker.ts` (voir `site/README.md`) : vérifie la signature `X-Cal-Signature-256` avec le secret `CAL_WEBHOOK_SECRET` (posé par JB dans Cloudflare, jamais dans le dépôt), puis consigne un ticket GitHub `essai-cal` sans données personnelles. Vérifié en local avec `wrangler dev` : sans signature → 401, signature fausse → 401, bonne signature → passe la vérification (puis 502, car la clé GitHub locale est factice). `npm run build` (24 pages), `npm run check` (0 erreur), `scripts/liens.mjs` (1477 liens, 0 cassé). Adresse visée : l'aperçu de la branche, `https://claude-project-thread-axo12t-anne-vial-tissot-site.jbcholat.workers.dev/api/essai-cal`. Reste à JB : le secret, l'ouverture de ce seul chemin dans Access, et le webhook dans Cal.com.
 
+2026-10-07 : secret `CAL_WEBHOOK_SECRET` posé par JB dans Cloudflare ; branche remise à jour avec main (conflits résolus en gardant la version de main pour le contenu ; construction 24 pages, 0 erreur de types, 1478 liens, 0 cassé). Reste : vérifier qu'Access laisse passer `/api/essai-cal`, déclarer le webhook dans Cal.com, réservation d'essai.
+
 ### 3. Verdicts proposés pour la table « Deferred » du spine
 | Décision | Verdict proposé (2026-10-04) | Qui tranche |
 |---|---|---|
