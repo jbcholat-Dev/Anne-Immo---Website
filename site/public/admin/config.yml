@@ -107,6 +107,7 @@ collections:
       - { name: titre, label: Titre, widget: string }
       - { name: sous_titre, label: Sous-titre, widget: text, required: false }
       - { name: video, label: Vidéo, widget: string, required: false, hint: "Laisser vide : pas de bloc vidéo." }
+      - { name: portrait, label: "Portrait d'Anne", widget: image, required: false, hint: "Photo verticale d'Anne (format portrait, 4:5 ou plus haute). Affichée sur À propos, l'accueil et le diagnostic. Laisser vide : emplacement réservé." }
       - { name: statut, label: Statut, widget: select, options: [brouillon, a-relire, publie], default: brouillon }
       - { name: body, label: Texte, widget: markdown }
 
