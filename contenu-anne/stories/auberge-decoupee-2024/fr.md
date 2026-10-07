@@ -1,58 +1,64 @@
 ---
 commune: Armoy
-type_bien: Propriété bâtie et terrain (ancienne auberge, à diviser)
+type_bien: Propriété anciens gîtes touristiques
 annee_vente: 2024
-delai_vente:
-particularite: >
-  Propriété de 6 000 m² avec trois bâtiments, restée sans repreneur un an :
-  aucun acheteur capable d'absorber l'ensemble en bloc.
-photo_principale: "photos/photo-003.jpg"   # photo de tête (chemin dans le dossier de la story)
-photos: ["photos/photo-020.jpg", "photos/photo-030.jpg", "photos/photo-031.jpg"]
-temoignages:          # vendeur et/ou acheteur ; un seul suffit pour publier
-  - role: vendeur
-    prenom:
-    contexte:
-    citation:
-    portrait:
-  - role: acheteur
-    prenom:
-    contexte:
-    citation:
-    portrait:
+delai_vente: ''
+particularite: Une propriété de 6 000 m² composé de gîtes touristiques. Des vendeurs avec un projet de vendre depuis de nombreuses années mais sans savoir pas où commencer.
+photo_principale: photos/photo-003.jpg
+photos:
+  - photos/armoy-exp-immo-028-hd.webp
+  - photos/photo-031.jpg
+  - photos/armoy-exp-immo-003-hd.webp
+  - photos/photo-020.jpg
+  - photos/armoy-exp-immo-013-hd.webp
+  - photos/armoy-exp-immo-016-hd.webp
+  - photos/armoy-exp-immo-018-hd.webp
+  - photos/armoy-exp-immo-019-hd.webp
+  - photos/armoy-exp-immo-021-hd.webp
+  - photos/armoy-exp-immo-032-hd.webp
+  - photos/armoy-exp-immo-034-hd.webp
 statut: brouillon
 autorisations: false
+temoignages:
+  - citation: null
+    contexte: null
+    portrait: null
+    prenom: null
+    role: vendeur
+  - citation: null
+    contexte: null
+    portrait: null
+    prenom: null
+    role: acheteur
 ---
 
-# De l'impasse à l'opportunité : transformer un bien invendable en projet stratégique
+# De l'impasse à l'opportunité : transformer un bien difficile à vendre en bloc en projet stratégique
 
 ## Le défi
 
-Quand les propriétaires m'ont contactée, ils avaient un rêve mais aussi une grosse épine dans le pied. Leur ancienne auberge, c'était plus qu'un bâtiment — c'était un ensemble de 6 000 m² de terrain avec trois constructions, des années d'histoire, et... aucun acheteur en vue.
+Quand les propriétaires m'ont contactée, ils avaient un projet de vente depuis de nombreuses années sans parvenir à enclencher le processus. Leur ancienne auberge, c'était plus qu'un bâtiment — c'était un ensemble de 6 000 m² de terrain avec trois bâtis, une piscine hôtelière, des années d'histoire, et... une envie de tourner un chapitre de leur vie.
 
-Le problème était clairement identifié : leur propriété était exactement ce qu'elle était — **trop grande, trop complexe, trop immobile sur le marché**. Un seul acheteur capable de l'absorber en bloc ? Quasi impossible. Les annonces classiques ne fonctionnaient pas. Le bien restait invendable en l'état.
+Le problème était clairement identifié : leur propriété était **trop grande, trop complexe**. Un seul acheteur capable de l'absorber en bloc ? Quasi impossible. 
 
-## La stratégie : repositionnement structuré
+## La stratégie : positionnement
 
-Plutôt que de chercher l'impossible — ce fameux acquéreur unique capable d'absorber l'ensemble — j'ai proposé une approche différente : **transformer une vente impossible en projet d'investissement stratégique**.
+Il s'agissait clairement d'un projet d'investisseur et plus précisément de marchands de biens.
 
-### Phase 1 : Diagnostic et audit
+### Phase 1 : travailler une ébauche de projet d'investissement
 
-J'ai d'abord identifié le vrai problème : le bien n'était pas invendable en soi, il était *mal-structuré* pour le marché. Proposer l'ensemble, c'était chercher parmi moins d'1% de la population totale des acquéreurs potentiels.
+Avec un géomètre expert nous avons travaillé une ébauche de division parcellaire en anticipant toutes les contraintes :
 
-### Phase 2 : Structuration professionnelle
+- **1 terrain à bâtir** (à viabiliser et valoriser) : une vue lac imprenable, forte demande marché
+- **3 lots bâtis dont une mise en copropriété**
 
-J'ai mobilisé un **géomètre spécialisé** pour établir un véritable plan de découpage. Pas une simple division, mais une réorganisation réfléchie du potentiel :
-- **2 terrains à bâtir** (à viabiliser et valoriser) — segments neufs avec forte demande marché
-- **3 lots bâtis** (repositionnement en habitat ou tertiaire) — chacun avec sa valeur intrinsèque
+Pour chaque lot, un prix de revente étudié. 
 
-Ce découpage changeait tout. Soudain, nous n'avions plus *un* problème insoluble, nous avions *trois à cinq* solutions accessibles et structurées.
+### Phase 2 : proposer en off market le projet 
 
-### Phase 3 : Ciblage des investisseurs
+Le projet a été proposé à mon réseau en off-market avant publication sur les portails de diffusion. Des investisseurs se sont tout de suite positionnés sur le bien. Ils ont réalisé des ajustements sur l'ébauche initiale de découpe puis m'ont confié à la vente les différents lots. 
 
-Au lieu de chercher un acquéreur unique, j'ai structuré le projet pour les **marchands de biens** — des acteurs avec l'expertise pour monter des montages complexes : copropriété, optimisation commerciale, revente progressive.
+Les formalités administratives (division parcellaire / mise en copropriété), les viabilités et les différentes commercialisations auront duré moins d'une année.
 
 ## Le résultat
 
 Là où il y avait une impasse immobilière, il existe maintenant une **cascade de transactions**. Mes clients ont obtenu la meilleure valorisation possible de leur propriété, le bien a trouvé ses acheteurs finaux selon des logiques cohérentes, et un projet qui aurait pu rester invendu pendant des années s'est transformé en moteur économique.
-
-**C'est ça, la vraie expertise immobilière** : ne pas chercher l'acheteur, mais créer les conditions stratégiques pour qu'il existe.
