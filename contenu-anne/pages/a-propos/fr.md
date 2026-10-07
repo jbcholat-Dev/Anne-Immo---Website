@@ -4,6 +4,7 @@ sous_titre: |-
   Dix ans dans la Finance d'entreprise en France et à l'étranger (Brésil) — Groupe BEL puis Danone — avant l'immobilier. Chaque vente est menée comme un projet : un audit de votre situation, une coordination des différents interlocuteurs, un accompagnement jusqu'à la réussite de votre projet. Sur le Chablais et le bassin lémanique, au service d'une clientèle locale et internationale. 
   Langues parlées : Français, anglais, espagnol, portugais.
 video: ''
+portrait: jyhell-2023-104.webp
 statut: brouillon
 ---
 
