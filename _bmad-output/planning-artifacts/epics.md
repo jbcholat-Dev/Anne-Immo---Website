@@ -1877,3 +1877,16 @@ afin que la première impression du site soit à jour.
 **Quand** il est encodé par `npm run video`
 **Alors** l'accueil le joue en entier, en boucle, sans son, avec pour image d'attente sa première image utile
 **Et** la source ne va pas dans Git, seules les versions web y vont
+
+### Story 7.16: Portrait d'Anne dans l'espace d'édition
+
+En tant qu'Anne,
+je veux mettre ma photo dans l'emplacement du portrait depuis l'espace d'édition,
+afin que le site me montre sans passer par Claude.
+
+**Critères d'acceptation :**
+
+**Étant donné** la page À propos dans l'espace d'édition
+**Quand** une photo est mise dans le champ « Portrait d'Anne » et la demande de fusion acceptée
+**Alors** la photo remplace le bloc réservé A-04 sur À propos, l'accueil et le diagnostic, en ordinateur et en téléphone
+**Et** si le champ est vide, le bloc réservé reste affiché

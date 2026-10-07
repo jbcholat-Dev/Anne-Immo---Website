@@ -66,6 +66,8 @@ const pages = defineCollection({
     titre: z.string(),
     sous_titre: z.string().optional(),
     video: vide,
+    // Portrait d'Anne (A-04), envoyé depuis l'espace d'édition dans contenu-anne/photos/ (story 7.16) : « photos/portrait.webp ».
+    portrait: vide,
     statut: z.string().optional(),
   }),
 });

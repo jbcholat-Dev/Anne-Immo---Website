@@ -1,7 +1,7 @@
 // Dérive les formats web des photos réelles de contenu-anne/ (AD-15 : formats produits au build, jamais d'original > 500 Ko en double).
 // Entrée : contenu-anne/stories/<slug>/photos/ — photos web de chaque story : photo-*.jpg (scripts/preparer-photos)
 //          et *.webp / *.png (envoyées par l'espace d'édition, déjà réduites, story 7.13) ;
-//          + contenu-anne/photos/*.jpg (photos hors story).
+//          + contenu-anne/photos/*.jpg|webp|png (photos hors story, dont le portrait envoyé par l'espace d'édition, story 7.16).
 // Lancé avant chaque construction (`npm run build`), pour que les photos envoyées depuis l'espace d'édition apparaissent.
 // Sortie : public/img/<groupe>/<nom>-<largeur>.{webp,jpg} + src/data/images.json (dimensions, srcset).
 //   npm run images
@@ -59,8 +59,8 @@ for (const slug of fs.readdirSync(stories)) {
 }
 // 2. photos hors story
 const photos = path.join(CONTENU, 'photos');
-for (const f of fs.readdirSync(photos).filter((f) => /\.jpe?g$/i.test(f))) {
-  await deriver('photos', f.replace(/\.jpe?g$/i, ''), path.join(photos, f));
+for (const f of fs.readdirSync(photos).filter((f) => /\.(jpe?g|webp|png)$/i.test(f))) {
+  await deriver('photos', f.replace(/\.[^.]+$/, ''), path.join(photos, f));
 }
 
 fs.writeFileSync(path.join(SITE, 'src', 'data', 'images.json'), JSON.stringify(manifeste, null, 2) + '\n');

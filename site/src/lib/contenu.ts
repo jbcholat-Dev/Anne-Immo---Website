@@ -80,3 +80,15 @@ export function dateLibelle(d: Date, lang: 'fr' | 'en' = 'fr') {
 }
 /** Le texte d'un avis, en paragraphes (tel quel, jamais corrigé). */
 export const paragraphes = (body: string | undefined) => (body ?? '').trim().split(/\n\s*\n/).map((p) => p.replace(/\n/g, ' ').trim()).filter(Boolean);
+
+/**
+ * Portrait d'Anne (A-04) : champ `portrait` de la page À propos, choisi dans l'espace d'édition (story 7.16).
+ * Le fichier vit dans contenu-anne/photos/ ; renvoie la clé de l'image dérivée (« photos/<nom> »), ou null.
+ */
+export async function portraitAnne(): Promise<string | null> {
+  const page = await getEntry('pages', 'a-propos');
+  const valeur = page?.data.portrait;
+  if (!valeur) return null;
+  const cle = `photos/${path.basename(valeur).replace(/\.[^.]+$/, '')}`;
+  return images[cle] ? cle : null;
+}

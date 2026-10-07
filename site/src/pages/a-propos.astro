@@ -2,6 +2,7 @@
 // 07 À propos (D-11, D-12, D-15) : une page longue à trois ancres — Qui suis-je ? · Ma méthode · Cible — repère collant, sans le bloc vidéo A-15 (absent : pas de trou).
 import Page from '../layouts/Page.astro';
 import Reserve from '../components/Reserve.astro';
+import Portrait from '../components/Portrait.astro';
 import Signature from '../components/Signature.astro';
 import CtaFin from '../components/CtaFin.astro';
 import { getEntry } from 'astro:content';
@@ -41,8 +42,8 @@ const cibles = [
 
   <section id="qui-suis-je" class="ap-qui" aria-labelledby="qui-titre">
     <div class="ap-portrait">
-      <Reserve label="A-04 · portrait · 1600 px vertical" class="seulement-desktop ap-portrait-reserve" />
-      <Reserve label="A-04 · portrait 4:5" class="seulement-mobile ap-portrait-reserve-m" />
+      <Portrait label="A-04 · portrait · 1600 px vertical" class="seulement-desktop ap-portrait-reserve" sizes="520px" />
+      <Portrait label="A-04 · portrait 4:5" class="seulement-mobile ap-portrait-reserve-m" sizes="100vw" />
       <p class="ap-langues seulement-desktop">FRANÇAIS · ENGLISH · ESPAÑOL · PORTUGUÊS</p>
       <p class="ap-zone seulement-desktop">Chablais · bassin lémanique · réseau eXp France</p>
     </div>

@@ -1,0 +1,17 @@
+---
+// Portrait d'Anne (A-04) s'il a été envoyé depuis l'espace d'édition (story 7.16), sinon le bloc réservé.
+// La classe reçue porte les dimensions du cadre (mêmes classes que le bloc réservé) : la photo le remplit, recadrée.
+import Picture from './Picture.astro';
+import Reserve from './Reserve.astro';
+import { portraitAnne } from '../lib/contenu';
+interface Props { label: string; class?: string; sizes?: string }
+const { label, class: cls = '', sizes = '(max-width: 899px) 100vw, 520px' } = Astro.props;
+const portrait = await portraitAnne();
+---
+{portrait
+  ? <div class={`portrait ${cls}`}><Picture id={portrait} alt="Anne Vial-Tissot" sizes={sizes} class="portrait-img" /></div>
+  : <Reserve label={label} class={cls} />}
+<style>
+  .portrait { overflow: hidden; border-radius: 12px; }
+  .portrait :global(picture), .portrait :global(.portrait-img) { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
+</style>

@@ -1,7 +1,7 @@
 ---
 story: 7.15
 epic: 7 — Contenu d'Anne
-statut: review
+statut: done
 date: 2026-10-05
 autorisations: sans objet (montage d'Anne)
 ---

@@ -3,6 +3,7 @@
 import Page from '../../layouts/Page.astro';
 import Picture from '../../components/Picture.astro';
 import Reserve from '../../components/Reserve.astro';
+import Portrait from '../../components/Portrait.astro';
 import { instantane, avisParId, roleLibelle, photoPrincipale, storyVisible } from '../../lib/contenu';
 import { accueil } from '../../config/site';
 import { r } from '../../i18n';
@@ -33,7 +34,7 @@ const note = String(inst.note).replace('.', ',');
   </div>
   <div class="dl-blocs">
     <div class="dl-bloc">
-      <Reserve label="A-04" class="dl-portrait" />
+      <Portrait label="A-04" class="dl-portrait" sizes="72px" />
       <h2>Qui pose ces questions</h2>
       <p><span class="seulement-desktop">Anne Vial-Tissot, consultante en immobilier sur le Chablais. Dix ans de finance d'entreprise avant l'immobilier.</span><span class="seulement-mobile">Anne Vial-Tissot, consultante en immobilier sur le Chablais. Dix ans de finance avant l'immobilier.</span></p>
       <p class="dl-langues">FR · EN · ES · PT</p>
