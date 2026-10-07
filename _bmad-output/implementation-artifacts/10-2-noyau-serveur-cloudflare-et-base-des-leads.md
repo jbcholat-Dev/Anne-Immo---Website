@@ -1,7 +1,7 @@
 ---
 story: 10.2
 epic: 10 — Capture des leads et backend
-statut: in-progress
+statut: done
 date: 2026-10-07
 ---
 
@@ -26,9 +26,10 @@ Le site est servi par le Worker Cloudflare avec l'adaptateur Astro, une base D1 
 - `wrangler d1 migrations apply DB --local` : 2 migrations appliquées. `wrangler dev` : `/`, `/vendre`, `/contact`, `/diagnostic`, `/diagnostic/questions`, `/en`, `/guide`, `/realisation`, `/a-propos`, `/admin/`, `/robots.txt` → 200 ; adresse inconnue → 404 ; `/api/sante` → `{"ok":true,"migrations":2}` ; `/api/retour` et `/api/essai-cal` répondent comme avant (signature Cal.com vérifiée) ; tâche planifiée déclenchée → 200.
 
 ## Ce qui est vérifié en ligne (2026-10-07)
+- Aperçu de la branche : pages parcourues par JB, identiques ; bouton « Un retour ? » → ticket #29 créé ; Ping test Cal.com → 200 et ticket #30 (signature valide). Tickets fermés.
 - Aperçu de la branche, après construction chez Cloudflare avec les commandes d'origine (commit 440fa57) : `/api/sante` → `{"ok":true,"migrations":2}` (capture de JB). Les migrations ont donc été appliquées pendant la construction sur `anne-leads-apercu` : la clé de construction de Cloudflare a les droits D1.
 
-## Ce qui reste
-1. Incident du 2026-10-07 : les commandes `npm run deploy` / `deploy:apercu` réglées dans Cloudflare n'existaient que sur cette branche ; ce réglage étant commun à toutes les branches, les mises en ligne de `main` ont échoué. JB remet les commandes d'origine ; les migrations passent dans `npm run build` (`scripts/migrations-ci.mjs`, actif seulement chez Cloudflare).
-2. Vérifier en ligne sur l'aperçu de la branche : ~~`/api/sante`~~ fait ; pages identiques, bouton « Un retour ? » et webhook Cal.com toujours fonctionnels.
-3. Après fusion : même contrôle sur l'aperçu principal.
+## Ce qui reste (après fusion, hors story)
+- Contrôle de `/api/sante` sur l'aperçu principal après la fusion dans `main`.
+- Exercice de redéploiement depuis une machine vierge (AD-10) : prévu avant le lancement, avec la restauration (story 12.x).
+- Base de production `anne-leads` à brancher au lancement (12.4).
