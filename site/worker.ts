@@ -41,9 +41,14 @@ export default {
 // (HMAC SHA-256 du corps brut, calculé avec CAL_WEBHOOK_SECRET) et, si elle est bonne, on consigne
 // un ticket GitHub étiqueté `essai-cal` avec ce que l'essai doit constater (fuseaux, case de confidentialité,
 // statut). Aucun nom, e-mail ni téléphone n'est recopié : seulement les noms des champs et la case à cocher.
-// Signature absente ou fausse : réponse 401, aucun ticket (l'adresse est publique pendant l'essai).
+// Signature absente : réponse 401, rien d'écrit. Signature fausse : 401 et un ticket de diagnostic sans contenu.
 async function essaiCal(request: Request, env: Env): Promise<Response> {
-  if (request.method !== 'POST') return json({ ok: false, error: { code: 'methode' } }, 405);
+  // Visite dans un navigateur : dit seulement si les deux secrets sont posés (jamais leur valeur).
+  if (request.method !== 'POST')
+    return json(
+      { ok: false, error: { code: 'methode' }, secret_cal: !!env.CAL_WEBHOOK_SECRET, cle_github: !!env.GITHUB_TOKEN },
+      405,
+    );
   if (!env.CAL_WEBHOOK_SECRET || !env.GITHUB_TOKEN) return json({ ok: false, error: { code: 'cle_absente' } }, 503);
 
   const brut = await request.text();
@@ -59,7 +64,31 @@ async function essaiCal(request: Request, env: Env): Promise<Response> {
   const attendue = [...calcul].map((o) => o.toString(16).padStart(2, '0')).join('');
   let ecart = recue.length === attendue.length ? 0 : 1;
   for (let i = 0; i < attendue.length; i++) ecart |= attendue.charCodeAt(i) ^ (recue.charCodeAt(i) || 0);
-  if (!recue || ecart !== 0) return json({ ok: false, error: { code: 'signature' } }, 401);
+  if (!recue || ecart !== 0) {
+    // Pendant l'essai, un refus venant de Cal.com (en-tête présent) est consigné pour en trouver la cause,
+    // sans le contenu du message.
+    if (recue) {
+      let evenement = null;
+      try {
+        evenement = JSON.parse(brut).triggerEvent ?? null;
+      } catch {
+        /* corps illisible */
+      }
+      await ticketEssai(
+        env,
+        '[Essai Cal.com] signature refusée',
+        [
+          `Message reçu le ${new Date().toISOString()}, signature refusée.`,
+          '',
+          `- événement : ${evenement ?? 'illisible'}`,
+          `- longueur de la signature reçue : ${recue.length} (attendu : 64)`,
+          `- longueur du corps : ${brut.length}`,
+          `- longueur du secret posé côté Cloudflare : ${env.CAL_WEBHOOK_SECRET.length}`,
+        ].join('\n'),
+      );
+    }
+    return json({ ok: false, error: { code: 'signature' } }, 401);
+  }
 
   let corps: Record<string, any> = {};
   try {
@@ -96,8 +125,13 @@ async function essaiCal(request: Request, env: Env): Promise<Response> {
     'Essai de la story 10.1, aucune donnée personnelle recopiée.',
   ].join('\n');
 
+  const r = await ticketEssai(env, `[Essai Cal.com] ${releve.evenement ?? 'webhook'}`, body);
+  if (!r.ok) return json({ ok: false, error: { code: r.code, statut: r.statut } }, 502);
+  return json({ ok: true });
+}
+
+async function ticketEssai(env: Env, titre: string, body: string): Promise<{ ok: boolean; code?: string; statut?: number }> {
   const depot = env.GITHUB_REPO || REPO_DEFAUT;
-  const titre = `[Essai Cal.com] ${releve.evenement ?? 'webhook'}`;
   const creer = (labels?: string[]) =>
     fetch(`https://api.github.com/repos/${depot}/issues`, {
       method: 'POST',
@@ -113,11 +147,10 @@ async function essaiCal(request: Request, env: Env): Promise<Response> {
   try {
     let r = await creer(['essai-cal']);
     if (r.status === 422) r = await creer(); // étiquette refusée : ticket sans elle
-    if (!r.ok) return json({ ok: false, error: { code: 'github', statut: r.status } }, 502);
+    return r.ok ? { ok: true } : { ok: false, code: 'github', statut: r.status };
   } catch {
-    return json({ ok: false, error: { code: 'reseau' } }, 502);
+    return { ok: false, code: 'reseau' };
   }
-  return json({ ok: true });
 }
 
 async function retour(request: Request, env: Env): Promise<Response> {
