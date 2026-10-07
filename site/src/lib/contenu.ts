@@ -83,14 +83,16 @@ export const paragraphes = (body: string | undefined) => (body ?? '').trim().spl
 
 /**
  * Portrait d'Anne (A-04) : champ `portrait` de la page À propos, choisi dans l'espace d'édition (story 7.16).
- * Le fichier vit dans contenu-anne/photos/ ; renvoie la clé de l'image dérivée (« photos/<nom> »), ou null.
+ * Le fichier vit à côté de la page (contenu-anne/pages/a-propos/) ou dans contenu-anne/photos/ ; renvoie la clé de l'image dérivée, ou null.
  */
 export async function portraitAnne(): Promise<string | null> {
   const page = await getEntry('pages', 'a-propos');
   const valeur = page?.data.portrait;
   if (!valeur) return null;
-  const cle = `photos/${path.basename(valeur).replace(/\.[^.]+$/, '')}`;
-  return images[cle] ? cle : null;
+  // L'espace d'édition range la photo à côté de la page (« portrait.webp ») ; « photos/x.webp » désigne contenu-anne/photos/ (story 7.18).
+  const nom = path.basename(valeur).replace(/\.[^.]+$/, '');
+  const cles = /^\/?photos\//.test(valeur) ? [`photos/${nom}`] : [`pages/a-propos/${nom}`, `photos/${nom}`];
+  return cles.find((c) => images[c]) ?? null;
 }
 
 /**

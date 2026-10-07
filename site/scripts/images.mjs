@@ -1,7 +1,8 @@
 // Dérive les formats web des photos réelles de contenu-anne/ (AD-15 : formats produits au build, jamais d'original > 500 Ko en double).
 // Entrée : contenu-anne/stories/<slug>/photos/ — photos web de chaque story : photo-*.jpg (scripts/preparer-photos)
 //          et *.webp / *.png (envoyées par l'espace d'édition, déjà réduites, story 7.13) ;
-//          + contenu-anne/photos/*.jpg|webp|png (photos hors story, dont le portrait envoyé par l'espace d'édition, story 7.16).
+//          + contenu-anne/photos/*.jpg|webp|png (photos hors story)
+//          + contenu-anne/pages/<page>/*.jpg|webp|png (photos rangées à côté d'une page par l'espace d'édition, dont le portrait, stories 7.16 et 7.18).
 // Lancé avant chaque construction (`npm run build`), pour que les photos envoyées depuis l'espace d'édition apparaissent.
 // Sortie : public/img/<groupe>/<nom>-<largeur>.{webp,jpg} + src/data/images.json (dimensions, srcset).
 //   npm run images
@@ -61,6 +62,15 @@ for (const slug of fs.readdirSync(stories)) {
 const photos = path.join(CONTENU, 'photos');
 for (const f of fs.readdirSync(photos).filter((f) => /\.(jpe?g|webp|png)$/i.test(f))) {
   await deriver('photos', f.replace(/\.[^.]+$/, ''), path.join(photos, f));
+}
+// 3. photos rangées par l'espace d'édition à côté d'une page (contenu-anne/pages/<page>/, ex. le portrait d'À propos, story 7.18)
+const pages = path.join(CONTENU, 'pages');
+for (const page of fs.readdirSync(pages)) {
+  const dossier = path.join(pages, page);
+  if (!fs.statSync(dossier).isDirectory()) continue;
+  for (const f of fs.readdirSync(dossier).filter((f) => /\.(jpe?g|webp|png)$/i.test(f))) {
+    await deriver(`pages/${page}`, f.replace(/\.[^.]+$/, ''), path.join(dossier, f));
+  }
 }
 
 fs.writeFileSync(path.join(SITE, 'src', 'data', 'images.json'), JSON.stringify(manifeste, null, 2) + '\n');

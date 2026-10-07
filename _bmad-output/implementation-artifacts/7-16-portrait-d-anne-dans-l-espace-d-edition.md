@@ -27,5 +27,8 @@ Avec une photo d'essai (1200×1600, ajoutée puis retirée avant le commit) :
 - `scripts/ecrans.mjs` : aucun débordement signalé.
 Sans photo (état livré) : le bloc réservé A-04 reste affiché, comme avant.
 
+## Correctif
+Le vrai envoi (PR n° 27) a montré que l'espace d'édition range la photo à côté de la page, pas dans `contenu-anne/photos/` : corrigé par la story 7.18.
+
 ## Ce qui reste
 - JB ou Anne : mettre le vrai portrait par l'espace d'édition une fois cette demande fusionnée, puis fusionner la demande créée par l'enregistrement.

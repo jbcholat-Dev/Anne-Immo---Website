@@ -140,7 +140,7 @@ La maquette dessine 1 440 px (ordinateur) et 390 px (téléphone). Entre 900 et 
 - `photo_principale` et `photos` portent un chemin relatif à la story (`photos/x.webp`) ; un ancien numéro (`"047"`) est encore lu via `photos.json`.
 - Brouillons : l'aperçu montre toutes les stories ; le site public (`PUBLIC_INDEXATION=oui`) seulement les « publie ».
 - Page À propos (story 7.17) : le sous-titre et le texte de la page « À propos » de l'espace d'édition sont ceux du site. `aPropos()` (`src/lib/contenu.ts`) découpe le texte selon ses titres (voir l'aide du champ « Texte ») ; le refrain, la ligne des langues, les profils « Cible » et les boutons restent dans le gabarit.
-- Portrait d'Anne (story 7.16) : champ « Portrait d'Anne » de la page À propos. La photo va dans `contenu-anne/photos/` ; le site l'affiche dans les emplacements A-04 (À propos, accueil, diagnostic). Champ vide : le bloc réservé A-04 reste affiché.
+- Portrait d'Anne (story 7.16) : champ « Portrait d'Anne » de la page À propos. L'espace d'édition range la photo à côté de la page (`contenu-anne/pages/a-propos/`, story 7.18) ; un chemin `photos/x.webp` vise `contenu-anne/photos/` ; le site l'affiche dans les emplacements A-04 (À propos, accueil, diagnostic). Champ vide : le bloc réservé A-04 reste affiché.
 - Écart assumé : les commentaires de l'en-tête YAML (« proposition Claude… ») disparaissent quand une fiche est enregistrée depuis l'espace d'édition ; les consignes sont dans les aides des champs.
 
 ## Garde-fous de contenu (stories 6.2 et 7.9)
