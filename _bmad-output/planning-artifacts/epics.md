@@ -1890,3 +1890,16 @@ afin que le site me montre sans passer par Claude.
 **Quand** une photo est mise dans le champ « Portrait d'Anne » et la demande de fusion acceptée
 **Alors** la photo remplace le bloc réservé A-04 sur À propos, l'accueil et le diagnostic, en ordinateur et en téléphone
 **Et** si le champ est vide, le bloc réservé reste affiché
+
+### Story 7.17: Page À propos lue depuis l'espace d'édition
+
+En tant qu'Anne,
+je veux que le texte de ma page À propos modifié dans l'espace d'édition soit celui du site,
+afin de ne pas dépendre de Claude pour changer mon parcours ou ma méthode.
+
+**Critères d'acceptation :**
+
+**Étant donné** une modification du sous-titre ou du texte de la page À propos, fusionnée
+**Quand** le site est construit
+**Alors** la page À propos affiche ce texte, dans la mise en page de la maquette (colonne Qui suis-je ?, piliers, points concrets, grille des partenaires)
+**Et** aucun texte de la page n'est plus figé dans le code, hors refrain, langues, profils « Cible » et boutons

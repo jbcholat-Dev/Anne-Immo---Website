@@ -6,19 +6,15 @@ import Portrait from '../components/Portrait.astro';
 import Signature from '../components/Signature.astro';
 import CtaFin from '../components/CtaFin.astro';
 import { getEntry } from 'astro:content';
+import { aPropos } from '../lib/contenu';
 import { r } from '../i18n';
 const page = await getEntry('pages', 'a-propos');
 const video = page?.data.video ?? null; // D-12 : le bloc vidéo n'apparaît que si la vidéo existe
 const refrain = ['Pas de mauvaise surprise.', 'Pas de dossier qui traîne.', 'Des ventes qui vont au bout.'];
-const partenaires = [
-  ['Expert-comptable', 'analyse financière'], ['Géomètre', 'relevés techniques'], ['Diagnostiqueurs', 'diagnostics obligatoires'],
-  ['Notaire', 'aspects juridiques'], ['Urbanisme', 'conformité réglementaire'], ['Gestion de projet', 'si transaction complexe'],
-];
-const traductions = [
-  ['01', 'Audit patrimonial complet', 'Avant tout, je comprends vraiment votre situation : la valeur, le potentiel, les contraintes, les opportunités. Pas de zone grise.'],
-  ['03', 'Anticipation des obstacles', 'Parce que j’ai vu les pièges récurrents, je les vois venir. Je les règle avant qu’ils deviennent des blocages.'],
-  ['04', 'Accompagnement du début à la fin', 'Un interlocuteur unique qui connaît toute la situation. Pas juste des infos détachées, mais une vraie présence.'],
-];
+// Textes de « Qui suis-je ? » et « Ma méthode » : ceux de contenu-anne/pages/a-propos/fr.md, modifiables dans l'espace d'édition (story 7.17).
+const texte = await aPropos();
+if (!texte) throw new Error('contenu-anne/pages/a-propos/fr.md introuvable ou vide');
+const { qui, methode } = texte;
 const cibles = [
   ['Primo-accédants', 'Un premier achat, un budget à cadrer, un financement à monter avant la première visite.'],
   ['Investisseurs', 'Rendement, fiscalité, revente : le bien est regardé comme un actif, pas comme un coup de cœur.'],
@@ -29,8 +25,10 @@ const cibles = [
 <Page titre="À propos — Anne VIAL-TISSOT" description="Le parcours, la méthode — bon sens, rigueur et pragmatisme — et les profils qu'Anne accompagne. Une seule page, trois temps de lecture." courante="apropos">
   <div class="ap-tete">
     <h1>À propos</h1>
-    <p class="seulement-desktop">Le parcours, la méthode, et les profils qu'elle accompagne — une seule page, trois temps de lecture.</p>
-    <p class="seulement-mobile">Le parcours, la méthode, et les profils accompagnés.</p>
+    {texte.sousTitre
+      ? <p class="ap-sous-titre">{texte.sousTitre}</p>
+      : <><p class="seulement-desktop">Le parcours, la méthode, et les profils qu'elle accompagne — une seule page, trois temps de lecture.</p>
+         <p class="seulement-mobile">Le parcours, la méthode, et les profils accompagnés.</p></>}
   </div>
   <div class="ap-repere" data-repere>
     <nav aria-label="Sur cette page">
@@ -50,18 +48,10 @@ const cibles = [
     <div class="ap-texte">
       <h2 id="qui-titre" class="ap-nom">Anne Vial‑Tissot</h2>
       <Signature largeur={180} hauteur={9} class="ap-signature" />
-      <h3 class="chapeau">Le parcours</h3>
-      <p>Après dix ans en finance d'entreprise dans de grands groupes agroalimentaires, le Groupe Bel à São Paulo puis Danone Waters sur le site d'Évian, j'ai souhaité mettre ces compétences au service d'un secteur que j'affectionne : l'immobilier. J'y ai fait mes premiers pas comme cliente et investisseuse, et je voyais déjà le potentiel du secteur, mais aussi ses manquements.</p>
-      <h3 class="chapeau">Ce que j'ai vu</h3>
-      <p class="ap-intro-liste">À mes débuts, j'ai été surprise par le nombre de ventes qui s'effondraient après la promesse de vente :</p>
-      <ul>
-        <li>financement refusé à la dernière minute, dossiers bancaires mal montés ;</li>
-        <li>formalités administratives découvertes trop tard ;</li>
-        <li>acquéreurs mal accompagnés : stress, doutes, désengagement ;</li>
-        <li>coordination inexistante, chacun dans son coin, aucun chef d'orchestre.</li>
-      </ul>
-      <h3 class="chapeau">Ma méthode</h3>
-      <p>J'ai appliqué ce que je savais faire : construire un réseau d'experts et traiter chaque vente comme un projet d'entreprise. C'est de là qu'est née ma méthode — bon sens, rigueur et pragmatisme — une vision complète du projet avant, pendant et après la vente. Parce qu'un seul angle mort suffit pour faire échouer une transaction.</p>
+      {qui.map((b) => <>
+        {b.titre && <h3 class="chapeau">{b.titre}</h3>}
+        <div class="ap-md" set:html={b.html} />
+      </>)}
       <div class="ap-refrain">{refrain.map((l) => <div>{l}</div>)}</div>
       <p>Parce que le Léman attire une clientèle internationale, je travaille en français, en anglais, en espagnol et en portugais.</p>
       <p class="ap-langues seulement-mobile">FRANÇAIS · ENGLISH · ESPAÑOL · PORTUGUÊS</p>
@@ -81,25 +71,28 @@ const cibles = [
     )}
     <div class="ap-methode-tete">
       <div>
-        <h2 id="methode-titre">Ma méthode</h2>
-        <p class="ap-methode-sous">Bon sens, rigueur et pragmatisme</p>
-        <p class="ap-methode-intro">Je ne réinvente pas les choses. Je fais simplement ce qui doit être fait — complètement.</p>
+        <h2 id="methode-titre">{methode.titre}</h2>
+        {methode.sous && <p class="ap-methode-sous">{methode.sous}</p>}
+        {methode.intro && <div class="ap-methode-intro ap-md" set:html={methode.intro} />}
       </div>
       <Reserve label="A-05 · Anne en situation · terrain" class="ap-situation" />
     </div>
     <div class="ap-piliers">
-      <div class="ap-rang ap-rang-filet"><div><div class="chapeau">Pilier 1</div><h3>Bon sens</h3></div><div class="ap-rang-texte"><p>Comprendre vraiment la situation avant de bouger. Écouter. Poser les bonnes questions. Ne pas improviser.</p></div></div>
-      <div class="ap-rang ap-rang-filet"><div><div class="chapeau">Pilier 2</div><h3>Rigueur</h3></div><div class="ap-rang-texte"><p>Appliquer la même discipline qu'en finance à chaque dossier immobilier. Préparer, anticiper, documenter. Pas d'improvisation, pas de surprise à la dernière minute.</p></div></div>
-      <div class="ap-rang ap-rang-filet"><div><div class="chapeau">Pilier 3</div><h3>Pragmatisme</h3></div><div class="ap-rang-texte"><p>Les solutions théoriques, c'est bien. Les solutions qui marchent vraiment, c'est mieux. Je fais ce qui fonctionne dans la réalité — et j'adapte selon le contexte.</p></div></div>
-      <div class="ap-rang-filet ap-concretement"><h3>Concrètement, cela se traduit par :</h3></div>
-      <div class="ap-rang"><div><div class="chapeau">{traductions[0][0]}</div><h4>{traductions[0][1]}</h4></div><div class="ap-rang-texte"><p>{traductions[0][2]}</p></div></div>
-      <div class="ap-rang"><div><div class="chapeau">02</div><h4>Coordination d'expertise intégrée</h4></div><div class="ap-rang-texte">
-        <p class="ap-avant-grille">Selon vos besoins, je fais travailler ensemble les bons acteurs :</p>
-        <div class="ap-partenaires">{partenaires.map(([n, d]) => <div>{n}<br /><span class="texte-muet">{d}</span></div>)}</div>
-        <p>Ils ne travaillent pas en silos. <b class="ap-coordonne">Je coordonne.</b> Je m'assure que chacun sait où on va et que tout s'imbrique.</p>
-      </div></div>
-      {traductions.slice(1).map(([n, t, x]) => <div class="ap-rang"><div><div class="chapeau">{n}</div><h4>{t}</h4></div><div class="ap-rang-texte"><p>{x}</p></div></div>)}
-      <div class="ap-rang ap-rang-filet"><div><div class="chapeau">Engagement</div><h3>Mon engagement</h3></div><div class="ap-rang-texte"><p>Travailler avec rigueur et transparence pour que votre dossier avance sereinement. Minimiser les surprises. Vous tenir informé à chaque étape.</p><p>Parce qu'un projet immobilier mérite mieux que des improvisations et des obstacles évitables.</p></div></div>
+      {methode.rangs.map((rg, i) => {
+        const premierConcret = methode.concretement && rg.niveau === 4 && methode.rangs.findIndex((x) => x.niveau === 4) === i;
+        const [avant, apres] = rg.html.split('<!--grille-->');
+        return <>
+          {premierConcret && <div class="ap-rang-filet ap-concretement"><h3>{methode.concretement}</h3></div>}
+          <div class:list={['ap-rang', { 'ap-rang-filet': rg.niveau === 3 }]}>
+            <div>{rg.chapeau && <div class="chapeau">{rg.chapeau}</div>}{rg.niveau === 3 ? <h3>{rg.titre}</h3> : <h4>{rg.titre}</h4>}</div>
+            <div class="ap-rang-texte ap-md">
+              <Fragment set:html={avant} />
+              {rg.partenaires && <div class="ap-partenaires">{rg.partenaires.map(([n, d]) => <div>{n}<br /><span class="texte-muet">{d}</span></div>)}</div>}
+              {apres && <Fragment set:html={apres} />}
+            </div>
+          </div>
+        </>;
+      })}
     </div>
     <div class="ap-refrain-grand">{refrain.map((l) => <div>{l}</div>)}</div>
   </section>
@@ -148,6 +141,17 @@ const cibles = [
   .ap-texte p { margin-bottom: 40px; }
   .ap-texte p.ap-intro-liste { margin-bottom: 16px; }
   .ap-texte ul { padding-left: 20px; margin-bottom: 40px; display: flex; flex-direction: column; gap: 8px; }
+  .ap-sous-titre { white-space: pre-line; }
+  .ap-texte > .ap-md { margin-bottom: 40px; }
+  .ap-md :global(p) { margin-bottom: 20px; }
+  .ap-md :global(:last-child) { margin-bottom: 0; }
+  .ap-md :global(ul) { padding-left: 20px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
+  .ap-md :global(p:has(+ ul)) { margin-bottom: 16px; }
+  .ap-md :global(strong) { font-weight: 600; }
+  .ap-rang-texte.ap-md :global(p), .ap-rang-texte.ap-md :global(ul) { margin-bottom: 0; }
+  .ap-rang-texte.ap-md :global(* + *) { margin-top: 16px; }
+  .ap-rang-texte.ap-md :global(.ap-partenaires) { margin-top: 20px; }
+  .ap-methode-intro.ap-md :global(p) { margin-bottom: 0; }
   .ap-refrain { font-family: var(--avt-font-display); font-size: 40px; line-height: 1.2; margin-bottom: 40px; }
   .ap-boutons { display: flex; gap: 14px; flex-wrap: wrap; }
   .ap-methode { border-top: 1px solid var(--filet-brun-fort); padding-top: 8px; }
@@ -202,7 +206,11 @@ const cibles = [
     .ap-nom { font-size: 40px; line-height: 1.05; margin-bottom: 6px; }
     .ap-signature { width: 140px !important; height: 8px !important; margin-bottom: 28px; }
     .ap-texte h3.chapeau { font-size: 12px; margin-bottom: 10px; }
-    .ap-texte p, .ap-texte ul { margin-bottom: 30px; }
+    .ap-texte p, .ap-texte ul, .ap-texte > .ap-md { margin-bottom: 30px; }
+    .ap-md :global(p), .ap-md :global(ul) { margin-bottom: 16px; }
+    .ap-md :global(:last-child) { margin-bottom: 0; }
+    .ap-md :global(p:has(+ ul)) { margin-bottom: 12px; }
+    .ap-rang-texte.ap-md :global(p), .ap-rang-texte.ap-md :global(ul), .ap-methode-intro.ap-md :global(p) { margin-bottom: 0; }
     .ap-texte p.ap-intro-liste { margin-bottom: 12px; }
     .ap-refrain { font-size: 30px; margin-bottom: 30px; }
     .ap-langues.seulement-mobile { font-size: 12.5px; margin-bottom: 28px; }

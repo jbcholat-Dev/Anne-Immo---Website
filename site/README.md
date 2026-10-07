@@ -29,7 +29,7 @@ Les scripts Playwright utilisent `/opt/pw-browsers/chromium` s'il existe, sinon 
 |---|---|---|
 | `/` | Accueil — hero vidéo/poster, bande Klein, pile de 6 cartes collantes (D-16), méthode + refrain, « Ils ont travaillé avec Anne », diagnostic, Anne, fermeture Klein (D-22) | maquette `01-accueil-*`, `contenu-anne/` |
 | `/realisation`, `/realisation/<slug>` | Réalisation (index + 3 fiches story) | `contenu-anne/stories/*/fr.md` (récits d'Anne, tels quels) |
-| `/a-propos` `#qui-suis-je` `#methode` `#cible` | À propos, page longue à ancres, repère collant, **sans** bloc vidéo A-15 (D-12) | maquette `apropos-*` (condensé de `contenu-anne/pages/a-propos/fr.md`) |
+| `/a-propos` `#qui-suis-je` `#methode` `#cible` | À propos, page longue à ancres, repère collant, **sans** bloc vidéo A-15 (D-12) | maquette `apropos-*` ; textes lus dans `contenu-anne/pages/a-propos/fr.md` (story 7.17) |
 | `/vendre` (`#estimation`) | deux portes + formulaire d'estimation (8 champs, D-4) | maquette `04-vendre-*` |
 | `/acheter` | profils, recherche accompagnée, avis d'acheteurs (§ 5.4), CTA → contact préréglé Achat | maquette `04b-acheter-*` |
 | `/diagnostic` | landing autonome | maquette `05-diagnostic-*` |
@@ -127,6 +127,7 @@ La maquette dessine 1 440 px (ordinateur) et 390 px (téléphone). Entre 900 et 
 - Les photos envoyées sont réduites dans le navigateur en WebP 3 200 px ; `scripts/images.mjs` (lancé par `npm run build`) en tire les formats web. Il prend dans `stories/<id>/photos/` les `photo-*.jpg` (ancien circuit, `scripts/preparer-photos`) et les `*.webp` / `*.png`.
 - `photo_principale` et `photos` portent un chemin relatif à la story (`photos/x.webp`) ; un ancien numéro (`"047"`) est encore lu via `photos.json`.
 - Brouillons : l'aperçu montre toutes les stories ; le site public (`PUBLIC_INDEXATION=oui`) seulement les « publie ».
+- Page À propos (story 7.17) : le sous-titre et le texte de la page « À propos » de l'espace d'édition sont ceux du site. `aPropos()` (`src/lib/contenu.ts`) découpe le texte selon ses titres (voir l'aide du champ « Texte ») ; le refrain, la ligne des langues, les profils « Cible » et les boutons restent dans le gabarit.
 - Portrait d'Anne (story 7.16) : champ « Portrait d'Anne » de la page À propos. La photo va dans `contenu-anne/photos/` ; le site l'affiche dans les emplacements A-04 (À propos, accueil, diagnostic). Champ vide : le bloc réservé A-04 reste affiché.
 - Écart assumé : les commentaires de l'en-tête YAML (« proposition Claude… ») disparaissent quand une fiche est enregistrée depuis l'espace d'édition ; les consignes sont dans les aides des champs.
 
