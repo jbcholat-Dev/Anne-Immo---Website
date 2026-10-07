@@ -111,9 +111,9 @@ development_status:
   9-6-boucle-de-retours-sur-l-aperçu: done
   epic-9-retrospective: optional
 
-  epic-10: backlog
-  10-1-architecture-vague-2-consolidée: backlog
-  10-2-noyau-serveur-cloudflare-et-base-des-leads: backlog
+  epic-10: in-progress
+  10-1-architecture-vague-2-consolidée: done
+  10-2-noyau-serveur-cloudflare-et-base-des-leads: done
   10-3-formulaires-contact-estimation-et-guide-écrits-en-base-et-no: backlog
   10-4-gate-du-diagnostic-côté-serveur: backlog
   10-5-guide-par-lien-signé-et-séquence-d-e-mails-de-la-sortie-b: backlog

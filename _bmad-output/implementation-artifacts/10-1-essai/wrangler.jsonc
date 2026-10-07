@@ -1,0 +1,10 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "anne-vial-tissot-essai-10-1",
+  "main": "./worker.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": { "directory": "./dist", "binding": "ASSETS", "not_found_handling": "404-page", "html_handling": "auto-trailing-slash" },
+  "d1_databases": [{ "binding": "DB", "database_name": "essai-leads", "database_id": "00000000-0000-0000-0000-000000000000" }],
+  "triggers": { "crons": ["0 6 * * *"] }
+}

@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const ICI = path.dirname(fileURLToPath(import.meta.url));
-const DIST = path.resolve(ICI, '../dist'); const OUT = path.resolve(ICI, '../.verif');
+const DIST = path.resolve(ICI, '../dist/client'); const OUT = path.resolve(ICI, '../.verif');
 const TYPES = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml' };
 const srv = createServer((req, res) => { let p = decodeURIComponent(new URL(req.url, 'http://x').pathname); let f = path.join(DIST, p); if (fs.existsSync(f + '.html')) f += '.html'; else if (fs.existsSync(f) && fs.statSync(f).isDirectory()) f = path.join(f, 'index.html'); if (!fs.existsSync(f)) { res.statusCode = 404; return res.end('404'); } res.setHeader('Content-Type', TYPES[path.extname(f)] ?? 'application/octet-stream'); fs.createReadStream(f).pipe(res); });
 await new Promise((ok) => srv.listen(4323, ok));

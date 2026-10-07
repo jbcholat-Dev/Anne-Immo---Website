@@ -1,0 +1,11 @@
+{
+  // Vérification des types du code serveur (story 10.2) : worker.ts et les routes src/pages/api/,
+  // avec les types de l'exécution Cloudflare générés par `wrangler types` (worker-configuration.d.ts).
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "lib": ["es2024"],
+    "types": [],
+    "noEmit": true
+  },
+  "include": ["worker.ts", "src/pages/api/**/*.ts", "worker-configuration.d.ts"]
+}

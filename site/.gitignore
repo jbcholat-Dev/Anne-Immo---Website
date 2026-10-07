@@ -4,3 +4,5 @@ dist/
 .verif/*.tmp
 .dev.vars
 .wrangler/
+# Généré par `npm run types` (wrangler types), recréé avant chaque `npm run check`
+worker-configuration.d.ts
