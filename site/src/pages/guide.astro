@@ -37,8 +37,10 @@ const erreurs = ['Le prix fixé sans comparables', 'Le dossier incomplet au comp
     <div class="confirmation g-confirmation" data-confirmation="guide" hidden>
       <div class="confirmation-titre">Le guide est en route</div>
       <p>Le lien de téléchargement est dans votre boîte (<span data-champ="email"></span>), valable 7 jours.</p>
-      <a href="#" class="btn btn-secondaire btn-m g-ouvrir" data-lien-guide target="_blank" rel="noopener" hidden>Ouvrir le guide maintenant</a>
-      <a href="/contact#ecrire" class="lien" style="font-size:14.5px">Je n'ai rien reçu</a>
+      <div class="g-actions">
+        <a href="#" class="btn btn-secondaire btn-m" data-lien-guide target="_blank" rel="noopener" hidden>Ouvrir le guide maintenant</a>
+        <a href="/contact#ecrire" class="lien g-rien-recu">Je n'ai rien reçu</a>
+      </div>
     </div>
   </div>
   <script src="../islands/formulaires.ts"></script>
@@ -58,7 +60,9 @@ const erreurs = ['Le prix fixé sans comparables', 'Le dossier incomplet au comp
   .g-note { font-size: 12.5px; line-height: 1.5; }
   .g-confirmation { grid-column: 3; }
   .g-confirmation p { font-size: 15px; line-height: 1.5; margin-bottom: 10px; }
-  .g-confirmation .g-ouvrir { margin-bottom: 14px; }
+  /* Bouton et lien côte à côte, séparés ; l'un sous l'autre si la place manque (journal des défauts, story 8.2). */
+  .g-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; margin-top: 4px; }
+  .g-rien-recu { font-size: 14.5px; }
   /* Largeurs intermédiaires (900 à 1399 px, sans artboard) : colonnes proportionnelles, sinon le texte déborde (story 8.2) */
   @media (min-width: 900px) and (max-width: 1399px) {
     .g-corps { grid-template-columns: minmax(0, 280px) minmax(0, 1fr) minmax(0, 400px); gap: 48px; }
