@@ -1,6 +1,6 @@
 # Site d'Anne VIAL-TISSOT — v1 (build statique)
 
-Astro 7, pages prérendues servies par un Worker Cloudflare (adaptateur `@astrojs/cloudflare`, story 10.2), CSS sur les seuls tokens de `design-system/tokens/tokens.css`, trois îlots JS (scroll-craft, formulaires, diagnostic). Le noyau serveur existe (base D1, route `/api/sante`), mais aucun formulaire n'écrit encore en base : tout ce qui écrit un lead est **simulé** (voir « TODO(backend) »). La référence visuelle est la maquette lot 3 (`maquettes/lot-3-complet/`), les décisions D-1 → D-26 priment.
+Astro 7, pages prérendues servies par un Worker Cloudflare (adaptateur `@astrojs/cloudflare`, story 10.2), CSS sur les seuls tokens de `design-system/tokens/tokens.css`, trois îlots JS (scroll-craft, formulaires, diagnostic). Le noyau serveur existe (base D1, route `/api/sante`). Depuis la story 10.3, les formulaires contact, estimation et guide écrivent **réellement** en base et préviennent Anne par e-mail ; le diagnostic reste **simulé** jusqu'à la story 10.4 (voir « TODO(backend) »). La référence visuelle est la maquette lot 3 (`maquettes/lot-3-complet/`), les décisions D-1 → D-26 priment.
 
 ## Lancer
 
@@ -18,10 +18,11 @@ Autres commandes :
 | `npm run images` | dérive les WebP/JPG de `contenu-anne/` vers `public/img/` + `src/data/images.json` (sharp). Déjà lancé et commité : à relancer quand Anne dépose des photos ou change une sélection dans `stories/<slug>/fr.md` (après `scripts/preparer-photos`). |
 | `npm run verif` | captures Playwright (1440 et 390) de toutes les pages dans `.verif/` ; accueil à 5 positions de défilement + mouvement réduit. |
 | `node scripts/e2e-diagnostic.mjs` | parcours complet du diagnostic (sortie A, sortie B, profil à risque, abandon / reprise, gate en erreur, lien expiré). |
+| `node scripts/e2e-formulaires.mjs` | essai de bout en bout des formulaires réels sur le serveur local (story 10.3) : barrières anti-robot, validation, base, idempotence, e-mails vers la boîte de test, échec puis rejeu, envoi depuis la page /contact. Préalable : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local`. E-mails produits dans `.verif/e2e-formulaires-emails.txt`. |
 | `node scripts/liens.mjs` | vérifie que chaque lien et chaque ancre du site construit mène quelque part. |
 | `npm run check` | `astro check` (types). |
 
-Les scripts Playwright utilisent `/opt/pw-browsers/chromium` s'il existe, sinon le Chromium de Playwright (`npx playwright install chromium` une fois). Pour tester l'**échec d'envoi** d'un formulaire : ajouter `?simuler=echec` à l'URL de la page.
+Les scripts Playwright utilisent `/opt/pw-browsers/chromium` s'il existe, sinon le Chromium de Playwright (`npx playwright install chromium` une fois). L'ancien mode `?simuler=echec` a disparu avec les formulaires réels (story 10.3) : l'échec se teste avec `scripts/e2e-formulaires.mjs`.
 
 ## Les 11 pages
 
@@ -77,11 +78,11 @@ Tous dans `src/config/site.ts` :
 
 Chaque endroit est marqué `TODO(backend)` dans le code (`grep -rn "TODO(backend" src`).
 
-1. `src/islands/formulaires.ts` `envoyer()` : POST vers `/api/<source>` (contact, estimation, guide, rdv) avec Turnstile, champ piège, `submission_id` ULID, écriture D1 avant diffusion (AD-4, AD-6, AD-7). Aujourd'hui : résolution après 700 ms, échec si `?simuler=echec`.
+1. ~~Formulaires contact, estimation, guide~~ : **réels depuis la story 10.3** (voir « Formulaires réels »). Reste simulé dans `src/islands/formulaires.ts` : `envoyerSimule()`, utilisé par le diagnostic et sa page de résultats jusqu'à la story 10.4.
 2. `src/islands/diagnostic.ts` + `src/lib/scoring.ts` : **le gate est côté client** ; le score est calculé dans le navigateur et le résultat stocké en session. Cible AD-5 : POST `/api/diagnostic`, jeton serveur à usage unique, page de résultats rendue par le noyau (404 sinon), barème lu par le serveur seulement — l'îlot `resultats.ts` disparaît.
 3. `src/islands/resultats.ts` : envoi du guide (lien signé, e-mail Resend, AD-8) et opt-in séquence (`newsletter_opt_in_at`, AD-16).
 4. `src/pages/contact.astro` : remplacer le gabarit Cal.com statique par l'embed (chargé après action du visiteur, AD-11), question obligatoire d'acceptation, webhook `BOOKING_CREATED` (CAP-9).
-5. `src/pages/guide.astro` : le PDF n'a pas d'adresse publique — lien signé expirant (CAP-8).
+5. `src/pages/guide.astro` et `src/server/leads.ts` : la demande du guide est enregistrée et Anne est prévenue, mais **Anne envoie le PDF à la main** ; le lien signé expirant envoyé automatiquement arrive à la story 10.5 (CAP-8), avec les textes de la maquette (« lien valable 48 heures »).
 6. Adaptateur Cloudflare (`@astrojs/cloudflare`, `worker.ts` pour le cron), D1 `eu`, migrations, admin, mesure d'audience, `funnel_event` (AD-10 → AD-18). `astro.config.mjs` reste `output: 'static'` jusque-là.
 7. Données structurées `RealEstateAgent` depuis `identite` (AD-13) une fois A-13 fourni.
 
@@ -92,11 +93,22 @@ Cloudflare Workers Builds : dossier racine `site`, construction `npm ci && npm r
 ## Noyau serveur et base des leads (story 10.2)
 
 - **Construction** : `npm run build` produit `dist/client/` (les pages, servies telles quelles) et `dist/server/` (le Worker et sa configuration `wrangler.json`, générée depuis `wrangler.jsonc`). Les scripts de vérification lisent `dist/client/`.
-- **Point d'entrée** : `worker.ts` (`main` de `wrangler.jsonc`). Il sert lui-même `/api/retour` et `/api/essai-cal`, et confie le reste à Astro (`handle`), donc les routes de `src/pages/api/` (`export const prerender = false`). `scheduled` est vide jusqu'aux stories 10.5 et 10.8. Toutes les pages restent prérendues.
+- **Point d'entrée** : `worker.ts` (`main` de `wrangler.jsonc`). Il sert lui-même `/api/retour` et `/api/essai-cal`, et confie le reste à Astro (`handle`), donc les routes de `src/pages/api/` (`export const prerender = false`). `scheduled` (toutes les 15 minutes) réessaie les e-mails en échec depuis la story 10.3. Toutes les pages restent prérendues.
 - **Base** : liaison `DB`, base D1 `anne-leads-apercu` (juridiction UE) pour toutes les mises en ligne tant que le site n'est pas lancé ; la base de production `anne-leads` sera branchée à la story 12.4. Schéma : `migrations/0001-lead.sql` (table `lead`, AD-6) et `0002-lead-delivery.sql`. En local : `npm run base:local`, puis `npx wrangler dev` (après `npm run build`).
 - **Santé** : `GET /api/sante` répond `{ "ok": true, "migrations": 2 }` si la base répond, 503 sinon. Aucune donnée personnelle.
 - **Réglages écartés** : pas de sessions Astro (`session: false`, donc pas de stockage KV créé automatiquement) ; images en `passthrough` (le site prépare ses images lui-même), donc pas de liaison Cloudflare Images.
 - **Types** : `npm run check` génère d'abord les types Cloudflare (`wrangler types`, fichier `worker-configuration.d.ts` non versionné), vérifie le site avec `astro check`, puis le code serveur à part avec `tsconfig.worker.json` (les types du Worker et ceux du navigateur ne cohabitent pas).
+
+## Formulaires réels (story 10.3)
+
+- **Ce que voit le visiteur** : rien de neuf à l'écran (mêmes états : envoi en cours, confirmation, échec avec « Renvoyer », erreurs de champ). La différence : sa demande est enregistrée dans la base et Anne la reçoit par e-mail ; le prospect reçoit un accusé de réception (contact, estimation). Pour le guide, Anne envoie le PDF elle-même jusqu'à la story 10.5 : les textes de la page le disent.
+- **Routes** : `POST /api/contact`, `/api/estimation`, `/api/guide` (`src/pages/api/`), toutes traitées par `src/server/capture.ts`. Ordre (AD-7) : jeton Turnstile vérifié auprès de Cloudflare (`src/server/verification.ts`) → champ piège `site_web` vide (`src/components/ChampPiege.astro`) → limite de 5 envois par minute et par adresse IP (liaison `LIMITE_FORMULAIRES` de `wrangler.jsonc`, l'adresse n'est ni écrite ni journalisée) → contrat de la source (`src/server/schema.ts` : formats d'AD-6, téléphone mis au format international, un numéro à dix chiffres sans indicatif est considéré comme français) → écriture (`src/server/leads.ts`). Réponses `{ ok: true }` ou `{ ok: false, error: { code, message } }`, codes `ANTI_ROBOT`, `ANTI_ROBOT_INDISPONIBLE`, `TROP_DE_DEMANDES`, `CHAMP_INVALIDE` (+ `champ`), `REQUETE_INVALIDE`, `BASE_INDISPONIBLE`.
+- **Écrire d'abord** (AD-4) : une seule transaction écrit le lead et ses lignes `lead_delivery` (`notify_anne`, `confirm_prospect` ; guide : `notify_anne` seul). La page envoie une clé `submission_id` (ULID) gardée tant que l'envoi n'a pas réussi : « Renvoyer » ne crée jamais deux demandes.
+- **E-mails** (`src/server/delivery.ts`, `src/server/messages.ts`, `src/server/adapters/email.ts`, seul fichier qui parle à Resend) : envoyés après la réponse au visiteur ; un échec n'est jamais une erreur pour lui, il est noté sur la ligne (`status`, `attempts`, `last_error`) et réessayé toutes les 15 minutes, 5 essais au plus. Chaque envoi est réservé en base avant de partir et porte une clé anti-doublon chez Resend : jamais deux fois le même e-mail. `notify_anne` est écrit pour être recopié dans la fiche Modelo (un bloc par champ ; « Répondre » écrit au prospect) ; `confirm_prospect` part de `anne@annevialtissot.fr`, « Répondre » écrit à Anne (`BOITE_ANNE`, `wrangler.jsonc`).
+- **Aperçu = tests** (AD-12) : tant que `ENVIRONNEMENT` (`wrangler.jsonc`) ne vaut pas `production`, chaque lead est écrit avec `is_test = 1` et **tous** les e-mails partent vers la boîte de test (secret `BOITE_TEST`), objet préfixé `[TEST]`, jamais vers Anne ni vers le prospect.
+- **Navigateur** : `src/islands/formulaires.ts` charge le script Turnstile seulement au premier envoi, jamais à l'ouverture de la page (AD-11), et obtient un jeton neuf à chaque essai. Clé publique du widget `site-anne` dans le code ; `PUBLIC_TURNSTILE_SITE_KEY` la remplace pour les essais en local (clé d'essai de Cloudflare `1x00000000000000000000AA`, qui passe partout).
+- **Secrets** (Cloudflare, jamais dans le dépôt) : `TURNSTILE_SECRET_KEY`, `RESEND_API_KEY`, `BOITE_TEST`. Sans eux, l'envoi échoue proprement (`ANTI_ROBOT_INDISPONIBLE`) ou l'e-mail reste en attente (`RESEND_API_KEY absente`). En local, `URL_SERVICES_ESSAI` (fichier de réglages de `wrangler dev`, jamais dans Cloudflare) dirige Turnstile et Resend vers une imitation, car le serveur local ne peut pas les joindre.
+- **Journaux** : JSON, sans donnée personnelle ; une adresse e-mail n'y figure que sous forme d'empreinte (`src/server/journal.ts`).
 
 ## Retours sur l'aperçu (story 9.6)
 
@@ -127,6 +139,7 @@ Italiana (titres) et DM Sans (texte) sont servies par le site lui-même depuis `
 - Marqueurs « Point ouvert » / « Contenu à écrire par Anne » affichés (pastilles de la maquette) pour que JB les repère ; à supprimer en production.
 - **Contrastes** vérifiés sur chaque paire de tokens employée (≥ 4,5:1) — deux écarts à la maquette : la pastille « Bases solides » passe du fond galet (4,35:1) à l'écru bordé ; les dates indisponibles du gabarit Cal.com gardent le token `--avt-disabled` de la maquette (1,7:1, information non essentielle — l'embed Cal.com les remplacera).
 - **Écarts d'architecture de la story 10.2** : `main` → `worker.ts` au lieu de l'option `workerEntryPoint` (absente de l'adaptateur 14) ; une seule base (aperçu) pour toutes les mises en ligne jusqu'au lancement, la base de production étant branchée en 12.4 ; plan Cloudflare gratuit tant qu'il n'y a pas de vrais leads (la restauration sur 30 jours du plan payant attendra, action J10).
+- **Écarts de la story 10.3** : Anne envoie le PDF du guide à la main jusqu'à la story 10.5, donc la page Guide dit « Anne vous envoie le guide par e-mail sous un jour ouvré » et le bouton dit « Recevoir le guide » (maquette : « Télécharger le guide », « lien valable 48 heures ») ; la limite de fréquence compte par adresse IP (la story dit « par adresse » sans préciser) ; les textes des deux e-mails automatiques et l'ordre des blocs de la fiche Modelo sont des propositions à faire valider par Anne ; une tâche planifiée toutes les 15 minutes réessaie les e-mails en échec (l'architecture prévoyait le rejeu depuis l'admin, story 10.7, qui reste).
 - Pages légales : textes de structure conformes à AD-16 (finalités, bases légales, 3 ans), **à faire valider par Anne** avant publication ; les valeurs A-13 sont des pastilles « à compléter ».
 
 ## Largeurs intermédiaires (story 8.2)
@@ -152,4 +165,4 @@ La maquette dessine 1 440 px (ordinateur) et 390 px (téléphone). Entre 900 et 
 
 ## Vérification faite (voir `.verif/`)
 
-`npm run build` sans erreur (19 pages) · `npm run check` : 0 erreur · `npm run dev` : les 17 routes répondent 200, une route inconnue 404 · `node scripts/liens.mjs` : 0 lien cassé · `node scripts/e2e-diagnostic.mjs` : sorties A, B et profil à risque, abandon/reprise, erreurs du gate, lien expiré, aucune erreur console · `npm run verif` : captures 1440 / 390 de chaque page, accueil à 5 positions (hero, pile 3 positions, fermeture) et en mouvement réduit.
+Story 10.3 : `node scripts/e2e-formulaires.mjs` : 25 constats bons sur 25 (voir la story) · `npm run build` sans erreur (19 pages) · `npm run check` : 0 erreur · `npm run dev` : les 17 routes répondent 200, une route inconnue 404 · `node scripts/liens.mjs` : 0 lien cassé · `node scripts/e2e-diagnostic.mjs` : sorties A, B et profil à risque, abandon/reprise, erreurs du gate, lien expiré, aucune erreur console · `npm run verif` : captures 1440 / 390 de chaque page, accueil à 5 positions (hero, pile 3 positions, fermeture) et en mouvement réduit.

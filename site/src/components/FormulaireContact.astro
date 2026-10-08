@@ -2,6 +2,7 @@
 // § 9 Écrire à Anne (CAP-6, D-5) : prénom, nom, e-mail, téléphone obligatoire, « votre projet » vente / achat (préréglé sur achat depuis Acheter), message, deux cases.
 import Champ from './Champ.astro';
 import Case from './Case.astro';
+import ChampPiege from './ChampPiege.astro';
 interface Props { projet?: 'vente' | 'achat'; titre?: string; compact?: boolean }
 const { projet = 'vente', titre = 'Écrire à Anne', compact = false } = Astro.props;
 ---
@@ -25,6 +26,7 @@ const { projet = 'vente', titre = 'Écrire à Anne', compact = false } = Astro.p
       <Champ nom="message" label="Message" type="textarea" requis rows={5} erreur="Écrivez un message." placeholder={projet === 'achat' ? 'Ce que vous cherchez' : undefined} />
       <Case nom="privacy" requis message="Nécessaire pour envoyer.">J'accepte la <a href="/confidentialite">politique de confidentialité</a>. Obligatoire.</Case>
       <Case nom="newsletter">Recevoir la séquence d'e-mails d'Anne. Facultatif.</Case>
+      <ChampPiege />
       <div class="alerte-douce" data-erreurs-globales hidden role="alert"></div>
       <div data-echec hidden tabindex="-1"><div class="alerte" role="alert">L'envoi n'a pas abouti. Votre message est conservé : rien à ressaisir.</div></div>
       <button type="submit" class="btn btn-primaire fc-bouton">Envoyer</button>

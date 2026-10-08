@@ -38,7 +38,8 @@ Mots de passe : jamais dans ce dépôt, jamais manipulés par Claude. Coffre par
 
 1. Domaine acheté chez Infomaniak, serveurs de noms pointés vers Cloudflare (story 12.1).
 2. Cloudflare → projet → Domains → Add Domain : `annevialtissot.fr` ; `.com` en redirection permanente vers `.fr`.
-3. Settings → Build → Variables : ajouter `PUBLIC_INDEXATION` = `oui`, puis relancer un build. Vérifier `/robots.txt` = `Allow: /` et l'absence de `noindex`.
+3. Dans `site/wrangler.jsonc`, passer `ENVIRONNEMENT` à `production` (les e-mails partent alors vers Anne et les prospects, et non plus vers `BOITE_TEST`) et brancher la base `anne-leads` (story 12.4).
+3 bis. Settings → Build → Variables : ajouter `PUBLIC_INDEXATION` = `oui`, puis relancer un build. Vérifier `/robots.txt` = `Allow: /` et l'absence de `noindex`.
 4. Access : retirer la protection sur `annevialtissot.fr` (la garder sur l'adresse `workers.dev`, ou éteindre cette adresse).
 5. Critères de lancement de la story 12.5 tous cochés avant l'étape 3.
 
@@ -87,7 +88,11 @@ Contrôle : `GET /api/sante` répond `{"ok":true,"migrations":N}` (N = nombre de
 |---|---|---|---|
 | `GITHUB_TOKEN` | bouton « Un retour ? » de l'aperçu, tickets d'essai | 2026-09-26 | avant le 2026-09-26 + 1 an (§ 4 bis) |
 | `CAL_WEBHOOK_SECRET` | vérifier que les messages viennent de Cal.com | 2026-10-07 | inventer un nouveau texte, le mettre dans Cloudflare puis dans le webhook Cal.com |
-| `RESEND_API_KEY`, `TURNSTILE_SECRET_KEY` | e-mails (10.3), anti-robot (10.4) | à venir | à la création |
+| `RESEND_API_KEY` | envoyer les e-mails du site (Resend → API Keys, nom `site-anne-cloudflare`, droit « Sending access », domaine `annevialtissot.fr`) | 2026-10-07 | en créer une nouvelle dans Resend, la poser ici, puis supprimer l'ancienne dans Resend |
+| `TURNSTILE_SECRET_KEY` | vérifier le jeton anti-robot des formulaires (Turnstile → `site-anne` → Settings → Secret key) | 2026-10-07 | « Rotate » dans Turnstile, puis poser la nouvelle ici aussitôt (l'ancienne cesse de marcher) |
+| `BOITE_TEST` | adresse qui reçoit **tous** les e-mails tant que le site n'est pas lancé, puis ceux du test quotidien (AD-12) | 2026-10-07 (adresse de JB) | changer la valeur si JB passe la main |
+
+**Formulaires et e-mails (story 10.3)** : les demandes (contact, estimation, guide) sont dans la table `lead`, ce qui doit partir pour chacune dans `lead_delivery` (`status` : `pending`, `delivered`, `failed` ; `last_error` dit pourquoi). Un e-mail en échec est réessayé toutes les 15 minutes, 5 fois au plus. Tant que `ENVIRONNEMENT` vaut `apercu` dans `site/wrangler.jsonc`, chaque demande est marquée test et tous les e-mails vont à `BOITE_TEST`, objet préfixé `[TEST]`. Expéditeur `anne@annevialtissot.fr` (domaine vérifié dans Resend le 2026-10-07) ; les réponses des prospects vont à `BOITE_ANNE` (`avialtissot@gmail.com`, `wrangler.jsonc`). Pour voir ce qui n'est pas parti : Cloudflare → Storage & Databases → D1 → `anne-leads-apercu` → Console : `SELECT lead_id, channel, status, attempts, last_error FROM lead_delivery WHERE status != 'delivered';`. **Reste avant le lancement** : la ligne DMARC dans le DNS Cloudflare de `annevialtissot.fr` (type TXT, nom `_dmarc`, valeur `v=DMARC1; p=quarantine; adkim=r; aspf=r`), exigée par AD-8.
 
 **Redéployer depuis une machine vierge** (AD-10) : `git clone` du dépôt, `cd site && npm ci && npm run build && npx wrangler login && npx wrangler d1 migrations apply DB --remote && npx wrangler deploy`.
 
@@ -106,3 +111,4 @@ Contrôle : `GET /api/sante` répond `{"ok":true,"migrations":N}` (N = nombre de
 - 2026-10-05 (après-midi) : le dossier Drive est rangé comme `contenu-anne/` (mêmes noms, une vente = un dossier `stories/<bien>/` avec ses photos HD). L'ancien dossier « Site web - Anne Immo » est devenu « Contenu site Anne » ; le découpage en 5 sous-dossiers du matin est archivé sous « ARCHIVE - ancien Contenu site Anne (ne plus utiliser) ». Piège : sur Drive, seul le propriétaire d'un fichier peut le déplacer ou le supprimer ; les fichiers déposés par Anne ne peuvent être supprimés que par elle (Claude les renomme « À SUPPRIMER - … »).
 - 2026-10-05 (fin d'après-midi) : espace d'édition Sveltia CMS à `/admin` (décision de JB, story 7.13). Trois éléments à créer par JB : le Worker `sveltia-cms-auth`, l'autorisation OAuth GitHub, l'invitation d'Anne comme collaboratrice. Le Drive reste l'archive des photos HD et des vidéos. Pièges : une autorisation OAuth GitHub voit tous les dépôts du compte qui s'y connecte (sans risque pour Anne, dont le compte n'a que ce dépôt) ; si le Worker est supprimé ou son secret changé, plus personne ne peut se connecter à l'espace d'édition (le site, lui, continue de fonctionner).
 - 2026-10-07 : essai du webhook Cal.com (story 10.1) : ouverture provisoire du chemin `/api/essai-cal` dans Access et secret `CAL_WEBHOOK_SECRET` (§ 2). § 4 quater : création des bases D1 en juridiction UE (story 10.2), écrite avant d'être lancée.
+- 2026-10-07 (soir) : formulaires réels (story 10.3) : secrets `RESEND_API_KEY`, `TURNSTILE_SECRET_KEY` et `BOITE_TEST` posés par JB ; boîte d'Anne `avialtissot@gmail.com` (décision de JB) ; tant que le site n'est pas lancé, tous les e-mails vont à `BOITE_TEST` (§ 4 quater). Reste la ligne DMARC.

@@ -2,3 +2,9 @@
 # En ligne, le même secret se règle dans Cloudflare : projet → Settings → Variables and Secrets (voir RUNBOOK.md § Retours).
 # Clé GitHub à portée réduite : ce dépôt seulement, droit « Issues : lecture et écriture ».
 GITHUB_TOKEN=
+# Formulaires réels (story 10.3). Pour un essai en local, des valeurs factices suffisent avec URL_SERVICES_ESSAI
+# (imitation de Turnstile et de Resend, voir scripts/e2e-formulaires.mjs) ; ne jamais y mettre les vraies clés.
+TURNSTILE_SECRET_KEY=
+RESEND_API_KEY=
+BOITE_TEST=
+URL_SERVICES_ESSAI=

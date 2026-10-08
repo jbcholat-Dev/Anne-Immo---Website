@@ -3,7 +3,7 @@
 import feedbacks from '../content/diagnostic/feedbacks.json';
 import contenu from '../content/diagnostic/questions.json';
 import type { Resultat } from '../lib/scoring';
-import { envoyer } from './formulaires';
+import { envoyerSimule as envoyer } from './formulaires';
 
 type Stocke = Resultat & { prenom: string; email: string; newsletter: boolean; at: number };
 const CLE = 'avt.diagnostic.resultat';

@@ -30,6 +30,6 @@ Le site est servi par le Worker Cloudflare avec l'adaptateur Astro, une base D1 
 - Aperçu de la branche, après construction chez Cloudflare avec les commandes d'origine (commit 440fa57) : `/api/sante` → `{"ok":true,"migrations":2}` (capture de JB). Les migrations ont donc été appliquées pendant la construction sur `anne-leads-apercu` : la clé de construction de Cloudflare a les droits D1.
 
 ## Ce qui reste (après fusion, hors story)
-- Contrôle de `/api/sante` sur l'aperçu principal après la fusion dans `main`.
+- ~~Contrôle de `/api/sante` sur l'aperçu principal après la fusion dans `main`~~ : fait le 2026-10-07 après la fusion de la PR n° 4, `{"ok":true,"migrations":2}` (capture de JB).
 - Exercice de redéploiement depuis une machine vierge (AD-10) : prévu avant le lancement, avec la restauration (story 12.x).
 - Base de production `anne-leads` à brancher au lancement (12.4).

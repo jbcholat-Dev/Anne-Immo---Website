@@ -1,0 +1,10 @@
+---
+// Champ piège (story 10.3, AD-7) : invisible et inaccessible pour un humain (hors écran, ignoré par les lecteurs d'écran,
+// sauté au clavier). Un robot qui remplit tous les champs le remplit aussi : le serveur refuse alors l'envoi.
+---
+<div class="piege" aria-hidden="true">
+  <label>Site web <input type="text" name="site_web" tabindex="-1" autocomplete="off" /></label>
+</div>
+<style>
+  .piege { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+</style>

@@ -1,0 +1,498 @@
+À : boite-test@example.com
+Répondre à : marie+run-muylmjcv@example.com
+Objet : [TEST] Nouvelle demande · Contact (vente) · Marie Essai
+
+(E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
+
+Nouvelle demande reçue par le site le 07/10/2026 23:07 (heure de Paris) : formulaire de contact (vente).
+À faire : répondre sous un jour ouvré (le site le lui a promis).
+
+À recopier dans la fiche contact Modelo :
+
+Nom
+Essai
+
+Prénom
+Marie
+
+Téléphone
++33 6 12 34 56 78
+
+E-mail
+marie+run-muylmjcv@example.com
+
+Type de contact
+Vendeur
+
+Notes
+Bonjour, je vends un T3.
+Demande du 07/10/2026 23:07 via annevialtissot.fr (formulaire de contact (vente)).
+Séquence d'e-mails : non demandée.
+Campagne : essai.
+
+Répondre à cet e-mail écrit directement à Marie Essai.
+Référence de la demande : 01M4C32X4XDWSA7HRZNJRT25V4
+
+==========
+
+À : boite-test@example.com
+Répondre à : avialtissot@gmail.com
+Objet : [TEST] Votre message à Anne VIAL-TISSOT
+
+(E-mail de test : en production, il serait parti vers marie+run-muylmjcv@example.com.)
+
+Bonjour Marie,
+
+Votre message est bien arrivé. Je vous réponds sous un jour ouvré, par e-mail ou au +33 6 12 34 56 78.
+
+Pour rappel, votre message :
+Bonjour, je vends un T3.
+
+Pour ajouter une précision, répondez simplement à cet e-mail.
+
+Anne VIAL-TISSOT
+Consultante en immobilier · Chablais, Léman · réseau eXp France
+https://annevialtissot.fr
+
+==========
+
+À : boite-test@example.com
+Répondre à : marie+run-muylmjcv@example.com
+Objet : [TEST] Nouvelle demande · Contact (vente) · Marie Essai
+
+(E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
+
+Nouvelle demande reçue par le site le 07/10/2026 23:08 (heure de Paris) : formulaire de contact (vente).
+À faire : répondre sous un jour ouvré (le site le lui a promis).
+
+À recopier dans la fiche contact Modelo :
+
+Nom
+Essai
+
+Prénom
+Marie
+
+Téléphone
++33 6 12 34 56 78
+
+E-mail
+marie+run-muylmjcv@example.com
+
+Type de contact
+Vendeur
+
+Notes
+Bonjour, je vends un T3.
+Demande du 07/10/2026 23:08 via annevialtissot.fr (formulaire de contact (vente)).
+Séquence d'e-mails : non demandée.
+Campagne : essai.
+
+Répondre à cet e-mail écrit directement à Marie Essai.
+Référence de la demande : 01M4C33PQCGRA63MM9EVH7BNX0
+
+==========
+
+À : boite-test@example.com
+Répondre à : avialtissot@gmail.com
+Objet : [TEST] Votre message à Anne VIAL-TISSOT
+
+(E-mail de test : en production, il serait parti vers marie+run-muylmjcv@example.com.)
+
+Bonjour Marie,
+
+Votre message est bien arrivé. Je vous réponds sous un jour ouvré, par e-mail ou au +33 6 12 34 56 78.
+
+Pour rappel, votre message :
+Bonjour, je vends un T3.
+
+Pour ajouter une précision, répondez simplement à cet e-mail.
+
+Anne VIAL-TISSOT
+Consultante en immobilier · Chablais, Léman · réseau eXp France
+https://annevialtissot.fr
+
+==========
+
+À : boite-test@example.com
+Répondre à : marie+run-muylmjcv@example.com
+Objet : [TEST] Nouvelle demande · Contact (vente) · Marie Essai
+
+(E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
+
+Nouvelle demande reçue par le site le 07/10/2026 23:08 (heure de Paris) : formulaire de contact (vente).
+À faire : répondre sous un jour ouvré (le site le lui a promis).
+
+À recopier dans la fiche contact Modelo :
+
+Nom
+Essai
+
+Prénom
+Marie
+
+Téléphone
++33 6 12 34 56 78
+
+E-mail
+marie+run-muylmjcv@example.com
+
+Type de contact
+Vendeur
+
+Notes
+Bonjour, je vends un T3.
+Demande du 07/10/2026 23:08 via annevialtissot.fr (formulaire de contact (vente)).
+Séquence d'e-mails : non demandée.
+Campagne : essai.
+
+Répondre à cet e-mail écrit directement à Marie Essai.
+Référence de la demande : 01M4C33PR9M788Z7716BE93Y1G
+
+==========
+
+À : boite-test@example.com
+Répondre à : avialtissot@gmail.com
+Objet : [TEST] Votre message à Anne VIAL-TISSOT
+
+(E-mail de test : en production, il serait parti vers marie+run-muylmjcv@example.com.)
+
+Bonjour Marie,
+
+Votre message est bien arrivé. Je vous réponds sous un jour ouvré, par e-mail ou au +33 6 12 34 56 78.
+
+Pour rappel, votre message :
+Bonjour, je vends un T3.
+
+Pour ajouter une précision, répondez simplement à cet e-mail.
+
+Anne VIAL-TISSOT
+Consultante en immobilier · Chablais, Léman · réseau eXp France
+https://annevialtissot.fr
+
+==========
+
+À : boite-test@example.com
+Répondre à : marie+run-muylmjcv@example.com
+Objet : [TEST] Nouvelle demande · Contact (vente) · Marie Essai
+
+(E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
+
+Nouvelle demande reçue par le site le 07/10/2026 23:08 (heure de Paris) : formulaire de contact (vente).
+À faire : répondre sous un jour ouvré (le site le lui a promis).
+
+À recopier dans la fiche contact Modelo :
+
+Nom
+Essai
+
+Prénom
+Marie
+
+Téléphone
++33 6 12 34 56 78
+
+E-mail
+marie+run-muylmjcv@example.com
+
+Type de contact
+Vendeur
+
+Notes
+Bonjour, je vends un T3.
+Demande du 07/10/2026 23:08 via annevialtissot.fr (formulaire de contact (vente)).
+Séquence d'e-mails : non demandée.
+Campagne : essai.
+
+Répondre à cet e-mail écrit directement à Marie Essai.
+Référence de la demande : 01M4C33PS3N7HXKPHRHHHB2CBG
+
+==========
+
+À : boite-test@example.com
+Répondre à : avialtissot@gmail.com
+Objet : [TEST] Votre message à Anne VIAL-TISSOT
+
+(E-mail de test : en production, il serait parti vers marie+run-muylmjcv@example.com.)
+
+Bonjour Marie,
+
+Votre message est bien arrivé. Je vous réponds sous un jour ouvré, par e-mail ou au +33 6 12 34 56 78.
+
+Pour rappel, votre message :
+Bonjour, je vends un T3.
+
+Pour ajouter une précision, répondez simplement à cet e-mail.
+
+Anne VIAL-TISSOT
+Consultante en immobilier · Chablais, Léman · réseau eXp France
+https://annevialtissot.fr
+
+==========
+
+À : boite-test@example.com
+Répondre à : marie+run-muylmjcv@example.com
+Objet : [TEST] Nouvelle demande · Contact (vente) · Marie Essai
+
+(E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
+
+Nouvelle demande reçue par le site le 07/10/2026 23:08 (heure de Paris) : formulaire de contact (vente).
+À faire : répondre sous un jour ouvré (le site le lui a promis).
+
+À recopier dans la fiche contact Modelo :
+
+Nom
+Essai
+
+Prénom
+Marie
+
+Téléphone
++33 6 12 34 56 78
+
+E-mail
+marie+run-muylmjcv@example.com
+
+Type de contact
+Vendeur
+
+Notes
+Bonjour, je vends un T3.
+Demande du 07/10/2026 23:08 via annevialtissot.fr (formulaire de contact (vente)).
+Séquence d'e-mails : non demandée.
+Campagne : essai.
+
+Répondre à cet e-mail écrit directement à Marie Essai.
+Référence de la demande : 01M4C33PT2P0HGZD7DW8D9GXBV
+
+==========
+
+À : boite-test@example.com
+Répondre à : avialtissot@gmail.com
+Objet : [TEST] Votre message à Anne VIAL-TISSOT
+
+(E-mail de test : en production, il serait parti vers marie+run-muylmjcv@example.com.)
+
+Bonjour Marie,
+
+Votre message est bien arrivé. Je vous réponds sous un jour ouvré, par e-mail ou au +33 6 12 34 56 78.
+
+Pour rappel, votre message :
+Bonjour, je vends un T3.
+
+Pour ajouter une précision, répondez simplement à cet e-mail.
+
+Anne VIAL-TISSOT
+Consultante en immobilier · Chablais, Léman · réseau eXp France
+https://annevialtissot.fr
+
+==========
+
+À : boite-test@example.com
+Répondre à : marie+run-muylmjcv@example.com
+Objet : [TEST] Nouvelle demande · Contact (vente) · Marie Essai
+
+(E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
+
+Nouvelle demande reçue par le site le 07/10/2026 23:08 (heure de Paris) : formulaire de contact (vente).
+À faire : répondre sous un jour ouvré (le site le lui a promis).
+
+À recopier dans la fiche contact Modelo :
+
+Nom
+Essai
+
+Prénom
+Marie
+
+Téléphone
++33 6 12 34 56 78
+
+E-mail
+marie+run-muylmjcv@example.com
+
+Type de contact
+Vendeur
+
+Notes
+Bonjour, je vends un T3.
+Demande du 07/10/2026 23:08 via annevialtissot.fr (formulaire de contact (vente)).
+Séquence d'e-mails : non demandée.
+Campagne : essai.
+
+Répondre à cet e-mail écrit directement à Marie Essai.
+Référence de la demande : 01M4C33PTV0Z8R41EWF3TJ188P
+
+==========
+
+À : boite-test@example.com
+Répondre à : avialtissot@gmail.com
+Objet : [TEST] Votre message à Anne VIAL-TISSOT
+
+(E-mail de test : en production, il serait parti vers marie+run-muylmjcv@example.com.)
+
+Bonjour Marie,
+
+Votre message est bien arrivé. Je vous réponds sous un jour ouvré, par e-mail ou au +33 6 12 34 56 78.
+
+Pour rappel, votre message :
+Bonjour, je vends un T3.
+
+Pour ajouter une précision, répondez simplement à cet e-mail.
+
+Anne VIAL-TISSOT
+Consultante en immobilier · Chablais, Léman · réseau eXp France
+https://annevialtissot.fr
+
+==========
+
+À : boite-test@example.com
+Répondre à : paul+run-muylmjcv@example.com
+Objet : [TEST] Nouvelle demande · Guide · Paul Guide
+
+(E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
+
+Nouvelle demande reçue par le site le 07/10/2026 23:08 (heure de Paris) : demande du guide « Les 10 erreurs fatales ».
+À faire : envoyer le guide à la main. Le site ne l'envoie pas encore tout seul (story 10.5) : répondez à cet e-mail avec le PDF en pièce jointe.
+
+À recopier dans la fiche contact Modelo :
+
+Nom
+Guide
+
+Prénom
+Paul
+
+Téléphone
+non indiqué
+
+E-mail
+paul+run-muylmjcv@example.com
+
+Type de contact
+Vendeur
+
+Notes
+Demande du 07/10/2026 23:08 via annevialtissot.fr (demande du guide « Les 10 erreurs fatales »).
+Séquence d'e-mails : acceptée.
+
+Répondre à cet e-mail écrit directement à Paul Guide.
+Référence de la demande : 01M4C33PW30FYBGMP817J3QZ2V
+
+==========
+
+À : boite-test@example.com
+Répondre à : marie+run-muylmjcv@example.com
+Objet : [TEST] Nouvelle demande · Estimation · Marie Essai
+
+(E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
+
+Nouvelle demande reçue par le site le 07/10/2026 23:08 (heure de Paris) : demande d'estimation.
+À faire : rappeler sous un jour ouvré (le site le lui a promis).
+
+À recopier dans la fiche contact Modelo :
+
+Nom
+Essai
+
+Prénom
+Marie
+
+Téléphone
++33 6 12 34 56 78
+
+E-mail
+marie+run-muylmjcv@example.com
+
+Type de contact
+Vendeur
+
+Commune du bien
+Thonon-les-Bains
+
+Type de bien
+Appartement
+
+Notes
+Demande du 07/10/2026 23:08 via annevialtissot.fr (demande d'estimation).
+Séquence d'e-mails : non demandée.
+Campagne : essai.
+
+Répondre à cet e-mail écrit directement à Marie Essai.
+Référence de la demande : 01M4C33XQMX46JK605FBPQ0QB7
+
+==========
+
+À : boite-test@example.com
+Répondre à : avialtissot@gmail.com
+Objet : [TEST] Votre demande d'estimation à Anne VIAL-TISSOT
+
+(E-mail de test : en production, il serait parti vers marie+run-muylmjcv@example.com.)
+
+Bonjour Marie,
+
+Votre demande d'estimation est bien arrivée. Je vous rappelle sous un jour ouvré au +33 6 12 34 56 78, pour quelques questions sur votre bien à Thonon-les-Bains, puis nous fixerons une visite. Aucun chiffre n'est donné par écrit avant cette visite.
+
+Pour ajouter une précision, répondez simplement à cet e-mail.
+
+Anne VIAL-TISSOT
+Consultante en immobilier · Chablais, Léman · réseau eXp France
+https://annevialtissot.fr
+
+==========
+
+À : boite-test@example.com
+Répondre à : jeanne+run-muylmjcv@example.com
+Objet : [TEST] Nouvelle demande · Contact (vente) · Jeanne Navigateur
+
+(E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
+
+Nouvelle demande reçue par le site le 07/10/2026 23:08 (heure de Paris) : formulaire de contact (vente).
+À faire : répondre sous un jour ouvré (le site le lui a promis).
+
+À recopier dans la fiche contact Modelo :
+
+Nom
+Navigateur
+
+Prénom
+Jeanne
+
+Téléphone
++33 6 98 76 54 32
+
+E-mail
+jeanne+run-muylmjcv@example.com
+
+Type de contact
+Vendeur
+
+Notes
+Essai depuis le navigateur.
+Demande du 07/10/2026 23:08 via annevialtissot.fr (formulaire de contact (vente)).
+Séquence d'e-mails : non demandée.
+Campagne : navigateur.
+
+Répondre à cet e-mail écrit directement à Jeanne Navigateur.
+Référence de la demande : 01M4C347QC22XP0C1R7AD26X85
+
+==========
+
+À : boite-test@example.com
+Répondre à : avialtissot@gmail.com
+Objet : [TEST] Votre message à Anne VIAL-TISSOT
+
+(E-mail de test : en production, il serait parti vers jeanne+run-muylmjcv@example.com.)
+
+Bonjour Jeanne,
+
+Votre message est bien arrivé. Je vous réponds sous un jour ouvré, par e-mail ou au +33 6 98 76 54 32.
+
+Pour rappel, votre message :
+Essai depuis le navigateur.
+
+Pour ajouter une précision, répondez simplement à cet e-mail.
+
+Anne VIAL-TISSOT
+Consultante en immobilier · Chablais, Léman · réseau eXp France
+https://annevialtissot.fr
