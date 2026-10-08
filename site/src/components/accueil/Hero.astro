@@ -2,6 +2,7 @@
 // § 1.1 Ouverture (D-1, D-19, D-10) : vidéo drone plein cadre 900 px, voile, bloc nom + positionnement + CTA posé en bas (84 px).
 // A-01 réelle (story 8.3, D-27) : le montage d'Anne (52 s depuis le 2026-10-05, story 7.15) tourne en boucle, sans son ; le poster est sa première image, affichée
 // pendant le chargement ; le <picture> derrière est le repli (mouvement réduit, échec de chargement, économie de données).
+// Deux boutons (retour d'Anne, ticket #40) : le diagnostic, et « Estimation offerte » vers l'agenda de /contact#reserver.
 // Les fichiers vidéo sont produits par `npm run video` (scripts/video.mjs) ; s'ils manquent, la balise <video> est masquée.
 import fs from 'node:fs';
 import Picture from '../Picture.astro';
@@ -28,7 +29,10 @@ const videoDispo = fs.existsSync(new URL('../../../public/video/ouverture.mp4', 
     <h1 id="hero-titre" data-reveal="titre">Anne <span class="hero-nom">VIAL‑TISSOT</span></h1>
     <Signature largeur={260} hauteur={10} class="hero-signature" />
     <p class="hero-ligne" data-reveal="petit">{d.accueil.hero_ligne}</p>
-    <a href={r('diagnostic', lang)} class="btn btn-primaire hero-cta" data-reveal="petit"><span class="seulement-desktop">{d.accueil.hero_cta}</span><span class="seulement-mobile">{d.accueil.hero_cta_m}</span></a>
+    <div class="hero-boutons" data-reveal="petit">
+      <a href={r('diagnostic', lang)} class="btn btn-primaire"><span class="seulement-desktop">{d.accueil.hero_cta}</span><span class="seulement-mobile">{d.accueil.hero_cta_m}</span></a>
+      <a href={`${r('contact', lang)}#reserver`} class="btn btn-contour-ecru">{d.accueil.hero_estimation}</a>
+    </div>
   </div>
 </section>
 
@@ -43,7 +47,7 @@ const videoDispo = fs.existsSync(new URL('../../../public/video/ouverture.mp4', 
   .hero h1 { font-size: 96px; letter-spacing: .02em; line-height: 1; color: var(--avt-ecru); white-space: nowrap; }
   .hero-signature { margin-top: 14px; }
   .hero-ligne { font-size: 19px; line-height: 1.5; margin-top: 18px; color: var(--avt-ecru); max-width: 44ch; }
-  .hero-cta { margin-top: 32px; }
+  .hero-boutons { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
   @media (prefers-reduced-motion: reduce) { .hero-video { display: none; } }
   @media (max-width: 899px) {
     .hero { height: 780px; }
@@ -53,7 +57,7 @@ const videoDispo = fs.existsSync(new URL('../../../public/video/ouverture.mp4', 
     .hero-nom { display: block; }
     .hero-signature { width: 150px !important; height: 8px !important; margin-top: 10px; }
     .hero-ligne { font-size: 16px; margin-top: 14px; }
-    .hero-cta { margin-top: 22px; }
+    .hero-boutons { margin-top: 22px; }
   }
 </style>
 

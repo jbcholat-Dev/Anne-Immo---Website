@@ -1120,6 +1120,22 @@ afin de revenir à la page d'accueil sans deviner que le symbole y mène.
 
 **État :** fait (2026-10-04). Responsable : Claude ; origine : ticket GitHub n° 3 (`retour-apercu`).
 
+### Story 8.7: Retours d'Anne du 7 octobre
+
+En tant qu'Anne,
+je veux que le site dise « Réalisations » au pluriel, titre l'index « Quelques réalisations » et propose une estimation offerte dès l'accueil,
+afin qu'on ne croie pas que je n'ai vendu que les biens montrés, et qu'un vendeur prenne rendez-vous en un clic.
+
+**Critères d'acceptation :**
+
+**Étant donné** les retours d'aperçu n° 39, 40 et 42 d'Anne (2026-10-07)
+**Quand** on parcourt le site en français
+**Alors** l'entrée de navigation s'appelle « Réalisations », l'index est titré « Quelques réalisations » (D-29)
+**Et** l'ouverture de l'accueil porte un second bouton « Estimation offerte » vers `/contact#reserver`, le diagnostic restant le bouton principal (D-30)
+**Et** rien ne déborde à 900 px ni sur téléphone.
+
+**État :** en relecture (2026-10-08). Responsable : Claude ; origine : tickets n° 39, 40, 42 (`retour-apercu`). Le ticket n° 41 (stories Sciez et Bernex) attend le texte d'Anne (fil Contenu du site).
+
 
 # Mise en ligne d'aperçu, référencement et lancement public (epics 9, 11 et 12)
 
