@@ -1134,7 +1134,7 @@ afin qu'on ne croie pas que je n'ai vendu que les biens montrés, et qu'un vende
 **Et** l'ouverture de l'accueil porte un second bouton « Estimation offerte » vers `/contact#reserver`, le diagnostic restant le bouton principal (D-30)
 **Et** rien ne déborde à 900 px ni sur téléphone.
 
-**État :** en relecture (2026-10-08). Responsable : Claude ; origine : tickets n° 39, 40, 42 (`retour-apercu`). Le ticket n° 41 (stories Sciez et Bernex) attend le texte d'Anne (fil Contenu du site).
+**État :** fait (2026-10-08, PR #48). Responsable : Claude ; origine : tickets n° 39, 40, 42 (`retour-apercu`). Le ticket n° 41 (stories Sciez et Bernex) attend le texte d'Anne (fil Contenu du site).
 
 
 # Mise en ligne d'aperçu, référencement et lancement public (epics 9, 11 et 12)
