@@ -1151,6 +1151,22 @@ afin que mon nom et mes titres restent lisibles même en petit, et que le texte 
 
 **État :** fait (2026-10-08), PR #49 fusionnée par JB. Responsable : Claude ; décision : Anne (proposition), JB (fusion).
 
+### Story 8.9: Retours du 8 octobre
+
+En tant qu'Anne,
+je veux être présentée comme « conseillère en immobilier », une accroche qui dit ma méthode, ma présentation plus haut sur l'accueil, les parties Cible et Réseau eXp modifiables dans l'espace d'édition, et des photos de ventes qu'on peut agrandir,
+afin que le site parle de moi comme je me présente et que je puisse en écrire le contenu moi-même.
+
+**Critères d'acceptation :**
+
+**Étant donné** les retours d'aperçu n° 57 à 64 (2026-10-08)
+**Quand** on parcourt l'accueil, À propos et une fiche de vente
+**Alors** « consultante » n'apparaît plus, la pile s'intitule « Des ventes gérées comme des projets », le bloc Anne suit les ventes (D-32, D-33)
+**Et** Cible et Réseau eXp sont lus dans `contenu-anne/pages/a-propos/fr.md`, le refrain a disparu d'À propos, « Parlons de votre projet » porte un bouton de rendez-vous (D-34)
+**Et** un clic sur une photo de vente ouvre une visionneuse navigable au clavier et au doigt (D-35), sans débordement à 900 px ni sur téléphone.
+
+**État :** en relecture (2026-10-08). Responsable : Claude ; origine : tickets n° 57 à 64 (`retour-apercu`).
+
 
 # Mise en ligne d'aperçu, référencement et lancement public (epics 9, 11 et 12)
 

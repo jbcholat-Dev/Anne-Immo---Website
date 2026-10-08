@@ -102,11 +102,19 @@ export async function portraitAnne(): Promise<string | null> {
  * - « # Ma méthode : sous-titre », son premier paragraphe en introduction ;
  * - « ## …piliers » : un rang par paragraphe « **Nom :** texte » ;
  * - « ## Concrètement… » : un rang par titre « ### 1. Titre » ; une liste « Nom (précision) » devient la grille des partenaires ;
- * - tout autre « ## » : un rang simple (titre + texte).
+ * - tout autre « ## » : un rang simple (titre + texte) ;
+ * - « # Cible » : un paragraphe d'introduction, puis un profil par titre « ## » (retour d'Anne n° 61, story 8.9) ;
+ * - « # Réseau eXp » : un texte libre, avec ses éventuels titres « ## » (retour d'Anne n° 58, story 8.9).
+ * Ces deux parties sont facultatives : absentes, la page garde ses textes par défaut.
  */
 export type BlocTexte = { titre: string; html: string };
 export type RangMethode = { chapeau: string; titre: string; html: string; partenaires?: [string, string][]; niveau: 3 | 4 };
-export type APropos = { sousTitre?: string; qui: BlocTexte[]; methode: { titre: string; sous?: string; intro: string; rangs: RangMethode[]; concretement?: string } };
+export type APropos = {
+  sousTitre?: string; qui: BlocTexte[];
+  methode: { titre: string; sous?: string; intro: string; rangs: RangMethode[]; concretement?: string };
+  cible?: { titre: string; intro: string; profils: BlocTexte[] };
+  reseau?: { titre: string; html: string };
+};
 
 const sansBalises = (h: string) => h.replace(/<[^>]+>/g, '').replace(/&#x27;|&#39;/g, '’').replace(/&quot;/g, '"').replace(/&amp;/g, '&').trim();
 function decouper(html: string, niveau: 1 | 2 | 3): { titre: string; html: string }[] {
@@ -128,7 +136,12 @@ export async function aPropos(): Promise<APropos | null> {
   const page = await getEntry('pages', 'a-propos');
   const html = page?.rendered?.html;
   if (!page || !html) return null;
-  const parties = decouper(nettoyer(html), 1);
+  const toutes = decouper(nettoyer(html), 1);
+  const estCible = (t: string) => /^cible/i.test(t);
+  const estReseau = (t: string) => /r[ée]seau/i.test(t);
+  const pc = toutes.find((p) => estCible(p.titre));
+  const pr = toutes.find((p) => estReseau(p.titre));
+  const parties = toutes.filter((p) => !estCible(p.titre) && !estReseau(p.titre));
   const iMethode = parties.findIndex((p) => /m[ée]thode/i.test(p.titre));
   const avant = iMethode < 0 ? parties : parties.slice(0, iMethode);
   const qui = avant.flatMap((p) => decouper(p.html, 2)).filter((b) => b.titre || nettoyer(b.html)).map((b) => ({ titre: b.titre, html: nettoyer(b.html) }));
@@ -162,5 +175,11 @@ export async function aPropos(): Promise<APropos | null> {
       rangs.push({ chapeau: /engagement/i.test(s.titre) ? 'Engagement' : '', titre: s.titre, html: nettoyer(s.html), niveau: 3 });
     }
   }
-  return { sousTitre: page.data.sous_titre?.trim() || undefined, qui, methode: { titre: titre || 'Ma méthode', sous, intro: nettoyer(tete.html), rangs, concretement } };
+  let cible: APropos['cible'];
+  if (pc) {
+    const [intro, ...profils] = decouper(pc.html, 2);
+    cible = { titre: pc.titre, intro: nettoyer(intro.html), profils: profils.map((b) => ({ titre: b.titre, html: nettoyer(b.html) })) };
+  }
+  const reseau = pr && nettoyer(pr.html) ? { titre: pr.titre, html: nettoyer(pr.html) } : undefined;
+  return { sousTitre: page.data.sous_titre?.trim() || undefined, qui, methode: { titre: titre || 'Ma méthode', sous, intro: nettoyer(tete.html), rangs, concretement }, cible, reseau };
 }

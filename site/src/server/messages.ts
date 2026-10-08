@@ -89,8 +89,8 @@ function reponsesLisibles(l: LigneLead): string[] {
   });
 }
 
-const SIGNATURE = 'Anne VIAL-TISSOT\nConsultante en immobilier · Chablais, Léman · réseau eXp France\nhttps://annevialtissot.fr';
-const SIGNATURE_EN = 'Anne VIAL-TISSOT\nReal estate consultant · Chablais, Lake Geneva · eXp France network\nhttps://annevialtissot.fr';
+const SIGNATURE = 'Anne VIAL-TISSOT\nConseillère en immobilier · Chablais, Léman · réseau eXp France\nhttps://annevialtissot.fr';
+const SIGNATURE_EN = 'Anne VIAL-TISSOT\nReal estate advisor · Chablais, Lake Geneva · eXp France network\nhttps://annevialtissot.fr';
 
 export function notifierAnne(l: LigneLead): Message {
   const nomComplet = [l.prenom, l.nom].filter(Boolean).join(' ');

@@ -1,5 +1,7 @@
 ---
-// 07 À propos (D-11, D-12, D-15) : une page longue à trois ancres — Qui suis-je ? · Ma méthode · Cible — repère collant, sans le bloc vidéo A-15 (absent : pas de trou).
+// 07 À propos (D-11, D-12, D-15) : une page longue à quatre ancres — Qui suis-je ? · Ma méthode · Cible · Réseau eXp — repère collant, sans le bloc vidéo A-15 (absent : pas de trou).
+// Story 8.9 (retours d'Anne n° 58 à 61) : Cible et Réseau eXp lus dans le texte d'Anne (modifiables dans l'espace d'édition), refrain retiré,
+// « Mon engagement » et « Parlons de votre projet » centrés, bouton de rendez-vous sous « Parlons de votre projet ».
 import Page from '../layouts/Page.astro';
 import Reserve from '../components/Reserve.astro';
 import Portrait from '../components/Portrait.astro';
@@ -10,17 +12,20 @@ import { aPropos } from '../lib/contenu';
 import { r } from '../i18n';
 const page = await getEntry('pages', 'a-propos');
 const video = page?.data.video ?? null; // D-12 : le bloc vidéo n'apparaît que si la vidéo existe
-const refrain = ['Pas de mauvaise surprise.', 'Pas de dossier qui traîne.', 'Des ventes qui vont au bout.'];
 // Textes de « Qui suis-je ? » et « Ma méthode » : ceux de contenu-anne/pages/a-propos/fr.md, modifiables dans l'espace d'édition (story 7.17).
 const texte = await aPropos();
 if (!texte) throw new Error('contenu-anne/pages/a-propos/fr.md introuvable ou vide');
 const { qui, methode } = texte;
-const cibles = [
+// Profils par défaut, si le texte d'Anne n'a pas de partie « # Cible ».
+const ciblesDefaut = [
   ['Primo-accédants', 'Un premier achat, un budget à cadrer, un financement à monter avant la première visite.'],
   ['Investisseurs', 'Rendement, fiscalité, revente : le bien est regardé comme un actif, pas comme un coup de cœur.'],
   ['Cadres en mobilité', 'Une arrivée ou un départ daté, un calendrier qui ne bouge pas, souvent à distance.'],
   ['Seniors', 'Une vente de transition, un bien de famille, des délais qui demandent de la patience.'],
 ];
+const cible = texte.cible;
+const reseau = texte.reseau;
+const centre = (t: string) => /engagement|parlons/i.test(t);
 ---
 <Page titre="À propos — Anne VIAL-TISSOT" description="Le parcours, la méthode — bon sens, rigueur et pragmatisme — et les profils qu'Anne accompagne. Une seule page, trois temps de lecture." courante="apropos">
   <div class="ap-tete">
@@ -35,6 +40,7 @@ const cibles = [
       <a href="#qui-suis-je" data-cible="qui-suis-je" aria-current="true">Qui suis-je ?</a>
       <a href="#methode" data-cible="methode">Ma méthode</a>
       <a href="#cible" data-cible="cible">Cible</a>
+      {reseau && <a href="#reseau-exp" data-cible="reseau-exp">Réseau eXp</a>}
     </nav>
   </div>
 
@@ -52,7 +58,6 @@ const cibles = [
         {b.titre && <h3 class="chapeau">{b.titre}</h3>}
         <div class="ap-md" set:html={b.html} />
       </>)}
-      <div class="ap-refrain">{refrain.map((l) => <div>{l}</div>)}</div>
       <p>Parce que le Léman attire une clientèle internationale, je travaille en français, en anglais, en espagnol et en portugais.</p>
       <p class="ap-langues seulement-mobile">FRANÇAIS · ENGLISH · ESPAÑOL · PORTUGUÊS</p>
       <div class="ap-boutons">
@@ -83,25 +88,42 @@ const cibles = [
         const [avant, apres] = rg.html.split('<!--grille-->');
         return <>
           {premierConcret && <div class="ap-rang-filet ap-concretement"><h3>{methode.concretement}</h3></div>}
-          <div class:list={['ap-rang', { 'ap-rang-filet': rg.niveau === 3 }]}>
+          <div class:list={['ap-rang', { 'ap-rang-filet': rg.niveau === 3, 'ap-rang-centre': rg.niveau === 3 && centre(rg.titre) }]}>
             <div>{rg.chapeau && <div class="chapeau">{rg.chapeau}</div>}{rg.niveau === 3 ? <h3>{rg.titre}</h3> : <h4>{rg.titre}</h4>}</div>
             <div class="ap-rang-texte ap-md">
               <Fragment set:html={avant} />
               {rg.partenaires && <div class="ap-partenaires">{rg.partenaires.map(([n, d]) => <div>{n}<br /><span class="texte-muet">{d}</span></div>)}</div>}
               {apres && <Fragment set:html={apres} />}
+              {/parlons/i.test(rg.titre) && (
+                <div class="ap-boutons">
+                  <a href={`${r('contact')}#reserver`} class="btn btn-primaire btn-m">Réserver un créneau</a>
+                  <a href={`${r('contact')}#ecrire`} class="btn btn-secondaire btn-m">Écrire à Anne</a>
+                </div>
+              )}
             </div>
           </div>
         </>;
       })}
     </div>
-    <div class="ap-refrain-grand">{refrain.map((l) => <div>{l}</div>)}</div>
   </section>
 
   <section id="cible" class="ap-cible" aria-labelledby="cible-titre">
-    <div class="ap-cible-tete"><h2 id="cible-titre">Cible</h2><span class="marqueur">Point ouvert 1 · contenu à écrire par Anne</span></div>
-    <p class="ap-cible-intro">Quatre profils qu'Anne accompagne le plus souvent.</p>
-    <div class="ap-cibles">{cibles.map(([t, x]) => <div><h3 class="chapeau">{t}</h3><p>{x}</p></div>)}</div>
+    {cible ? <>
+      <div class="ap-cible-tete"><h2 id="cible-titre">{cible.titre}</h2></div>
+      {cible.intro && <div class="ap-cible-intro ap-md" set:html={cible.intro} />}
+      <div class="ap-cibles">{cible.profils.map((b) => <div><h3 class="chapeau">{b.titre}</h3><div class="ap-md" set:html={b.html} /></div>)}</div>
+    </> : <>
+      <div class="ap-cible-tete"><h2 id="cible-titre">Cible</h2><span class="marqueur">Point ouvert 1 · contenu à écrire par Anne</span></div>
+      <p class="ap-cible-intro">Quatre profils qu'Anne accompagne le plus souvent.</p>
+      <div class="ap-cibles">{ciblesDefaut.map(([t, x]) => <div><h3 class="chapeau">{t}</h3><p>{x}</p></div>)}</div>
+    </>}
   </section>
+  {reseau && (
+    <section id="reseau-exp" class="ap-reseau" aria-labelledby="reseau-titre">
+      <h2 id="reseau-titre">{reseau.titre}</h2>
+      <div class="ap-reseau-texte ap-md" set:html={reseau.html.replace(/<(\/?)h2/g, '<$1h3')} />
+    </section>
+  )}
   <div class="ap-espace"></div>
   <CtaFin titre="Où en est votre vente ?" texte="Trois minutes, un score, un plan d'action." />
 </Page>
@@ -152,7 +174,6 @@ const cibles = [
   .ap-rang-texte.ap-md :global(* + *) { margin-top: 16px; }
   .ap-rang-texte.ap-md :global(.ap-partenaires) { margin-top: 20px; }
   .ap-methode-intro.ap-md :global(p) { margin-bottom: 0; }
-  .ap-refrain { font-family: var(--avt-font-display); font-size: 40px; line-height: 1.2; margin-bottom: 40px; }
   .ap-boutons { display: flex; gap: 14px; flex-wrap: wrap; }
   .ap-methode { border-top: 1px solid var(--filet-brun-fort); padding-top: 8px; }
   .ap-video { margin: 0 var(--marge); background: var(--avt-galet); border-radius: 16px; padding: 40px 48px; }
@@ -164,6 +185,8 @@ const cibles = [
   .ap-methode-tete :global(.ap-situation) { height: 360px; }
   .ap-piliers { padding: 0 var(--marge) 96px; display: flex; flex-direction: column; gap: 64px; }
   .ap-rang { display: grid; grid-template-columns: 320px 1fr; gap: 80px; }
+  .ap-rang-centre { grid-template-columns: minmax(320px, 420px) 1fr; align-items: center; }
+  .ap-rang-centre .ap-boutons { margin-top: 24px; }
   .ap-rang-filet { border-top: 1px solid var(--avt-brun); padding-top: 36px; }
   .ap-rang .chapeau { margin-bottom: 12px; }
   .ap-rang h3 { font-size: 44px; }
@@ -175,7 +198,6 @@ const cibles = [
   .ap-partenaires { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
   .ap-partenaires div { background: var(--avt-galet); border-radius: 10px; padding: 16px; font-size: 14px; line-height: 1.4; }
   .ap-coordonne { font-weight: 500; color: var(--avt-klein); }
-  .ap-refrain-grand { padding: 0 var(--marge) 96px; font-family: var(--avt-font-display); font-size: 56px; line-height: 1.15; max-width: 22ch; }
   .ap-cible { background: var(--avt-brume); padding: 96px var(--marge); }
   .ap-cible-tete { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
   .ap-cible h2 { font-size: 48px; }
@@ -184,6 +206,11 @@ const cibles = [
   .ap-cibles div { border-top: 1px solid var(--avt-brun); padding-top: 18px; }
   .ap-cibles h3 { font-family: var(--avt-font-text); margin: 0 0 10px; }
   .ap-cibles p { font-size: 16px; line-height: 1.6; }
+  .ap-cibles .ap-md :global(p) { margin-bottom: 0; }
+  .ap-reseau { padding: 96px var(--marge); display: grid; grid-template-columns: 320px 1fr; gap: 80px; border-bottom: 1px solid var(--filet-brun); }
+  .ap-reseau h2 { font-size: 48px; }
+  .ap-reseau-texte { max-width: 64ch; font-size: 17px; line-height: 1.7; }
+  .ap-reseau-texte :global(h3) { font-size: 28px; margin: 28px 0 10px; }
   .ap-espace { height: 96px; }
   /* Largeurs intermédiaires (900 à 1199 px, sans artboard) : colonnes proportionnelles, sinon le texte déborde (story 8.2) */
   @media (min-width: 900px) and (max-width: 1199px) {
@@ -212,7 +239,6 @@ const cibles = [
     .ap-md :global(p:has(+ ul)) { margin-bottom: 12px; }
     .ap-rang-texte.ap-md :global(p), .ap-rang-texte.ap-md :global(ul), .ap-methode-intro.ap-md :global(p) { margin-bottom: 0; }
     .ap-texte p.ap-intro-liste { margin-bottom: 12px; }
-    .ap-refrain { font-size: 30px; margin-bottom: 30px; }
     .ap-langues.seulement-mobile { font-size: 12.5px; margin-bottom: 28px; }
     .ap-boutons { flex-direction: column; }
     .ap-methode { padding-top: 20px; }
@@ -232,12 +258,14 @@ const cibles = [
     .ap-rang-texte { font-size: 16px; line-height: 1.6; }
     .ap-partenaires { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
     .ap-partenaires div { padding: 14px; line-height: 1.35; }
-    .ap-refrain-grand { padding: 0 var(--marge-m) 48px; font-size: 32px; }
     .ap-cible { padding: 56px var(--marge-m); }
     .ap-cible h2 { font-size: 34px; }
     .ap-cible-intro { font-size: 16px; margin-bottom: 28px; }
     .ap-cibles { grid-template-columns: 1fr; gap: 22px; }
     .ap-cibles p { font-size: 15.5px; }
+    .ap-reseau { padding: 56px var(--marge-m); display: block; }
+    .ap-reseau h2 { font-size: 34px; margin-bottom: 18px; }
+    .ap-reseau-texte { font-size: 16px; line-height: 1.6; }
     .ap-espace { height: 48px; }
   }
 </style>

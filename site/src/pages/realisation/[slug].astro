@@ -2,6 +2,7 @@
 // 06 Story — fiche d'une vente : photo maîtresse, contexte, récit d'Anne, témoignages (vendeur / acheteur, rôle affiché), galerie, CTA.
 import Page from '../../layouts/Page.astro';
 import Picture from '../../components/Picture.astro';
+import { image } from '../../lib/images';
 import Reserve from '../../components/Reserve.astro';
 import CtaFin from '../../components/CtaFin.astro';
 import { render } from 'astro:content';
@@ -16,6 +17,12 @@ const { Content } = await render(story);
 const photos = photosDeStory(story);
 const principale = photos.find((p) => p.role === 'principale');
 const secondaires = photos.filter((p) => p.role === 'secondaire');
+// Visionneuse (retour de JB n° 64, story 8.9) : un clic sur une photo l'agrandit ; flèches, boutons ou glissé pour passer à la suivante.
+const vues = [principale, ...secondaires].filter((p) => p && image(p.cle)).map((p) => {
+  const img = image(p!.cle)!;
+  return { src: img.webp.at(-1)?.src ?? img.jpg, l: img.largeur, h: img.hauteur };
+});
+const decalage = principale && image(principale.cle) ? 1 : 0;
 // Témoignages : ceux du front matter (A-07) d'abord ; sinon les avis Immodvisor reliés (v1) ; sinon bloc réservé.
 const propres = story.data.temoignages.filter((t) => t.citation);
 const avis = propres.length ? [] : await avisDeStory(story.id);
@@ -27,7 +34,7 @@ const alt = `${story.data.type_bien} vendu à ${story.data.commune}`;
 ---
 <Page titre={`${story.data.commune} — Réalisations — Anne VIAL-TISSOT`} description={(story.data.particularite ?? '').trim()} courante="realisation">
   <div class="story-photo">
-    {principale ? <Picture id={principale.cle} alt={alt} sizes="100vw" loading="eager" fetchpriority="high" /> : <Reserve label={`A-02 · photo maîtresse · ${story.data.commune} · 16:9 plein cadre`} style="height:100%" />}
+    {principale ? <button type="button" class="zoom" data-zoom="0" aria-label="Agrandir la photo"><Picture id={principale.cle} alt={alt} sizes="100vw" loading="eager" fetchpriority="high" /></button> : <Reserve label={`A-02 · photo maîtresse · ${story.data.commune} · 16:9 plein cadre`} style="height:100%" />}
   </div>
   <div class="story-corps">
     <aside class="story-contexte">
@@ -61,12 +68,68 @@ const alt = `${story.data.type_bien} vendu à ${story.data.commune}`;
   </div>
   {secondaires.length > 0 && (
     <div class="story-galerie" aria-label="Galerie">
-      {secondaires.map((p) => <div class="story-galerie-photo"><Picture id={p.cle} alt={alt} sizes="(max-width: 899px) 240px, 25vw" /></div>)}
+      {secondaires.map((p, i) => <button type="button" class="story-galerie-photo zoom" data-zoom={i + decalage} aria-label={`Agrandir la photo ${i + decalage + 1} sur ${vues.length}`}><Picture id={p.cle} alt={alt} sizes="(max-width: 899px) 240px, 25vw" /></button>)}
     </div>
+  )}
+  {vues.length > 0 && (
+    <dialog class="visionneuse" data-visionneuse data-vues={JSON.stringify(vues)} aria-label={`Photos · ${story.data.commune}`}>
+      <img alt={alt} data-vue />
+      <button type="button" class="visionneuse-btn visionneuse-fermer" data-fermer aria-label="Fermer">✕</button>
+      {vues.length > 1 && <>
+        <button type="button" class="visionneuse-btn visionneuse-prec" data-prec aria-label="Photo précédente">‹</button>
+        <button type="button" class="visionneuse-btn visionneuse-suiv" data-suiv aria-label="Photo suivante">›</button>
+        <p class="visionneuse-compte" data-compte aria-live="polite"></p>
+      </>}
+    </dialog>
   )}
   <CtaFin titre="Et votre vente ?" texte="Trois minutes pour savoir où elle en est, ou un créneau pour en parler." />
 </Page>
+<script>
+  const d = document.querySelector<HTMLDialogElement>('[data-visionneuse]');
+  if (d) {
+    const vues: { src: string; l: number; h: number }[] = JSON.parse(d.dataset.vues ?? '[]');
+    const img = d.querySelector<HTMLImageElement>('[data-vue]')!;
+    const compte = d.querySelector<HTMLElement>('[data-compte]');
+    let i = 0;
+    const montrer = (n: number) => {
+      i = (n + vues.length) % vues.length;
+      img.src = vues[i].src; img.width = vues[i].l; img.height = vues[i].h;
+      if (compte) compte.textContent = `${i + 1} / ${vues.length}`;
+    };
+    document.querySelectorAll<HTMLElement>('[data-zoom]').forEach((b) => b.addEventListener('click', () => { montrer(Number(b.dataset.zoom)); d.showModal(); }));
+    d.querySelector('[data-prec]')?.addEventListener('click', () => montrer(i - 1));
+    d.querySelector('[data-suiv]')?.addEventListener('click', () => montrer(i + 1));
+    d.querySelector('[data-fermer]')?.addEventListener('click', () => d.close());
+    d.addEventListener('click', (e) => { if (e.target === d) d.close(); }); // clic hors de la photo
+    d.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') { e.preventDefault(); montrer(i - 1); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); montrer(i + 1); }
+    });
+    let x0 = 0; // glissé du doigt sur téléphone
+    d.addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; }, { passive: true });
+    d.addEventListener('touchend', (e) => { const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 40) montrer(i + (dx < 0 ? 1 : -1)); });
+  }
+</script>
+
 <style>
+  .zoom { display: block; width: 100%; height: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
+  .visionneuse { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: rgba(28, 24, 20, .94); }
+  .visionneuse[open] { display: flex; align-items: center; justify-content: center; }
+  .visionneuse::backdrop { background: rgba(28, 24, 20, .94); }
+  .visionneuse img { max-width: calc(100vw - 160px); max-height: calc(100dvh - 120px); width: auto; height: auto; object-fit: contain; border-radius: 6px; }
+  .visionneuse-btn { position: absolute; width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(247, 242, 234, .5); background: rgba(38, 32, 26, .5); color: var(--avt-ecru); font-size: 28px; line-height: 1; cursor: pointer; }
+  .visionneuse-btn:hover { background: rgba(247, 242, 234, .16); }
+  .visionneuse-fermer { top: 24px; right: 24px; font-size: 20px; }
+  .visionneuse-prec { left: 24px; top: 50%; transform: translateY(-50%); }
+  .visionneuse-suiv { right: 24px; top: 50%; transform: translateY(-50%); }
+  .visionneuse-compte { position: absolute; bottom: 24px; left: 0; right: 0; text-align: center; color: var(--avt-ecru); font-size: 14px; letter-spacing: .08em; }
+  @media (max-width: 899px) {
+    .visionneuse img { max-width: 100vw; max-height: calc(100dvh - 140px); border-radius: 0; }
+    .visionneuse-btn { width: 48px; height: 48px; }
+    .visionneuse-prec, .visionneuse-suiv { top: auto; bottom: 16px; transform: none; }
+    .visionneuse-fermer { top: 16px; right: 16px; }
+    .visionneuse-compte { bottom: 30px; }
+  }
   .story-photo { height: 640px; background: var(--avt-galet); overflow: hidden; }
   .story-photo :global(picture), .story-photo :global(img) { width: 100%; height: 100%; }
   .story-photo :global(img) { object-fit: cover; }

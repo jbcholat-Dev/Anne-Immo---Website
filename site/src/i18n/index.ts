@@ -33,6 +33,7 @@ export const routes = {
   qui: { fr: '/a-propos#qui-suis-je', en: '/a-propos#qui-suis-je' },
   methode: { fr: '/a-propos#methode', en: '/a-propos#methode' },
   cible: { fr: '/a-propos#cible', en: '/a-propos#cible' },
+  reseau: { fr: '/a-propos#reseau-exp', en: '/a-propos#reseau-exp' },
   vendre: { fr: '/vendre', en: '/vendre' },
   acheter: { fr: '/acheter', en: '/acheter' },
   diagnostic: { fr: '/diagnostic', en: '/diagnostic' },
