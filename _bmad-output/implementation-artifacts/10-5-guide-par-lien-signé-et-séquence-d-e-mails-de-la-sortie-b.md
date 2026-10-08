@@ -48,6 +48,14 @@ Le prospect reçoit le guide par un lien personnel valable 7 jours et, s'il l'a 
 - `PUBLIC_INDEXATION=oui npm run build` échoue avec « Lancement refusé : … (etape-1 … etape-6, guide.md) ».
 - `npm run build` sans erreur ; `npm run check` : 0 erreur ; `node scripts/liens.mjs` : 24 pages, 1466 liens, 0 cassé ; `npm run verif` : aucune erreur console ; `node scripts/ecrans.mjs` : rien à signaler. Captures `.verif/guide-confirmation.png`, `.verif/resultats-guide-envoye.png` et `.verif/desabonnement.png` regardées.
 
+## Vérifié en ligne (2026-10-08, après la fusion de la PR n° 51, par JB)
+- Secret `LIEN_SECRET` posé dans Cloudflare.
+- Demande du guide sur `/guide` : e-mail « [TEST] Votre guide « Les 10 erreurs fatales des vendeurs particuliers » » reçu avec son lien ; le lien ouvre le PDF ; « Ouvrir le guide maintenant » aussi (captures de JB).
+- Séquence : les 6 lignes `sequence:1` à `sequence:6` créées en base ; échéance avancée par JB dans la console D1 pour l'essai.
+
+## Correction après l'essai (2026-10-08)
+- Le PDF suivait encore l'ancienne charte et collait deux éléments du texte : la checklist numérotée (un seul paragraphe) et le tableau de suivi (barres verticales affichées). `scripts/guide-pdf.mjs` gère désormais les listes numérotées et les tableaux (intertitre gardé sur la même page) et prend les polices de la charte v3 (Gilda Display, Jost, story 8.8). PDF refait (10 pages). `npm run build` sans erreur, `e2e-guide` : tous les constats bons.
+
 ## Ce qui reste
 - JB : poser `LIEN_SECRET` dans Cloudflare (J31), fusionner, puis essayer sur l'aperçu (demande du guide, lien, désabonnement).
 - Anne : relire le guide et les 6 e-mails, puis passer leur `statut` à `publie` (Claude refait alors le PDF). Sans cela, le lancement est refusé.
