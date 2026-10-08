@@ -1,7 +1,7 @@
 ---
 story: 10.5
 epic: 10 — Capture des leads et backend
-statut: review
+statut: done
 date: 2026-10-08
 ---
 
@@ -53,9 +53,13 @@ Le prospect reçoit le guide par un lien personnel valable 7 jours et, s'il l'a 
 - Demande du guide sur `/guide` : e-mail « [TEST] Votre guide « Les 10 erreurs fatales des vendeurs particuliers » » reçu avec son lien ; le lien ouvre le PDF ; « Ouvrir le guide maintenant » aussi (captures de JB).
 - Séquence : les 6 lignes `sequence:1` à `sequence:6` créées en base ; échéance avancée par JB dans la console D1 pour l'essai ; les 6 passées en `delivered` à 12:30 UTC, e-mails reçus (« Pourquoi votre bien est invisible… », « Comment arrêter de perdre votre temps en visites inutiles »…). Retour de JB : la mise en page des e-mails (texte brut) est à reprendre, d'où la story 10.9.
 
+- Désabonnement : bouton « Arrêter les e-mails » d'un e-mail de la séquence → page « C'est fait : vous ne recevrez plus la série de conseils d'Anne » (capture de JB).
+
 ## Correction après l'essai (2026-10-08)
 - Le PDF suivait encore l'ancienne charte et collait deux éléments du texte : la checklist numérotée (un seul paragraphe) et le tableau de suivi (barres verticales affichées). `scripts/guide-pdf.mjs` gère désormais les listes numérotées et les tableaux (intertitre gardé sur la même page) et prend les polices de la charte v3 (Gilda Display, Jost, story 8.8). PDF refait (10 pages). `npm run build` sans erreur, `e2e-guide` : tous les constats bons.
 
+- Objet du 6e e-mail : « [Prénom], on fait le point ? » partait tel quel. `sujetEtape()` (`src/server/sequence.ts`) remplace le prénom dans l'objet comme dans le texte (sans prénom, l'objet commence par « On fait… »). Nouveau constat dans `e2e-guide` : « objet du dernier e-mail avec le prénom : [TEST] Bruno, on fait le point ? ». `npm run check` : 0 erreur, `e2e-guide` : tous les constats bons.
+
 ## Ce qui reste
-- JB : poser `LIEN_SECRET` dans Cloudflare (J31), fusionner, puis essayer sur l'aperçu (demande du guide, lien, désabonnement).
+- Mise en page des e-mails : story 10.9.
 - Anne : relire le guide et les 6 e-mails, puis passer leur `statut` à `publie` (Claude refait alors le PDF). Sans cela, le lancement est refusé.
