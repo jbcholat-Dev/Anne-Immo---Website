@@ -1,7 +1,7 @@
 ---
 story: 8.7
 epic: 8 — Site : finitions
-statut: review
+statut: done
 date: 2026-10-08
 origine: tickets GitHub n° 39, 40, 41 et 42 (retour-apercu, Anne, 2026-10-07)
 ---
@@ -31,4 +31,4 @@ Traiter les quatre retours laissés par Anne sur l'aperçu le 2026-10-07 avec le
 
 ## Ce qui reste
 - Ticket n° 41 (Sciez, Bernex) : Anne doit écrire quelques lignes sur chaque vente ; le fil Contenu du site les met au format du site.
-- Fermer les tickets n° 39, 40 et 42 en citant le commit une fois la PR fusionnée par JB.
+- Tickets n° 39, 40 et 42 fermés le 2026-10-08 en citant le commit a876386 (PR #48, fusionnée par JB).
