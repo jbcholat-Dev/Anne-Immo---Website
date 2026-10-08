@@ -1134,7 +1134,7 @@ afin qu'on ne croie pas que je n'ai vendu que les biens montrés, et qu'un vende
 **Et** l'ouverture de l'accueil porte un second bouton « Estimation offerte » vers `/contact#reserver`, le diagnostic restant le bouton principal (D-30)
 **Et** rien ne déborde à 900 px ni sur téléphone.
 
-**État :** en relecture (2026-10-08). Responsable : Claude ; origine : tickets n° 39, 40, 42 (`retour-apercu`). Le ticket n° 41 (stories Sciez et Bernex) attend le texte d'Anne (fil Contenu du site).
+**État :** fait (2026-10-08, PR #48). Responsable : Claude ; origine : tickets n° 39, 40, 42 (`retour-apercu`). Le ticket n° 41 (stories Sciez et Bernex) attend le texte d'Anne (fil Contenu du site).
 
 ### Story 8.8: Typographies de la charte v3
 
@@ -1947,3 +1947,16 @@ afin de ne pas dépendre d'un réglage invisible.
 **Quand** le site est construit
 **Alors** la photo remplace le bloc A-04 sur À propos, l'accueil et le diagnostic
 **Et** un chemin `photos/x.webp` (dossier `contenu-anne/photos/`) reste accepté
+
+### Story 7.19: Ventes de Sciez et de Bernex
+
+En tant qu'Anne,
+je veux que mes ventes de Sciez et de Bernex figurent sur la page Réalisation,
+afin de montrer toutes mes ventes photographiées.
+
+**Critères d'acceptation :**
+
+**Étant donné** les fiches `sciez-villa-2025` et `bernex-chalet-2024` complétées par Anne (récit, photos) dans l'espace d'édition
+**Quand** elles passent en « publie »
+**Alors** elles apparaissent sur la page Réalisation et ont leur page
+**Et** le récit est celui d'Anne, jamais un texte inventé
