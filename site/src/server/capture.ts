@@ -1,8 +1,9 @@
-// Traitement commun des formulaires contact, estimation et guide (story 10.3, AD-4, AD-7).
+// Traitement commun des formulaires contact, estimation, guide (story 10.3) et du gate du diagnostic (story 10.4), AD-4, AD-7.
 // Dans l'ordre : barrières anti-robot, validation du contenu, écriture en base, réponse au visiteur ;
 // les e-mails partent ensuite, sans faire attendre le visiteur (et sans jamais le mettre en échec).
 import type { APIContext } from 'astro';
 import { diffuser } from './delivery';
+import { evaluer, type Diagnostic } from './diagnostic';
 import { enProduction, envSite } from './env';
 import { empreinte, journal } from './journal';
 import { ecrireLead } from './leads';
@@ -28,7 +29,7 @@ const refus = (code: string, champ?: string) =>
 
 export async function traiterCapture(source: SourceFormulaire, { request, locals }: APIContext): Promise<Response> {
   const env = envSite;
-  if (Number(request.headers.get('content-length') ?? 0) > 20_000) return refus('REQUETE_INVALIDE');
+  if (Number(request.headers.get('content-length') ?? 0) > 40_000) return refus('REQUETE_INVALIDE');
   let d: Record<string, unknown>;
   try {
     d = (await request.json()) as Record<string, unknown>;
@@ -54,11 +55,21 @@ export async function traiterCapture(source: SourceFormulaire, { request, locals
     journal('capture_refusee', { source, code: 'CHAMP_INVALIDE', champ: verdict.champ });
     return refus('CHAMP_INVALIDE', verdict.champ);
   }
+  // Diagnostic : réponses revérifiées, score calculé ici, jamais dans le navigateur (AD-5).
+  let diag: Diagnostic | null = null;
+  if (source === 'diagnostic') {
+    const evaluation = evaluer(d);
+    if (!evaluation.ok) {
+      journal('capture_refusee', { source, code: 'CHAMP_INVALIDE', champ: evaluation.champ });
+      return refus('CHAMP_INVALIDE', evaluation.champ);
+    }
+    diag = evaluation.diagnostic;
+  }
 
   const isTest = !enProduction(env);
   let ecriture;
   try {
-    ecriture = await ecrireLead(env, verdict.lead, submissionId, isTest);
+    ecriture = await ecrireLead(env, verdict.lead, submissionId, isTest, diag);
   } catch (e) {
     journal('base_indisponible', { source, erreur: String(e).slice(0, 200) });
     return refus('BASE_INDISPONIBLE');
@@ -69,5 +80,7 @@ export async function traiterCapture(source: SourceFormulaire, { request, locals
   const cf = (locals as { cfContext?: ExecutionContext }).cfContext;
   if (cf) cf.waitUntil(envoi);
   else await envoi;
-  return Response.json({ ok: true }, { headers: ENTETES });
+  // Diagnostic : la page de résultats, liée au jeton du lead (celui du premier envoi si c'est un renvoi).
+  const suite = source === 'diagnostic' && ecriture.token ? { url: `/diagnostic/resultats?t=${ecriture.token}` } : {};
+  return Response.json({ ok: true, ...suite }, { headers: ENTETES });
 }

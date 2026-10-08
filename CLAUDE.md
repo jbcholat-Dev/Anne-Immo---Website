@@ -76,7 +76,7 @@ npm run check        # vérification des types
 npm run verif        # captures d'écran de chaque page (ordinateur + téléphone) dans site/.verif
 node scripts/liens.mjs         # vérifie que chaque lien mène quelque part
 node scripts/ecrans.mjs        # signale tout débordement ou bouton trop petit, page par page et largeur par largeur
-node scripts/e2e-diagnostic.mjs # parcourt le diagnostic de bout en bout
+node scripts/e2e-diagnostic.mjs # diagnostic de bout en bout sur le serveur local (préalable : site/README.md)
 ```
 
 ## 5. Règles de contenu et de sécurité

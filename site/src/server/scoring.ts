@@ -1,5 +1,5 @@
-// Scoring du diagnostic (CAP-4, CAP-7) depuis bareme.json — partagé par l'îlot (v1, client) et, plus tard, le noyau serveur (AD-5).
-// TODO(backend) : en production le barème n'est lu que par le serveur ; le client ne calcule rien avant le gate.
+// Scoring du diagnostic (CAP-4, CAP-7) depuis bareme.json. Lu seulement par le serveur depuis la story 10.4 (AD-5) :
+// le navigateur ne connaît ni le barème ni le score avant d'avoir laissé ses coordonnées.
 import bareme from '../content/diagnostic/bareme.json';
 
 export type Reponses = Record<string, string[]>;

@@ -1,12 +1,13 @@
 ---
 // Lockup co-brandé Anne + eXp (AD-17 : consommé tel quel depuis design-system/assets, jamais recoloré).
 // D-21 : version négative sans le cercle écru → le cercle (liseré) est retiré à l'inclusion. Les ids internes sont rendus uniques.
-import fs from 'node:fs';
-import path from 'node:path';
+// Les SVG sont inclus à la construction (import ?raw), pas lus sur le disque au rendu : la page de résultats du diagnostic
+// est rendue par le serveur (story 10.4), où le dossier design-system n'existe pas.
+import svgNegatif from '../../../design-system/assets/lockup-exp-horizontal-negatif.svg?raw';
+import svgPositif from '../../../design-system/assets/lockup-exp-horizontal.svg?raw';
 interface Props { variante?: 'negatif' | 'positif'; largeur?: number; class?: string }
 const { variante = 'negatif', largeur = 488, class: cls = '' } = Astro.props;
-const fichier = variante === 'negatif' ? 'lockup-exp-horizontal-negatif.svg' : 'lockup-exp-horizontal.svg';
-let svg = fs.readFileSync(path.resolve(process.cwd(), '../design-system/assets', fichier), 'utf8');
+let svg = variante === 'negatif' ? svgNegatif : svgPositif;
 const uid = `lk${variante}${Math.random().toString(36).slice(2, 7)}`;
 svg = svg
   .replace(/<\?xml[^>]*>\s*/g, '')

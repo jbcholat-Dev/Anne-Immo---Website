@@ -1,15 +1,16 @@
 // Îlot diagnostic — raison : les 17 écrans du parcours (état par identifiants qNN, indépendant de la langue), reprise localStorage,
-// confirmation d'abandon, gate de capture, puis calcul du score et redirection vers /diagnostic/resultats.
-// v1 SANS SERVEUR : le score est calculé ici et le résultat stocké dans sessionStorage. TODO(backend, AD-5) : POST /api/diagnostic
-// (réponses + coordonnées + journey_id + utm), jeton serveur à usage unique, résultats rendus par le noyau, jamais dans le navigateur avant soumission.
+// confirmation d'abandon, gate de capture, puis envoi au serveur et redirection vers la page de résultats (story 10.4).
+// Le navigateur ne calcule rien : POST /api/diagnostic (réponses par identifiants + coordonnées + journey_id + utm + submission_id),
+// le serveur calcule le score et renvoie l'adresse des résultats, liée à un jeton (AD-5). Les réponses restent sur l'appareil
+// jusqu'au succès ; « Renvoyer » réutilise la même clé submission_id (AD-4).
 import contenu from '../content/diagnostic/questions.json';
-import { calculer, type Reponses } from '../lib/scoring';
-import { telephoneValide, emailValide, envoyerSimule as envoyer } from './formulaires';
+import { telephoneValide, emailValide, envoyer, ulid } from './formulaires';
+
+type Reponses = Record<string, string[]>;
 
 type Ecran = (typeof contenu.ecrans)[number];
-type Etat = { ecran: number; reponses: Reponses; autre: Record<string, string>; texte: string; journey_id: string; utm: Record<string, string> };
+type Etat = { ecran: number; reponses: Reponses; autre: Record<string, string>; texte: string; journey_id: string; utm: Record<string, string>; submission_id?: string };
 const CLE = 'avt.diagnostic.v1';
-const CLE_RESULTAT = 'avt.diagnostic.resultat';
 const ECRANS = contenu.ecrans as Ecran[];
 const N = ECRANS.length; // 17
 const categories = contenu.categories as Record<string, { libelle: string }>;
@@ -24,7 +25,6 @@ if (racine) {
 
   const utm: Record<string, string> = {};
   new URLSearchParams(location.search).forEach((v, k) => { if (k.startsWith('utm_')) utm[k] = v; });
-  const ulid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 12);
 
   const charger = (): Etat | null => { try { return JSON.parse(localStorage.getItem(CLE) ?? 'null'); } catch { return null; } };
   const sauver = () => { try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch { /* stockage indisponible : le parcours continue en mémoire */ } };
@@ -111,11 +111,13 @@ if (racine) {
   function rendreGate() {
     majProgression(N - 1);
     if (repere) repere.textContent = '';
-    const res = calculer(etat.reponses);
+    etat.submission_id ??= ulid(); // gardée jusqu'au succès : un renvoi ne crée jamais un second lead
+    sauver();
     zone.innerHTML = html`<div class="qz-gate">
-      <div class="qz-gate-tete"><div class="chapeau-muet">Votre diagnostic est prêt</div><div class="qz-gate-score"><b>${res.total}</b><span>/ 100</span></div>
-      <p>Le détail par axe et vos recommandations s'affichent une fois vos coordonnées renseignées.</p></div>
+      <div class="qz-gate-tete"><div class="chapeau-muet">Votre diagnostic est prêt</div><h1 class="qz-gate-titre">Votre score et vos recommandations</h1>
+      <p>Votre score sur 100, le détail par axe et vos recommandations s'affichent une fois vos coordonnées renseignées.</p></div>
       <form data-gate novalidate>
+        <div class="piege" aria-hidden="true" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden"><label>Site web <input type="text" name="site_web" tabindex="-1" autocomplete="off"></label></div>
         <label class="champ">Prénom<input type="text" name="prenom" required autocomplete="given-name" aria-describedby="g1"><span class="champ-erreur" id="g1"></span></label>
         <label class="champ">Nom<input type="text" name="nom" required autocomplete="family-name" aria-describedby="g2"><span class="champ-erreur" id="g2"></span></label>
         <label class="champ">E-mail<input type="email" name="email" required autocomplete="email" aria-describedby="g3"><span class="champ-erreur" id="g3"></span></label>
@@ -123,13 +125,14 @@ if (racine) {
         <label class="case" data-case style="margin-top:6px"><input type="checkbox" name="privacy" required><span>J'accepte que mes coordonnées servent à m'envoyer ce diagnostic et à me recontacter. <a href="/confidentialite">Politique de confidentialité</a>.<span class="case-message" data-case-message hidden>Nécessaire pour recevoir le diagnostic.</span></span></label>
         <label class="case" data-case><input type="checkbox" name="newsletter"><span>Je souhaite recevoir la séquence d'e-mails d'Anne (7 jours, désinscription à tout moment). Facultatif.</span></label>
         <div class="alerte-douce" data-gate-erreurs hidden role="alert"></div>
-        <div data-gate-echec hidden><div class="alerte" role="alert">L'envoi n'a pas abouti. Vos réponses et vos coordonnées sont conservées : rien à ressaisir.</div></div>
+        <div data-gate-echec hidden><div class="alerte" role="alert" data-gate-echec-texte>L'envoi n'a pas abouti. Vos réponses et vos coordonnées sont conservées : rien à ressaisir.</div></div>
         <button type="submit" class="btn btn-primaire" style="min-height:56px;margin-top:8px" data-gate-bouton>Voir mon diagnostic</button>
         <p class="qz-mention">Finalité : envoi du diagnostic et prise de contact. Conservation 3 ans. Responsable : Anne Vial-Tissot.</p>
       </form></div>`;
     const form = zone.querySelector<HTMLFormElement>('[data-gate]')!;
     const erreurs = form.querySelector<HTMLElement>('[data-gate-erreurs]')!;
     const echec = form.querySelector<HTMLElement>('[data-gate-echec]')!;
+    const texteEchec = form.querySelector<HTMLElement>('[data-gate-echec-texte]')!;
     const bouton = form.querySelector<HTMLButtonElement>('[data-gate-bouton]')!;
     const champ = (n: string) => form.querySelector<HTMLInputElement>(`[name="${n}"]`)!;
     const erreur = (n: string, id: string, msg: string | null) => { const c = champ(n); const z = form.querySelector<HTMLElement>(`#${id}`)!; z.textContent = msg ?? ''; if (msg) c.setAttribute('aria-invalid', 'true'); else c.removeAttribute('aria-invalid'); return msg ? 1 : 0; };
@@ -150,12 +153,18 @@ if (racine) {
       if (n) { form.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus(); return; }
       bouton.setAttribute('aria-busy', 'true'); bouton.disabled = true; bouton.textContent = 'Envoi en cours…';
       const coord = Object.fromEntries(new FormData(form).entries());
-      const r = await envoyer('diagnostic', { submission_id: ulid(), journey_id: etat.journey_id, utm: etat.utm, reponses: etat.reponses, autre: etat.autre, message: etat.texte, ...coord });
+      form.dataset.submission = etat.submission_id;
+      const r = await envoyer(form, 'diagnostic', { journey_id: etat.journey_id, utm: etat.utm, reponses: etat.reponses, autre: etat.autre, message: etat.texte.trim(), ...coord });
       bouton.removeAttribute('aria-busy'); bouton.disabled = false; bouton.textContent = 'Voir mon diagnostic';
-      if (!r.ok) { echec.hidden = false; bouton.textContent = 'Renvoyer'; return; }
-      try { sessionStorage.setItem(CLE_RESULTAT, JSON.stringify({ ...res, prenom: coord.prenom, email: coord.email, newsletter: !!coord.newsletter, at: Date.now() })); } catch { /* ignoré */ }
+      if (!r.ok || !r.url) {
+        const champs: Record<string, [string, string]> = { prenom: ['g1', 'Indiquez votre prénom.'], nom: ['g2', 'Indiquez votre nom.'], email: ['g3', 'Cette adresse ne semble pas complète.'], telephone: ['g4', 'Ce numéro ne semble pas valable.'] };
+        const c = champs[r.error?.champ ?? ''];
+        if (c) { erreur(r.error!.champ!, c[0], c[1]); champ(r.error!.champ!).focus(); }
+        texteEchec.textContent = r.error?.message ?? "L'envoi n'a pas abouti. Vos réponses et vos coordonnées sont conservées : rien à ressaisir.";
+        echec.hidden = false; bouton.textContent = 'Renvoyer'; return;
+      }
       try { localStorage.removeItem(CLE); } catch { /* ignoré */ }
-      location.href = '/diagnostic/resultats';
+      location.href = r.url;
     });
   }
 
