@@ -90,7 +90,7 @@ export function notifierAnne(l: LigneLead): Message {
       `Sortie ${l.orientation} : ${l.orientation === 'A' ? 'prospect qualifié, la page lui propose un rendez-vous de 30 minutes' : 'prospect à accompagner, la page lui propose le guide'}.`,
       ...(l.message ? [`Message libre (question 15) : ${l.message}`] : []),
       'Réponses :',
-      ...reponsesLisibles(l),
+      ...reponsesLisibles(l).map((r, i, t) => (i === t.length - 1 ? `${r}\n` : r)), // ligne vide avant la date de la demande
     ] : [l.message ?? '']),
     `Demande du ${dateParis(l.created_at)} via annevialtissot.fr (${ORIGINE[l.source] ?? l.source}${detail}).`,
     `Séquence d'e-mails : ${l.newsletter_opt_in_at ? 'acceptée' : 'non demandée'}.`,
