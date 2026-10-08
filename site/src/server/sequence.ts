@@ -76,6 +76,13 @@ export function lignesSequence(env: EnvSite, leadId: string, lang: Langue, inscr
   );
 }
 
+/** L'objet d'un e-mail de la séquence, prénom remplacé (sans prénom : « [Prénom], on fait… » devient « On fait… »). */
+export function sujetEtape(e: EtapeSequence, prenom: string | null): string {
+  if (prenom) return e.sujet.replace(/\[Prénom\]/g, prenom);
+  const s = e.sujet.replace(/\[Prénom\],?\s*/g, '').trim();
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 /** Le texte d'un e-mail de la séquence, prêt à envoyer en texte brut : prénom remplacé, marques Markdown retirées. */
 export function texteEtape(e: EtapeSequence, prenom: string | null): string {
   return e.corps

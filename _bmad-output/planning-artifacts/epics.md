@@ -1583,6 +1583,26 @@ afin qu'aucun lead ne se perde en silence et que la mesure d'audience se fasse s
 
 **État :** à faire ; responsable : Claude, prérequis : 10.4 (gate serveur à tester), 10.7 (admin pour les compteurs), compte Better Stack au nom d'Anne avec JB invité, fichiers concernés : `site/worker.ts`, `site/src/server/adapters/monitoring.ts`, `site/src/server/funnel.ts`, `site/src/pages/api/funnel.ts`, `site/migrations/0003-funnel-event.sql`, `site/src/islands/diagnostic.ts`, `site/src/pages/admin/…`, `RUNBOOK.md`, durée estimée : 1 session (une journée).
 
+### Story 10.9: E-mails du site à la charte
+
+Ajoutée le 2026-10-08 à la demande de JB, après l'essai de la séquence sur l'aperçu : les e-mails partent en texte brut, sans mise en page.
+
+En tant qu'Anne,
+je veux que les e-mails que le site envoie en mon nom aient la même allure que mon site,
+afin que le prospect reconnaisse ma marque et lise volontiers la séquence jusqu'au bout.
+
+**Critères d'acceptation :**
+
+**Étant donné** les e-mails reçus par les prospects (accusés de réception, guide, résumé du diagnostic, 6 e-mails de la séquence)
+**Quand** ils partent
+**Alors** ils sont envoyés en HTML à la charte (logo, couleurs, titres, listes, encadrés, bouton pour les liens), lisibles sur téléphone et dans Gmail, Outlook et Apple Mail, avec une version texte jointe pour les messageries qui n'affichent pas le HTML (AD-8)
+**Et** les textes d'Anne restent la seule source : la mise en page est appliquée par un gabarit commun, sans réécrire les fichiers de `contenu-anne/guide/sequence-emails/`
+**Et** la notification à Anne reste en texte brut, pour être recopiée telle quelle dans Modelo.
+
+**Étant donné** le gabarit
+**Quand** JB et Anne le relisent
+**Alors** une maquette d'e-mail est validée avant le branchement, et les captures de chaque e-mail (ordinateur et téléphone) sont citées dans la story.
+
 ## Epic 11: Référencement et visibilité
 
 Le site d'Anne est trouvé par les vendeurs et acheteurs du Chablais qui cherchent sur Google, et pas seulement par ceux qui ont l'adresse.

@@ -2,7 +2,7 @@
 import bareme from '../content/diagnostic/bareme.json';
 import contenu from '../content/diagnostic/questions.json';
 import type { Scores } from './diagnostic';
-import { texteEtape, type EtapeSequence } from './sequence';
+import { sujetEtape, texteEtape, type EtapeSequence } from './sequence';
 
 // - notify_anne : prévient Anne d'une demande, prêt à recopier dans la fiche contact Modelo (AD-14) :
 //   un bloc par champ, dans l'ordre de la fiche (Nom, Prénom, Téléphone, E-mail, Type de contact, Commune, Type de bien, Notes).
@@ -230,5 +230,5 @@ export function etapeSequence(l: LigneLead, e: EtapeSequence, lienDesabonnement:
   const pied = l.lang === 'en'
     ? `You receive this e-mail because you asked for Anne's advice series. To stop: ${lienDesabonnement}`
     : `Vous recevez cet e-mail parce que vous avez demandé la série de conseils d'Anne. Pour ne plus la recevoir : ${lienDesabonnement}`;
-  return { objet: e.sujet, texte: [texteEtape(e, l.prenom), '', '—', pied, '', l.lang === 'en' ? SIGNATURE_EN : SIGNATURE].join('\n') };
+  return { objet: sujetEtape(e, l.prenom), texte: [texteEtape(e, l.prenom), '', '—', pied, '', l.lang === 'en' ? SIGNATURE_EN : SIGNATURE].join('\n') };
 }

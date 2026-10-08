@@ -171,6 +171,13 @@ try {
   constat(txtSeq.includes(`Séquence de ${etapes.length} e-mails confirmée. Le premier arrive dans ${etapes[0].delai} jours`) && (lienDesabo ?? '').includes(`/desabonnement?l=${lead4.id}`), `inscription : « Séquence de ${etapes.length} e-mails confirmée. Le premier arrive dans ${etapes[0].delai} jours », lien de désinscription signé`);
   constat(sql(`SELECT count(*) AS n FROM lead_delivery WHERE lead_id = '${lead4.id}' AND channel LIKE 'sequence:%'`)[0].n === etapes.length, 'inscription depuis les résultats : la séquence est prévue');
   await page.screenshot({ path: path.join(OUT, 'resultats-guide-envoye.png'), fullPage: true });
+  // Le dernier e-mail porte « [Prénom] » dans son objet : il doit être remplacé (retour de JB du 2026-10-08).
+  const derniere = etapes.at(-1);
+  sql(`UPDATE lead_delivery SET due_at = '2000-01-01T00:00:00.000Z' WHERE lead_id = '${lead4.id}' AND channel = 'sequence:${derniere.etape}'`);
+  await appeler(`${U}/cdn-cgi/handler/scheduled`);
+  await attendre(lead4.id, `sequence:${derniere.etape}`);
+  const eDer = mails(lead4.id).find((e) => e.idempotence.endsWith(`:sequence:${derniere.etape}`));
+  constat(eDer?.subject === `[TEST] ${derniere.sujet.replace(/\[Prénom\]/g, 'Bruno')}` && !eDer.subject.includes('[Prénom]'), `objet du dernier e-mail avec le prénom : « ${eDer?.subject} »`);
   await page.goto(lienDesabo, { waitUntil: 'networkidle' });
   await page.screenshot({ path: path.join(OUT, 'desabonnement.png') });
   await page.click('[data-desabonner]');
