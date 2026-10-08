@@ -26,6 +26,13 @@ Chaque page lisible et fidèle à la maquette, du téléphone (390 px) au grand 
 - Captures à 1 000 px (guide, À propos, diagnostic, fiche de vente) et 1 280 px (guide) relues : rien ne déborde, rien ne se chevauche.
 - `npm run build` : 19 pages. `npm run check` : 0 erreur. `node scripts/liens.mjs` : 0 lien cassé.
 
+## Journal des petits défauts visuels
+Chaque défaut signalé (bouton « Un retour ? » de l'aperçu, capture envoyée dans le projet) est noté ici, avec sa correction. Un défaut qui demande un vrai choix de design devient une story à part.
+
+| Date | Page, largeur | Défaut | Signalé par | Correction | Vérifié |
+|---|---|---|---|---|---|
+| 2026-10-08 | `/guide`, confirmation « Le guide est en route », ordinateur | Le lien « Je n'ai rien reçu » est collé au bouton « Ouvrir le guide maintenant ». | JB (capture) | Bouton et lien rangés dans une ligne souple : 24 px d'écart côte à côte, 12 px quand le lien passe dessous (`guide.astro`, `.g-actions`). | Captures du bloc à 1 440, 1 000 et 390 px ; build, check, liens, écrans. |
+
 ## Ce qui reste
 - **JB** : la liste des défauts vus sur la v1 (page, taille d'écran, ce qui cloche, capture si possible). Le plus simple : le bouton « Un retour ? » de l'aperçu, un retour par défaut.
 - **JB** : essai des pages principales sur son téléphone, une fois la PR fusionnée et l'aperçu mis à jour.
