@@ -1,7 +1,7 @@
 ---
 story: 10.6
 epic: 10 — Capture des leads et backend
-statut: review
+statut: done
 date: 2026-10-08
 ---
 
@@ -38,6 +38,11 @@ Le prospect réserve un vrai créneau dans l'agenda d'Anne depuis `/contact`, et
 - `node scripts/e2e-formulaires.mjs` et `node scripts/e2e-diagnostic.mjs` : tous les constats bons.
 - `npm run build` sans erreur ; `npm run check` : 0 erreur ; `node scripts/liens.mjs` : 24 pages, 1465 liens, 0 cassé ; `npm run verif` : aucune erreur console ; `node scripts/ecrans.mjs` : aucun débordement signalé.
 
+## Vérifié en ligne (2026-10-08, après la fusion de la PR #45, par JB)
+- Cal.com : lieu « Attendee phone number », adresse du webhook `https://anne-vial-tissot-site.jbcholat.workers.dev/api/webhook-cal` (captures de JB).
+- Cloudflare Access : l'application du webhook ne laisse passer que `anne-vial-tissot-site.jbcholat.workers.dev/api/webhook-cal` ; l'accueil de l'aperçu demande toujours le code en fenêtre privée.
+- « Tester le ping » de Cal.com : statut 200 (signature reconnue, événement ignoré).
+- Vraie réservation depuis `/contact` (jeudi 8 octobre, 12:30) : agenda réel affiché dans la page, numéro et case de confidentialité transmis ; e-mail de Cal.com et notification du site « [TEST] Nouvelle demande · Rendez-vous jeudi 8 octobre à 12:30 · Jean-Baptiste CHOLAT-MAUDUECH » reçus à la même minute dans la boîte de test.
+
 ## Ce qui reste
-- JB (J28) : dans Cal.com, lieu du « Premier échange » = « numéro du participant » ; question obligatoire « confidentialite » (case à cocher) déjà en place depuis la 10.1, à garder.
-- JB : dans Cloudflare Access, ouvrir le chemin `/api/webhook-cal` au lieu de `/api/essai-cal` (adresse de la branche le temps de l'essai, puis celle de `main`), et changer l'adresse du webhook dans Cal.com. Puis une vraie réservation sur l'aperçu : agenda réel affiché, e-mails de Cal.com reçus, notification du site reçue dans la boîte de test.
+- Rien pour cette story. Au lancement (story 12.4), l'adresse du webhook dans Cal.com passe sur `annevialtissot.fr`.
