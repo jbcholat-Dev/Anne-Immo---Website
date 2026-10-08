@@ -28,7 +28,7 @@ Les scripts Playwright utilisent `/opt/pw-browsers/chromium` s'il existe, sinon 
 
 | Route | Page | Source des textes |
 |---|---|---|
-| `/` | Accueil — hero vidéo/poster, bande Klein, pile de 6 cartes collantes (D-16), méthode + refrain, « Ils ont travaillé avec Anne », diagnostic, Anne, fermeture Klein (D-22) | maquette `01-accueil-*`, `contenu-anne/` |
+| `/` | Accueil — hero vidéo/poster avec deux boutons (diagnostic ; « Estimation offerte » vers `/contact#reserver`, D-30), bande Klein, pile de 6 cartes collantes (D-16), méthode + refrain, « Ils ont travaillé avec Anne », diagnostic, Anne, fermeture Klein (D-22) | maquette `01-accueil-*`, `contenu-anne/` |
 | `/realisation`, `/realisation/<slug>` | Réalisation (index + 3 fiches story) | `contenu-anne/stories/*/fr.md` (récits d'Anne, tels quels) |
 | `/a-propos` `#qui-suis-je` `#methode` `#cible` | À propos, page longue à ancres, repère collant, **sans** bloc vidéo A-15 (D-12) | maquette `apropos-*` ; textes lus dans `contenu-anne/pages/a-propos/fr.md` (story 7.17) |
 | `/vendre` (`#estimation`) | deux portes + formulaire d'estimation (8 champs, D-4) | maquette `04-vendre-*` |
@@ -42,7 +42,7 @@ Les scripts Playwright utilisent `/opt/pw-browsers/chromium` s'il existe, sinon 
 | `/404` | page introuvable | — |
 | `/en`, `/en/track-record` | accueil EN et index « Track record » (vide : aucune story traduite, AD-2). Les autres entrées EN renvoient aux pages FR pour cette v1, sans écran mi-traduit. | `src/content/ui/en.json` |
 
-Navigation (D-2, D-6 A, D-17, D-21, D-28) : réseaux · symbole seul | Accueil · À propos ▾ (Qui suis-je ? · Ma méthode · Cible) · Réalisation · Vendre · Acheter · Contact · FR EN. Fixe dès le premier pixel, réduite à 56 px au défilement, jamais masquée ; menu mobile plein écran avec Accueil puis « À propos » en accordéon (lien + chevron). Pied de page `00-footer` partout.
+Navigation (D-2, D-6 A, D-17, D-21, D-28) : réseaux · symbole seul | Accueil · À propos ▾ (Qui suis-je ? · Ma méthode · Cible) · Réalisations · Vendre · Acheter · Contact · FR EN (« Réalisations » au pluriel, index titré « Quelques réalisations », D-29). Fixe dès le premier pixel, réduite à 56 px au défilement, jamais masquée ; menu mobile plein écran avec Accueil puis « À propos » en accordéon (lien + chevron). Pied de page `00-footer` partout.
 
 ## Réel vs placeholder
 

@@ -1,5 +1,5 @@
 ---
-// 05 Réalisation — index des stories (D-3, D-26) : photo, commune, une phrase. État vide si aucune story.
+// 05 Réalisations — index des stories (D-3, D-26) ; titre « Quelques réalisations » (retour d'Anne, ticket #42 : ce ne sont pas toutes ses ventes) : photo, commune, une phrase. État vide si aucune story.
 import Page from '../../layouts/Page.astro';
 import Picture from '../../components/Picture.astro';
 import Reserve from '../../components/Reserve.astro';
@@ -8,9 +8,9 @@ import { tiret } from '../../lib/texte';
 import { r } from '../../i18n';
 const liste = await stories();
 ---
-<Page titre="Réalisation — Anne VIAL-TISSOT" description="Chaque bien vendu raconté par Anne : ce qui bloquait, ce qui a été fait, comment cela s'est terminé." courante="realisation">
+<Page titre="Quelques réalisations — Anne VIAL-TISSOT" description="Chaque bien vendu raconté par Anne : ce qui bloquait, ce qui a été fait, comment cela s'est terminé." courante="realisation">
   <div class="index-tete">
-    <h1>Réalisation</h1>
+    <h1>Quelques réalisations</h1>
     <p class="seulement-desktop">Chaque bien vendu raconté par Anne : ce qui bloquait, ce qui a été fait, comment cela s'est terminé. Pas de prix, pas de surface.</p>
     <p class="seulement-mobile">Chaque bien vendu raconté par Anne. Pas de prix, pas de surface.</p>
   </div>

@@ -114,4 +114,5 @@ Contrôle : `GET /api/sante` répond `{"ok":true,"migrations":N}` (N = nombre de
 - 2026-10-07 : essai du webhook Cal.com (story 10.1) : ouverture provisoire du chemin `/api/essai-cal` dans Access et secret `CAL_WEBHOOK_SECRET` (§ 2). § 4 quater : création des bases D1 en juridiction UE (story 10.2), écrite avant d'être lancée.
 - 2026-10-07 (soir) : formulaires réels (story 10.3) : secrets `RESEND_API_KEY`, `TURNSTILE_SECRET_KEY` et `BOITE_TEST` posés par JB ; boîte d'Anne `avialtissot@gmail.com` (décision de JB) ; tant que le site n'est pas lancé, tous les e-mails vont à `BOITE_TEST` (§ 4 quater).
 - 2026-10-08 : DMARC constaté déjà présent (`p=reject`), gardé ; aucune ligne à ajouter.
+- 2026-10-08 : retours d'Anne n° 39, 40 et 42 (story 8.7, « Réalisations », bouton « Estimation offerte ») : rien ne change dans les comptes ni la mise en ligne.
 - 2026-10-08 : rendez-vous Cal.com par téléphone (décision de JB). Webhook réel `/api/webhook-cal` (story 10.6) : le chemin ouvert dans Access et l'adresse du webhook dans Cal.com passent de `/api/essai-cal` à `/api/webhook-cal` (§ 2).
