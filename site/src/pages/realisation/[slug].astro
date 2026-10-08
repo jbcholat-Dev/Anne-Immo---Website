@@ -25,7 +25,7 @@ const temoignages = propres.length
 const titreTemoignages = temoignages.length === 1 ? (temoignages[0].role.startsWith('vendeu') ? (temoignages[0].role === 'vendeuse' ? 'Ce qu’elle en dit' : 'Ce qu’il en dit') : 'Ce qu’il en dit') : 'Ce qu’ils en disent';
 const alt = `${story.data.type_bien} vendu à ${story.data.commune}`;
 ---
-<Page titre={`${story.data.commune} — Réalisation — Anne VIAL-TISSOT`} description={(story.data.particularite ?? '').trim()} courante="realisation">
+<Page titre={`${story.data.commune} — Réalisations — Anne VIAL-TISSOT`} description={(story.data.particularite ?? '').trim()} courante="realisation">
   <div class="story-photo">
     {principale ? <Picture id={principale.cle} alt={alt} sizes="100vw" loading="eager" fetchpriority="high" /> : <Reserve label={`A-02 · photo maîtresse · ${story.data.commune} · 16:9 plein cadre`} style="height:100%" />}
   </div>

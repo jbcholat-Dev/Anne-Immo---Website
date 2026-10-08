@@ -94,7 +94,7 @@ Toutes traduites (CAP-10).
 
 **En-tête, desktop** — **cinq entrées, une bascule de langue, un bouton** (D-2 à D-7).
 - Logo à gauche : **le symbole seul** (cercle Klein + strate terracotta, D-21) — le nom vit dans le hero et dans le lockup du pied de page ; sans sous-titre (charte § 2, 2026-09-22) — **logo Anne seul : pas de logo eXp en en-tête** (charte § 2.4, le co-branding vit en pied de page). Le secteur (Léman & Chablais) n'est pas redit ici : il vit dans le sous-titre du hero et la ligne de statut du pied de page.
-- Entrées, dans cet ordre : Accueil · **À propos ▾** · Réalisation · Vendre · Acheter · Contact. « Accueil » ajouté le 2026-10-04 (D-28, retour d'aperçu n° 3) : le symbole seul ne disait pas assez qu'il ramène à l'accueil ; il y ramène toujours.
+- Entrées, dans cet ordre : Accueil · **À propos ▾** · Réalisations · Vendre · Acheter · Contact. « Accueil » ajouté le 2026-10-04 (D-28, retour d'aperçu n° 3) : le symbole seul ne disait pas assez qu'il ramène à l'accueil ; il y ramène toujours.
 - **« À propos » porte un menu déroulant** (au survol sur desktop, au tap sur les appareils tactiles) avec trois sous-entrées, qui sont les ancres de la page À propos (§3) : « Qui suis-je ? » (`#qui-suis-je`) · « Ma méthode » (`#methode`) · « Cible » (`#cible`). ⚠️ **« Cible » est à trancher** (D-2, point ouvert 1) : dessiner le menu **en deux variantes**, à trois et à deux sous-entrées. L'entrée « À propos » reste elle-même cliquable et mène en haut de la page.
 - Sélecteur de langue à droite, discret (code de langue, **pas de drapeau** — un drapeau désigne un pays, pas une langue).
 - **Pas de bouton dans l'en-tête** (D-17, 2026-09-22 — annule D-7) : le diagnostic est atteint par le CTA du hero, § 1.6, la page Vendre, le menu mobile et le pied de page.
@@ -118,7 +118,7 @@ Huit sections. L'ordre est délibéré : **la preuve arrive avant l'argumentaire
 ### 1.1 — Ouverture · [QUI] + [PREUVE]
 **Rôle :** montrer, immédiatement.
 **Contenu :** **une vidéo drone plein cadre, en fond du titre** (D-1) — tournée sur les biens qu'Anne a vendus, pas une banque d'images. Par-dessus : le nom « Anne VIAL-TISSOT » et une ligne de positionnement. Le lac et la montagne doivent être lisibles : c'est le territoire, et il doit être **reconnaissable comme le Chablais et le Léman**, pas comme une montagne générique. **Le secteur est dit une fois, dans le sous-titre** — et nulle part ailleurs dans le hero (D-10 : la liste de communes en bas à droite est retirée, elle bornait le territoire à six communes alors qu'Anne travaille sur tout le Chablais et le bassin lémanique).
-**CTA :** un seul, vers le diagnostic — « Faire le point sur votre vente · 3 minutes ».
+**CTA :** le diagnostic — « Faire le point sur votre vente · 3 minutes » (bouton principal) ; à côté, en contour, « Estimation offerte » vers l'agenda de `/contact#reserver` (D-30, 2026-10-08, retour d'Anne).
 **Volume :** une phrase. Pas de paragraphe.
 **Sur mobile :** visuel recadré en portrait ou carré, jamais une bande fine. Le nom et le CTA restent au-dessus de la ligne de flottaison.
 **Actif requis :** A-01 (vidéo drone) et A-14 (image d'ouverture, qui sert de poster et de repli).
@@ -196,7 +196,7 @@ Chaque vue porte la photo en grand, la commune, et une phrase extraite du récit
 
 ## §2 — Réalisation (les ventes)
 
-**Rôle :** la preuve détaillée. C'est le contenu qui prouve la méthode sans la réciter. L'entrée de navigation s'appelle **Réalisation** (D-3) ; elle mène à l'index des stories de biens vendus.
+**Rôle :** la preuve détaillée. C'est le contenu qui prouve la méthode sans la réciter. L'entrée de navigation s'appelle **Réalisations** (D-29, 2026-10-08, remplace D-3) et l'index est titré « Quelques réalisations » ; elle mène à l'index des stories de biens vendus.
 **Volume :** développé — c'est une page de fond.
 
 ### Index
