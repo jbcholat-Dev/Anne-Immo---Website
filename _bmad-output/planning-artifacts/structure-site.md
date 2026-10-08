@@ -139,7 +139,7 @@ Huit sections. L'ordre est délibéré : **la preuve arrive avant l'argumentaire
 **Sur mobile :** la note et le nombre d'avis restent ; l'extrait peut passer en défilement horizontal.
 
 ### 1.3 — Ventes récentes · [PREUVE]
-**Titre (D-32, 2026-10-08) :** « Des ventes gérées comme des projets ». **Ordre (D-33) :** la section 1.7 Anne suit immédiatement celle-ci.
+**Titre (D-32, 2026-10-08) :** « Chaque bien mérite une attention particulière et un service adapté » (choisi par JB). **Ordre (D-33) :** la section 1.7 Anne suit immédiatement celle-ci.
 **Rôle :** le cœur visuel du site, et le remplacement de la vitrine de biens. **C'est le sommet de la page** (brief lot 3 § 4).
 **Contenu :** **six cartes de biens vendus, empilées en défilement collant** (D-16, 2026-09-22 ; mécanique mesurée dans `brief-scrollcraft-fora.md` § 1.3 et § 3.2) : chaque carte se colle sous la barre de navigation et la suivante vient la recouvrir. Le visiteur manipule les ventes au lieu de les faire défiler, et chaque photo reste grande — ces photos sont le cœur visuel du site, pas des vignettes. Le carrousel de la v4 est abandonné.
 

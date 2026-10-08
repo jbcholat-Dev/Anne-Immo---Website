@@ -13,7 +13,7 @@
 :root {
   --nav-h: 72px;            /* hauteur réelle de la barre, mise à jour par l'îlot nav (réduite : 56px) */
   --nav-h-mobile: 64px;
-  --marge: 64px;            /* marge latérale desktop (maquette 1440) */
+  --marge: max(64px, calc((100vw - 1312px) / 2)); /* marge latérale desktop (maquette 1440) ; au-delà de 1440 px, le contenu reste à 1312 px et se centre (D-36, ticket n° 65) */
   --marge-m: 20px;          /* marge latérale mobile (maquette 390) */
   --ease-titre: cubic-bezier(.44, 0, .56, 1);
   --ease-bloc: cubic-bezier(.22, 1, .36, 1);
