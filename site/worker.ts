@@ -2,15 +2,19 @@
 // Les pages prérendues sont servies directement par Cloudflare, sans passer par ce code.
 // /api/* passe ici (run_worker_first dans wrangler.jsonc) :
 // - /api/retour : remarque faite depuis l'aperçu, enregistrée comme ticket GitHub (story 9.6) ;
-// - le reste est confié à Astro (handle), qui sert les routes de src/pages/api/ (ex. /api/sante, /api/webhook-cal)
-//   et la page de résultats du diagnostic.
+// - /api/desabonnement : désinscription en un clic depuis la messagerie (en-tête List-Unsubscribe, story 10.5), servie ici
+//   car les messageries postent sans en-tête Origin, ce que le contrôle d'origine d'Astro refuserait ;
+// - le reste est confié à Astro (handle), qui sert les routes de src/pages/api/ (ex. /api/sante, /api/webhook-cal),
+//   la page de résultats du diagnostic et la page /desabonnement.
 // Le site est protégé par Cloudflare Access : seules les personnes autorisées atteignent /api/retour,
 // et Access transmet leur adresse dans l'en-tête cf-access-authenticated-user-email.
-// `scheduled` : tâche planifiée, toutes les 15 minutes (wrangler.jsonc) : réessaie les e-mails en échec (story 10.3) ;
-// la séquence d'e-mails, le test quotidien et la purge s'y ajouteront (stories 10.5, 10.7, 10.8).
+// `scheduled` : tâche planifiée, toutes les 15 minutes (wrangler.jsonc) : réessaie les e-mails en échec (story 10.3) et
+// envoie les e-mails de la séquence arrivés à échéance (story 10.5) ; le test quotidien et la purge s'y ajouteront (10.7, 10.8).
 import { handle } from '@astrojs/cloudflare/handler';
 import { rejouer } from './src/server/delivery';
 import type { EnvSite } from './src/server/env';
+import { journal } from './src/server/journal';
+import { desabonner, verifierDesabonnement } from './src/server/liens';
 
 const REPO_DEFAUT = 'jbcholat-Dev/Anne-Immo---Website';
 const ETIQUETTE = 'retour-apercu';
@@ -26,12 +30,23 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (url.pathname === '/api/retour') return retour(request, env);
+    if (url.pathname === '/api/desabonnement') return desabonnementUnClic(request, env, url);
     return handle(request, env, ctx);
   },
   async scheduled(_controller, env, ctx) {
     ctx.waitUntil(rejouer(env));
   },
 } satisfies ExportedHandler<EnvSite>;
+
+/** Désinscription en un clic (RFC 8058) : la messagerie poste `List-Unsubscribe=One-Click` sur l'adresse de l'en-tête. */
+async function desabonnementUnClic(request: Request, env: EnvSite, url: URL): Promise<Response> {
+  if (request.method !== 'POST') return json({ ok: false, error: { code: 'methode' } }, 405);
+  const leadId = await verifierDesabonnement(env, url);
+  if (!leadId) return json({ ok: false, error: { code: 'lien' } }, 404);
+  await desabonner(env, leadId);
+  journal('desabonnement', { lead: leadId, mode: 'un_clic' });
+  return json({ ok: true });
+}
 
 async function retour(request: Request, env: EnvSite): Promise<Response> {
   if (request.method !== 'POST') return json({ ok: false, error: { code: 'methode' } }, 405);

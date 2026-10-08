@@ -4,6 +4,7 @@
 import type { EnvSite } from './env';
 import type { Diagnostic } from './diagnostic';
 import type { LeadFormulaire } from './schema';
+import { lignesSequence } from './sequence';
 import { ulid } from './ulid';
 
 export interface Ecriture {
@@ -14,12 +15,12 @@ export interface Ecriture {
   token: string | null;
 }
 
-/** Ce qui part pour chaque source. Guide : tant que la story 10.5 n'est pas livrée, Anne envoie le PDF à la main,
- * donc pas de confirmation automatique au prospect. TODO(backend) : 10.5 ajoute l'envoi du lien signé. */
+/** Ce qui part pour chaque source. Guide : la confirmation au prospect porte le lien signé du guide (story 10.5).
+ * Une inscription à la séquence ajoute en plus une ligne `sequence:<étape>` par e-mail (sequence.ts). */
 export const CANAUX: Record<LeadFormulaire['source'], string[]> = {
   contact: ['notify_anne', 'confirm_prospect'],
   estimation: ['notify_anne', 'confirm_prospect'],
-  guide: ['notify_anne'],
+  guide: ['notify_anne', 'confirm_prospect'],
   diagnostic: ['notify_anne', 'confirm_prospect'],
   // Rendez-vous : Cal.com envoie lui-même les confirmations au prospect et à Anne ; le site prévient Anne au format Modelo (AD-8).
   rdv: ['notify_anne'],
@@ -48,8 +49,10 @@ export async function ecrireLead(env: EnvSite, lead: LeadFormulaire, submissionI
        ON CONFLICT (lead_id, channel) DO NOTHING`,
     ).bind(canal, maintenant, submissionId),
   );
+  // Séquence : seulement si ce lead vient d'être créé (un renvoi ne trouve pas `id` et n'ajoute rien).
+  const sequence = lead.newsletter ? lignesSequence(env, id, lead.lang, maintenant) : [];
   const lecture = env.DB.prepare('SELECT id, token FROM lead WHERE submission_id = ?1').bind(submissionId);
-  const resultats = await env.DB.batch([insertion, ...envois, lecture]);
+  const resultats = await env.DB.batch([insertion, ...envois, ...sequence, lecture]);
   const ecrit = resultats.at(-1)?.results?.[0] as { id?: string; token?: string | null } | undefined;
   if (!ecrit?.id) throw new Error('lead introuvable après écriture');
   return { leadId: ecrit.id, nouveau: ecrit.id === id, token: ecrit.token ?? null };

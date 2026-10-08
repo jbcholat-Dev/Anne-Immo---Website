@@ -12,6 +12,8 @@ export interface EnvSite extends Env {
   RESEND_API_KEY?: string;
   /** Clé secrète du widget Turnstile `site-anne` (story 10.3). */
   TURNSTILE_SECRET_KEY?: string;
+  /** Secret qui signe les liens envoyés par e-mail : guide (7 jours) et désabonnement de la séquence (story 10.5). */
+  LIEN_SECRET?: string;
   /** Boîte qui reçoit tous les e-mails tant que le site n'est pas lancé, et ceux des leads de test (AD-12). */
   BOITE_TEST?: string;
   /** Essais en local seulement (fichier de réglages de `wrangler dev`, jamais dans Cloudflare) : adresse d'une

@@ -1,10 +1,10 @@
 À : boite-test@example.com
-Répondre à : claire+diagnostic-muz9fnkm@example.com
+Répondre à : claire+diagnostic-muzawims@example.com
 Objet : [TEST] Nouvelle demande · Diagnostic 100/100 (sortie A) · Claire Essai
 
 (E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
 
-Nouvelle demande reçue par le site le 08/10/2026 10:14 (heure de Paris) : diagnostic vendeur.
+Nouvelle demande reçue par le site le 08/10/2026 10:55 (heure de Paris) : diagnostic vendeur.
 À faire : rappeler sous un jour ouvré pour proposer le rendez-vous stratégique (sortie A).
 
 À recopier dans la fiche contact Modelo :
@@ -19,7 +19,7 @@ Téléphone
 +33 6 12 34 56 78
 
 E-mail
-claire+diagnostic-muz9fnkm@example.com
+claire+diagnostic-muzawims@example.com
 
 Type de contact
 Vendeur
@@ -46,12 +46,12 @@ Quel est votre objectif principal pour cette vente ? Vendre sereinement avec un 
 Quelles difficultés avez-vous rencontrées ou anticipez-vous dans votre vente ? Aucune difficulté pour le moment
 Quel type d'accompagnement correspondrait le mieux à vos besoins ? Accompagnement premium complet : prise en charge totale (photos pro, diffusion multi-canal, qualification acquéreurs, gestion administrative, négociation)
 
-Demande du 08/10/2026 10:14 via annevialtissot.fr (diagnostic vendeur).
+Demande du 08/10/2026 10:55 via annevialtissot.fr (diagnostic vendeur).
 Séquence d'e-mails : non demandée.
 Campagne : essai.
 
 Répondre à cet e-mail écrit directement à Claire Essai.
-Référence de la demande : 01M4D979HM948TRGZB65TW5WP1
+Référence de la demande : 01M4DBJJ86B6R36DB07PEX97Q3
 
 ==========
 
@@ -59,7 +59,7 @@ Référence de la demande : 01M4D979HM948TRGZB65TW5WP1
 Répondre à : avialtissot@gmail.com
 Objet : [TEST] Votre diagnostic vendeur : vos résultats
 
-(E-mail de test : en production, il serait parti vers claire+diagnostic-muz9fnkm@example.com.)
+(E-mail de test : en production, il serait parti vers claire+diagnostic-muzawims@example.com.)
 
 Bonjour Claire,
 
@@ -81,12 +81,12 @@ https://annevialtissot.fr
 ==========
 
 À : boite-test@example.com
-Répondre à : marc+diagnostic-muz9fnkm@example.com
+Répondre à : marc+diagnostic-muzawims@example.com
 Objet : [TEST] Nouvelle demande · Diagnostic 52/100 (sortie B) · Marc Essai
 
 (E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
 
-Nouvelle demande reçue par le site le 08/10/2026 10:14 (heure de Paris) : diagnostic vendeur.
+Nouvelle demande reçue par le site le 08/10/2026 10:55 (heure de Paris) : diagnostic vendeur.
 À faire : un appel quand vous le jugez utile ; ses résultats lui proposent le guide (sortie B).
 
 À recopier dans la fiche contact Modelo :
@@ -101,7 +101,7 @@ Téléphone
 +41791234567
 
 E-mail
-marc+diagnostic-muz9fnkm@example.com
+marc+diagnostic-muzawims@example.com
 
 Type de contact
 Vendeur
@@ -127,11 +127,11 @@ Quel est votre objectif principal pour cette vente ? Minimiser les frais d'agenc
 Quelles difficultés avez-vous rencontrées ou anticipez-vous dans votre vente ? Peu ou pas de demandes de visites / annonce peu vue, Offres trop basses par rapport au prix souhaité
 Quel type d'accompagnement correspondrait le mieux à vos besoins ? Forfait estimation + conseils : j'ai besoin d'un diagnostic expert pour débloquer ma situation
 
-Demande du 08/10/2026 10:14 via annevialtissot.fr (diagnostic vendeur).
+Demande du 08/10/2026 10:55 via annevialtissot.fr (diagnostic vendeur).
 Séquence d'e-mails : non demandée.
 
 Répondre à cet e-mail écrit directement à Marc Essai.
-Référence de la demande : 01M4D97FYXFT4M5DBNQJ0B2S4Q
+Référence de la demande : 01M4DBJRE4J23QPRV95BF3131W
 
 ==========
 
@@ -139,7 +139,7 @@ Référence de la demande : 01M4D97FYXFT4M5DBNQJ0B2S4Q
 Répondre à : avialtissot@gmail.com
 Objet : [TEST] Votre diagnostic vendeur : vos résultats
 
-(E-mail de test : en production, il serait parti vers marc+diagnostic-muz9fnkm@example.com.)
+(E-mail de test : en production, il serait parti vers marc+diagnostic-muzawims@example.com.)
 
 Bonjour Marc,
 
@@ -152,7 +152,10 @@ Efficacité Commerciale : 8 / 20
 
 Le détail et les recommandations restent affichés 24 heures dans le navigateur où vous avez fait le diagnostic.
 
-Pour corriger les points faibles identifiés, demandez mon guide « Les 10 erreurs fatales des vendeurs particuliers » sur https://annevialtissot.fr/guide. Pour en parler de vive voix, répondez simplement à cet e-mail.
+Pour corriger les points faibles identifiés, voici mon guide « Les 10 erreurs fatales des vendeurs particuliers » (lien personnel, valable 7 jours) :
+http://localhost:8788/api/guide/telecharger?l=01M4DBJRE4J23QPRV95BF3131W&e=1792054522&s=zUkr7ThUsqGwoyk1FAQcP1IS-oke1Z3OfLAPyzDP068
+
+Pour en parler de vive voix, répondez simplement à cet e-mail.
 
 Anne VIAL-TISSOT
 Consultante en immobilier · Chablais, Léman · réseau eXp France
@@ -161,12 +164,12 @@ https://annevialtissot.fr
 ==========
 
 À : boite-test@example.com
-Répondre à : alice+nav-diagnostic-muz9fnkm@example.com
+Répondre à : alice+nav-diagnostic-muzawims@example.com
 Objet : [TEST] Nouvelle demande · Diagnostic 100/100 (sortie A) · Alice Navigateur
 
 (E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
 
-Nouvelle demande reçue par le site le 08/10/2026 10:14 (heure de Paris) : diagnostic vendeur.
+Nouvelle demande reçue par le site le 08/10/2026 10:55 (heure de Paris) : diagnostic vendeur.
 À faire : rappeler sous un jour ouvré pour proposer le rendez-vous stratégique (sortie A).
 
 À recopier dans la fiche contact Modelo :
@@ -181,7 +184,7 @@ Téléphone
 +33 6 12 34 56 78
 
 E-mail
-alice+nav-diagnostic-muz9fnkm@example.com
+alice+nav-diagnostic-muzawims@example.com
 
 Type de contact
 Vendeur
@@ -208,12 +211,12 @@ Quel est votre objectif principal pour cette vente ? Vendre sereinement avec un 
 Quelles difficultés avez-vous rencontrées ou anticipez-vous dans votre vente ? Aucune difficulté pour le moment
 Quel type d'accompagnement correspondrait le mieux à vos besoins ? Accompagnement premium complet : prise en charge totale (photos pro, diffusion multi-canal, qualification acquéreurs, gestion administrative, négociation)
 
-Demande du 08/10/2026 10:14 via annevialtissot.fr (diagnostic vendeur).
+Demande du 08/10/2026 10:55 via annevialtissot.fr (diagnostic vendeur).
 Séquence d'e-mails : non demandée.
 Campagne : parcours.
 
 Répondre à cet e-mail écrit directement à Alice Navigateur.
-Référence de la demande : 01M4D98JXM5C82Q1RSDFTZS1CB
+Référence de la demande : 01M4DBKT0RYH0HKWTP7R1BVXTX
 
 ==========
 
@@ -221,7 +224,7 @@ Référence de la demande : 01M4D98JXM5C82Q1RSDFTZS1CB
 Répondre à : avialtissot@gmail.com
 Objet : [TEST] Votre diagnostic vendeur : vos résultats
 
-(E-mail de test : en production, il serait parti vers alice+nav-diagnostic-muz9fnkm@example.com.)
+(E-mail de test : en production, il serait parti vers alice+nav-diagnostic-muzawims@example.com.)
 
 Bonjour Alice,
 
@@ -243,12 +246,12 @@ https://annevialtissot.fr
 ==========
 
 À : boite-test@example.com
-Répondre à : bruno+nav-diagnostic-muz9fnkm@example.com
+Répondre à : bruno+nav-diagnostic-muzawims@example.com
 Objet : [TEST] Nouvelle demande · Diagnostic 52/100 (sortie B) · Bruno Navigateur
 
 (E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
 
-Nouvelle demande reçue par le site le 08/10/2026 10:14 (heure de Paris) : diagnostic vendeur.
+Nouvelle demande reçue par le site le 08/10/2026 10:56 (heure de Paris) : diagnostic vendeur.
 À faire : un appel quand vous le jugez utile ; ses résultats lui proposent le guide (sortie B).
 
 À recopier dans la fiche contact Modelo :
@@ -263,7 +266,7 @@ Téléphone
 +33 6 12 34 56 78
 
 E-mail
-bruno+nav-diagnostic-muz9fnkm@example.com
+bruno+nav-diagnostic-muzawims@example.com
 
 Type de contact
 Vendeur
@@ -289,12 +292,12 @@ Quel est votre objectif principal pour cette vente ? Minimiser les frais d'agenc
 Quelles difficultés avez-vous rencontrées ou anticipez-vous dans votre vente ? Peu ou pas de demandes de visites / annonce peu vue, Offres trop basses par rapport au prix souhaité
 Quel type d'accompagnement correspondrait le mieux à vos besoins ? Forfait estimation + conseils : j'ai besoin d'un diagnostic expert pour débloquer ma situation
 
-Demande du 08/10/2026 10:14 via annevialtissot.fr (diagnostic vendeur).
+Demande du 08/10/2026 10:56 via annevialtissot.fr (diagnostic vendeur).
 Séquence d'e-mails : non demandée.
 Campagne : parcours.
 
 Répondre à cet e-mail écrit directement à Bruno Navigateur.
-Référence de la demande : 01M4D98X8KGC995FMVRP5GYCZV
+Référence de la demande : 01M4DBM3BES41YCGG84AACMPRF
 
 ==========
 
@@ -302,7 +305,7 @@ Référence de la demande : 01M4D98X8KGC995FMVRP5GYCZV
 Répondre à : avialtissot@gmail.com
 Objet : [TEST] Votre diagnostic vendeur : vos résultats
 
-(E-mail de test : en production, il serait parti vers bruno+nav-diagnostic-muz9fnkm@example.com.)
+(E-mail de test : en production, il serait parti vers bruno+nav-diagnostic-muzawims@example.com.)
 
 Bonjour Bruno,
 
@@ -315,7 +318,10 @@ Efficacité Commerciale : 8 / 20
 
 Le détail et les recommandations restent affichés 24 heures dans le navigateur où vous avez fait le diagnostic.
 
-Pour corriger les points faibles identifiés, demandez mon guide « Les 10 erreurs fatales des vendeurs particuliers » sur https://annevialtissot.fr/guide. Pour en parler de vive voix, répondez simplement à cet e-mail.
+Pour corriger les points faibles identifiés, voici mon guide « Les 10 erreurs fatales des vendeurs particuliers » (lien personnel, valable 7 jours) :
+http://localhost:8788/api/guide/telecharger?l=01M4DBM3BES41YCGG84AACMPRF&e=1792054563&s=h8UcGYS4WDOd3mZaD_RnOPn-Zl8kPTZ1fg5eEdg0rZU
+
+Pour en parler de vive voix, répondez simplement à cet e-mail.
 
 Anne VIAL-TISSOT
 Consultante en immobilier · Chablais, Léman · réseau eXp France
@@ -324,12 +330,12 @@ https://annevialtissot.fr
 ==========
 
 À : boite-test@example.com
-Répondre à : lea+nav-diagnostic-muz9fnkm@example.com
+Répondre à : lea+nav-diagnostic-muzawims@example.com
 Objet : [TEST] Nouvelle demande · Diagnostic 1/100 (sortie B) · Lea Navigateur
 
 (E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
 
-Nouvelle demande reçue par le site le 08/10/2026 10:15 (heure de Paris) : diagnostic vendeur.
+Nouvelle demande reçue par le site le 08/10/2026 10:56 (heure de Paris) : diagnostic vendeur.
 À faire : un appel quand vous le jugez utile ; ses résultats lui proposent le guide (sortie B).
 
 À recopier dans la fiche contact Modelo :
@@ -344,7 +350,7 @@ Téléphone
 +33 6 12 34 56 78
 
 E-mail
-lea+nav-diagnostic-muz9fnkm@example.com
+lea+nav-diagnostic-muzawims@example.com
 
 Type de contact
 Vendeur
@@ -370,12 +376,12 @@ Quel est votre objectif principal pour cette vente ? Obtenir le meilleur prix po
 Quelles difficultés avez-vous rencontrées ou anticipez-vous dans votre vente ? Peu ou pas de demandes de visites / annonce peu vue
 Quel type d'accompagnement correspondrait le mieux à vos besoins ? Vente 100% autonome : je préfère gérer seul(e), j'ai juste besoin de ressources/formations
 
-Demande du 08/10/2026 10:15 via annevialtissot.fr (diagnostic vendeur).
+Demande du 08/10/2026 10:56 via annevialtissot.fr (diagnostic vendeur).
 Séquence d'e-mails : acceptée.
 Campagne : parcours.
 
 Répondre à cet e-mail écrit directement à Lea Navigateur.
-Référence de la demande : 01M4D997200247SZFJJPDA9TSS
+Référence de la demande : 01M4DBMC8ZWC380RZBTB2EQC9Z
 
 ==========
 
@@ -383,7 +389,7 @@ Référence de la demande : 01M4D997200247SZFJJPDA9TSS
 Répondre à : avialtissot@gmail.com
 Objet : [TEST] Votre diagnostic vendeur : vos résultats
 
-(E-mail de test : en production, il serait parti vers lea+nav-diagnostic-muz9fnkm@example.com.)
+(E-mail de test : en production, il serait parti vers lea+nav-diagnostic-muzawims@example.com.)
 
 Bonjour Lea,
 
@@ -396,7 +402,12 @@ Efficacité Commerciale : 1 / 20
 
 Le détail et les recommandations restent affichés 24 heures dans le navigateur où vous avez fait le diagnostic.
 
-Pour corriger les points faibles identifiés, demandez mon guide « Les 10 erreurs fatales des vendeurs particuliers » sur https://annevialtissot.fr/guide. Pour en parler de vive voix, répondez simplement à cet e-mail.
+Pour corriger les points faibles identifiés, voici mon guide « Les 10 erreurs fatales des vendeurs particuliers » (lien personnel, valable 7 jours) :
+http://localhost:8788/api/guide/telecharger?l=01M4DBMC8ZWC380RZBTB2EQC9Z&e=1792054572&s=7_OUPjK8rxhHO5s3mnqQtk04dryOd6vDrC1psKCftkE
+
+Pour en parler de vive voix, répondez simplement à cet e-mail.
+
+Vous recevrez aussi 6 e-mails de conseils, à quelques jours d'intervalle. Chacun contient un lien pour arrêter.
 
 Anne VIAL-TISSOT
 Consultante en immobilier · Chablais, Léman · réseau eXp France

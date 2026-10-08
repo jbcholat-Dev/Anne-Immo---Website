@@ -62,11 +62,12 @@ try {
   for (let i = 0; i < 6; i++) codes.push((await envoyer('contact', { ...contact, submission_id: sid() }, '203.0.113.7')).statut);
   constat(codes.at(-1) === 429, `limite de fréquence : ${codes.join(' ')}`);
 
-  // 4. Guide sans téléphone : seulement la notification à Anne (Anne envoie le PDF à la main jusqu'à la story 10.5).
+  // 4. Guide sans téléphone : notification à Anne et lien du guide au prospect (story 10.5, détail dans e2e-guide.mjs).
   const s4 = sid();
   r = await envoyer('guide', { submission_id: s4, prenom: 'Paul', nom: 'Guide', email: `paul+${ESSAI}@example.com`, newsletter: 'on' });
   const canaux = sql(`SELECT d.channel, l.newsletter_opt_in_at FROM lead l JOIN lead_delivery d ON d.lead_id = l.id WHERE l.submission_id = '${s4}'`);
-  constat(r.ok && canaux.length === 1 && canaux[0].channel === 'notify_anne' && canaux[0].newsletter_opt_in_at, 'guide sans téléphone : accepté, notification à Anne seule, séquence horodatée');
+  const envois = canaux.map((c) => c.channel).filter((c) => !c.startsWith('sequence:')).sort().join(',');
+  constat(r.ok && envois === 'confirm_prospect,notify_anne' && canaux[0].newsletter_opt_in_at, 'guide sans téléphone : accepté, notification à Anne et guide au prospect, séquence horodatée');
 
   // 5. E-mails : tous vers la boîte de test, objets marqués [TEST], « Répondre » de la notification = le prospect.
   await pause(1500);

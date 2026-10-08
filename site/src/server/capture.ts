@@ -6,6 +6,7 @@ import { diffuser } from './delivery';
 import { evaluer, type Diagnostic } from './diagnostic';
 import { enProduction, envSite } from './env';
 import { empreinte, journal } from './journal';
+import { lienGuide } from './liens';
 import { ecrireLead } from './leads';
 import { valider, type SourceFormulaire } from './schema';
 import { ULID } from './ulid';
@@ -81,6 +82,8 @@ export async function traiterCapture(source: SourceFormulaire, { request, locals
   if (cf) cf.waitUntil(envoi);
   else await envoi;
   // Diagnostic : la page de résultats, liée au jeton du lead (celui du premier envoi si c'est un renvoi).
-  const suite = source === 'diagnostic' && ecriture.token ? { url: `/diagnostic/resultats?t=${ecriture.token}` } : {};
+  // Guide : le lien signé, affiché dans la confirmation (story 10.5) ; absent si le secret des liens manque.
+  const lien = source === 'guide' ? await lienGuide(env, ecriture.leadId) : null;
+  const suite = source === 'diagnostic' && ecriture.token ? { url: `/diagnostic/resultats?t=${ecriture.token}` } : lien ? { url: lien } : {};
   return Response.json({ ok: true, ...suite }, { headers: ENTETES });
 }

@@ -158,6 +158,9 @@ function brancher(form: HTMLFormElement) {
       form.dispatchEvent(new CustomEvent('avt:envoye', { detail: donnees, bubbles: true }));
       if (confirmation) {
         confirmation.querySelectorAll<HTMLElement>('[data-champ]').forEach((el) => { el.textContent = String(donnees[el.dataset.champ!] ?? ''); });
+        // Guide (story 10.5) : le lien signé renvoyé par le serveur, à ouvrir tout de suite.
+        const lien = confirmation.querySelector<HTMLAnchorElement>('[data-lien-guide]');
+        if (lien && res.url) { lien.href = res.url; lien.hidden = false; }
         confirmation.hidden = false;
         form.hidden = true;
         confirmation.setAttribute('tabindex', '-1');

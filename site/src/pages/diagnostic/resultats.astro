@@ -7,6 +7,9 @@ import feedbacks from '../../content/diagnostic/feedbacks.json';
 import contenu from '../../content/diagnostic/questions.json';
 import bareme from '../../content/diagnostic/bareme.json';
 import { ouvrir } from '../../server/resultats';
+import { envSite } from '../../server/env';
+import { lienDesabonnement } from '../../server/liens';
+import { NOMBRE_ETAPES, PREMIER_DELAI } from '../../server/sequence';
 
 export const prerender = false;
 
@@ -28,6 +31,10 @@ const axes = r
   : [];
 const s = (r ? feedbacks.sorties[r.orientation] : feedbacks.sorties.B) as { titre: string; texte: string; texte_court?: string; cta: string; cta2?: string; sequence?: string; sequence_cta?: string };
 const A = r?.orientation === 'A';
+// Séquence (story 10.5) : le nombre réel d'e-mails et le délai du premier, et le lien de désabonnement signé de ce lead.
+const n = (t?: string) => (t ?? '').replace('{n}', String(NOMBRE_ETAPES));
+const premier = PREMIER_DELAI <= 1 ? 'demain' : `dans ${PREMIER_DELAI} jours`;
+const desabonnement = r ? ((await lienDesabonnement(envSite, r.id)) ?? '/confidentialite') : '/confidentialite';
 ---
 <Quiz titre="Vos résultats — Diagnostic — Anne VIAL-TISSOT" mode="resultats">
   <div class="rs" data-resultats data-ton={profil?.ton}>
@@ -55,37 +62,44 @@ const A = r?.orientation === 'A';
           <div class="rs-sortie-boutons">
             {A
               ? <><a href="/contact#reserver" class="btn btn-ecru">{s.cta}</a><a href="/contact#ecrire" class="btn btn-contour-ecru">{s.cta2}</a></>
-              : <a href="/guide" class="btn btn-ecru" data-guide>{s.cta}</a>}
+              : <button type="button" class="btn btn-ecru" data-guide>{s.cta}</button>}
           </div></div>
         {A
-          ? <div class="rs-guide"><div class="rs-guide-int"><div class="rs-guide-couv"></div><div><div class="rs-guide-titre">Les 10 erreurs fatales des vendeurs particuliers</div><div class="rs-guide-sous">Guide PDF, à la charte · A-10</div></div></div><a href="/guide" class="btn btn-secondaire btn-m" data-guide>Recevoir le guide</a></div>
-          : <div class="rs-sequence"><p>{s.sequence}</p><button type="button" class="btn btn-secondaire btn-m" data-sequence hidden={r.newsletter}>{s.sequence_cta}</button><span data-sequence-deja hidden={!r.newsletter} class="texte-muet" style="font-size:14px">Inscription à la séquence enregistrée.</span></div>}
+          ? <div class="rs-guide"><div class="rs-guide-int"><div class="rs-guide-couv"></div><div><div class="rs-guide-titre">Les 10 erreurs fatales des vendeurs particuliers</div><div class="rs-guide-sous">Guide PDF, à la charte · A-10</div></div></div><button type="button" class="btn btn-secondaire btn-m" data-guide>Recevoir le guide</button></div>
+          : <div class="rs-sequence"><p>{n(s.sequence)}</p><button type="button" class="btn btn-secondaire btn-m" data-sequence hidden={r.newsletter}>{s.sequence_cta}</button><span data-sequence-deja hidden={!r.newsletter} class="texte-muet" style="font-size:14px">Inscription à la séquence enregistrée.</span></div>}
         <div class="rs-etats" data-etats hidden>
-          <div class="rs-etat-sequence" data-etat-sequence hidden>Inscription enregistrée. Anne vous écrira à {r.email}. <a href="/confidentialite">Se désinscrire</a> à tout moment.</div>
-          <div class="alerte" role="alert" data-etat-echec hidden>L'inscription n'a pas abouti. Réessayez dans un instant.</div>
+          <div class="rs-etat-sequence" data-etat-guide hidden>Le guide est parti. Vérifiez {r.email}. Le lien de téléchargement est valable 7 jours. <a href="#" data-lien-guide target="_blank" rel="noopener">Ouvrir le guide maintenant</a></div>
+          <div class="rs-etat-sequence" data-etat-sequence hidden>Séquence de {NOMBRE_ETAPES} e-mails confirmée. Le premier arrive {premier}. <a href={desabonnement}>Se désinscrire</a> à tout moment.</div>
+          <div class="alerte" role="alert" data-etat-echec hidden>L'envoi n'a pas abouti. Réessayez dans un instant.</div>
         </div>
       </div>
     )}
   </div>
   <script>
-    // Inscription à la séquence (sortie B) : la seule action de la page qui parle au serveur (story 10.4).
-    // TODO(backend) : 10.5 envoie la séquence et remet le texte de la maquette (« Séquence de 7 e-mails confirmée… »).
-    const b = document.querySelector<HTMLButtonElement>('[data-sequence]');
-    b?.addEventListener('click', async () => {
-      const etats = document.querySelector<HTMLElement>('[data-etats]')!;
-      const echec = document.querySelector<HTMLElement>('[data-etat-echec]')!;
+    // Les deux actions de la page qui parlent au serveur, pour le lead de ce navigateur (cookie des résultats) :
+    // inscription à la séquence (story 10.4) et envoi du guide par lien signé (story 10.5).
+    const etats = document.querySelector<HTMLElement>('[data-etats]');
+    const echec = document.querySelector<HTMLElement>('[data-etat-echec]');
+    async function action(b: HTMLButtonElement, route: string, reussite: (r: { url?: string }) => void) {
       b.disabled = true; b.setAttribute('aria-busy', 'true');
-      let ok = false;
-      try { ok = (await (await fetch('/api/diagnostic/sequence', { method: 'POST' })).json()).ok === true; } catch { ok = false; }
+      let r: { ok?: boolean; url?: string } = {};
+      try { r = await (await fetch(route, { method: 'POST' })).json(); } catch { r = {}; }
       b.disabled = false; b.removeAttribute('aria-busy');
-      etats.hidden = false; echec.hidden = ok;
-      if (ok) {
-        b.hidden = true;
-        document.querySelector<HTMLElement>('[data-sequence-deja]')!.hidden = false;
-        document.querySelector<HTMLElement>('[data-etat-sequence]')!.hidden = false;
-      }
-      etats.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
+      etats!.hidden = false; echec!.hidden = r.ok === true;
+      if (r.ok) reussite(r);
+      etats!.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    const b = document.querySelector<HTMLButtonElement>('[data-sequence]');
+    b?.addEventListener('click', () => action(b, '/api/diagnostic/sequence', () => {
+      b.hidden = true;
+      document.querySelector<HTMLElement>('[data-sequence-deja]')!.hidden = false;
+      document.querySelector<HTMLElement>('[data-etat-sequence]')!.hidden = false;
+    }));
+    document.querySelectorAll<HTMLButtonElement>('[data-guide]').forEach((g) => g.addEventListener('click', () => action(g, '/api/diagnostic/guide', (r) => {
+      const lien = document.querySelector<HTMLAnchorElement>('[data-lien-guide]')!;
+      if (r.url) lien.href = r.url; else lien.hidden = true;
+      document.querySelector<HTMLElement>('[data-etat-guide]')!.hidden = false;
+    })));
   </script>
 </Quiz>
 <style is:global>

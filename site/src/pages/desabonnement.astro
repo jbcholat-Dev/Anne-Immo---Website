@@ -1,0 +1,67 @@
+---
+// Désabonnement de la séquence d'e-mails (story 10.5, AD-8, AD-16), lien en pied de chaque e-mail de la séquence.
+// Rendue par le serveur. L'ouverture du lien ne désabonne pas encore : certaines messageries ouvrent les liens toutes seules
+// pour les vérifier, ce qui désabonnerait le prospect à son insu. Le bouton envoie la demande (POST sur cette page).
+// La désinscription en un clic depuis la messagerie (en-tête List-Unsubscribe) passe par POST /api/desabonnement (worker.ts).
+import Page from '../layouts/Page.astro';
+import { envSite } from '../server/env';
+import { journal } from '../server/journal';
+import { abonnement, desabonner, verifierDesabonnement } from '../server/liens';
+
+export const prerender = false;
+
+Astro.response.headers.set('Cache-Control', 'no-store');
+// « same-origin » et non « no-referrer » : le lien signé ne part pas vers d'autres sites, mais le navigateur garde l'en-tête
+// Origin du bouton, sans lequel Astro refuse l'envoi (403).
+Astro.response.headers.set('Referrer-Policy', 'same-origin');
+const leadId = await verifierDesabonnement(envSite, Astro.url);
+let etat: 'demande' | 'fait' | 'invalide' = leadId ? 'demande' : 'invalide';
+let lang: 'fr' | 'en' = 'fr';
+if (leadId) {
+  const lu = await abonnement(envSite, leadId);
+  if (!lu) etat = 'invalide';
+  else {
+    lang = lu.lang;
+    if (lu.desabonne) etat = 'fait';
+    else if (Astro.request.method === 'POST') {
+      await desabonner(envSite, leadId);
+      journal('desabonnement', { lead: leadId, mode: 'page' });
+      etat = 'fait';
+    }
+  }
+}
+if (etat === 'invalide') Astro.response.status = 404;
+const T = {
+  fr: {
+    titre: 'Arrêter les e-mails d’Anne', demande: 'Vous ne recevrez plus la série de conseils d’Anne. Les e-mails déjà partis restent dans votre boîte.',
+    bouton: 'Arrêter les e-mails', fait: 'C’est fait : vous ne recevrez plus la série de conseils d’Anne.', retour: 'Retour au site',
+    invalide: 'Ce lien n’est pas valable. Pour arrêter les e-mails, répondez simplement à l’un d’eux : Anne s’en occupe.',
+  },
+  en: {
+    titre: 'Stop Anne’s e-mails', demande: 'You will no longer receive Anne’s advice series. E-mails already sent stay in your inbox.',
+    bouton: 'Stop the e-mails', fait: 'Done: you will no longer receive Anne’s advice series.', retour: 'Back to the site',
+    invalide: 'This link is not valid. To stop the e-mails, simply reply to one of them and Anne will take care of it.',
+  },
+}[lang];
+---
+<Page titre={`${T.titre} — Anne VIAL-TISSOT`} lang={lang} noindex>
+  <section class="ds">
+    <h1>{T.titre}</h1>
+    {etat === 'demande' && (
+      <form method="post">
+        <p>{T.demande}</p>
+        <button type="submit" class="btn btn-primaire" data-desabonner>{T.bouton}</button>
+      </form>
+    )}
+    {etat === 'fait' && <p role="status" data-desabonne>{T.fait}</p>}
+    {etat === 'invalide' && <p data-lien-invalide>{T.invalide}</p>}
+    <a href={lang === 'en' ? '/en/' : '/'} class="lien">{T.retour}</a>
+  </section>
+</Page>
+<style>
+  .ds { max-width: 620px; margin: 0 auto; padding: 96px var(--marge-m) 120px; display: flex; flex-direction: column; gap: 20px; align-items: flex-start; }
+  .ds h1 { font-size: 44px; line-height: 1.1; }
+  .ds form { display: flex; flex-direction: column; gap: 20px; align-items: flex-start; }
+  .ds p { font-size: 17px; line-height: 1.6; }
+  @media (max-width: 899px) { .ds { padding: 48px var(--marge-m) 72px; } .ds h1 { font-size: 32px; } }
+</style>
