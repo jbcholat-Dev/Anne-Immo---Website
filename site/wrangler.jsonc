@@ -1,7 +1,7 @@
 {
   // Configuration Cloudflare. Le site est construit par Astro avec l'adaptateur Cloudflare (story 10.2) :
   // les pages prérendues sont servies telles quelles, /api/*, la page de résultats du diagnostic (rendue par le serveur,
-  // story 10.4) et la page de désabonnement (story 10.5) passent par worker.ts.
+  // story 10.4), la page de désabonnement (story 10.5) et l'espace de gestion /gestion (story 10.7) passent par worker.ts.
   // Aucun secret ici, seulement des identifiants publics. Secrets (GITHUB_TOKEN, CAL_WEBHOOK_SECRET, LIEN_SECRET, RESEND_API_KEY, TURNSTILE_SECRET_KEY, BOITE_TEST…) :
   // Cloudflare → Workers & Pages → anne-vial-tissot-site → Settings → Variables and Secrets, voir RUNBOOK.md.
   // L'indexation se règle à la construction, par la variable de build PUBLIC_INDEXATION du projet Cloudflare
@@ -15,7 +15,7 @@
     "binding": "ASSETS",
     "not_found_handling": "404-page",
     "html_handling": "auto-trailing-slash",
-    "run_worker_first": ["/api/*", "/diagnostic/resultats", "/desabonnement"]
+    "run_worker_first": ["/api/*", "/diagnostic/resultats", "/desabonnement", "/gestion", "/gestion/*"]
   },
   // Base des leads (D1, juridiction UE, RUNBOOK § 4 quater). Tant que le site n'est pas lancé, toutes les
   // mises en ligne (main comme branches) utilisent la base d'aperçu ; la base de production `anne-leads`
@@ -45,6 +45,11 @@
     // (adresse de réponse des confirmations, car anne@annevialtissot.fr n'a pas encore de boîte de réception).
     "BOITE_ANNE": "avialtissot@gmail.com",
     // Adresse du site dans les liens des e-mails (guide, désabonnement, story 10.5). Passe à https://annevialtissot.fr au lancement (story 12.4).
-    "URL_SITE": "https://anne-vial-tissot-site.jbcholat.workers.dev"
+    "URL_SITE": "https://anne-vial-tissot-site.jbcholat.workers.dev",
+    // Espace de gestion des demandes (story 10.7) : équipe Cloudflare Access qui signe les jetons, et identifiants (AUD)
+    // des applications Access autorisées, séparés par des virgules (aperçu, puis annevialtissot.fr/gestion au lancement).
+    // Valeurs publiques. Sans AUD, l'espace de gestion reste fermé (403). Voir RUNBOOK.md § 4 quinquies.
+    "ACCESS_EQUIPE": "https://dry-truth-5a0d.cloudflareaccess.com",
+    "ACCESS_AUD": ""
   }
 }

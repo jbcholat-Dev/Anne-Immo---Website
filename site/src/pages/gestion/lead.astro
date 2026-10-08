@@ -1,0 +1,89 @@
+---
+// Fiche d'une demande : tous ses champs, l'état de chaque envoi, rejeu et marque « recopié dans Modelo » (story 10.7).
+import Gestion from '../../layouts/Gestion.astro';
+import { ENTETE_COMPTE } from '../../server/acces';
+import { envSite } from '../../server/env';
+import { canal, detailLead, ETATS, quand, rejouable, SOURCES } from '../../server/gestion';
+
+export const prerender = false;
+if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
+
+const id = Astro.url.searchParams.get('id') ?? '';
+const m = Astro.url.searchParams.get('m') ?? '';
+const fiche = /^[0-9A-Z]{26}$/.test(id) ? await detailLead(envSite, id) : null;
+if (!fiche) Astro.response.status = 404;
+const l = fiche?.lead ?? {};
+const MESSAGES: Record<string, string> = {
+  rejoue: "L'envoi a été relancé : son état est ci-dessous.",
+  'rejeu-impossible': "Cet envoi ne peut pas être relancé (déjà fait ou annulé).",
+  modelo: 'Marquée comme recopiée dans Modelo.',
+  'modelo-annule': 'Marque « recopiée dans Modelo » retirée.',
+};
+const DATES = ['created_at', 'last_activity_at', 'privacy_accepted_at', 'newsletter_opt_in_at', 'newsletter_unsubscribed_at', 'rdv_start'];
+const MASQUES = ['id', 'submission_id', 'token', 'token_browser'];
+const LIBELLES: Record<string, string> = {
+  created_at: 'Reçue le', last_activity_at: 'Dernière activité', lang: 'Langue', source: 'Type', email: 'E-mail', telephone: 'Téléphone',
+  prenom: 'Prénom', nom: 'Nom', privacy_accepted_at: 'Confidentialité acceptée le', newsletter_opt_in_at: 'Séquence demandée le',
+  newsletter_unsubscribed_at: 'Désabonnée le', utm: 'Campagne', is_test: 'Demande de test', answers: 'Réponses', scores: 'Scores',
+  band: 'Tranche de score', orientation: 'Orientation', message: 'Message', projet: 'Projet', commune_bien: 'Commune du bien',
+  type_bien: 'Type de bien', rdv_start: 'Rendez-vous le',
+};
+const valeur = (k: string, v: unknown) => {
+  if (DATES.includes(k)) return quand(v);
+  if (k === 'source') return SOURCES[String(v)] ?? String(v);
+  if (k === 'is_test') return v ? 'oui' : 'non';
+  if (['answers', 'scores', 'utm'].includes(k) && typeof v === 'string') { try { return JSON.stringify(JSON.parse(v), null, 2); } catch { return v; } }
+  return String(v);
+};
+const champs = Object.entries(l).filter(([k, v]) => !MASQUES.includes(k) && v !== null && v !== '');
+const recopie = fiche?.envois.some((e) => e.channel === 'modelo' && e.status === 'delivered');
+const nom = [l.prenom, l.nom].filter(Boolean).join(' ') || String(l.email ?? '');
+---
+<Gestion titre={fiche ? nom : 'Demande introuvable'}>
+  <p><a href="/gestion">← Toutes les demandes</a></p>
+  {!fiche ? <h1>Demande introuvable</h1> : (
+    <>
+      <h1>{nom}</h1>
+      {MESSAGES[m] && <p class="g-message" role="status" data-message>{MESSAGES[m]}</p>}
+      <section class="g-cadre">
+        <div class="g-actions">
+          <form method="post" action="/api/gestion/modelo" data-modelo>
+            <input type="hidden" name="id" value={id} />
+            <input type="hidden" name="recopie" value={recopie ? '0' : '1'} />
+            <button class="g-bouton" type="submit">{recopie ? 'Retirer la marque « recopiée dans Modelo »' : 'Marquer comme recopiée dans Modelo'}</button>
+          </form>
+          <a class="g-bouton" href={`/gestion?q=${encodeURIComponent(String(l.email))}`}>Droits RGPD de cette adresse</a>
+        </div>
+        <dl class="g-fiche" data-fiche>
+          {champs.map(([k, v]) => <><dt>{LIBELLES[k] ?? k}</dt><dd>{valeur(k, v)}</dd></>)}
+        </dl>
+      </section>
+      <section>
+        <h2>Envois</h2>
+        <div class="g-table-zone">
+          <table class="g-table" data-envois>
+            <thead><tr><th>Envoi</th><th>État</th><th>Essais</th><th>Fait le</th><th>Erreur</th><th></th></tr></thead>
+            <tbody>
+              {fiche.envois.map((e) => (
+                <tr data-canal={e.channel}>
+                  <td>{canal(e.channel)}</td>
+                  <td><span class={`g-pastille ${e.status === 'delivered' ? 'ok' : e.status === 'failed' ? 'ko' : ''}`}>{ETATS[e.status] ?? e.status}</span>{e.status === 'pending' && <span class="g-muet"> (prévu le {quand(e.due_at)})</span>}</td>
+                  <td>{e.attempts}</td>
+                  <td>{quand(e.delivered_at)}</td>
+                  <td>{e.last_error ?? ''}</td>
+                  <td>{rejouable(e.channel) && e.status === 'failed' && (
+                    <form method="post" action="/api/gestion/rejouer" data-rejouer>
+                      <input type="hidden" name="id" value={id} />
+                      <input type="hidden" name="canal" value={e.channel} />
+                      <button class="g-bouton" type="submit">Relancer</button>
+                    </form>
+                  )}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </>
+  )}
+</Gestion>
