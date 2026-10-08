@@ -1,0 +1,83 @@
+---
+// Espace de gestion : liste des demandes, recherche, droits RGPD d'une adresse (story 10.7).
+// Atteint seulement à travers worker.ts, qui a vérifié le jeton Cloudflare Access (src/server/acces.ts).
+import Gestion from '../../layouts/Gestion.astro';
+import { ENTETE_COMPTE } from '../../server/acces';
+import { envSite } from '../../server/env';
+import { listerLeads, quand, SOURCES } from '../../server/gestion';
+import { CONSERVATION_ANS } from '../../server/purge';
+import { droitsExerces } from '../../server/rights';
+
+export const prerender = false;
+if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
+
+const q = (Astro.url.searchParams.get('q') ?? '').trim().slice(0, 200);
+const m = Astro.url.searchParams.get('m') ?? '';
+const leads = await listerLeads(envSite, q);
+const adresse = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(q) ? q.toLowerCase() : '';
+const droits = await droitsExerces(envSite, 10);
+const message = m.startsWith('efface-') ? `C'est fait : ${m.slice(7)} demande(s) effacée(s), avec leurs envois.` : m === 'confirmation' ? "Effacement non fait : l'adresse de confirmation ne correspond pas." : '';
+---
+<Gestion titre="Demandes">
+  <h1>Demandes</h1>
+  {message && <p class="g-message" role="status" data-message>{message}</p>}
+  <form class="g-recherche" method="get" action="/gestion">
+    <input type="search" name="q" value={q} placeholder="Adresse e-mail, nom ou téléphone" aria-label="Rechercher une demande" />
+    <button class="g-bouton" type="submit">Rechercher</button>
+    {q && <a href="/gestion">Tout afficher</a>}
+  </form>
+
+  {adresse && (
+    <section class="g-cadre" data-droits>
+      <h2>Droits de {adresse}</h2>
+      <p class="g-muet">Quand une personne demande ses données ou leur effacement, suivre la procédure du RUNBOOK (§ 4 quinquies) : export ou effacement ici, puis Cal.com, puis réponse à la personne sous un mois.</p>
+      <div class="g-actions">
+        <a class="g-bouton" href={`/api/gestion/export?email=${encodeURIComponent(adresse)}`} data-exporter>Exporter ses données (fichier JSON)</a>
+      </div>
+      <form method="post" action="/api/gestion/effacer" class="g-cadre" data-effacer>
+        <input type="hidden" name="email" value={adresse} />
+        <label>Pour effacer définitivement les {leads.length} demande(s) de cette adresse, recopiez-la ici :
+          <input type="text" name="confirmation" autocomplete="off" />
+        </label>
+        <div><button class="g-bouton danger" type="submit">Effacer définitivement</button></div>
+      </form>
+    </section>
+  )}
+
+  <section>
+    <h2>{q ? `${leads.length} résultat(s)` : `Les ${leads.length} dernières demandes`}</h2>
+    {leads.length === 0 ? <p class="g-muet">Aucune demande.</p> : (
+      <div class="g-table-zone">
+        <table class="g-table" data-liste>
+          <thead><tr><th>Reçue</th><th>Type</th><th>Nom</th><th>E-mail</th><th>Téléphone</th><th>E-mails</th><th>Modelo</th></tr></thead>
+          <tbody>
+            {leads.map((l) => (
+              <tr data-lead={l.id}>
+                <td><a href={`/gestion/lead?id=${l.id}`}>{quand(l.created_at)}</a></td>
+                <td>{SOURCES[l.source] ?? l.source}{l.orientation ? ` ${l.orientation}` : ''}{l.is_test ? <> <span class="g-pastille test">test</span></> : ''}</td>
+                <td><a href={`/gestion/lead?id=${l.id}`}>{[l.prenom, l.nom].filter(Boolean).join(' ') || '—'}</a></td>
+                <td>{l.email}</td>
+                <td>{l.telephone ?? '—'}</td>
+                <td>{l.echecs ? <span class="g-pastille ko">{l.echecs} en échec</span> : <span class="g-pastille ok">ok</span>}</td>
+                <td>{l.modelo === 'delivered' ? <span class="g-pastille ok">recopié</span> : <span class="g-pastille">à recopier</span>}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </section>
+
+  {droits.length > 0 && (
+    <section>
+      <h2>Derniers droits exercés</h2>
+      <div class="g-table-zone">
+        <table class="g-table">
+          <thead><tr><th>Date</th><th>Droit</th><th>Adresse (empreinte)</th><th>Demandes</th><th>Par</th></tr></thead>
+          <tbody>{droits.map((d) => <tr><td>{quand(d.a)}</td><td>{d.type === 'acces' ? 'Accès' : 'Effacement'}</td><td>{d.email_empreinte}</td><td>{d.leads}</td><td>{d.par}</td></tr>)}</tbody>
+        </table>
+      </div>
+    </section>
+  )}
+  <p class="g-muet">Les demandes sans activité depuis {CONSERVATION_ANS} ans sont supprimées automatiquement, comme l'annonce la politique de confidentialité.</p>
+</Gestion>

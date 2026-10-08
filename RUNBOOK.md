@@ -100,10 +100,36 @@ Contrôle : `GET /api/sante` répond `{"ok":true,"migrations":N}` (N = nombre de
 
 **Redéployer depuis une machine vierge** (AD-10) : `git clone` du dépôt, `cd site && npm ci && npm run build && npx wrangler login && npx wrangler d1 migrations apply DB --remote && npx wrangler deploy`.
 
+## 4 quinquies. Gestion des demandes et droits RGPD (story 10.7)
+
+**Où** : `/gestion` sur l'adresse du site (aperçu : https://anne-vial-tissot-site.jbcholat.workers.dev/gestion). Anne y voit les demandes, relance un e-mail en échec, marque une demande « recopiée dans Modelo », exporte ou efface les données d'une personne. Réservé à Anne et JB.
+
+**Comment c'est protégé** : deux verrous. 1) Cloudflare Access demande un code envoyé par e-mail aux seules adresses de la règle `Anne et JB`. 2) Le serveur vérifie lui-même le jeton signé qu'Access joint à chaque requête ; il ne l'accepte que s'il vient de l'équipe `https://dry-truth-5a0d.cloudflareaccess.com` (`ACCESS_EQUIPE`) et d'une application dont l'identifiant figure dans `ACCESS_AUD` (`site/wrangler.jsonc`). Si `ACCESS_AUD` est vide, l'espace est fermé à tous (403). Ces deux valeurs sont publiques, elles vont dans le dépôt ; aucun secret à poser.
+
+**Réglage de `ACCESS_AUD`** : Cloudflare → Zero Trust → Access → Applications → l'application → Overview (ou Basic information) → « Application Audience (AUD) Tag », une longue suite de lettres et chiffres. Sur l'aperçu : l'AUD de l'application qui protège tout `anne-vial-tissot-site.jbcholat.workers.dev`. Plusieurs applications : les séparer par des virgules. Changer la valeur demande une PR (mise en ligne à la fusion).
+
+**Au lancement (story 12.4)** : Access ne protège plus `annevialtissot.fr` en entier (§ 4, étape 4). Avant de retirer cette protection, créer une application Access « Gestion » sur `annevialtissot.fr/gestion` et `annevialtissot.fr/api/gestion` (Self-hosted, règle `Anne et JB`), et ajouter son AUD à `ACCESS_AUD`. Vérifier en fenêtre privée : `/gestion` demande le code ; sans code, `curl https://annevialtissot.fr/gestion` répond 403.
+
+**Second facteur** : aujourd'hui le code envoyé par e-mail. Pour le renforcer : Zero Trust → Settings → Authentication → ajouter la connexion Google, puis dans la règle `Anne et JB` exiger cette méthode ; la validation en deux étapes du compte Google d'Anne devient alors le second facteur.
+
+**Procédure quand une personne demande ses données ou leur effacement** (délai légal : un mois) :
+1. Vérifier que la demande vient bien de la personne (elle écrit depuis l'adresse concernée, ou répond à un e-mail envoyé à cette adresse).
+2. `/gestion` → chercher son adresse e-mail exacte → cadre « Droits de … ».
+3. Accès : « Exporter ses données » donne un fichier JSON lisible ; le joindre à la réponse.
+4. Effacement : retaper l'adresse, « Effacer définitivement ». Toutes ses demandes et leurs envois disparaissent, sans retour possible ; les e-mails déjà prévus (séquence) ne partent plus.
+5. Si elle a pris rendez-vous : Cal.com → Bookings → retrouver la réservation → l'annuler ou la supprimer.
+6. Effacer aussi la fiche dans Modelo si elle y a été recopiée, et les e-mails échangés dans la boîte d'Anne si elle le demande.
+7. Répondre à la personne : ce qui a été fait, à quelle date.
+Rien n'est à effacer chez Resend : le site n'y garde aucun contact. Chaque export ou effacement est noté (date, type, empreinte de l'adresse, qui a agi) dans la table `droit_exerce`, visible en bas de `/gestion`.
+
+**Conservation** : les demandes sans activité depuis 3 ans sont supprimées automatiquement par la tâche planifiée ; durée écrite dans la politique de confidentialité et dans `site/src/server/purge.ts`, une seule source.
+
 ## 5. Pièges irréversibles
 
 - Ne jamais mettre `PUBLIC_INDEXATION=oui` sur une adresse d'aperçu : Google mémoriserait une version incomplète.
 - Ne jamais éteindre Access tant que des photos sans autorisation écrite sont sur le site.
+- Effacement RGPD depuis `/gestion` (§ 4 quinquies) : définitif, aucune sauvegarde n'est restaurée pour une seule personne.
+- Ne jamais retirer Access de `annevialtissot.fr` sans avoir d'abord protégé `/gestion` par sa propre application et ajouté son AUD à `ACCESS_AUD` (§ 4 quinquies) : le serveur refuserait tout, mais Anne n'aurait plus accès.
 - Base de données (backend, epic 10) : elle se crée avec une juridiction UE irréversible ; commande et noms au § 4 quater, écrits avant la création (AD-10).
 
 ## 6. Journal des changements de ce document
@@ -120,3 +146,4 @@ Contrôle : `GET /api/sante` répond `{"ok":true,"migrations":N}` (N = nombre de
 - 2026-10-08 : retours d'Anne n° 39, 40 et 42 (story 8.7, « Réalisations », bouton « Estimation offerte ») : rien ne change dans les comptes ni la mise en ligne.
 - 2026-10-08 : rendez-vous Cal.com par téléphone (décision de JB). Webhook réel `/api/webhook-cal` (story 10.6) : le chemin ouvert dans Access et l'adresse du webhook dans Cal.com passent de `/api/essai-cal` à `/api/webhook-cal` (§ 2).
 - 2026-10-08 : guide par lien signé et séquence d'e-mails (story 10.5) : nouveau secret `LIEN_SECRET` à poser (§ 4 quater) ; changer ce secret casse les liens déjà envoyés.
+- 2026-10-08 : espace de gestion des demandes et droits RGPD (story 10.7), § 4 quinquies : réglage `ACCESS_AUD`, procédure de demande d'accès ou d'effacement, application Access à créer au lancement.

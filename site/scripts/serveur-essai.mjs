@@ -3,6 +3,7 @@
 // car le serveur local ne peut pas joindre ces services depuis l'environnement de Claude. Utilisé par e2e-formulaires.mjs
 // et e2e-diagnostic.mjs. Préalable : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local`.
 import { spawn, execFileSync } from 'node:child_process';
+import { createSign, generateKeyPairSync } from 'node:crypto';
 import { createServer } from 'node:http';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -15,6 +16,10 @@ export const pause = (ms) => new Promise((ok) => setTimeout(ok, ms));
 export async function demarrer({ nom, port = 8788, portImitation = 8790 }) {
   const recus = [];
   const etat = { enPanne: false };
+  // Imitation de Cloudflare Access (story 10.7) : une paire de clés d'essai, la clé publique servie comme celles de l'équipe Access.
+  const ACCESS = `http://localhost:${portImitation}/access`;
+  const { privateKey, publicKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+  const certs = JSON.stringify({ keys: [{ ...publicKey.export({ format: 'jwk' }), kid: 'cle-essai', alg: 'RS256', use: 'sig' }] });
   const imitation = createServer((req, res) => {
     let corps = '';
     req.on('data', (c) => (corps += c));
@@ -23,6 +28,7 @@ export async function demarrer({ nom, port = 8788, portImitation = 8790 }) {
       // Une connexion par appel : le serveur local réutilise sinon une connexion que l'imitation a déjà fermée
       // (« Network connection lost » sur le deuxième e-mail d'un même lead).
       res.setHeader('Connection', 'close');
+      if (req.url === '/access/cdn-cgi/access/certs') return res.end(certs);
       if (req.url === '/turnstile') return res.end(JSON.stringify({ success: !corps.includes('response=refuse'), 'error-codes': [] }));
       if (req.url === '/resend') {
         if (etat.enPanne) { res.statusCode = 500; return res.end(JSON.stringify({ name: 'imitation_en_panne', message: 'panne simulée' })); }
@@ -39,6 +45,7 @@ export async function demarrer({ nom, port = 8788, portImitation = 8790 }) {
   fs.writeFileSync(reglages, [
     'TURNSTILE_SECRET_KEY=essai', 'RESEND_API_KEY=essai', 'BOITE_TEST=boite-test@example.com', 'CAL_WEBHOOK_SECRET=essai', 'LIEN_SECRET=essai',
     `URL_SERVICES_ESSAI=http://localhost:${portImitation}`, `URL_SITE=http://localhost:${port}`,
+    `ACCESS_EQUIPE=${ACCESS}`, 'ACCESS_AUD=essai-aud',
   ].join('\n'));
   const journal = path.join(os.tmpdir(), `e2e-${essai}.log`); // journal du serveur local, hors du dossier du site
   const sortie = fs.openSync(journal, 'w');
@@ -50,8 +57,15 @@ export async function demarrer({ nom, port = 8788, portImitation = 8790 }) {
     try { if ((await fetch(`${U}/api/sante`)).ok) break; } catch {}
     await pause(1000);
   }
+  /** Jeton tel que Cloudflare Access l'ajoute à chaque requête (en-tête Cf-Access-Jwt-Assertion) ; `champs` remplace les valeurs par défaut. */
+  const jetonAcces = (champs = {}, cle = privateKey) => {
+    const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
+    const t = Math.floor(Date.now() / 1000);
+    const corps = `${b64({ alg: 'RS256', kid: 'cle-essai', typ: 'JWT' })}.${b64({ aud: ['essai-aud'], iss: ACCESS, email: 'anne@example.com', iat: t, nbf: t, exp: t + 3600, ...champs })}`;
+    return `${corps}.${createSign('RSA-SHA256').update(corps).sign(cle).toString('base64url')}`;
+  };
   return {
-    U, recus, etat, journal, essai,
+    U, recus, etat, journal, essai, jetonAcces,
     arreter() { try { process.kill(-serveur.pid); } catch {} imitation.close(); fs.rmSync(reglages, { force: true }); },
     // Le serveur local ferme parfois une connexion réutilisée : on réessaie une fois avant de conclure.
     appeler: (url, options) => fetch(url, options).catch(() => pause(500).then(() => fetch(url, options))),
