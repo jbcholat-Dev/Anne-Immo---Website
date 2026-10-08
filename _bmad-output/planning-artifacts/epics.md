@@ -1149,7 +1149,7 @@ afin que mon nom et mes titres restent lisibles même en petit, et que le texte 
 **Alors** titres, logo et grands chiffres sont en Gilda Display, texte et étiquettes en Jost 400 / 500, servis par le site (aucun appel à Google)
 **Et** le nom dans les logos garde la même largeur qu'avant, les captures avant / après ne montrent aucun débordement, et `npm run build`, `npm run check`, `scripts/liens.mjs`, `scripts/ecrans.mjs` passent.
 
-**État :** en revue (2026-10-08), PR à fusionner par JB. Responsable : Claude ; décision : Anne (proposition), JB (fusion).
+**État :** fait (2026-10-08), PR #49 fusionnée par JB. Responsable : Claude ; décision : Anne (proposition), JB (fusion).
 
 
 # Mise en ligne d'aperçu, référencement et lancement public (epics 9, 11 et 12)

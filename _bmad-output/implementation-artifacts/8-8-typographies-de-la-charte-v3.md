@@ -1,7 +1,7 @@
 ---
 story: 8.8
 epic: 8 — Site : finitions
-statut: review
+statut: done
 date: 2026-10-08
 origine: artefact d'Anne « Charte graphique v3 » (https://claude.ai/artifact/L5WMPPVNZqneFUng7Loyie), demande de JB du 2026-10-08
 decision: D-31
@@ -37,6 +37,6 @@ Dans l'artefact, hors typographie et non repris ici : le logo y garde le sous-ti
 - Rendu des 14 SVG avec les nouvelles polices : le nom tient dans son cadre, le lockup eXp garde ses cotes.
 
 ## Ce qui reste
-- JB : relire et fusionner la PR (décision D-31).
+- ~~JB : relire et fusionner la PR~~ : fait, PR #49 fusionnée le 2026-10-08 (décision D-31 adoptée).
 - Anne : regarder le résultat sur l'aperçu une fois fusionné.
 - Le tiret insécable de « VIAL‑TISSOT » dans les titres du site est dessiné par la police de secours (Gilda n'a pas ce caractère) ; acceptable à l'œil, à revoir si Anne le remarque.
