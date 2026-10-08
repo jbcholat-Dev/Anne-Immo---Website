@@ -1,35 +1,10 @@
 À : boite-test@example.com
-Répondre à : avialtissot@gmail.com
-Objet : [TEST] Votre diagnostic vendeur : vos résultats
-
-(E-mail de test : en production, il serait parti vers claire+diagnostic-muz9472r@example.com.)
-
-Bonjour Claire,
-
-Merci d'avoir fait le diagnostic de votre vente. Voici le résumé de vos résultats :
-
-Score global : 100 / 100 (Bien préparé)
-Préparation à la Vente : 40 / 40
-Visibilité & Attractivité : 40 / 40
-Efficacité Commerciale : 20 / 20
-
-Le détail et les recommandations restent affichés 24 heures dans le navigateur où vous avez fait le diagnostic.
-
-Votre score montre une vente déjà bien préparée. Pour optimiser ce qui reste, je vous propose un rendez-vous stratégique de 30 minutes : réservez un créneau sur https://annevialtissot.fr/contact, ou répondez simplement à cet e-mail.
-
-Anne VIAL-TISSOT
-Consultante en immobilier · Chablais, Léman · réseau eXp France
-https://annevialtissot.fr
-
-==========
-
-À : boite-test@example.com
-Répondre à : claire+diagnostic-muz9472r@example.com
+Répondre à : claire+diagnostic-muz9fnkm@example.com
 Objet : [TEST] Nouvelle demande · Diagnostic 100/100 (sortie A) · Claire Essai
 
 (E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
 
-Nouvelle demande reçue par le site le 08/10/2026 10:05 (heure de Paris) : diagnostic vendeur.
+Nouvelle demande reçue par le site le 08/10/2026 10:14 (heure de Paris) : diagnostic vendeur.
 À faire : rappeler sous un jour ouvré pour proposer le rendez-vous stratégique (sortie A).
 
 À recopier dans la fiche contact Modelo :
@@ -44,7 +19,7 @@ Téléphone
 +33 6 12 34 56 78
 
 E-mail
-claire+diagnostic-muz9472r@example.com
+claire+diagnostic-muz9fnkm@example.com
 
 Type de contact
 Vendeur
@@ -71,22 +46,47 @@ Quel est votre objectif principal pour cette vente ? Vendre sereinement avec un 
 Quelles difficultés avez-vous rencontrées ou anticipez-vous dans votre vente ? Aucune difficulté pour le moment
 Quel type d'accompagnement correspondrait le mieux à vos besoins ? Accompagnement premium complet : prise en charge totale (photos pro, diffusion multi-canal, qualification acquéreurs, gestion administrative, négociation)
 
-Demande du 08/10/2026 10:05 via annevialtissot.fr (diagnostic vendeur).
+Demande du 08/10/2026 10:14 via annevialtissot.fr (diagnostic vendeur).
 Séquence d'e-mails : non demandée.
 Campagne : essai.
 
 Répondre à cet e-mail écrit directement à Claire Essai.
-Référence de la demande : 01M4D8Q2NVDA2Y3GRTTAR3FF92
+Référence de la demande : 01M4D979HM948TRGZB65TW5WP1
 
 ==========
 
 À : boite-test@example.com
-Répondre à : marc+diagnostic-muz9472r@example.com
+Répondre à : avialtissot@gmail.com
+Objet : [TEST] Votre diagnostic vendeur : vos résultats
+
+(E-mail de test : en production, il serait parti vers claire+diagnostic-muz9fnkm@example.com.)
+
+Bonjour Claire,
+
+Merci d'avoir fait le diagnostic de votre vente. Voici le résumé de vos résultats :
+
+Score global : 100 / 100 (Bien préparé)
+Préparation à la Vente : 40 / 40
+Visibilité & Attractivité : 40 / 40
+Efficacité Commerciale : 20 / 20
+
+Le détail et les recommandations restent affichés 24 heures dans le navigateur où vous avez fait le diagnostic.
+
+Votre score montre une vente déjà bien préparée. Pour optimiser ce qui reste, je vous propose un rendez-vous stratégique de 30 minutes : réservez un créneau sur https://annevialtissot.fr/contact, ou répondez simplement à cet e-mail.
+
+Anne VIAL-TISSOT
+Consultante en immobilier · Chablais, Léman · réseau eXp France
+https://annevialtissot.fr
+
+==========
+
+À : boite-test@example.com
+Répondre à : marc+diagnostic-muz9fnkm@example.com
 Objet : [TEST] Nouvelle demande · Diagnostic 52/100 (sortie B) · Marc Essai
 
 (E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
 
-Nouvelle demande reçue par le site le 08/10/2026 10:05 (heure de Paris) : diagnostic vendeur.
+Nouvelle demande reçue par le site le 08/10/2026 10:14 (heure de Paris) : diagnostic vendeur.
 À faire : un appel quand vous le jugez utile ; ses résultats lui proposent le guide (sortie B).
 
 À recopier dans la fiche contact Modelo :
@@ -101,7 +101,7 @@ Téléphone
 +41791234567
 
 E-mail
-marc+diagnostic-muz9472r@example.com
+marc+diagnostic-muz9fnkm@example.com
 
 Type de contact
 Vendeur
@@ -127,11 +127,11 @@ Quel est votre objectif principal pour cette vente ? Minimiser les frais d'agenc
 Quelles difficultés avez-vous rencontrées ou anticipez-vous dans votre vente ? Peu ou pas de demandes de visites / annonce peu vue, Offres trop basses par rapport au prix souhaité
 Quel type d'accompagnement correspondrait le mieux à vos besoins ? Forfait estimation + conseils : j'ai besoin d'un diagnostic expert pour débloquer ma situation
 
-Demande du 08/10/2026 10:05 via annevialtissot.fr (diagnostic vendeur).
+Demande du 08/10/2026 10:14 via annevialtissot.fr (diagnostic vendeur).
 Séquence d'e-mails : non demandée.
 
 Répondre à cet e-mail écrit directement à Marc Essai.
-Référence de la demande : 01M4D8QDX5H9XY8078H4XKAN55
+Référence de la demande : 01M4D97FYXFT4M5DBNQJ0B2S4Q
 
 ==========
 
@@ -139,7 +139,7 @@ Référence de la demande : 01M4D8QDX5H9XY8078H4XKAN55
 Répondre à : avialtissot@gmail.com
 Objet : [TEST] Votre diagnostic vendeur : vos résultats
 
-(E-mail de test : en production, il serait parti vers marc+diagnostic-muz9472r@example.com.)
+(E-mail de test : en production, il serait parti vers marc+diagnostic-muz9fnkm@example.com.)
 
 Bonjour Marc,
 
@@ -161,12 +161,12 @@ https://annevialtissot.fr
 ==========
 
 À : boite-test@example.com
-Répondre à : alice+nav-diagnostic-muz9472r@example.com
+Répondre à : alice+nav-diagnostic-muz9fnkm@example.com
 Objet : [TEST] Nouvelle demande · Diagnostic 100/100 (sortie A) · Alice Navigateur
 
 (E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
 
-Nouvelle demande reçue par le site le 08/10/2026 10:06 (heure de Paris) : diagnostic vendeur.
+Nouvelle demande reçue par le site le 08/10/2026 10:14 (heure de Paris) : diagnostic vendeur.
 À faire : rappeler sous un jour ouvré pour proposer le rendez-vous stratégique (sortie A).
 
 À recopier dans la fiche contact Modelo :
@@ -181,7 +181,7 @@ Téléphone
 +33 6 12 34 56 78
 
 E-mail
-alice+nav-diagnostic-muz9472r@example.com
+alice+nav-diagnostic-muz9fnkm@example.com
 
 Type de contact
 Vendeur
@@ -208,12 +208,12 @@ Quel est votre objectif principal pour cette vente ? Vendre sereinement avec un 
 Quelles difficultés avez-vous rencontrées ou anticipez-vous dans votre vente ? Aucune difficulté pour le moment
 Quel type d'accompagnement correspondrait le mieux à vos besoins ? Accompagnement premium complet : prise en charge totale (photos pro, diffusion multi-canal, qualification acquéreurs, gestion administrative, négociation)
 
-Demande du 08/10/2026 10:06 via annevialtissot.fr (diagnostic vendeur).
+Demande du 08/10/2026 10:14 via annevialtissot.fr (diagnostic vendeur).
 Séquence d'e-mails : non demandée.
 Campagne : parcours.
 
 Répondre à cet e-mail écrit directement à Alice Navigateur.
-Référence de la demande : 01M4D8RKS3WEF4DWMNQGBSV11T
+Référence de la demande : 01M4D98JXM5C82Q1RSDFTZS1CB
 
 ==========
 
@@ -221,7 +221,7 @@ Référence de la demande : 01M4D8RKS3WEF4DWMNQGBSV11T
 Répondre à : avialtissot@gmail.com
 Objet : [TEST] Votre diagnostic vendeur : vos résultats
 
-(E-mail de test : en production, il serait parti vers alice+nav-diagnostic-muz9472r@example.com.)
+(E-mail de test : en production, il serait parti vers alice+nav-diagnostic-muz9fnkm@example.com.)
 
 Bonjour Alice,
 
@@ -243,12 +243,12 @@ https://annevialtissot.fr
 ==========
 
 À : boite-test@example.com
-Répondre à : bruno+nav-diagnostic-muz9472r@example.com
+Répondre à : bruno+nav-diagnostic-muz9fnkm@example.com
 Objet : [TEST] Nouvelle demande · Diagnostic 52/100 (sortie B) · Bruno Navigateur
 
 (E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
 
-Nouvelle demande reçue par le site le 08/10/2026 10:06 (heure de Paris) : diagnostic vendeur.
+Nouvelle demande reçue par le site le 08/10/2026 10:14 (heure de Paris) : diagnostic vendeur.
 À faire : un appel quand vous le jugez utile ; ses résultats lui proposent le guide (sortie B).
 
 À recopier dans la fiche contact Modelo :
@@ -263,7 +263,7 @@ Téléphone
 +33 6 12 34 56 78
 
 E-mail
-bruno+nav-diagnostic-muz9472r@example.com
+bruno+nav-diagnostic-muz9fnkm@example.com
 
 Type de contact
 Vendeur
@@ -289,12 +289,12 @@ Quel est votre objectif principal pour cette vente ? Minimiser les frais d'agenc
 Quelles difficultés avez-vous rencontrées ou anticipez-vous dans votre vente ? Peu ou pas de demandes de visites / annonce peu vue, Offres trop basses par rapport au prix souhaité
 Quel type d'accompagnement correspondrait le mieux à vos besoins ? Forfait estimation + conseils : j'ai besoin d'un diagnostic expert pour débloquer ma situation
 
-Demande du 08/10/2026 10:06 via annevialtissot.fr (diagnostic vendeur).
+Demande du 08/10/2026 10:14 via annevialtissot.fr (diagnostic vendeur).
 Séquence d'e-mails : non demandée.
 Campagne : parcours.
 
 Répondre à cet e-mail écrit directement à Bruno Navigateur.
-Référence de la demande : 01M4D8S0AT8CET3MCWD0XNAD02
+Référence de la demande : 01M4D98X8KGC995FMVRP5GYCZV
 
 ==========
 
@@ -302,7 +302,7 @@ Référence de la demande : 01M4D8S0AT8CET3MCWD0XNAD02
 Répondre à : avialtissot@gmail.com
 Objet : [TEST] Votre diagnostic vendeur : vos résultats
 
-(E-mail de test : en production, il serait parti vers bruno+nav-diagnostic-muz9472r@example.com.)
+(E-mail de test : en production, il serait parti vers bruno+nav-diagnostic-muz9fnkm@example.com.)
 
 Bonjour Bruno,
 
@@ -324,12 +324,12 @@ https://annevialtissot.fr
 ==========
 
 À : boite-test@example.com
-Répondre à : lea+nav-diagnostic-muz9472r@example.com
+Répondre à : lea+nav-diagnostic-muz9fnkm@example.com
 Objet : [TEST] Nouvelle demande · Diagnostic 1/100 (sortie B) · Lea Navigateur
 
 (E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
 
-Nouvelle demande reçue par le site le 08/10/2026 10:06 (heure de Paris) : diagnostic vendeur.
+Nouvelle demande reçue par le site le 08/10/2026 10:15 (heure de Paris) : diagnostic vendeur.
 À faire : un appel quand vous le jugez utile ; ses résultats lui proposent le guide (sortie B).
 
 À recopier dans la fiche contact Modelo :
@@ -344,7 +344,7 @@ Téléphone
 +33 6 12 34 56 78
 
 E-mail
-lea+nav-diagnostic-muz9472r@example.com
+lea+nav-diagnostic-muz9fnkm@example.com
 
 Type de contact
 Vendeur
@@ -370,12 +370,12 @@ Quel est votre objectif principal pour cette vente ? Obtenir le meilleur prix po
 Quelles difficultés avez-vous rencontrées ou anticipez-vous dans votre vente ? Peu ou pas de demandes de visites / annonce peu vue
 Quel type d'accompagnement correspondrait le mieux à vos besoins ? Vente 100% autonome : je préfère gérer seul(e), j'ai juste besoin de ressources/formations
 
-Demande du 08/10/2026 10:06 via annevialtissot.fr (diagnostic vendeur).
+Demande du 08/10/2026 10:15 via annevialtissot.fr (diagnostic vendeur).
 Séquence d'e-mails : acceptée.
 Campagne : parcours.
 
 Répondre à cet e-mail écrit directement à Lea Navigateur.
-Référence de la demande : 01M4D8SBWKN99WCAEM8XX2DWHY
+Référence de la demande : 01M4D997200247SZFJJPDA9TSS
 
 ==========
 
@@ -383,7 +383,7 @@ Référence de la demande : 01M4D8SBWKN99WCAEM8XX2DWHY
 Répondre à : avialtissot@gmail.com
 Objet : [TEST] Votre diagnostic vendeur : vos résultats
 
-(E-mail de test : en production, il serait parti vers lea+nav-diagnostic-muz9472r@example.com.)
+(E-mail de test : en production, il serait parti vers lea+nav-diagnostic-muz9fnkm@example.com.)
 
 Bonjour Lea,
 

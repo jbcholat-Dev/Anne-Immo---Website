@@ -1,0 +1,29 @@
+[TEST] Nouvelle demande · Rendez-vous vendredi 16 octobre à 11:00 · Paul Essai
+
+(E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
+
+Nouvelle demande reçue par le site le 08/10/2026 10:12 (heure de Paris) : rendez-vous réservé dans Cal.com.
+À faire : appeler +33 6 98 76 54 32 le vendredi 16 octobre à 11:00. Cal.com a déjà envoyé les confirmations et l'invitation d'agenda.
+
+À recopier dans la fiche contact Modelo :
+
+Nom
+Paul Essai
+
+Téléphone
++33 6 98 76 54 32
+
+E-mail
+paul+rendez-vous-muz9d692@example.com
+
+Type de contact
+À préciser pendant l'appel
+
+Notes
+Rendez-vous « Premier échange » le vendredi 16 octobre à 11:00 (heure de Paris), par téléphone.
+Note du prospect : Maison à Thonon, vente au printemps.
+Demande du 08/10/2026 10:12 via annevialtissot.fr (rendez-vous réservé dans Cal.com).
+Séquence d'e-mails : non demandée.
+
+Répondre à cet e-mail écrit directement à Paul Essai.
+Référence de la demande : 01M4D93W4F5ARFKV1CGPN17S9G
