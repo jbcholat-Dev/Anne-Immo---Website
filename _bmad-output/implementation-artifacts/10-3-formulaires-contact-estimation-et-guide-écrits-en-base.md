@@ -47,6 +47,6 @@ Un message, une demande d'estimation ou une demande de guide envoyés depuis le 
 - E-mails reçus dans la boîte de test (`BOITE_TEST`), en boîte de réception et non en indésirables, expéditeur `anne@annevialtissot.fr` : accusés de réception du contact et de l'estimation, notifications à Anne du contact et du guide (captures de JB), téléphone remis au format `+33 6 45 27 85 84`, blocs prêts pour Modelo. Pour le guide, aucun e-mail au prospect, comme prévu jusqu'à la story 10.5.
 
 ## Ce qui reste
-- Ligne DMARC à poser dans le DNS (`_dmarc`, `v=DMARC1; p=quarantine; adkim=r; aspf=r`), exigée par AD-8 avant le lancement (action JB).
+- ~~Ligne DMARC à poser dans le DNS~~ : fait. Le 2026-10-08, JB constate (capture du DNS Cloudflare) qu'une ligne `_dmarc` `v=DMARC1; p=reject;` existe déjà ; plus stricte que prévu, gardée (décision de Claude, validée par la réception des e-mails de test en boîte de réception). Écrit dans `RUNBOOK.md` § 4 quater, avec le piège SPF pour J08.
 - Anne : relire les deux e-mails automatiques et l'ordre des blocs de la fiche Modelo (`.verif/e2e-formulaires-emails.txt` donne un exemple de chaque) ; valider la politique de confidentialité.
 - Boîte de réception pour `anne@annevialtissot.fr` (action J08) : pas nécessaire tant que les réponses vont à `avialtissot@gmail.com`.
