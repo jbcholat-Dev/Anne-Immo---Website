@@ -98,8 +98,8 @@ Anne a classé les photos HD par vente dans `contenu-anne/Stories  photos/` (9 d
 | `ALLINGES_MORAND_villa` | `maison-premium-2025` ✍️ | MORAND MUFFAT | 18 (nov. 2024) | — | 047 |
 | `ANTHY_BOGLI_T3 RDJ` | `anthy-t3-2024` *proposé* | BOEGLI BRAIZE (2024) | 11 (nov.-déc. 2023) | JcbAnthy (forte) | 002 (jardin) |
 | `ANTHY_LOIEZ_T4` | `anthy-t4-2025` *proposé* | LOIEZ BRAIZE (2025) | 13 (nov. 2024), 1 portrait | — | 025 (drone lac) |
-| `BERNEX_HIGOUNENC_chalet` | `bernex-chalet-2024` *proposé* | HIGOUNENC CHERON (2024) | 12 (juin 2024) | — | 013 (façade) |
-| `SCIEZ_BURNET_Villa` | `sciez-villa-2025` *proposé* | BURNET PINET HOUSSARD (2025) | 18 (mars 2025) | IsalineP (forte) | 004 (aérien port) |
+| `BERNEX_HIGOUNENC_chalet` | `bernex-chalet-2024` (fiche créée le 2026-10-08, récit à écrire) | HIGOUNENC CHERON (2024) | 12 (juin 2024) | — | 013 (façade) |
+| `SCIEZ_BURNET_Villa` | `sciez-villa-2025` (fiche créée le 2026-10-08, récit à écrire) | BURNET PINET HOUSSARD (2025) | 18 (mars 2025) | IsalineP (forte) | 004 (aérien port) |
 | `ESSERT_BAUD_chalet` | `essert-romand-chalet-2026` *proposé* | BAUD HOFMANNER… (2026) | 17 (nov. 2025) | Sabine/François (forte) | 036 (drone, chalet sous la neige) |
 | `EVIAN_LEBORGNE_T4` | `evian-t4-2026` *proposé* | LEBORGNE JOHNSON BAILLY (2026) | 23 (avr. 2026), 1 portrait | — | 038 (façade) |
 
