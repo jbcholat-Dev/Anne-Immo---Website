@@ -1,7 +1,7 @@
 ---
 story: 10.3
 epic: 10 — Capture des leads et backend
-statut: review
+statut: done
 date: 2026-10-07
 ---
 
@@ -42,8 +42,11 @@ Un message, une demande d'estimation ou une demande de guide envoyés depuis le 
   - navigateur sur `/contact?utm_source=navigateur` : Turnstile non chargé à l'ouverture, chargé à l'envoi, confirmation affichée, lead écrit avec sa campagne (capture `.verif/e2e-formulaires-contact.png`). Le widget Turnstile lui-même ne se charge pas depuis l'environnement de Claude : il est remplacé par une imitation dans cet essai et sera essayé pour de vrai sur l'aperçu.
 - `npm run build` : sans erreur. `npm run check` : 0 erreur (site et code serveur). `node scripts/liens.mjs` : 25 pages, 1479 liens, 0 cassé. `node scripts/e2e-diagnostic.mjs` : parcours complet, aucune erreur (le diagnostic reste simulé). `npm run verif` : aucune erreur console ; page Guide avec ses nouveaux textes (capture `.verif/guide-desktop.png`), autres pages inchangées.
 
+## Ce qui est vérifié en ligne (2026-10-08, aperçu de la branche, par JB)
+- Contact, estimation et guide envoyés depuis le vrai site avec le vrai widget Turnstile : confirmation affichée à chaque fois (captures de JB).
+- E-mails reçus dans la boîte de test (`BOITE_TEST`), en boîte de réception et non en indésirables, expéditeur `anne@annevialtissot.fr` : accusés de réception du contact et de l'estimation, notifications à Anne du contact et du guide (captures de JB), téléphone remis au format `+33 6 45 27 85 84`, blocs prêts pour Modelo. Pour le guide, aucun e-mail au prospect, comme prévu jusqu'à la story 10.5.
+
 ## Ce qui reste
-- **Essai réel sur l'aperçu de la branche** (JB) : un envoi par formulaire ; constater la confirmation à l'écran et les e-mails `[TEST]` dans la boîte de JB.
 - Ligne DMARC à poser dans le DNS (`_dmarc`, `v=DMARC1; p=quarantine; adkim=r; aspf=r`), exigée par AD-8 avant le lancement (action JB).
 - Anne : relire les deux e-mails automatiques et l'ordre des blocs de la fiche Modelo (`.verif/e2e-formulaires-emails.txt` donne un exemple de chaque) ; valider la politique de confidentialité.
 - Boîte de réception pour `anne@annevialtissot.fr` (action J08) : pas nécessaire tant que les réponses vont à `avialtissot@gmail.com`.
