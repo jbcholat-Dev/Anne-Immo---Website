@@ -1916,3 +1916,16 @@ afin de ne pas dépendre d'un réglage invisible.
 **Quand** le site est construit
 **Alors** la photo remplace le bloc A-04 sur À propos, l'accueil et le diagnostic
 **Et** un chemin `photos/x.webp` (dossier `contenu-anne/photos/`) reste accepté
+
+### Story 7.19: Ventes de Sciez et de Bernex
+
+En tant qu'Anne,
+je veux que mes ventes de Sciez et de Bernex figurent sur la page Réalisation,
+afin de montrer toutes mes ventes photographiées.
+
+**Critères d'acceptation :**
+
+**Étant donné** les fiches `sciez-villa-2025` et `bernex-chalet-2024` complétées par Anne (récit, photos) dans l'espace d'édition
+**Quand** elles passent en « publie »
+**Alors** elles apparaissent sur la page Réalisation et ont leur page
+**Et** le récit est celui d'Anne, jamais un texte inventé
