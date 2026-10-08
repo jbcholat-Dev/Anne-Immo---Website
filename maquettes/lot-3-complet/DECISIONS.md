@@ -51,6 +51,13 @@ La nav passe de 4 entrées + bouton à **5 entrées (À propos ▾ · Réalisati
 |---|---|---|---|
 | D-27 | **Le hero, c'est le montage d'Anne, en entier (95 s), en boucle, sans son** (D-1 précisée). Le 2026-10-05, JB remplace le montage par une nouvelle version d'Anne (52 s, story 7.15) ; la règle reste la même. Le montage a été fait exprès pour le site : on ne le découpe pas, on ne le recadre pas (le logo eXp incrusté reste). **Le poster A-14 devient la première image de la vidéo** (Anne face caméra dans un pré du Chablais) : image d'attente pendant le chargement et repli si la lecture automatique est refusée (mouvement réduit, économie de données), sans saut visuel au démarrage. La photo d'Armoy quitte le hero. Poids : 1440 px, ≈ 15 Mo MP4 — écart assumé au budget « 12 s, < 6 Mo » (voir `site/README.md` § Écarts). | ✅ | `site/README.md` · `scripts/video.mjs` · story 8.3. |
 
+## Décisions du 2026-10-08 (Anne, retours d'aperçu n° 39, 40 et 42 — story 8.7)
+
+| # | Décision | Statut | À propager |
+|---|---|---|---|
+| D-29 | **« Réalisations » au pluriel, index titré « Quelques réalisations »** (remplace D-3 et le titre de D-26). Anne : sinon « on va croire que j'ai vendu que qqs biens ». L'adresse `/realisation` ne change pas ; l'anglais garde « Track record ». | ✅ | `structure-site.md` § 0 et § 2 · `site/src/content/ui/fr.json` · `site/src/pages/realisation/` · story 8.7. |
+| D-30 | **Un second bouton « Estimation offerte » dans l'ouverture de l'accueil** (amende « un seul CTA » de `structure-site.md` § 1.1 et D-19), en contour clair à côté du bouton du diagnostic, qui reste le bouton principal (plein). Il mène à l'agenda de `/contact#reserver`. Ce qu'on perd : un appel à l'action unique et plus net ; gardé parce que « estimation offerte » est la porte d'entrée que les vendeurs cherchent, quand le diagnostic demande trois minutes. | ✅ | `structure-site.md` § 1.1 · `site/src/components/accueil/Hero.astro` · story 8.7. |
+
 ## Décision du 2026-10-04 (JB, retour d'aperçu n° 3 — story 8.5)
 
 | # | Décision | Statut | À propager |
@@ -84,7 +91,7 @@ La nav passe de 4 entrées + bouton à **5 entrées (À propos ▾ · Réalisati
 | 02 Diagnostic (landing) | 🔄 | 🔄 | non revue en séance |
 | 03 Diagnostic (questions) | 🔄 | 🔄 | non revue |
 | 04 Résultats | 🔄 | 🔄 | non revue |
-| 05 Réalisation (index) | 🔄 | 🔄 | h1 « Réalisation » (D-26) |
+| 05 Réalisation (index) | 🔄 | 🔄 | h1 « Quelques réalisations » (D-29, remplace D-26) |
 | 06 Story | 🔄 | 🔄 | mobile ajouté le 22/09 |
 | 07 + 08 → À propos | 🔄 | 🔄 | Méthode et Anne fusionnent en une page à ancres (D-11) ; vidéo méthode prévue, facultative (D-12) ; « Cible » à trancher (D-2) |
 | 09 Contact | 🔄 | 🔄 | non revue |
