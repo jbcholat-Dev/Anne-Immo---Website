@@ -2,14 +2,15 @@
 // le navigateur l'a déjà fait (une vérification faite seulement dans la page se contourne).
 // Renvoie soit le lead prêt à écrire, soit le premier champ refusé.
 
-export type SourceFormulaire = 'contact' | 'estimation' | 'guide' | 'diagnostic';
+export type SourceFormulaire = 'contact' | 'estimation' | 'guide' | 'diagnostic' | 'rdv';
 export const TYPES_BIEN = ['Maison', 'Appartement', 'Chalet', 'Terrain', 'Autre'] as const;
 const CLES_UTM = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'] as const;
 
 export interface LeadFormulaire {
   source: SourceFormulaire;
   lang: 'fr' | 'en';
-  prenom: string;
+  /** Null pour un rendez-vous : Cal.com ne donne que le nom complet. */
+  prenom: string | null;
   nom: string;
   email: string;
   telephone: string | null;
@@ -19,6 +20,8 @@ export interface LeadFormulaire {
   type_bien: string | null;
   newsletter: boolean;
   utm: string | null;
+  /** Début du rendez-vous Cal.com (UTC), pour un lead `rdv` seulement. */
+  rdv_start?: string | null;
 }
 
 export type Verdict = { ok: true; lead: LeadFormulaire } | { ok: false; champ: string };

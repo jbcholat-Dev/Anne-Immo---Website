@@ -25,6 +25,7 @@ export interface LigneLead {
   answers?: string | null;
   scores?: string | null;
   orientation?: 'A' | 'B' | null;
+  rdv_start?: string | null;
   utm: string | null;
   is_test: number;
 }
@@ -49,6 +50,15 @@ const ORIGINE: Record<string, string> = {
   estimation: "demande d'estimation",
   guide: 'demande du guide « Les 10 erreurs fatales »',
   diagnostic: 'diagnostic vendeur',
+  rdv: 'rendez-vous réservé dans Cal.com',
+};
+
+/** « jeudi 9 octobre à 11:00 » (heure de Paris). */
+const rendezVous = (iso: string) => {
+  const d = new Date(iso);
+  const jour = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', weekday: 'long', day: 'numeric', month: 'long' }).format(d);
+  const heure = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit' }).format(d);
+  return `${jour} à ${heure}`;
 };
 
 const AXES = ['preparation', 'visibilite', 'efficacite'] as const;
@@ -80,7 +90,7 @@ const SIGNATURE_EN = 'Anne VIAL-TISSOT\nReal estate consultant · Chablais, Lake
 
 export function notifierAnne(l: LigneLead): Message {
   const nomComplet = [l.prenom, l.nom].filter(Boolean).join(' ');
-  const type = l.source === 'contact' && l.projet === 'achat' ? 'Acquéreur' : 'Vendeur';
+  const type = l.source === 'contact' && l.projet === 'achat' ? 'Acquéreur' : l.source === 'rdv' ? 'À préciser pendant l\'appel' : 'Vendeur';
   const detail = l.source === 'contact' ? ` (${l.projet === 'achat' ? 'achat' : 'vente'})` : '';
   const campagne = l.utm ? Object.values(JSON.parse(l.utm) as Record<string, string>).join(' · ') : '';
   const diag = resultat(l);
@@ -90,7 +100,10 @@ export function notifierAnne(l: LigneLead): Message {
       `Sortie ${l.orientation} : ${l.orientation === 'A' ? 'prospect qualifié, la page lui propose un rendez-vous de 30 minutes' : 'prospect à accompagner, la page lui propose le guide'}.`,
       ...(l.message ? [`Message libre (question 15) : ${l.message}`] : []),
       'Réponses :',
-      ...reponsesLisibles(l),
+      ...reponsesLisibles(l).map((r, i, t) => (i === t.length - 1 ? `${r}\n` : r)), // ligne vide avant la date de la demande
+    ] : l.source === 'rdv' && l.rdv_start ? [
+      `Rendez-vous « Premier échange » le ${rendezVous(l.rdv_start)} (heure de Paris), par téléphone.`,
+      ...(l.message ? [`Note du prospect : ${l.message}`] : []),
     ] : [l.message ?? '']),
     `Demande du ${dateParis(l.created_at)} via annevialtissot.fr (${ORIGINE[l.source] ?? l.source}${detail}).`,
     `Séquence d'e-mails : ${l.newsletter_opt_in_at ? 'acceptée' : 'non demandée'}.`,
@@ -108,7 +121,9 @@ export function notifierAnne(l: LigneLead): Message {
     ['Notes', notes],
   ];
   const aFaire =
-    l.source === 'diagnostic'
+    l.source === 'rdv'
+      ? `À faire : appeler ${telephoneLisible(l.telephone) || 'le prospect (numéro non transmis, voir l\'invitation Cal.com)'} le ${l.rdv_start ? rendezVous(l.rdv_start) : '(date dans l\'invitation Cal.com)'}. Cal.com a déjà envoyé les confirmations et l'invitation d'agenda.`
+      : l.source === 'diagnostic'
       ? l.orientation === 'A'
         ? 'À faire : rappeler sous un jour ouvré pour proposer le rendez-vous stratégique (sortie A).'
         : 'À faire : un appel quand vous le jugez utile ; ses résultats lui proposent le guide (sortie B).'
@@ -129,7 +144,8 @@ export function notifierAnne(l: LigneLead): Message {
   ].join('\n');
   const libelle =
     l.source === 'contact' ? `Contact${detail}` : l.source === 'estimation' ? 'Estimation'
-      : l.source === 'diagnostic' ? `Diagnostic ${diag?.scores.total ?? '?'}/100 (sortie ${l.orientation})` : 'Guide';
+      : l.source === 'diagnostic' ? `Diagnostic ${diag?.scores.total ?? '?'}/100 (sortie ${l.orientation})`
+      : l.source === 'rdv' ? `Rendez-vous ${l.rdv_start ? rendezVous(l.rdv_start) : ''}`.trim() : 'Guide';
   return { objet: `Nouvelle demande · ${libelle} · ${nomComplet}`, texte };
 }
 

@@ -1,4 +1,4 @@
-// Serveur local pour les essais de bout en bout (stories 10.3 et 10.4) : `wrangler dev` sur la base locale, avec une
+// Serveur local pour les essais de bout en bout (stories 10.3, 10.4 et 10.6) : `wrangler dev` sur la base locale, avec une
 // imitation de Turnstile (accepte tout jeton sauf « refuse ») et de Resend (garde les e-mails reçus ; en panne sur demande),
 // car le serveur local ne peut pas joindre ces services depuis l'environnement de Claude. Utilisé par e2e-formulaires.mjs
 // et e2e-diagnostic.mjs. Préalable : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local`.
@@ -34,7 +34,7 @@ export async function demarrer({ nom, port = 8788, portImitation = 8790 }) {
   const essai = `${nom}-${Date.now().toString(36)}`;
   const reglages = path.join(os.tmpdir(), `essai-${essai}.vars`);
   fs.writeFileSync(reglages, [
-    'TURNSTILE_SECRET_KEY=essai', 'RESEND_API_KEY=essai', 'BOITE_TEST=boite-test@example.com',
+    'TURNSTILE_SECRET_KEY=essai', 'RESEND_API_KEY=essai', 'BOITE_TEST=boite-test@example.com', 'CAL_WEBHOOK_SECRET=essai',
     `URL_SERVICES_ESSAI=http://localhost:${portImitation}`,
   ].join('\n'));
   const journal = path.join(os.tmpdir(), `e2e-${essai}.log`); // journal du serveur local, hors du dossier du site

@@ -1,7 +1,7 @@
 ---
 story: 10.4
 epic: 10 — Capture des leads et backend
-statut: review
+statut: done
 date: 2026-10-08
 ---
 
@@ -42,7 +42,12 @@ Le score du diagnostic est calculé par le serveur et affiché seulement après 
 - `node scripts/e2e-formulaires.mjs` : 25 constats sur 25 (les formulaires de la 10.3 n'ont pas bougé).
 - `npm run build` sans erreur ; `npm run check` : 0 erreur (site et code serveur) ; `node scripts/liens.mjs` : 24 pages, 1466 liens, 0 cassé ; `npm run verif` : aucune erreur console.
 
+## Vérifié en ligne (2026-10-08, aperçu de la branche puis fusion de la PR #44 par JB)
+- JB a fait le diagnostic jusqu'au bout sur l'aperçu : notification à Anne reçue (87/100, « Bien préparé », sortie B à cause de la question 14 « forfait », ce qui est juste), résumé au prospect parti (Resend : « Sent », contenu conforme), rangé par Gmail dans l'onglet Promotions de la boîte de test `avialtissot@gmail.com`.
+- Même lien en navigation privée : « Ce lien n'est plus valable ».
+- La correction de la ligne vide dans la notification (commit « ligne vide avant la date de la demande ») n'était pas dans la PR #44 au moment de la fusion : elle part avec la PR de la story 10.6.
+
 ## Ce qui reste
-- Essai sur l'aperçu par JB (vrai widget Turnstile, vraie base, vrais e-mails de test) : faire le diagnostic jusqu'au bout, vérifier la page de résultats, rouvrir le lien dans un autre navigateur (page « lien plus valable »), et les deux e-mails reçus.
 - Anne : valider la grille de la question 10 (A09) ; relire les deux e-mails du diagnostic (A17).
+- Avant le lancement : envoyer un vrai diagnostic vers une boîte Gmail neuve pour voir où il arrive (le résumé au prospect contient des liens, Gmail le range en Promotions).
 - Story 10.5 : lien signé du guide, envoi de la séquence, textes de la maquette.

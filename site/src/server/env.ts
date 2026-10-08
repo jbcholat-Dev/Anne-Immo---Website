@@ -6,7 +6,7 @@ import { env as envCloudflare } from 'cloudflare:workers';
 export interface EnvSite extends Env {
   /** Clé GitHub limitée à ce dépôt (bouton « Un retour ? » de l'aperçu, story 9.6). */
   GITHUB_TOKEN?: string;
-  /** Le même texte que le champ « Secret » du webhook Cal.com (essai de la story 10.1). */
+  /** Le même texte que le champ « Secret » du webhook Cal.com (route /api/webhook-cal, story 10.6). */
   CAL_WEBHOOK_SECRET?: string;
   /** Clé d'API Resend, droit d'envoi seulement, domaine annevialtissot.fr (story 10.3). */
   RESEND_API_KEY?: string;

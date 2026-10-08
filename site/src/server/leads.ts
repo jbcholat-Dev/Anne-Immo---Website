@@ -21,6 +21,8 @@ export const CANAUX: Record<LeadFormulaire['source'], string[]> = {
   estimation: ['notify_anne', 'confirm_prospect'],
   guide: ['notify_anne'],
   diagnostic: ['notify_anne', 'confirm_prospect'],
+  // Rendez-vous : Cal.com envoie lui-même les confirmations au prospect et à Anne ; le site prévient Anne au format Modelo (AD-8).
+  rdv: ['notify_anne'],
 };
 
 export async function ecrireLead(env: EnvSite, lead: LeadFormulaire, submissionId: string, isTest: boolean, diag: Diagnostic | null = null): Promise<Ecriture> {
@@ -29,14 +31,15 @@ export async function ecrireLead(env: EnvSite, lead: LeadFormulaire, submissionI
   const insertion = env.DB.prepare(
     `INSERT INTO lead (id, submission_id, created_at, last_activity_at, lang, source, email, privacy_accepted_at,
        newsletter_opt_in_at, utm, is_test, prenom, nom, telephone, message, projet, commune_bien, type_bien,
-       token, answers, scores, band, orientation)
-     VALUES (?1, ?2, ?3, ?3, ?4, ?5, ?6, ?3, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21)
+       token, answers, scores, band, orientation, rdv_start)
+     VALUES (?1, ?2, ?3, ?3, ?4, ?5, ?6, ?3, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22)
      ON CONFLICT (submission_id) DO NOTHING`,
   ).bind(
     id, submissionId, maintenant, lead.lang, lead.source, lead.email,
     lead.newsletter ? maintenant : null, lead.utm, isTest ? 1 : 0,
     lead.prenom, lead.nom, lead.telephone, lead.message, lead.projet, lead.commune_bien, lead.type_bien,
     diag?.token ?? null, diag?.answers ?? null, diag?.scores ?? null, diag?.band ?? null, diag?.orientation ?? null,
+    lead.rdv_start ?? null,
   );
   const envois = CANAUX[lead.source].map((canal) =>
     env.DB.prepare(
