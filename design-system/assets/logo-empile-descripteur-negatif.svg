@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 330" role="img" aria-label="Anne VIAL-TISSOT — version empilée avec descripteur, négative pour fonds sombres">
   <defs>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Italiana&amp;family=DM+Sans:wght@500&amp;display=swap');
-      .nm{font-family:'Italiana',serif; font-size:50px; letter-spacing:1.5px; fill:#F7F2EA}
-      .st{font-family:'DM Sans',sans-serif; font-size:12.5px; font-weight:500; letter-spacing:3.2px; fill:#F7F2EA; opacity:.92}
+      @import url('https://fonts.googleapis.com/css2?family=Gilda+Display&amp;family=Jost:wght@400;500&amp;display=swap');
+      .nm{font-family:'Gilda Display',serif; font-size:44px; letter-spacing:1.5px; fill:#F7F2EA}
+      .st{font-family:'Jost',sans-serif; font-size:12.5px; font-weight:500; letter-spacing:3.2px; fill:#F7F2EA; opacity:.92}
     </style>
     <clipPath id="sym"><circle cx="280" cy="88" r="60"/></clipPath>
   </defs>

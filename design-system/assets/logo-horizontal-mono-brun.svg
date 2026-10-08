@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 160" role="img" aria-label="Anne VIAL-TISSOT — version monochrome brun (tampon, gravure, fax)">
   <defs>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Italiana&amp;display=swap');
-      .nm{font-family:'Italiana',serif; font-size:52px; letter-spacing:1.6px; fill:#26201A}
+      @import url('https://fonts.googleapis.com/css2?family=Gilda+Display&amp;display=swap');
+      .nm{font-family:'Gilda Display',serif; font-size:46px; letter-spacing:1.6px; fill:#26201A}
     </style>
     <clipPath id="sym"><circle cx="78" cy="80" r="54"/></clipPath>
   </defs>

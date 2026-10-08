@@ -64,6 +64,12 @@ La nav passe de 4 entrées + bouton à **5 entrées (À propos ▾ · Réalisati
 |---|---|---|---|
 | D-28 | **Un lien « Accueil » en toutes lettres ouvre la navigation** (desktop, réduite, menu mobile ; « Home » en anglais), avant « À propos ▾ ». Le symbole seul (D-21) ramène toujours à l'accueil, mais JB a relevé sur l'aperçu que ce n'était « pas très intuitif ». Le lien est marqué « page en cours » sur l'accueil seulement (pas sur la 404). Ce qu'on perd : une entrée de plus dans une barre déjà dense ; vérifié à 900 px, la plus petite largeur desktop, sans débordement (entrées resserrées de 32 à 22 px entre 900 et 1 099 px). | ✅ | `structure-site.md` § 0 · `site/README.md` · `site/src/components/Nav.astro` · story 8.5. |
 
+## Décision du 2026-10-08 (proposée par Anne, charte v3 ; validée par JB à la fusion de la PR — story 8.8)
+
+| # | Décision | Statut | À propager |
+|---|---|---|---|
+| D-31 | **Typographies de la charte v3 : Gilda Display remplace Italiana, Jost remplace DM Sans.** Gilda Display (une seule graisse) pour le logo, les titres et les grands chiffres, jamais sous 15 px (Italiana : jamais sous 22 px). Jost 400 / 500 pour le texte, l'interface et les étiquettes ; le gras, c'est Jost 500 (plus de 600 ni de 700). Raison d'Anne : un trait plus solide, « VIAL-TISSOT » lisible jusqu'à 15 px, et une meilleure lecture sur téléphone. Le nom dans les logos passe en Gilda Display, réduit de 52 à 46 px (44 px pour l'empilé) pour garder exactement la même largeur. Couleurs, boutons, co-branding : inchangés. Source : artefact d'Anne « Charte graphique v3 », https://claude.ai/artifact/L5WMPPVNZqneFUng7Loyie. | 🔄 à fusionner par JB | `design-system/` (tokens, cartes, 14 SVG) · `site/` (polices, Lockup) · SPEC (contrainte charte) · story 8.8. |
+
 Écarts maquette ↔ CDC corrigés dans le canvas le 2026-09-22 (export `maquettes/lot-3-complet/`) : section « Ils ont acheté avec Anne » sur Acheter (§ 5.4) · case « séquence d'e-mails » sur l'estimation (§ 4) · citations sur deux cartes de la pile (D-16) · fiche story mobile · sortie A mobile, sortie B desktop, profil « Stratégie à risque » · YouTube et ligne de statut dans le pied de page (§ 0) · téléphone obligatoire sur Contact (§ 9) · dates des avis (A-11) · hamburger mobile invisible sur 4 pages, `clipPath` cassé, libellé A-01 périmé, réglage « 4 cartes » retiré (CAP-1). Restent au build : menu « À propos » à deux sous-entrées, story sans photo secondaire, 404, footer complet sur toutes les pages, nav fixe dès le premier pixel.
 
 ### Points laissés ouverts (mis à jour le 2026-09-22)

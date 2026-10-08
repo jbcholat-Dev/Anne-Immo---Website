@@ -1136,6 +1136,21 @@ afin qu'on ne croie pas que je n'ai vendu que les biens montrés, et qu'un vende
 
 **État :** fait (2026-10-08, PR #48). Responsable : Claude ; origine : tickets n° 39, 40, 42 (`retour-apercu`). Le ticket n° 41 (stories Sciez et Bernex) attend le texte d'Anne (fil Contenu du site).
 
+### Story 8.8: Typographies de la charte v3
+
+En tant qu'Anne,
+je veux que le site et le design system emploient les typographies de ma charte v3, Gilda Display et Jost,
+afin que mon nom et mes titres restent lisibles même en petit, et que le texte se lise mieux sur téléphone.
+
+**Critères d'acceptation :**
+
+**Étant donné** l'artefact « Charte graphique v3 » d'Anne (2026-10-08) et la décision D-31
+**Quand** le design system est mis à jour d'abord (`tokens.css`, cartes, SVG des logos), puis le site (AD-17)
+**Alors** titres, logo et grands chiffres sont en Gilda Display, texte et étiquettes en Jost 400 / 500, servis par le site (aucun appel à Google)
+**Et** le nom dans les logos garde la même largeur qu'avant, les captures avant / après ne montrent aucun débordement, et `npm run build`, `npm run check`, `scripts/liens.mjs`, `scripts/ecrans.mjs` passent.
+
+**État :** en revue (2026-10-08), PR à fusionner par JB. Responsable : Claude ; décision : Anne (proposition), JB (fusion).
+
 
 # Mise en ligne d'aperçu, référencement et lancement public (epics 9, 11 et 12)
 
