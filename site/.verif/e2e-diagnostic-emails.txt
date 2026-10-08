@@ -1,0 +1,398 @@
+À : boite-test@example.com
+Répondre à : claire+diagnostic-muz8jckk@example.com
+Objet : [TEST] Nouvelle demande · Diagnostic 100/100 (sortie A) · Claire Essai
+
+(E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
+
+Nouvelle demande reçue par le site le 08/10/2026 09:48 (heure de Paris) : diagnostic vendeur.
+À faire : rappeler sous un jour ouvré pour proposer le rendez-vous stratégique (sortie A).
+
+À recopier dans la fiche contact Modelo :
+
+Nom
+Essai
+
+Prénom
+Claire
+
+Téléphone
++33 6 12 34 56 78
+
+E-mail
+claire+diagnostic-muz8jckk@example.com
+
+Type de contact
+Vendeur
+
+Notes
+Diagnostic : 100 / 100, Bien préparé. Préparation à la Vente : 40 / 40 · Visibilité & Attractivité : 40 / 40 · Efficacité Commerciale : 20 / 20.
+Sortie A : prospect qualifié, la page lui propose un rendez-vous de 30 minutes.
+Message libre (question 15) : Vente prévue au printemps.
+Réponses :
+Comment avez-vous déterminé le prix de vente de votre bien ? Estimateur en ligne + ajustements personnels
+Où en êtes-vous avec vos diagnostics immobiliers obligatoires ? Tous à jour
+Disposez-vous d'un dossier administratif complet pour accélérer la vente ? Oui (diagnostics + autorisations d'urbanisme + documents travaux si <10 ans)
+Avez-vous désencombré et rangé votre logement pour permettre aux visiteurs de se projeter facilement ? Oui, entièrement dépersonnalisé et rangé
+Comment avez-vous valorisé visuellement votre bien ? Photos professionnelles + visite virtuelle + vidéo
+Votre annonce immobilière est-elle optimisée pour attirer les bons acquéreurs ? Oui, titre accrocheur + description détaillée + points forts mis en avant
+Sur quelles plateformes diffusez-vous actuellement votre annonce ? Le BonCoin, Se Loger, Bien Ici, PAP (Particulier à Particulier), Logic-Immo, ParuVendu
+Rafraîchissez-vous régulièrement votre annonce pour maintenir sa visibilité dans les classements ? Oui, au moins 1 fois par semaine
+Comment filtrez-vous les appels et demandes de visite des acquéreurs potentiels ? Je vérifie systématiquement capacité financière + critères de recherche
+Depuis la mise en vente, combien de visites avez-vous réalisées ? Moins de 5 visites
+Depuis la mise en vente, combien d'offres avez-vous reçues ? Plusieurs offres
+Depuis combien de temps votre bien est-il en vente ? Moins de 3 mois
+Êtes-vous actuellement accompagné(e) dans votre vente ? Je vends seul(e) sans accompagnement
+Quel est votre objectif principal pour cette vente ? Vendre sereinement avec un accompagnement professionnel de qualité
+Quelles difficultés avez-vous rencontrées ou anticipez-vous dans votre vente ? Aucune difficulté pour le moment
+Quel type d'accompagnement correspondrait le mieux à vos besoins ? Accompagnement premium complet : prise en charge totale (photos pro, diffusion multi-canal, qualification acquéreurs, gestion administrative, négociation)
+Demande du 08/10/2026 09:48 via annevialtissot.fr (diagnostic vendeur).
+Séquence d'e-mails : non demandée.
+Campagne : essai.
+
+Répondre à cet e-mail écrit directement à Claire Essai.
+Référence de la demande : 01M4D7SA31AWW07J9AHG8ARCWQ
+
+==========
+
+À : boite-test@example.com
+Répondre à : avialtissot@gmail.com
+Objet : [TEST] Votre diagnostic vendeur : vos résultats
+
+(E-mail de test : en production, il serait parti vers claire+diagnostic-muz8jckk@example.com.)
+
+Bonjour Claire,
+
+Merci d'avoir fait le diagnostic de votre vente. Voici le résumé de vos résultats :
+
+Score global : 100 / 100 (Bien préparé)
+Préparation à la Vente : 40 / 40
+Visibilité & Attractivité : 40 / 40
+Efficacité Commerciale : 20 / 20
+
+Le détail et les recommandations restent affichés 24 heures dans le navigateur où vous avez fait le diagnostic.
+
+Votre score montre une vente déjà bien préparée. Pour optimiser ce qui reste, je vous propose un rendez-vous stratégique de 30 minutes : réservez un créneau sur https://annevialtissot.fr/contact, ou répondez simplement à cet e-mail.
+
+Anne VIAL-TISSOT
+Consultante en immobilier · Chablais, Léman · réseau eXp France
+https://annevialtissot.fr
+
+==========
+
+À : boite-test@example.com
+Répondre à : marc+diagnostic-muz8jckk@example.com
+Objet : [TEST] Nouvelle demande · Diagnostic 52/100 (sortie B) · Marc Essai
+
+(E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
+
+Nouvelle demande reçue par le site le 08/10/2026 09:49 (heure de Paris) : diagnostic vendeur.
+À faire : un appel quand vous le jugez utile ; ses résultats lui proposent le guide (sortie B).
+
+À recopier dans la fiche contact Modelo :
+
+Nom
+Essai
+
+Prénom
+Marc
+
+Téléphone
++41791234567
+
+E-mail
+marc+diagnostic-muz8jckk@example.com
+
+Type de contact
+Vendeur
+
+Notes
+Diagnostic : 52 / 100, Bases solides, optimisations nécessaires. Préparation à la Vente : 23 / 40 · Visibilité & Attractivité : 21 / 40 · Efficacité Commerciale : 8 / 20.
+Sortie B : prospect à accompagner, la page lui propose le guide.
+Réponses :
+Comment avez-vous déterminé le prix de vente de votre bien ? Avis d'un ou plusieurs agents immobiliers
+Où en êtes-vous avec vos diagnostics immobiliers obligatoires ? Certains diagnostics à refaire
+Disposez-vous d'un dossier administratif complet pour accélérer la vente ? Partiellement (quelques documents manquants)
+Avez-vous désencombré et rangé votre logement pour permettre aux visiteurs de se projeter facilement ? Partiellement, quelques pièces seulement
+Comment avez-vous valorisé visuellement votre bien ? Photos professionnelles uniquement
+Votre annonce immobilière est-elle optimisée pour attirer les bons acquéreurs ? Description standard sans optimisation particulière
+Sur quelles plateformes diffusez-vous actuellement votre annonce ? Le BonCoin, Se Loger
+Rafraîchissez-vous régulièrement votre annonce pour maintenir sa visibilité dans les classements ? Occasionnellement (1 fois par mois)
+Comment filtrez-vous les appels et demandes de visite des acquéreurs potentiels ? Je pose quelques questions de base
+Depuis la mise en vente, combien de visites avez-vous réalisées ? 5 à 10 visites
+Depuis la mise en vente, combien d'offres avez-vous reçues ? 1 offre
+Depuis combien de temps votre bien est-il en vente ? 3 à 6 mois
+Êtes-vous actuellement accompagné(e) dans votre vente ? Je vends seul(e) sans accompagnement
+Quel est votre objectif principal pour cette vente ? Minimiser les frais d'agence en gérant moi-même la transaction
+Quelles difficultés avez-vous rencontrées ou anticipez-vous dans votre vente ? Peu ou pas de demandes de visites / annonce peu vue, Offres trop basses par rapport au prix souhaité
+Quel type d'accompagnement correspondrait le mieux à vos besoins ? Forfait estimation + conseils : j'ai besoin d'un diagnostic expert pour débloquer ma situation
+Demande du 08/10/2026 09:49 via annevialtissot.fr (diagnostic vendeur).
+Séquence d'e-mails : non demandée.
+
+Répondre à cet e-mail écrit directement à Marc Essai.
+Référence de la demande : 01M4D7SGM0W792BP1SDQ33HB2E
+
+==========
+
+À : boite-test@example.com
+Répondre à : avialtissot@gmail.com
+Objet : [TEST] Votre diagnostic vendeur : vos résultats
+
+(E-mail de test : en production, il serait parti vers marc+diagnostic-muz8jckk@example.com.)
+
+Bonjour Marc,
+
+Merci d'avoir fait le diagnostic de votre vente. Voici le résumé de vos résultats :
+
+Score global : 52 / 100 (Bases solides, optimisations nécessaires)
+Préparation à la Vente : 23 / 40
+Visibilité & Attractivité : 21 / 40
+Efficacité Commerciale : 8 / 20
+
+Le détail et les recommandations restent affichés 24 heures dans le navigateur où vous avez fait le diagnostic.
+
+Pour corriger les points faibles identifiés, demandez mon guide « Les 10 erreurs fatales des vendeurs particuliers » sur https://annevialtissot.fr/guide. Pour en parler de vive voix, répondez simplement à cet e-mail.
+
+Anne VIAL-TISSOT
+Consultante en immobilier · Chablais, Léman · réseau eXp France
+https://annevialtissot.fr
+
+==========
+
+À : boite-test@example.com
+Répondre à : alice+nav-diagnostic-muz8jckk@example.com
+Objet : [TEST] Nouvelle demande · Diagnostic 100/100 (sortie A) · Alice Navigateur
+
+(E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
+
+Nouvelle demande reçue par le site le 08/10/2026 09:49 (heure de Paris) : diagnostic vendeur.
+À faire : rappeler sous un jour ouvré pour proposer le rendez-vous stratégique (sortie A).
+
+À recopier dans la fiche contact Modelo :
+
+Nom
+Navigateur
+
+Prénom
+Alice
+
+Téléphone
++33 6 12 34 56 78
+
+E-mail
+alice+nav-diagnostic-muz8jckk@example.com
+
+Type de contact
+Vendeur
+
+Notes
+Diagnostic : 100 / 100, Bien préparé. Préparation à la Vente : 40 / 40 · Visibilité & Attractivité : 40 / 40 · Efficacité Commerciale : 20 / 20.
+Sortie A : prospect qualifié, la page lui propose un rendez-vous de 30 minutes.
+Message libre (question 15) : Essai de bout en bout.
+Réponses :
+Comment avez-vous déterminé le prix de vente de votre bien ? Estimateur en ligne + ajustements personnels
+Où en êtes-vous avec vos diagnostics immobiliers obligatoires ? Tous à jour
+Disposez-vous d'un dossier administratif complet pour accélérer la vente ? Oui (diagnostics + autorisations d'urbanisme + documents travaux si <10 ans)
+Avez-vous désencombré et rangé votre logement pour permettre aux visiteurs de se projeter facilement ? Oui, entièrement dépersonnalisé et rangé
+Comment avez-vous valorisé visuellement votre bien ? Photos professionnelles + visite virtuelle + vidéo
+Votre annonce immobilière est-elle optimisée pour attirer les bons acquéreurs ? Oui, titre accrocheur + description détaillée + points forts mis en avant
+Sur quelles plateformes diffusez-vous actuellement votre annonce ? Le BonCoin, Se Loger, Bien Ici, PAP (Particulier à Particulier), Logic-Immo, ParuVendu
+Rafraîchissez-vous régulièrement votre annonce pour maintenir sa visibilité dans les classements ? Oui, au moins 1 fois par semaine
+Comment filtrez-vous les appels et demandes de visite des acquéreurs potentiels ? Je vérifie systématiquement capacité financière + critères de recherche
+Depuis la mise en vente, combien de visites avez-vous réalisées ? Moins de 5 visites
+Depuis la mise en vente, combien d'offres avez-vous reçues ? Plusieurs offres
+Depuis combien de temps votre bien est-il en vente ? Moins de 3 mois
+Êtes-vous actuellement accompagné(e) dans votre vente ? Je vends seul(e) sans accompagnement
+Quel est votre objectif principal pour cette vente ? Vendre sereinement avec un accompagnement professionnel de qualité
+Quelles difficultés avez-vous rencontrées ou anticipez-vous dans votre vente ? Aucune difficulté pour le moment
+Quel type d'accompagnement correspondrait le mieux à vos besoins ? Accompagnement premium complet : prise en charge totale (photos pro, diffusion multi-canal, qualification acquéreurs, gestion administrative, négociation)
+Demande du 08/10/2026 09:49 via annevialtissot.fr (diagnostic vendeur).
+Séquence d'e-mails : non demandée.
+Campagne : parcours.
+
+Répondre à cet e-mail écrit directement à Alice Navigateur.
+Référence de la demande : 01M4D7TKYC4B04886KF3F7GAYB
+
+==========
+
+À : boite-test@example.com
+Répondre à : avialtissot@gmail.com
+Objet : [TEST] Votre diagnostic vendeur : vos résultats
+
+(E-mail de test : en production, il serait parti vers alice+nav-diagnostic-muz8jckk@example.com.)
+
+Bonjour Alice,
+
+Merci d'avoir fait le diagnostic de votre vente. Voici le résumé de vos résultats :
+
+Score global : 100 / 100 (Bien préparé)
+Préparation à la Vente : 40 / 40
+Visibilité & Attractivité : 40 / 40
+Efficacité Commerciale : 20 / 20
+
+Le détail et les recommandations restent affichés 24 heures dans le navigateur où vous avez fait le diagnostic.
+
+Votre score montre une vente déjà bien préparée. Pour optimiser ce qui reste, je vous propose un rendez-vous stratégique de 30 minutes : réservez un créneau sur https://annevialtissot.fr/contact, ou répondez simplement à cet e-mail.
+
+Anne VIAL-TISSOT
+Consultante en immobilier · Chablais, Léman · réseau eXp France
+https://annevialtissot.fr
+
+==========
+
+À : boite-test@example.com
+Répondre à : bruno+nav-diagnostic-muz8jckk@example.com
+Objet : [TEST] Nouvelle demande · Diagnostic 52/100 (sortie B) · Bruno Navigateur
+
+(E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
+
+Nouvelle demande reçue par le site le 08/10/2026 09:49 (heure de Paris) : diagnostic vendeur.
+À faire : un appel quand vous le jugez utile ; ses résultats lui proposent le guide (sortie B).
+
+À recopier dans la fiche contact Modelo :
+
+Nom
+Navigateur
+
+Prénom
+Bruno
+
+Téléphone
++33 6 12 34 56 78
+
+E-mail
+bruno+nav-diagnostic-muz8jckk@example.com
+
+Type de contact
+Vendeur
+
+Notes
+Diagnostic : 52 / 100, Bases solides, optimisations nécessaires. Préparation à la Vente : 23 / 40 · Visibilité & Attractivité : 21 / 40 · Efficacité Commerciale : 8 / 20.
+Sortie B : prospect à accompagner, la page lui propose le guide.
+Réponses :
+Comment avez-vous déterminé le prix de vente de votre bien ? Avis d'un ou plusieurs agents immobiliers
+Où en êtes-vous avec vos diagnostics immobiliers obligatoires ? Certains diagnostics à refaire
+Disposez-vous d'un dossier administratif complet pour accélérer la vente ? Partiellement (quelques documents manquants)
+Avez-vous désencombré et rangé votre logement pour permettre aux visiteurs de se projeter facilement ? Partiellement, quelques pièces seulement
+Comment avez-vous valorisé visuellement votre bien ? Photos professionnelles uniquement
+Votre annonce immobilière est-elle optimisée pour attirer les bons acquéreurs ? Description standard sans optimisation particulière
+Sur quelles plateformes diffusez-vous actuellement votre annonce ? Le BonCoin, Se Loger
+Rafraîchissez-vous régulièrement votre annonce pour maintenir sa visibilité dans les classements ? Occasionnellement (1 fois par mois)
+Comment filtrez-vous les appels et demandes de visite des acquéreurs potentiels ? Je pose quelques questions de base
+Depuis la mise en vente, combien de visites avez-vous réalisées ? 5 à 10 visites
+Depuis la mise en vente, combien d'offres avez-vous reçues ? 1 offre
+Depuis combien de temps votre bien est-il en vente ? 3 à 6 mois
+Êtes-vous actuellement accompagné(e) dans votre vente ? Je vends seul(e) sans accompagnement
+Quel est votre objectif principal pour cette vente ? Minimiser les frais d'agence en gérant moi-même la transaction
+Quelles difficultés avez-vous rencontrées ou anticipez-vous dans votre vente ? Peu ou pas de demandes de visites / annonce peu vue, Offres trop basses par rapport au prix souhaité
+Quel type d'accompagnement correspondrait le mieux à vos besoins ? Forfait estimation + conseils : j'ai besoin d'un diagnostic expert pour débloquer ma situation
+Demande du 08/10/2026 09:49 via annevialtissot.fr (diagnostic vendeur).
+Séquence d'e-mails : non demandée.
+Campagne : parcours.
+
+Répondre à cet e-mail écrit directement à Bruno Navigateur.
+Référence de la demande : 01M4D7TY2933QQ14B6Q2QF75VR
+
+==========
+
+À : boite-test@example.com
+Répondre à : avialtissot@gmail.com
+Objet : [TEST] Votre diagnostic vendeur : vos résultats
+
+(E-mail de test : en production, il serait parti vers bruno+nav-diagnostic-muz8jckk@example.com.)
+
+Bonjour Bruno,
+
+Merci d'avoir fait le diagnostic de votre vente. Voici le résumé de vos résultats :
+
+Score global : 52 / 100 (Bases solides, optimisations nécessaires)
+Préparation à la Vente : 23 / 40
+Visibilité & Attractivité : 21 / 40
+Efficacité Commerciale : 8 / 20
+
+Le détail et les recommandations restent affichés 24 heures dans le navigateur où vous avez fait le diagnostic.
+
+Pour corriger les points faibles identifiés, demandez mon guide « Les 10 erreurs fatales des vendeurs particuliers » sur https://annevialtissot.fr/guide. Pour en parler de vive voix, répondez simplement à cet e-mail.
+
+Anne VIAL-TISSOT
+Consultante en immobilier · Chablais, Léman · réseau eXp France
+https://annevialtissot.fr
+
+==========
+
+À : boite-test@example.com
+Répondre à : lea+nav-diagnostic-muz8jckk@example.com
+Objet : [TEST] Nouvelle demande · Diagnostic 1/100 (sortie B) · Lea Navigateur
+
+(E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
+
+Nouvelle demande reçue par le site le 08/10/2026 09:50 (heure de Paris) : diagnostic vendeur.
+À faire : un appel quand vous le jugez utile ; ses résultats lui proposent le guide (sortie B).
+
+À recopier dans la fiche contact Modelo :
+
+Nom
+Navigateur
+
+Prénom
+Lea
+
+Téléphone
++33 6 12 34 56 78
+
+E-mail
+lea+nav-diagnostic-muz8jckk@example.com
+
+Type de contact
+Vendeur
+
+Notes
+Diagnostic : 1 / 100, Stratégie à risque. Préparation à la Vente : 0 / 40 · Visibilité & Attractivité : 0 / 40 · Efficacité Commerciale : 1 / 20.
+Sortie B : prospect à accompagner, la page lui propose le guide.
+Réponses :
+Comment avez-vous déterminé le prix de vente de votre bien ? Je n'ai pas encore défini de prix
+Où en êtes-vous avec vos diagnostics immobiliers obligatoires ? Aucun diagnostic réalisé
+Disposez-vous d'un dossier administratif complet pour accélérer la vente ? Je ne sais pas quels documents préparer
+Avez-vous désencombré et rangé votre logement pour permettre aux visiteurs de se projeter facilement ? Non, le bien est présenté en l'état
+Comment avez-vous valorisé visuellement votre bien ? Photos basiques au smartphone
+Votre annonce immobilière est-elle optimisée pour attirer les bons acquéreurs ? Je ne sais pas ce qu'est une annonce optimisée
+Sur quelles plateformes diffusez-vous actuellement votre annonce ? Aucune diffusion active pour le moment
+Rafraîchissez-vous régulièrement votre annonce pour maintenir sa visibilité dans les classements ? Je ne savais pas qu'il fallait le faire
+Comment filtrez-vous les appels et demandes de visite des acquéreurs potentiels ? J'accepte toutes les demandes de visite sans filtrage
+Depuis la mise en vente, combien de visites avez-vous réalisées ? Aucune visite pour le moment
+Depuis la mise en vente, combien d'offres avez-vous reçues ? Aucune offre pour le moment
+Depuis combien de temps votre bien est-il en vente ? Pas encore mis en vente
+Êtes-vous actuellement accompagné(e) dans votre vente ? J'hésite encore entre vendre seul(e) ou avec une agence
+Quel est votre objectif principal pour cette vente ? Obtenir le meilleur prix possible, même si cela prend plus de temps
+Quelles difficultés avez-vous rencontrées ou anticipez-vous dans votre vente ? Peu ou pas de demandes de visites / annonce peu vue
+Quel type d'accompagnement correspondrait le mieux à vos besoins ? Vente 100% autonome : je préfère gérer seul(e), j'ai juste besoin de ressources/formations
+Demande du 08/10/2026 09:50 via annevialtissot.fr (diagnostic vendeur).
+Séquence d'e-mails : acceptée.
+Campagne : parcours.
+
+Répondre à cet e-mail écrit directement à Lea Navigateur.
+Référence de la demande : 01M4D7V82PC2EH5EKENW08QX6N
+
+==========
+
+À : boite-test@example.com
+Répondre à : avialtissot@gmail.com
+Objet : [TEST] Votre diagnostic vendeur : vos résultats
+
+(E-mail de test : en production, il serait parti vers lea+nav-diagnostic-muz8jckk@example.com.)
+
+Bonjour Lea,
+
+Merci d'avoir fait le diagnostic de votre vente. Voici le résumé de vos résultats :
+
+Score global : 1 / 100 (Stratégie à risque)
+Préparation à la Vente : 0 / 40
+Visibilité & Attractivité : 0 / 40
+Efficacité Commerciale : 1 / 20
+
+Le détail et les recommandations restent affichés 24 heures dans le navigateur où vous avez fait le diagnostic.
+
+Pour corriger les points faibles identifiés, demandez mon guide « Les 10 erreurs fatales des vendeurs particuliers » sur https://annevialtissot.fr/guide. Pour en parler de vive voix, répondez simplement à cet e-mail.
+
+Anne VIAL-TISSOT
+Consultante en immobilier · Chablais, Léman · réseau eXp France
+https://annevialtissot.fr

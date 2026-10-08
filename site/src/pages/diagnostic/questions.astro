@@ -59,14 +59,14 @@ import Quiz from '../../layouts/Quiz.astro';
   .qz-dialogue-quitter { text-align: center; font-size: 15px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
   /* gate de capture (07-resultats-gate) */
   .qz-gate-tete { padding: 24px 0 28px; border-bottom: 1px solid rgba(38, 32, 26, .1); margin-bottom: 28px; }
-  .qz-gate-score { display: flex; align-items: baseline; gap: 6px; }
-  .qz-gate-score b { font-family: var(--avt-font-display); font-weight: 400; font-size: 72px; line-height: 1; color: var(--avt-klein); }
-  .qz-gate-score span { font-size: 18px; }
+  .qz-gate-titre { font-size: 40px; line-height: 1.1; margin-top: 10px; color: var(--avt-klein); } /* le score n'est plus affiché avant le gate (AD-5, story 10.4) */
   .qz-gate-tete p { font-size: 15px; line-height: 1.5; margin-top: 12px; }
   .qz-gate form { display: flex; flex-direction: column; gap: 14px; }
   .qz-tel { display: flex; gap: 8px; }
-  .qz-tel select { width: 110px; flex: none; }
-  .qz-tel input { width: auto; flex: 1; min-width: 0; }
+  /* .champ .qz-tel : plus précis que « .champ select { width: 100% } » de global.css, chargé après (sinon l'indicatif prend
+     toute la largeur et écrase la case du numéro, story 10.4). */
+  .champ .qz-tel select { width: 110px; flex: none; }
+  .champ .qz-tel input { width: auto; flex: 1; min-width: 0; }
   .qz-mention { font-size: 12.5px; line-height: 1.5; color: var(--avt-text-muted); }
   @media (min-width: 900px) { .qz-question { font-size: 34px; } .qz-ecran { padding-top: 32px; } }
 </style>

@@ -1,11 +1,11 @@
 // Îlot formulaires — raison : validation côté client (formats AD-6), états erreur / envoi / confirmation / échec,
-// puis envoi réel au serveur (story 10.3) : POST /api/<source> (contact, estimation, guide), qui vérifie, écrit en base
+// puis envoi réel au serveur (story 10.3) : POST /api/<source> (contact, estimation, guide ; diagnostic depuis la story 10.4), qui vérifie, écrit en base
 // et prévient Anne (AD-4, AD-7). Chaque formulaire porte une clé d'idempotence (ULID) gardée tant qu'il n'est pas parti :
 // « Renvoyer » après un échec ne crée jamais deux demandes. Le script anti-robot Turnstile n'est chargé qu'au premier
 // envoi, jamais à l'ouverture de la page (AD-11).
 
 type Champ = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-type Reponse = { ok: true } | { ok: false; error: { code: string; message?: string } };
+type Reponse = { ok: boolean; url?: string; error?: { code: string; message?: string; champ?: string } };
 
 export function telephoneValide(v: string) {
   const chiffres = v.replace(/\D/g, '');
@@ -52,13 +52,6 @@ export function valider(form: HTMLFormElement): boolean {
   if (global) { global.hidden = n === 0; global.textContent = n === 1 ? 'Un champ à corriger avant d’envoyer.' : `${n} champs à corriger avant d’envoyer.`; }
   if (premier) (premier as Champ).focus();
   return n === 0;
-}
-
-/** Envoi simulé, encore utilisé par le diagnostic et sa page de résultats : résout après 700 ms.
- * TODO(backend) : remplacé par POST /api/diagnostic à la story 10.4. */
-export function envoyerSimule(source: string, donnees: Record<string, unknown>): Promise<Reponse> {
-  console.info(`[TODO backend] lead source=${source}`, donnees);
-  return new Promise((ok) => setTimeout(() => ok({ ok: true }), 700));
 }
 
 // Identifiant ULID (26 caractères, triable par date) : la clé d'idempotence d'un envoi.
@@ -130,7 +123,7 @@ export async function envoyer(form: HTMLFormElement, source: string, donnees: Re
     const r = await fetch(`/api/${source}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...donnees, submission_id: form.dataset.submission, lang: document.documentElement.lang.slice(0, 2), utm: utm(), turnstile }),
+      body: JSON.stringify({ submission_id: form.dataset.submission, lang: document.documentElement.lang.slice(0, 2), utm: utm(), ...donnees, turnstile }),
     });
     return (await r.json()) as Reponse;
   } catch {

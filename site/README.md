@@ -1,6 +1,6 @@
 # Site d'Anne VIAL-TISSOT — v1 (build statique)
 
-Astro 7, pages prérendues servies par un Worker Cloudflare (adaptateur `@astrojs/cloudflare`, story 10.2), CSS sur les seuls tokens de `design-system/tokens/tokens.css`, trois îlots JS (scroll-craft, formulaires, diagnostic). Le noyau serveur existe (base D1, route `/api/sante`). Depuis la story 10.3, les formulaires contact, estimation et guide écrivent **réellement** en base et préviennent Anne par e-mail ; le diagnostic reste **simulé** jusqu'à la story 10.4 (voir « TODO(backend) »). La référence visuelle est la maquette lot 3 (`maquettes/lot-3-complet/`), les décisions D-1 → D-26 priment.
+Astro 7, pages prérendues servies par un Worker Cloudflare (adaptateur `@astrojs/cloudflare`, story 10.2), CSS sur les seuls tokens de `design-system/tokens/tokens.css`, trois îlots JS (scroll-craft, formulaires, diagnostic). Le noyau serveur existe (base D1, route `/api/sante`). Depuis la story 10.3, les formulaires contact, estimation et guide écrivent **réellement** en base et préviennent Anne par e-mail ; depuis la story 10.4, le diagnostic aussi : le score est calculé par le serveur après le gate et la page de résultats est rendue par le serveur (seule page non prérendue, voir « Diagnostic réel »). La référence visuelle est la maquette lot 3 (`maquettes/lot-3-complet/`), les décisions D-1 → D-26 priment.
 
 ## Lancer
 
@@ -17,7 +17,7 @@ Autres commandes :
 |---|---|
 | `npm run images` | dérive les WebP/JPG de `contenu-anne/` vers `public/img/` + `src/data/images.json` (sharp). Déjà lancé et commité : à relancer quand Anne dépose des photos ou change une sélection dans `stories/<slug>/fr.md` (après `scripts/preparer-photos`). |
 | `npm run verif` | captures Playwright (1440 et 390) de toutes les pages dans `.verif/` ; accueil à 5 positions de défilement + mouvement réduit. |
-| `node scripts/e2e-diagnostic.mjs` | parcours complet du diagnostic (sortie A, sortie B, profil à risque, abandon / reprise, gate en erreur, lien expiré). |
+| `node scripts/e2e-diagnostic.mjs` | essai de bout en bout du diagnostic sur le serveur local (story 10.4) : gate côté serveur (réponses revérifiées, score, lead, renvoi), page de résultats (un navigateur, 24 heures, 404 sinon), séquence, e-mails, puis les 17 écrans dans un navigateur (sorties A et B, profil à risque, abandon / reprise, gate en erreur, coupure puis « Renvoyer », lien expiré). Même préalable que la ligne suivante. E-mails produits dans `.verif/e2e-diagnostic-emails.txt`. |
 | `node scripts/e2e-formulaires.mjs` | essai de bout en bout des formulaires réels sur le serveur local (story 10.3) : barrières anti-robot, validation, base, idempotence, e-mails vers la boîte de test, échec puis rejeu, envoi depuis la page /contact. Préalable : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local`. E-mails produits dans `.verif/e2e-formulaires-emails.txt`. |
 | `node scripts/liens.mjs` | vérifie que chaque lien et chaque ancre du site construit mène quelque part. |
 | `npm run check` | `astro check` (types). |
@@ -78,9 +78,9 @@ Tous dans `src/config/site.ts` :
 
 Chaque endroit est marqué `TODO(backend)` dans le code (`grep -rn "TODO(backend" src`).
 
-1. ~~Formulaires contact, estimation, guide~~ : **réels depuis la story 10.3** (voir « Formulaires réels »). Reste simulé dans `src/islands/formulaires.ts` : `envoyerSimule()`, utilisé par le diagnostic et sa page de résultats jusqu'à la story 10.4.
-2. `src/islands/diagnostic.ts` + `src/lib/scoring.ts` : **le gate est côté client** ; le score est calculé dans le navigateur et le résultat stocké en session. Cible AD-5 : POST `/api/diagnostic`, jeton serveur à usage unique, page de résultats rendue par le noyau (404 sinon), barème lu par le serveur seulement — l'îlot `resultats.ts` disparaît.
-3. `src/islands/resultats.ts` : envoi du guide (lien signé, e-mail Resend, AD-8) et opt-in séquence (`newsletter_opt_in_at`, AD-16).
+1. ~~Formulaires contact, estimation, guide~~ : **réels depuis la story 10.3** (voir « Formulaires réels »). `envoyerSimule()` a disparu avec la story 10.4.
+2. ~~Gate du diagnostic côté client~~ : **côté serveur depuis la story 10.4** (voir « Diagnostic réel »).
+3. `src/pages/diagnostic/resultats.astro` et `src/pages/api/diagnostic/sequence.ts` : le bouton guide des résultats mène à la page `/guide` (story 10.3) ; l'inscription à la séquence est enregistrée (`newsletter_opt_in_at`, AD-16) mais la séquence n'est pas encore envoyée. Story 10.5 : lien signé du guide, envoi de la séquence, et retour des textes de la maquette (« Le guide est parti… », « Séquence de 7 e-mails confirmée… »).
 4. `src/pages/contact.astro` : remplacer le gabarit Cal.com statique par l'embed (chargé après action du visiteur, AD-11), question obligatoire d'acceptation, webhook `BOOKING_CREATED` (CAP-9).
 5. `src/pages/guide.astro` et `src/server/leads.ts` : la demande du guide est enregistrée et Anne est prévenue, mais **Anne envoie le PDF à la main** ; le lien signé expirant envoyé automatiquement arrive à la story 10.5 (CAP-8), avec les textes de la maquette (« lien valable 48 heures »).
 6. Adaptateur Cloudflare (`@astrojs/cloudflare`, `worker.ts` pour le cron), D1 `eu`, migrations, admin, mesure d'audience, `funnel_event` (AD-10 → AD-18). `astro.config.mjs` reste `output: 'static'` jusque-là.
@@ -94,8 +94,8 @@ Cloudflare Workers Builds : dossier racine `site`, construction `npm ci && npm r
 
 - **Construction** : `npm run build` produit `dist/client/` (les pages, servies telles quelles) et `dist/server/` (le Worker et sa configuration `wrangler.json`, générée depuis `wrangler.jsonc`). Les scripts de vérification lisent `dist/client/`.
 - **Point d'entrée** : `worker.ts` (`main` de `wrangler.jsonc`). Il sert lui-même `/api/retour` et `/api/essai-cal`, et confie le reste à Astro (`handle`), donc les routes de `src/pages/api/` (`export const prerender = false`). `scheduled` (toutes les 15 minutes) réessaie les e-mails en échec depuis la story 10.3. Toutes les pages restent prérendues.
-- **Base** : liaison `DB`, base D1 `anne-leads-apercu` (juridiction UE) pour toutes les mises en ligne tant que le site n'est pas lancé ; la base de production `anne-leads` sera branchée à la story 12.4. Schéma : `migrations/0001-lead.sql` (table `lead`, AD-6) et `0002-lead-delivery.sql`. En local : `npm run base:local`, puis `npx wrangler dev` (après `npm run build`).
-- **Santé** : `GET /api/sante` répond `{ "ok": true, "migrations": 2 }` si la base répond, 503 sinon. Aucune donnée personnelle.
+- **Base** : liaison `DB`, base D1 `anne-leads-apercu` (juridiction UE) pour toutes les mises en ligne tant que le site n'est pas lancé ; la base de production `anne-leads` sera branchée à la story 12.4. Schéma : `migrations/0001-lead.sql` (table `lead`, AD-6), `0002-lead-delivery.sql` et `0003-jeton-resultats.sql` (story 10.4). En local : `npm run base:local`, puis `npx wrangler dev` (après `npm run build`).
+- **Santé** : `GET /api/sante` répond `{ "ok": true, "migrations": 3 }` (depuis la story 10.4) si la base répond, 503 sinon. Aucune donnée personnelle.
 - **Réglages écartés** : pas de sessions Astro (`session: false`, donc pas de stockage KV créé automatiquement) ; images en `passthrough` (le site prépare ses images lui-même), donc pas de liaison Cloudflare Images.
 - **Types** : `npm run check` génère d'abord les types Cloudflare (`wrangler types`, fichier `worker-configuration.d.ts` non versionné), vérifie le site avec `astro check`, puis le code serveur à part avec `tsconfig.worker.json` (les types du Worker et ceux du navigateur ne cohabitent pas).
 
@@ -109,6 +109,16 @@ Cloudflare Workers Builds : dossier racine `site`, construction `npm ci && npm r
 - **Navigateur** : `src/islands/formulaires.ts` charge le script Turnstile seulement au premier envoi, jamais à l'ouverture de la page (AD-11), et obtient un jeton neuf à chaque essai. Clé publique du widget `site-anne` dans le code ; `PUBLIC_TURNSTILE_SITE_KEY` la remplace pour les essais en local (clé d'essai de Cloudflare `1x00000000000000000000AA`, qui passe partout).
 - **Secrets** (Cloudflare, jamais dans le dépôt) : `TURNSTILE_SECRET_KEY`, `RESEND_API_KEY`, `BOITE_TEST`. Sans eux, l'envoi échoue proprement (`ANTI_ROBOT_INDISPONIBLE`) ou l'e-mail reste en attente (`RESEND_API_KEY absente`). En local, `URL_SERVICES_ESSAI` (fichier de réglages de `wrangler dev`, jamais dans Cloudflare) dirige Turnstile et Resend vers une imitation, car le serveur local ne peut pas les joindre.
 - **Journaux** : JSON, sans donnée personnelle ; une adresse e-mail n'y figure que sous forme d'empreinte (`src/server/journal.ts`).
+
+## Diagnostic réel (story 10.4)
+
+- **Ce que voit le visiteur** : les 17 écrans ne changent pas. Le gate n'affiche plus le score avant les coordonnées (le navigateur ne le connaît pas, AD-5) ; après l'envoi, la page de résultats est la même qu'avant (score, profil, 3 sous-scores, 9 feedbacks, sortie A ou B). La case du téléphone n'est plus écrasée par l'indicatif.
+- **Gate** : `POST /api/diagnostic` (`src/pages/api/diagnostic.ts`), traité par `src/server/capture.ts` comme les autres formulaires (Turnstile, champ piège, fréquence, contrat de la source avec indicatif FR +33 / CH +41), puis `src/server/diagnostic.ts` revérifie les réponses contre `questions.json` (une réponse par question à choix unique, « aucune » exclusive, « autre » seulement avec sa précision) et calcule score, profil et orientation A/B avec `src/server/scoring.ts` (ex-`src/lib/scoring.ts`). Le barème `bareme.json` n'est plus dans le JavaScript du navigateur. Le lead `diagnostic` est écrit avec `token`, `answers`, `scores`, `band`, `orientation` et ses deux envois (`notify_anne`, `confirm_prospect`). Réponse `{ ok: true, url }`.
+- **Renvoi** : l'îlot `src/islands/diagnostic.ts` garde le `submission_id` avec les réponses sur l'appareil jusqu'au succès ; « Renvoyer » redonne la même adresse, sans second lead. La sauvegarde locale est effacée après succès.
+- **Page de résultats** (`src/pages/diagnostic/resultats.astro`, `export const prerender = false`, logique dans `src/server/resultats.ts`) : `/diagnostic/resultats?t=<jeton>` vaut 24 heures. Le premier navigateur qui l'ouvre reçoit une clé (cookie `avt_resultats`, HttpOnly, Secure, SameSite=Lax), la base n'en garde que l'empreinte (`token_browser`, migration 0003), puis la page se recharge sans jeton dans l'adresse. Un autre navigateur, un jeton inconnu ou périmé : 404, « Ce lien n'est plus valable ». `wrangler.jsonc` fait passer cette adresse par le Worker (`run_worker_first`).
+- **Séquence** : le bouton « Recevoir la séquence » (sortie B) appelle `POST /api/diagnostic/sequence`, réservé au navigateur qui a la clé ; il écrit `newsletter_opt_in_at`. Astro refuse un POST venu d'un autre site (403).
+- **E-mails** (`src/server/messages.ts`) : la notification à Anne donne score, profil, sous-scores, sortie A ou B, le message libre et toutes les réponses en clair, au format Modelo ; le prospect reçoit le résumé de ses scores (sans lien vers la page, qui ne s'ouvre que dans son navigateur), avec l'invitation au rendez-vous (A) ou au guide (B).
+- **Rendu côté serveur** : `Lockup.astro` inclut ses SVG à la construction (`?raw`) au lieu de les lire sur le disque, car le disque n'existe pas dans le Worker.
 
 ## Retours sur l'aperçu (story 9.6)
 
@@ -128,6 +138,8 @@ Italiana (titres) et DM Sans (texte) sont servies par le site lui-même depuis `
 
 ## Écarts assumés avec la maquette / les briefs
 
+- **Gate du diagnostic sans score** (story 10.4) : la maquette affichait le score sur 100 au-dessus du formulaire ; AD-5 interdit que le résultat existe dans le navigateur avant les coordonnées (c'est le défaut reproché à ScoreApp). Le gate garde son chapeau « Votre diagnostic est prêt » et annonce le score sans le donner.
+- **Résultats : guide et séquence en attente de la story 10.5** : les boutons guide mènent à la page `/guide` (bouton A renommé « Recevoir le guide ») et l'état « Le guide est parti » n'existe plus ; l'inscription à la séquence affiche « Inscription enregistrée » au lieu de « Séquence de 7 e-mails confirmée. Le premier arrive demain matin », puisqu'elle ne part pas encore. Page « lien plus valable » : texte exact (24 heures, dans le même navigateur, résumé envoyé par e-mail) au lieu de « disponibles 30 jours » ; boutons « Refaire le diagnostic » et « Écrire à Anne ».
 - **Vidéo d'ouverture au-dessus du budget** « 8-12 s, < 6 Mo » : JB a décidé (D-27) de diffuser le montage d'Anne en entier (52 s depuis le 2026-10-05, 95 s avant). Compromis : 1440 px au lieu de 1920 (le hero fait 900 px de haut, différence invisible), crf 30, 7,8 Mo MP4 / 6,4 Mo WebM (≈ 15 / 10 Mo avec l'ancien montage). Le fichier est lu en flux (faststart + `preload="metadata"`) : la lecture démarre après les premières secondes reçues, le poster couvre l'attente, et le LCP (plus grand élément affiché) reste le poster, chargé en priorité. À remesurer sur l'aperçu (story 10.8).
 
 - **Pas de Lenis** (défilement inertiel du brief scroll-craft) : JS minimal, défilement natif ; à ajouter en îlot si JB le souhaite (≈ 10 Ko).
@@ -164,5 +176,7 @@ La maquette dessine 1 440 px (ordinateur) et 390 px (téléphone). Entre 900 et 
 - Ce qu'Anne doit fournir est listé dans `contenu-anne/A-FOURNIR.md`.
 
 ## Vérification faite (voir `.verif/`)
+
+Story 10.4 : `node scripts/e2e-diagnostic.mjs` : 31 constats bons (voir la story) · `node scripts/e2e-formulaires.mjs` : 25 constats bons · `npm run check` : 0 erreur · `node scripts/liens.mjs` : 24 pages, 0 lien cassé · `npm run verif` : aucune erreur console.
 
 Story 10.3 : `node scripts/e2e-formulaires.mjs` : 25 constats bons sur 25 (voir la story) · `npm run build` sans erreur (19 pages) · `npm run check` : 0 erreur · `npm run dev` : les 17 routes répondent 200, une route inconnue 404 · `node scripts/liens.mjs` : 0 lien cassé · `node scripts/e2e-diagnostic.mjs` : sorties A, B et profil à risque, abandon/reprise, erreurs du gate, lien expiré, aucune erreur console · `npm run verif` : captures 1440 / 390 de chaque page, accueil à 5 positions (hero, pile 3 positions, fermeture) et en mouvement réduit.

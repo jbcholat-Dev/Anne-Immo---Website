@@ -4,62 +4,18 @@
 // et un vrai envoi depuis la page /contact dans un navigateur (avec la clé d'essai Turnstile de Cloudflare).
 // Préalable : construire avec la clé d'essai, `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build`,
 // et la base locale à jour, `npm run base:local`. Lancer : `node scripts/e2e-formulaires.mjs`.
-import { spawn, execFileSync } from 'node:child_process';
-import { createServer } from 'node:http';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { demarrer, imiterTurnstile, ICI, pause } from './serveur-essai.mjs';
 
-const ICI = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ICI, '.verif');
-const PORT = 8788, PORT_IMITATION = 8790, U = `http://localhost:${PORT}`;
-const ESSAI = `run-${Date.now().toString(36)}`;
+fs.mkdirSync(OUT, { recursive: true });
 let echecs = 0;
 const constat = (ok, texte) => { console.log(`${ok ? '✓' : '✗'} ${texte}`); if (!ok) echecs++; };
+const serveur = await demarrer({ nom: 'formulaires' });
+const { U, recus, appeler, sql, arreter, journal: JOURNAL, essai: ESSAI } = serveur;
 
-// Imitation de Turnstile (accepte tout jeton sauf « refuse ») et de Resend (garde les e-mails reçus ; en panne sur demande).
-const recus = [];
-let enPanne = false;
-const imitation = createServer((req, res) => {
-  let corps = '';
-  req.on('data', (c) => (corps += c));
-  req.on('end', () => {
-    res.setHeader('Content-Type', 'application/json');
-    if (req.url === '/turnstile') return res.end(JSON.stringify({ success: !corps.includes('response=refuse'), 'error-codes': [] }));
-    if (req.url === '/resend') {
-      if (enPanne) { res.statusCode = 500; return res.end(JSON.stringify({ name: 'imitation_en_panne', message: 'panne simulée' })); }
-      recus.push({ ...JSON.parse(corps), idempotence: req.headers['idempotency-key'] });
-      return res.end(JSON.stringify({ id: `imitation-${recus.length}` }));
-    }
-    res.statusCode = 404; res.end('{}');
-  });
-});
-await new Promise((ok) => imitation.listen(PORT_IMITATION, ok));
-
-const reglages = path.join(os.tmpdir(), `essai-formulaires-${ESSAI}.vars`);
-fs.writeFileSync(reglages, [
-  'TURNSTILE_SECRET_KEY=essai', 'RESEND_API_KEY=essai', 'BOITE_TEST=boite-test@example.com',
-  `URL_SERVICES_ESSAI=http://localhost:${PORT_IMITATION}`,
-].join('\n'));
-fs.mkdirSync(OUT, { recursive: true });
-const JOURNAL = path.join(os.tmpdir(), `e2e-formulaires-${ESSAI}.log`); // journal du serveur local, hors du dossier du site
-const journalServeur = fs.openSync(JOURNAL, 'w');
-// Sans réglage de proxy : wrangler ferait passer par lui les appels du serveur local vers l'imitation, qui est sur cette machine.
-const sansProxy = Object.fromEntries(Object.entries(process.env).filter(([k]) => !/^(https?|all|no)_proxy$/i.test(k)));
-const serveur = spawn('npx', ['wrangler', 'dev', '--port', String(PORT), '--env-file', reglages, '--test-scheduled'], { cwd: ICI, detached: true, stdio: ['ignore', journalServeur, journalServeur], env: sansProxy });
-const arreter = () => { try { process.kill(-serveur.pid); } catch {} imitation.close(); fs.rmSync(reglages, { force: true }); };
-for (let i = 0; i < 60; i++) {
-  try { if ((await fetch(`${U}/api/sante`)).ok) break; } catch {}
-  await new Promise((ok) => setTimeout(ok, 1000));
-}
-
-const pause = (ms) => new Promise((ok) => setTimeout(ok, ms));
-// Le serveur local ferme parfois une connexion réutilisée : on réessaie une fois avant de conclure.
-const appeler = (url, options) => fetch(url, options).catch(() => pause(500).then(() => fetch(url, options)));
-const sql = (requete) =>
-  JSON.parse(execFileSync('npx', ['wrangler', 'd1', 'execute', 'DB', '--local', '--json', '--command', requete], { cwd: ICI, encoding: 'utf8' }))[0].results;
 let n = 0;
 const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 const sid = () => { n++; return Array.from({ length: 26 }, () => ALPHABET[Math.floor(Math.random() * 32)]).join(''); };
@@ -124,13 +80,13 @@ try {
   constat(new Set(recus.map((e) => e.idempotence)).size === recus.length, 'une clé anti-doublon par e-mail');
 
   // 6. Resend en panne : le visiteur a quand même sa confirmation ; l'envoi est noté en échec, puis rejoué par la tâche planifiée.
-  enPanne = true;
+  serveur.etat.enPanne = true;
   const s6 = sid();
   r = await envoyer('estimation', { submission_id: s6, ...contact, message: '', commune_bien: 'Thonon-les-Bains', type_bien: 'Appartement' });
   await pause(1500);
   let e6 = sql(`SELECT d.status, d.attempts, d.last_error FROM lead l JOIN lead_delivery d ON d.lead_id = l.id WHERE l.submission_id = '${s6}'`);
   constat(r.ok && e6.length === 2 && e6.every((e) => e.status === 'failed' && e.attempts === 1 && e.last_error.includes('500')), `panne : visiteur ${r.ok ? 'confirmé' : 'en échec'}, envois ${e6.map((e) => e.status).join('/')}`);
-  enPanne = false;
+  serveur.etat.enPanne = false;
   await appeler(`${U}/cdn-cgi/handler/scheduled`);
   await pause(2000);
   e6 = sql(`SELECT d.status, d.attempts FROM lead l JOIN lead_delivery d ON d.lead_id = l.id WHERE l.submission_id = '${s6}'`);
@@ -141,13 +97,7 @@ try {
   // une imitation de son script, qui rend un jeton. On vérifie ainsi le comportement de la page ; le vrai widget est essayé sur l'aperçu.
   const navigateur = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   const page = await (await navigateur.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
-  await page.route('https://challenges.cloudflare.com/**', (route) => route.fulfill({
-    contentType: 'text/javascript',
-    body: `window.turnstile = { _o: {}, render(el, o) { const id = 'w' + Math.random(); this._o[id] = o; return id; },
-      execute(id) { setTimeout(() => this._o[id].callback('jeton-navigateur'), 50); }, remove(id) { delete this._o[id]; } };`,
-  }));
-  const scripts = [];
-  page.on('request', (q) => { if (q.url().includes('challenges.cloudflare.com')) scripts.push(q.url()); });
+  const scripts = await imiterTurnstile(page);
   const consoleNav = [];
   page.on('console', (m) => consoleNav.push(`${m.type()} ${m.text()}`));
   page.on('requestfailed', (q) => consoleNav.push(`échec ${q.url()} ${q.failure()?.errorText}`));

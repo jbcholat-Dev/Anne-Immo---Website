@@ -1,19 +1,92 @@
 ---
-// 04 Résultats (§ 8.2, D-23) : score global, profil (Klein / terra-deep / brun), 3 sous-scores brut + %, 9 feedbacks, sortie A ou B, guide. États : guide parti, séquence confirmée, lien expiré.
-// v1 : rendu par l'îlot depuis sessionStorage (TODO backend : page rendue par le noyau sous jeton, 404 sinon).
+// 04 Résultats (§ 8.2, D-23) : score global, profil (Klein / terra-deep / brun), 3 sous-scores brut + %, 9 feedbacks, sortie A ou B, guide.
+// Rendue par le serveur depuis la story 10.4 (AD-5) : seulement pour le navigateur qui a ouvert le lien du gate, pendant 24 heures ;
+// sinon « Ce lien n'est plus valable », en 404. Voir src/server/resultats.ts.
 import Quiz from '../../layouts/Quiz.astro';
+import feedbacks from '../../content/diagnostic/feedbacks.json';
+import contenu from '../../content/diagnostic/questions.json';
+import bareme from '../../content/diagnostic/bareme.json';
+import { ouvrir } from '../../server/resultats';
+
+export const prerender = false;
+
+const ouverture = await ouvrir(Astro.url, Astro.cookies);
+if (ouverture.etat === 'redirection') return Astro.redirect('/diagnostic/resultats', 303);
+Astro.response.headers.set('Cache-Control', 'no-store');
+Astro.response.headers.set('Referrer-Policy', 'no-referrer');
+if (ouverture.etat === 'introuvable') Astro.response.status = 404;
+const r = ouverture.etat === 'resultats' ? ouverture.resultats : null;
+
+type Fb = { insight: string; impact: string };
+const cats = contenu.categories as Record<string, { resultat?: string }>;
+const profil = r ? (bareme.profils.find((p) => p.id === r.scores.profil) ?? bareme.profils[0]) : null;
+const axes = r
+  ? (['preparation', 'visibilite', 'efficacite'] as const).map((k) => ({
+      k, nom: cats[k].resultat!, ...r.scores.categories[k],
+      fb: (feedbacks as unknown as Record<string, Record<string, Fb>>)[k][r.scores.categories[k].bande],
+    }))
+  : [];
+const s = (r ? feedbacks.sorties[r.orientation] : feedbacks.sorties.B) as { titre: string; texte: string; texte_court?: string; cta: string; cta2?: string; sequence?: string; sequence_cta?: string };
+const A = r?.orientation === 'A';
 ---
 <Quiz titre="Vos résultats — Diagnostic — Anne VIAL-TISSOT" mode="resultats">
-  <div class="rs" data-resultats>
-    <div class="rs-expire" data-expire hidden>
-      <h1>Ce lien n'est plus valable</h1>
-      <p>Les résultats restent disponibles 30 jours. Redemandez-les à l'adresse utilisée, ou refaites le diagnostic.</p>
-      <a href="/diagnostic/questions" class="btn btn-primaire">Recevoir un nouveau lien</a>
-      <a href="/diagnostic/questions" class="rs-refaire">Refaire le diagnostic</a>
-    </div>
-    <div data-contenu></div>
+  <div class="rs" data-resultats data-ton={profil?.ton}>
+    {!r && (
+      <div class="rs-expire" data-expire>
+        <h1>Ce lien n'est plus valable</h1>
+        <p>Vos résultats s'affichent pendant 24 heures, dans le navigateur où vous avez fait le diagnostic. Leur résumé vous a été envoyé par e-mail. Pour un diagnostic à jour, refaites-le : il prend cinq minutes.</p>
+        <a href="/diagnostic/questions" class="btn btn-primaire">Refaire le diagnostic</a>
+        <a href="/contact" class="rs-refaire">Écrire à Anne</a>
+      </div>
+    )}
+    {r && profil && (
+      <div data-contenu>
+        <div class="rs-tete">
+          <div><div class="chapeau-muet" style="margin-bottom:10px">Votre score global</div><div class="rs-score"><b>{r.scores.total}</b><span>/ 100</span></div>
+            <div class="seulement-mobile"><span class="rs-pastille">{profil.libelle}</span><p class="rs-profil-texte">{profil.texte}</p></div></div>
+          <div class="seulement-desktop"><span class="rs-pastille">{profil.libelle}</span><p class="rs-profil-texte">{profil.texte}</p></div>
+        </div>
+        <div class="rs-resume">{axes.map((a) => <div><div class="rs-resume-rang"><span>{a.nom}</span><b>{a.brut} <small>/ {a.max} · {a.pourcent} %</small></b></div><div class="rs-barre"><div style={`width:${a.pourcent}%`}></div></div></div>)}</div>
+        <div class="rs-axes">{axes.map((a) => (
+          <section class="rs-axe"><div><div class="chapeau">{a.nom}<span class="seulement-mobile"> · {a.brut} / {a.max}</span></div><div class="rs-sous"><b>{a.brut}</b><span>/ {a.max} · {a.pourcent} %</span></div><div class="rs-barre"><div style={`width:${a.pourcent}%`}></div></div></div>
+            <p class="rs-insight">{a.fb.insight}</p><div class="rs-impact"><div class="chapeau-muet">Impact chiffré</div><p>{a.fb.impact}</p></div></section>
+        ))}</div>
+        <div class="rs-sortie"><div><h2>{s.titre}</h2><p class="seulement-desktop">{s.texte}</p><p class="seulement-mobile">{s.texte_court ?? s.texte}</p></div>
+          <div class="rs-sortie-boutons">
+            {A
+              ? <><a href="/contact#reserver" class="btn btn-ecru">{s.cta}</a><a href="/contact#ecrire" class="btn btn-contour-ecru">{s.cta2}</a></>
+              : <a href="/guide" class="btn btn-ecru" data-guide>{s.cta}</a>}
+          </div></div>
+        {A
+          ? <div class="rs-guide"><div class="rs-guide-int"><div class="rs-guide-couv"></div><div><div class="rs-guide-titre">Les 10 erreurs fatales des vendeurs particuliers</div><div class="rs-guide-sous">Guide PDF, à la charte · A-10</div></div></div><a href="/guide" class="btn btn-secondaire btn-m" data-guide>Recevoir le guide</a></div>
+          : <div class="rs-sequence"><p>{s.sequence}</p><button type="button" class="btn btn-secondaire btn-m" data-sequence hidden={r.newsletter}>{s.sequence_cta}</button><span data-sequence-deja hidden={!r.newsletter} class="texte-muet" style="font-size:14px">Inscription à la séquence enregistrée.</span></div>}
+        <div class="rs-etats" data-etats hidden>
+          <div class="rs-etat-sequence" data-etat-sequence hidden>Inscription enregistrée. Anne vous écrira à {r.email}. <a href="/confidentialite">Se désinscrire</a> à tout moment.</div>
+          <div class="alerte" role="alert" data-etat-echec hidden>L'inscription n'a pas abouti. Réessayez dans un instant.</div>
+        </div>
+      </div>
+    )}
   </div>
-  <script src="../../islands/resultats.ts"></script>
+  <script>
+    // Inscription à la séquence (sortie B) : la seule action de la page qui parle au serveur (story 10.4).
+    // TODO(backend) : 10.5 envoie la séquence et remet le texte de la maquette (« Séquence de 7 e-mails confirmée… »).
+    const b = document.querySelector<HTMLButtonElement>('[data-sequence]');
+    b?.addEventListener('click', async () => {
+      const etats = document.querySelector<HTMLElement>('[data-etats]')!;
+      const echec = document.querySelector<HTMLElement>('[data-etat-echec]')!;
+      b.disabled = true; b.setAttribute('aria-busy', 'true');
+      let ok = false;
+      try { ok = (await (await fetch('/api/diagnostic/sequence', { method: 'POST' })).json()).ok === true; } catch { ok = false; }
+      b.disabled = false; b.removeAttribute('aria-busy');
+      etats.hidden = false; echec.hidden = ok;
+      if (ok) {
+        b.hidden = true;
+        document.querySelector<HTMLElement>('[data-sequence-deja]')!.hidden = false;
+        document.querySelector<HTMLElement>('[data-etat-sequence]')!.hidden = false;
+      }
+      etats.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  </script>
 </Quiz>
 <style is:global>
   .rs-expire { max-width: 560px; margin: 0 auto; padding: 48px var(--marge-m) 80px; display: flex; flex-direction: column; gap: 14px; }
@@ -59,10 +132,6 @@ import Quiz from '../../layouts/Quiz.astro';
   .rs-sequence { margin: 0 var(--marge) 96px; display: flex; align-items: center; justify-content: space-between; gap: 32px; border: 1px solid var(--filet-brun-fort); border-radius: 16px; padding: 28px 36px; font-size: 16px; line-height: 1.5; }
   .rs-sequence p { max-width: 60ch; }
   .rs-etats { margin: 0 var(--marge) 96px; display: flex; flex-direction: column; gap: 14px; max-width: 560px; }
-  .rs-etat-guide { background: var(--avt-brume); border-radius: 14px; padding: 20px; display: flex; gap: 16px; align-items: flex-start; }
-  .rs-etat-guide .rs-guide-couv { width: 44px; height: 58px; background: var(--avt-placeholder); }
-  .rs-etat-guide b { font-family: var(--avt-font-display); font-weight: 400; font-size: 22px; display: block; margin-bottom: 6px; }
-  .rs-etat-guide p { font-size: 14px; line-height: 1.5; }
   .rs-etat-sequence { border: 1px solid var(--filet-brun-fort); border-radius: 14px; padding: 18px 20px; font-size: 14.5px; line-height: 1.5; }
   @media (max-width: 899px) {
     .rs-tete { padding: 24px var(--marge-m) 28px; display: block; border-bottom: 0; }

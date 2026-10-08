@@ -1,10 +1,10 @@
 À : boite-test@example.com
-Répondre à : marie+run-muylmjcv@example.com
+Répondre à : marie+formulaires-muz8l634@example.com
 Objet : [TEST] Nouvelle demande · Contact (vente) · Marie Essai
 
 (E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
 
-Nouvelle demande reçue par le site le 07/10/2026 23:07 (heure de Paris) : formulaire de contact (vente).
+Nouvelle demande reçue par le site le 08/10/2026 09:50 (heure de Paris) : formulaire de contact (vente).
 À faire : répondre sous un jour ouvré (le site le lui a promis).
 
 À recopier dans la fiche contact Modelo :
@@ -19,19 +19,19 @@ Téléphone
 +33 6 12 34 56 78
 
 E-mail
-marie+run-muylmjcv@example.com
+marie+formulaires-muz8l634@example.com
 
 Type de contact
 Vendeur
 
 Notes
 Bonjour, je vends un T3.
-Demande du 07/10/2026 23:07 via annevialtissot.fr (formulaire de contact (vente)).
+Demande du 08/10/2026 09:50 via annevialtissot.fr (formulaire de contact (vente)).
 Séquence d'e-mails : non demandée.
 Campagne : essai.
 
 Répondre à cet e-mail écrit directement à Marie Essai.
-Référence de la demande : 01M4C32X4XDWSA7HRZNJRT25V4
+Référence de la demande : 01M4D7VWM1D6CKFW73NC4CGGXB
 
 ==========
 
@@ -39,7 +39,7 @@ Référence de la demande : 01M4C32X4XDWSA7HRZNJRT25V4
 Répondre à : avialtissot@gmail.com
 Objet : [TEST] Votre message à Anne VIAL-TISSOT
 
-(E-mail de test : en production, il serait parti vers marie+run-muylmjcv@example.com.)
+(E-mail de test : en production, il serait parti vers marie+formulaires-muz8l634@example.com.)
 
 Bonjour Marie,
 
@@ -57,12 +57,12 @@ https://annevialtissot.fr
 ==========
 
 À : boite-test@example.com
-Répondre à : marie+run-muylmjcv@example.com
+Répondre à : marie+formulaires-muz8l634@example.com
 Objet : [TEST] Nouvelle demande · Contact (vente) · Marie Essai
 
 (E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
 
-Nouvelle demande reçue par le site le 07/10/2026 23:08 (heure de Paris) : formulaire de contact (vente).
+Nouvelle demande reçue par le site le 08/10/2026 09:50 (heure de Paris) : formulaire de contact (vente).
 À faire : répondre sous un jour ouvré (le site le lui a promis).
 
 À recopier dans la fiche contact Modelo :
@@ -77,19 +77,19 @@ Téléphone
 +33 6 12 34 56 78
 
 E-mail
-marie+run-muylmjcv@example.com
+marie+formulaires-muz8l634@example.com
 
 Type de contact
 Vendeur
 
 Notes
 Bonjour, je vends un T3.
-Demande du 07/10/2026 23:08 via annevialtissot.fr (formulaire de contact (vente)).
+Demande du 08/10/2026 09:50 via annevialtissot.fr (formulaire de contact (vente)).
 Séquence d'e-mails : non demandée.
 Campagne : essai.
 
 Répondre à cet e-mail écrit directement à Marie Essai.
-Référence de la demande : 01M4C33PQCGRA63MM9EVH7BNX0
+Référence de la demande : 01M4D7WV2K0D9RZ6A45Q93V1X3
 
 ==========
 
@@ -97,7 +97,7 @@ Référence de la demande : 01M4C33PQCGRA63MM9EVH7BNX0
 Répondre à : avialtissot@gmail.com
 Objet : [TEST] Votre message à Anne VIAL-TISSOT
 
-(E-mail de test : en production, il serait parti vers marie+run-muylmjcv@example.com.)
+(E-mail de test : en production, il serait parti vers marie+formulaires-muz8l634@example.com.)
 
 Bonjour Marie,
 
@@ -115,12 +115,12 @@ https://annevialtissot.fr
 ==========
 
 À : boite-test@example.com
-Répondre à : marie+run-muylmjcv@example.com
+Répondre à : marie+formulaires-muz8l634@example.com
 Objet : [TEST] Nouvelle demande · Contact (vente) · Marie Essai
 
 (E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
 
-Nouvelle demande reçue par le site le 07/10/2026 23:08 (heure de Paris) : formulaire de contact (vente).
+Nouvelle demande reçue par le site le 08/10/2026 09:50 (heure de Paris) : formulaire de contact (vente).
 À faire : répondre sous un jour ouvré (le site le lui a promis).
 
 À recopier dans la fiche contact Modelo :
@@ -135,19 +135,19 @@ Téléphone
 +33 6 12 34 56 78
 
 E-mail
-marie+run-muylmjcv@example.com
+marie+formulaires-muz8l634@example.com
 
 Type de contact
 Vendeur
 
 Notes
 Bonjour, je vends un T3.
-Demande du 07/10/2026 23:08 via annevialtissot.fr (formulaire de contact (vente)).
+Demande du 08/10/2026 09:50 via annevialtissot.fr (formulaire de contact (vente)).
 Séquence d'e-mails : non demandée.
 Campagne : essai.
 
 Répondre à cet e-mail écrit directement à Marie Essai.
-Référence de la demande : 01M4C33PR9M788Z7716BE93Y1G
+Référence de la demande : 01M4D7WV3SV5ZCV2C5009R00XY
 
 ==========
 
@@ -155,7 +155,7 @@ Référence de la demande : 01M4C33PR9M788Z7716BE93Y1G
 Répondre à : avialtissot@gmail.com
 Objet : [TEST] Votre message à Anne VIAL-TISSOT
 
-(E-mail de test : en production, il serait parti vers marie+run-muylmjcv@example.com.)
+(E-mail de test : en production, il serait parti vers marie+formulaires-muz8l634@example.com.)
 
 Bonjour Marie,
 
@@ -173,12 +173,12 @@ https://annevialtissot.fr
 ==========
 
 À : boite-test@example.com
-Répondre à : marie+run-muylmjcv@example.com
+Répondre à : marie+formulaires-muz8l634@example.com
 Objet : [TEST] Nouvelle demande · Contact (vente) · Marie Essai
 
 (E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
 
-Nouvelle demande reçue par le site le 07/10/2026 23:08 (heure de Paris) : formulaire de contact (vente).
+Nouvelle demande reçue par le site le 08/10/2026 09:50 (heure de Paris) : formulaire de contact (vente).
 À faire : répondre sous un jour ouvré (le site le lui a promis).
 
 À recopier dans la fiche contact Modelo :
@@ -193,19 +193,19 @@ Téléphone
 +33 6 12 34 56 78
 
 E-mail
-marie+run-muylmjcv@example.com
+marie+formulaires-muz8l634@example.com
 
 Type de contact
 Vendeur
 
 Notes
 Bonjour, je vends un T3.
-Demande du 07/10/2026 23:08 via annevialtissot.fr (formulaire de contact (vente)).
+Demande du 08/10/2026 09:50 via annevialtissot.fr (formulaire de contact (vente)).
 Séquence d'e-mails : non demandée.
 Campagne : essai.
 
 Répondre à cet e-mail écrit directement à Marie Essai.
-Référence de la demande : 01M4C33PS3N7HXKPHRHHHB2CBG
+Référence de la demande : 01M4D7WV531SEX22T04QZHP28D
 
 ==========
 
@@ -213,7 +213,7 @@ Référence de la demande : 01M4C33PS3N7HXKPHRHHHB2CBG
 Répondre à : avialtissot@gmail.com
 Objet : [TEST] Votre message à Anne VIAL-TISSOT
 
-(E-mail de test : en production, il serait parti vers marie+run-muylmjcv@example.com.)
+(E-mail de test : en production, il serait parti vers marie+formulaires-muz8l634@example.com.)
 
 Bonjour Marie,
 
@@ -231,12 +231,12 @@ https://annevialtissot.fr
 ==========
 
 À : boite-test@example.com
-Répondre à : marie+run-muylmjcv@example.com
+Répondre à : marie+formulaires-muz8l634@example.com
 Objet : [TEST] Nouvelle demande · Contact (vente) · Marie Essai
 
 (E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
 
-Nouvelle demande reçue par le site le 07/10/2026 23:08 (heure de Paris) : formulaire de contact (vente).
+Nouvelle demande reçue par le site le 08/10/2026 09:50 (heure de Paris) : formulaire de contact (vente).
 À faire : répondre sous un jour ouvré (le site le lui a promis).
 
 À recopier dans la fiche contact Modelo :
@@ -251,19 +251,19 @@ Téléphone
 +33 6 12 34 56 78
 
 E-mail
-marie+run-muylmjcv@example.com
+marie+formulaires-muz8l634@example.com
 
 Type de contact
 Vendeur
 
 Notes
 Bonjour, je vends un T3.
-Demande du 07/10/2026 23:08 via annevialtissot.fr (formulaire de contact (vente)).
+Demande du 08/10/2026 09:50 via annevialtissot.fr (formulaire de contact (vente)).
 Séquence d'e-mails : non demandée.
 Campagne : essai.
 
 Répondre à cet e-mail écrit directement à Marie Essai.
-Référence de la demande : 01M4C33PT2P0HGZD7DW8D9GXBV
+Référence de la demande : 01M4D7WV6BF7MC67J048C3W2YT
 
 ==========
 
@@ -271,7 +271,7 @@ Référence de la demande : 01M4C33PT2P0HGZD7DW8D9GXBV
 Répondre à : avialtissot@gmail.com
 Objet : [TEST] Votre message à Anne VIAL-TISSOT
 
-(E-mail de test : en production, il serait parti vers marie+run-muylmjcv@example.com.)
+(E-mail de test : en production, il serait parti vers marie+formulaires-muz8l634@example.com.)
 
 Bonjour Marie,
 
@@ -289,12 +289,12 @@ https://annevialtissot.fr
 ==========
 
 À : boite-test@example.com
-Répondre à : marie+run-muylmjcv@example.com
+Répondre à : marie+formulaires-muz8l634@example.com
 Objet : [TEST] Nouvelle demande · Contact (vente) · Marie Essai
 
 (E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
 
-Nouvelle demande reçue par le site le 07/10/2026 23:08 (heure de Paris) : formulaire de contact (vente).
+Nouvelle demande reçue par le site le 08/10/2026 09:50 (heure de Paris) : formulaire de contact (vente).
 À faire : répondre sous un jour ouvré (le site le lui a promis).
 
 À recopier dans la fiche contact Modelo :
@@ -309,19 +309,19 @@ Téléphone
 +33 6 12 34 56 78
 
 E-mail
-marie+run-muylmjcv@example.com
+marie+formulaires-muz8l634@example.com
 
 Type de contact
 Vendeur
 
 Notes
 Bonjour, je vends un T3.
-Demande du 07/10/2026 23:08 via annevialtissot.fr (formulaire de contact (vente)).
+Demande du 08/10/2026 09:50 via annevialtissot.fr (formulaire de contact (vente)).
 Séquence d'e-mails : non demandée.
 Campagne : essai.
 
 Répondre à cet e-mail écrit directement à Marie Essai.
-Référence de la demande : 01M4C33PTV0Z8R41EWF3TJ188P
+Référence de la demande : 01M4D7WV7N44MVRANRP0Z8GTST
 
 ==========
 
@@ -329,7 +329,7 @@ Référence de la demande : 01M4C33PTV0Z8R41EWF3TJ188P
 Répondre à : avialtissot@gmail.com
 Objet : [TEST] Votre message à Anne VIAL-TISSOT
 
-(E-mail de test : en production, il serait parti vers marie+run-muylmjcv@example.com.)
+(E-mail de test : en production, il serait parti vers marie+formulaires-muz8l634@example.com.)
 
 Bonjour Marie,
 
@@ -347,12 +347,12 @@ https://annevialtissot.fr
 ==========
 
 À : boite-test@example.com
-Répondre à : paul+run-muylmjcv@example.com
+Répondre à : paul+formulaires-muz8l634@example.com
 Objet : [TEST] Nouvelle demande · Guide · Paul Guide
 
 (E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
 
-Nouvelle demande reçue par le site le 07/10/2026 23:08 (heure de Paris) : demande du guide « Les 10 erreurs fatales ».
+Nouvelle demande reçue par le site le 08/10/2026 09:50 (heure de Paris) : demande du guide « Les 10 erreurs fatales ».
 À faire : envoyer le guide à la main. Le site ne l'envoie pas encore tout seul (story 10.5) : répondez à cet e-mail avec le PDF en pièce jointe.
 
 À recopier dans la fiche contact Modelo :
@@ -367,27 +367,52 @@ Téléphone
 non indiqué
 
 E-mail
-paul+run-muylmjcv@example.com
+paul+formulaires-muz8l634@example.com
 
 Type de contact
 Vendeur
 
 Notes
-Demande du 07/10/2026 23:08 via annevialtissot.fr (demande du guide « Les 10 erreurs fatales »).
+Demande du 08/10/2026 09:50 via annevialtissot.fr (demande du guide « Les 10 erreurs fatales »).
 Séquence d'e-mails : acceptée.
 
 Répondre à cet e-mail écrit directement à Paul Guide.
-Référence de la demande : 01M4C33PW30FYBGMP817J3QZ2V
+Référence de la demande : 01M4D7WVA1T95VMKBQV9KFVPJZ
 
 ==========
 
 À : boite-test@example.com
-Répondre à : marie+run-muylmjcv@example.com
+Répondre à : avialtissot@gmail.com
+Objet : [TEST] Votre diagnostic vendeur : vos résultats
+
+(E-mail de test : en production, il serait parti vers a@example.com.)
+
+Bonjour A,
+
+Merci d'avoir fait le diagnostic de votre vente. Voici le résumé de vos résultats :
+
+Score global : 92 / 100 (Bien préparé)
+Préparation à la Vente : 40 / 40
+Visibilité & Attractivité : 32 / 40
+Efficacité Commerciale : 20 / 20
+
+Le détail et les recommandations restent affichés 24 heures dans le navigateur où vous avez fait le diagnostic.
+
+Votre score montre une vente déjà bien préparée. Pour optimiser ce qui reste, je vous propose un rendez-vous stratégique de 30 minutes : réservez un créneau sur https://annevialtissot.fr/contact, ou répondez simplement à cet e-mail.
+
+Anne VIAL-TISSOT
+Consultante en immobilier · Chablais, Léman · réseau eXp France
+https://annevialtissot.fr
+
+==========
+
+À : boite-test@example.com
+Répondre à : marie+formulaires-muz8l634@example.com
 Objet : [TEST] Nouvelle demande · Estimation · Marie Essai
 
 (E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
 
-Nouvelle demande reçue par le site le 07/10/2026 23:08 (heure de Paris) : demande d'estimation.
+Nouvelle demande reçue par le site le 08/10/2026 09:51 (heure de Paris) : demande d'estimation.
 À faire : rappeler sous un jour ouvré (le site le lui a promis).
 
 À recopier dans la fiche contact Modelo :
@@ -402,7 +427,7 @@ Téléphone
 +33 6 12 34 56 78
 
 E-mail
-marie+run-muylmjcv@example.com
+marie+formulaires-muz8l634@example.com
 
 Type de contact
 Vendeur
@@ -414,12 +439,12 @@ Type de bien
 Appartement
 
 Notes
-Demande du 07/10/2026 23:08 via annevialtissot.fr (demande d'estimation).
+Demande du 08/10/2026 09:51 via annevialtissot.fr (demande d'estimation).
 Séquence d'e-mails : non demandée.
 Campagne : essai.
 
 Répondre à cet e-mail écrit directement à Marie Essai.
-Référence de la demande : 01M4C33XQMX46JK605FBPQ0QB7
+Référence de la demande : 01M4D7X32HHCTMNDJTGRHNYW12
 
 ==========
 
@@ -427,7 +452,7 @@ Référence de la demande : 01M4C33XQMX46JK605FBPQ0QB7
 Répondre à : avialtissot@gmail.com
 Objet : [TEST] Votre demande d'estimation à Anne VIAL-TISSOT
 
-(E-mail de test : en production, il serait parti vers marie+run-muylmjcv@example.com.)
+(E-mail de test : en production, il serait parti vers marie+formulaires-muz8l634@example.com.)
 
 Bonjour Marie,
 
@@ -442,12 +467,12 @@ https://annevialtissot.fr
 ==========
 
 À : boite-test@example.com
-Répondre à : jeanne+run-muylmjcv@example.com
+Répondre à : jeanne+formulaires-muz8l634@example.com
 Objet : [TEST] Nouvelle demande · Contact (vente) · Jeanne Navigateur
 
 (E-mail de test : en production, il serait parti vers avialtissot@gmail.com.)
 
-Nouvelle demande reçue par le site le 07/10/2026 23:08 (heure de Paris) : formulaire de contact (vente).
+Nouvelle demande reçue par le site le 08/10/2026 09:51 (heure de Paris) : formulaire de contact (vente).
 À faire : répondre sous un jour ouvré (le site le lui a promis).
 
 À recopier dans la fiche contact Modelo :
@@ -462,19 +487,19 @@ Téléphone
 +33 6 98 76 54 32
 
 E-mail
-jeanne+run-muylmjcv@example.com
+jeanne+formulaires-muz8l634@example.com
 
 Type de contact
 Vendeur
 
 Notes
 Essai depuis le navigateur.
-Demande du 07/10/2026 23:08 via annevialtissot.fr (formulaire de contact (vente)).
+Demande du 08/10/2026 09:51 via annevialtissot.fr (formulaire de contact (vente)).
 Séquence d'e-mails : non demandée.
 Campagne : navigateur.
 
 Répondre à cet e-mail écrit directement à Jeanne Navigateur.
-Référence de la demande : 01M4C347QC22XP0C1R7AD26X85
+Référence de la demande : 01M4D7XET5DT6RMFTSBPMDE77E
 
 ==========
 
@@ -482,7 +507,7 @@ Référence de la demande : 01M4C347QC22XP0C1R7AD26X85
 Répondre à : avialtissot@gmail.com
 Objet : [TEST] Votre message à Anne VIAL-TISSOT
 
-(E-mail de test : en production, il serait parti vers jeanne+run-muylmjcv@example.com.)
+(E-mail de test : en production, il serait parti vers jeanne+formulaires-muz8l634@example.com.)
 
 Bonjour Jeanne,
 
