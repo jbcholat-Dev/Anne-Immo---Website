@@ -13,6 +13,8 @@ export interface Email {
   texte: string;
   repondreA?: string;
   test: boolean;
+  /** En-têtes ajoutés (désabonnement en un clic de la séquence, story 10.5). */
+  entetes?: Record<string, string>;
   /** Clé qui empêche Resend d'envoyer deux fois le même e-mail (même lead, même canal) pendant 24 h. */
   idempotence: string;
 }
@@ -29,6 +31,7 @@ export async function envoyerEmail(env: EnvSite, e: Email): Promise<ResultatEnvo
     subject: e.test ? `[TEST] ${e.objet}` : e.objet,
     text: e.test ? `(E-mail de test : en production, il serait parti vers ${e.a}.)\n\n${e.texte}` : e.texte,
     ...(e.repondreA ? { reply_to: e.repondreA } : {}),
+    ...(e.entetes ? { headers: e.entetes } : {}),
   };
   try {
     const r = await fetch(env.URL_SERVICES_ESSAI ? `${env.URL_SERVICES_ESSAI}/resend` : 'https://api.resend.com/emails', {

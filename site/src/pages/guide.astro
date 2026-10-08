@@ -1,11 +1,12 @@
 ---
 // 11 Guide (CAP-8) : couverture (A-10 réservée), cinq lignes, capture — téléphone facultatif —, confirmation. Le PDF n'a pas d'adresse publique.
-// Story 10.3 : la demande est enregistrée et Anne est prévenue ; elle envoie le PDF elle-même. TODO(backend) : story 10.5,
-// lien signé envoyé automatiquement (« lien valable 48 heures » dans la maquette) ; remettre alors les textes de la maquette.
+// Story 10.5 : la demande est enregistrée, Anne est prévenue et le prospect reçoit un lien signé valable 7 jours (48 heures dans
+// la maquette, 7 jours par AD-8), aussi affiché dans la confirmation. La case « séquence » annonce le nombre réel d'e-mails.
 import Page from '../layouts/Page.astro';
 import Reserve from '../components/Reserve.astro';
 import Case from '../components/Case.astro';
 import ChampPiege from '../components/ChampPiege.astro';
+import { NOMBRE_ETAPES } from '../server/sequence';
 const erreurs = ['Le prix fixé sans comparables', 'Le dossier incomplet au compromis', 'Les diagnostics périmés', 'Les visites non qualifiées', 'Le financement vérifié trop tard'];
 ---
 <Page titre="Le guide — Les 10 erreurs fatales des vendeurs particuliers — Anne VIAL-TISSOT" description="Un guide court pour vendre sans mauvaise surprise, écrit par Anne. Envoyé par e-mail." courante="guide">
@@ -26,17 +27,18 @@ const erreurs = ['Le prix fixé sans comparables', 'Le dossier incomplet au comp
       <label class="champ"><span class="sr-only">E-mail</span><input type="email" name="email" placeholder="E-mail" required autocomplete="email" data-erreur="Indiquez votre adresse e-mail." aria-describedby="g-e3" /><span class="champ-erreur" id="g-e3"></span></label>
       <label class="champ"><span class="sr-only">Téléphone (facultatif)</span><input type="tel" name="telephone" placeholder="Téléphone (facultatif)" autocomplete="tel" inputmode="tel" class="g-facultatif" aria-describedby="g-e4" /><span class="champ-erreur" id="g-e4"></span></label>
       <Case nom="privacy" requis message="Nécessaire pour recevoir le guide.">J'accepte la <a href="/confidentialite">politique de confidentialité</a>. Obligatoire.</Case>
-      <Case nom="newsletter">Recevoir la séquence d'e-mails d'Anne. Facultatif.</Case>
+      <Case nom="newsletter">Recevoir aussi {NOMBRE_ETAPES} e-mails de conseils d'Anne, à quelques jours d'intervalle. Facultatif.</Case>
       <ChampPiege />
       <div class="alerte-douce" data-erreurs-globales hidden role="alert"></div>
       <div data-echec hidden tabindex="-1"><div class="alerte" role="alert">L'envoi n'a pas abouti. Vos informations sont conservées : rien à ressaisir.</div></div>
       <button type="submit" class="btn btn-primaire g-bouton">Recevoir le guide</button>
-      <p class="texte-muet g-note">Anne vous envoie le guide par e-mail sous un jour ouvré.</p>
+      <p class="texte-muet g-note">Le lien arrive par e-mail et reste valable 7 jours.</p>
     </form>
     <div class="confirmation g-confirmation" data-confirmation="guide" hidden>
       <div class="confirmation-titre">Le guide est en route</div>
-      <p>Anne vous l'envoie à <span data-champ="email"></span> sous un jour ouvré.</p>
-      <a href="/guide" class="lien" style="font-size:14.5px">Je n'ai rien reçu</a>
+      <p>Le lien de téléchargement est dans votre boîte (<span data-champ="email"></span>), valable 7 jours.</p>
+      <a href="#" class="btn btn-secondaire btn-m g-ouvrir" data-lien-guide target="_blank" rel="noopener" hidden>Ouvrir le guide maintenant</a>
+      <a href="/contact#ecrire" class="lien" style="font-size:14.5px">Je n'ai rien reçu</a>
     </div>
   </div>
   <script src="../islands/formulaires.ts"></script>
@@ -56,6 +58,7 @@ const erreurs = ['Le prix fixé sans comparables', 'Le dossier incomplet au comp
   .g-note { font-size: 12.5px; line-height: 1.5; }
   .g-confirmation { grid-column: 3; }
   .g-confirmation p { font-size: 15px; line-height: 1.5; margin-bottom: 10px; }
+  .g-confirmation .g-ouvrir { margin-bottom: 14px; }
   /* Largeurs intermédiaires (900 à 1399 px, sans artboard) : colonnes proportionnelles, sinon le texte déborde (story 8.2) */
   @media (min-width: 900px) and (max-width: 1399px) {
     .g-corps { grid-template-columns: minmax(0, 280px) minmax(0, 1fr) minmax(0, 400px); gap: 48px; }

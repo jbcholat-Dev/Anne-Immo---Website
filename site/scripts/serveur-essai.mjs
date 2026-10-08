@@ -20,6 +20,9 @@ export async function demarrer({ nom, port = 8788, portImitation = 8790 }) {
     req.on('data', (c) => (corps += c));
     req.on('end', () => {
       res.setHeader('Content-Type', 'application/json');
+      // Une connexion par appel : le serveur local réutilise sinon une connexion que l'imitation a déjà fermée
+      // (« Network connection lost » sur le deuxième e-mail d'un même lead).
+      res.setHeader('Connection', 'close');
       if (req.url === '/turnstile') return res.end(JSON.stringify({ success: !corps.includes('response=refuse'), 'error-codes': [] }));
       if (req.url === '/resend') {
         if (etat.enPanne) { res.statusCode = 500; return res.end(JSON.stringify({ name: 'imitation_en_panne', message: 'panne simulée' })); }
@@ -34,8 +37,8 @@ export async function demarrer({ nom, port = 8788, portImitation = 8790 }) {
   const essai = `${nom}-${Date.now().toString(36)}`;
   const reglages = path.join(os.tmpdir(), `essai-${essai}.vars`);
   fs.writeFileSync(reglages, [
-    'TURNSTILE_SECRET_KEY=essai', 'RESEND_API_KEY=essai', 'BOITE_TEST=boite-test@example.com', 'CAL_WEBHOOK_SECRET=essai',
-    `URL_SERVICES_ESSAI=http://localhost:${portImitation}`,
+    'TURNSTILE_SECRET_KEY=essai', 'RESEND_API_KEY=essai', 'BOITE_TEST=boite-test@example.com', 'CAL_WEBHOOK_SECRET=essai', 'LIEN_SECRET=essai',
+    `URL_SERVICES_ESSAI=http://localhost:${portImitation}`, `URL_SITE=http://localhost:${port}`,
   ].join('\n'));
   const journal = path.join(os.tmpdir(), `e2e-${essai}.log`); // journal du serveur local, hors du dossier du site
   const sortie = fs.openSync(journal, 'w');

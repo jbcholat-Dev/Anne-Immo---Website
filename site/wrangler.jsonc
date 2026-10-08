@@ -1,8 +1,8 @@
 {
   // Configuration Cloudflare. Le site est construit par Astro avec l'adaptateur Cloudflare (story 10.2) :
-  // les pages prérendues sont servies telles quelles, /api/* et la page de résultats du diagnostic (rendue par le serveur,
-  // story 10.4) passent par worker.ts.
-  // Aucun secret ici, seulement des identifiants publics. Secrets (GITHUB_TOKEN, CAL_WEBHOOK_SECRET, RESEND_API_KEY, TURNSTILE_SECRET_KEY, BOITE_TEST…) :
+  // les pages prérendues sont servies telles quelles, /api/*, la page de résultats du diagnostic (rendue par le serveur,
+  // story 10.4) et la page de désabonnement (story 10.5) passent par worker.ts.
+  // Aucun secret ici, seulement des identifiants publics. Secrets (GITHUB_TOKEN, CAL_WEBHOOK_SECRET, LIEN_SECRET, RESEND_API_KEY, TURNSTILE_SECRET_KEY, BOITE_TEST…) :
   // Cloudflare → Workers & Pages → anne-vial-tissot-site → Settings → Variables and Secrets, voir RUNBOOK.md.
   // L'indexation se règle à la construction, par la variable de build PUBLIC_INDEXATION du projet Cloudflare
   // (absente = aperçu non indexé ; « oui » = production, story 12.4). Voir .env.example.
@@ -15,7 +15,7 @@
     "binding": "ASSETS",
     "not_found_handling": "404-page",
     "html_handling": "auto-trailing-slash",
-    "run_worker_first": ["/api/*", "/diagnostic/resultats"]
+    "run_worker_first": ["/api/*", "/diagnostic/resultats", "/desabonnement"]
   },
   // Base des leads (D1, juridiction UE, RUNBOOK § 4 quater). Tant que le site n'est pas lancé, toutes les
   // mises en ligne (main comme branches) utilisent la base d'aperçu ; la base de production `anne-leads`
@@ -43,6 +43,8 @@
     "ENVIRONNEMENT": "apercu",
     // Boîte d'Anne (décision de JB du 2026-10-07) : reçoit les demandes en production, et reçoit les réponses des prospects
     // (adresse de réponse des confirmations, car anne@annevialtissot.fr n'a pas encore de boîte de réception).
-    "BOITE_ANNE": "avialtissot@gmail.com"
+    "BOITE_ANNE": "avialtissot@gmail.com",
+    // Adresse du site dans les liens des e-mails (guide, désabonnement, story 10.5). Passe à https://annevialtissot.fr au lancement (story 12.4).
+    "URL_SITE": "https://anne-vial-tissot-site.jbcholat.workers.dev"
   }
 }

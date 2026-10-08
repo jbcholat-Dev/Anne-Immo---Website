@@ -78,6 +78,8 @@ node scripts/liens.mjs         # vérifie que chaque lien mène quelque part
 node scripts/ecrans.mjs        # signale tout débordement ou bouton trop petit, page par page et largeur par largeur
 node scripts/e2e-diagnostic.mjs # diagnostic de bout en bout sur le serveur local (préalable : site/README.md)
 node scripts/e2e-rendez-vous.mjs # webhook Cal.com et agenda de /contact sur le serveur local (même préalable)
+node scripts/e2e-guide.mjs     # guide par lien signé, séquence et désabonnement sur le serveur local (même préalable)
+node scripts/guide-pdf.mjs     # refait le PDF du guide (site/prive/guide.pdf) depuis contenu-anne/guide/texte-actuel.md
 ```
 
 ## 5. Règles de contenu et de sécurité
