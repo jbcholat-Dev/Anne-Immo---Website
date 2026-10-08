@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 262" role="img" aria-label="Anne VIAL-TISSOT (version empilée)">
   <defs>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Italiana&amp;display=swap');
-      .nm{font-family:'Italiana',serif; font-size:50px; letter-spacing:1.5px; fill:#26201A}
+      @import url('https://fonts.googleapis.com/css2?family=Gilda+Display&amp;display=swap');
+      .nm{font-family:'Gilda Display',serif; font-size:44px; letter-spacing:1.5px; fill:#26201A}
     </style>
     <clipPath id="sym"><circle cx="280" cy="88" r="60"/></clipPath>
   </defs>

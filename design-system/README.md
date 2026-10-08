@@ -10,7 +10,7 @@ Bundle prêt à pousser vers un projet **Design System** du compte claude.ai/des
 | `brand/logo.html` | Logos : primaire **sans sous-titre**, version avec descripteur + seuil d'usage, monogramme sans texte (SVG inline) | Brand |
 | `brand/co-branding-exp.html` | Lockups Anne + eXp aux cotes officielles (SVG inline) + règles | Brand |
 | `brand/palette.html` | 7 couleurs + règles d'usage | Colors |
-| `brand/typographie.html` | Italiana / DM Sans, hiérarchie, étiquettes | Type |
+| `brand/typographie.html` | Gilda Display / Jost (charte v3, D-31), hiérarchie, étiquettes | Type |
 | `components/boutons.html` | Bouton pilule primaire/hover, secondaire, lien | Components |
 | `components/cartes-encarts.html` | Carte galet, encart brume, séparateur horizon | Components |
 | `components/hero.html` | Pattern hero du site (titre + signature + CTA + bandeau Klein) | Patterns |

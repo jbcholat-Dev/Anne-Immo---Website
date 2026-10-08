@@ -18,8 +18,8 @@
   --avt-disabled: #B7AC9D;           /* champs et dates indisponibles */
 
   /* Typographies (Google Fonts) */
-  --avt-font-display: 'Italiana', serif;      /* logo, H1/H2, grands chiffres — jamais < 22px web */
-  --avt-font-text: 'DM Sans', sans-serif;     /* texte courant, UI, sous-titres */
+  --avt-font-display: 'Gilda Display', serif; /* logo, titres, grands chiffres — jamais < 15px (charte v3, D-31) */
+  --avt-font-text: 'Jost', sans-serif;        /* texte courant, UI, étiquettes — 400 / 500 */
 
   /* Règles clés (voir charte) :
      - terracotta JAMAIS en texte courant (accents, gros titres, boutons) ;

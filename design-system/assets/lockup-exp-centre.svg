@@ -3,8 +3,8 @@
   <svg x="0" y="0" width="651.1" height="130" viewBox="21 23 571 114">
     <defs>
       <style>
-        @import url('https://fonts.googleapis.com/css2?family=Italiana&amp;display=swap');
-        .nm{font-family:'Italiana',serif; font-size:52px; letter-spacing:1.6px; fill:#26201A}
+        @import url('https://fonts.googleapis.com/css2?family=Gilda+Display&amp;display=swap');
+        .nm{font-family:'Gilda Display',serif; font-size:46px; letter-spacing:1.6px; fill:#26201A}
       </style>
       <clipPath id="sym"><circle cx="78" cy="80" r="54"/></clipPath>
     </defs>
