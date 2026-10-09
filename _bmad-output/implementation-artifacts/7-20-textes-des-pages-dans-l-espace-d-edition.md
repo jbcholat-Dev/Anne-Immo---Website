@@ -1,7 +1,7 @@
 ---
 story: 7.20
 epic: 7 — Contenu d'Anne
-statut: review
+statut: done
 date: 2026-10-09
 ---
 
@@ -24,5 +24,5 @@ Question de JB du 2026-10-09 : dans l'espace d'édition (Sveltia CMS, `/admin`),
 - `npm run build` : OK ; `npm run check` : 0 erreur ; `scripts/liens.mjs` : 26 pages, 1661 liens, 0 cassé ; `scripts/ecrans.mjs` : aucun signalement ; `npm run verif` : aucune erreur console.
 
 ## Ce qui reste
-- JB : fusionner la demande de fusion.
+- ~~JB : fusionner la demande de fusion.~~ Fait : PR n° 69 fusionnée le 2026-10-09.
 - Anne ou JB : ouvrir `/admin` › « Textes des pages », changer un mot, enregistrer, et vérifier sur l'aperçu de la demande de fusion (premier essai réel avec la connexion GitHub).
