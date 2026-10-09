@@ -80,6 +80,8 @@ node scripts/e2e-diagnostic.mjs # diagnostic de bout en bout sur le serveur loca
 node scripts/e2e-rendez-vous.mjs # webhook Cal.com et agenda de /contact sur le serveur local (même préalable)
 node scripts/e2e-guide.mjs     # guide par lien signé, séquence et désabonnement sur le serveur local (même préalable)
 node scripts/e2e-gestion.mjs   # espace de gestion /gestion, droits RGPD et purge, avec une imitation de Cloudflare Access (même préalable)
+node scripts/maquette-emails.mjs # fait partir les 12 e-mails aux prospects sur le serveur local, vérifie leur mise en forme et les capture dans site/.verif/emails (même préalable)
+node scripts/email-logo.mjs    # refait le logo joint aux e-mails (site/src/server/email-logo.png) depuis le logo de la charte
 node scripts/guide-pdf.mjs     # refait le PDF du guide (site/prive/guide.pdf) depuis contenu-anne/guide/texte-actuel.md
 ```
 

@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-26-2026 15:10
-last_updated: 10-09-2026 11:30
+last_updated: 10-09-2026 20:30
 project: Site Anne Vial-Tissot
 project_key: NOKEY
 tracking_system: file-system
@@ -124,9 +124,9 @@ development_status:
   10-4-gate-du-diagnostic-côté-serveur: done
   10-5-guide-par-lien-signé-et-séquence-d-e-mails-de-la-sortie-b: done
   10-6-rendez-vous-cal-com-intégré: done
-  10-7-administration-et-droits-rgpd: review
+  10-7-administration-et-droits-rgpd: done
   10-8-surveillance-mesure-et-test-synthétique: backlog
-  10-9-e-mails-du-site-à-la-charte: backlog
+  10-9-e-mails-du-site-à-la-charte: in-progress
   epic-10-retrospective: optional
 
   epic-11: backlog
