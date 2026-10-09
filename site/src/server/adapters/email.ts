@@ -2,7 +2,12 @@
 // Sans état, il n'écrit jamais en base. Changer de fournisseur = réécrire ce seul fichier.
 // Routage des tests (AD-12) : un e-mail marqué `test` part vers la boîte de test (secret BOITE_TEST),
 // jamais vers Anne ni vers un prospect. Tant que le site n'est pas lancé, tous les leads sont des tests.
+import logo from '../email-logo.png?inline';
+import { CID_LOGO } from '../email-html';
 import type { EnvSite } from '../env';
+
+/** Logo joint aux e-mails HTML et affiché par `cid:logo` : aucune image n'est chargée depuis un serveur (story 10.9). */
+const LOGO_BASE64 = logo.slice(logo.indexOf(',') + 1);
 
 export const EXPEDITEUR = 'Anne VIAL-TISSOT <anne@annevialtissot.fr>';
 
@@ -11,6 +16,8 @@ export interface Email {
   a: string;
   objet: string;
   texte: string;
+  /** Version HTML à la charte (story 10.9) ; la version texte part toujours avec elle. */
+  html?: string;
   repondreA?: string;
   test: boolean;
   /** En-têtes ajoutés (désabonnement en un clic de la séquence, story 10.5). */
@@ -30,6 +37,10 @@ export async function envoyerEmail(env: EnvSite, e: Email): Promise<ResultatEnvo
     to: [a],
     subject: e.test ? `[TEST] ${e.objet}` : e.objet,
     text: e.test ? `(E-mail de test : en production, il serait parti vers ${e.a}.)\n\n${e.texte}` : e.texte,
+    ...(e.html ? {
+      html: e.test ? e.html.replace(/(<body[^>]*>)/, `$1<p style="margin:0;padding:8px;background:#E9E0D2;font:13px Arial,sans-serif;color:#26201A;text-align:center;">E-mail de test : en production, il serait parti vers ${e.a}.</p>`) : e.html,
+      attachments: [{ filename: 'logo.png', content: LOGO_BASE64, content_type: 'image/png', content_id: CID_LOGO }],
+    } : {}),
     ...(e.repondreA ? { reply_to: e.repondreA } : {}),
     ...(e.entetes ? { headers: e.entetes } : {}),
   };

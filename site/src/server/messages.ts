@@ -2,7 +2,8 @@
 import bareme from '../content/diagnostic/bareme.json';
 import contenu from '../content/diagnostic/questions.json';
 import type { Scores } from './diagnostic';
-import { sujetEtape, texteEtape, type EtapeSequence } from './sequence';
+import { enHtml, enTexte } from './email-html';
+import { sujetEtape, type EtapeSequence } from './sequence';
 
 // - notify_anne : prévient Anne d'une demande, prêt à recopier dans la fiche contact Modelo (AD-14) :
 //   un bloc par champ, dans l'ordre de la fiche (Nom, Prénom, Téléphone, E-mail, Type de contact, Commune, Type de bien, Notes).
@@ -11,6 +12,8 @@ import { sujetEtape, texteEtape, type EtapeSequence } from './sequence';
 //   Guide : porte le lien signé du guide, valable 7 jours (story 10.5).
 // - guide : le lien du guide demandé depuis la page de résultats du diagnostic (story 10.5).
 // - sequence:<étape> : un e-mail de la séquence d'Anne, avec son lien de désabonnement (story 10.5).
+// Les e-mails aux prospects sont écrits en petit Markdown et partent en HTML à la charte avec leur version texte
+// (story 10.9, email-html.ts) ; la notification à Anne reste en texte brut.
 
 export interface LigneLead {
   id: string;
@@ -37,6 +40,14 @@ export interface LigneLead {
 export interface Message {
   objet: string;
   texte: string;
+  /** Version HTML à la charte (e-mails aux prospects seulement, story 10.9). */
+  html?: string;
+}
+
+/** Un e-mail au prospect : la même source Markdown donne la version HTML et la version texte (signature ajoutée aux deux). */
+function auProspect(objet: string, md: string, lang: 'fr' | 'en', apercu: string, pied?: { texte: string; md: string }): Message {
+  const texte = [enTexte(md), ...(pied ? ['', '—', pied.texte] : []), '', lang === 'en' ? SIGNATURE_EN : SIGNATURE].join('\n');
+  return { objet, texte, html: enHtml(md, { lang, apercu, pied: pied?.md }) };
 }
 
 /** +33612345678 → « +33 6 12 34 56 78 » ; les autres numéros restent tels quels. */
@@ -154,6 +165,7 @@ export function notifierAnne(l: LigneLead): Message {
 }
 
 const PIED_SEQUENCE = (n: number) => `Vous recevrez aussi ${n} e-mails de conseils, à quelques jours d'intervalle. Chacun contient un lien pour arrêter.`;
+const bonjour = (l: LigneLead) => `${l.lang === 'en' ? 'Hello' : 'Bonjour'} ${l.prenom ?? ''}`.trim() + ',';
 
 /** `lienGuide` : lien signé du guide (null si le secret des liens manque : l'e-mail renvoie alors à la page du guide). */
 export function confirmerProspect(l: LigneLead, lienGuide: string | null = null, etapes = 0): Message {
@@ -161,74 +173,74 @@ export function confirmerProspect(l: LigneLead, lienGuide: string | null = null,
   const diag = resultat(l);
   const sequence = l.newsletter_opt_in_at && etapes ? ['', PIED_SEQUENCE(etapes)] : [];
   if (l.source === 'guide') {
-    return {
-      objet: 'Votre guide « Les 10 erreurs fatales des vendeurs particuliers »',
-      texte: [
-        `Bonjour ${l.prenom ?? ''},`.trim(), '',
-        'Merci pour votre demande. Voici votre guide, à télécharger :', '',
-        lienGuide ?? 'Le lien de téléchargement vous sera envoyé par Anne sous un jour ouvré.', '',
-        ...(lienGuide ? ['Ce lien est personnel et reste valable 7 jours.', ''] : []),
-        'Une question sur votre vente ? Répondez simplement à cet e-mail.', ...sequence, '', SIGNATURE,
-      ].join('\n'),
-    };
+    return auProspect('Votre guide « Les 10 erreurs fatales des vendeurs particuliers »', [
+      bonjour(l), '',
+      'Merci pour votre demande. Voici votre guide, à télécharger :', '',
+      lienGuide ? `[Télécharger le guide](${lienGuide})` : 'Le lien de téléchargement vous sera envoyé par Anne sous un jour ouvré.', '',
+      ...(lienGuide ? ['Ce lien est personnel et reste valable 7 jours.', ''] : []),
+      'Une question sur votre vente ? Répondez simplement à cet e-mail.', ...sequence,
+    ].join('\n'), 'fr', 'Votre guide est prêt : le lien de téléchargement est dans cet e-mail.');
   }
   if (diag) {
     // Pas de lien vers la page de résultats : elle ne s'ouvre que dans le navigateur du diagnostic (AD-5). L'e-mail en garde le résumé.
     const suite = l.orientation === 'A'
-      ? "Votre score montre une vente déjà bien préparée. Pour optimiser ce qui reste, je vous propose un rendez-vous stratégique de 30 minutes : réservez un créneau sur https://annevialtissot.fr/contact, ou répondez simplement à cet e-mail."
+      ? ['Votre score montre une vente déjà bien préparée. Pour optimiser ce qui reste, je vous propose un rendez-vous stratégique de 30 minutes :', '',
+        '[Réserver un créneau](https://annevialtissot.fr/contact#reserver)', '', 'Ou répondez simplement à cet e-mail.']
       : lienGuide
-        ? `Pour corriger les points faibles identifiés, voici mon guide « Les 10 erreurs fatales des vendeurs particuliers » (lien personnel, valable 7 jours) :\n${lienGuide}\n\nPour en parler de vive voix, répondez simplement à cet e-mail.`
-        : "Pour corriger les points faibles identifiés, demandez mon guide « Les 10 erreurs fatales des vendeurs particuliers » sur https://annevialtissot.fr/guide. Pour en parler de vive voix, répondez simplement à cet e-mail.";
-    return {
-      objet: 'Votre diagnostic vendeur : vos résultats',
-      texte: [
-        `Bonjour ${l.prenom ?? ''},`.trim(), '',
-        'Merci d\'avoir fait le diagnostic de votre vente. Voici le résumé de vos résultats :', '',
-        `Score global : ${diag.scores.total} / 100 (${diag.profil})`,
-        ...diag.axes, '',
-        'Le détail et les recommandations restent affichés 24 heures dans le navigateur où vous avez fait le diagnostic.', '',
-        suite, ...sequence, '', SIGNATURE,
-      ].join('\n'),
-    };
+        ? ['Pour corriger les points faibles identifiés, voici mon guide « Les 10 erreurs fatales des vendeurs particuliers » (lien personnel, valable 7 jours) :', '',
+          `[Télécharger le guide](${lienGuide})`, '', 'Pour en parler de vive voix, répondez simplement à cet e-mail.']
+        : ['Pour corriger les points faibles identifiés, demandez mon guide « Les 10 erreurs fatales des vendeurs particuliers » :', '',
+          '[Recevoir le guide](https://annevialtissot.fr/guide)', '', 'Pour en parler de vive voix, répondez simplement à cet e-mail.'];
+    return auProspect('Votre diagnostic vendeur : vos résultats', [
+      bonjour(l), '',
+      'Merci d\'avoir fait le diagnostic de votre vente. Voici le résumé de vos résultats :', '',
+      `> **Score global : ${diag.scores.total} / 100** (${diag.profil})\n${diag.axes.map((a) => `> ${a}`).join('\n')}`, '',
+      'Le détail et les recommandations restent affichés 24 heures dans le navigateur où vous avez fait le diagnostic.', '',
+      ...suite, ...sequence,
+    ].join('\n'), 'fr', `Votre score : ${diag.scores.total} / 100, ${diag.profil}.`);
   }
   if (l.lang === 'en') {
     const corps =
       l.source === 'estimation'
         ? `Your valuation request has reached me. I will call you back within one working day${tel ? ` on ${tel}` : ''} to ask a few questions about the property in ${l.commune_bien}, then we will arrange a visit. No figure is given in writing before that visit.`
         : `Your message has reached me. I will reply within one working day, by e-mail${tel ? ` or on ${tel}` : ''}.`;
-    return {
-      objet: l.source === 'estimation' ? 'Your valuation request to Anne VIAL-TISSOT' : 'Your message to Anne VIAL-TISSOT',
-      texte: [`Hello ${l.prenom ?? ''},`.trim(), '', corps, ...(l.message ? ['', 'Your message:', l.message] : []), '', 'To add anything, simply reply to this e-mail.', '', SIGNATURE_EN].join('\n'),
-    };
+    return auProspect(
+      l.source === 'estimation' ? 'Your valuation request to Anne VIAL-TISSOT' : 'Your message to Anne VIAL-TISSOT',
+      [bonjour(l), '', corps, ...(l.message ? ['', 'Your message:', '', `> ${l.message.replace(/\n/g, '\n> ')}`] : []), '', 'To add anything, simply reply to this e-mail.'].join('\n'),
+      'en', 'Your request has reached Anne.',
+    );
   }
   const corps =
     l.source === 'estimation'
       ? `Votre demande d'estimation est bien arrivée. Je vous rappelle sous un jour ouvré${tel ? ` au ${tel}` : ''}, pour quelques questions sur votre bien à ${l.commune_bien}, puis nous fixerons une visite. Aucun chiffre n'est donné par écrit avant cette visite.`
       : `Votre message est bien arrivé. Je vous réponds sous un jour ouvré, par e-mail${tel ? ` ou au ${tel}` : ''}.`;
-  return {
-    objet: l.source === 'estimation' ? "Votre demande d'estimation à Anne VIAL-TISSOT" : 'Votre message à Anne VIAL-TISSOT',
-    texte: [`Bonjour ${l.prenom ?? ''},`.trim(), '', corps, ...(l.message ? ['', 'Pour rappel, votre message :', l.message] : []), '', 'Pour ajouter une précision, répondez simplement à cet e-mail.', '', SIGNATURE].join('\n'),
-  };
+  return auProspect(
+    l.source === 'estimation' ? "Votre demande d'estimation à Anne VIAL-TISSOT" : 'Votre message à Anne VIAL-TISSOT',
+    [bonjour(l), '', corps, ...(l.message ? ['', 'Pour rappel, votre message :', '', `> ${l.message.replace(/\n/g, '\n> ')}`] : []), '', 'Pour ajouter une précision, répondez simplement à cet e-mail.'].join('\n'),
+    'fr', l.source === 'estimation' ? 'Votre demande d\'estimation est bien arrivée.' : 'Votre message est bien arrivé.',
+  );
 }
 
 /** Le guide demandé depuis la page de résultats du diagnostic (envoi `guide`). */
 export function envoyerGuide(l: LigneLead, lienGuide: string): Message {
-  return {
-    objet: 'Votre guide « Les 10 erreurs fatales des vendeurs particuliers »',
-    texte: [
-      `Bonjour ${l.prenom ?? ''},`.trim(), '',
-      'Voici le guide demandé depuis vos résultats du diagnostic :', '',
-      lienGuide, '',
-      'Ce lien est personnel et reste valable 7 jours.', '',
-      'Une question sur votre vente ? Répondez simplement à cet e-mail.', '', SIGNATURE,
-    ].join('\n'),
-  };
+  return auProspect('Votre guide « Les 10 erreurs fatales des vendeurs particuliers »', [
+    bonjour(l), '',
+    'Voici le guide demandé depuis vos résultats du diagnostic :', '',
+    `[Télécharger le guide](${lienGuide})`, '',
+    'Ce lien est personnel et reste valable 7 jours.', '',
+    'Une question sur votre vente ? Répondez simplement à cet e-mail.',
+  ].join('\n'), 'fr', 'Votre guide est prêt : le lien de téléchargement est dans cet e-mail.');
 }
 
-/** Un e-mail de la séquence d'Anne (`sequence:<étape>`), avec le lien de désabonnement en pied. */
+/** Un e-mail de la séquence d'Anne (`sequence:<étape>`), avec le lien de désabonnement en pied. Le texte d'Anne est
+ * mis en forme tel qu'elle l'a écrit : seul « [Prénom] » est remplacé. */
 export function etapeSequence(l: LigneLead, e: EtapeSequence, lienDesabonnement: string): Message {
+  const md = e.corps.replace(/\[Prénom\]/g, l.prenom ?? '').replace(/^(Bonjour|Hello) ,/m, '$1,');
   const pied = l.lang === 'en'
-    ? `You receive this e-mail because you asked for Anne's advice series. To stop: ${lienDesabonnement}`
-    : `Vous recevez cet e-mail parce que vous avez demandé la série de conseils d'Anne. Pour ne plus la recevoir : ${lienDesabonnement}`;
-  return { objet: sujetEtape(e, l.prenom), texte: [texteEtape(e, l.prenom), '', '—', pied, '', l.lang === 'en' ? SIGNATURE_EN : SIGNATURE].join('\n') };
+    ? { texte: `You receive this e-mail because you asked for Anne's advice series. To stop: ${lienDesabonnement}`,
+      md: `You receive this e-mail because you asked for Anne's advice series. [Stop receiving these e-mails](${lienDesabonnement})` }
+    : { texte: `Vous recevez cet e-mail parce que vous avez demandé la série de conseils d'Anne. Pour ne plus la recevoir : ${lienDesabonnement}`,
+      md: `Vous recevez cet e-mail parce que vous avez demandé la série de conseils d'Anne. [Ne plus recevoir ces e-mails](${lienDesabonnement})` };
+  const apercu = enTexte(md).split('\n').map((x) => x.trim()).filter((x) => x && !/^(Bonjour|Hello)\b/.test(x))[0] ?? '';
+  return auProspect(sujetEtape(e, l.prenom), md, l.lang, apercu.slice(0, 140), pied);
 }

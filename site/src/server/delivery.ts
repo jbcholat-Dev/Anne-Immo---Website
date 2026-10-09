@@ -27,13 +27,13 @@ async function construire(env: EnvSite, canal: string, l: LigneLead & { newslett
     // Le guide part avec la confirmation d'une demande de guide et avec les résultats en sortie B (story 10.5).
     const avecGuide = l.source === 'guide' || (l.source === 'diagnostic' && l.orientation === 'B');
     const m = confirmerProspect(l, avecGuide ? await lienGuide(env, l.id) : null, etapesDe(l.lang).length);
-    return { email: { ...base, a: l.email, objet: m.objet, texte: m.texte, repondreA: env.BOITE_ANNE } };
+    return { email: { ...base, a: l.email, objet: m.objet, texte: m.texte, html: m.html, repondreA: env.BOITE_ANNE } };
   }
   if (canal === 'guide') {
     const lien = await lienGuide(env, l.id);
     if (!lien) return { erreur: 'LIEN_SECRET absent' };
     const m = envoyerGuide(l, lien);
-    return { email: { ...base, a: l.email, objet: m.objet, texte: m.texte, repondreA: env.BOITE_ANNE } };
+    return { email: { ...base, a: l.email, objet: m.objet, texte: m.texte, html: m.html, repondreA: env.BOITE_ANNE } };
   }
   if (canal.startsWith('sequence:')) {
     if (l.newsletter_unsubscribed_at) return { annuler: 'désabonné' };
@@ -44,7 +44,7 @@ async function construire(env: EnvSite, canal: string, l: LigneLead & { newslett
     const m = etapeSequence(l, etape, lien);
     // Désabonnement en un clic depuis la messagerie (RFC 8058) : la messagerie poste sur /api/desabonnement.
     const unClic = lien.replace('/desabonnement?', '/api/desabonnement?');
-    return { email: { ...base, a: l.email, objet: m.objet, texte: m.texte, repondreA: env.BOITE_ANNE,
+    return { email: { ...base, a: l.email, objet: m.objet, texte: m.texte, html: m.html, repondreA: env.BOITE_ANNE,
       entetes: { 'List-Unsubscribe': `<${unClic}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } } };
   }
   return { annuler: 'canal inconnu' };
