@@ -1,7 +1,7 @@
 ---
 id: SPEC-anne-website
-version: 5
-date: 2026-09-13
+version: 6
+date: 2026-10-09
 companions:
   - ../../planning-artifacts/architecture/architecture-anne-website-2026-08-29/ARCHITECTURE-SPINE.md
   - contexte-existant.md
@@ -18,6 +18,7 @@ sources:
   - review-findings.json — bmad-review, 31 findings (2026-08-29)
   - ../../../../CLAUDE.md § journal 2026-09-07 — décisions d'architecture vague 1 (JB)
   - ../../../maquettes/lot-3-complet/DECISIONS.md — journal des décisions de la séance maquette lot 3, Anne + JB (2026-09-13)
+  - Fil « Espace de travail d'Anne », réponses de JB sur la façon de travailler d'Anne (2026-10-09) — CAP-12
 ---
 
 # Site web Anne Vial-Tissot — vitrine de crédibilité et génération de leads
@@ -31,6 +32,8 @@ sources:
 
 Anne Vial-Tissot est mandataire indépendante chez eXp France, un modèle que les agences traditionnelles attaquent sur le terrain de la légitimité. Le site doit installer sa crédibilité professionnelle (preuve sociale, visuels premium) et ouvrir un canal d'acquisition de leads qualifiés, indépendant de son faible volume de biens en portefeuille (2-3 actifs ; 5-6 ventes/an suffisent à son modèle économique).
 
+Depuis la v6 (2026-10-09), le site porte aussi **l'espace de travail quotidien d'Anne** (CAP-12). Ses premiers contacts arrivent surtout par téléphone (boîtage, appels entrants) et lors d'événements (jeu concours trimestriel à l'Entrepôt du Bricolage), bientôt par le site ; son suivi n'est pas structuré, et Modelo, le CRM imposé par eXp, ne lui sert qu'à formaliser un mandat. Un lead capté mais pas suivi est un lead perdu : chaque journée d'Anne doit commencer devant ses contacts, en sachant qui appeler et comment faire avancer chacun. Cet outil reste à elle si elle change de réseau.
+
 ## Success signal
 
 Le site est en ligne, les 3 axes (visuels, preuve sociale, diagnostic) et les parcours de conversion (diagnostic, contact direct — vendeur ou acheteur —, demande d'estimation) sont opérationnels, et Anne peut opposer aux agences traditionnelles une preuve concrète de professionnalisme — avis, stories, visuels — plutôt qu'un volume de biens.
@@ -41,6 +44,7 @@ Mesuré sur les **6 premiers mois** suivant la mise en ligne :
 - **≥ 40 % de taux de complétion** du quiz parmi les visiteurs qui le démarrent
 - **≥ 8 rendez-vous pris** via le site
 - **0 lead perdu** : chaque soumission est stockée côté site et notifiée à Anne
+- **0 contact actif sans prochaine action datée** dans l'espace de travail (CAP-12), et Anne l'ouvre en début de journée au moins 4 jours ouvrés sur 5 (mesuré sur le premier mois d'usage)
 
 Ces seuils sont posés par déduction du modèle économique (5-6 ventes/an), pas par une cible fournie — voir Assumptions.
 
@@ -80,15 +84,28 @@ Ces seuils sont posés par déduction du modèle économique (5-6 ventes/an), pa
   - **intent:** Un vendeur peut demander à Anne une estimation de son bien. **L'estimation n'est pas produite par le site** : la demande ouvre un rappel puis une visite par Anne (D-4, 2026-09-13).
   - **success:** Un formulaire dédié recueille prénom, nom, téléphone (obligatoire, format international), email, commune du bien, type de bien et un consentement explicite. Le lead est écrit côté site avant toute diffusion, avec la même garantie d'idempotence que les autres sources (contrainte « Stockage de référence des leads », AD-4, AD-6) ; il porte la source `estimation`, distincte de la source `contact`, pour que l'origine reste lisible dans le suivi. Une confirmation est envoyée au prospect et une notification à Anne. Les obligations RGPD sont identiques à celles des autres formulaires.
 
+- **CAP-12 — Espace de travail d'Anne**
+  - **intent:** Anne démarre chaque journée devant ses contacts et sait qui appeler, qui relancer et quoi faire pour faire avancer chacun, quel que soit le canal par lequel le contact est arrivé (téléphone, événement, site). C'est son outil principal de suivi ; Modelo n'est utilisé qu'au moment de formaliser un mandat (2026-10-09).
+  - **success:**
+    - **Tout contact y entre.** Les demandes du site y arrivent seules (CAP-5, CAP-6, CAP-8, CAP-9, CAP-11). Anne crée un contact à la main depuis son téléphone en moins d'une minute (prénom, nom, téléphone ou e-mail, origine : téléphone, boîtage, événement, recommandation, site…). Elle importe une liste issue d'un événement (fichier tableur) ; un contact déjà connu, reconnu par son téléphone au format international ou son e-mail (casse ignorée), n'est jamais créé deux fois.
+    - **Chaque contact a un parcours, une étape, une prochaine action datée et un historique** (notes, changements d'étape, envois, rendez-vous, puis appels et e-mails). Parcours **vendeur**, étapes par défaut : À qualifier (premier appel : vend-il, a-t-il déjà un agent, depuis quand est-il en vente) → Premier rendez-vous (visite du bien) → Estimation en préparation → Second rendez-vous (stratégie et estimation présentées) → Mandat exclusif signé → En vente (points réguliers avec les vendeurs) → Vendu. Parcours **acheteur**, étapes par défaut : À qualifier → Besoin défini → Mandat de recherche signé → Visites → Offre acceptée → Acte signé. À toute étape, un contact peut passer **En sommeil** (avec une date de réveil) ou **Perdu** (avec un motif).
+    - **Aucun contact actif sans prochaine action datée.** L'espace la demande à chaque changement d'étape ; seuls Vendu, Acte signé et Perdu en sont dispensés. Un contact en sommeil revient dans la journée à sa date de réveil.
+    - **Une page « Aujourd'hui » ouvre l'espace** : nouveaux contacts pas encore traités, actions prévues aujourd'hui ou en retard (les retards en tête), rendez-vous du jour. Depuis chaque ligne, Anne appelle ou écrit en un geste, note le résultat et fixe la prochaine action sans quitter la page.
+    - **Une vue pipeline par parcours** : une colonne par étape avec son nombre de contacts ; déplacer une carte change l'étape et le trace dans l'historique.
+    - **Modelo à la signature seulement.** Au passage à « Mandat exclusif signé » ou « Mandat de recherche signé », le contact est marqué « à recopier dans Modelo » avec une fiche prête à copier ; avant cette étape, aucune recopie n'est demandée (amende AD-14).
+    - **Téléphone et ordinateur à égalité** (Anne travaille à 50/50) ; même protection d'accès que la gestion des demandes (AD-18) ; en français.
+    - **Enrichissement, en second temps et selon les accès obtenus** : les résumés d'appels de Leedflow (l'application qui enregistre et résume ses appels) et les échanges de sa boîte e-mail professionnelle (Gmail reliée à son adresse eXp) se rangent sur la fiche du bon contact, retrouvé par téléphone ou e-mail ; un appel d'un numéro inconnu propose de créer le contact. L'outil peut proposer une étape ou une prochaine action ; **rien ne change d'étape sans qu'Anne le valide**. L'espace reste complet et utile sans cet enrichissement.
+    - **RGPD** : l'export et l'effacement (AD-18) couvrent les notes, l'historique et les contacts saisis à la main ou importés ; la purge à 3 ans d'inactivité s'applique à tous.
+
 ## Constraints
 
 - **Diagnostic recréé nativement.** Le diagnostic (CAP-4) est construit dans le site, sans dépendance à la plateforme SaaS ScoreApp (décision JB 2026-08-29 ; faisabilité confirmée — quiz à branchements, scoring par catégorie, gate de capture et résultats dynamiques sont standards). Le contenu du diagnostic est intégralement possédé et versionné (`quiz-conception-notion.md`) ; le ScoreApp en ligne n'est plus qu'une référence de vérification, pas un outil à conserver en production.
 - **Réalisation interne poussée au maximum** avant tout arbitrage prestataire — devis reçus : 7-10 k€. Claude Design pour la maquette ; **Framer écarté** (2026-09-07) : le rendu est en Astro 7 sur Cloudflare Workers (spine, Stack).
 - **Charte graphique v1 obligatoire** pour tout visuel — identité Rive Signature, palette, typographie Gilda Display et Jost (charte v3, D-31, 2026-10-08 ; avant : Italiana et DM Sans), règles d'usage du logo (détail : `../../../design-system/README.md`). **Co-branding eXp obligatoire** (règle du réseau, charte § 2.4, 2026-09-22) : le lockup officiel Anne + eXp figure en pied de page de toutes les pages et sur la page légale, **jamais en en-tête** ; le logo eXp est utilisé dans ses versions officielles Black/White, jamais recoloré ni modifié ; aucune couleur ni typographie eXp n'entre dans l'interface — deux identités juxtaposées, jamais mixées.
 - **Pas de vitrine de biens en ligne** — seulement 2-3 biens actifs, risque de décrédibilisation ; remplacée par CAP-3.
-- **Conformité RGPD.** Toute capture de données personnelles (CAP-5, CAP-6, CAP-8, CAP-9, CAP-11) exige : base légale identifiée, mentions légales, politique de confidentialité, opt-in distinct pour la newsletter, lien de désabonnement dans chaque email, et une localisation des données documentée.
+- **Conformité RGPD.** Toute capture de données personnelles (CAP-5, CAP-6, CAP-8, CAP-9, CAP-11, et les contacts saisis ou importés dans CAP-12) exige : base légale identifiée, mentions légales, politique de confidentialité, opt-in distinct pour la newsletter, lien de désabonnement dans chaque email, et une localisation des données documentée.
 - **Stockage de référence des leads côté site.** Chaque lead capté est persisté côté site, indépendamment de toute synchronisation CRM. Une notification email à Anne ne constitue pas un stockage. Critères testables : base en juridiction UE (AD-10) ; chaque soumission porte une clé d'idempotence — un renvoi ne crée jamais un second lead (AD-4) ; les champs obligatoires par source suivent le contrat AD-6. La source **`estimation`** (CAP-11) s'ajoute au contrat AD-6, distincte de `contact` (D-4, 2026-09-13).
-- **CRM Modelo** fourni voire imposé par eXp France — **tranché le 2026-09-07 (AD-14)** : en v1, l'email de notification à Anne est formaté « prêt à copier » dans la fiche contact Modelo, et une page d'administration protégée permet de marquer la recopie. L'export CSV est écarté (l'import de Modelo InTouch n'alimente pas la base contacts de Modelo Office, vérifié sur capture). L'API Modelo est hors horizon : clé réservée au super-administrateur eXp, 25 € HT/mois, adresse IP fixe requise. Le parcours de capture ne dépend en rien de Modelo.
+- **CRM Modelo** fourni voire imposé par eXp France — **tranché le 2026-09-07 (AD-14)** : en v1, l'email de notification à Anne est formaté « prêt à copier » dans la fiche contact Modelo, et une page d'administration protégée permet de marquer la recopie. L'export CSV est écarté (l'import de Modelo InTouch n'alimente pas la base contacts de Modelo Office, vérifié sur capture). L'API Modelo est hors horizon : clé réservée au super-administrateur eXp, 25 € HT/mois, adresse IP fixe requise. Le parcours de capture ne dépend en rien de Modelo. **Amendé le 2026-10-09 (CAP-12)** : Modelo n'est plus l'aval de chaque lead ; Anne ne s'en sert qu'à la formalisation d'un mandat (eXp exige que le mandat parte d'un contact du CRM, et c'est là qu'elle publie les photos du bien). La recopie n'est donc demandée qu'au passage à l'étape de mandat ; le suivi quotidien vit dans l'espace de travail du site, qui reste à Anne si elle change de réseau.
 - **Performance, mobile et SEO local.** Le site est conçu mobile-first ; la homepage se charge utilement en moins de 3 secondes sur connexion mobile malgré les visuels lourds (vidéo différée, images adaptatives) ; le référencement local cible le Chablais et le bassin lémanique.
 - **Production de contenu par Anne.** CAP-1, CAP-2, CAP-3 et CAP-8 dépendent d'actifs qu'Anne doit produire ou collecter : séquences drone, photographies, **témoignages de vendeurs et d'acheteurs** (personnes ayant réellement travaillé avec elle), récits de ventes, guide PDF rebrandé. Cette production est sur le chemin critique du lancement, au même titre que le développement. **Hors chemin critique :** la vidéo d'Anne présentant sa méthode est un actif **facultatif, attendu après le lancement** — la page qui l'accueille doit être complète sans elle, et le bloc n'apparaît pas tant que la vidéo n'existe pas (D-12, 2026-09-13).
 
@@ -97,6 +114,7 @@ Ces seuils sont posés par déduction du modèle économique (5-6 ventes/an), pa
 - Galerie ou vitrine de biens en ligne.
 - Estimation de la valeur d'un bien sur le site — c'est le chantier Estimateur, séparé. Le « diagnostic » porte sur la préparation du vendeur, jamais sur un prix. CAP-11 ne contredit pas ce non-goal : elle capte une **demande** d'estimation et déclenche un rappel humain ; aucune valeur n'est calculée ni affichée par le site.
 - Intégration API avec le CRM Modelo — évaluée le 2026-08-30 et classée hors horizon (voir Constraints).
+- Un CRM complet dans l'espace de travail (CAP-12) : pas de gestion des mandats, des annonces ni de la facturation (cela reste dans Modelo et les outils d'eXp), pas d'envoi d'e-mails en masse depuis l'espace.
 - Arbitrage interne-vs-prestataire (différé à la vague 2 de l'architecture, après validation de la maquette). La stack, elle, est choisie (spine).
 
 ## Assumptions
@@ -104,6 +122,7 @@ Ces seuils sont posés par déduction du modèle économique (5-6 ventes/an), pa
 - Le **contenu** du quiz (questions, options, barème, seuils, feedbacks, textes d'orientation) est réutilisé via `quiz-conception-notion.md` ; l'**outil** ScoreApp ne l'est pas. Ce contenu est complet : aucune mécanique n'est à rétro-ingénierer.
 - Les chiffres publics repris de la conception (statistique PAP.fr des 9 vendeurs sur 10, « taux de concrétisation supérieur de 30 % à la moyenne ») sont republiés tels quels ; ils ne sont pas sourcés dans le document d'origine et doivent être revalidés avant mise en ligne.
 - Les seuils quantitatifs de CAP-1, CAP-2, CAP-3 (1 vidéo, 6 photos, **3 avis Immodvisor entiers**, 3 stories) et de la section Success signal sont **posés par défaut** pour rendre les critères testables. Ils sont à confirmer par Anne ; les revoir ne remet pas en cause les capacités.
+- Les étapes des parcours vendeur et acheteur de CAP-12 sont **posées par défaut** à partir de la description de JB (2026-10-09) ; elles sont à valider par Anne avec ses mots. Le parcours acheteur est prévu dès la conception, Anne ne suivant pas encore d'acheteurs mais visant des mandats de recherche.
 - Les cibles marketing du projet (primo-accédants, investisseurs, cadres sup, seniors 60+) s'appliquent aux 3 axes, faute de segmentation alternative dans les sources.
 - ~~Les avis Immodvisor sont exploitables hors de leur plateforme~~ — confirmé le 2026-09-07 (widget officiel existant) ; retenu : instantané local (note, nombre, extraits, lien vers la fiche), sans widget (AD-13).
 - ~~Des témoignages d'acheteurs non convertis (non-clients) peuvent être collectés en nombre suffisant pour porter une section de l'accueil~~ — retiré le 2026-09-13 (D-8) : contenu non collectable ; la preuve sociale repose désormais sur les avis Immodvisor de vendeurs et d'acheteurs réels (CAP-2).
@@ -115,6 +134,9 @@ Ces seuils sont posés par déduction du modèle économique (5-6 ventes/an), pa
 - **Intégration Modelo — faisabilité établie le 2026-08-30, calendrier ouvert.** L'API Modelo Office (Netty) accepte la création de contacts depuis l'extérieur et documente explicitement « créer un contact vendeur suite à la soumission d'un formulaire ». Trois obstacles : la clé ne peut être créée que par un **super-administrateur**, donc par eXp France et non par Anne ; elle coûte **25 € HT/mois** ; et elle impose une **restriction par IP**, incompatible en l'état avec un hébergement statique sans IP de sortie fixe. Recommandation : hors v1, architecture prête à l'accueillir. Détail : `../../planning-artifacts/architecture-brief.md`.
 - **Champs minimaux du formulaire d'estimation (CAP-11)** — proposition de la séance du 2026-09-13 (D-4, point ouvert 3) : prénom, nom, téléphone, e-mail, commune du bien, type de bien, consentement. Retenue par défaut dans CAP-11 ; à confirmer avec Anne avant le build (arbitrage friction vs qualification — adresse précise ou commune seule, surface, délai de vente).
 - **Formulaire « Parler de votre projet » de la page Acheter (CAP-6)** — dédié ou identique au contact avec un champ de qualification vente/achat ? (D-5, point ouvert 4). Retenu par défaut : **le formulaire de contact qualifié**, donc pas de source de lead supplémentaire. Un formulaire dédié ouvrirait une source `achat` au contrat AD-6 — décision à prendre avant le build.
+- **Accès à Leedflow (CAP-12)** — API, webhook (notification à la fin d'un appel) ou seulement serveur MCP ? Quelles données par appel, hébergement, contrat de sous-traitance RGPD, information de la personne enregistrée ? Questions envoyées par JB au support Leedflow (2026-10-09). Décide de la façon dont les résumés arrivent (AD à écrire) ; ne bloque pas le pipeline lui-même.
+- **Accès à la boîte Gmail d'Anne (CAP-12)** — lecture automatique par le serveur (autorisation Google sur une donnée sensible, validation par Google à prévoir) ou relecture quotidienne par Claude avec un connecteur Gmail ? À trancher dans la même décision d'architecture.
+- **Contacts du jeu concours de l'Entrepôt du Bricolage** — le bulletin rempli à l'événement autorise-t-il Anne à recontacter ces personnes (appel, e-mail) ? À vérifier sur le bulletin avant l'import ; sans consentement, l'import se limite à un rappel individuel par Anne, sans e-mail groupé.
 
 ### Différés — non bloquants pour la maquette et l'architecture
 

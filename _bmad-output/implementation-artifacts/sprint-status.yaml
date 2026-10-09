@@ -144,3 +144,8 @@ development_status:
   12-4-bascule-en-production: backlog
   12-5-critères-de-lancement-vérifiés: backlog
   epic-12-retrospective: optional
+
+  epic-13: in-progress
+  13-1-spécification-de-l-espace-de-travail: review
+  13-2-décision-d-architecture-pour-leedflow-et-la-boîte-e-mail: backlog
+  epic-13-retrospective: optional
