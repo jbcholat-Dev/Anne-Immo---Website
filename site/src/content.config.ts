@@ -45,6 +45,8 @@ const avis = defineCollection({
     vente_candidate: vide,
     confiance: z.enum(['forte', 'moyenne', 'faible', 'aucun']).default('aucun'),
     story: vide,
+    // Phrase mise en avant en tête de la carte d'avis (story 8.10), recopiée mot pour mot du texte de l'avis.
+    phrase: vide,
     retenu: z.boolean().default(false),
   }),
 });

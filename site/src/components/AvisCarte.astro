@@ -1,0 +1,58 @@
+---
+// Carte d'un avis Immodvisor (story 8.10, ticket n° 68, option B) : la phrase mise en avant par Anne (champ `phrase` de l'avis,
+// recopiée mot pour mot) en grand, puis l'avis entier en taille de lecture. Au-delà de `lignes` lignes, le texte est replié
+// derrière « Lire la suite » ; il reste entier dans la page (D-9) et s'affiche en entier sans JavaScript. Sans phrase : un guillemet bleu.
+import type { Lang } from '../i18n';
+interface Props { phrase?: string | null; texte: string[]; lignes?: number; taille?: 'grande' | 'grille'; lang?: Lang; class?: string }
+const { phrase, texte, lignes = 6, taille = 'grille', lang = 'fr', class: classe } = Astro.props;
+const libelles = lang === 'fr' ? { plus: 'Lire la suite', moins: 'Réduire' } : { plus: 'Read more', moins: 'Show less' };
+---
+<figure class:list={['avis-carte', `avis-carte-${taille}`, classe]}>
+  <slot name="tete" />
+  <div class="avis-carte-corps">
+    {phrase ? <p class="avis-carte-phrase" lang="fr">«&nbsp;{phrase}&nbsp;»</p> : <span class="avis-carte-guillemet" aria-hidden="true">«</span>}
+    <blockquote class:list={['avis-carte-texte', phrase && 'avis-carte-texte-second']} lang="fr" data-replie style={`--lignes: ${lignes}`}>
+      {texte.map((p) => <p>{p}</p>)}
+    </blockquote>
+    <button type="button" class="avis-carte-suite" data-suite data-plus={libelles.plus} data-moins={libelles.moins} aria-expanded="false" hidden>{libelles.plus}</button>
+    <figcaption class="avis-carte-legende"><slot /></figcaption>
+  </div>
+</figure>
+<script>
+  // Replie les avis plus longs que leur hauteur prévue ; le bouton n'apparaît que si le texte dépasse.
+  for (const q of document.querySelectorAll<HTMLElement>('[data-replie]')) {
+    const bouton = q.parentElement?.querySelector<HTMLButtonElement>('[data-suite]');
+    if (!bouton || q.dataset.pret) continue;
+    q.dataset.pret = '1';
+    q.classList.add('est-replie');
+    if (q.scrollHeight <= q.clientHeight + 4) { q.classList.remove('est-replie'); continue; }
+    bouton.hidden = false;
+    bouton.addEventListener('click', () => {
+      const ouvert = q.classList.toggle('est-replie') === false;
+      bouton.setAttribute('aria-expanded', String(ouvert));
+      bouton.textContent = (ouvert ? bouton.dataset.moins : bouton.dataset.plus) ?? '';
+    });
+  }
+</script>
+<style>
+  .avis-carte { display: flex; flex-direction: column; background: var(--avt-ecru); border-radius: 16px; overflow: hidden; margin: 0; }
+  .avis-carte-grande { background: var(--avt-galet); }
+  .avis-carte-corps { display: flex; flex-direction: column; gap: 16px; padding: 28px 28px 26px; flex: 1; }
+  .avis-carte-grande .avis-carte-corps { padding: 40px 44px 36px; gap: 20px; }
+  .avis-carte-guillemet { font-family: var(--avt-font-display); font-size: 60px; line-height: .6; color: var(--avt-klein); margin-top: 10px; }
+  .avis-carte-phrase { font-family: var(--avt-font-display); font-size: 23px; line-height: 1.3; margin: 0; }
+  .avis-carte-grande .avis-carte-phrase { font-size: 30px; }
+  .avis-carte-texte { display: flex; flex-direction: column; gap: 10px; font-size: 16px; line-height: 1.65; margin: 0; }
+  .avis-carte-grande .avis-carte-texte { font-size: 17px; line-height: 1.7; gap: 14px; }
+  .avis-carte-texte-second { color: var(--avt-text-muted); }
+  .avis-carte-texte.est-replie { max-height: calc(var(--lignes) * 1.65em); overflow: hidden; -webkit-mask-image: linear-gradient(#000 60%, transparent); mask-image: linear-gradient(#000 60%, transparent); }
+  .avis-carte-suite { align-self: flex-start; background: none; border: 0; padding: 4px 0; min-height: 44px; font: inherit; font-size: 14.5px; color: var(--avt-klein); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; margin-top: -8px; }
+  .avis-carte-legende { font-size: 14px; margin-top: auto; }
+  .avis-carte-grande .avis-carte-legende { font-size: 15px; }
+  @media (max-width: 899px) {
+    .avis-carte-corps, .avis-carte-grande .avis-carte-corps { padding: 24px 22px 20px; gap: 14px; }
+    .avis-carte-phrase, .avis-carte-grande .avis-carte-phrase { font-size: 22px; }
+    .avis-carte-texte, .avis-carte-grande .avis-carte-texte { font-size: 16px; line-height: 1.6; }
+    .avis-carte-legende { font-size: 13.5px; }
+  }
+</style>

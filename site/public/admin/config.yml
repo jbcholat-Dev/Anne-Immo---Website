@@ -290,7 +290,7 @@ collections:
     label_singular: Avis
     description: >
       Les avis sont recopiés tels quels depuis Immodvisor et ne se corrigent pas.
-      Seuls deux champs sont à remplir : la vente concernée et « cité sur l'accueil ».
+      Trois champs sont à remplir : la vente concernée, la phrase mise en avant et « cité sur l'accueil ».
     folder: contenu-anne/avis-immodvisor
     filter: { field: id, pattern: "^20" }
     extension: md
@@ -320,6 +320,7 @@ collections:
         display_fields: ["{{commune}} · {{type_bien}} · {{annee_vente}}"]
         required: false
         hint: "La vente que cet avis concerne. C'est ce champ que le site lit."
+      - { name: phrase, label: Phrase mise en avant, widget: text, required: false, hint: "Une phrase de l'avis, recopiée mot pour mot (copier-coller depuis le texte ci-dessous), affichée en grand en tête de la carte d'avis. Si elle ne figure pas telle quelle dans l'avis, elle n'est pas affichée. Laisser vide : la carte s'affiche sans phrase." }
       - { name: retenu, label: Cité en entier sur l'accueil, widget: boolean, default: false, required: false }
       - { name: body, label: Texte de l'avis (tel quel), widget: markdown, readonly: true }
 

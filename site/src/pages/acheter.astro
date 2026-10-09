@@ -1,7 +1,8 @@
 ---
 // 09 Acheter (D-5) : primo-accédants et investisseurs, la recherche accompagnée en quatre temps, les avis d'acheteurs (§ 5.4), « Parler de votre projet » → contact préréglé Achat.
 import Page from '../layouts/Page.astro';
-import { avisParId, storyDeAvis, storyVisible, roleLibelle, dateLibelle, paragraphes, instantane } from '../lib/contenu';
+import { avisParId, storyDeAvis, storyVisible, roleLibelle, dateLibelle, paragraphes, phraseDeAvis, instantane } from '../lib/contenu';
+import AvisCarte from '../components/AvisCarte.astro';
 import { acheter } from '../config/site';
 import { r } from '../i18n';
 import { textes, court } from '../lib/textes';
@@ -36,12 +37,9 @@ const x = await textes('acheter');
     <p class="ac-avis-intro"><span class="seulement-desktop">{x.avis.intro}</span><span class="seulement-mobile">{court(x.avis.intro_court, x.avis.intro)}</span></p>
     <div class="ac-avis-grille">
       {avis.map((x) => (
-        <figure>
-          <blockquote>{paragraphes(x.a.body).map((p) => <p>{p}</p>)}</blockquote>
-          <figcaption>{x.a.data.auteur} <span class="texte-muet">· {[roleLibelle(x.a), x.story?.data.commune, dateLibelle(x.a.data.date)].filter(Boolean).join(' · ')}</span>
-            {x.slug && x.story && <div class="ac-avis-lien"><a href={`${r('realisation')}/${x.slug}`}>Voir cette vente</a></div>}
-          </figcaption>
-        </figure>
+        <AvisCarte taille="grande" phrase={phraseDeAvis(x.a)} texte={paragraphes(x.a.body)} lignes={6}>{x.a.data.auteur}{' '}<span class="texte-muet">· {[roleLibelle(x.a), x.story?.data.commune, dateLibelle(x.a.data.date)].filter(Boolean).join(' · ')}</span>
+          {x.slug && x.story && <div class="ac-avis-lien"><a href={`${r('realisation')}/${x.slug}`}>Voir cette vente</a></div>}
+        </AvisCarte>
       ))}
     </div>
     <div class="ac-avis-tous"><a href={inst.url_fiche} rel="noopener" target="_blank">Voir les {inst.nombre_avis} avis sur Immodvisor</a></div>
@@ -69,12 +67,7 @@ const x = await textes('acheter');
   .ac-avis { padding: 96px var(--marge) 0; }
   .ac-avis h2 { font-size: 40px; margin-bottom: 10px; }
   .ac-avis-intro { font-size: 15px; color: var(--avt-text-muted); margin-bottom: 40px; max-width: 64ch; }
-  .ac-avis-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
-  figure { display: flex; flex-direction: column; gap: 16px; border-top: 1px solid var(--avt-brun); padding-top: 20px; }
-  blockquote { display: flex; flex-direction: column; gap: 10px; font-size: 17px; line-height: 1.6; }
-  blockquote p:first-child::before { content: '« '; }
-  blockquote p:last-child::after { content: ' »'; }
-  figcaption { font-size: 14px; }
+  .ac-avis-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
   .ac-avis-lien { margin-top: 10px; font-size: 14.5px; }
   .ac-avis-tous { margin-top: 32px; font-size: 13.5px; }
   .ac-cta { padding: 56px var(--marge) 96px; }
@@ -99,9 +92,7 @@ const x = await textes('acheter');
     .ac-avis { padding: 48px var(--marge-m) 0; }
     .ac-avis h2 { font-size: 30px; margin-bottom: 8px; }
     .ac-avis-intro { font-size: 14px; margin-bottom: 24px; }
-    .ac-avis-grille { grid-template-columns: 1fr; gap: 22px; }
-    figure { padding-top: 16px; }
-    blockquote { font-size: 16px; line-height: 1.55; }
+    .ac-avis-grille { grid-template-columns: 1fr; gap: 20px; }
     .ac-cta { padding: 36px var(--marge-m) 48px; }
     .ac-cta .btn { display: flex; width: 100%; }
   }

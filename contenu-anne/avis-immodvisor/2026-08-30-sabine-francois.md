@@ -10,6 +10,7 @@ dossier_photos: "ESSERT_BAUD_chalet"
 confiance: forte                 # forte | moyenne | faible | aucun
 indice: "Vente d'un chalet d'environ 30 ans à remettre au goût du jour, dans un village peu équipé. Les photos le confirment : ESSERT_BAUD = chalet ancien à rafraîchir à Essert-Romand (photos de nov. 2025) ; BERNEX_HIGOUNENC = chalet haut de gamme très entretenu, ne colle pas."
 story: essert-romand-chalet-2026   # la vente confirmée par Anne (slug) — seul champ lu par le site
+phrase: "Elle a toujours été optimiste et a su nous rassurés tout au long du processus en nous proposant un suivi rigoureux et bienveillant."   # phrase mise en avant, recopiée mot pour mot de l'avis (story 8.10)
 retenu: true               # true = cité en entier dans « Ils ont travaillé avec Anne »
 ---
 
