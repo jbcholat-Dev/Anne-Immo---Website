@@ -64,6 +64,16 @@ La nav passe de 4 entrées + bouton à **5 entrées (À propos ▾ · Réalisati
 |---|---|---|---|
 | D-28 | **Un lien « Accueil » en toutes lettres ouvre la navigation** (desktop, réduite, menu mobile ; « Home » en anglais), avant « À propos ▾ ». Le symbole seul (D-21) ramène toujours à l'accueil, mais JB a relevé sur l'aperçu que ce n'était « pas très intuitif ». Le lien est marqué « page en cours » sur l'accueil seulement (pas sur la 404). Ce qu'on perd : une entrée de plus dans une barre déjà dense ; vérifié à 900 px, la plus petite largeur desktop, sans débordement (entrées resserrées de 32 à 22 px entre 900 et 1 099 px). | ✅ | `structure-site.md` § 0 · `site/README.md` · `site/src/components/Nav.astro` · story 8.5. |
 
+## Décisions du 2026-10-08 au soir (Anne et JB, retours d'aperçu n° 57 à 64 — story 8.9)
+
+| # | Décision | Statut | À propager |
+|---|---|---|---|
+| D-32 | **Anne est « conseillère en immobilier »** (plus « consultante », EN « real-estate advisor »), et **la pile de l'accueil s'intitule « Chaque bien mérite une attention particulière et un service adapté »** (remplace « Des maisons vendues, pas des annonces »). Accroche choisie par JB le 2026-10-08 parmi les trois proposées par Anne (tickets n° 62 et 63). Ce qu'on perd : un titre court ; celui-ci tient sur deux lignes sur ordinateur et quatre sur téléphone. | ✅ | `structure-site.md` § 1.3 · `site/src/content/ui/*.json` · story 8.9. |
+| D-33 | **Le bloc « Anne » suit immédiatement les ventes** sur l'accueil (avant « Ma méthode ») au lieu de clore la page avant la fermeture. Anne s'interrogeait sur « qui je suis en dernier » ; le visiteur qui vient de voir des ventes veut savoir qui les a menées. Ce qu'on perd : l'ordre de la maquette (preuve, méthode, avis, puis la personne). | ✅ | `structure-site.md` § 1 · `site/src/pages/index.astro` et `en/index.astro` · story 8.9. |
+| D-34 | **À propos : quatre ancres (Qui suis-je ? · Ma méthode · Cible · Réseau eXp)**, Cible retenue (clôt le point ouvert 1, D-2) et écrite par Anne, Cible et Réseau eXp lues dans le texte de la page (espace d'édition) ; refrain « Pas de mauvaise surprise… » retiré de la page ; « Mon engagement » et « Parlons de votre projet » centrés, avec boutons de rendez-vous. | ✅ | `structure-site.md` § 0 et § 3 · `site/src/pages/a-propos.astro` · `site/src/lib/contenu.ts` · story 8.9. |
+| D-36 | **Sur grand écran, le contenu s'arrête à 1312 px de large et se centre** (au-delà de 1440 px de fenêtre) ; les fonds de couleur et les photos pleine largeur continuent jusqu'aux bords. Réglé en un seul endroit, la marge latérale de `global.css`. Ticket n° 65 de JB : les cartes s'étiraient sur tout l'écran. Ce qu'on perd : rien sous 1440 px, la page est identique. | ✅ | `site/src/styles/global.css` · story 8.9. |
+| D-35 | **Visionneuse sur les fiches de vente** : clic sur une photo → plein écran, flèches, glissé, Échap. Fenêtre native du navigateur, sans bibliothèque (budget de vitesse AD-15). | ✅ | `site/src/pages/realisation/[slug].astro` · story 8.9. |
+
 ## Décision du 2026-10-08 (proposée par Anne, charte v3 ; validée par JB, PR #49 fusionnée le 2026-10-08 — story 8.8)
 
 | # | Décision | Statut | À propager |

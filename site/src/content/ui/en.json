@@ -1,7 +1,7 @@
 {
   "lang": "en",
   "nav": {
-    "apropos": "About", "qui": "Who I am", "methode": "My method", "cible": "Who I work with",
+    "apropos": "About", "qui": "Who I am", "methode": "My method", "cible": "Who I work with", "reseau": "eXp network",
     "realisation": "Track record", "vendre": "Sell", "acheter": "Buy", "contact": "Contact",
     "diagnostic": "Assessment", "guide": "The guide", "menu": "Menu", "fermer": "Close", "principale": "Main",
     "reseaux": "Social", "langue": "Language", "accueil": "Home"
@@ -9,18 +9,18 @@
   "footer": {
     "plan": "Site map", "legal": "Legal", "ailleurs": "Elsewhere",
     "mentions": "Legal notice", "confidentialite": "Privacy", "cookies": "Cookies",
-    "statut": "Independent real-estate consultant — Lake Geneva & Chablais — eXp France network.",
+    "statut": "Independent real-estate advisor — Lake Geneva & Chablais — eXp France network.",
     "copyright": "© 2026 Anne Vial-Tissot · independent sales agent · RSAC to be completed (A-13)"
   },
   "accueil": {
-    "titre_page": "Anne VIAL-TISSOT — Real-estate consultant, Chablais and Lake Geneva",
-    "description": "Real-estate consultant in the Chablais and the Lake Geneva area. Homes sold, not listings.",
-    "hero_ligne": "Real-estate consultant. Chablais and Lake Geneva area.",
+    "titre_page": "Anne VIAL-TISSOT — Real-estate advisor, Chablais and Lake Geneva",
+    "description": "Real-estate advisor in the Chablais and the Lake Geneva area. Every property deserves particular attention and a tailored service.",
+    "hero_ligne": "Real-estate advisor. Chablais and Lake Geneva area.",
     "hero_cta": "Assess your sale · 3 minutes",
     "hero_cta_m": "Assess your sale · 3 min",
     "hero_estimation": "Free valuation",
     "preuve_sur": "/ 5 ·", "preuve_avis": "reviews · Immodvisor", "preuve_lien": "See the Immodvisor page",
-    "ventes_titre": "Homes sold, not listings", "ventes_lien": "All sales", "voir_vente": "Read the story",
+    "ventes_titre": "Every property deserves particular attention and a tailored service", "ventes_lien": "All sales", "voir_vente": "Read the story",
     "story_a_venir": "Story coming soon", "vendu": "Sold",
     "methode_titre": "My method, at a glance", "methode_lien": "The method in detail",
     "avis_titre": "They worked with Anne", "avis_tous": "See all {n} reviews on Immodvisor",

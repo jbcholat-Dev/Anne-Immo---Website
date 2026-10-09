@@ -72,7 +72,7 @@ Conséquence : **la page Diagnostic est une landing autonome**, pas une sous-pag
 | 0 | **Navigation** (transverse) | En-tête, pied de page, langue | CAP-6, CAP-10 |
 | 1 | **Accueil** | Installer la crédibilité, orienter vers les parcours | CAP-1, 2, 3, 5, 6 |
 | 2 | **Réalisation** (index des stories + fiche story — page titrée « Réalisation », D-26) | La preuve détaillée, une story par bien vendu | CAP-3 |
-| 3 | **À propos** (ancres : Qui suis-je ? · Ma méthode · Cible) | Le parcours, la méthode, les langues, la posture | CAP-2 |
+| 3 | **À propos** (ancres : Qui suis-je ? · Ma méthode · Cible · Réseau eXp, D-34) | Le parcours, la méthode, les langues, la posture | CAP-2 |
 | 4 | **Vendre** | Hub vendeur : diagnostic ou demande d'estimation | CAP-5, CAP-11 |
 | 5 | **Acheter** | Parcours acheteur et recherche accompagnée | CAP-6 |
 | 6 | **Diagnostic** (landing) | 2ᵉ porte d'entrée — destination des campagnes | CAP-5 |
@@ -139,6 +139,7 @@ Huit sections. L'ordre est délibéré : **la preuve arrive avant l'argumentaire
 **Sur mobile :** la note et le nombre d'avis restent ; l'extrait peut passer en défilement horizontal.
 
 ### 1.3 — Ventes récentes · [PREUVE]
+**Titre (D-32, 2026-10-08) :** « Chaque bien mérite une attention particulière et un service adapté » (choisi par JB). **Ordre (D-33) :** la section 1.7 Anne suit immédiatement celle-ci.
 **Rôle :** le cœur visuel du site, et le remplacement de la vitrine de biens. **C'est le sommet de la page** (brief lot 3 § 4).
 **Contenu :** **six cartes de biens vendus, empilées en défilement collant** (D-16, 2026-09-22 ; mécanique mesurée dans `brief-scrollcraft-fora.md` § 1.3 et § 3.2) : chaque carte se colle sous la barre de navigation et la suivante vient la recouvrir. Le visiteur manipule les ventes au lieu de les faire défiler, et chaque photo reste grande — ces photos sont le cœur visuel du site, pas des vignettes. Le carrousel de la v4 est abandonné.
 
@@ -252,7 +253,9 @@ Grille de toutes les stories : photo, commune, une phrase. Pas de filtre tant qu
 - Très probablement absente à la première publication : la vidéo se tourne après le lancement (actif A-15, facultatif).
 - Mêmes règles de production que le hero : image d'ouverture, chargement différé, jamais de lecture automatique avec son.
 
-### 3.3 — Cible (`#cible`) — 🔄 à trancher
+### 3.3 — Cible (`#cible`) — ✅ retenue (D-34, 2026-10-08)
+
+**Tranché le 2026-10-08 :** Cible est gardée, introduite par le texte d'Anne et suivie des quatre profils, modifiable dans l'espace d'édition. Une partie « Réseau eXp » (`#reseau-exp`) la suit, écrite par Anne. Le texte ci-dessous est l'historique.
 
 **Statut : non tranché** (D-2, point ouvert 1). La section présenterait les profils de clients : primo-accédants, investisseurs, cadres supérieurs, seniors. **La question ouverte est sa redondance** : ces profils sont déjà portés par les pages Vendre (§4) et Acheter (§5), qui les adressent par le besoin plutôt que par l'étiquette.
 

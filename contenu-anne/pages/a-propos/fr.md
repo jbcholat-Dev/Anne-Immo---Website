@@ -99,3 +99,27 @@ Parce qu'un projet immobilier mérite mieux que des improvisations.
 ## Parlons de votre projet immobilier
 
 Si vous avez une question, une préoccupation ou simplement envie d'échanger sur votre situation, je suis là pour vous guider.
+
+# Cible
+
+Chaque projet est différent et chaque client mérite une attention particulière. Que vous soyez primo-accédants, investisseurs, en mobilité professionnelle ou seniors, mon approche sera sur-mesure et adaptée à vos besoins.
+
+## Primo-accédants
+
+Un premier achat, un budget à cadrer, un financement à monter avant la première visite.
+
+## Investisseurs
+
+Rendement, fiscalité, revente : le bien est regardé comme un actif, pas comme un coup de cœur.
+
+## Cadres en mobilité
+
+Une arrivée ou un départ daté, un calendrier qui ne bouge pas, souvent à distance.
+
+## Seniors
+
+Une vente de transition, un bien de famille, des délais qui demandent de la patience.
+
+# Réseau eXp
+
+À écrire par Anne : comment je travaille avec le réseau eXp France, et ce qu'il apporte à mes clients (par exemple la visibilité internationale des biens, les outils, l'entraide entre conseillers).

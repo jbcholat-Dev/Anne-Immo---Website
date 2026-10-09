@@ -1,7 +1,7 @@
 {
   "lang": "fr",
   "nav": {
-    "apropos": "À propos", "qui": "Qui suis-je ?", "methode": "Ma méthode", "cible": "Cible",
+    "apropos": "À propos", "qui": "Qui suis-je ?", "methode": "Ma méthode", "cible": "Cible", "reseau": "Réseau eXp",
     "realisation": "Réalisations", "vendre": "Vendre", "acheter": "Acheter", "contact": "Contact",
     "diagnostic": "Diagnostic", "guide": "Le guide", "menu": "Menu", "fermer": "Fermer", "principale": "Principale",
     "reseaux": "Réseaux", "langue": "Langue", "accueil": "Accueil"
@@ -9,18 +9,18 @@
   "footer": {
     "plan": "Plan du site", "legal": "Légal", "ailleurs": "Ailleurs",
     "mentions": "Mentions légales", "confidentialite": "Confidentialité", "cookies": "Cookies",
-    "statut": "Consultante indépendante en immobilier — Léman & Chablais — réseau eXp France.",
+    "statut": "Conseillère indépendante en immobilier — Léman & Chablais — réseau eXp France.",
     "copyright": "© 2026 Anne Vial-Tissot · agent commercial indépendant · RSAC à compléter (A-13)"
   },
   "accueil": {
-    "titre_page": "Anne VIAL-TISSOT — Consultante en immobilier, Chablais et bassin lémanique",
-    "description": "Consultante en immobilier sur le Chablais et le bassin lémanique. Des maisons vendues, pas des annonces.",
-    "hero_ligne": "Consultante en immobilier. Chablais et bassin lémanique.",
+    "titre_page": "Anne VIAL-TISSOT — Conseillère en immobilier, Chablais et bassin lémanique",
+    "description": "Conseillère en immobilier sur le Chablais et le bassin lémanique. Chaque bien mérite une attention particulière et un service adapté.",
+    "hero_ligne": "Conseillère en immobilier. Chablais et bassin lémanique.",
     "hero_cta": "Faire le point sur votre vente · 3 minutes",
     "hero_cta_m": "Faire le point sur votre vente · 3 min",
     "hero_estimation": "Estimation offerte",
     "preuve_sur": "/ 5 ·", "preuve_avis": "avis · Immodvisor", "preuve_lien": "Voir la fiche Immodvisor",
-    "ventes_titre": "Des maisons vendues, pas des annonces", "ventes_lien": "Toutes les ventes", "voir_vente": "Voir cette vente",
+    "ventes_titre": "Chaque bien mérite une attention particulière et un service adapté", "ventes_lien": "Toutes les ventes", "voir_vente": "Voir cette vente",
     "story_a_venir": "Story à venir", "vendu": "Vendu",
     "methode_titre": "Ma méthode, en un coup d'œil", "methode_lien": "La méthode en détail",
     "avis_titre": "Ils ont travaillé avec Anne", "avis_tous": "Voir les {n} avis sur Immodvisor",

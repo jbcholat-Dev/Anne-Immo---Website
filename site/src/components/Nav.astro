@@ -1,6 +1,6 @@
 ---
 // Barre de navigation (D-2, D-6 variante A, D-17, D-21) : fixe dès le premier pixel, réduite au défilement, jamais masquée.
-// Desktop : réseaux · filet · symbole seul | Accueil · À propos ▾ (Qui suis-je ? · Ma méthode · Cible) · Réalisations · Vendre · Acheter · Contact · FR EN.
+// Desktop : réseaux · filet · symbole seul | Accueil · À propos ▾ (Qui suis-je ? · Ma méthode · Cible · Réseau eXp) · Réalisations · Vendre · Acheter · Contact · FR EN.
 // Mobile : symbole + bouton menu ; menu plein écran, Accueil puis « À propos » en accordéon (libellé cliquable + chevron).
 // « Accueil » en toutes lettres (D-28, retour d'aperçu n° 3) : le logo seul ne suffisait pas à dire « revenir à l'accueil ».
 import Logo from './Logo.astro';
@@ -20,10 +20,11 @@ const sous: { key: RouteKey; label: string }[] = [
   { key: 'qui', label: d.nav.qui },
   { key: 'methode', label: d.nav.methode },
   { key: 'cible', label: d.nav.cible },
+  { key: 'reseau', label: d.nav.reseau },
 ];
 // Accueil marqué « page en cours » seulement sur l'accueil lui-même (la 404 passe aussi courante="accueil" pour la bascule de langue).
 const surAccueil = courante === 'accueil' && !/404/.test(Astro.url.pathname);
-const estCourante = (k: RouteKey) => courante === k || (k === 'apropos' && ['qui', 'methode', 'cible'].includes(courante ?? ''));
+const estCourante = (k: RouteKey) => courante === k || (k === 'apropos' && ['qui', 'methode', 'cible', 'reseau'].includes(courante ?? ''));
 ---
 <header class="nav" data-nav data-sombre={sombre ? '1' : undefined}>
   <div class="nav-int">

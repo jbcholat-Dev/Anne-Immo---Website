@@ -29,8 +29,8 @@ Les scripts Playwright utilisent `/opt/pw-browsers/chromium` s'il existe, sinon 
 | Route | Page | Source des textes |
 |---|---|---|
 | `/` | Accueil — hero vidéo/poster avec deux boutons (diagnostic ; « Estimation offerte » vers `/contact#reserver`, D-30), bande Klein, pile de 6 cartes collantes (D-16), méthode + refrain, « Ils ont travaillé avec Anne », diagnostic, Anne, fermeture Klein (D-22) | maquette `01-accueil-*`, `contenu-anne/` |
-| `/realisation`, `/realisation/<slug>` | Réalisation (index + 3 fiches story) | `contenu-anne/stories/*/fr.md` (récits d'Anne, tels quels) |
-| `/a-propos` `#qui-suis-je` `#methode` `#cible` | À propos, page longue à ancres, repère collant, **sans** bloc vidéo A-15 (D-12) | maquette `apropos-*` ; textes lus dans `contenu-anne/pages/a-propos/fr.md` (story 7.17) |
+| `/realisation`, `/realisation/<slug>` | Réalisations (index + fiches ; visionneuse plein écran sur les photos, D-35) | `contenu-anne/stories/*/fr.md` (récits d'Anne, tels quels) |
+| `/a-propos` `#qui-suis-je` `#methode` `#cible` `#reseau-exp` | À propos, page longue à ancres (Cible et Réseau eXp lus dans le texte d'Anne, D-34), repère collant, **sans** bloc vidéo A-15 (D-12) | maquette `apropos-*` ; textes lus dans `contenu-anne/pages/a-propos/fr.md` (story 7.17) |
 | `/vendre` (`#estimation`) | deux portes + formulaire d'estimation (8 champs, D-4) | maquette `04-vendre-*` |
 | `/acheter` | profils, recherche accompagnée, avis d'acheteurs (§ 5.4), CTA → contact préréglé Achat | maquette `04b-acheter-*` |
 | `/diagnostic` | landing autonome | maquette `05-diagnostic-*` |
@@ -42,7 +42,7 @@ Les scripts Playwright utilisent `/opt/pw-browsers/chromium` s'il existe, sinon 
 | `/404` | page introuvable | — |
 | `/en`, `/en/track-record` | accueil EN et index « Track record » (vide : aucune story traduite, AD-2). Les autres entrées EN renvoient aux pages FR pour cette v1, sans écran mi-traduit. | `src/content/ui/en.json` |
 
-Navigation (D-2, D-6 A, D-17, D-21, D-28) : réseaux · symbole seul | Accueil · À propos ▾ (Qui suis-je ? · Ma méthode · Cible) · Réalisations · Vendre · Acheter · Contact · FR EN (« Réalisations » au pluriel, index titré « Quelques réalisations », D-29). Fixe dès le premier pixel, réduite à 56 px au défilement, jamais masquée ; menu mobile plein écran avec Accueil puis « À propos » en accordéon (lien + chevron). Pied de page `00-footer` partout.
+Navigation (D-2, D-6 A, D-17, D-21, D-28) : réseaux · symbole seul | Accueil · À propos ▾ (Qui suis-je ? · Ma méthode · Cible) · Réalisations · Vendre · Acheter · Contact · FR EN (sous-menu À propos : Qui suis-je ? · Ma méthode · Cible · Réseau eXp, D-34 ; « Réalisations » au pluriel, index titré « Quelques réalisations », D-29). Fixe dès le premier pixel, réduite à 56 px au défilement, jamais masquée ; menu mobile plein écran avec Accueil puis « À propos » en accordéon (lien + chevron). Pied de page `00-footer` partout.
 
 ## Réel vs placeholder
 
@@ -159,6 +159,7 @@ Charte v3 (D-31, 2026-10-08) : Gilda Display (titres, une seule graisse) et Jost
 
 ## Écarts assumés avec la maquette / les briefs
 
+- **Contenu limité à 1312 px sur grand écran** (D-36, ticket n° 65) : la maquette est dessinée à 1440 px ; au-delà, la marge latérale grandit au lieu du contenu, pour que les cartes ne s'étirent pas sur un écran de 1920 px ou plus.
 - **Gate du diagnostic sans score** (story 10.4) : la maquette affichait le score sur 100 au-dessus du formulaire ; AD-5 interdit que le résultat existe dans le navigateur avant les coordonnées (c'est le défaut reproché à ScoreApp). Le gate garde son chapeau « Votre diagnostic est prêt » et annonce le score sans le donner.
 - **Résultats : séquence** (story 10.5) : « Séquence de 6 e-mails confirmée. Le premier arrive dans 2 jours » au lieu de « 7 e-mails… demain matin » : le nombre et le délai viennent des textes d'Anne. Page « lien plus valable » : texte exact (24 heures, dans le même navigateur, résumé envoyé par e-mail) au lieu de « disponibles 30 jours » ; boutons « Refaire le diagnostic » et « Écrire à Anne ».
 - **Vidéo d'ouverture au-dessus du budget** « 8-12 s, < 6 Mo » : JB a décidé (D-27) de diffuser le montage d'Anne en entier (52 s depuis le 2026-10-05, 95 s avant). Compromis : 1440 px au lieu de 1920 (le hero fait 900 px de haut, différence invisible), crf 30, 7,8 Mo MP4 / 6,4 Mo WebM (≈ 15 / 10 Mo avec l'ancien montage). Le fichier est lu en flux (faststart + `preload="metadata"`) : la lecture démarre après les premières secondes reçues, le poster couvre l'attente, et le LCP (plus grand élément affiché) reste le poster, chargé en priorité. À remesurer sur l'aperçu (story 10.8).
