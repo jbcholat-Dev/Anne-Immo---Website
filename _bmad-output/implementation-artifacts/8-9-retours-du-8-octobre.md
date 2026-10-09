@@ -1,7 +1,7 @@
 ---
 story: 8.9
 epic: 8 — Site : finitions
-statut: review
+statut: done
 date: 2026-10-08
 origine: tickets GitHub n° 57 à 64 (retour-apercu, Anne et JB, 2026-10-08)
 ---
@@ -40,4 +40,4 @@ Traiter les huit retours laissés sur l'aperçu le 2026-10-08 (sept d'Anne, un d
 
 ## Ce qui reste
 - Anne : écrire le texte « Réseau eXp » dans l'espace d'édition (À propos, partie « # Réseau eXp »).
-- Fermer les tickets n° 57 à 65 en citant le commit une fois la PR fusionnée.
+- Tickets n° 57 à 65 fermés le 2026-10-09, chacun avec son commit (PR #66 fusionnée, 696d383).
