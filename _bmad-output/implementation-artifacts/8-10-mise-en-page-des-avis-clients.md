@@ -34,5 +34,5 @@ Captures : `/mnt/project-files/tickets/68/` (dossier partagé du projet).
 - `npm run build` : OK ; `npm run check` : 0 erreur ; `scripts/liens.mjs` : 26 pages, 1661 liens, 0 cassé ; `scripts/ecrans.mjs` : aucun signalement ; `npm run verif` : aucune erreur console.
 
 ## Ce qui reste
-- JB : confirmer l'option sur la carte de décision (si A ou C, adapter), puis fusionner.
+- JB : fusionner la PR n° 69 (option B confirmée par JB sur la carte de décision le 2026-10-09 à 11 h 24).
 - Après fusion : fermer le ticket n° 68 en citant le commit.
