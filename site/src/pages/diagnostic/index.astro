@@ -18,6 +18,7 @@ const note = String(inst.note).replace('.', ',');
 <Page titre="Diagnostic — Découvrez en 3 minutes si votre stratégie de vente va réellement fonctionner" description="Quinze questions sur votre bien, votre annonce et vos visites. Un score de maturité sur 100, un diagnostic sur trois axes, des recommandations concrètes. Trois minutes, gratuit." courante="diagnostic" ogImage="/img/stories/maison-premium-2025/photo-047-1280.jpg">
   <div class="dl-offre">
     <div>
+      <div class="dl-qui"><Portrait label="A-04" class="dl-qui-portrait" sizes="44px" /><span><b>Anne Vial-Tissot</b> · conseillère en immobilier, Chablais et Léman</span></div>
       <h1><span class="seulement-desktop">Découvrez en 3 minutes si votre stratégie de vente va réellement fonctionner</span><span class="seulement-mobile">Découvrez en 3 minutes si votre stratégie de vente va fonctionner</span></h1>
       <p class="dl-intro seulement-desktop">Quinze questions sur votre bien, votre annonce et vos visites. À la fin :</p>
       <ul class="dl-livrables">
@@ -67,6 +68,9 @@ const note = String(inst.note).replace('.', ',');
 </script>
 <style>
   .dl-offre { padding: 80px var(--marge) 96px; display: grid; grid-template-columns: 1fr 520px; gap: 96px; align-items: center; }
+  .dl-qui { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; font-size: 14.5px; color: var(--avt-text-muted); }
+  .dl-qui b { font-weight: 500; color: var(--avt-brun); }
+  .dl-qui :global(.dl-qui-portrait) { width: 44px; height: 44px; border-radius: 999px; flex: none; background: var(--avt-placeholder); font-size: 7px; padding: 0; }
   .dl-offre h1 { font-size: 64px; line-height: 1.05; margin-bottom: 22px; }
   .dl-intro { font-size: 19px; line-height: 1.6; max-width: 52ch; margin-bottom: 32px; }
   .dl-livrables { list-style: none; margin-bottom: 36px; display: flex; flex-direction: column; gap: 14px; font-size: 17px; }
@@ -104,6 +108,7 @@ const note = String(inst.note).replace('.', ',');
   }
   @media (max-width: 899px) {
     .dl-offre { padding: 32px var(--marge-m) 40px; display: block; }
+    .dl-qui { margin-bottom: 18px; font-size: 13.5px; line-height: 1.4; }
     .dl-offre h1 { font-size: 38px; line-height: 1.08; margin-bottom: 16px; }
     .dl-livrables { margin-bottom: 24px; gap: 10px; font-size: 16px; }
     .dl-livrables li > span:first-child { font-size: 24px; min-width: 22px; }
