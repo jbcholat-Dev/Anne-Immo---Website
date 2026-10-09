@@ -13,6 +13,7 @@ Ce dossier est **ta boîte de dépôt**. Tu y poses tout ce que le site a besoin
 | `videos/` | Vidéo drone d'ouverture, autres séquences | ⚠️ **pas dans Git** — voir `videos/README.md` |
 | `avis-immodvisor/` | Tes avis Immodvisor, **un fichier par avis** (relevé du 2026-09-22 : 18 avis) — confirme à quelle vente chacun correspond (champ `story`) | |
 | `guide/` | Le guide « 10 erreurs » : corrections souhaitées, et la séquence d'e-mails | JB/Claude produisent le PDF à la charte |
+| `textes/` | Les textes de l'accueil et des pages Vendre, Acheter, Contact, un fichier par page | à modifier dans l'espace d'édition, rubrique « Textes des pages » (story 7.20) |
 | `legal/` | Numéro RSAC, référence de carte pro eXp, adresse professionnelle | pour les mentions légales |
 | `portrait/` | Ton portrait (vertical ou carré, 1600 px minimum) + 1-2 photos en situation | |
 

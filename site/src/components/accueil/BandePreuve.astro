@@ -1,11 +1,12 @@
 ---
 // § 1.2 La preuve, tout de suite (D-20) : bande Klein compacte — note, nombre d'avis (instantané), un extrait attribué, lien vers la fiche.
-import { t, type Lang } from '../../i18n';
+import type { Lang } from '../../i18n';
+import { dicoAccueil } from '../../lib/textes';
 import { instantane, avisParId, roleLibelle } from '../../lib/contenu';
 import { accueil } from '../../config/site';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
-const d = t(lang);
+const d = await dicoAccueil(lang);
 const inst = await instantane();
 const a = await avisParId(accueil.extrait.avis);
 const note = String(inst.note).replace('.', ',');

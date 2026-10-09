@@ -1996,3 +1996,17 @@ afin de montrer toutes mes ventes photographiées.
 **Quand** elles passent en « publie »
 **Alors** elles apparaissent sur la page Réalisation et ont leur page
 **Et** le récit est celui d'Anne, jamais un texte inventé
+
+### Story 7.20: Textes des pages dans l'espace d'édition
+
+En tant qu'Anne,
+je veux modifier les textes de l'accueil et des pages Vendre, Acheter et Contact dans l'espace d'édition,
+afin de les ajuster sans passer par JB ou Claude.
+
+**Critères d'acceptation :**
+
+**Étant donné** la rubrique « Textes des pages » de l'espace d'édition
+**Quand** Anne change un texte et que JB fusionne la demande
+**Alors** le texte apparaît à son endroit sur la page française, sans changer la mise en page
+**Et** une version téléphone laissée vide reprend le texte complet
+**Et** un texte obligatoire vidé fait échouer la construction avant toute mise en ligne

@@ -4,38 +4,36 @@ import Page from '../layouts/Page.astro';
 import { avisParId, storyDeAvis, storyVisible, roleLibelle, dateLibelle, paragraphes, instantane } from '../lib/contenu';
 import { acheter } from '../config/site';
 import { r } from '../i18n';
+import { textes, court } from '../lib/textes';
 const inst = await instantane();
 const avis = await Promise.all(acheter.avis.map(async (id) => { const a = await avisParId(id); const slug = storyDeAvis(a); const story = await storyVisible(slug); return { a, slug, story }; }));
-const temps = [
-  ['Elle repère', 'Le réseau local, les ventes qui se préparent, celles qui ne sont pas encore en ligne.', 'Le réseau local, les ventes qui ne sont pas encore en ligne.'],
-  ['Elle visite en premier', 'Seule, avec vos critères en tête. Vous ne déplacez pas votre semaine pour rien.', 'Seule, avec vos critères en tête.'],
-  ['Elle présélectionne', 'Trois ou quatre biens, avec ce qui va et ce qui ne va pas dit avant la visite.', 'Trois ou quatre biens, le pour et le contre dits avant la visite.'],
-  ['Elle reste après l’achat', 'Artisans, syndic, formalités : le dossier ne se referme pas à la remise des clés.', 'Artisans, syndic, formalités.'],
-];
+// Textes modifiables par Anne : contenu-anne/textes/acheter.yml (story 7.20).
+const x = await textes('acheter');
 ---
-<Page titre="Acheter — Anne VIAL-TISSOT" description="Primo-accédants et investisseurs : la recherche accompagnée — Anne repère, visite en premier, présélectionne, et reste après l'achat." courante="acheter">
+<Page titre={`${x.titre} — Anne VIAL-TISSOT`} description={x.description} courante="acheter">
   <div class="ac-tete">
-    <div class="ac-tete-rang"><h1>Acheter</h1><span class="marqueur">Contenu à écrire par Anne</span></div>
-    <p class="seulement-desktop">Un premier achat et un investissement ne se préparent pas de la même façon. Dans les deux cas, le travail commence avant la première visite.</p>
-    <p class="seulement-mobile">Le travail commence avant la première visite.</p>
-    <a href={`${r('contact')}?projet=achat#ecrire`} class="btn btn-primaire seulement-mobile ac-cta-haut">Parler de votre projet</a>
+    <div class="ac-tete-rang"><h1>{x.titre}</h1><span class="marqueur">Contenu à écrire par Anne</span></div>
+    <p class="seulement-desktop">{x.intro}</p>
+    <p class="seulement-mobile">{court(x.intro_court, x.intro)}</p>
+    <a href={`${r('contact')}?projet=achat#ecrire`} class="btn btn-primaire seulement-mobile ac-cta-haut">{x.bouton}</a>
   </div>
   <div class="ac-profils">
-    <section><h2 class="chapeau">Primo-accédants</h2><h3>Un premier achat tenu</h3><p class="seulement-desktop">Budget réel, capacité d'emprunt validée avec un courtier, charges et travaux chiffrés avant l'offre. Rien ne part avant que le financement tienne.</p><p class="seulement-mobile">Budget réel, capacité d'emprunt validée, charges et travaux chiffrés avant l'offre.</p></section>
-    <section><h2 class="chapeau">Investisseurs</h2><h3>Un actif, pas un coup de cœur</h3><p class="seulement-desktop">Rendement, fiscalité, revente, saisonnalité du bassin lémanique. Le bien est regardé sur dix ans, pas sur une visite.</p><p class="seulement-mobile">Rendement, fiscalité, revente, saisonnalité du bassin lémanique.</p></section>
+    {[x.primo, x.investisseurs].map((p) => (
+      <section><h2 class="chapeau">{p.chapeau}</h2><h3>{p.titre}</h3><p class="seulement-desktop">{p.texte}</p><p class="seulement-mobile">{court(p.texte_court, p.texte)}</p></section>
+    ))}
   </div>
   <section class="ac-recherche" aria-labelledby="recherche-titre">
-    <h2 id="recherche-titre">La recherche accompagnée</h2>
-    <p class="ac-recherche-intro"><span class="seulement-desktop">Quatre temps, dans cet ordre. Anne travaille pour l'acheteur, pas pour le bien.</span><span class="seulement-mobile">Quatre temps, dans cet ordre.</span></p>
+    <h2 id="recherche-titre">{x.recherche.titre}</h2>
+    <p class="ac-recherche-intro"><span class="seulement-desktop">{x.recherche.intro}</span><span class="seulement-mobile">{court(x.recherche.intro_court, x.recherche.intro)}</span></p>
     <div class="ac-temps">
-      {temps.map(([t, d, m], i) => (
-        <div class="ac-temp"><div class="ac-num">{i + 1}</div><div><h3>{t}</h3><p class="seulement-desktop">{d}</p><p class="seulement-mobile">{m}</p></div></div>
+      {x.recherche.temps.map((m, i) => (
+        <div class="ac-temp"><div class="ac-num">{i + 1}</div><div><h3>{m.titre}</h3><p class="seulement-desktop">{m.texte}</p><p class="seulement-mobile">{court(m.texte_court, m.texte)}</p></div></div>
       ))}
     </div>
   </section>
   <section class="ac-avis" aria-labelledby="ac-avis-titre">
-    <h2 id="ac-avis-titre">Ils ont acheté avec Anne</h2>
-    <p class="ac-avis-intro"><span class="seulement-desktop">Avis Immodvisor d'acheteurs, repris entiers — la même source vérifiable que sur l'accueil.</span><span class="seulement-mobile">Avis Immodvisor d'acheteurs, entiers.</span></p>
+    <h2 id="ac-avis-titre">{x.avis.titre}</h2>
+    <p class="ac-avis-intro"><span class="seulement-desktop">{x.avis.intro}</span><span class="seulement-mobile">{court(x.avis.intro_court, x.avis.intro)}</span></p>
     <div class="ac-avis-grille">
       {avis.map((x) => (
         <figure>
@@ -48,7 +46,7 @@ const temps = [
     </div>
     <div class="ac-avis-tous"><a href={inst.url_fiche} rel="noopener" target="_blank">Voir les {inst.nombre_avis} avis sur Immodvisor</a></div>
   </section>
-  <div class="ac-cta"><a href={`${r('contact')}?projet=achat#ecrire`} class="btn btn-primaire">Parler de votre projet</a></div>
+  <div class="ac-cta"><a href={`${r('contact')}?projet=achat#ecrire`} class="btn btn-primaire">{x.bouton}</a></div>
 </Page>
 <style>
   .ac-tete { padding: 88px var(--marge) 40px; }

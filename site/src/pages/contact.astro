@@ -3,21 +3,24 @@
 // Le premier rendez-vous se fait par téléphone, Anne appelle (décision de JB du 2026-10-08).
 import Page from '../layouts/Page.astro';
 import FormulaireContact from '../components/FormulaireContact.astro';
+import { textes, court } from '../lib/textes';
+// Textes modifiables par Anne : contenu-anne/textes/contact.yml (story 7.20).
+const x = await textes('contact');
 ---
-<Page titre="Contact — Parler à Anne — Anne VIAL-TISSOT" description="Un créneau de trente minutes, ou un message. Réponse sous un jour ouvré." courante="contact">
+<Page titre={`Contact — ${x.titre} — Anne VIAL-TISSOT`} description={x.description} courante="contact">
   <div class="ct-tete">
-    <h1>Parler à Anne</h1>
-    <p><span class="seulement-desktop">Un créneau de trente minutes, ou un message. Réponse sous un jour ouvré.</span><span class="seulement-mobile">Un créneau de trente minutes, ou un message.</span></p>
+    <h1>{x.titre}</h1>
+    <p><span class="seulement-desktop">{x.intro}</span><span class="seulement-mobile">{court(x.intro_court, x.intro)}</span></p>
   </div>
   <div class="ct-corps">
-    <section aria-label="Réserver un créneau" class="ct-rdv" id="reserver" data-rdv>
-      <h2>Réserver un créneau</h2>
-      <p class="ct-rdv-sous">Trente minutes par téléphone : vous choisissez le créneau, Anne vous appelle. Les horaires s'affichent à l'heure de votre appareil.</p>
+    <section aria-label={x.rendez_vous.titre} class="ct-rdv" id="reserver" data-rdv>
+      <h2>{x.rendez_vous.titre}</h2>
+      <p class="ct-rdv-sous">{x.rendez_vous.texte}</p>
       <!-- L'agenda Cal.com (service de prise de rendez-vous) ne se charge qu'au clic, ou à l'arrivée depuis un bouton « Réserver » (AD-11).
            Cal.com verrouille le créneau, demande l'accord sur la politique de confidentialité et envoie les confirmations ;
            le site enregistre chaque réservation par le webhook /api/webhook-cal (src/server/adapters/booking.ts). -->
       <div class="ct-agenda" data-agenda>
-        <button type="button" class="btn btn-primaire ct-agenda-bouton" data-agenda-ouvrir>Voir les créneaux d'Anne</button>
+        <button type="button" class="btn btn-primaire ct-agenda-bouton" data-agenda-ouvrir data-libelle={x.rendez_vous.bouton}>{x.rendez_vous.bouton}</button>
         <p class="texte-muet ct-agenda-note">L'agenda est fourni par Cal.com. <a href="/confidentialite">Confidentialité</a>.</p>
       </div>
       <div class="ct-agenda-cadre" id="agenda-cal" data-agenda-cadre hidden></div>
@@ -47,7 +50,7 @@ import FormulaireContact from '../components/FormulaireContact.astro';
           c.ns = {}; c.q = c.q || [];
           const s = document.createElement('script');
           s.src = 'https://app.cal.com/embed/embed.js';
-          s.onerror = () => { delete w.Cal; cadre.hidden = true; delete cadre.dataset.charge; if (echecAgenda) echecAgenda.hidden = false; ouvrir.disabled = false; ouvrir.removeAttribute('aria-busy'); ouvrir.textContent = 'Voir les créneaux d’Anne'; };
+          s.onerror = () => { delete w.Cal; cadre.hidden = true; delete cadre.dataset.charge; if (echecAgenda) echecAgenda.hidden = false; ouvrir.disabled = false; ouvrir.removeAttribute('aria-busy'); ouvrir.textContent = ouvrir.dataset.libelle ?? ''; };
           document.head.append(s);
           c.loaded = true;
         }

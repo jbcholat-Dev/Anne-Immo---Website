@@ -1,0 +1,18 @@
+titre: "Vendre"
+description: "Deux façons de commencer : mesurer où en est votre vente en trois minutes, ou faire estimer votre bien — Anne vous rappelle, puis visite."
+intro: "Deux façons de commencer : mesurer où en est votre vente, ou faire estimer votre bien."
+intro_court: "Mesurer où en est votre vente, ou faire estimer votre bien."
+diagnostic:
+  titre: "Faire le point sur votre vente"
+  titre_court: "Faire le point"
+  texte: "Quinze questions, trois minutes. Un score sur 100, un diagnostic par axe, un plan d'action. Rien à installer, aucun engagement."
+  texte_court: "Quinze questions, trois minutes. Un score, un diagnostic par axe, un plan d'action."
+  bouton: "Démarrer le diagnostic"
+estimation:
+  titre: "Faire estimer mon bien"
+  texte: "Un rappel d'Anne, puis une visite sur place. Le formulaire ci-dessous suffit à lancer la démarche."
+  texte_court: "Un rappel d'Anne, puis une visite sur place."
+  bouton: "Aller au formulaire"
+formulaire:
+  titre: "Demander une estimation"
+  intro: "L'estimation ne se fait pas en ligne. Anne vous rappelle sous un jour ouvré, pose ses questions, puis se déplace pour voir le bien. Le chiffre vient après la visite, jamais avant."
