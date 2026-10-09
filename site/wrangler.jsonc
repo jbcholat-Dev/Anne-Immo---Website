@@ -50,6 +50,6 @@
     // des applications Access autorisées, séparés par des virgules (aperçu, puis annevialtissot.fr/gestion au lancement).
     // Valeurs publiques. Sans AUD, l'espace de gestion reste fermé (403). Voir RUNBOOK.md § 4 quinquies.
     "ACCESS_EQUIPE": "https://dry-truth-5a0d.cloudflareaccess.com",
-    "ACCESS_AUD": ""
+    "ACCESS_AUD": "614e9c87ae981d4e5aa3c896bdfcdb22f00dc201702463cc38da0d5aa22a3280"
   }
 }

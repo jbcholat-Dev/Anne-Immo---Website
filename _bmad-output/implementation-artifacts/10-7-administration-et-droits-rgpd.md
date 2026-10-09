@@ -48,7 +48,7 @@ Anne consulte ses demandes, relance un e-mail manqué, marque une recopie dans M
 - `npm run build` sans erreur ; `npm run check` : 0 erreur ; `node scripts/liens.mjs` : 26 pages, 1600 liens, 0 cassé ; `npm run verif` : aucune erreur console ; `node scripts/ecrans.mjs` : rien à signaler.
 
 ## Ce qui reste
-- JB : donner l'« Application Audience (AUD) Tag » de l'application Access de l'aperçu, à mettre dans `ACCESS_AUD` (action J32).
+- ~~JB : donner l'AUD de l'application Access de l'aperçu (action J32)~~ : donné le 2026-10-09, mis dans `ACCESS_AUD`.
 - Essai en ligne après la fusion : ouvrir `/gestion`, relancer, exporter et effacer une demande de test.
 - Anne : valider la politique de confidentialité (durée de 3 ans) avec les autres pages légales.
 - Au lancement (story 12.4) : application Access sur `annevialtissot.fr/gestion`, son AUD ajouté (RUNBOOK § 4 quinquies).
