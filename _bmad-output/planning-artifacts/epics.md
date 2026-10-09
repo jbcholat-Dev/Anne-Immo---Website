@@ -161,6 +161,9 @@ Le site est trouvé par les vendeurs et acheteurs du Chablais qui cherchent sur 
 - **Epic 12 : Lancement public**
 Le site est en ligne sur annevialtissot.fr, trouvable, légal, avec des formulaires qui fonctionnent. **AD-9, AD-10, AD-16 ; NFR3.** **État :** à faire.
 
+- **Epic 13 : Espace de travail d'Anne**
+Anne démarre chaque journée devant ses contacts et sait qui appeler, qui relancer et comment faire avancer chacun ; Modelo ne sert plus qu'à formaliser un mandat. **CAP-12 ; AD-14 (amendée), AD-18.** **État :** à définir ; spec écrite (story 13.1), architecture et découpage à suivre.
+
 Ordre prévu : 9 (aperçu) → 8 et 7 en parallèle sur l'aperçu → 11.1 (cadrage visibilité) → 10 (backend) → 6 (anglais) → 11 (suite) → 12 (lancement).
 
 
@@ -1636,7 +1639,7 @@ afin que le prospect reconnaisse ma marque et lise volontiers la séquence jusqu
 ## Epic 11: Référencement et visibilité
 
 Le site d'Anne est trouvé par les vendeurs et acheteurs du Chablais qui cherchent sur Google, et pas seulement par ceux qui ont l'adresse.
-**Capacités couvertes :** CAP-2 (preuve sociale, avis cohérents avec la fiche Google), CAP-10 (une adresse par langue), contrainte « Performance, mobile et SEO local » de la spec (cible : Chablais et bassin lémanique), et la future CAP-12 « Visibilité » (à créer à la story 11.4). **Décisions :** AD-13 (référencement généré, cohérent avec la fiche Google, contenu long sur le domaine), AD-3 (une adresse par langue, sitemap et hreflang générés depuis le contenu réel), AD-2 (une langue livrée est complète ou n'existe pas), AD-11 (aucun traceur, aucun script tiers), AD-1 (tout contenu est un objet typé).
+**Capacités couvertes :** CAP-2 (preuve sociale, avis cohérents avec la fiche Google), CAP-10 (une adresse par langue), contrainte « Performance, mobile et SEO local » de la spec (cible : Chablais et bassin lémanique), et la future CAP-13 « Visibilité » (à créer à la story 11.4 ; CAP-12 est prise depuis le 2026-10-09 par l’espace de travail d’Anne). **Décisions :** AD-13 (référencement généré, cohérent avec la fiche Google, contenu long sur le domaine), AD-3 (une adresse par langue, sitemap et hreflang générés depuis le contenu réel), AD-2 (une langue livrée est complète ou n'existe pas), AD-11 (aucun traceur, aucun script tiers), AD-1 (tout contenu est un objet typé).
 
 ### Story 11.1: Session de cadrage de la stratégie de visibilité
 
@@ -1727,7 +1730,7 @@ afin que le travail de visibilité soit suivi comme le reste (règle « tout tra
 
 **Étant donné** `strategie-visibilite.md` validé (story 11.1)
 **Quand** Claude amende la spec avec `bmad-spec` (l'outil de la méthode qui met la spec à jour sans en perdre le reste)
-**Alors** la spec passe en version 6 avec une capacité **CAP-12 « Visibilité »** (intention, critère de succès mesurable, tiré du document de stratégie), les Open Questions et Assumptions touchées sont mises à jour, et l'entrée est journalisée dans `.memlog.md` de la spec le jour même
+**Alors** la spec passe en version suivante avec une capacité **CAP-13 « Visibilité »** (intention, critère de succès mesurable, tiré du document de stratégie), les Open Questions et Assumptions touchées sont mises à jour, et l'entrée est journalisée dans `.memlog.md` de la spec le jour même
 **Et** si le cadrage crée un nouveau type de contenu (page locale, article), le spine est amendé (inventaire AD-1, table de correspondance capacité / architecture) et `structure-site.md` reçoit la nouvelle liste des pages, par le même mécanisme que les amendements du 2026-09-07 et du 2026-09-13.
 
 **Étant donné** la liste des pages et contenus décidés
@@ -2024,3 +2027,34 @@ afin de les ajuster sans passer par JB ou Claude.
 **Alors** le texte apparaît à son endroit sur la page française, sans changer la mise en page
 **Et** une version téléphone laissée vide reprend le texte complet
 **Et** un texte obligatoire vidé fait échouer la construction avant toute mise en ligne
+
+
+## Epic 13: Espace de travail d'Anne
+
+Anne démarre chaque journée devant ses contacts et sait qui appeler, qui relancer et comment faire avancer chacun, quel que soit le canal d'arrivée du contact (téléphone, événement, site). L'espace part de `/gestion` (story 10.7) et devient son outil principal ; Modelo n'est utilisé qu'à la signature d'un mandat.
+**Capacités couvertes :** CAP-12 (spec v6, 2026-10-09). **Décisions :** AD-14 (amendée par CAP-12 : recopie Modelo au mandat seulement), AD-18 (droits RGPD depuis l'espace), AD-4 et AD-6 (un contact n'est jamais créé deux fois), une décision d'architecture à écrire pour Leedflow et la boîte Gmail.
+
+### Story 13.1: Spécification de l'espace de travail
+
+En tant que JB,
+je veux que l'espace de travail quotidien d'Anne soit décrit dans la spec avant toute construction,
+afin que ce qu'on construit corresponde à sa façon réelle de travailler et reste transférable.
+
+**Critères d'acceptation :**
+**Étant donné** les réponses de JB sur la façon de travailler d'Anne (2026-10-09)
+**Quand** la spec est amendée
+**Alors** elle passe en version 6 avec une capacité CAP-12 (intention, critères de succès vérifiables), AD-14 est amendée dans la contrainte Modelo, et les questions ouvertes (Leedflow, Gmail, contacts du jeu concours) sont listées
+**Et** l'entrée est journalisée dans `.memlog.md` de la spec le jour même
+
+### Story 13.2: Décision d'architecture pour Leedflow et la boîte e-mail
+
+En tant que JB,
+je veux une décision écrite sur la façon dont les résumés d'appels Leedflow et les e-mails d'Anne arrivent sur la fiche d'un contact,
+afin de construire l'enrichissement sur un accès réel, pas supposé.
+
+**Critères d'acceptation :**
+**Étant donné** les réponses du support Leedflow (API, webhook, MCP, hébergement, contrat RGPD) et le choix d'accès à Gmail
+**Quand** la décision est prise
+**Alors** elle est ajoutée au spine d'architecture (nouvelle AD) avec ce qu'on perd en choisissant autrement, et AD-14 y est amendée
+**Et** les stories de construction de l'epic 13 sont découpées et ajoutées ici (pipeline, page « Aujourd'hui », vue par étapes, saisie et import, recopie Modelo au mandat, enrichissement)
+
