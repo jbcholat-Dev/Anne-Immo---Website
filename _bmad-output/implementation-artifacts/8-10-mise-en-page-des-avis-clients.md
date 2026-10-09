@@ -1,7 +1,7 @@
 ---
 story: 8.10
 epic: 8 — Structure et visuel
-statut: review
+statut: done
 date: 2026-10-09
 ticket: 68
 ---
@@ -34,5 +34,4 @@ Captures : `/mnt/project-files/tickets/68/` (dossier partagé du projet).
 - `npm run build` : OK ; `npm run check` : 0 erreur ; `scripts/liens.mjs` : 26 pages, 1661 liens, 0 cassé ; `scripts/ecrans.mjs` : aucun signalement ; `npm run verif` : aucune erreur console.
 
 ## Ce qui reste
-- JB : fusionner la PR n° 69 (option B confirmée par JB sur la carte de décision le 2026-10-09 à 11 h 24).
-- Après fusion : fermer le ticket n° 68 en citant le commit.
+- Fait : option B confirmée par JB (2026-10-09, 11 h 24), PR n° 69 fusionnée, ticket n° 68 fermé en citant le commit cc68370.
