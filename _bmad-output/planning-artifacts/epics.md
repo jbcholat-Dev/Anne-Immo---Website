@@ -2056,5 +2056,6 @@ afin de construire l'enrichissement sur un accès réel, pas supposé.
 **Étant donné** les réponses du support Leedflow (API, webhook, MCP, hébergement, contrat RGPD) et le choix d'accès à Gmail
 **Quand** la décision est prise
 **Alors** elle est ajoutée au spine d'architecture (nouvelle AD) avec ce qu'on perd en choisissant autrement, et AD-14 y est amendée
+**Et** le spine porte aussi la décision de JB du 2026-10-09 : l'espace de travail est une application séparée du site (son propre Worker et sa propre adresse, même dépôt) qui partage la base D1 des leads, après avoir vérifié que deux Workers peuvent utiliser la même base ; `/gestion` y est déplacé
 **Et** les stories de construction de l'epic 13 sont découpées et ajoutées ici (pipeline, page « Aujourd'hui », vue par étapes, saisie et import, recopie Modelo au mandat, enrichissement)
 
