@@ -45,6 +45,8 @@ const avis = defineCollection({
     vente_candidate: vide,
     confiance: z.enum(['forte', 'moyenne', 'faible', 'aucun']).default('aucun'),
     story: vide,
+    // Phrase mise en avant en tête de la carte d'avis (story 8.10), recopiée mot pour mot du texte de l'avis.
+    phrase: vide,
     retenu: z.boolean().default(false),
   }),
 });
@@ -72,4 +74,45 @@ const pages = defineCollection({
   }),
 });
 
-export const collections = { stories, avis, instantane, pages };
+// Textes des pages Accueil, Vendre, Acheter, Contact (story 7.20), modifiables par Anne dans l'espace d'édition (« Textes des pages »).
+// Un fichier YAML par page dans contenu-anne/textes/. Un champ « … (téléphone) » vide reprend le texte complet.
+// Un texte obligatoire vide fait échouer la construction : l'aperçu de la demande de fusion le montre avant la mise en ligne.
+const texte = z.string().trim().min(1);
+const fichierTextes = (page: string) => glob({ pattern: `${page}.yml`, base: `${CONTENU}/textes` });
+const page = { titre: texte, description: texte, intro: texte, intro_court: vide };
+
+const textesAccueil = defineCollection({ loader: fichierTextes('accueil'), schema: z.object({
+  description: texte,
+  ouverture: z.object({ ligne: texte, bouton_diagnostic: texte, bouton_diagnostic_court: vide, bouton_estimation: texte }),
+  ventes: z.object({ titre: texte, lien: texte }),
+  methode: z.object({
+    titre: texte, lien: texte,
+    piliers: z.array(z.object({ titre: texte, texte })).min(1),
+    refrain: z.array(texte).min(1),
+  }),
+  avis: z.object({ titre: texte }),
+  diagnostic: z.object({ titre: texte, texte, texte_court: vide, bouton: texte, score: texte, axes: texte, plan: texte }),
+  anne: z.object({ texte, texte_court: vide, langues: texte, langues_court: vide, lien: texte }),
+  parler: z.object({ titre: texte, texte, bouton_rendez_vous: texte, bouton_ecrire: texte }),
+}) });
+const textesVendre = defineCollection({ loader: fichierTextes('vendre'), schema: z.object({
+  ...page,
+  diagnostic: z.object({ titre: texte, titre_court: vide, texte, texte_court: vide, bouton: texte }),
+  estimation: z.object({ titre: texte, texte, texte_court: vide, bouton: texte }),
+  formulaire: z.object({ titre: texte, intro: texte }),
+}) });
+const bloc = z.object({ chapeau: texte, titre: texte, texte, texte_court: vide });
+const textesAcheter = defineCollection({ loader: fichierTextes('acheter'), schema: z.object({
+  ...page,
+  bouton: texte,
+  primo: bloc,
+  investisseurs: bloc,
+  recherche: z.object({ titre: texte, intro: texte, intro_court: vide, temps: z.array(z.object({ titre: texte, texte, texte_court: vide })).min(1) }),
+  avis: z.object({ titre: texte, intro: texte, intro_court: vide }),
+}) });
+const textesContact = defineCollection({ loader: fichierTextes('contact'), schema: z.object({
+  ...page,
+  rendez_vous: z.object({ titre: texte, texte, bouton: texte }),
+}) });
+
+export const collections = { stories, avis, instantane, pages, textesAccueil, textesVendre, textesAcheter, textesContact };

@@ -1,9 +1,10 @@
 ---
 // § 1.6 Le diagnostic : une phrase, la durée, le bouton ; trois livrables en encarts galet.
-import { t, r, type Lang } from '../../i18n';
+import { r, type Lang } from '../../i18n';
+import { dicoAccueil } from '../../lib/textes';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
-const d = t(lang);
+const d = await dicoAccueil(lang);
 ---
 <section class="diag" data-sec="diagnostic" aria-labelledby="diag-titre">
   <div data-reveal="titre">

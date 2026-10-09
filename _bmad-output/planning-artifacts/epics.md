@@ -1181,6 +1181,20 @@ Tout est à faire. Chaque story, une fois lancée, prend un fichier dans `_bmad-
 Anne et JB voient chaque changement du site sur une adresse en ligne protégée, depuis leur téléphone, sans rien installer.
 **Capacités couvertes :** aucune capacité de la spec en propre ; l'aperçu sert à faire valider par Anne toutes les capacités déjà construites (CAP-1 à CAP-11 en version simulée) et la contrainte « maintenable et transférable ». **Décisions :** AD-9 (comptes au nom d'Anne, JB administrateur, MFA), AD-10 (tout est reconstructible depuis le dépôt, RUNBOOK), AD-11 (aucun traceur), AD-12 (alertes de build Cloudflare), AD-15 (l'audit de vitesse se mesure sur l'adresse d'aperçu), environnements « production / preview / local » du spine.
 
+### Story 8.10: Mise en page des avis clients
+
+En tant que visiteur,
+je veux lire les avis clients d'un coup d'œil,
+afin de voir ce qu'on dit d'Anne sans affronter un pavé de texte.
+
+**Critères d'acceptation :**
+
+**Étant donné** un avis Immodvisor affiché sur une page de vente, l'accueil ou la page Acheter
+**Quand** la page s'affiche
+**Alors** l'avis est dans une carte, avec en grand la phrase mise en avant par Anne (recopiée mot pour mot) et l'avis entier en taille de lecture
+**Et** au-delà de quelques lignes l'avis est replié derrière « Lire la suite », sans jamais être tronqué dans la page
+**Et** une phrase qui ne figure pas telle quelle dans l'avis n'est pas affichée
+
 ### Story 9.1: Comptes et connexion du dépôt
 
 En tant que JB,
@@ -1996,3 +2010,17 @@ afin de montrer toutes mes ventes photographiées.
 **Quand** elles passent en « publie »
 **Alors** elles apparaissent sur la page Réalisation et ont leur page
 **Et** le récit est celui d'Anne, jamais un texte inventé
+
+### Story 7.20: Textes des pages dans l'espace d'édition
+
+En tant qu'Anne,
+je veux modifier les textes de l'accueil et des pages Vendre, Acheter et Contact dans l'espace d'édition,
+afin de les ajuster sans passer par JB ou Claude.
+
+**Critères d'acceptation :**
+
+**Étant donné** la rubrique « Textes des pages » de l'espace d'édition
+**Quand** Anne change un texte et que JB fusionne la demande
+**Alors** le texte apparaît à son endroit sur la page française, sans changer la mise en page
+**Et** une version téléphone laissée vide reprend le texte complet
+**Et** un texte obligatoire vidé fait échouer la construction avant toute mise en ligne

@@ -111,12 +111,186 @@ collections:
       - { name: statut, label: Statut, widget: select, options: [brouillon, a-relire, publie], default: brouillon }
       - { name: body, label: Texte, widget: markdown, hint: "Le site découpe ce texte selon ses titres : avant « Ma méthode » (titre 1), la colonne Qui suis-je ?, un bloc par titre 2 ; « Les trois piliers » : un paragraphe « **Nom :** texte » par pilier ; « Concrètement… » : un titre 3 « 1. Titre » par point ; « Cible » (titre 1) : une phrase d'introduction puis un titre 2 par profil ; « Réseau eXp » (titre 1) : texte libre. Garder ces titres." }
 
+  - name: textes
+    label: Textes des pages
+    label_singular: Textes
+    description: >
+      Les textes de l'accueil et des pages Vendre, Acheter et Contact. On change les mots, pas la mise en page :
+      chaque champ correspond à un endroit précis de la page. Un champ « (téléphone) » est la version courte affichée
+      sur téléphone ; vide, le téléphone affiche le texte complet. L'anglais n'est pas modifié ici.
+    publish: false
+    files:
+      - name: accueil
+        label: Accueil
+        file: contenu-anne/textes/accueil.yml
+        fields:
+          - { name: description, label: Description pour Google, widget: text, hint: "Le résumé affiché sous le titre dans les résultats de recherche. Deux phrases au plus." }
+          - name: ouverture
+            label: Ouverture (vidéo)
+            widget: object
+            fields:
+              - { name: ligne, label: Phrase sous le nom, widget: string }
+              - { name: bouton_diagnostic, label: Bouton du diagnostic, widget: string }
+              - { name: bouton_diagnostic_court, label: "Bouton du diagnostic (téléphone)", widget: string, required: false, hint: "Ce que voit un téléphone. Laisser vide : le texte complet." }
+              - { name: bouton_estimation, label: "Bouton de l'estimation", widget: string }
+          - name: ventes
+            label: Ventes récentes
+            widget: object
+            fields:
+              - { name: titre, label: Titre, widget: string }
+              - { name: lien, label: Lien vers toutes les ventes, widget: string }
+          - name: methode
+            label: Ma méthode
+            widget: object
+            fields:
+              - { name: titre, label: Titre, widget: string }
+              - { name: lien, label: Lien vers la méthode, widget: string }
+              - name: piliers
+                label: Les piliers
+                label_singular: Pilier
+                widget: list
+                hint: "Trois piliers : la mise en page est prévue pour trois."
+                fields:
+                  - { name: titre, label: Nom, widget: string }
+                  - { name: texte, label: Texte, widget: text }
+              - { name: refrain, label: Refrain (une phrase par ligne), widget: list, field: { name: ligne, label: Phrase, widget: string }, hint: "Les phrases qui apparaissent une à une." }
+          - name: avis
+            label: Avis
+            widget: object
+            fields:
+              - { name: titre, label: Titre, widget: string }
+          - name: diagnostic
+            label: Diagnostic
+            widget: object
+            fields:
+              - { name: titre, label: Titre, widget: string }
+              - { name: texte, label: Texte, widget: text }
+              - { name: texte_court, label: "Texte (téléphone)", widget: text, required: false, hint: "Ce que voit un téléphone. Laisser vide : le texte complet." }
+              - { name: bouton, label: Bouton, widget: string }
+              - { name: score, label: "Encart « /100 »", widget: string }
+              - { name: axes, label: "Encart « 3 »", widget: string }
+              - { name: plan, label: "Encart « 1 »", widget: string }
+          - name: anne
+            label: Anne
+            widget: object
+            fields:
+              - { name: texte, label: Texte, widget: text }
+              - { name: texte_court, label: "Texte (téléphone)", widget: text, required: false, hint: "Ce que voit un téléphone. Laisser vide : le texte complet." }
+              - { name: langues, label: Langues, widget: string }
+              - { name: langues_court, label: "Langues (téléphone)", widget: string, required: false, hint: "Ce que voit un téléphone. Laisser vide : le texte complet." }
+              - { name: lien, label: "Lien vers « À propos »", widget: string }
+          - name: parler
+            label: Parler à Anne (bas de page)
+            widget: object
+            fields:
+              - { name: titre, label: Titre, widget: string }
+              - { name: texte, label: Texte, widget: text }
+              - { name: bouton_rendez_vous, label: Bouton du rendez-vous, widget: string }
+              - { name: bouton_ecrire, label: "Bouton « Écrire »", widget: string }
+
+      - name: vendre
+        label: Vendre
+        file: contenu-anne/textes/vendre.yml
+        fields:
+          - { name: titre, label: Titre de la page, widget: string, hint: "Le menu garde son libellé « Vendre »." }
+          - { name: description, label: Description pour Google, widget: text }
+          - { name: intro, label: Introduction, widget: text }
+          - { name: intro_court, label: "Introduction (téléphone)", widget: text, required: false, hint: "Ce que voit un téléphone. Laisser vide : le texte complet." }
+          - name: diagnostic
+            label: Bloc « Faire le point »
+            widget: object
+            fields:
+              - { name: titre, label: Titre, widget: string }
+              - { name: titre_court, label: "Titre (téléphone)", widget: string, required: false, hint: "Ce que voit un téléphone. Laisser vide : le texte complet." }
+              - { name: texte, label: Texte, widget: text }
+              - { name: texte_court, label: "Texte (téléphone)", widget: text, required: false, hint: "Ce que voit un téléphone. Laisser vide : le texte complet." }
+              - { name: bouton, label: Bouton, widget: string }
+          - name: estimation
+            label: Bloc « Faire estimer mon bien »
+            widget: object
+            fields:
+              - { name: titre, label: Titre, widget: string }
+              - { name: texte, label: Texte, widget: text }
+              - { name: texte_court, label: "Texte (téléphone)", widget: text, required: false, hint: "Ce que voit un téléphone. Laisser vide : le texte complet." }
+              - { name: bouton, label: Bouton, widget: string }
+          - name: formulaire
+            label: "Formulaire d'estimation"
+            widget: object
+            fields:
+              - { name: titre, label: Titre, widget: string }
+              - { name: intro, label: Texte au-dessus du formulaire, widget: text }
+
+      - name: acheter
+        label: Acheter
+        file: contenu-anne/textes/acheter.yml
+        fields:
+          - { name: titre, label: Titre de la page, widget: string, hint: "Le menu garde son libellé « Acheter »." }
+          - { name: description, label: Description pour Google, widget: text }
+          - { name: intro, label: Introduction, widget: text }
+          - { name: intro_court, label: "Introduction (téléphone)", widget: text, required: false, hint: "Ce que voit un téléphone. Laisser vide : le texte complet." }
+          - { name: bouton, label: "Bouton « Parler de votre projet »", widget: string }
+          - name: primo
+            label: Primo-accédants
+            widget: object
+            fields:
+              - { name: chapeau, label: Petit titre, widget: string }
+              - { name: titre, label: Titre, widget: string }
+              - { name: texte, label: Texte, widget: text }
+              - { name: texte_court, label: "Texte (téléphone)", widget: text, required: false, hint: "Ce que voit un téléphone. Laisser vide : le texte complet." }
+          - name: investisseurs
+            label: Investisseurs
+            widget: object
+            fields:
+              - { name: chapeau, label: Petit titre, widget: string }
+              - { name: titre, label: Titre, widget: string }
+              - { name: texte, label: Texte, widget: text }
+              - { name: texte_court, label: "Texte (téléphone)", widget: text, required: false, hint: "Ce que voit un téléphone. Laisser vide : le texte complet." }
+          - name: recherche
+            label: La recherche accompagnée
+            widget: object
+            fields:
+              - { name: titre, label: Titre, widget: string }
+              - { name: intro, label: Introduction, widget: text }
+              - { name: intro_court, label: "Introduction (téléphone)", widget: text, required: false, hint: "Ce que voit un téléphone. Laisser vide : le texte complet." }
+              - name: temps
+                label: Les étapes
+                label_singular: Étape
+                widget: list
+                hint: "Quatre étapes : la mise en page est prévue pour quatre. Elles sont numérotées dans l'ordre."
+                fields:
+                  - { name: titre, label: Titre, widget: string }
+                  - { name: texte, label: Texte, widget: text }
+                  - { name: texte_court, label: "Texte (téléphone)", widget: text, required: false, hint: "Ce que voit un téléphone. Laisser vide : le texte complet." }
+          - name: avis
+            label: Avis des acheteurs
+            widget: object
+            fields:
+              - { name: titre, label: Titre, widget: string }
+              - { name: intro, label: Introduction, widget: text }
+              - { name: intro_court, label: "Introduction (téléphone)", widget: text, required: false, hint: "Ce que voit un téléphone. Laisser vide : le texte complet." }
+
+      - name: contact
+        label: Contact
+        file: contenu-anne/textes/contact.yml
+        fields:
+          - { name: titre, label: Titre de la page, widget: string }
+          - { name: description, label: Description pour Google, widget: text }
+          - { name: intro, label: Introduction, widget: text }
+          - { name: intro_court, label: "Introduction (téléphone)", widget: text, required: false, hint: "Ce que voit un téléphone. Laisser vide : le texte complet." }
+          - name: rendez_vous
+            label: Réserver un créneau
+            widget: object
+            fields:
+              - { name: titre, label: Titre, widget: string }
+              - { name: texte, label: Texte, widget: text }
+              - { name: bouton, label: "Bouton d'ouverture de l'agenda", widget: string }
+
   - name: avis
     label: Avis Immodvisor
     label_singular: Avis
     description: >
       Les avis sont recopiés tels quels depuis Immodvisor et ne se corrigent pas.
-      Seuls deux champs sont à remplir : la vente concernée et « cité sur l'accueil ».
+      Trois champs sont à remplir : la vente concernée, la phrase mise en avant et « cité sur l'accueil ».
     folder: contenu-anne/avis-immodvisor
     filter: { field: id, pattern: "^20" }
     extension: md
@@ -146,6 +320,7 @@ collections:
         display_fields: ["{{commune}} · {{type_bien}} · {{annee_vente}}"]
         required: false
         hint: "La vente que cet avis concerne. C'est ce champ que le site lit."
+      - { name: phrase, label: Phrase mise en avant, widget: text, required: false, hint: "Une phrase de l'avis, recopiée mot pour mot (copier-coller depuis le texte ci-dessous), affichée en grand en tête de la carte d'avis. Si elle ne figure pas telle quelle dans l'avis, elle n'est pas affichée. Laisser vide : la carte s'affiche sans phrase." }
       - { name: retenu, label: Cité en entier sur l'accueil, widget: boolean, default: false, required: false }
       - { name: body, label: Texte de l'avis (tel quel), widget: markdown, readonly: true }
 

@@ -9,10 +9,11 @@ import Picture from '../Picture.astro';
 import Signature from '../Signature.astro';
 import { image } from '../../lib/images';
 import { hero } from '../../config/site';
-import { t, r, type Lang } from '../../i18n';
+import { r, type Lang } from '../../i18n';
+import { dicoAccueil } from '../../lib/textes';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
-const d = t(lang);
+const d = await dicoAccueil(lang);
 const poster = image(hero.poster)!;
 const videoDispo = fs.existsSync(new URL('../../../public/video/ouverture.mp4', import.meta.url));
 ---

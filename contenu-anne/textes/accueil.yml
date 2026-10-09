@@ -1,0 +1,44 @@
+description: "Conseillère en immobilier sur le Chablais et le bassin lémanique. Chaque bien mérite une attention particulière et un service adapté."
+ouverture:
+  ligne: "Conseillère en immobilier. Chablais et bassin lémanique."
+  bouton_diagnostic: "Faire le point sur votre vente · 3 minutes"
+  bouton_diagnostic_court: "Faire le point sur votre vente · 3 min"
+  bouton_estimation: "Estimation offerte"
+ventes:
+  titre: "Chaque bien mérite une attention particulière et un service adapté"
+  lien: "Toutes les ventes"
+methode:
+  titre: "Ma méthode, en un coup d'œil"
+  lien: "La méthode en détail"
+  piliers:
+    - titre: "Bon sens"
+      texte: "Comprendre vraiment la situation avant de bouger. Écouter, poser les bonnes questions."
+    - titre: "Rigueur"
+      texte: "La même discipline qu’en finance sur chaque dossier : préparer, anticiper, documenter."
+    - titre: "Pragmatisme"
+      texte: "Faire ce qui fonctionne dans la réalité, et adapter selon le contexte."
+  refrain:
+    - "Pas de mauvaise surprise."
+    - "Pas de dossier qui traîne."
+    - "Des ventes qui vont au bout."
+avis:
+  titre: "Ils ont travaillé avec Anne"
+diagnostic:
+  titre: "Où en est votre vente ?"
+  texte: "Un score sur 100, un diagnostic par axe, des recommandations concrètes. Trois minutes, gratuit."
+  texte_court: "Un score sur 100, un diagnostic par axe, des recommandations. Trois minutes, gratuit."
+  bouton: "Démarrer le diagnostic"
+  score: "Score de maturité"
+  axes: "Axes diagnostiqués"
+  plan: "Plan d'action"
+anne:
+  texte: "Dix ans de finance d'entreprise, Danone à Évian puis Bel au Brésil, avant l'immobilier. Chaque vente est menée comme un projet : un dossier complet, un calendrier tenu, des points réguliers."
+  texte_court: "Dix ans de finance d'entreprise, Danone à Évian puis Bel au Brésil, avant l'immobilier. Chaque vente est menée comme un projet."
+  langues: "FRANÇAIS · ENGLISH · ESPAÑOL · PORTUGUÊS"
+  langues_court: "FR · EN · ES · PT"
+  lien: "En savoir plus"
+parler:
+  titre: "Parler à Anne"
+  texte: "Un projet, une question ? Le plus simple est d'en parler."
+  bouton_rendez_vous: "Réserver un créneau"
+  bouton_ecrire: "Écrire à Anne"

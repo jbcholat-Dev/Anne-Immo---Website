@@ -1,9 +1,10 @@
 ---
 // § 1.8 Parler à Anne (D-22) : vague puis bande Klein, sans image, deux boutons — la page se ferme, elle ne s'éteint pas.
-import { t, r, type Lang } from '../../i18n';
+import { r, type Lang } from '../../i18n';
+import { dicoAccueil } from '../../lib/textes';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
-const d = t(lang);
+const d = await dicoAccueil(lang);
 ---
 <section class="parler" data-sec="parler" aria-labelledby="parler-titre">
   <div class="parler-vague" aria-hidden="true"><svg><use href="#avt-vague"></use></svg></div>

@@ -82,6 +82,19 @@ export function dateLibelle(d: Date, lang: 'fr' | 'en' = 'fr') {
 export const paragraphes = (body: string | undefined) => (body ?? '').trim().split(/\n\s*\n/).map((p) => p.replace(/\n/g, ' ').trim()).filter(Boolean);
 
 /**
+ * Phrase mise en avant d'un avis (story 8.10) : seulement si elle figure mot pour mot dans l'avis (espaces et apostrophes près),
+ * puisque les avis sont cités tels quels. Sinon la carte s'affiche sans phrase et la construction le signale.
+ */
+export function phraseDeAvis(a: Avis): string | null {
+  const phrase = a.data.phrase?.trim();
+  if (!phrase) return null;
+  const n = (s: string) => s.replace(/[’‘]/g, "'").replace(/\s+/g, ' ').trim();
+  if (n(a.body ?? '').includes(n(phrase))) return phrase;
+  console.warn(`Avis ${a.data.id} : la phrase mise en avant ne figure pas mot pour mot dans l'avis, elle n'est pas affichée.`);
+  return null;
+}
+
+/**
  * Portrait d'Anne (A-04) : champ `portrait` de la page À propos, choisi dans l'espace d'édition (story 7.16).
  * Le fichier vit à côté de la page (contenu-anne/pages/a-propos/) ou dans contenu-anne/photos/ ; renvoie la clé de l'image dérivée, ou null.
  */

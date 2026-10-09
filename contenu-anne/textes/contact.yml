@@ -1,0 +1,8 @@
+titre: "Parler à Anne"
+description: "Un créneau de trente minutes, ou un message. Réponse sous un jour ouvré."
+intro: "Un créneau de trente minutes, ou un message. Réponse sous un jour ouvré."
+intro_court: "Un créneau de trente minutes, ou un message."
+rendez_vous:
+  titre: "Réserver un créneau"
+  texte: "Trente minutes par téléphone : vous choisissez le créneau, Anne vous appelle. Les horaires s'affichent à l'heure de votre appareil."
+  bouton: "Voir les créneaux d'Anne"

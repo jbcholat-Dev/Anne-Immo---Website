@@ -2,10 +2,11 @@
 // § 1.7 Anne : portrait (A-04, bloc réservé tant qu'aucun portrait n'est envoyé, story 7.16), trois lignes, les quatre langues, « En savoir plus » → /a-propos#qui-suis-je.
 import Portrait from '../Portrait.astro';
 import Signature from '../Signature.astro';
-import { t, r, type Lang } from '../../i18n';
+import { r, type Lang } from '../../i18n';
+import { dicoAccueil } from '../../lib/textes';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
-const d = t(lang);
+const d = await dicoAccueil(lang);
 ---
 <section class="anne" data-sec="anne" aria-labelledby="anne-titre">
   <div class="anne-portrait" data-reveal="bloc">

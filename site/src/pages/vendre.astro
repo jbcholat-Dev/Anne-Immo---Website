@@ -3,30 +3,33 @@
 import Page from '../layouts/Page.astro';
 import FormulaireEstimation from '../components/FormulaireEstimation.astro';
 import { r } from '../i18n';
+import { textes, court } from '../lib/textes';
+// Textes modifiables par Anne : contenu-anne/textes/vendre.yml (story 7.20).
+const x = await textes('vendre');
 ---
-<Page titre="Vendre — Anne VIAL-TISSOT" description="Deux façons de commencer : mesurer où en est votre vente en trois minutes, ou faire estimer votre bien — Anne vous rappelle, puis visite." courante="vendre">
+<Page titre={`${x.titre} — Anne VIAL-TISSOT`} description={x.description} courante="vendre">
   <div class="v-tete">
-    <h1>Vendre</h1>
-    <p class="seulement-desktop">Deux façons de commencer : mesurer où en est votre vente, ou faire estimer votre bien.</p>
-    <p class="seulement-mobile">Mesurer où en est votre vente, ou faire estimer votre bien.</p>
+    <h1>{x.titre}</h1>
+    <p class="seulement-desktop">{x.intro}</p>
+    <p class="seulement-mobile">{court(x.intro_court, x.intro)}</p>
   </div>
   <div class="v-portes">
     <section class="v-porte v-porte-brume">
-      <h2><span class="seulement-desktop">Faire le point sur votre vente</span><span class="seulement-mobile">Faire le point</span></h2>
-      <p class="seulement-desktop">Quinze questions, trois minutes. Un score sur 100, un diagnostic par axe, un plan d'action. Rien à installer, aucun engagement.</p>
-      <p class="seulement-mobile">Quinze questions, trois minutes. Un score, un diagnostic par axe, un plan d'action.</p>
-      <a href={r('diagnostic')} class="btn btn-primaire v-porte-cta">Démarrer le diagnostic</a>
+      <h2><span class="seulement-desktop">{x.diagnostic.titre}</span><span class="seulement-mobile">{court(x.diagnostic.titre_court, x.diagnostic.titre)}</span></h2>
+      <p class="seulement-desktop">{x.diagnostic.texte}</p>
+      <p class="seulement-mobile">{court(x.diagnostic.texte_court, x.diagnostic.texte)}</p>
+      <a href={r('diagnostic')} class="btn btn-primaire v-porte-cta">{x.diagnostic.bouton}</a>
     </section>
     <section class="v-porte v-porte-galet">
-      <h2>Faire estimer mon bien</h2>
-      <p class="seulement-desktop">Un rappel d'Anne, puis une visite sur place. Le formulaire ci-dessous suffit à lancer la démarche.</p>
-      <p class="seulement-mobile">Un rappel d'Anne, puis une visite sur place.</p>
-      <a href="#estimation" class="btn btn-secondaire v-porte-cta">Aller au formulaire</a>
+      <h2>{x.estimation.titre}</h2>
+      <p class="seulement-desktop">{x.estimation.texte}</p>
+      <p class="seulement-mobile">{court(x.estimation.texte_court, x.estimation.texte)}</p>
+      <a href="#estimation" class="btn btn-secondaire v-porte-cta">{x.estimation.bouton}</a>
     </section>
   </div>
   <section id="estimation" class="v-estimation" aria-labelledby="estimation-titre">
-    <div class="v-estimation-tete"><h2 id="estimation-titre">Demander une estimation</h2><span class="marqueur">Point ouvert 2 · champs du formulaire</span></div>
-    <p class="v-estimation-intro">L'estimation ne se fait pas en ligne. Anne vous rappelle sous un jour ouvré, pose ses questions, puis se déplace pour voir le bien. Le chiffre vient après la visite, jamais avant.</p>
+    <div class="v-estimation-tete"><h2 id="estimation-titre">{x.formulaire.titre}</h2><span class="marqueur">Point ouvert 2 · champs du formulaire</span></div>
+    <p class="v-estimation-intro">{x.formulaire.intro}</p>
     <FormulaireEstimation />
   </section>
   <script src="../islands/formulaires.ts"></script>

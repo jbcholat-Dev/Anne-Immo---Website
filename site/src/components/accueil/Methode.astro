@@ -1,23 +1,17 @@
 ---
 // § 1.4 Ma méthode, en un coup d'œil (D-15) : trois piliers, puis le refrain révélé ligne par ligne (seul texte animé de la page).
-import { t, r, type Lang } from '../../i18n';
+import { r, type Lang } from '../../i18n';
+import { dicoAccueil } from '../../lib/textes';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
-const d = t(lang);
-const piliers = lang === 'fr'
-  ? [
-      { titre: 'Bon sens', texte: 'Comprendre vraiment la situation avant de bouger. Écouter, poser les bonnes questions.' },
-      { titre: 'Rigueur', texte: 'La même discipline qu’en finance sur chaque dossier : préparer, anticiper, documenter.' },
-      { titre: 'Pragmatisme', texte: 'Faire ce qui fonctionne dans la réalité, et adapter selon le contexte.' },
-    ]
-  : [
-      { titre: 'Common sense', texte: 'Truly understand the situation before moving. Listen, ask the right questions.' },
-      { titre: 'Rigour', texte: 'The same discipline as in finance on every file: prepare, anticipate, document.' },
-      { titre: 'Pragmatism', texte: 'Do what works in the real world, and adapt to the context.' },
-    ];
-const refrain = lang === 'fr'
-  ? ['Pas de mauvaise surprise.', 'Pas de dossier qui traîne.', 'Des ventes qui vont au bout.']
-  : ['No bad surprises.', 'No file left dragging.', 'Sales that go all the way.'];
+const d = await dicoAccueil(lang);
+// Français : les textes d'Anne (contenu-anne/textes/accueil.yml, story 7.20). Anglais : ici.
+const piliers = d.piliers ?? [
+  { titre: 'Common sense', texte: 'Truly understand the situation before moving. Listen, ask the right questions.' },
+  { titre: 'Rigour', texte: 'The same discipline as in finance on every file: prepare, anticipate, document.' },
+  { titre: 'Pragmatism', texte: 'Do what works in the real world, and adapt to the context.' },
+];
+const refrain = d.refrain ?? ['No bad surprises.', 'No file left dragging.', 'Sales that go all the way.'];
 ---
 <section class="methode" data-sec="methode" aria-labelledby="methode-titre">
   <div class="methode-tete" data-reveal="titre">

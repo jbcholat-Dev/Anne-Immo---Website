@@ -4,13 +4,14 @@
 // Une vente « à venir » dont la story existe n'est pas reprise (sinon la commune apparaît deux fois). Citation courte quand un avis est relié.
 import Picture from '../Picture.astro';
 import Reserve from '../Reserve.astro';
-import { t, r, type Lang } from '../../i18n';
+import { r, type Lang } from '../../i18n';
+import { dicoAccueil } from '../../lib/textes';
 import { stories, photoPrincipale, avisDeStory, avisParId, roleLibelle } from '../../lib/contenu';
 import { accueil, phrasesStories } from '../../config/site';
 import { tiret } from '../../lib/texte';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
-const d = t(lang);
+const d = await dicoAccueil(lang);
 const toutes = await stories();
 type Carte = { titre: string; phrase: string; citation?: { texte: string; auteur: string; role: string }; photo: string | null; alt: string; lien: string | null; sousTitre?: string };
 const cartes: Carte[] = [];

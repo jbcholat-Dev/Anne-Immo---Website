@@ -1,12 +1,14 @@
 ---
 // § 1.5 Ils ont travaillé avec Anne (D-8, D-9) : trois avis Immodvisor entiers, vendeurs et acheteurs, le premier relié à sa story avec la photo du bien.
 import Picture from '../Picture.astro';
-import { t, r, type Lang } from '../../i18n';
-import { avisParId, storyDeAvis, storyVisible, photoPrincipale, roleLibelle, dateLibelle, paragraphes, instantane } from '../../lib/contenu';
+import AvisCarte from '../AvisCarte.astro';
+import { r, type Lang } from '../../i18n';
+import { dicoAccueil } from '../../lib/textes';
+import { avisParId, storyDeAvis, storyVisible, photoPrincipale, roleLibelle, dateLibelle, paragraphes, phraseDeAvis, instantane } from '../../lib/contenu';
 import { accueil } from '../../config/site';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
-const d = t(lang);
+const d = await dicoAccueil(lang);
 const inst = await instantane();
 const liste = await Promise.all(accueil.avis.map(async (id) => {
   const a = await avisParId(id);
@@ -20,15 +22,13 @@ const contexte = (x: (typeof liste)[number]) => [roleLibelle(x.a, lang), x.story
   <div class="avis-tete" data-reveal="titre"><h2 id="avis-titre">{d.accueil.avis_titre}</h2>{lang === 'en' && <p class="texte-muet avis-note">Verified Immodvisor reviews, quoted in full in their original language (French).</p>}</div>
   <div class="avis-grille" data-reveal="bloc">
     {liste.map((x, i) => (
-      <figure class={i === 0 ? 'avis-relie' : 'avis-seul'} lang="fr">
+      <AvisCarte phrase={phraseDeAvis(x.a)} texte={paragraphes(x.a.body)} lignes={6} lang={lang} class={i === 0 ? 'avis-relie' : 'avis-seul'}>
         {i === 0 && x.photo && x.story && (
-          <div class="avis-photo"><Picture id={x.photo} alt={`${x.story.data.type_bien} vendu à ${x.story.data.commune}`} sizes="(max-width: 899px) 100vw, 40vw" /></div>
+          <div class="avis-photo" slot="tete"><Picture id={x.photo} alt={`${x.story.data.type_bien} vendu à ${x.story.data.commune}`} sizes="(max-width: 899px) 100vw, 33vw" /></div>
         )}
-        <blockquote>{paragraphes(x.a.body).map((p) => <p>{p}</p>)}</blockquote>
-        <figcaption>{x.a.data.auteur} <span class="texte-muet">· {contexte(x)}</span>
-          {x.slug && x.story && <div class="avis-lien"><a href={`${r('realisation', 'fr')}/${x.slug}`} hreflang="fr">{d.accueil.voir_vente}{lang === 'en' && ' (in French)'}</a></div>}
-        </figcaption>
-      </figure>
+        {x.a.data.auteur}{' '}<span class="texte-muet">· {contexte(x)}</span>
+        {x.slug && x.story && <div class="avis-lien"><a href={`${r('realisation', 'fr')}/${x.slug}`} hreflang="fr">{d.accueil.voir_vente}{lang === 'en' && ' (in French)'}</a></div>}
+      </AvisCarte>
     ))}
   </div>
   <div class="avis-tous"><a href={inst.url_fiche} rel="noopener" target="_blank">{d.accueil.avis_tous.replace('{n}', String(inst.nombre_avis))}</a></div>
@@ -38,29 +38,18 @@ const contexte = (x: (typeof liste)[number]) => [roleLibelle(x.a, lang), x.story
   .avis-tete { margin: 0 0 48px; }
   .avis-tete h2 { font-size: 40px; }
   .avis-note { font-size: 14px; margin-top: 10px; }
-  .avis-grille { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 40px; align-items: start; }
-  figure { display: flex; flex-direction: column; gap: 16px; }
-  .avis-relie { gap: 18px; }
-  .avis-seul { border-top: 1px solid var(--avt-brun); padding-top: 20px; }
-  .avis-photo { height: 300px; border-radius: 12px; overflow: hidden; background: var(--avt-galet); }
+  .avis-grille { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; align-items: start; }
+  .avis-photo { height: 220px; background: var(--avt-galet); }
   .avis-photo :global(picture), .avis-photo :global(img) { width: 100%; height: 100%; }
   .avis-photo :global(img) { object-fit: cover; }
-  blockquote { display: flex; flex-direction: column; gap: 10px; font-size: 17px; line-height: 1.6; }
-  .avis-relie blockquote { font-size: 18px; }
-  blockquote p:first-child::before { content: '« '; }
-  blockquote p:last-child::after { content: ' »'; }
-  figcaption { font-size: 14px; }
   .avis-lien { margin-top: 10px; font-size: 14.5px; }
   .avis-tous { margin-top: 40px; font-size: 13.5px; }
   @media (max-width: 899px) {
     .avis { padding: 56px var(--marge-m); }
     .avis-tete { margin-bottom: 28px; }
     .avis-tete h2 { font-size: 32px; }
-    .avis-grille { grid-template-columns: 1fr; gap: 32px; }
-    .avis-photo { height: 220px; }
-    blockquote, .avis-relie blockquote { font-size: 16.5px; line-height: 1.55; }
-    figcaption { font-size: 13.5px; }
-    .avis-seul { padding-top: 18px; }
+    .avis-grille { grid-template-columns: 1fr; gap: 20px; }
+    .avis-photo { height: 200px; }
     .avis-tous { margin-top: 26px; }
   }
 </style>

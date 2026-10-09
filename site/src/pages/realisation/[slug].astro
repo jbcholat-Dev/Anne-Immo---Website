@@ -6,7 +6,8 @@ import { image } from '../../lib/images';
 import Reserve from '../../components/Reserve.astro';
 import CtaFin from '../../components/CtaFin.astro';
 import { render } from 'astro:content';
-import { stories, photosDeStory, avisDeStory, roleLibelle, paragraphes } from '../../lib/contenu';
+import { stories, photosDeStory, avisDeStory, roleLibelle, paragraphes, phraseDeAvis } from '../../lib/contenu';
+import AvisCarte from '../../components/AvisCarte.astro';
 import { tiret } from '../../lib/texte';
 import { r } from '../../i18n';
 export async function getStaticPaths() {
@@ -27,8 +28,8 @@ const decalage = principale && image(principale.cle) ? 1 : 0;
 const propres = story.data.temoignages.filter((t) => t.citation);
 const avis = propres.length ? [] : await avisDeStory(story.id);
 const temoignages = propres.length
-  ? propres.map((t) => ({ role: t.role === 'vendeur' ? 'vendeur' : 'acheteur', prenom: t.prenom ?? '', texte: [t.citation!], source: null as string | null }))
-  : avis.map((a) => ({ role: roleLibelle(a), prenom: a.data.auteur, texte: paragraphes(a.body), source: 'Avis Immodvisor' }));
+  ? propres.map((t) => ({ role: t.role === 'vendeur' ? 'vendeur' : 'acheteur', prenom: t.prenom ?? '', texte: [t.citation!], source: null as string | null, phrase: null as string | null }))
+  : avis.map((a) => ({ role: roleLibelle(a), prenom: a.data.auteur, texte: paragraphes(a.body), source: 'Avis Immodvisor', phrase: phraseDeAvis(a) }));
 const titreTemoignages = temoignages.length === 1 ? (temoignages[0].role.startsWith('vendeu') ? (temoignages[0].role === 'vendeuse' ? 'Ce qu’elle en dit' : 'Ce qu’il en dit') : 'Ce qu’il en dit') : 'Ce qu’ils en disent';
 const alt = `${story.data.type_bien} vendu à ${story.data.commune}`;
 ---
@@ -58,10 +59,7 @@ const alt = `${story.data.type_bien} vendu à ${story.data.commune}`;
       <div class="temoignages">
         {temoignages.length === 0 && <Reserve label="Actif attendu A-07 · témoignage, cité et attribué (vendeur ou acheteur)" style="height:160px" />}
         {temoignages.map((t) => (
-          <blockquote class="temoignage">
-            <div class="temoignage-texte">{t.texte.map((p) => <p>{p}</p>)}</div>
-            <footer>{t.prenom} <span class="texte-muet">· {t.role}{t.source && ` · ${t.source}`}</span></footer>
-          </blockquote>
+          <AvisCarte taille="grande" phrase={t.phrase} texte={t.texte} lignes={8}>{t.prenom}{' '}<span class="texte-muet">· {t.role}{t.source && ` · ${t.source}`}</span></AvisCarte>
         ))}
       </div>
     </div>
@@ -148,13 +146,7 @@ const alt = `${story.data.type_bien} vendu à ${story.data.commune}`;
   .recit :global(ul), .recit :global(ol) { padding-left: 20px; margin: 0 0 16px; display: flex; flex-direction: column; gap: 6px; }
   .recit :global(strong) { font-weight: 500; }
   .recit :global(em) { font-style: italic; }
-  .temoignages { display: flex; flex-direction: column; gap: 36px; margin-bottom: 56px; }
-  .temoignage { font-family: var(--avt-font-display); font-size: 32px; line-height: 1.3; }
-  .temoignage + .temoignage { border-top: 1px solid rgba(38, 32, 26, .15); padding-top: 32px; }
-  .temoignage-texte { display: flex; flex-direction: column; gap: 12px; }
-  .temoignage-texte p:first-child::before { content: '« '; }
-  .temoignage-texte p:last-child::after { content: ' »'; }
-  .temoignage footer { font: 400 14px var(--avt-font-text); margin-top: 12px; }
+  .temoignages { display: flex; flex-direction: column; gap: 24px; margin-bottom: 56px; }
   .story-galerie { padding: 0 var(--marge) 80px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
   .story-galerie-photo { height: 220px; border-radius: 12px; overflow: hidden; background: var(--avt-galet); }
   .story-galerie-photo :global(picture), .story-galerie-photo :global(img) { width: 100%; height: 100%; }
@@ -173,9 +165,7 @@ const alt = `${story.data.type_bien} vendu à ${story.data.commune}`;
     .story-texte h2.chapeau { font-size: 12px; margin-bottom: 12px; }
     .recit { font-size: 16px; line-height: 1.65; margin-bottom: 36px; }
     .recit :global(h1) { font-size: 26px; }
-    .temoignage { font-size: 26px; }
-    .temoignage + .temoignage { padding-top: 24px; }
-    .temoignages { gap: 24px; margin-bottom: 36px; }
+    .temoignages { gap: 20px; margin-bottom: 36px; }
     .story-galerie { display: flex; gap: 10px; padding: 0 var(--marge-m) 36px; overflow-x: auto; }
     .story-galerie-photo { height: 180px; min-width: 240px; flex: none; }
   }

@@ -10,6 +10,7 @@ dossier_photos: "THONON_VALCIC_T3"
 confiance: moyenne               # forte | moyenne | faible | aucun
 indice: "« Projet vente et achat d'un bien », famille ; initiale V ↔ VALCIC, dont la story est justement une vente et un achat synchronisés (suivi : VALCIC BLIEZ + RABIER VALCIC)."
 story: appartement-cascade-2024   # la vente confirmée par Anne (slug) — seul champ lu par le site
+phrase: "Elle est une professionnelle de qualité, qui traite l'entier du dossier avec sérieux et rigueur durant toutes les étapes du projet."   # phrase mise en avant, recopiée mot pour mot de l'avis (story 8.10)
 retenu: false               # true = cité en entier dans « Ils ont travaillé avec Anne »
 ---
 

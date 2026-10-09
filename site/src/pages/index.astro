@@ -8,10 +8,10 @@ import Avis from '../components/accueil/Avis.astro';
 import Diagnostic from '../components/accueil/Diagnostic.astro';
 import Anne from '../components/accueil/Anne.astro';
 import Fermeture from '../components/accueil/Fermeture.astro';
-import { t } from '../i18n';
+import { dicoAccueil } from '../lib/textes';
 import { image } from '../lib/images';
 import { hero } from '../config/site';
-const d = t('fr');
+const d = await dicoAccueil('fr');
 ---
 <Page titre={d.accueil.titre_page} description={d.accueil.description} lang="fr" courante="accueil" sombre sansPadding ogImage={image(hero.poster)!.jpg}>
   <Hero lang="fr" />
