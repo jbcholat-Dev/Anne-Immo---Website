@@ -72,6 +72,7 @@ Tous dans `src/config/site.ts` :
   - Q14 option a : le live cite le « Système 360™ » (retiré, D-15) → descripteur de la conception (« prise en charge totale… »).
   - Q7 : le nombre de plateformes cochées fait le score ; « Autre (préciser) » compte si renseigné ; « Aucune diffusion » exclusive.
 - Sortie A = score ≥ 71 **et** Q14 premium **et** Q12 ≠ « minimiser les frais » (CAP-7) ; sinon B.
+- Campagnes (story 5.4) : les paramètres `utm_*` de l'adresse de la landing `/diagnostic` sont recopiés sur ses liens vers le parcours, le guide et le contact ; le parcours et les formulaires les envoient avec le contact. Rien n'est déposé dans le navigateur (AD-11).
 - Reprise à l'écran atteint (localStorage `avt.diagnostic.v1`), effacée à la soumission du gate. Résultats dans `sessionStorage` (`avt.diagnostic.resultat`, 24 h) — sans session, la page affiche « Ce lien n'est plus valable ».
 
 ## TODO(backend) — ce que la v1 simule
