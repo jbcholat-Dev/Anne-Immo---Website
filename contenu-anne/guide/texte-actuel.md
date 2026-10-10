@@ -20,8 +20,8 @@ Par Anne Vial-Tissot, experte immobilière Léman & Chablais
 
 ## Pourquoi tant de ventes s'enlisent
 
-- **103 jours** : délai moyen pour vendre un logement ancien en France début 2026 (1)
-- **5,4 %** : marge de négociation moyenne en régions, c'est-à-dire ce que les vendeurs cèdent sur leur prix affiché (1)
+- **101 jours** : délai moyen pour vendre un logement ancien en septembre 2026 (1)
+- **5,1 %** : marge de négociation moyenne en régions, c'est-à-dire ce que les vendeurs cèdent sur leur prix affiché (1)
 - **−25 %** : décote d'une maison ancienne classée G par rapport à une maison classée D (2)
 
 Chaque année, de nombreux propriétaires du Chablais et du Léman mettent leur bien en vente seuls, ou le confient à une agence, et le voient rester des mois sur les portails sans offre sérieuse. Le bien n'est presque jamais en cause. Ce qui coince, c'est la façon dont la vente est menée.
@@ -40,7 +40,7 @@ Chaque erreur est illustrée, quand c'est possible, par une de mes ventes réell
 
 Vous fixez votre prix selon l'une de ces méthodes : « J'ai acheté 300 000 € il y a 5 ans, je vends 400 000 € », « Mon voisin a vendu 450 000 €, je mets 460 000 € » ou « L'estimation en ligne dit entre 380 000 et 420 000 €, je mets 450 000 € ». Résultat : **soit vous bloquez votre vente (prix trop haut), soit vous bradez (prix trop bas)**.
 
-**La réalité.** Le marché immobilier est très local. À Thonon-les-Bains, le prix médian d'un appartement ancien est de **3 490 € le m²** selon les notaires (3), mais deux appartements de la même rue peuvent s'en écarter nettement. Les acheteurs filtrent les annonces par prix : au-dessus du marché, votre bien n'apparaît même pas devant ceux qui ont le bon budget, et ceux qui le voient le comparent à des biens mieux placés.
+**La réalité.** Le marché immobilier est très local. Dans le secteur Léman, le prix médian d'un appartement ancien vendu entre août 2025 et juillet 2026 est de **3 910 € le m²** selon les notaires (3), mais deux appartements de la même rue peuvent s'en écarter nettement. Les acheteurs filtrent les annonces par prix : au-dessus du marché, votre bien n'apparaît même pas devant ceux qui ont le bon budget, et ceux qui le voient le comparent à des biens mieux placés.
 
 **Cas réel : un chalet à Essert-Romand.** En vente depuis juin dans deux agences, sans une seule visite. Le prix avait été fixé sans comparaison avec les ventes du secteur. Plutôt qu'une forte baisse d'un coup, j'ai proposé un premier ajustement pour tester le marché, puis un second quatre semaines plus tard. Chaque chiffre était documenté et expliqué. Résultat : quatre visites en quelques semaines, puis deux offres au prix demandé après deux mois de commercialisation.
 
@@ -51,7 +51,7 @@ Vous fixez votre prix selon l'une de ces méthodes : « J'ai acheté 300 000 €
 
 **Attention.** Dans les communes rurales du Chablais, les ventes comparables sont rares et les estimateurs en ligne manquent de données. Ne vous fiez pas uniquement à eux.
 
-**La fourchette stratégique.** En régions, les acheteurs obtiennent en moyenne **5,4 %** de baisse sur le prix affiché (1). Gardez une marge de cet ordre, mais seulement celle que vous pouvez justifier face à un acheteur.
+**La fourchette stratégique.** En régions, les acheteurs obtiennent en moyenne **5,1 %** de baisse sur le prix affiché, et 9 ventes sur 10 sont négociées (1). Gardez une marge de cet ordre, mais seulement celle que vous pouvez justifier face à un acheteur.
 
 ## Erreur n° 2 : ignorer la réforme DPE de juillet 2021
 
@@ -81,7 +81,7 @@ Vous pensez que votre DPE de 2019 est encore bon parce que « le DPE dure 10 ans
 
 ## Erreur n° 3 : avoir un dossier administratif incomplet
 
-Vous signez un compromis, puis le notaire réclame des documents que vous n'avez pas, ou découvre un problème d'urbanisme (extension non déclarée, travaux sans autorisation). Signature repoussée, acheteur qui doute, parfois annulation : selon une étude de PAP, environ **un compromis sur dix** n'aboutit pas (6).
+Vous signez un compromis, puis le notaire réclame des documents que vous n'avez pas, ou découvre un problème d'urbanisme (extension non déclarée, travaux sans autorisation). Signature repoussée, acheteur qui doute, parfois annulation.
 
 **Cas réel : à Morzine, il fallait d'abord créer la copropriété.** Une bâtisse familiale divisée en trois logements, jamais mise en copropriété : sans elle, ni acte ni prêt possibles pour l'acheteur. Géomètre, notaire, accord de chaque propriétaire : six mois de préparation avant la première annonce, puis une vente sans mauvaise surprise.
 
@@ -124,7 +124,7 @@ Le problème n'est pas le bien, mais sa présentation.
 
 ## Erreur n° 5 : sous-estimer l'importance des photos professionnelles
 
-**Le problème.** Vous pensez que de bonnes photos prises avec votre téléphone suffisent. Après tout, le bien parle de lui-même, non ? Pas en ligne. Un acheteur fait défiler des dizaines d'annonces et décide en un coup d'œil, sur la première photo, s'il ouvre la vôtre. Il ne lira jamais votre description si la photo ne l'arrête pas. Une étude universitaire qui a suivi le regard d'acheteurs devant des annonces l'a confirmé : la photo est ce qu'ils regardent en premier (7).
+**Le problème.** Vous pensez que de bonnes photos prises avec votre téléphone suffisent. Après tout, le bien parle de lui-même, non ? Pas en ligne. Un acheteur fait défiler des dizaines d'annonces et décide en un coup d'œil, sur la première photo, s'il ouvre la vôtre. Il ne lira jamais votre description si la photo ne l'arrête pas. Une étude universitaire américaine qui a suivi le regard d'acheteurs devant des annonces l'a confirmé : la photo est, avec le descriptif chiffré, ce qu'ils regardent en premier (6).
 
 **Ce que ça vous coûte.** Peu de demandes, donc peu de visites, donc pas d'offre. Les semaines passent avant que vous compreniez que le problème vient des photos, et pendant ce temps votre annonce vieillit sur les portails.
 
@@ -194,7 +194,7 @@ Vous mettez votre annonce sur Le Bon Coin et vous attendez. Ou pire : vous la me
 
 Quelqu'un vous appelle pour visiter. Vous dites oui immédiatement. Vous préparez le bien, vous faites visiter. La personne repart avec un « on vous recontacte »... et plus de nouvelles. Vous avez perdu deux heures.
 
-Parmi ceux qui demandent une visite, beaucoup ne sont pas prêts : leur budget ne correspond pas, ils cherchent autre chose, ils doivent d'abord vendre leur propre bien, ou leur financement n'est pas validé.
+Parmi ceux qui demandent une visite, beaucoup ne sont pas prêts : leur budget ne correspond pas, ils cherchent autre chose, ils doivent d'abord vendre leur propre bien, ou leur financement n'est pas validé. Fin 2022, quand les taux montaient, près d'**un compromis sur dix** est retombé, le plus souvent parce que l'acheteur n'avait pas obtenu son prêt (7).
 
 **Script de qualification téléphonique.** Avant de confirmer une visite, posez systématiquement ces questions :
 
@@ -265,10 +265,10 @@ Experte immobilière Léman & Chablais
 
 ## Sources
 
-1. Laforêt, « Immobilier ancien : quelles sont les tendances du 1er trimestre 2026 ? » : délai moyen de vente de 103 jours, marge de négociation de 5,1 % en France et 5,4 % en régions. laforet.com/espace-presse
-2. Notaires de France, « La valeur verte des logements en France sur les transactions 2024 », janvier 2026. notaires.fr
-3. Chambre interdépartementale des notaires de Savoie, « Conjoncture immobilière départementale, Alpes du Léman », synthèse de mars 2025. chambre-interdepartementale-de-savoie.notaires.fr
-4. Ministère de la Transition écologique, « Audit énergétique réglementaire » ; article L. 126-28-1 du Code de la construction et de l'habitation. ecologie.gouv.fr
-5. ANIL (Agence nationale pour l'information sur le logement), « Performance énergétique et décence ». anil.org
-6. Étude PAP de novembre 2022 sur les compromis non aboutis (10 828 répondants), rapportée par L'Écho du Mardi. pap.fr
-7. M. Seiler, P. Madhavan, M. Liechty, « Toward an Understanding of Real Estate Homebuyer Internet Search Behavior: An Application of Ocular Tracking Technology », Journal of Real Estate Research, 2012.
+1. Laforêt, « Immobilier ancien : quelles sont les tendances du 3e trimestre 2026 ? » (chiffres de septembre 2026, réseau Laforêt) : délai moyen de vente de 101 jours, marge de négociation de 4,8 % en France et 5,1 % en régions, 9 acquisitions sur 10 négociées. laforet.com/espace-presse
+2. Notaires de France, « La valeur verte des logements en France sur les transactions 2024 », décembre 2025. notaires.fr
+3. Notaires des Savoie, « Conjoncture immobilière départementale, Haute-Savoie », synthèse d'octobre 2026 (ventes du 1er août 2025 au 31 juillet 2026). chambre-interdepartementale-de-savoie.notaires.fr
+4. ANIL (Agence nationale pour l'information sur le logement), « L'audit énergétique » ; article L. 126-28-1 du Code de la construction et de l'habitation. anil.org
+5. ANIL, « Logement décent : la performance énergétique ». anil.org
+6. M. Seiler, P. Madhavan, M. Liechty, « Toward an Understanding of Real Estate Homebuyer Internet Search Behavior: An Application of Ocular Tracking Technology », Journal of Real Estate Research, 2012.
+7. PAP.fr, taux de republication des annonces après un compromis annulé (9,4 % en novembre 2022) et sondage auprès de 10 828 acheteurs, rapportés par L'Écho du Mardi, 7 décembre 2022.
