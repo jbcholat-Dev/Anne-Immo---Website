@@ -1,0 +1,178 @@
+/* ============================================================================
+   CONCEPT « Verre du lac » (Liquid Glass) — branche d'essai claude/concept-liquid-glass.
+   Ne pas fusionner tel quel : essai à comparer (fil Structure et visuel, demande de JB du 2026-10-10).
+
+   Idée : des surfaces en verre dépoli posées sur la lumière du lac. Le verre floute et sature ce qui
+   passe derrière, un liseré clair dessine son bord, un reflet traverse sa partie haute.
+   Pour qu'il y ait quelque chose à voir à travers le verre, le fond écru reçoit trois nappes de
+   couleur très douces (bleu du lac, terracotta de la rive, brume), fixes pendant le défilement.
+
+   Accessibilité : « réduire la transparence » (macOS, iOS) ou navigateur sans flou d'arrière-plan
+   → surfaces opaques, le site reste celui d'aujourd'hui.
+   Spécificité : chaque règle commence par html[data-concept="verre"] pour passer devant les styles
+   de composants d'Astro (classe + attribut) sans toucher aux composants.
+   ========================================================================== */
+
+html[data-concept="verre"] {
+  --verre-clair: linear-gradient(155deg, rgba(255, 255, 255, .62) 0%, rgba(255, 255, 255, .34) 46%, rgba(255, 255, 255, .22) 100%);
+  --verre-sombre: linear-gradient(155deg, rgba(255, 255, 255, .20) 0%, rgba(255, 255, 255, .08) 50%, rgba(255, 255, 255, .05) 100%);
+  --verre-flou: blur(22px) saturate(170%);
+  --verre-flou-fort: blur(34px) saturate(180%);
+  --verre-bord: rgba(255, 255, 255, .62);
+  --verre-bord-sombre: rgba(255, 255, 255, .30);
+  /* liseré haut lumineux, liseré bas plus sombre, ombre portée douce : la « goutte » de verre */
+  --verre-relief: inset 0 1px 0 rgba(255, 255, 255, .85), inset 0 -1px 0 rgba(38, 32, 26, .06), 0 18px 50px rgba(38, 32, 26, .12), 0 2px 8px rgba(38, 32, 26, .06);
+  --verre-relief-sombre: inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 -1px 0 rgba(0, 0, 0, .18), 0 24px 60px rgba(0, 0, 0, .28);
+}
+
+/* --- Le fond : trois nappes de couleur, fixes ----------------------------------------------- */
+html[data-concept="verre"] body {
+  background:
+    radial-gradient(60vw 50vw at 88% 18%, rgba(0, 47, 167, .16), transparent 70%),
+    radial-gradient(55vw 45vw at 6% 62%, rgba(196, 98, 62, .14), transparent 70%),
+    radial-gradient(70vw 50vw at 60% 104%, rgba(0, 47, 167, .12), transparent 70%),
+    var(--avt-ecru);
+  background-attachment: fixed;
+}
+/* Les sections écru deviennent transparentes pour laisser passer les nappes */
+html[data-concept="verre"] .ventes,
+html[data-concept="verre"] .methode,
+html[data-concept="verre"] .diag,
+html[data-concept="verre"] .anne,
+html[data-concept="verre"] .parler { background: transparent; }
+
+/* --- Recette commune du verre ---------------------------------------------------------------- */
+html[data-concept="verre"] .verre-clair,
+html[data-concept="verre"] .nav,
+html[data-concept="verre"] .carte,
+html[data-concept="verre"] .diag-livrable,
+html[data-concept="verre"] .avis-carte {
+  background: var(--verre-clair);
+  -webkit-backdrop-filter: var(--verre-flou);
+  backdrop-filter: var(--verre-flou);
+  border: 1px solid var(--verre-bord);
+  box-shadow: var(--verre-relief);
+}
+html[data-concept="verre"] .diag-livrable, html[data-concept="verre"] .avis-carte { position: relative; }
+/* Le reflet : un arc de lumière dans le haut de la surface */
+html[data-concept="verre"] .nav::before,
+html[data-concept="verre"] .carte::before,
+html[data-concept="verre"] .diag-livrable::before,
+html[data-concept="verre"] .preuve::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(120% 60% at 30% -10%, rgba(255, 255, 255, .55), transparent 55%);
+  mix-blend-mode: soft-light;
+}
+
+/* --- La barre de navigation : une gélule de verre qui flotte -------------------------------- */
+html[data-concept="verre"] .nav {
+  top: 14px; left: 24px; right: 24px; border-radius: 999px;
+  border-bottom: 1px solid var(--verre-bord);
+  transition: height .35s ease, background .35s ease, color .35s ease, top .35s ease;
+}
+html[data-concept="verre"] .nav .nav-int { padding: 0 28px 0 18px; }
+html[data-concept="verre"] .nav[data-reduit] { top: 10px; background: var(--verre-clair); -webkit-backdrop-filter: var(--verre-flou-fort); backdrop-filter: var(--verre-flou-fort); border-bottom-color: var(--verre-bord); }
+/* Sur la vidéo d'accueil : verre fumé, texte écru */
+html[data-concept="verre"] .nav[data-sombre]:not([data-reduit]) {
+  background: linear-gradient(155deg, rgba(38, 32, 26, .30), rgba(38, 32, 26, .16)); border: 1px solid var(--verre-bord-sombre); box-shadow: var(--verre-relief-sombre);
+  -webkit-backdrop-filter: var(--verre-flou); backdrop-filter: var(--verre-flou);
+}
+/* Menu « À propos » : verre aussi, accroché sous la gélule */
+html[data-concept="verre"] .nav-menu {
+  background: var(--verre-clair); -webkit-backdrop-filter: var(--verre-flou-fort); backdrop-filter: var(--verre-flou-fort);
+  border: 1px solid var(--verre-bord); border-radius: 18px; top: calc(100% + 8px); box-shadow: var(--verre-relief);
+}
+html[data-concept="verre"] .nav-menu a:hover, html[data-concept="verre"] .nav-menu a:focus-visible { background: rgba(255, 255, 255, .55); }
+html[data-concept="verre"] .nav-item:hover .nav-menu::before { content: ""; position: absolute; left: 0; right: 0; top: -10px; height: 10px; } /* pont de survol */
+html[data-concept="verre"] .page-int { padding-top: calc(var(--nav-h) + 14px); }
+
+/* --- Ouverture : le nom d'Anne posé directement sur la vidéo, sans plaque (retour de JB du 10/10 :
+   la plaque de verre « c'est trop »). Un voile plus dense en bas à gauche garde le texte lisible. --- */
+html[data-concept="verre"] .hero-voile { background: linear-gradient(180deg, rgba(38, 32, 26, .18) 0%, rgba(38, 32, 26, .04) 38%, rgba(38, 32, 26, .42) 100%), linear-gradient(90deg, rgba(38, 32, 26, .28) 0%, transparent 60%); }
+html[data-concept="verre"] .hero h1 { font-size: 84px; text-shadow: 0 2px 28px rgba(0, 0, 0, .35); }
+html[data-concept="verre"] .hero-contenu p { text-shadow: 0 1px 12px rgba(0, 0, 0, .45); }
+html[data-concept="verre"] .hero-contenu { max-width: none; bottom: 150px; }
+/* Bouton secondaire en verre (au lieu du simple contour) */
+html[data-concept="verre"] .btn-contour-ecru {
+  background: rgba(255, 255, 255, .14); border-color: rgba(255, 255, 255, .55);
+  -webkit-backdrop-filter: blur(10px) saturate(160%); backdrop-filter: blur(10px) saturate(160%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5);
+}
+html[data-concept="verre"] .btn-contour-ecru:hover { background: rgba(255, 255, 255, .26); }
+html[data-concept="verre"] .btn-secondaire {
+  background: rgba(255, 255, 255, .45); border-color: rgba(38, 32, 26, .55);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9);
+}
+
+/* --- Bande des avis : une barre de verre fumé qui chevauche le bas de la vidéo --------------- */
+html[data-concept="verre"] .preuve {
+  position: relative; z-index: 2; margin: -112px var(--marge) 0; border-radius: 22px; padding: 22px 32px;
+  background: linear-gradient(155deg, rgba(0, 47, 167, .62), rgba(0, 47, 167, .42));
+  -webkit-backdrop-filter: var(--verre-flou); backdrop-filter: var(--verre-flou);
+  border: 1px solid rgba(255, 255, 255, .32); box-shadow: var(--verre-relief-sombre);
+}
+
+/* --- Ventes : cartes de verre empilées. La carte du dessous se voit floutée à travers ------- */
+html[data-concept="verre"] .carte { -webkit-backdrop-filter: var(--verre-flou-fort); backdrop-filter: var(--verre-flou-fort); border-radius: 26px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .85), 0 -6px 24px rgba(38, 32, 26, .08), 0 10px 30px rgba(38, 32, 26, .08); }
+html[data-concept="verre"] .carte-photo { border-radius: 18px; box-shadow: 0 20px 50px rgba(38, 32, 26, .22); }
+
+/* --- Méthode : les trois piliers deviennent trois lamelles de verre ------------------------- */
+html[data-concept="verre"] .pilier {
+  border-top: 0; padding: 26px 26px 30px; border-radius: 20px;
+  background: var(--verre-clair); -webkit-backdrop-filter: var(--verre-flou); backdrop-filter: var(--verre-flou);
+  border: 1px solid var(--verre-bord); box-shadow: var(--verre-relief);
+}
+
+/* --- Avis : fond bleu brume plus profond, cartes de verre ----------------------------------- */
+html[data-concept="verre"] .avis {
+  background:
+    radial-gradient(50vw 40vw at 15% 20%, rgba(0, 47, 167, .28), transparent 70%),
+    radial-gradient(45vw 40vw at 90% 80%, rgba(196, 98, 62, .22), transparent 70%),
+    var(--avt-brume);
+}
+html[data-concept="verre"] .avis-carte { border-radius: 24px; }
+
+/* --- Diagnostic : tuiles de verre sur une tache de couleur ---------------------------------- */
+html[data-concept="verre"] .diag-livrables { position: relative; }
+html[data-concept="verre"] .diag-livrables::before {
+  content: ""; position: absolute; inset: -40px -20px; z-index: -1; border-radius: 50%;
+  background: radial-gradient(closest-side at 30% 50%, rgba(0, 47, 167, .45), transparent), radial-gradient(closest-side at 75% 55%, rgba(196, 98, 62, .45), transparent);
+  filter: blur(20px);
+}
+html[data-concept="verre"] .diag { isolation: isolate; }
+html[data-concept="verre"] .diag-livrable { border-radius: 20px; }
+
+/* --- Fin de page : boutons en verre sur le bleu du lac -------------------------------------- */
+html[data-concept="verre"] .parler-bande { background: linear-gradient(180deg, var(--avt-klein), #00268a); }
+
+/* --- Réfraction (Chromium seulement) : le bord du verre déforme légèrement ce qui passe derrière.
+   Activée par l'attribut data-refraction posé en tête de page quand le navigateur sait faire. ---- */
+html[data-concept="verre"][data-refraction] .nav {
+  -webkit-backdrop-filter: url(#verre-refraction) blur(16px) saturate(170%);
+  backdrop-filter: url(#verre-refraction) blur(16px) saturate(170%);
+}
+
+/* --- Téléphone ------------------------------------------------------------------------------ */
+@media (max-width: 899px) {
+  html[data-concept="verre"] .nav { top: 10px; left: 12px; right: 12px; }
+  html[data-concept="verre"] .nav .nav-int { padding: 0 10px 0 14px; }
+  html[data-concept="verre"] .hero-contenu { bottom: auto; }
+  html[data-concept="verre"] .hero h1 { font-size: 52px; }
+  html[data-concept="verre"] .preuve { margin: -96px 12px 0; padding: 18px 20px; }
+  html[data-concept="verre"] .carte { border-radius: 22px; }
+}
+
+/* --- Repli : transparence réduite ou flou non pris en charge → surfaces opaques -------------- */
+@media (prefers-reduced-transparency: reduce) {
+  html[data-concept="verre"] .nav, html[data-concept="verre"] .nav[data-reduit], html[data-concept="verre"] .carte,
+  html[data-concept="verre"] .diag-livrable, html[data-concept="verre"] .avis-carte, html[data-concept="verre"] .pilier,
+  html[data-concept="verre"] .nav-menu { background: var(--avt-ecru); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  html[data-concept="verre"] .nav[data-sombre]:not([data-reduit]) { background: rgba(38, 32, 26, .78); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  html[data-concept="verre"] .preuve { background: var(--avt-klein); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html[data-concept="verre"] .nav, html[data-concept="verre"] .carte, html[data-concept="verre"] .diag-livrable,
+  html[data-concept="verre"] .avis-carte, html[data-concept="verre"] .pilier, html[data-concept="verre"] .nav-menu { background: rgba(247, 242, 234, .94); }
+  html[data-concept="verre"] .nav[data-sombre]:not([data-reduit]) { background: rgba(38, 32, 26, .72); }
+}
