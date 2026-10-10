@@ -5,7 +5,7 @@
 import { envoyerEmail, type Email } from './adapters/email';
 import { enProduction, type EnvSite } from './env';
 import { journal } from './journal';
-import { lienDesabonnement, lienGuide } from './liens';
+import { lienDesabonnement, lienGuide, lienRapport } from './liens';
 import { confirmerProspect, envoyerGuide, etapeSequence, notifierAnne, type LigneLead } from './messages';
 import { etapesDe } from './sequence';
 
@@ -26,7 +26,9 @@ async function construire(env: EnvSite, canal: string, l: LigneLead & { newslett
   if (canal === 'confirm_prospect') {
     // Le guide part avec la confirmation d'une demande de guide et avec les résultats en sortie B (story 10.5).
     const avecGuide = l.source === 'guide' || (l.source === 'diagnostic' && l.orientation === 'B');
-    const m = confirmerProspect(l, avecGuide ? await lienGuide(env, l.id) : null, etapesDe(l.lang).length);
+    // Et le rapport PDF du diagnostic, pour chaque diagnostic (story 10.10).
+    const rapport = l.source === 'diagnostic' && l.scores && l.answers ? await lienRapport(env, l.id) : null;
+    const m = confirmerProspect(l, avecGuide ? await lienGuide(env, l.id) : null, etapesDe(l.lang).length, rapport);
     return { email: { ...base, a: l.email, objet: m.objet, texte: m.texte, html: m.html, repondreA: env.BOITE_ANNE } };
   }
   if (canal === 'guide') {

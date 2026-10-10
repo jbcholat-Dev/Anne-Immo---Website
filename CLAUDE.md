@@ -82,7 +82,8 @@ node scripts/e2e-guide.mjs     # guide par lien signé, séquence et désabonnem
 node scripts/e2e-gestion.mjs   # espace de gestion /gestion, droits RGPD et purge, avec une imitation de Cloudflare Access (même préalable)
 node scripts/maquette-emails.mjs # fait partir les 12 e-mails aux prospects sur le serveur local, vérifie leur mise en forme et les capture dans site/.verif/emails (même préalable)
 node scripts/email-logo.mjs    # refait le logo joint aux e-mails (site/src/server/email-logo.png) depuis le logo de la charte
-node scripts/maquette-rapport.mjs # deux rapports PDF du diagnostic d'exemple, dans site/.verif/rapport (story 10.10)
+node scripts/rapport-gabarit.mjs  # refait le gabarit du rapport PDF du diagnostic après un changement de ses textes (story 10.10), puis npm run build
+node scripts/e2e-rapport.mjs     # rapport PDF de bout en bout sur le serveur local : bouton, e-mail, PDF lu, liens refusés (même préalable)
 node scripts/guide-pdf.mjs     # refait le PDF du guide (site/prive/guide.pdf) depuis contenu-anne/guide/texte-actuel.md
 ```
 

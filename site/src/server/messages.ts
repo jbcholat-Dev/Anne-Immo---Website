@@ -168,7 +168,7 @@ const PIED_SEQUENCE = (n: number) => `Vous recevrez aussi ${n} e-mails de consei
 const bonjour = (l: LigneLead) => `${l.lang === 'en' ? 'Hello' : 'Bonjour'} ${l.prenom ?? ''}`.trim() + ',';
 
 /** `lienGuide` : lien signé du guide (null si le secret des liens manque : l'e-mail renvoie alors à la page du guide). */
-export function confirmerProspect(l: LigneLead, lienGuide: string | null = null, etapes = 0): Message {
+export function confirmerProspect(l: LigneLead, lienGuide: string | null = null, etapes = 0, lienRapport: string | null = null): Message {
   const tel = telephoneLisible(l.telephone);
   const diag = resultat(l);
   const sequence = l.newsletter_opt_in_at && etapes ? ['', PIED_SEQUENCE(etapes)] : [];
@@ -195,7 +195,11 @@ export function confirmerProspect(l: LigneLead, lienGuide: string | null = null,
       bonjour(l), '',
       'Merci d\'avoir fait le diagnostic de votre vente. Voici le résumé de vos résultats :', '',
       `> **Score global : ${diag.scores.total} / 100** (${diag.profil})\n${diag.axes.map((a) => `> ${a}`).join('\n')}`, '',
-      'Le détail et les recommandations restent affichés 24 heures dans le navigateur où vous avez fait le diagnostic.', '',
+      // Rapport PDF personnalisé (story 10.10) : le détail et les recommandations, par lien signé de 7 jours. Sans secret, l'ancienne phrase.
+      ...(lienRapport
+        ? ['Votre rapport personnalisé reprend le détail de vos réponses et mes recommandations, axe par axe, en commençant par vos priorités :', '',
+          `[Télécharger mon rapport (PDF)](${lienRapport})`, '', 'Ce lien est personnel et reste valable 7 jours.', '']
+        : ['Le détail et les recommandations restent affichés 24 heures dans le navigateur où vous avez fait le diagnostic.', '']),
       ...suite, ...sequence,
     ].join('\n'), 'fr', `Votre score : ${diag.scores.total} / 100, ${diag.profil}.`);
   }

@@ -15,7 +15,8 @@ export type Resultat = {
 const MAX: Record<Categorie, number> = { preparation: 40, visibilite: 40, efficacite: 20 };
 const points = bareme.points as Record<string, number>;
 
-function pointsQuestion(q: string, r: Reponses): number {
+/** Les points obtenus à une question (q07 : nombre de plateformes ; q10 : visites × offres). */
+export function pointsQuestion(q: string, r: Reponses): number {
   const rep = r[q] ?? [];
   if (q === 'q07') {
     const n = rep.filter((x) => x !== 'q07.i' && x !== '').length; // « Aucune diffusion » ne compte pas ; « autre » compte si renseigné

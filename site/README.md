@@ -19,6 +19,8 @@ Autres commandes :
 | `npm run verif` | captures Playwright (1440 et 390) de toutes les pages dans `.verif/` ; accueil à 5 positions de défilement + mouvement réduit. |
 | `node scripts/e2e-diagnostic.mjs` | essai de bout en bout du diagnostic sur le serveur local (story 10.4) : gate côté serveur (réponses revérifiées, score, lead, renvoi), page de résultats (un navigateur, 24 heures, 404 sinon), séquence, e-mails, puis les 17 écrans dans un navigateur (sorties A et B, profil à risque, abandon / reprise, gate en erreur, coupure puis « Renvoyer », lien expiré). Même préalable que la ligne suivante. E-mails produits dans `.verif/e2e-diagnostic-emails.txt`. |
 | `node scripts/e2e-formulaires.mjs` | essai de bout en bout des formulaires réels sur le serveur local (story 10.3) : barrières anti-robot, validation, base, idempotence, e-mails vers la boîte de test, échec puis rejeu, envoi depuis la page /contact. Préalable : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local`. E-mails produits dans `.verif/e2e-formulaires-emails.txt`. |
+| `node scripts/rapport-gabarit.mjs` | refait le gabarit du rapport PDF du diagnostic (`prive/rapport/gabarit.pdf` et `src/server/rapport-gabarit.json`) depuis `contenu-anne/guide/rapport-diagnostic.md`, `feedbacks.json` et `bareme.json` (story 10.10). À relancer, puis `npm run build`, dès qu'un de ces textes change. |
+| `node scripts/e2e-rapport.mjs` | essai de bout en bout du rapport PDF sur le serveur local (story 10.10) : gabarit à jour, bouton de la page de résultats, lien de l'e-mail, PDF servi et lu, 404 sinon, temps de fabrication. Même préalable que `e2e-formulaires`. Rapports et images des pages dans `.verif/rapport/`. |
 | `node scripts/liens.mjs` | vérifie que chaque lien et chaque ancre du site construit mène quelque part. |
 | `npm run check` | `astro check` (types). |
 
@@ -153,6 +155,13 @@ Sur `/contact`, le bouton « Voir les créneaux d'Anne » charge l'agenda de Cal
 - **Logo** : `src/server/email-logo.png`, joint à chaque e-mail et appelé par `cid:logo` (aucune image chargée depuis un serveur). À refaire après un changement de logo : `node scripts/email-logo.mjs`.
 - **Maquette** : `node scripts/maquette-emails.mjs` (préalable : `npm run build` et `npm run base:local`) fait partir les 12 e-mails sur le serveur local, vérifie leur forme et écrit `.verif/emails/` (HTML, texte, captures ordinateur et téléphone).
 
+## Rapport PDF du diagnostic (story 10.10)
+
+- **Ce que reçoit le vendeur** : un PDF à son nom (8 pages environ) : couverture avec son score et son profil, « Par où commencer » (ses priorités, dans l'ordre), une partie par axe (score, constat, impact chiffré, puis les recommandations tirées des 10 erreurs du guide, chacune marquée « En priorité », « À améliorer » ou « Point solide » avec sa réponse et ses points), et la suite proposée (sortie A ou B). Il le télécharge depuis le bouton « Télécharger mon rapport » de la page de résultats ou depuis l'e-mail du résumé, par un lien personnel valable 7 jours.
+- **Fabrication** : `scripts/rapport-gabarit.mjs` met en page à la charte, une fois, toutes les pages possibles (3 couvertures, 3 niveaux par axe, 2 suites), avec des emplacements vides dont il note la position. Au téléchargement, `src/server/rapport.ts` (bibliothèque pdf-lib, dans le Worker) choisit les pages du vendeur et y écrit son nom, ses scores, ses barres, ses étiquettes et ses réponses. Rien n'est stocké : le PDF est refait à chaque téléchargement depuis le lead.
+- **Lien** : `/api/diagnostic/rapport?l=…&e=…&s=…`, signé avec `LIEN_SECRET` (préfixe `rapport.`, distinct du guide). Faux, expiré, lead effacé : 404 « Ce lien n'est plus valable ». Sans secret, pas de bouton et l'e-mail garde l'ancienne phrase.
+- **Textes** : `contenu-anne/guide/rapport-diagnostic.md` (brouillon à relire par Anne). Le gabarit embarque une empreinte de ses sources ; `e2e-rapport` signale un gabarit à refaire.
+
 ## Vidéo d'ouverture (stories 7.4 et 8.3)
 
 - **Source** : `contenu-anne/videos/ouverture-source.mp4` (hors Git, 115 Mo, 4K, 52 s, montage d'Anne du 2026-10-05, story 7.15 ; encodé avec `--debut 0.1` pour sauter deux images blanches). Inventaire : `contenu-anne/videos/liens.md`.
@@ -184,6 +193,7 @@ Charte v3 (D-31, 2026-10-08) : Gilda Display (titres, une seule graisse) et Jost
 - **Écarts de la story 10.5** : un seul guide pour tous les profils (la clé `band` du lead n'est pas utilisée, Anne n'a pas décidé d'en faire trois) ; le PDF est embarqué dans le Worker au lieu d'être rangé à part ; la séquence est lue directement dans `contenu-anne/guide/sequence-emails/` (pas de type `SequenceEmail` dans `content.config.ts`) ; elle n'existe qu'en français : un lead anglais n'est pas inscrit, au lieu de faire échouer la construction, tant que l'anglais n'est pas livré ; envoi toutes les 15 minutes au lieu d'une fois par jour (même tâche que le rejeu) ; désabonnement en deux temps (page + bouton) ; « Je n'ai rien reçu » mène à `/contact#ecrire` au lieu de renvoyer l'e-mail.
 - **Écarts de la story 10.7** : l'espace est à `/gestion` et non `/admin`, déjà pris par l'espace d'édition Sveltia CMS (story 7.13) ; le second facteur exigé (MFA) est le code à usage unique envoyé par e-mail par Access, sans autre facteur (voir RUNBOOK § 4 quinquies pour le renforcer) ; rien n'est effacé chez Resend car le site n'y crée aucun contact ni audience, il n'y fait qu'envoyer des e-mails (Resend garde ses journaux d'envoi selon sa propre politique) ; la purge tourne à chaque passage de la tâche (toutes les 15 minutes) au lieu d'une fois par jour, sans effet visible.
 - **Écarts de la story 10.9** : les polices du site (Gilda Display, Jost) ne s'affichent que dans Apple Mail et sur iPhone, qui les chargent depuis `annevialtissot.fr/fonts/` (autorisé par `public/_headers`) ; Gmail et Outlook ne chargent aucune police extérieure et affichent Arial. Le logo est joint à l'e-mail plutôt qu'appelé depuis le site (l'aperçu est derrière Access, les messageries bloquent les images distantes, et aucun pixel de suivi n'est possible). Allure « lettre sobre » (fond blanc, logo, filet terracotta), choisie par JB le 2026-10-10 parmi trois maquettes.
+- **Écarts de la story 10.10** : rapport en français seulement (le diagnostic l'est aussi). Polices du PDF converties une fois de woff2 en TTF dans `prive/polices/` (pdf-lib ne sait pas réduire une police woff2), licences jointes. Le gabarit est un fichier fabriqué, commité, à refaire quand les textes changent. Fabriquer le PDF demande environ 60 ms de calcul par téléchargement, au-delà des 10 ms du plan Workers gratuit : le plan Workers Paid (action J10) est nécessaire avant le lancement. Worker : 1,19 Mo compressé (limite 3 Mo en gratuit, 10 Mo en payant).
 - Pages légales : textes de structure conformes à AD-16 (finalités, bases légales, 3 ans), **à faire valider par Anne** avant publication ; les valeurs A-13 sont des pastilles « à compléter ».
 
 ## Largeurs intermédiaires (story 8.2)
@@ -210,6 +220,8 @@ La maquette dessine 1 440 px (ordinateur) et 390 px (téléphone). Entre 900 et 
 - Ce qu'Anne doit fournir est listé dans `contenu-anne/A-FOURNIR.md`.
 
 ## Vérification faite (voir `.verif/`)
+
+Story 10.10 : `node scripts/e2e-rapport.mjs` : 19 constats bons (deux vendeurs, profil à risque sortie B et profil préparé sortie A, PDF de 8 pages lus) · `e2e-diagnostic` 31, `e2e-guide` 38, `e2e-formulaires` 25 : tous bons · `maquette-emails` : tous bons · `npm run check` : 0 erreur · `node scripts/liens.mjs` : 26 pages, 1661 liens, 0 cassé.
 
 Story 10.7 : `node scripts/e2e-gestion.mjs` : 39 constats bons (voir la story) · `e2e-formulaires`, `e2e-diagnostic`, `e2e-rendez-vous`, `e2e-guide` : tous bons · `npm run check` : 0 erreur · `node scripts/liens.mjs` : 26 pages, 1600 liens, 0 cassé · `npm run verif` : aucune erreur console · `node scripts/ecrans.mjs` : rien à signaler.
 
