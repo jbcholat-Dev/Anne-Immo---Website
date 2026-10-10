@@ -15,7 +15,7 @@ photos:
   - photos/anthy-sur-leman-exp-immo-028-hd.webp
   - photos/anthy-sur-leman-exp-immo-025-hd.webp
   - blob:https://anne-vial-tissot-site.jbcholat.workers.dev/69bd8e01-b681-490a-940a-b0ec9b3bf5f7
-statut: brouillon
+statut: publie
 autorisations: false
 temoignages:
   - citation: null
