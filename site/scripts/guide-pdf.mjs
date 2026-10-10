@@ -32,7 +32,16 @@ function versHtml(md) {
   let balise = 'ul';
   let para = [];
   let tableau = null;
+  let annonce = null;
   const fermer = () => {
+    // Exemple d'annonce « ❌ Avant » / « ✅ Après » : une ligne = un paragraphe, la première ligne en gras = le titre de l'annonce.
+    if (annonce) {
+      const [premiere, ...suite] = annonce.lignes;
+      const titreAnnonce = /^\*\*.+\*\*$/.test(premiere ?? '') ? `<div class="annonce-titre">${enLigne(premiere.replace(/\*\*/g, ''))}</div>` : '';
+      const textes = (titreAnnonce ? suite : annonce.lignes).map((t) => `<p>${enLigne(t.replace(/^«\s*|\s*»$/g, ''))}</p>`).join('');
+      blocs.push(`<div class="annonce annonce-${annonce.genre}"><span class="etiquette">${annonce.genre === 'avant' ? 'Avant · l’annonce catalogue' : 'Après · l’annonce qui raconte'}</span>${titreAnnonce}${textes}</div>`);
+      annonce = null;
+    }
     if (para.length) { blocs.push(`<p>${enLigne(para.join(' '))}</p>`); para = []; }
     if (tableau) {
       const [entete, ...rangs] = tableau.map((r) => r.replace(/^\||\|$/g, '').split('|').map((c) => enLigne(c.trim())));
@@ -44,6 +53,10 @@ function versHtml(md) {
     if (liste) { blocs.push(`<${balise}>${liste.map((li) => `<li>${enLigne(li)}</li>`).join('')}</${balise}>`); liste = null; }
   };
   for (const l of lignes.slice(debut + 1)) {
+    const exemple = /^\*\*(❌ Avant|✅ Après)\*\*$/.exec(l.trim());
+    if (exemple) { fermer(); annonce = { genre: exemple[1].includes('Avant') ? 'avant' : 'apres', lignes: [] }; continue; }
+    if (annonce && l.trim() && !/^(\d+\. |- |## |### |\|)/.test(l)) { annonce.lignes.push(l.trim()); continue; }
+    if (annonce) fermer();
     if (l.startsWith('> ⚠️') || l.trim() === '---') { fermer(); continue; }
     if (l.startsWith('## ')) { fermer(); blocs.push(`<h2>${enLigne(l.slice(3))}</h2>`); continue; }
     if (l.startsWith('### ')) { fermer(); blocs.push(`<h3>${enLigne(l.slice(4))}</h3>`); continue; }
@@ -135,6 +148,12 @@ strong { font-weight: 500; }
 table { width: 100%; border-collapse: collapse; margin: 2mm 0 5mm; font-size: 9.5pt; break-inside: avoid; }
 th { text-align: left; font-weight: 500; background: #E9E0D2; }
 th, td { padding: 1.6mm 2.4mm; border-bottom: 1px solid #E9E0D2; vertical-align: top; }
+.annonce { border-radius: 2.5mm; margin: 4mm 0; padding: 4mm 5mm; break-inside: avoid; }
+.annonce p { margin: 0 0 2mm; }
+.annonce p:last-child { margin-bottom: 0; }
+.annonce-avant { background: #F4F1EC; color: #5C5248; font-size: 9.5pt; }
+.annonce-apres { border: 1px solid #E9E0D2; border-top: 3px solid #002FA7; padding: 5mm 6mm; }
+.annonce-titre { font-family: 'Gilda Display', serif; font-size: 15pt; line-height: 1.2; color: #002FA7; margin: 0 0 3mm; }
 blockquote { margin: 4mm 0; padding: 4mm 6mm; background: #E7EDF9; border-radius: 3mm; font-style: italic; }
 </style></head><body>
 <section class="couverture">
