@@ -36,39 +36,24 @@ Elles se rangent en trois familles :
 
 Chaque erreur est illustrée, quand c'est possible, par une de mes ventes réelles, racontée en entier sur annevialtissot.fr.
 
-## Erreur n° 1 : sous-estimer l'importance des photos professionnelles
+## Erreur n° 1 : fixer le prix au « feeling » sans analyse comparative
 
-**Le problème.** Vous pensez que de bonnes photos prises avec votre téléphone suffisent. Après tout, le bien parle de lui-même, non ? Pas en ligne. Un acheteur fait défiler des dizaines d'annonces et décide en un coup d'œil, sur la première photo, s'il ouvre la vôtre. Il ne lira jamais votre description si la photo ne l'arrête pas. Une étude universitaire qui a suivi le regard d'acheteurs devant des annonces l'a confirmé : la photo est ce qu'ils regardent en premier (3).
+Vous fixez votre prix selon l'une de ces méthodes : « J'ai acheté 300 000 € il y a 5 ans, je vends 400 000 € », « Mon voisin a vendu 450 000 €, je mets 460 000 € » ou « L'estimation en ligne dit entre 380 000 et 420 000 €, je mets 450 000 € ». Résultat : **soit vous bloquez votre vente (prix trop haut), soit vous bradez (prix trop bas)**.
 
-**Ce que ça vous coûte.** Peu de demandes, donc peu de visites, donc pas d'offre. Les semaines passent avant que vous compreniez que le problème vient des photos, et pendant ce temps votre annonce vieillit sur les portails.
+**La réalité.** Le marché immobilier est très local. À Thonon-les-Bains, le prix médian d'un appartement ancien est de **3 490 € le m²** selon les notaires (3), mais deux appartements de la même rue peuvent s'en écarter nettement. Les acheteurs filtrent les annonces par prix : au-dessus du marché, votre bien n'apparaît même pas devant ceux qui ont le bon budget, et ceux qui le voient le comparent à des biens mieux placés.
 
-**Cas réel : une maison de standing à Allinges.** Un an sur le marché avec deux agences, aucune offre. Entre autres obstacles, la présentation était minimale : photos standards, ni vidéo ni visite virtuelle. Nous avons tout refait avec un professionnel (photos, vidéo, drone, visite virtuelle), en plus d’autres ajustements (prix, home staging virtuel). Vente conclue trois mois plus tard. L'histoire complète est sur annevialtissot.fr, rubrique Réalisations.
+**Cas réel : un chalet à Essert-Romand.** En vente depuis juin dans deux agences, sans une seule visite. Le prix avait été fixé sans comparaison avec les ventes du secteur. Plutôt qu'une forte baisse d'un coup, j'ai proposé un premier ajustement pour tester le marché, puis un second quatre semaines plus tard. Chaque chiffre était documenté et expliqué. Résultat : quatre visites en quelques semaines, puis deux offres au prix demandé après deux mois de commercialisation.
 
-**La solution.** Confiez vos photos à un photographe spécialisé en immobilier. Demandez deux ou trois devis : c'est un petit investissement au regard du prix de votre bien et des mois qu'il peut vous faire gagner.
+1. Identifier une dizaine de biens comparables : même type, même secteur, vendus récemment
+2. Analyser leurs prix de vente réels au m² dans la base DVF (app.dvf.etalab.gouv.fr, publique et gratuite)
+3. Ajuster selon ce qui distingue votre bien : vue, exposition, état, prestations, extérieurs
+4. Comparer avec les annonces en cours : ce sont vos concurrents directs
 
-- Lumière du jour : séance à l'heure où vos pièces principales sont les plus lumineuses
-- Perspectives corrigées : des murs droits, sans effet « fisheye »
-- Impression d'espace : des angles larges pour valoriser chaque pièce
-- Toutes les pièces et les extérieurs, et plusieurs vues de la pièce principale
+**Attention.** Dans les communes rurales du Chablais, les ventes comparables sont rares et les estimateurs en ligne manquent de données. Ne vous fiez pas uniquement à eux.
 
-## Erreur n° 2 : négliger la préparation du bien
+**La fourchette stratégique.** En régions, les acheteurs obtiennent en moyenne **5,4 %** de baisse sur le prix affiché (1). Gardez une marge de cet ordre, mais seulement celle que vous pouvez justifier face à un acheteur.
 
-Vous vendez votre bien « en l'état » parce que vous y vivez encore, ou parce que vous pensez que l'acheteur « verra le potentiel ». Mauvaise nouvelle : **les acheteurs ne voient pas le potentiel. Ils voient vos affaires, votre décoration personnelle, et ils ne se projettent pas.**
-
-> « C'est sombre » • « Les pièces sont petites » • « Il y a beaucoup de travaux à prévoir »
-> *Commentaires typiques après la visite d'un bien mal préparé*
-
-Le problème n'est pas le bien, mais sa présentation.
-
-1. Désencombrer : retirez la moitié de vos affaires visibles pour créer une impression d'espace
-2. Dépersonnaliser : photos de famille, objets de collection, rangez tout au placard
-3. Neutraliser : repeindre les murs de couleurs vives dans des tons clairs
-4. Nettoyer : un grand ménage avant les photos et avant chaque visite
-5. Éclairer : ouvrir tous les volets, allumer toutes les lumières lors des visites
-
-**Cas réel : un appartement au bord du lac à Anthy-sur-Léman.** Un couple de retraités vendait l'appartement acheté sur plan 25 ans plus tôt. Rien n'a été retouché sur le bien lui-même. Nous avons désencombré pièce par pièce, puis fait réaliser photos, vidéo, visite virtuelle et vues au drone. Deux mois après la remise en vente, la deuxième visite s'est conclue par une offre au prix visé, sans négociation.
-
-## Erreur n° 3 : ignorer la réforme DPE de juillet 2021
+## Erreur n° 2 : ignorer la réforme DPE de juillet 2021
 
 **Attention danger.** Depuis le 1er juillet 2021, le DPE (diagnostic de performance énergétique) se calcule avec une nouvelle méthode. **Les DPE réalisés avant cette date ne sont plus valables depuis le 1er janvier 2025.**
 
@@ -94,22 +79,65 @@ Vous pensez que votre DPE de 2019 est encore bon parce que « le DPE dure 10 ans
 7. Assainissement : contrôle de moins de 3 ans si l'assainissement n'est pas collectif
 8. État des risques : pour tous les biens
 
-## Erreur n° 4 : limiter la diffusion à 1-2 plateformes
+## Erreur n° 3 : avoir un dossier administratif incomplet
 
-Vous mettez votre annonce sur Le Bon Coin et vous attendez. Ou pire : vous la mettez uniquement sur Facebook. Les acheteurs ne cherchent pas tous au même endroit : chaque portail a son public. Si vous n'êtes pas visible là où ils cherchent, vous passez à côté d'une partie d'entre eux.
+Vous signez un compromis, puis le notaire réclame des documents que vous n'avez pas, ou découvre un problème d'urbanisme (extension non déclarée, travaux sans autorisation). Signature repoussée, acheteur qui doute, parfois annulation : selon une étude de PAP, environ **un compromis sur dix** n'aboutit pas (6).
 
-- Le Bon Coin : audience massive, tous profils d'acheteurs
-- SeLoger : acheteurs qui comparent beaucoup, souvent avec un projet avancé
-- Bien'ici : bonne couverture, carte détaillée
-- PAP : acheteurs qui cherchent des vendeurs particuliers
-- Facebook Marketplace : local, proximité géographique
-- Réseaux sociaux : pour montrer le bien en vidéo
+**Cas réel : à Morzine, il fallait d'abord créer la copropriété.** Une bâtisse familiale divisée en trois logements, jamais mise en copropriété : sans elle, ni acte ni prêt possibles pour l'acheteur. Géomètre, notaire, accord de chaque propriétaire : six mois de préparation avant la première annonce, puis une vente sans mauvaise surprise.
 
-**Cas réel : un chalet à Bernex, vendu à l'autre bout du monde.** Au-delà des portails français, le réseau eXp m'a donné une visibilité sur les portails internationaux. Deux semaines après le lancement, une première visite et une offre au prix demandé, de la part d'acquéreurs installés en Malaisie.
+**Documents à réunir AVANT la mise en vente**
 
-**Diffusion large = plus de demandes = plus de chances d'offres = meilleur prix**
+*Documents de base*
+- Titre de propriété
+- Diagnostics complets et à jour
+- Dernière taxe foncière
 
-## Erreur n° 5 : créer une annonce « catalogue » sans storytelling
+*Si copropriété*
+- Règlement de copropriété
+- Procès-verbaux des assemblées générales des 3 dernières années
+- Carnet d'entretien et montant des charges
+- Surface « loi Carrez »
+
+*Si travaux ces 10 dernières années*
+- Déclarations préalables ou permis de construire
+- Attestation de conformité
+- Factures et assurances décennales des artisans
+
+**La solution.** Préparez ce dossier **avant** la mise en vente. Vous pourrez le présenter aux acheteurs sérieux dès la première visite : c'est rassurant, et ça accélère leur décision.
+
+## Erreur n° 4 : négliger la préparation du bien
+
+Vous vendez votre bien « en l'état » parce que vous y vivez encore, ou parce que vous pensez que l'acheteur « verra le potentiel ». Mauvaise nouvelle : **les acheteurs ne voient pas le potentiel. Ils voient vos affaires, votre décoration personnelle, et ils ne se projettent pas.**
+
+> « C'est sombre » • « Les pièces sont petites » • « Il y a beaucoup de travaux à prévoir »
+> *Commentaires typiques après la visite d'un bien mal préparé*
+
+Le problème n'est pas le bien, mais sa présentation.
+
+1. Désencombrer : retirez la moitié de vos affaires visibles pour créer une impression d'espace
+2. Dépersonnaliser : photos de famille, objets de collection, rangez tout au placard
+3. Neutraliser : repeindre les murs de couleurs vives dans des tons clairs
+4. Nettoyer : un grand ménage avant les photos et avant chaque visite
+5. Éclairer : ouvrir tous les volets, allumer toutes les lumières lors des visites
+
+**Cas réel : un appartement au bord du lac à Anthy-sur-Léman.** Un couple de retraités vendait l'appartement acheté sur plan 25 ans plus tôt. Rien n'a été retouché sur le bien lui-même. Nous avons désencombré pièce par pièce, puis fait réaliser photos, vidéo, visite virtuelle et vues au drone. Deux mois après la remise en vente, la deuxième visite s'est conclue par une offre au prix visé, sans négociation.
+
+## Erreur n° 5 : sous-estimer l'importance des photos professionnelles
+
+**Le problème.** Vous pensez que de bonnes photos prises avec votre téléphone suffisent. Après tout, le bien parle de lui-même, non ? Pas en ligne. Un acheteur fait défiler des dizaines d'annonces et décide en un coup d'œil, sur la première photo, s'il ouvre la vôtre. Il ne lira jamais votre description si la photo ne l'arrête pas. Une étude universitaire qui a suivi le regard d'acheteurs devant des annonces l'a confirmé : la photo est ce qu'ils regardent en premier (7).
+
+**Ce que ça vous coûte.** Peu de demandes, donc peu de visites, donc pas d'offre. Les semaines passent avant que vous compreniez que le problème vient des photos, et pendant ce temps votre annonce vieillit sur les portails.
+
+**Cas réel : une maison de standing à Allinges.** Un an sur le marché avec deux agences, aucune offre. Entre autres obstacles, la présentation était minimale : photos standards, ni vidéo ni visite virtuelle. Nous avons tout refait avec un professionnel (photos, vidéo, drone, visite virtuelle), en plus d’autres ajustements (prix, home staging virtuel). Vente conclue trois mois plus tard. L'histoire complète est sur annevialtissot.fr, rubrique Réalisations.
+
+**La solution.** Confiez vos photos à un photographe spécialisé en immobilier. Demandez deux ou trois devis : c'est un petit investissement au regard du prix de votre bien et des mois qu'il peut vous faire gagner.
+
+- Lumière du jour : séance à l'heure où vos pièces principales sont les plus lumineuses
+- Perspectives corrigées : des murs droits, sans effet « fisheye »
+- Impression d'espace : des angles larges pour valoriser chaque pièce
+- Toutes les pièces et les extérieurs, et plusieurs vues de la pièce principale
+
+## Erreur n° 6 : créer une annonce « catalogue » sans storytelling
 
 Votre annonce ressemble à ça : « Maison 120 m², 4 pièces, garage, jardin 500 m². Prix : 450 000 €. » C'est une description. Pas une annonce qui vend. Les annonces qui donnent envie de visiter racontent un lieu de vie et aident l'acheteur à s'y projeter.
 
@@ -134,7 +162,22 @@ Diagnostics à jour (DPE : C). Dossier complet disponible. Premières visites d�
 7. Proposer une visite virtuelle : un atout pour se démarquer
 8. Terminer par une invitation et vos coordonnées : proposez directement d'organiser une visite
 
-## Erreur n° 6 : ne jamais rafraîchir l'annonce
+## Erreur n° 7 : limiter la diffusion à 1-2 plateformes
+
+Vous mettez votre annonce sur Le Bon Coin et vous attendez. Ou pire : vous la mettez uniquement sur Facebook. Les acheteurs ne cherchent pas tous au même endroit : chaque portail a son public. Si vous n'êtes pas visible là où ils cherchent, vous passez à côté d'une partie d'entre eux.
+
+- Le Bon Coin : audience massive, tous profils d'acheteurs
+- SeLoger : acheteurs qui comparent beaucoup, souvent avec un projet avancé
+- Bien'ici : bonne couverture, carte détaillée
+- PAP : acheteurs qui cherchent des vendeurs particuliers
+- Facebook Marketplace : local, proximité géographique
+- Réseaux sociaux : pour montrer le bien en vidéo
+
+**Cas réel : un chalet à Bernex, vendu à l'autre bout du monde.** Au-delà des portails français, le réseau eXp m'a donné une visibilité sur les portails internationaux. Deux semaines après le lancement, une première visite et une offre au prix demandé, de la part d'acquéreurs installés en Malaisie.
+
+**Diffusion large = plus de demandes = plus de chances d'offres = meilleur prix**
+
+## Erreur n° 8 : ne jamais rafraîchir l'annonce
 
 **Le problème.** Vous publiez votre annonce en septembre et vous la laissez telle quelle jusqu'en décembre. Sur la plupart des portails, **les annonces récentes ou mises à jour apparaissent en premier**. Semaine après semaine, la vôtre recule dans les résultats et devient de moins en moins visible.
 
@@ -147,7 +190,7 @@ Diagnostics à jour (DPE : C). Dossier complet disponible. Premières visites d�
 
 **Moment idéal.** Rafraîchissez en fin de semaine, avant que les acheteurs ne fassent leurs recherches du week-end.
 
-## Erreur n° 7 : accepter toutes les visites sans qualification
+## Erreur n° 9 : accepter toutes les visites sans qualification
 
 Quelqu'un vous appelle pour visiter. Vous dites oui immédiatement. Vous préparez le bien, vous faites visiter. La personne repart avec un « on vous recontacte »... et plus de nouvelles. Vous avez perdu deux heures.
 
@@ -163,49 +206,6 @@ Parmi ceux qui demandent une visite, beaucoup ne sont pas prêts : leur budget n
 **Si les réponses sont floues ou inadaptées, déclinez poliment ou proposez d'abord un appel vidéo.**
 
 Vous gagnez des heures, et vous gardez votre énergie pour les acheteurs qui peuvent vraiment acheter.
-
-## Erreur n° 8 : avoir un dossier administratif incomplet
-
-Vous signez un compromis, puis le notaire réclame des documents que vous n'avez pas, ou découvre un problème d'urbanisme (extension non déclarée, travaux sans autorisation). Signature repoussée, acheteur qui doute, parfois annulation : selon une étude de PAP, environ **un compromis sur dix** n'aboutit pas (7).
-
-**Cas réel : à Morzine, il fallait d'abord créer la copropriété.** Une bâtisse familiale divisée en trois logements, jamais mise en copropriété : sans elle, ni acte ni prêt possibles pour l'acheteur. Géomètre, notaire, accord de chaque propriétaire : six mois de préparation avant la première annonce, puis une vente sans mauvaise surprise.
-
-**Documents à réunir AVANT la mise en vente**
-
-*Documents de base*
-- Titre de propriété
-- Diagnostics complets et à jour
-- Dernière taxe foncière
-
-*Si copropriété*
-- Règlement de copropriété
-- Procès-verbaux des assemblées générales des 3 dernières années
-- Carnet d'entretien et montant des charges
-- Surface « loi Carrez »
-
-*Si travaux ces 10 dernières années*
-- Déclarations préalables ou permis de construire
-- Attestation de conformité
-- Factures et assurances décennales des artisans
-
-**La solution.** Préparez ce dossier **avant** la mise en vente. Vous pourrez le présenter aux acheteurs sérieux dès la première visite : c'est rassurant, et ça accélère leur décision.
-
-## Erreur n° 9 : fixer le prix au « feeling » sans analyse comparative
-
-Vous fixez votre prix selon l'une de ces méthodes : « J'ai acheté 300 000 € il y a 5 ans, je vends 400 000 € », « Mon voisin a vendu 450 000 €, je mets 460 000 € » ou « L'estimation en ligne dit entre 380 000 et 420 000 €, je mets 450 000 € ». Résultat : **soit vous bloquez votre vente (prix trop haut), soit vous bradez (prix trop bas)**.
-
-**La réalité.** Le marché immobilier est très local. À Thonon-les-Bains, le prix médian d'un appartement ancien est de **3 490 € le m²** selon les notaires (6), mais deux appartements de la même rue peuvent s'en écarter nettement. Les acheteurs filtrent les annonces par prix : au-dessus du marché, votre bien n'apparaît même pas devant ceux qui ont le bon budget, et ceux qui le voient le comparent à des biens mieux placés.
-
-**Cas réel : un chalet à Essert-Romand.** En vente depuis juin dans deux agences, sans une seule visite. Le prix avait été fixé sans comparaison avec les ventes du secteur. Plutôt qu'une forte baisse d'un coup, j'ai proposé un premier ajustement pour tester le marché, puis un second quatre semaines plus tard. Chaque chiffre était documenté et expliqué. Résultat : quatre visites en quelques semaines, puis deux offres au prix demandé après deux mois de commercialisation.
-
-1. Identifier une dizaine de biens comparables : même type, même secteur, vendus récemment
-2. Analyser leurs prix de vente réels au m² dans la base DVF (app.dvf.etalab.gouv.fr, publique et gratuite)
-3. Ajuster selon ce qui distingue votre bien : vue, exposition, état, prestations, extérieurs
-4. Comparer avec les annonces en cours : ce sont vos concurrents directs
-
-**Attention.** Dans les communes rurales du Chablais, les ventes comparables sont rares et les estimateurs en ligne manquent de données. Ne vous fiez pas uniquement à eux.
-
-**La fourchette stratégique.** En régions, les acheteurs obtiennent en moyenne **5,4 %** de baisse sur le prix affiché (1). Gardez une marge de cet ordre, mais seulement celle que vous pouvez justifier face à un acheteur.
 
 ## Erreur n° 10 : ne pas suivre ses indicateurs
 
@@ -267,8 +267,8 @@ Experte immobilière Léman & Chablais
 
 1. Laforêt, « Immobilier ancien : quelles sont les tendances du 1er trimestre 2026 ? » : délai moyen de vente de 103 jours, marge de négociation de 5,1 % en France et 5,4 % en régions. laforet.com/espace-presse
 2. Notaires de France, « La valeur verte des logements en France sur les transactions 2024 », janvier 2026. notaires.fr
-3. M. Seiler, P. Madhavan, M. Liechty, « Toward an Understanding of Real Estate Homebuyer Internet Search Behavior: An Application of Ocular Tracking Technology », Journal of Real Estate Research, 2012.
+3. Chambre interdépartementale des notaires de Savoie, « Conjoncture immobilière départementale, Alpes du Léman », synthèse de mars 2025. chambre-interdepartementale-de-savoie.notaires.fr
 4. Ministère de la Transition écologique, « Audit énergétique réglementaire » ; article L. 126-28-1 du Code de la construction et de l'habitation. ecologie.gouv.fr
 5. ANIL (Agence nationale pour l'information sur le logement), « Performance énergétique et décence ». anil.org
-6. Chambre interdépartementale des notaires de Savoie, « Conjoncture immobilière départementale, Alpes du Léman », synthèse de mars 2025. chambre-interdepartementale-de-savoie.notaires.fr
-7. Étude PAP de novembre 2022 sur les compromis non aboutis (10 828 répondants), rapportée par L'Écho du Mardi. pap.fr
+6. Étude PAP de novembre 2022 sur les compromis non aboutis (10 828 répondants), rapportée par L'Écho du Mardi. pap.fr
+7. M. Seiler, P. Madhavan, M. Liechty, « Toward an Understanding of Real Estate Homebuyer Internet Search Behavior: An Application of Ocular Tracking Technology », Journal of Real Estate Research, 2012.

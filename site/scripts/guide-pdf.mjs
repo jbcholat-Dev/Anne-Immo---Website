@@ -79,7 +79,7 @@ const [titre, sousTitre, auteur] = md.split('## Couverture')[1].split('\n').map(
 // Une page par partie (demande de JB du 2026-10-10) : l'introduction et son sommaire, chaque erreur, la conclusion, la checklist.
 // Chaque erreur porte son axe du diagnostic, le même que dans le rapport personnalisé (story 10.10), pour que les deux documents se répondent.
 const AXES = { preparation: 'Préparation à la vente', visibilite: 'Visibilité & Attractivité', efficacite: 'Efficacité commerciale' };
-const AXE_ERREUR = { 1: 'visibilite', 2: 'preparation', 3: 'preparation', 4: 'visibilite', 5: 'visibilite', 6: 'visibilite', 7: 'efficacite', 8: 'preparation', 9: 'preparation', 10: 'efficacite' };
+const AXE_ERREUR = { 1: 'preparation', 2: 'preparation', 3: 'preparation', 4: 'preparation', 5: 'visibilite', 6: 'visibilite', 7: 'visibilite', 8: 'visibilite', 9: 'efficacite', 10: 'efficacite' };
 const majuscule = (t) => t.charAt(0).toUpperCase() + t.slice(1);
 // Encadrés : un « cas réel » sur fond sable, « la solution » sur fond bleu pâle, comme les blocs du rapport.
 const encadres = (h) => h
