@@ -6,8 +6,13 @@ export const identite = {
   zone: 'Chablais et bassin lémanique',
   langues: ['Français', 'English', 'Español', 'Português'],
   rsac: '977 986 264' as string | null, // = SIREN (immatriculation du 2023-09-01, annuaire des entreprises) ; à confirmer par Anne sur son attestation RSAC
-  greffe: 'Thonon-les-Bains' as string | null, // greffe compétent pour Sciez (déduit) ; à confirmer par Anne
-  cartePro: null as string | null,      // A-13 attendu
+  greffe: 'Thonon-les-Bains' as string | null, // greffe confirmé par JB le 2026-10-10
+  /** Carte T sous laquelle Anne exerce : celle d'eXp Global France (mandat d'eXp, transmis par JB le 2026-10-10). */
+  cartePro: 'CPI 3402 2020 000 045 086, « Transactions sur immeubles et fonds de commerce », délivrée par la CCI de l’Hérault' as string | null,
+  titulaireCarte: 'eXp Global France, SAS au capital de 500 000 €, 266 place Ernest Granier, 34000 Montpellier, RCS Montpellier 890 710 700' as string | null,
+  assurance: 'AXA France IARD SA, 313 Terrasses de l’Arche, 92727 Nanterre Cedex, contrat n° 11340936704' as string | null,
+  /** Numéro de l'attestation d'habilitation d'Anne (carte collaborateur) : à ajouter quand elle l'a retrouvé ; facultatif pour construire. */
+  attestation: null as string | null,
   hebergeur: 'Cloudflare, Inc., 101 Townsend Street, San Francisco, CA 94107, États-Unis · +1 650 319 8930 · www.cloudflare.com' as string | null, // choisi par l'architecture (story 7.6), à relire par JB
   telephone: '+33 6 71 99 17 54' as string | null, // donné par JB le 2026-10-10
   email: 'anne.vialtissot@expfrance.fr' as string | null, // adresse eXp, donnée par JB le 2026-10-10

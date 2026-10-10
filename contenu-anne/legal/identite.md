@@ -1,8 +1,8 @@
 ---
 nom_complet: Anne VIAL-TISSOT
 statut_juridique: agent commercial indépendant en immobilier, mandataire du réseau eXp France   # à confirmer
-rsac: 977 986 264, greffe de Thonon-les-Bains   # SIREN = numéro RSAC ; greffe déduit de l'adresse, à confirmer
-carte_professionnelle:   # À REMPLIR : référence de la carte du réseau eXp France
+rsac: 977 986 264, greffe de Thonon-les-Bains   # SIREN = numéro RSAC ; greffe confirmé par JB le 2026-10-10
+carte_professionnelle: CPI 3402 2020 000 045 086 (CCI de l'Hérault), titulaire eXp Global France SAS, RCS Montpellier 890 710 700 ; RCP AXA France IARD n° 11340936704   # numéro d'attestation d'habilitation d'Anne à ajouter
 adresse_professionnelle: 812 chemin de la Tatte, 74140 Sciez   # siège, SIRET 977 986 264 00017 ; affichée seulement dans les mentions légales
 telephone: +33 6 71 99 17 54
 email: anne.vialtissot@expfrance.fr
