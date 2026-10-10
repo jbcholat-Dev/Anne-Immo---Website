@@ -1,7 +1,7 @@
 ---
 story: 7.21
 epic: 7 — Contenu d'Anne
-statut: review
+statut: done
 date: 2026-10-10
 ---
 
@@ -23,5 +23,5 @@ Anne a entre-temps écrit son propre texte dans l'espace d'édition (fusionné d
 - Page construite `a-propos.html` : la section affiche le texte, l'intertitre « Ce que cela change pour vous » et les trois paragraphes en gras d'attaque. Pas de capture : seul le texte change, la mise en page de la section est inchangée.
 
 ## Ce qui reste
-- JB : relire et fusionner la demande de fusion.
+- ~~JB : relire et fusionner la demande de fusion.~~ Fait : PR n° 97 fusionnée le 2026-10-10.
 - Anne : relire les trois points ajoutés sous son texte (modifiables dans l'espace d'édition).
