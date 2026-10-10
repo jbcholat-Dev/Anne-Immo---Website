@@ -600,6 +600,21 @@ Repères de vocabulaire, utilisés dans tout le document :
 - **Build** : la construction du site, la commande `npm run build` qui transforme le code et le contenu en pages prêtes à mettre en ligne. **Commit** : un enregistrement daté dans l'historique Git, identifié par un code court (hash).
 - **Story** a deux sens ici : une story BMAD (une unité de travail, ce document) et une story de vente (le récit d'un bien vendu, `contenu-anne/stories/`). Le contexte lève l'ambiguïté.
 
+### Story 5.4: L'origine des campagnes gardée depuis la landing
+
+En tant qu'Anne,
+je veux savoir de quelle campagne vient un contact arrivé par la landing du diagnostic,
+afin de savoir quelles publications et quels e-mails m'amènent des vendeurs.
+
+**Critères d'acceptation :**
+
+**Étant donné** une arrivée sur `/diagnostic` avec des paramètres `utm_*` dans l'adresse
+**Quand** le visiteur clique sur « Démarrer le diagnostic », le guide ou le contact
+**Alors** les paramètres `utm_*` suivent dans l'adresse, et eux seuls, sans rien déposer dans le navigateur (AD-11)
+**Et** le contact capté porte sa campagne, déjà enregistrée par le noyau.
+
+**État :** en revue (2026-10-09). Story : `_bmad-output/implementation-artifacts/5-4-origine-des-campagnes-gardée-depuis-la-landing.md`.
+
 ## Epic 6: Version anglaise
 
 Le visiteur anglophone lit le site en anglais, page par page, sans jamais tomber sur un écran mi-traduit : ce qui est traduit est livré en entier, ce qui ne l'est pas n'existe pas en anglais.
