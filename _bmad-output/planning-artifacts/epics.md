@@ -1633,6 +1633,26 @@ afin que le prospect reconnaisse ma marque et lise volontiers la séquence jusqu
 **Quand** JB et Anne le relisent
 **Alors** une maquette d'e-mail est validée avant le branchement, et les captures de chaque e-mail (ordinateur et téléphone) sont citées dans la story.
 
+### Story 10.10: Rapport PDF personnalisé du diagnostic
+
+Ajoutée le 2026-10-10 à la demande de JB : le diagnostic doit déboucher sur un rapport à télécharger, et non sur des résultats visibles 24 heures dans le navigateur.
+
+En tant que vendeur qui a fait le diagnostic,
+je veux recevoir un rapport PDF à mon nom, avec mes scores et des recommandations pour chaque axe,
+afin de savoir quoi corriger dans ma vente, et dans quel ordre.
+
+**Critères d'acceptation :**
+
+**Étant donné** un diagnostic soumis avec les coordonnées
+**Quand** le prospect ouvre la page de résultats ou l'e-mail du résumé
+**Alors** il peut télécharger un rapport PDF à la charte : couverture (prénom, date, score global, profil), une section par axe (Préparation à la vente, Visibilité & Attractivité, Efficacité commerciale) avec le score, le constat de son niveau et les recommandations tirées des 10 erreurs du guide, toutes présentes quel que soit le score, celles des questions où il a perdu des points marquées « en priorité », puis la suite proposée (rendez-vous ou guide)
+**Et** le lien est signé et valable 7 jours, comme celui du guide (AD-8, amendement AD-5 du 2026-10-10)
+**Et** les textes viennent d'un seul fichier d'Anne (`contenu-anne/guide/rapport-diagnostic.md`), validé par elle avant la mise en ligne.
+
+**Étant donné** le rapport
+**Quand** JB et Anne le relisent
+**Alors** une maquette du PDF est validée avant le branchement.
+
 ## Epic 11: Référencement et visibilité
 
 Le site d'Anne est trouvé par les vendeurs et acheteurs du Chablais qui cherchent sur Google, et pas seulement par ceux qui ont l'adresse.
