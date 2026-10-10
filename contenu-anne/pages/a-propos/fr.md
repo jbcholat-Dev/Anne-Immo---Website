@@ -120,3 +120,13 @@ Que ce soit pour un changement de projet de vie (vente d'une maison pour un appa
 # Réseau eXp
 
 Je m'appuie sur un réseau mondial présent dans plus de 30 pays avec plus de 88 000 collaborateurs dans le monde et plus de 900 agents en France. Ce réseau me permet de bénéficier d'outils innovants et d'un back office premium. L'aspect international est une forte valeur ajoutée, notamment au niveau du bassin lemanique, qui attire de plus en plus une clientèle étrangère.
+
+<!-- « Ce que cela change pour vous » : ajouté par Claude le 2026-10-10 à la demande de JB (story 7.21), sous le texte d'Anne. -->
+
+## Ce que cela change pour vous
+
+**Une ouverture à l'international.** Le réseau permet aux conseillers de se recommander des clients d'un pays à l'autre. Si vous arrivez de l'étranger pour vous installer dans la région, ou si vous partez vivre ailleurs, je peux vous mettre en relation avec un conseiller eXp sur place. Avec les quatre langues que je parle, c'est un vrai atout pour une clientèle internationale.
+
+**Des outils et un appui juridique.** eXp met à ma disposition ses outils de travail, des réunions et formations régulières, et un service juridique pour répondre aux questions que soulève chaque dossier.
+
+**L'entraide entre conseillers.** Le réseau repose sur le partage d'expérience entre conseillers. Pour vous, cela veut dire une interlocutrice unique, moi, avec tout un réseau derrière.
