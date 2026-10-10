@@ -98,8 +98,8 @@ const corps = parties.map((partie) => {
     return `<section class="partie erreur"><div class="surtitre">Erreur n° ${n} sur 10 · ${AXES[AXE_ERREUR[n]]}</div><h2>${enLigne(majuscule(m[2]))}</h2>${contenu}</section>`;
   }
   return `<section class="partie"><h2>${enLigne(titre)}</h2>${contenu}<!--sommaire:${titre.startsWith('Pourquoi') ? 'oui' : ''}--></section>`;
-}).join('\n').replace('<!--sommaire:oui-->', () => `<div class="sommaire"><h3>Au sommaire</h3><ol>${erreurs.map((e) =>
-  `<li value="${e.n}"><span>${enLigne(e.titre)}</span><span class="axe">${AXES[AXE_ERREUR[e.n]]}</span></li>`).join('')}</ol></div>`)
+}).join('\n').replace('<!--sommaire:oui-->', () => `<div class="sommaire"><h3>Au sommaire</h3>${Object.entries(AXES).map(([cle, nom]) =>
+  `<div class="axe"><div class="surtitre">${nom}</div><ol>${erreurs.filter((e) => AXE_ERREUR[e.n] === cle).map((e) => `<li value="${e.n}">${enLigne(e.titre)}</li>`).join('')}</ol></div>`).join('')}</div>`)
   .replace(/<!--sommaire:-->/g, '');
 const police = (nom, fichier, poids, style = 'normal') =>
   `@font-face{font-family:'${nom}';src:url(data:font/woff2;base64,${fs.readFileSync(path.join(POLICES, fichier)).toString('base64')}) format('woff2');font-weight:${poids};font-style:${style}}`;
@@ -138,9 +138,8 @@ h2 { font-family: 'Gilda Display', serif; font-weight: 400; font-size: 24pt; lin
 .sommaire { break-before: page; break-inside: avoid; }
 .sommaire h3 { font-family: 'Gilda Display', serif; font-weight: 400; font-size: 24pt; line-height: 1.12; color: #002FA7; margin: 0 0 8mm; }
 .sommaire ol { margin: 1mm 0 0; padding-left: 7mm; }
-.sommaire li { margin-bottom: 4.5mm; font-size: 11.5pt; }
-.sommaire li span { display: block; }
-.sommaire li .axe { font-size: 7.5pt; letter-spacing: .12em; text-transform: uppercase; color: #5C5248; }
+.sommaire li { margin-bottom: 3mm; font-size: 11.5pt; }
+.sommaire .axe { margin-bottom: 7mm; }
 h3 { font-size: 11pt; margin: 6mm 0 2mm; break-after: avoid; }
 p { margin: 0 0 3mm; }
 ul, ol { margin: 0 0 4mm; padding-left: 5mm; }
