@@ -20,6 +20,10 @@ Par Anne Vial-Tissot, experte immobilière Léman & Chablais
 
 ## Pourquoi tant de ventes s'enlisent
 
+- **103 jours** : délai moyen pour vendre un logement ancien en France début 2026 (1)
+- **5,4 %** : marge de négociation moyenne en régions, c'est-à-dire ce que les vendeurs cèdent sur leur prix affiché (1)
+- **−25 %** : décote d'une maison ancienne classée G par rapport à une maison classée D (2)
+
 Chaque année, de nombreux propriétaires du Chablais et du Léman mettent leur bien en vente seuls, ou le confient à une agence, et le voient rester des mois sur les portails sans offre sérieuse. Le bien n'est presque jamais en cause. Ce qui coince, c'est la façon dont la vente est menée.
 
 En accompagnant mes vendeurs, je retrouve toujours les mêmes **10 erreurs**. La bonne nouvelle : elles sont toutes évitables. Ce guide vous donne les clés pour vendre plus vite et au bon prix.
@@ -34,7 +38,7 @@ Chaque erreur est illustrée, quand c'est possible, par une de mes ventes réell
 
 ## Erreur n° 1 : sous-estimer l'importance des photos professionnelles
 
-**Le problème.** Vous pensez que de bonnes photos prises avec votre téléphone suffisent. Après tout, le bien parle de lui-même, non ? Pas en ligne. Un acheteur fait défiler des dizaines d'annonces et décide en un coup d'œil, sur la première photo, s'il ouvre la vôtre. Il ne lira jamais votre description si la photo ne l'arrête pas.
+**Le problème.** Vous pensez que de bonnes photos prises avec votre téléphone suffisent. Après tout, le bien parle de lui-même, non ? Pas en ligne. Un acheteur fait défiler des dizaines d'annonces et décide en un coup d'œil, sur la première photo, s'il ouvre la vôtre. Il ne lira jamais votre description si la photo ne l'arrête pas. Une étude universitaire qui a suivi le regard d'acheteurs devant des annonces l'a confirmé : la photo est ce qu'ils regardent en premier (3).
 
 **Ce que ça vous coûte.** Peu de demandes, donc peu de visites, donc pas d'offre. Les semaines passent avant que vous compreniez que le problème vient des photos, et pendant ce temps votre annonce vieillit sur les portails.
 
@@ -75,7 +79,9 @@ Vous pensez que votre DPE de 2019 est encore bon parce que « le DPE dure 10 ans
 - Un diagnostic manquant ou périmé retarde la signature du compromis
 - Un dossier incomplet fait douter les acheteurs sérieux
 
-**Bon à savoir.** Pour une maison classée E, F ou G, un audit énergétique doit aussi être remis à l'acheteur. Et un logement classé G ne peut plus être mis en location depuis 2025, ce que les acheteurs investisseurs regardent de près.
+**Ce que l'étiquette vaut.** Selon les notaires, sur les ventes de 2024, un appartement ancien classé C se vend **6 % plus cher** qu'un D, et un G **12 % moins cher**. Pour les maisons anciennes, la décote d'un G atteint **25 %** (2).
+
+**Bon à savoir.** Pour une maison classée E, F ou G, un audit énergétique doit être remis à l'acheteur dès la première visite (obligatoire depuis 2023 pour F et G, depuis 2025 pour E) (4). Et un logement classé G ne peut plus être loué avec un nouveau bail depuis le 1er janvier 2025, F suivra en 2028 et E en 2034 (5) : les acheteurs investisseurs le regardent de près.
 
 **La solution.** Faites réaliser tous vos diagnostics par un diagnostiqueur certifié **avant** de mettre en vente, et regardez le résultat du DPE avant de fixer votre prix.
 
@@ -160,7 +166,7 @@ Vous gagnez des heures, et vous gardez votre énergie pour les acheteurs qui peu
 
 ## Erreur n° 8 : avoir un dossier administratif incomplet
 
-Vous signez un compromis, puis le notaire réclame des documents que vous n'avez pas, ou découvre un problème d'urbanisme (extension non déclarée, travaux sans autorisation). Signature repoussée, acheteur qui doute, parfois annulation.
+Vous signez un compromis, puis le notaire réclame des documents que vous n'avez pas, ou découvre un problème d'urbanisme (extension non déclarée, travaux sans autorisation). Signature repoussée, acheteur qui doute, parfois annulation : selon une étude de PAP, environ **un compromis sur dix** n'aboutit pas (7).
 
 **Cas réel : à Morzine, il fallait d'abord créer la copropriété.** Une bâtisse familiale divisée en trois logements, jamais mise en copropriété : sans elle, ni acte ni prêt possibles pour l'acheteur. Géomètre, notaire, accord de chaque propriétaire : six mois de préparation avant la première annonce, puis une vente sans mauvaise surprise.
 
@@ -188,7 +194,7 @@ Vous signez un compromis, puis le notaire réclame des documents que vous n'avez
 
 Vous fixez votre prix selon l'une de ces méthodes : « J'ai acheté 300 000 € il y a 5 ans, je vends 400 000 € », « Mon voisin a vendu 450 000 €, je mets 460 000 € » ou « L'estimation en ligne dit entre 380 000 et 420 000 €, je mets 450 000 € ». Résultat : **soit vous bloquez votre vente (prix trop haut), soit vous bradez (prix trop bas)**.
 
-**La réalité.** Le marché immobilier est très local. Les acheteurs filtrent les annonces par prix : au-dessus du marché, votre bien n'apparaît même pas devant ceux qui ont le bon budget, et ceux qui le voient le comparent à des biens mieux placés.
+**La réalité.** Le marché immobilier est très local. À Thonon-les-Bains, le prix médian d'un appartement ancien est de **3 490 € le m²** selon les notaires (6), mais deux appartements de la même rue peuvent s'en écarter nettement. Les acheteurs filtrent les annonces par prix : au-dessus du marché, votre bien n'apparaît même pas devant ceux qui ont le bon budget, et ceux qui le voient le comparent à des biens mieux placés.
 
 **Cas réel : un chalet à Essert-Romand.** En vente depuis juin dans deux agences, sans une seule visite. Le prix avait été fixé sans comparaison avec les ventes du secteur. Plutôt qu'une forte baisse d'un coup, j'ai proposé un premier ajustement pour tester le marché, puis un second quatre semaines plus tard. Chaque chiffre était documenté et expliqué. Résultat : quatre visites en quelques semaines, puis deux offres au prix demandé après deux mois de commercialisation.
 
@@ -199,7 +205,7 @@ Vous fixez votre prix selon l'une de ces méthodes : « J'ai acheté 300 000 €
 
 **Attention.** Dans les communes rurales du Chablais, les ventes comparables sont rares et les estimateurs en ligne manquent de données. Ne vous fiez pas uniquement à eux.
 
-**La fourchette stratégique.** Gardez une marge de négociation raisonnable, mais seulement celle que vous pouvez justifier face à un acheteur.
+**La fourchette stratégique.** En régions, les acheteurs obtiennent en moyenne **5,4 %** de baisse sur le prix affiché (1). Gardez une marge de cet ordre, mais seulement celle que vous pouvez justifier face à un acheteur.
 
 ## Erreur n° 10 : ne pas suivre ses indicateurs
 
@@ -256,3 +262,13 @@ Si vous avez coché les 5, vous êtes bien préparé. Sinon, vous savez ce qu'il
 Bonne vente,
 **Anne Vial-Tissot**
 Experte immobilière Léman & Chablais
+
+## Sources
+
+1. Laforêt, « Immobilier ancien : quelles sont les tendances du 1er trimestre 2026 ? » : délai moyen de vente de 103 jours, marge de négociation de 5,1 % en France et 5,4 % en régions. laforet.com/espace-presse
+2. Notaires de France, « La valeur verte des logements en France sur les transactions 2024 », janvier 2026. notaires.fr
+3. M. Seiler, P. Madhavan, M. Liechty, « Toward an Understanding of Real Estate Homebuyer Internet Search Behavior: An Application of Ocular Tracking Technology », Journal of Real Estate Research, 2012.
+4. Ministère de la Transition écologique, « Audit énergétique réglementaire » ; article L. 126-28-1 du Code de la construction et de l'habitation. ecologie.gouv.fr
+5. ANIL (Agence nationale pour l'information sur le logement), « Performance énergétique et décence ». anil.org
+6. Chambre interdépartementale des notaires de Savoie, « Conjoncture immobilière départementale, Alpes du Léman », synthèse de mars 2025. chambre-interdepartementale-de-savoie.notaires.fr
+7. Étude PAP de novembre 2022 sur les compromis non aboutis (10 828 répondants), rapportée par L'Écho du Mardi. pap.fr
