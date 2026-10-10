@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import '../styles/verre.css'; // CONCEPT « Verre du lac » (branche d'essai, ne pas fusionner tel quel)
 import Sprite from '../components/Sprite.astro';
 import RetourApercu from '../components/RetourApercu.astro';
 import type { Lang } from '../i18n';
@@ -11,7 +12,7 @@ const indexable = import.meta.env.PUBLIC_INDEXATION === 'oui';
 const robots = noindex || !indexable;
 ---
 <!doctype html>
-<html lang={lang}>
+<html lang={lang} data-concept="verre">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -29,10 +30,19 @@ const robots = noindex || !indexable;
     <link rel="preload" href="/fonts/gilda-display-400.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/jost-400-normal.woff2" as="font" type="font/woff2" crossorigin />
     <script is:inline>document.documentElement.setAttribute('data-js', '1'); if (navigator.webdriver) document.documentElement.setAttribute('data-webdriver', '1');</script>
+    <!-- Concept verre : réfraction du bord, seulement pour Chrome et Edge (seuls à accepter un filtre SVG en flou d'arrière-plan) -->
+    <script is:inline>try { var b = (navigator.userAgentData && navigator.userAgentData.brands) || []; if (b.some(function (x) { return /Chromium/.test(x.brand); })) document.documentElement.setAttribute('data-refraction', '1'); } catch (e) {}</script>
     <slot name="head" />
   </head>
   <body class={classe}>
     <Sprite />
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+      <filter id="verre-refraction" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.008 0.012" numOctaves="2" seed="7" result="bruit" />
+        <feGaussianBlur in="bruit" stdDeviation="2" result="doux" />
+        <feDisplacementMap in="SourceGraphic" in2="doux" scale="38" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </svg>
     <slot />
     {!indexable && <RetourApercu />}
   </body>
