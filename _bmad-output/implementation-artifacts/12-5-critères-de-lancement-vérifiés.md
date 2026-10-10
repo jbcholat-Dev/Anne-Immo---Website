@@ -18,9 +18,9 @@ Constats, chacun vérifié dans le dépôt :
 - **Bascule** : `ENVIRONNEMENT`, `URL_SITE` et la base sont dans `wrangler.jsonc`, commun à toutes les branches. Les committer en production sur `main` ferait écrire les aperçus des branches (essais de design, travaux des fils) dans la vraie base et envoyer de vrais e-mails.
 - Aucun ticket `retour-apercu` ouvert. PR ouvertes : #20, #76, #79 (essais de design, brouillons), #72 (e-mails à la charte et rapport PDF, brouillon).
 
-## Périmètre proposé pour le 2026-10-11 (décision de JB attendue, carte du fil)
+## Périmètre du 2026-10-11 : **minimal**, décidé par JB le 2026-10-10 à 19 h 04 (carte du fil « Audit avant le lancement »)
 
-Recommandation : lancement **minimal**, design actuel. Décalés d'environ une semaine et notés comme écarts assumés : transfert du dépôt et coffre (12.3), surveillance Better Stack et test synthétique (10.8), fiche Google (11.2), cadrage visibilité (11.1), audit Lighthouse, e-mails à la charte (10.9) et rapport PDF (10.10), anglais complet (6.2 à 6.4), Sciez et Bernex (7.19), barème Q10.
+Lancement **minimal**, design actuel. Décalés d'environ une semaine et notés comme écarts assumés : transfert du dépôt et coffre (12.3), surveillance Better Stack et test synthétique (10.8), fiche Google (11.2), cadrage visibilité (11.1), audit Lighthouse, e-mails à la charte (10.9) et rapport PDF (10.10), anglais complet (6.2 à 6.4), Sciez et Bernex (7.19), barème Q10.
 
 ## Ce qui est fait (2026-10-10)
 
