@@ -1,7 +1,7 @@
 ---
 story: 8.14
 epic: 8 — Site : finitions
-statut: review
+statut: done
 date: 2026-10-10
 origine: choix de JB du 2026-10-10 dans le fil Structure et visuel, après les essais « Verre du lac » (PR #76) et « Magazine et matière » (PR #79) — « des deux propositions, le seul truc qu'on veut garder, c'est la navbar et la partie portrait dans l'accueil »
 décision: D-42
@@ -37,6 +37,6 @@ Faire passer sur le site les deux seuls éléments que JB retient des essais de 
   - À propos : barre des ancres, menu déroulant.
 
 ## Ce qui reste
-- JB valide sur l'aperçu, puis fusionne.
+- Validé par JB le 2026-10-10 (« tu peux fusionner les modifs »), fusionné par la PR #110.
 - `design-system/` : ajouter la barre en verre aux composants de la charte (carte « navigation »), à faire avec la prochaine mise à jour de la charte.
-- Les deux PR d'essai (#76, #79) restent en brouillon comme archive des concepts ; à fermer quand JB le souhaite.
+- Les deux PR d'essai (#76, #79) sont fermées à la demande de JB (2026-10-10) ; leurs branches restent comme archive.
