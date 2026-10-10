@@ -21,7 +21,7 @@ const statut = /^statut:\s*(\S+)/m.exec(fs.readFileSync(FICHE, 'utf8'))?.[1] ?? 
 const provisoire = statut !== 'publie';
 
 const echapper = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-const enLigne = (t) => echapper(t).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>');
+const enLigne = (t) => echapper(t).replace(/\[([^\]]+)\]\((https:\/\/[^)\s]+)\)/g, '<a href="$2">$1</a>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/(^|[^*])\*([^*]+?)\*/g, '$1<em>$2</em>');
 
 // Markdown simple du texte d'Anne : titres ##, listes « - » et « 1. », tableaux, citations « > », paragraphes.
 function versHtml(md) {
@@ -145,6 +145,8 @@ p { margin: 0 0 3mm; }
 ul, ol { margin: 0 0 4mm; padding-left: 5mm; }
 li { margin-bottom: 1.2mm; }
 strong { font-weight: 500; }
+a { color: #002FA7; text-decoration: underline; text-underline-offset: 2px; }
+.cas a { display: block; margin-top: 2mm; font-weight: 500; }
 .bloc-tableau { break-inside: avoid; }
 table { width: 100%; border-collapse: collapse; margin: 2mm 0 5mm; font-size: 9.5pt; break-inside: avoid; }
 th { text-align: left; font-weight: 500; background: #E9E0D2; }
