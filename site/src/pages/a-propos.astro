@@ -2,7 +2,8 @@
 // 07 À propos (D-11, D-12, D-15) : une page longue à quatre ancres — Qui suis-je ? · Ma méthode · Cible · Réseau eXp — repère collant, sans le bloc vidéo A-15 (absent : pas de trou).
 // Story 8.9 (retours d'Anne n° 58 à 61) : Cible et Réseau eXp lus dans le texte d'Anne (modifiables dans l'espace d'édition), refrain retiré,
 // « Mon engagement » et « Parlons de votre projet » centrés, bouton de rendez-vous sous « Parlons de votre projet ».
-// Story 8.12 (retours d'Anne n° 90, 94, 95) : photo A-05 retirée à côté de « Ma méthode » ; les trois piliers, puis les étapes 01 à 03, côte à côte.
+// Story 8.12 (retours d'Anne n° 90, 94, 95) : photo A-05 retirée à côté de « Ma méthode » ; les trois piliers, puis les étapes 01 à 03, côte à côte ;
+// « Réserver un créneau » de « Parlons de votre projet » en bleu (n° 102).
 import Page from '../layouts/Page.astro';
 import Portrait from '../components/Portrait.astro';
 import Signature from '../components/Signature.astro';
@@ -100,7 +101,7 @@ for (const rg of methode.rangs) {
                 {apres && <Fragment set:html={apres} />}
                 {/parlons/i.test(rg.titre) && (
                   <div class="ap-boutons">
-                    <a href={`${r('contact')}#reserver`} class="btn btn-primaire btn-m">Réserver un créneau</a>
+                    <a href={`${r('contact')}#reserver`} class="btn btn-klein btn-m">Réserver un créneau</a>
                     <a href={`${r('contact')}#ecrire`} class="btn btn-secondaire btn-m">Écrire à Anne</a>
                   </div>
                 )}
@@ -182,7 +183,7 @@ for (const rg of methode.rangs) {
   .ap-rang-texte.ap-md :global(p), .ap-rang-texte.ap-md :global(ul) { margin-bottom: 0; }
   .ap-rang-texte.ap-md :global(* + *) { margin-top: 16px; }
   .ap-rang-texte.ap-md :global(.ap-partenaires) { margin-top: 20px; }
-  .ap-rang-texte.ap-md :global(.ap-partenaires > *) { margin-top: 0; }
+  .ap-rang-texte.ap-md :global(.ap-partenaires > *), .ap-rang-texte.ap-md :global(.ap-boutons > *) { margin-top: 0; }
   .ap-methode-intro.ap-md :global(p) { margin-bottom: 0; }
   .ap-boutons { display: flex; gap: 14px; flex-wrap: wrap; }
   .ap-methode { border-top: 1px solid var(--filet-brun-fort); padding-top: 8px; }

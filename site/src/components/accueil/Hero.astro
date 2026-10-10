@@ -2,7 +2,7 @@
 // § 1.1 Ouverture (D-1, D-19, D-10) : vidéo drone plein cadre 900 px, voile, bloc nom + positionnement + CTA posé en bas (84 px).
 // A-01 réelle (story 8.3, D-27) : le montage d'Anne (52 s depuis le 2026-10-05, story 7.15) tourne en boucle, sans son ; le poster est sa première image, affichée
 // pendant le chargement ; le <picture> derrière est le repli (mouvement réduit, échec de chargement, économie de données).
-// Deux boutons (retour d'Anne, ticket #40) : le diagnostic, et « Estimation offerte » vers l'agenda de /contact#reserver.
+// Deux boutons (retour d'Anne, ticket #40) : le diagnostic, et « Estimation offerte » vers l'agenda de /contact#reserver, en noir (ticket n° 106).
 // Les fichiers vidéo sont produits par `npm run video` (scripts/video.mjs) ; s'ils manquent, la balise <video> est masquée.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -35,7 +35,7 @@ const videoDispo = fs.existsSync(path.resolve(process.cwd(), 'public/video/ouver
     <p class="hero-ligne" data-reveal="petit">{d.accueil.hero_ligne}</p>
     <div class="hero-boutons" data-reveal="petit">
       <a href={r('diagnostic', lang)} class="btn btn-primaire"><span class="seulement-desktop">{d.accueil.hero_cta}</span><span class="seulement-mobile">{d.accueil.hero_cta_m}</span></a>
-      <a href={`${r('contact', lang)}#reserver`} class="btn btn-contour-ecru">{d.accueil.hero_estimation}</a>
+      <a href={`${r('contact', lang)}#reserver`} class="btn btn-noir">{d.accueil.hero_estimation}</a>
     </div>
   </div>
 </section>
