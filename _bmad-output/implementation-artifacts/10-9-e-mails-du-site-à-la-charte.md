@@ -37,6 +37,9 @@ Les e-mails que le site envoie aux prospects au nom d'Anne (accusés de récepti
 - Polices : les e-mails appellent maintenant Gilda Display et Jost depuis `annevialtissot.fr/fonts/` (en-tête `Access-Control-Allow-Origin` posé par `public/_headers`) ; Gmail et Outlook les ignorent et prennent Arial. Le code garde les trois allures (`ALLURE` dans `email-html.ts`, « lettre » par défaut) jusqu'au choix de JB ; les deux autres seront retirées ensuite.
 - Le résumé du diagnostic renverra au futur rapport PDF (story 10.10) au lieu des « 24 heures dans le navigateur ».
 
+## Choix de JB (2026-10-10, 19 h)
+- Allure retenue : **lettre sobre**. Les allures « bandeau » et « texte brut » sont retirées du code (`email-html.ts` ne garde que celle-ci) ; le logo en négatif n'est pas ajouté au dépôt.
+
 ## Ce qui reste
-- **Choix de l'allure par JB**, puis validation avec Anne (critère de la story) ; retirer les allures non retenues ; logo en négatif ajouté au dépôt si le bandeau est choisi.
+- Relecture par Anne des textes des accusés de réception (action A17).
 - Après fusion : un vrai envoi sur l'aperçu vers une boîte de test, lu dans Gmail sur ordinateur et sur téléphone (Outlook et Apple Mail si un compte est disponible) ; captures citées ici.

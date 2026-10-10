@@ -7,7 +7,7 @@
 // listes `- ` et `1. `, `[libellé](adresse)`, `> encadré`, `—` seul sur sa ligne (filet). Un paragraphe fait d'un seul lien
 // devient un bouton.
 //
-// Allure « lettre sobre » (choix de JB du 2026-10-10, après une première maquette en carte blanche sur fond écru) : fond
+// Allure « lettre sobre », choisie par JB le 2026-10-10 parmi trois (après une première maquette en carte blanche sur fond écru) : fond
 // blanc, aucun cadre, logo en tête, filet terracotta, signature d'Anne. Contraintes des messageries (Gmail, Outlook,
 // Apple Mail) : mise en page en tableaux, styles écrits sur chaque balise, aucune image distante (le logo est joint à
 // l'e-mail et appelé par `cid:logo`), largeur 600 px qui se réduit sur téléphone. Les polices du site sont appelées
@@ -87,24 +87,9 @@ export function enTexte(md: string): string {
 }
 
 // ——— Version HTML ———
-// Trois allures sont en comparaison (maquette du 2026-10-10, JB choisit) : « lettre » (fond blanc, logo, filet terracotta),
-// « bandeau » (bandeau bleu Klein avec le logo en négatif) et « brut » (message écrit à la main, logo en signature).
-// Celle retenue restera seule ; `ALLURE` est l'allure envoyée.
-
-export type Allure = 'lettre' | 'bandeau' | 'brut';
-export const ALLURE: Allure = 'lettre';
-/** Identifiant du logo en négatif (allure « bandeau »). */
-export const CID_LOGO_NEGATIF = 'logo-negatif';
-
-const ARIAL = 'Arial, Helvetica, sans-serif';
-interface Style { titre: string; texte: string; taille: number; bouton: boolean }
-const STYLES: Record<Allure, Style> = {
-  lettre: { titre: SERIF, texte: SANS, taille: 16, bouton: true },
-  bandeau: { titre: SERIF, texte: SANS, taille: 16, bouton: true },
-  brut: { titre: ARIAL, texte: ARIAL, taille: 15, bouton: false },
-};
 
 const styleLien = `color:${C.klein};text-decoration:underline;`;
+const CORPS = `font-family:${SANS};font-size:16px;line-height:1.6;color:${C.brun};`;
 
 function enLigneHtml(texte: string): string {
   return echapper(texte)
@@ -114,37 +99,31 @@ function enLigneHtml(texte: string): string {
     .replace(/\n/g, '<br>');
 }
 
-function bouton(libelle: string, url: string, st: Style): string {
-  if (!st.bouton) {
-    return `<p style="margin:0 0 16px;font-family:${st.texte};font-size:${st.taille}px;line-height:1.6;"><a href="${echapper(url)}" style="${styleLien}font-weight:bold;">${echapper(libelle)}</a></p>`;
-  }
+function bouton(libelle: string, url: string): string {
   // Bouton « à l'épreuve des balles » : un tableau à fond terracotta, lisible même quand Outlook ignore les arrondis.
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px;"><tr><td align="center" bgcolor="${C.terra}" style="border-radius:999px;background:${C.terra};">`
-    + `<a href="${echapper(url)}" style="display:inline-block;padding:14px 28px;font-family:${st.texte};font-size:16px;font-weight:bold;line-height:1.2;color:${C.blanc};text-decoration:none;border-radius:999px;">${echapper(libelle)}</a>`
+    + `<a href="${echapper(url)}" style="display:inline-block;padding:14px 28px;font-family:${SANS};font-size:16px;font-weight:bold;line-height:1.2;color:${C.blanc};text-decoration:none;border-radius:999px;">${echapper(libelle)}</a>`
     + '</td></tr></table>';
 }
 
-function blocHtml(b: Bloc, st: Style): string {
-  const corps = `font-family:${st.texte};font-size:${st.taille}px;line-height:1.6;color:${C.brun};`;
+function blocHtml(b: Bloc): string {
   if (b.t === 'titre') {
-    if (!st.bouton) return `<p style="margin:24px 0 8px;${corps}font-weight:bold;">${enLigneHtml(b.texte)}</p>`;
     return b.niveau === 2
-      ? `<h2 style="margin:32px 0 12px;font-family:${st.titre};font-size:24px;font-weight:normal;line-height:1.3;color:${C.klein};">${enLigneHtml(b.texte)}</h2>`
-      : `<h3 style="margin:24px 0 8px;font-family:${st.titre};font-size:18px;font-weight:normal;line-height:1.3;color:${C.brun};">${enLigneHtml(b.texte)}</h3>`;
+      ? `<h2 style="margin:32px 0 12px;font-family:${SERIF};font-size:24px;font-weight:normal;line-height:1.3;color:${C.klein};">${enLigneHtml(b.texte)}</h2>`
+      : `<h3 style="margin:24px 0 8px;font-family:${SERIF};font-size:18px;font-weight:normal;line-height:1.3;color:${C.brun};">${enLigneHtml(b.texte)}</h3>`;
   }
   if (b.t === 'filet') return `<hr style="border:0;border-top:1px solid ${C.galet};margin:24px 0;">`;
   if (b.t === 'liste') {
     const balise = b.ordonnee ? 'ol' : 'ul';
-    return `<${balise} style="margin:0 0 16px;padding:0 0 0 24px;${corps}">`
+    return `<${balise} style="margin:0 0 16px;padding:0 0 0 24px;${CORPS}">`
       + b.items.map((it) => `<li style="margin:0 0 6px;">${enLigneHtml(it)}</li>`).join('') + `</${balise}>`;
   }
   if (b.t === 'encadre') {
-    const fond = st.bouton ? `background:${C.ecru};border-left:3px solid ${C.terra};padding:16px 18px;` : `border-left:3px solid ${C.galet};padding:2px 0 2px 14px;`;
     return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 20px;"><tr>`
-      + `<td style="${fond}${corps}">${enLigneHtml(b.texte)}</td></tr></table>`;
+      + `<td style="background:${C.ecru};border-left:3px solid ${C.terra};padding:16px 18px;${CORPS}">${enLigneHtml(b.texte)}</td></tr></table>`;
   }
   const seul = lienSeul(b.texte);
-  return seul ? bouton(seul[1], seul[2], st) : `<p style="margin:0 0 16px;${corps}">${enLigneHtml(b.texte)}</p>`;
+  return seul ? bouton(seul[1], seul[2]) : `<p style="margin:0 0 16px;${CORPS}">${enLigneHtml(b.texte)}</p>`;
 }
 
 export interface Habillage {
@@ -153,8 +132,6 @@ export interface Habillage {
   apercu?: string;
   /** Pied en petit (désabonnement de la séquence), en Markdown. */
   pied?: string;
-  /** Allure du gabarit (par défaut `ALLURE`). */
-  allure?: Allure;
 }
 
 const SIGNATURE = {
@@ -163,30 +140,12 @@ const SIGNATURE = {
 };
 
 /** Le Markdown d'un e-mail mis dans le gabarit de la charte. `logo` : adresse de l'image (par défaut la pièce jointe `cid:logo`). */
-export function enHtml(md: string, h: Habillage, logo = `cid:${CID_LOGO}`, logoNegatif = `cid:${CID_LOGO_NEGATIF}`): string {
-  const allure = h.allure ?? ALLURE;
-  const st = STYLES[allure];
+export function enHtml(md: string, h: Habillage, logo = `cid:${CID_LOGO}`): string {
   const s = SIGNATURE[h.lang];
-  const corps = blocs(md).map((b) => blocHtml(b, st)).join('\n');
+  const corps = blocs(md).map(blocHtml).join('\n');
   const pied = h.pied
-    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:36px 0 0;border-top:1px solid ${C.galet};"><tr><td style="padding:16px 0 0;"><p style="margin:0;font-family:${st.texte};font-size:13px;line-height:1.5;color:${C.muet};">${enLigneHtml(h.pied)}</p></td></tr></table>`
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:36px 0 0;border-top:1px solid ${C.galet};"><tr><td style="padding:16px 0 0;"><p style="margin:0;font-family:${SANS};font-size:13px;line-height:1.5;color:${C.muet};">${enLigneHtml(h.pied)}</p></td></tr></table>`
     : '';
-  const logoHaut = `<img src="${logo}" width="200" height="47" alt="Anne VIAL-TISSOT" style="display:block;border:0;width:200px;height:auto;">`;
-  const filet = `<table role="presentation" width="48" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0 32px;"><tr><td height="2" bgcolor="${C.terra}" style="height:2px;line-height:2px;font-size:0;background:${C.terra};">&nbsp;</td></tr></table>`;
-  const signature = allure === 'brut'
-    ? `<p style="margin:28px 0 0;font-family:${ARIAL};font-size:15px;line-height:1.5;color:${C.brun};">Anne VIAL-TISSOT<br><span style="color:${C.muet};">${s.role} · ${s.zone}<br><a href="https://annevialtissot.fr" style="${styleLien}">annevialtissot.fr</a></span></p>`
-      + `<img src="${logo}" width="140" height="33" alt="" style="display:block;border:0;width:140px;height:auto;margin:16px 0 0;">`
-    : `<p style="margin:32px 0 0;font-family:${st.titre};font-size:20px;line-height:1.3;color:${C.brun};">Anne VIAL-TISSOT</p>`
-      + `<p style="margin:4px 0 0;font-family:${st.texte};font-size:14px;line-height:1.5;color:${C.muet};">${s.role}<br>${s.zone}<br><a href="https://annevialtissot.fr" style="${styleLien}">annevialtissot.fr</a></p>`;
-  const entete = allure === 'bandeau'
-    ? `<tr><td bgcolor="${C.klein}" style="background:${C.klein};padding:28px 32px;" class="bandeau"><img src="${logoNegatif}" width="220" height="52" alt="Anne VIAL-TISSOT" style="display:block;border:0;width:220px;height:auto;"></td></tr>`
-    : '';
-  const debut = allure === 'lettre' ? logoHaut + filet : '';
-  const polices = st.bouton ? `
-  @font-face { font-family: 'Gilda Display'; src: url('${POLICES}/gilda-display-400.woff2') format('woff2'); font-weight: 400; font-style: normal; }
-  @font-face { font-family: 'Jost'; src: url('${POLICES}/jost-400-normal.woff2') format('woff2'); font-weight: 400; font-style: normal; }
-  @font-face { font-family: 'Jost'; src: url('${POLICES}/jost-500-normal.woff2') format('woff2'); font-weight: 500 700; font-style: normal; }
-  @font-face { font-family: 'Jost'; src: url('${POLICES}/jost-400-italic.woff2') format('woff2'); font-weight: 400; font-style: italic; }` : '';
   return `<!doctype html>
 <html lang="${h.lang}">
 <head>
@@ -195,8 +154,12 @@ export function enHtml(md: string, h: Habillage, logo = `cid:${CID_LOGO}`, logoN
 <meta name="color-scheme" content="light">
 <meta name="supported-color-schemes" content="light">
 <title></title>
-<style>${polices}
-  @media (max-width: 620px) { .lettre { padding: 28px 20px 32px !important; } .bandeau { padding: 22px 20px !important; } }
+<style>
+  @font-face { font-family: 'Gilda Display'; src: url('${POLICES}/gilda-display-400.woff2') format('woff2'); font-weight: 400; font-style: normal; }
+  @font-face { font-family: 'Jost'; src: url('${POLICES}/jost-400-normal.woff2') format('woff2'); font-weight: 400; font-style: normal; }
+  @font-face { font-family: 'Jost'; src: url('${POLICES}/jost-500-normal.woff2') format('woff2'); font-weight: 500 700; font-style: normal; }
+  @font-face { font-family: 'Jost'; src: url('${POLICES}/jost-400-italic.woff2') format('woff2'); font-weight: 400; font-style: italic; }
+  @media (max-width: 620px) { .lettre { padding: 28px 20px 32px !important; } }
   a { color: ${C.klein}; }
 </style>
 </head>
@@ -205,10 +168,12 @@ ${h.apercu ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;co
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.blanc}" style="background:${C.blanc};">
 <tr><td align="center" style="padding:0;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;">
-${entete}
-<tr><td class="lettre" style="padding:${allure === 'brut' ? '24px 24px 40px' : '40px 32px 48px'};">
-${debut}${corps}
-${signature}
+<tr><td class="lettre" style="padding:40px 32px 48px;">
+<img src="${logo}" width="200" height="47" alt="Anne VIAL-TISSOT" style="display:block;border:0;width:200px;height:auto;">
+<table role="presentation" width="48" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0 32px;"><tr><td height="2" bgcolor="${C.terra}" style="height:2px;line-height:2px;font-size:0;background:${C.terra};">&nbsp;</td></tr></table>
+${corps}
+<p style="margin:32px 0 0;font-family:${SERIF};font-size:20px;line-height:1.3;color:${C.brun};">Anne VIAL-TISSOT</p>
+<p style="margin:4px 0 0;font-family:${SANS};font-size:14px;line-height:1.5;color:${C.muet};">${s.role}<br>${s.zone}<br><a href="https://annevialtissot.fr" style="${styleLien}">annevialtissot.fr</a></p>
 ${pied}
 </td></tr>
 </table>
