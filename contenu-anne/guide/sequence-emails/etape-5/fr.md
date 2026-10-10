@@ -3,7 +3,7 @@ etape: 5
 delai_jours: 12
 sujet: "Où en êtes-vous aujourd'hui ?"
 angle: point d'étape : continuer seul ou se faire accompagner
-statut: a-relire
+statut: publie
 ---
 
 Bonjour [Prénom],

@@ -3,7 +3,7 @@ etape: 1
 delai_jours: 2
 sujet: "Pourquoi votre bien ne se fait pas remarquer (et comment y remédier)"
 angle: visibilité : désencombrer puis faire photographier par un professionnel, cas réel d'Anthy-sur-Léman
-statut: a-relire
+statut: publie
 ---
 
 Bonjour [Prénom],

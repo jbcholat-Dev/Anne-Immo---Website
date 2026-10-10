@@ -3,7 +3,7 @@ etape: 4
 delai_jours: 9
 sujet: "La bombe à retardement du dossier administratif"
 angle: dossier administratif complet avant la mise en vente, cas réel de Morzine
-statut: a-relire
+statut: publie
 ---
 
 Bonjour [Prénom],

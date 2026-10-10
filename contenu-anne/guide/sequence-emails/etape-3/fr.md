@@ -3,7 +3,7 @@ etape: 3
 delai_jours: 6
 sujet: "Comment arrêter de perdre votre temps en visites inutiles"
 angle: qualifier les visiteurs avant la visite : le script en 4 questions
-statut: a-relire
+statut: publie
 ---
 
 Bonjour [Prénom],

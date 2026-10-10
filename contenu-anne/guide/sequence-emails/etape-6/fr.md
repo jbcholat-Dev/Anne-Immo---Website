@@ -3,7 +3,7 @@ etape: 6
 delai_jours: 15
 sujet: "[Prénom], on fait le point ?"
 angle: récapitulatif et proposition de rendez-vous
-statut: a-relire
+statut: publie
 ---
 
 Bonjour [Prénom],

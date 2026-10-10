@@ -3,7 +3,7 @@ etape: 2
 delai_jours: 4
 sujet: "Le prix : l'erreur qui coûte le plus cher"
 angle: prix fondé sur les ventes réelles (DVF), cas réel d'Essert-Romand
-statut: a-relire
+statut: publie
 ---
 
 Bonjour [Prénom],
