@@ -3,100 +3,54 @@ etape: 5
 delai_jours: 12
 sujet: "Où en êtes-vous aujourd'hui ?"
 angle: point d'étape : continuer seul ou se faire accompagner
-statut: brouillon
+statut: a-relire
 ---
 
 Bonjour [Prénom],
 
-On se retrouve après presque 2 semaines d'échanges.
+On se retrouve après presque deux semaines d'échanges.
 
-Vous avez reçu :
+Vous avez reçu votre diagnostic, le guide des 10 erreurs, puis quatre e-mails sur les leviers clés : la présentation, le prix, les visites et le dossier administratif.
 
-- Votre diagnostic personnalisé
-- Le guide des 10 erreurs fatales
-- La checklist complète
-- 5 focus détaillés sur les leviers clés
+**Une question simple : où en êtes-vous aujourd'hui ?**
 
-Maintenant, **une question simple :**
+## Vous avez avancé
 
-**Où en êtes-vous aujourd'hui ?**
+Si vous avez refait vos photos, vérifié votre prix sur les ventes réelles, filtré vos visites et complété votre dossier, vous avez mis toutes les chances de votre côté.
 
-## Option 1 : Vous avez appliqué les conseils
+**Bravo.** Continuez, et si un point précis vous bloque, répondez à cet e-mail. Je suis là.
 
-Si vous avez :
+## Vous vous sentez un peu perdu
 
-- Fait refaire vos photos par un pro
-- Repositionné votre prix sur la base d'une analyse DVF
-- Mis en place le script de qualification
-- Complété votre dossier administratif
+Vous savez ce qu'il faudrait faire. Mais vous ne savez pas par où commencer, vous n'êtes pas sûr de bien faire, ou vous n'avez simplement pas le temps.
 
-...alors vous faites partie du top 10% des vendeurs les mieux préparés.
-
-**Bravo.**
-
-Vous êtes sur la bonne voie. Continuez.
-
-Et si vous avez des questions ou besoin d'un coup de pouce sur un point précis, répondez à cet email. Je suis là.
-
-## Option 2 : Vous êtes un peu perdu
-
-Vous avez lu les emails. Vous savez ce qu'il faut faire.
-
-Mais :
-
-- Vous ne savez pas par où commencer
-- Vous n'êtes pas sûr de bien faire
-- Vous n'avez pas le temps de tout gérer
-
-Je comprends.
-
-Vendre un bien, c'est un projet complexe. Ça demande du temps, de la méthode, et de l'expertise.
-
-C'est normal de se sentir dépassé.
-
-**Et c'est exactement pour ça que j'existe.**
+C'est normal. Vendre un bien demande du temps, de la méthode et une bonne connaissance du marché local.
 
 ## Les deux chemins possibles
 
-### Chemin 1 : Vous continuez seul(e)
+### Continuer seul
 
-Vous appliquez les conseils du guide, vous testez, vous ajustez.
+Vous appliquez les conseils du guide, vous observez, vous ajustez. Ça demande de la rigueur et du temps, mais c'est possible. Dans ce cas, je vous souhaite une excellente vente.
 
-C'est possible. Ça demande de la rigueur et du temps, mais c'est faisable.
+### Vous faire accompagner
 
-Dans ce cas, je vous souhaite une excellente vente. Vous avez toutes les clés en main.
+Vous confiez la vente à quelqu'un qui :
 
-### Chemin 2 : Vous vous faites accompagner
+- fixe un prix fondé sur les ventes réelles et la connaissance du secteur ;
+- organise la préparation et les visuels professionnels ;
+- rédige et diffuse l'annonce ;
+- filtre les visiteurs ;
+- coordonne notaire, mairie, syndic et courtiers ;
+- négocie pour vous et suit la vente jusqu'à la signature.
 
-Vous déléguez à quelqu'un qui :
+## On en parle ?
 
-- Fait l'estimation rigoureuse (DVF + expertise
+Réservez un rendez-vous de 30 minutes. On fait le point sur votre situation, et je vous dis honnêtement si et comment je peux vous aider.
 
-locale)
-
-- Organise le shooting photo pro
-- Rédige l'annonce optimisée
-- Diffuse sur 10+ plateformes
-- Qualifie tous les visiteurs
-- Coordonne notaire + mairie + courtiers
-- Gère tous les détails administratifs
-- Négocie pour vous
-- Sécurise la vente jusqu'à la signature
-
-**Résultat : vous gagnez 30h de votre temps + vous maximisez votre prix de vente + vous dormez tranquille.**
-
-## 📞 On en parle ?
-
-Si vous voulez en savoir plus sur mon accompagnement, réservez un rendez-vous stratégique de 30 minutes.
-
-On fait le diagnostic complet de votre situation et je vous dis exactement comment je peux vous aider.
-
-**Sans engagement. Sans pression. Juste une conversation honnête.**
-
-Réservez ici : [lien]
+**Sans engagement.** https://annevialtissot.fr/contact
 
 À très vite,
 
 Anne
 
-P.S. : Dernier email dans 3 jours avec un récap complet + une offre spéciale.
+P.S. : Dernier e-mail dans trois jours, avec un récapitulatif.

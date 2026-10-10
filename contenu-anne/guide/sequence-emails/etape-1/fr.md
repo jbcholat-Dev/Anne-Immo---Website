@@ -1,86 +1,53 @@
 ---
 etape: 1
 delai_jours: 2
-sujet: "Pourquoi votre bien est invisible (et comment y remédier)"
-angle: visibilité : photos professionnelles, cas Évian
-statut: brouillon
+sujet: "Pourquoi votre bien ne se fait pas remarquer (et comment y remédier)"
+angle: visibilité : désencombrer puis faire photographier par un professionnel, cas réel d'Anthy-sur-Léman
+statut: a-relire
 ---
 
 Bonjour [Prénom],
 
-Vous avez mis votre bien en ligne il y a quelques jours... et vous attendez les demandes de visite.
+Vous avez mis votre bien en ligne... et vous attendez les demandes de visite.
 
-Mais rien ne se passe. Ou presque.
+Si elles ne viennent pas, ou si elles ne sont pas sérieuses, le problème commence souvent bien avant la visite : sur la première photo.
 
-Quelques vues sur l'annonce. Peut-être 1-2 appels. Mais rien de sérieux.
+## Le problème : on ne vous remarque pas
 
-**Voici pourquoi.**
+Un acheteur fait défiler des dizaines d'annonces. Il décide en un coup d'œil, sur la première photo, s'il ouvre la vôtre ou s'il passe à la suivante.
 
-## Le problème : vous êtes invisible
+**Regardez vos photos actuelles.** Sont-elles :
 
-Sur Le Bon Coin, il y a en moyenne **250 à 300 nouvelles annonces immobilières publiées chaque jour** dans le Chablais et le Léman.
+- lumineuses, prises à la lumière du jour ?
+- larges, avec des angles qui montrent l'espace ?
+- nettes, droites, bien cadrées ?
+- prises dans des pièces dégagées, sans objets personnels partout ?
 
-Les acheteurs scrollent en moyenne **3 secondes par annonce**.
+Ou plutôt sombres, serrées, prises au téléphone entre deux rangements ?
 
-S'ils ne sont pas immédiatement accrochés par la première photo, ils passent à la suivante.
+Dans le second cas, votre bien ne se fait pas remarquer, quelle que soit sa qualité.
 
-Vous avez 3 secondes pour capter l'attention.
+## Un cas réel : un appartement au bord du lac, à Anthy-sur-Léman
 
-**Regardez vos photos actuelles.**
+Un couple de retraités m'a confié la vente de l'appartement qu'ils avaient acheté sur plan 25 ans plus tôt.
 
-Sont-elles :
+Nous n'avons rien changé au bien lui-même. Nous avons d'abord désencombré, pièce par pièce : les murs sont réapparus, les fenêtres ont retrouvé leur lumière. Ensuite seulement, un photographe professionnel a réalisé photos, vidéo, visite virtuelle et vues au drone.
 
-- Lumineuses (lumière naturelle optimale) ?
-- Larges (angles qui donnent une impression d'espace) ?
-- Nettes (HDR, correction des perspectives) ?
-- Professionnelles (composition, cadrages optimaux) ?
+**Résultat : deux mois après la remise en vente, la deuxième visite s'est conclue par une offre au prix visé, sans négociation.**
 
-Ou alors :
-
-- Sombres ?
-- Floues ?
-- Prises au smartphone sans préparation ?
-- 5-6 photos maximum ?
-
-Si vous êtes dans le deuxième cas, vous êtes invisible.
-
-## Cas réel : Évian, septembre 2024
-
-Un client me contacte. Son bien est en vente depuis 2 mois. 8 vues sur l'annonce Le Bon Coin. 0 demande de visite.
-
-Je regarde l'annonce. 5 photos prises au smartphone, sombres, angles serrés.
-
-On refait le shooting en 2h avec un photographe pro.
-
-**Résultat :**
-
-- 47 vues la première semaine (vs 8 en 2 mois)
-- 5 demandes de visite la deuxième semaine
-- Offre au prix sous 3 semaines
-
-**Coût du photographe : 400€.**
-
-**Gain de temps : 2 mois.**
-
-**Gain sur le prix : 0€ de négociation (prix maintenu).**
-
-ROI : infini.
+L'histoire complète : https://annevialtissot.fr/realisation/anthy-t3-2024
 
 ## Votre action cette semaine
 
-Si vous n'avez pas déjà fait appel à un photographe professionnel :
+1. Désencombrez : retirez la moitié des objets visibles de chaque pièce.
+2. Demandez 2 ou 3 devis à des photographes spécialisés en immobilier près de chez vous.
+3. Prenez rendez-vous un jour de beau temps, à l'heure où vos pièces principales sont les plus lumineuses.
+4. Republiez votre annonce avec les nouvelles photos.
 
-1. Cherchez "photographe immobilier [votre ville]" sur Google
-2. Demandez 2-3 devis (comptez 300-500€ pour 15-20 photos)
-3. Prenez rendez-vous dans les 7 jours
-4. Republication de l'annonce avec les nouvelles photos
-
-Vous verrez la différence immédiatement.
-
-**Demain, on parle du deuxième levier : la diffusion multi-canal.**
+**Dans deux jours, on parle du prix.**
 
 À très vite,
 
 Anne
 
-P.S. : Besoin d'une recommandation de photographe dans le Chablais ? Répondez à cet email.
+P.S. : Besoin d'un nom de photographe dans le Chablais ? Répondez à cet e-mail.

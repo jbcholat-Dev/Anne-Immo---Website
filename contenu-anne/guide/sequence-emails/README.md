@@ -21,17 +21,18 @@
 
 Le texte original reste intact dans Notion.
 
-## Points à vérifier, e-mail par e-mail
+## Passe du 2026-10-10 : chiffres et cas inventés retirés (demande de JB)
 
-| Dossier | Jour | Points à vérifier |
-|---|---|---|
-| `etape-0` | J+0 | C'est l'e-mail des résultats, envoyé tout de suite, distinct de la suite. Il promet une « checklist Prêt à vendre (25 points) » : elle existe dans Notion mais pas sur le site. On la garde ? Les trois profils doivent porter les noms du site (« Stratégie à risque », « Bases solides, optimisations nécessaires », « Bien préparé »). |
-| `etape-1` | J+2 | « 250 à 300 nouvelles annonces par jour sur Le Bon Coin » et « 3 secondes par annonce » : source ? Le cas Évian (septembre 2024) est-il une de tes ventes ? La fin annonce « demain, la diffusion », mais l'e-mail suivant parle du prix. |
-| `etape-2` | J+4 | L'objet promet « l'erreur à 50 000 € » mais l'exemple montre 10 000 €. « 80 % des vendeurs » : source ? Le cas Armoy (juillet 2024) correspond-il à l'auberge d'Armoy ? Si oui, il doit dire la même chose que la story. |
-| `etape-3` | J+6 | « 70 % des gens ne sont pas qualifiés » : source ? Le cas Thonon (mai 2024) est-il une de tes ventes ? « Téléchargez la version PDF » : ce PDF n'existe pas. |
-| `etape-4` | J+9 | « Selon la Chambre des Notaires, près de 30 % des promesses n'aboutissent pas » : chiffre à sourcer, sinon à retirer. Les deux cas (véranda à Évian, PV d'AG à Thonon) racontent les mêmes histoires que le guide avec d'autres lieux et d'autres dates (véranda à Armoy en 2023, PV d'AG à Évian en 2024) : il faut une seule version, vraie. |
-| `etape-5` | J+12 | « Diffusion sur 10+ plateformes » alors que le guide dit 6. Il annonce « 5 focus détaillés » alors que la séquence en compte 4 (J+2, J+4, J+6, J+9). |
-| `etape-6` | J+15 | « Pack Mise en Marché Premium » : ce nom d'offre est-il toujours le bon en 2026 ? « Vous signez dans 60-90 jours » est une promesse. Le récapitulatif annonce « 6 focus » alors qu'il y en a 4. |
+JB a constaté que la séquence contenait des chiffres sans source et des « cas réels » inventés. Claude a repris les e-mails 1 à 6 (ceux que le site envoie) et les a passés en `a-relire` :
+
+- **Cas inventés remplacés par de vraies ventes publiées sur le site**, racontées comme dans leur story, avec le lien : Anthy-sur-Léman T3 (photos, e-mail 1), Essert-Romand (prix, e-mail 2), Morzine (dossier administratif, e-mail 4). L'e-mail 3 (visites) n'a pas de vente réelle qui l'illustre : il n'a plus de cas.
+- **Chiffres sans source retirés** : 250 à 300 annonces par jour, 3 secondes par annonce, 80 % des vendeurs, 70 % de visiteurs non qualifiés, 30 % de promesses qui échouent, « top 10 % », 30 à 40 heures gagnées, budgets de photographe et de diagnostics, objet « l'erreur à 50 000 € ».
+- **Promesses retirées** : « vous signez dans 60-90 jours », « diffusion sur 10+ plateformes », « Pack Mise en Marché Premium » (nom d'offre non confirmé), offre limitée à 7 jours, checklist 25 points et PDF du script (inexistants).
+- **Liens** : les `[lien]` (qui seraient partis tels quels, le site ne les remplace pas) sont devenus de vraies adresses : `/contact` pour le rendez-vous, `/realisation/…` pour les ventes.
+- **Faits vérifiés** : DPE antérieurs au 1er juillet 2021 plus valables depuis le 1er janvier 2025 ; électricité et gaz valables 3 ans à la vente ; PV des AG des 3 dernières années demandés en copropriété ; données DVF publiques sur 5 ans.
+- `etape-0` (e-mail des résultats) n'est pas envoyé par la séquence (`src/server/sequence.ts` l'ignore) : non repris.
+
+**Reste à Anne** : relire, corriger si besoin, puis passer chaque e-mail en `publie`. Si une autre de ses ventes illustre mieux l'e-mail 3 (visites filtrées), l'ajouter.
 
 ## Et ensuite
 

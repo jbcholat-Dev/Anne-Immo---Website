@@ -47,7 +47,7 @@ Chaque point porte sa preuve et sa date quand il est coché.
 - [x] Ventes passées en `publie` depuis l'espace d'édition le 2026-10-10 au soir (PR n° 83 à 89, fusionnées par Claude à la demande de JB) : Thonon, Armoy, Anthy T3, Anthy T4, Évian, Bernex, Essert-Romand. Restent en brouillon : Allinges, Sciez, Morzine.
 - [ ] Mentions légales, confidentialité et cookies validées par écrit par Anne ; pastille « À valider par Anne » retirée de `/confidentialite`
 - [ ] Guide relu, `statut: publie`, PDF refait (`node scripts/guide-pdf.mjs`)
-- [ ] Six e-mails de la séquence relus, `statut: publie`
+- [ ] Six e-mails de la séquence relus, `statut: publie`. 2026-10-10 (soir) : JB constate des chiffres et des cas inventés ; Claude refait les e-mails 1 à 6 sans eux (vraies ventes d'Anthy, Essert-Romand et Morzine à la place, liens réels au lieu de `[lien]`), passés en `a-relire` ; détail dans `contenu-anne/guide/sequence-emails/README.md`. Reste la relecture et le passage en `publie`.
 - [x] Adresses des réseaux sociaux données par JB le 2026-10-10 (Instagram, YouTube, LinkedIn), reportées dans `site/src/config/site.ts` et `contenu-anne/legal/identite.md`
 
 **Bascule (JB, avec Claude)** : ordre du RUNBOOK § 4
@@ -58,6 +58,7 @@ Chaque point porte sa preuve et sa date quand il est coché.
 - [ ] Access retiré de `annevialtissot.fr` (gardé sur `workers.dev`)
 - [ ] Webhook Cal.com pointé sur `https://annevialtissot.fr/api/webhook-cal`
 - [ ] Essais en ligne : accueil sans écran de connexion, `/robots.txt` autorise, `.com` redirige, `/gestion` demande le code, un contact, un guide, un diagnostic et un rendez-vous reçus par Anne puis effacés depuis `/gestion`
+- [ ] Si la PR n° 72 (rapport PDF du diagnostic) est fusionnée avant le lancement : formule Cloudflare Workers Paid souscrite par JB (action J10 du tableau de bord), car le rapport demande environ 60 ms de calcul et la formule gratuite plafonne à 10 ms ; sans elle, le téléchargement du rapport échoue chez les visiteurs (signalé par le fil Back-end le 2026-10-10)
 - [ ] Accord écrit d'Anne pour le lancement
 
 ## Ce qui reste
