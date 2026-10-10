@@ -1,7 +1,7 @@
 ---
 story: 8.11
 epic: 8 — Structure et visuel
-statut: review
+statut: done
 date: 2026-10-10
 ---
 
@@ -25,4 +25,4 @@ Les fichiers vidéo, eux, étaient bien en ligne.
 - `npm run check` : 0 erreur. `node scripts/liens.mjs` : 26 pages, 1661 liens, 0 cassé.
 
 ## Ce qui reste
-- Constater sur l'aperçu après fusion de la PR.
+- Rien. PR #91 fusionnée le 2026-10-10 ; la mise en ligne de l'aperçu suit la fusion.
