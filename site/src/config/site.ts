@@ -5,13 +5,13 @@ export const identite = {
   statut: 'agent commercial indépendant en immobilier, mandataire du réseau eXp France',
   zone: 'Chablais et bassin lémanique',
   langues: ['Français', 'English', 'Español', 'Português'],
-  rsac: null as string | null,          // A-13 attendu
-  greffe: null as string | null,        // A-13 attendu : ville du greffe du RSAC
+  rsac: '977 986 264' as string | null, // = SIREN (immatriculation du 2023-09-01, annuaire des entreprises) ; à confirmer par Anne sur son attestation RSAC
+  greffe: 'Thonon-les-Bains' as string | null, // greffe compétent pour Sciez (déduit) ; à confirmer par Anne
   cartePro: null as string | null,      // A-13 attendu
   hebergeur: 'Cloudflare, Inc., 101 Townsend Street, San Francisco, CA 94107, États-Unis · +1 650 319 8930 · www.cloudflare.com' as string | null, // choisi par l'architecture (story 7.6), à relire par JB
   telephone: null as string | null,     // A-13 attendu
   email: null as string | null,         // A-13 attendu
-  adresse: null as string | null,       // A-13 attendu : adresse professionnelle, mentions légales seulement
+  adresse: '812 chemin de la Tatte, 74140 Sciez' as string | null, // siège de l'entreprise (SIRET 977 986 264 00017), mentions légales seulement
   immodvisor: 'https://www.immodvisor.com/professionnels/mandataire-immobilier/pro/exp-france-anne-vial-tissot-70511',
 };
 

@@ -41,7 +41,7 @@ Recommandation : lancement **minimal**, design actuel. Décalés d'environ une s
 Chaque point porte sa preuve et sa date quand il est coché.
 
 **Contenu (Anne)**
-- [ ] Coordonnées A-13 reçues et reportées (RSAC et greffe, carte pro, adresse pro, téléphone, e-mail). Point de JB du 2026-10-10 : Anne exerce sous la carte T d'eXp France ; à demander à Anne : son numéro RSAC (inscription obligatoire d'un agent commercial au greffe) et le numéro de son attestation d'habilitation eXp, en plus du numéro de carte T d'eXp France.
+- [ ] Coordonnées A-13 reçues et reportées (RSAC et greffe, carte pro, adresse pro, téléphone, e-mail). Point de JB du 2026-10-10 : Anne exerce sous la carte T d'eXp France ; à demander à Anne : son numéro RSAC (inscription obligatoire d'un agent commercial au greffe) et le numéro de son attestation d'habilitation eXp, en plus du numéro de carte T d'eXp France. 2026-10-10 (soir) : JB transmet la fiche de l'annuaire des entreprises (SIRET 977 986 264 00017, siège 812 chemin de la Tatte, 74140 Sciez, depuis le 2023-09-01, APE 6831Z) ; reportés : RSAC 977 986 264 (le numéro RSAC d'un agent commercial est son SIREN), greffe de Thonon-les-Bains (déduit, à confirmer par Anne), adresse. Manquent : attestation d'habilitation eXp, téléphone, e-mail public.
 - [x] Ventes passées en `publie` depuis l'espace d'édition le 2026-10-10 au soir (PR n° 83 à 89, fusionnées par Claude à la demande de JB) : Thonon, Armoy, Anthy T3, Anthy T4, Évian, Bernex, Essert-Romand. Restent en brouillon : Allinges, Sciez, Morzine.
 - [ ] Mentions légales, confidentialité et cookies validées par écrit par Anne ; pastille « À valider par Anne » retirée de `/confidentialite`
 - [ ] Guide relu, `statut: publie`, PDF refait (`node scripts/guide-pdf.mjs`)

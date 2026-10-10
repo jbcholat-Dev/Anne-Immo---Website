@@ -1,9 +1,9 @@
 ---
 nom_complet: Anne VIAL-TISSOT
 statut_juridique: agent commercial indépendant en immobilier, mandataire du réseau eXp France   # à confirmer
-rsac:                 # À REMPLIR : numéro et ville du greffe
+rsac: 977 986 264, greffe de Thonon-les-Bains   # SIREN = numéro RSAC ; greffe déduit de l'adresse, à confirmer
 carte_professionnelle:   # À REMPLIR : référence de la carte du réseau eXp France
-adresse_professionnelle: # À REMPLIR : affichée seulement dans les mentions légales, pas sur Google
+adresse_professionnelle: 812 chemin de la Tatte, 74140 Sciez   # siège, SIRET 977 986 264 00017 ; affichée seulement dans les mentions légales
 telephone:            # À REMPLIR : format international, ex. +33 6 …
 email:                # À REMPLIR
 url_immodvisor: https://www.immodvisor.com/professionnels/mandataire-immobilier/pro/exp-france-anne-vial-tissot-70511
