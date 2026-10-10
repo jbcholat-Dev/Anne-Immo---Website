@@ -28,11 +28,13 @@ Lancement **minimal**, design actuel. Décalés d'environ une semaine et notés 
 - Page `/guide` : la vraie couverture du PDF remplace le bloc A-10 (`public/img/guide-couverture.jpg`, produite par `scripts/guide-pdf.mjs`).
 - Réseaux sociaux : un réseau sans adresse de profil n'est plus affiché nulle part.
 - Mentions légales et pied de page : lus dans `identite` (RSAC, greffe, carte pro, adresse, téléphone, e-mail) ; **nouveau garde-fou** : le site public ne se construit pas tant qu'une de ces valeurs manque.
+- Guide PDF remis en page à la demande de JB (2026-10-10, 19 h 10) : chaque erreur commence sur une nouvelle page, avec « Erreur n° N sur 10 » et son axe (mêmes numéros et mêmes trois axes que le rapport du diagnostic, `contenu-anne/guide/rapport-diagnostic.md`, PR n° 72), un sommaire groupé par axe, des encadrés « Cas réel » et « La solution ». 14 pages.
 - Bascule par la construction : `scripts/lancement.mjs` (lancé par `npm run build`) passe en production **seulement** si la construction porte sur `main` et si la variable de construction `LANCEMENT` vaut `oui` : base `anne-leads`, `ENVIRONNEMENT=production`, `URL_SITE=https://annevialtissot.fr`, `PUBLIC_INDEXATION=oui`. Les autres branches restent des aperçus. Retour arrière : retirer `LANCEMENT` et relancer la construction (RUNBOOK § 4).
 
 ## Vérifié
 
 - `npm run build` (aperçu) : sans erreur ; `npm run check` : 0 erreur ; `node scripts/liens.mjs` : 26 pages, 1301 liens, 0 cassé.
+- Guide : `node scripts/guide-pdf.mjs` : 14 pages, chaque erreur en haut de page (planche des pages contrôlée) ; `npm run build` sans erreur, `npm run check` 0 erreur, `node scripts/liens.mjs` 26 pages, 1661 liens, 0 cassé.
 - `node scripts/lancement.mjs` en local : « aperçu (construction locale), configuration inchangée » ; `--essai` : base `anne-leads`, `production`, `https://annevialtissot.fr`.
 - Construction de production simulée sur une copie (`WORKERS_CI=1 WORKERS_CI_BRANCH=main LANCEMENT=oui`, guide et une vente passés en `publie`) : refusée tant que les coordonnées manquent (« Lancement refusé : coordonnées légales manquantes… ») ; avec des valeurs fictives, réussie ; `dist/server/wrangler.json` porte `anne-leads`, `production` et l'adresse publique ; `/robots.txt` = `Allow: /` ; aucune marque de travail, aucun `noindex`, aucun bouton « Un retour ? » sur l'accueil, Réalisations, À propos, Acheter, Vendre, Guide, Mentions légales ; captures 1440 et 390 de `/`, `/guide`, `/a-propos`, `/realisation` : aucune erreur console.
 

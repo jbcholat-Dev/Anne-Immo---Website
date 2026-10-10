@@ -63,7 +63,31 @@ function versHtml(md) {
 const md = fs.readFileSync(SOURCE, 'utf8');
 const [titre, sousTitre, auteur] = md.split('## Couverture')[1].split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('>')).slice(0, 3)
   .map((l) => l.replace(/\*\*/g, ''));
-const corps = versHtml(md.slice(md.indexOf('## Pourquoi') - 1));
+// Une page par partie (demande de JB du 2026-10-10) : l'introduction et son sommaire, chaque erreur, la conclusion, la checklist.
+// Chaque erreur porte son axe du diagnostic, le même que dans le rapport personnalisé (story 10.10), pour que les deux documents se répondent.
+const AXES = { preparation: 'Préparation à la vente', visibilite: 'Visibilité & Attractivité', efficacite: 'Efficacité commerciale' };
+const AXE_ERREUR = { 1: 'visibilite', 2: 'preparation', 3: 'preparation', 4: 'visibilite', 5: 'visibilite', 6: 'visibilite', 7: 'efficacite', 8: 'preparation', 9: 'preparation', 10: 'efficacite' };
+const majuscule = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+// Encadrés : un « cas réel » sur fond sable, « la solution » sur fond bleu pâle, comme les blocs du rapport.
+const encadres = (h) => h
+  .replace(/<p><strong>(Cas réel[^<]*)<\/strong>/g, '<p class="cas"><span class="etiquette">Cas réel</span><strong>$1</strong>')
+  .replace(/<p><strong>(La solution\.?)<\/strong>/g, '<p class="solution"><span class="etiquette">La solution</span>');
+const parties = md.slice(md.indexOf('## Pourquoi')).split(/^(?=## )/m).filter((p) => p.trim());
+const erreurs = [];
+const corps = parties.map((partie) => {
+  const [tete, ...reste] = partie.split('\n');
+  const titre = tete.replace(/^## /, '').trim();
+  const contenu = encadres(versHtml(reste.join('\n')));
+  const m = /^Erreur n° (\d+) : (.+)$/.exec(titre);
+  if (m) {
+    const n = Number(m[1]);
+    erreurs.push({ n, titre: majuscule(m[2]) });
+    return `<section class="partie erreur"><div class="surtitre">Erreur n° ${n} sur 10 · ${AXES[AXE_ERREUR[n]]}</div><h2>${enLigne(majuscule(m[2]))}</h2>${contenu}</section>`;
+  }
+  return `<section class="partie"><h2>${enLigne(titre)}</h2>${contenu}<!--sommaire:${titre.startsWith('Pourquoi') ? 'oui' : ''}--></section>`;
+}).join('\n').replace('<!--sommaire:oui-->', () => `<div class="sommaire"><h3>Au sommaire</h3>${Object.entries(AXES).map(([cle, nom]) =>
+  `<div class="axe"><div class="surtitre">${nom}</div><ol>${erreurs.filter((e) => AXE_ERREUR[e.n] === cle).map((e) => `<li value="${e.n}">${enLigne(e.titre)}</li>`).join('')}</ol></div>`).join('')}</div>`)
+  .replace(/<!--sommaire:-->/g, '');
 const police = (nom, fichier, poids, style = 'normal') =>
   `@font-face{font-family:'${nom}';src:url(data:font/woff2;base64,${fs.readFileSync(path.join(POLICES, fichier)).toString('base64')}) format('woff2');font-weight:${poids};font-style:${style}}`;
 const logo = fs.readFileSync(path.join(RACINE, 'design-system/assets/logo-horizontal-descripteur.svg'), 'utf8');
@@ -79,8 +103,18 @@ body { font-family: 'Jost', sans-serif; color: #26201A; font-size: 10.5pt; line-
 .couverture .ligne { width: 40mm; height: 2px; background: #C4623E; margin: 10mm 0; }
 .couverture .auteur { font-size: 11pt; color: #5C5248; }
 .provisoire { font-size: 9pt; color: #A34E30; letter-spacing: .08em; text-transform: uppercase; }
-h2 { font-family: 'Gilda Display', serif; font-weight: 400; font-size: 22pt; line-height: 1.15; color: #002FA7; margin: 12mm 0 4mm; break-after: avoid; }
-h2:first-child { margin-top: 0; }
+h2 { font-family: 'Gilda Display', serif; font-weight: 400; font-size: 24pt; line-height: 1.12; color: #002FA7; margin: 0 0 7mm; break-after: avoid; }
+.partie { break-before: page; }
+.surtitre { font-size: 8pt; letter-spacing: .14em; text-transform: uppercase; color: #5C5248; margin-bottom: 3mm; }
+.erreur h2 { padding-bottom: 5mm; border-bottom: 2px solid #C4623E; display: inline-block; }
+.cas, .solution { padding: 4mm 5mm; border-radius: 2.5mm; margin: 4mm 0; break-inside: avoid; }
+.cas { background: #F3ECE0; border-left: 3px solid #C4623E; }
+.solution { background: #E7EDF9; border-left: 3px solid #002FA7; }
+.etiquette { display: block; font-size: 7.5pt; letter-spacing: .14em; text-transform: uppercase; color: #5C5248; margin-bottom: 1.5mm; }
+.sommaire { margin-top: 10mm; padding-top: 6mm; border-top: 1px solid #E9E0D2; break-inside: avoid; }
+.sommaire h3 { font-family: 'Gilda Display', serif; font-weight: 400; font-size: 16pt; color: #002FA7; margin: 0 0 4mm; }
+.sommaire .axe { margin-bottom: 4mm; }
+.sommaire ol { margin: 1mm 0 0; padding-left: 7mm; }
 h3 { font-size: 11pt; margin: 6mm 0 2mm; break-after: avoid; }
 p { margin: 0 0 3mm; }
 ul, ol { margin: 0 0 4mm; padding-left: 5mm; }
