@@ -1,7 +1,7 @@
 ---
 story: 13.1
 epic: 13 — Espace de travail d'Anne
-statut: review
+statut: done
 date: 2026-10-09
 ---
 
@@ -26,6 +26,7 @@ Messages de JB du 2026-10-09 (fil Back-end, puis fil « Espace de travail d'Anne
 - Aucun code modifié : pas de build ni de captures nécessaires.
 
 ## Ce qui reste
+- Fusionnée le 2026-10-09 (PR n° 73). Décision de JB du même soir : application séparée sur la même base (AD-19, story 13.2).
 - JB : valider CAP-12 dans la PR, et faire valider par Anne les étapes des deux parcours avec ses mots.
 - JB : envoyer l'e-mail au support Leedflow ; vérifier sur le bulletin du jeu concours ce que les participants ont accepté.
 - Story 13.2 : décision d'architecture Leedflow et Gmail (nouvelle AD, AD-14 amendée dans le spine), puis découpage des stories de construction.

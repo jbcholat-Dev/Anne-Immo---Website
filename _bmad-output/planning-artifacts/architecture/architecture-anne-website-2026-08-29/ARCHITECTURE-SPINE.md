@@ -7,8 +7,8 @@ paradigm: 'Islands sur site statique à contenu typé, avec un noyau serveur min
 scope: 'Fondations du site annevialtissot.fr : contenu, langues, capture et stockage des leads, hébergement, propriété, SEO, mesure, surveillance, coût. Vague 2 (champs des objets, composants, go/no-go prestataire) hors périmètre.'
 status: final
 created: '2026-08-29'
-updated: '2026-10-07'
-binds: [CAP-1, CAP-2, CAP-3, CAP-4, CAP-5, CAP-6, CAP-7, CAP-8, CAP-9, CAP-10, CAP-11]
+updated: '2026-10-10'
+binds: [CAP-1, CAP-2, CAP-3, CAP-4, CAP-5, CAP-6, CAP-7, CAP-8, CAP-9, CAP-10, CAP-11, CAP-12]
 sources:
   - ../../architecture-brief.md — cadrage vague 1, réponses de JB, faisabilité Modelo (2026-08-29/30)
   - ../../../specs/spec-anne-website/SPEC.md — contrat v5 (2026-09-13)
@@ -149,6 +149,7 @@ Index unique **partiel** sur `token` (`source = 'diagnostic'`). `lead_delivery` 
 
 - **Binds:** CAP-5, CAP-6, CAP-8, CAP-9, admin, e-mails
 - **Prevents:** une capture qui échoue parce que le CRM refuse ; une seconde base « tampon » ; un relais à IP fixe à entretenir
+- **Amendé le 2026-10-10 (CAP-12, story 13.2)** : Modelo est à la fois **amont** et **aval**, jamais une pièce de l'espace de travail. Amont : les demandes faites sur les annonces d'Anne (Leboncoin et autres portails) créent un contact dans Modelo, qui envoie à Anne un e-mail de notification au format fixe ; l'espace les reçoit par cet e-mail (AD-20), sans accès à Modelo. Aval : la recopie n'est demandée qu'au passage d'un contact à « Mandat exclusif signé » ou « Mandat de recherche signé » ; avant, la ligne `modelo` n'est plus créée à chaque lead. Le texte ci-dessous reste vrai pour le format de la fiche prête à copier.
 - **Rule:** v1 : l'e-mail `notify_anne` est formaté **prêt à copier** dans la fiche contact Modelo (un bloc par champ, dans l'ordre de Modelo) ; la ligne `lead_delivery` de canal `modelo` est marquée livrée **à la main depuis l'admin** par Anne. Aucun export CSV : le seul import de contacts de Modelo (InTouch › Campagnes) n'alimente pas la base contacts de Modelo Office (avertissement de l'écran lui-même, vérifié par JB le 2026-09-07) — canal écarté tant que Modelo ne change pas. L'API Modelo (clé eXp, IP fixe) est hors horizon ; si elle devenait accessible, elle se brancherait comme un adaptateur AD-8 traitant les lignes `modelo` en attente.
 
 ### AD-15 — Budget de performance et JS en îlots déclarés [ADOPTED]
@@ -174,6 +175,18 @@ Index unique **partiel** sur `token` (`source = 'diagnostic'`). `lead_delivery` 
 - **Binds:** admin, D1, adaptateurs, RUNBOOK
 - **Prevents:** une demande d'accès ou d'effacement qui exige du SQL, donc JB ; une copie oubliée chez un sous-traitant
 - **Rule:** `/admin` (Cloudflare Access, comptes d'Anne et de JB) offre, par adresse e-mail : rechercher, **exporter** (JSON lisible) et **effacer** un lead avec ses `lead_delivery`, en propageant l'effacement au contact Resend ; la suppression de la réservation Cal.com et la réponse à la personne suivent la procédure écrite du RUNBOOK. Chaque exercice de droit est journalisé (date, type, e-mail haché). L'admin comprend aussi : liste et détail des leads, rejeu des diffusions, marquage Modelo, compteurs d'entonnoir, état du dernier test synthétique.
+
+### AD-19 — L'espace de travail d'Anne est une application séparée qui partage la base des leads [ADOPTED]
+
+- **Binds:** CAP-12, `/gestion` (story 10.7), D1, Access
+- **Prevents:** une mise en ligne du site qui casse l'outil de travail d'Anne, ou l'inverse ; des clés d'accès à sa boîte e-mail ou à Leedflow dans le programme qui répond au public ; une synchronisation entre deux bases, avec deux endroits à effacer pour le RGPD (le défaut reproché à Modelo)
+- **Rule:** L'espace de travail est un **second Worker** (`espace/` à la racine du dépôt, même compte Cloudflare, sa propre adresse, proposée `espace.annevialtissot.fr`, sa propre application Access « Anne et JB » avec vérification serveur du jeton comme en 10.7). Il est lié à **la même base D1** que le site : une demande captée par le site y apparaît aussitôt, sans copie. Partage des écritures : le site écrit `lead` et `lead_delivery` (AD-4, AD-6) ; l'espace écrit les tables du pipeline (AD-20) et exerce les droits (AD-18). Les **migrations restent dans `site/migrations/`**, un seul endroit, et chacune est essayée contre les deux applications avant la mise en ligne. `/gestion` est déplacé dans l'espace ; le site n'y garde aucune page privée. Les secrets propres à l'espace (Leedflow, Gmail) ne sont posés que sur son Worker. Décision de JB du 2026-10-09 (`.memlog.md` de la spec). Écartés : rester dans le site (couplage des mises en ligne, clés dans le Worker public) ; une application avec sa propre base (synchronisation).
+
+### AD-20 — Un contact par personne, une entrée par source, rien ne change d'étape sans Anne [ADOPTED]
+
+- **Binds:** CAP-12, CAP-5, CAP-6, CAP-8, CAP-9, CAP-11, AD-4, AD-6, AD-16, AD-18
+- **Prevents:** la même personne en trois exemplaires parce qu'elle a fait trois demandes ; un contact actif oublié faute de prochaine action ; une source externe qui déplace un contact dans le pipeline à l'insu d'Anne ; un accès à toute la boîte e-mail d'Anne pour lire quelques notifications
+- **Rule:** Nouvelle table `contact` (une ligne par personne : `id`, `parcours` ∈ {`vendeur`, `acheteur`}, `etape`, `prochaine_action`, `prochaine_action_le`, `reveil_le`, `motif_perte`, `origine`, `bien_ref`, `telephone` E.164, `email` en minuscules, `last_activity_at`) et table `contact_evenement` (historique : note, changement d'étape, demande, appel, e-mail, avec sa source). `lead` gagne `contact_id` : chaque capture du site est rattachée au contact existant de même téléphone E.164 ou de même e-mail (casse ignorée), sinon crée le contact. Écrivain unique de ces tables : `espace/src/server/pipeline` ; le site n'y écrit que par la fonction de rattachement appelée après l'écriture du lead (AD-4 inchangé : le lead d'abord). **Règle métier :** un contact hors Vendu, Acte signé et Perdu a toujours une prochaine action datée ; En sommeil exige `reveil_le`. **Entrées**, chacune idempotente par un identifiant de la source : (1) site, en direct ; (2) saisie à la main et import d'un tableur, depuis l'espace ; (3) **demandes des portails** : un filtre Gmail d'Anne transfère les e-mails de l'expéditeur `inbound@nettymail.com` (notifications Modelo, format à champs fixes, vérifié sur capture le 2026-10-10) vers une adresse reçue par Cloudflare Email Routing et traitée par le handler `email` du Worker de l'espace, qui lit les champs, rattache ou crée le contact (parcours acheteur, `bien_ref` = référence du bien) et note l'événement ; un e-mail illisible est conservé en erreur et signalé, jamais perdu ; (4) **appels Leedflow** : adaptateur AD-8 branché sur le webhook ou l'API qu'annoncera Leedflow, rattachement par numéro, en attente de leur réponse ; (5) **e-mails des clients** (Gmail) : différé. Toute proposition d'étape ou de relance tirée d'une source externe est une suggestion qu'Anne accepte ou ignore. **RGPD :** export, effacement (AD-18) et purge à 3 ans (AD-16) couvrent `contact` et `contact_evenement` ; bases légales : demandes du site et des portails = mesures précontractuelles à la demande de la personne ; contacts saisis par Anne = intérêt légitime ; liste d'un événement = ce que le bulletin a fait accepter (sans consentement, pas d'e-mail groupé).
 
 ## Consistency Conventions
 
@@ -291,6 +304,7 @@ Website/
 | Modelo | e-mail formaté, `/admin` | AD-14 |
 | SEO local | `identite.json`, fiche Google | AD-13 |
 | Droits RGPD | `/admin`, `server/rights` | AD-16, AD-18 |
+| CAP-12 Espace de travail d'Anne | Worker `espace/` (pages, `server/pipeline`, handler `email`), tables `contact` et `contact_evenement` dans la base D1 partagée | AD-14, AD-16, AD-18, AD-19, AD-20 |
 
 ## Deferred
 
@@ -324,6 +338,8 @@ Website/
 - ~~Resend : région UE~~ **Vérifié le 2026-10-05** : envoi depuis l'Irlande, mais données du compte aux États-Unis ; transfert hors UE à documenter dans la politique de confidentialité (AD-16). Domaine `annevialtissot.fr` ajouté, vérification DNS en cours. Volume : 100 e-mails/jour en gratuit.
 - Turnstile invisible et l'intégration Cal.com ne déposent rien de non essentiel : **partiellement vérifié** (le script Turnstile ne dépose rien sur l'origine du site, 2026-10-05) ; relevé de l'iframe à faire en 10.4. Mode invisible : la politique de confidentialité doit citer le « Turnstile Privacy Addendum » de Cloudflare.
 - ~~`workerEntryPoint`~~ **Vérifié le 2026-10-04, autre réglage** : `main` de `wrangler.jsonc` → `worker.ts` (`fetch: handle` + `scheduled`). Hypothèse d'origine : `workerEntryPoint` de `@astrojs/cloudflare` 14 accepte un point d'entrée portant `fetch` + `scheduled` sans perte de fonctionnalité Astro (bindings D1, assets).
+
+- **Espace de travail (AD-19, AD-20), à vérifier au début de la story 13.3 :** (1) une même base D1 liée à deux Workers par le même `database_id` (la documentation D1 lue le 2026-10-10 ne le dit pas explicitement) ; (2) Email Routing sur un sous-domaine d'`annevialtissot.fr` (proposé `entrant.annevialtissot.fr`) sans gêner les enregistrements DNS d'envoi de Resend ; le handler `email` d'un Worker est documenté (lu le 2026-10-10, limite de 25 Mio par message) ; (3) le transfert automatique de Gmail exige de confirmer l'adresse de destination par un code envoyé à cette adresse : le handler doit faire suivre ce premier message à JB.
 
 **Amendement du 2026-09-26 (JB) — AD-9, titulaire du compte Cloudflare.** Le compte Cloudflare est celui de JB (connexion via GitHub), pas un compte au nom d'Anne. Raison : Anne ne s'y connectera jamais, et un compte à son nom imposerait de créer et de partager une adresse e-mail à elle pour la reprise. Conséquence : la transférabilité (AD-10) repose sur le RUNBOOK et sur le dépôt, pas sur la propriété du compte ; Anne pourra être invitée comme membre à tout moment ; le domaine (Infomaniak) et les comptes de services (Resend, Cal.com, Better Stack) restent à traiter au cas par cas, même logique par défaut. Trace : story 9.2, tableau de bord (action J02).
 
