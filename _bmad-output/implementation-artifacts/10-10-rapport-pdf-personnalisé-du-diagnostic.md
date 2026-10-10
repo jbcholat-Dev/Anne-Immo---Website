@@ -13,7 +13,7 @@ Le vendeur qui a fait le diagnostic télécharge un rapport PDF à son nom : ses
 ## Décisions prises (JB, 2026-10-10)
 - Rapport PDF à la place de résultats limités à 24 heures dans le navigateur ; recommandations présentes pour chaque axe, quel que soit le score.
 - Le diagnostic a 3 axes, pas 4 : « Visibilité & Attractivité » en est un seul.
-- Chaque question du diagnostic correspond à une erreur du guide (q01 → erreur 9, q02 → 3, q03 → 8, q04 → 2, q05 → 1, q06 → 5, q07 → 4, q08 → 6, q09 → 7, q10 → 10) : la recommandation montre la réponse du vendeur et ses points, et porte « En priorité » (moins de la moitié des points), « À améliorer » ou « Point solide ». Page « Par où commencer » : les priorités, dans l'ordre.
+- Chaque question du diagnostic correspond à une erreur du guide (depuis le 2026-10-10 au soir, les erreurs du guide sont rangées dans l'ordre des questions, PR n° 80 : la question qN renvoie à l'erreur n° N ; auparavant q01 → 9, q02 → 3, q03 → 8, q04 → 2, q05 → 1, q06 → 5, q07 → 4, q08 → 6, q09 → 7, q10 → 10) : la recommandation montre la réponse du vendeur et ses points, et porte « En priorité » (moins de la moitié des points), « À améliorer » ou « Point solide ». Page « Par où commencer » : les priorités, dans l'ordre.
 - Fabrication proposée : pages préparées à la construction, complétées par le serveur au téléchargement (voir l'amendement d'architecture) ; lien signé valable 7 jours, sur la page de résultats et dans l'e-mail du résumé.
 
 ## Retour de JB (2026-10-10, 19 h)
@@ -33,6 +33,8 @@ Le vendeur qui a fait le diagnostic télécharge un rapport PDF à son nom : ses
 - `node scripts/e2e-rapport.mjs` : 19 constats bons. Deux vendeurs (Claire, profil à risque, sortie B, 10 priorités ; Marc, profil préparé, sortie A, aucune priorité) : bouton et lien de 7 jours sur la page de résultats, e-mail du résumé avec le bouton du rapport, PDF de 8 pages lu par `pdftotext` (nom, date, score, pied « n / 8 », réponses), 404 pour un lien modifié, expiré, signé pour le guide, d'un lead inconnu ou vide. Images des pages relues (couverture, axe).
 - Temps de fabrication sur le serveur local : 60 à 75 ms par rapport. Taille du Worker : 1,19 Mo compressé.
 - Non-régression : `e2e-diagnostic` 31, `e2e-guide` 38, `e2e-formulaires` 25 constats bons ; `maquette-emails` tous bons ; `npm run check` 0 erreur ; `npm run build` sans erreur ; `node scripts/liens.mjs` 26 pages, 1661 liens, 0 cassé.
+
+- Numéros d'erreur du guide alignés sur l'ordre des questions (demande de JB relayée par le fil « Audit avant le lancement ») ; gabarit refait, `e2e-rapport` relancé.
 
 ## Ce qui reste
 - Plan Workers Paid (action J10 de JB) avant le lancement : le plan gratuit limite le calcul à 10 ms par requête, le rapport en demande environ 60.

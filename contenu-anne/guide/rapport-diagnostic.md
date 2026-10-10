@@ -12,7 +12,7 @@ Ce rapport reprend vos réponses au diagnostic. Pour chacun des trois axes d'une
 ## preparation · Préparation à la vente
 
 ### q01 · Fixer le prix sur des ventes comparables
-Guide : erreur n° 9
+Guide : erreur n° 1
 
 - Identifiez 10 biens comparables : même type, même secteur, vendus récemment.
 - Comparez les prix au m² des ventes réelles (base DVF), pas ceux des annonces.
@@ -21,7 +21,7 @@ Guide : erreur n° 9
 - Dans le Chablais rural, les estimateurs en ligne peuvent se tromper de 15 à 20 % : ne vous fiez pas qu'à eux.
 
 ### q02 · Faire tous les diagnostics avant la mise en vente
-Guide : erreur n° 3
+Guide : erreur n° 2
 
 - Confiez-les à un diagnostiqueur certifié avant la première annonce (300 à 600 € selon le bien).
 - Vérifiez les durées : DPE 10 ans, électricité et gaz 3 ans.
@@ -29,7 +29,7 @@ Guide : erreur n° 3
 - Un DPE qui change de classe après le compromis, c'est une renégociation, voire une annulation.
 
 ### q03 · Préparer le dossier administratif complet
-Guide : erreur n° 8
+Guide : erreur n° 3
 
 - Documents de base : titre de propriété, diagnostics, taxe foncière, attestation de surface Carrez.
 - En copropriété : règlement, procès-verbaux des 3 dernières assemblées, carnet d'entretien, charges annuelles.
@@ -37,7 +37,7 @@ Guide : erreur n° 8
 - Présentez ce dossier dès la première visite : c'est un signal de sérieux qui accélère la décision.
 
 ### q04 · Préparer le bien pour les visites
-Guide : erreur n° 2
+Guide : erreur n° 4
 
 - Désencombrez : retirez la moitié des affaires visibles.
 - Dépersonnalisez : photos de famille et collections au placard.
@@ -48,7 +48,7 @@ Guide : erreur n° 2
 ## visibilite · Visibilité & Attractivité
 
 ### q05 · Confier les photos à un professionnel
-Guide : erreur n° 1
+Guide : erreur n° 5
 
 - Les acheteurs passent environ 3 secondes sur une annonce : la première photo décide.
 - Prévoyez 15 à 20 photos, chaque pièce et les extérieurs, en lumière naturelle et en HDR.
@@ -56,7 +56,7 @@ Guide : erreur n° 1
 - Budget : 300 à 500 €, vite rentabilisé si la vente se fait 2 mois plus tôt.
 
 ### q06 · Écrire une annonce qui raconte le bien
-Guide : erreur n° 5
+Guide : erreur n° 6
 
 - Un titre qui met en avant le principal bénéfice du bien.
 - Une description de 150 à 300 mots qui aide l'acheteur à se projeter.
@@ -64,7 +64,7 @@ Guide : erreur n° 5
 - Terminez par une invitation claire à organiser une visite.
 
 ### q07 · Diffuser sur au moins 6 plateformes
-Guide : erreur n° 4
+Guide : erreur n° 7
 
 - Les acheteurs consultent 4 à 5 sites avant de trouver leur bien.
 - Le Bon Coin, SeLoger, Bien'ici, PAP, Logic-Immo, Facebook Marketplace, voire Instagram.
@@ -72,7 +72,7 @@ Guide : erreur n° 4
 - Comptez 2 à 3 heures pour tout mettre en place.
 
 ### q08 · Rafraîchir l'annonce chaque semaine
-Guide : erreur n° 6
+Guide : erreur n° 8
 
 - Après 7 à 10 jours, une annonce non modifiée glisse en page 3, 4, 5.
 - Chaque semaine : retouchez le titre, changez l'ordre des photos, enrichissez la description.
@@ -81,7 +81,7 @@ Guide : erreur n° 6
 ## efficacite · Efficacité commerciale
 
 ### q09 · Qualifier chaque visite au téléphone
-Guide : erreur n° 7
+Guide : erreur n° 9
 
 - Avant de confirmer une visite, posez quatre questions :
 - « Qu'est-ce qui vous a plu dans l'annonce ? »
