@@ -13,7 +13,7 @@ photos:
   - photos/essert-romand-exp-immo-006-hd.webp
   - photos/essert-romand-exp-immo-027-hd.webp
   - blob:https://anne-vial-tissot-site.jbcholat.workers.dev/3caa2213-b597-41f4-9991-f44123e5dd09
-statut: brouillon
+statut: publie
 autorisations: false
 temoignages:
   - citation: null
