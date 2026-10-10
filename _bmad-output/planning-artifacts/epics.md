@@ -2198,3 +2198,94 @@ afin d'avoir toute la relation au même endroit.
 **Quand** un e-mail est échangé avec l'adresse d'un contact
 **Alors** il apparaît dans son historique. **Différée** : l'espace est complet sans (AD-20)
 
+
+## Epic 14: Campagnes promotionnelles temporaires
+
+Anne publie elle-même des offres limitées dans le temps (premier exemple : une séance photo professionnelle de sa maison à gagner) pour attirer du monde sur le site et récupérer des contacts de vendeurs. Chaque offre a sa page, ouverte et fermée par ses dates, et ses inscrits arrivent dans la même base que les autres demandes. Origine : demande de JB du 2026-10-10 (fil « Campagnes promotionnelles »). **À démarrer après le lancement public (story 12.4)**, sans toucher à la PR n° 80.
+
+**Capacités couvertes :** aucune dans la spec v6 : une capacité nouvelle sera ajoutée (story 14.2). **Décisions :** AD-11 (zéro traceur, les paramètres de campagne voyagent dans l'adresse), AD-6 (une seule table `lead`, une source de plus), AD-7 (contrôles anti-robots), AD-18 (droits RGPD), story 5.4 (origine des campagnes gardée), décision de JB du 2026-10-10 : une offre = un tirage au sort parmi les inscrits.
+
+### Story 14.1: Décision de principe
+
+En tant que JB,
+je veux une approche écrite pour les campagnes temporaires avant d'en construire une,
+afin de savoir ce qu'Anne pourra faire seule et ce que la première campagne demandera.
+
+**Critères d'acceptation :**
+**Étant donné** la demande de JB du 2026-10-10 et la carte de décision du même jour
+**Quand** la décision est journalisée
+**Alors** l'approche (page par offre gérée dans l'espace d'édition, dates d'ouverture et de fermeture, inscrits dans la base des leads, diagnostic proposé après l'inscription, bandeau d'accueil optionnel) et le choix du tirage au sort sont écrits dans `.memlog.md` de la spec, ici et dans le RUNBOOK.
+
+**État :** fait — 2026-10-10. Story : `_bmad-output/implementation-artifacts/14-1-décision-de-principe-des-campagnes.md`.
+
+### Story 14.2: Spec et architecture des campagnes
+
+En tant que JB,
+je veux la capacité « campagnes » dans la spec et sa décision technique dans le spine,
+afin que la construction suive un contrat et reste transférable.
+
+**Critères d'acceptation :**
+**Étant donné** la décision de principe (14.1)
+**Quand** la spec et le spine sont amendés
+**Alors** la spec passe en version 7 avec une capacité nouvelle (intention, critère de succès : nombre d'inscrits et de rendez-vous par campagne) et une contrainte « jeu-concours » (participation gratuite, règlement accessible, inscription au tirage distincte de la lettre d'information), et le spine reçoit une AD : source `offre` dans `lead`, identifiant de la campagne enregistré avec l'inscription, une inscription par adresse e-mail et par campagne, dates lues depuis la fiche de l'offre
+**Et** l'entrée est journalisée le jour même.
+
+### Story 14.3: Fiche « Offre » dans l'espace d'édition
+
+En tant qu'Anne,
+je veux créer une offre dans `/admin` comme je crée une vente,
+afin de lancer une campagne sans passer par Claude.
+
+**Critères d'acceptation :**
+**Étant donné** une rubrique « Offres » dans l'espace d'édition (Sveltia CMS)
+**Quand** Anne remplit titre, adresse courte, photo, accroche, texte, lot à gagner, date de début, date de fin, date du tirage, règlement et statut
+**Alors** l'enregistrement crée une demande de fusion comme pour les ventes, et la construction refuse une offre sans règlement ou dont la fin précède le début.
+
+### Story 14.4: Page d'offre datée
+
+En tant que visiteur venu d'une publication,
+je veux trouver l'offre en cours, ou un message clair si elle est terminée,
+afin de ne jamais tomber sur une page vide.
+
+**Critères d'acceptation :**
+**Étant donné** une offre publiée à l'adresse `/offre/<adresse-courte>`
+**Quand** on la visite avant, pendant ou après ses dates
+**Alors** avant : page introuvable ; pendant : l'offre, son règlement et le formulaire ; après : « cette offre est terminée » avec un lien vers le diagnostic, sans formulaire, et la page n'est plus indexée
+**Et** la bascule se fait d'elle-même à la date (le serveur refuse aussi une inscription hors des dates), les paramètres de campagne de l'adresse sont gardés (story 5.4), et les captures ordinateur et téléphone sont faites.
+
+### Story 14.5: Inscription au tirage
+
+En tant qu'Anne,
+je veux que chaque inscrit arrive dans ma base avec le nom de l'offre,
+afin de le rappeler comme n'importe quel contact.
+
+**Critères d'acceptation :**
+**Étant donné** le formulaire court (prénom, téléphone, e-mail, commune, échéance du projet de vente, case d'acceptation du règlement, case distincte et facultative pour la lettre d'information)
+**Quand** il est envoyé
+**Alors** une ligne `lead` de source `offre` est écrite avec la campagne et son origine, Anne reçoit l'alerte habituelle, l'inscrit reçoit une confirmation, une seconde inscription de la même adresse ne crée pas de doublon, et la page de remerciement propose le diagnostic sans l'imposer
+**Et** les contrôles anti-robots des autres formulaires s'appliquent (AD-7).
+
+### Story 14.6: Tirage et liste des participants
+
+En tant qu'Anne,
+je veux tirer le gagnant depuis mon espace de gestion et garder une trace du tirage,
+afin de pouvoir montrer qu'il a été loyal.
+
+**Critères d'acceptation :**
+**Étant donné** une offre close et ses inscrits dans `/gestion` (puis l'espace de travail, epic 13)
+**Quand** Anne lance le tirage
+**Alors** un gagnant est tiré au hasard parmi les inscrits hors inscriptions de test, la date, le nombre de participants et le gagnant sont enregistrés et non modifiables, et la liste des participants s'exporte
+**Et** les inscrits gardent leurs droits RGPD (accès, effacement) comme les autres contacts.
+
+### Story 14.7: Bandeau d'accueil pendant une offre
+
+En tant qu'Anne,
+je veux, si je le souhaite, un bandeau discret sur l'accueil pendant l'offre,
+afin que les visiteurs habituels la voient aussi.
+
+**Critères d'acceptation :**
+**Étant donné** une case « Annoncer sur l'accueil » dans la fiche de l'offre
+**Quand** elle est cochée et l'offre en cours
+**Alors** l'accueil montre une ligne menant à la page de l'offre, qui disparaît d'elle-même à la date de fin.
+
+**État de l'epic :** à faire — responsable : JB (cadrage, règlement), Anne (texte de l'offre, photographe, accord de son réseau eXp), Claude (spec, construction) ; prérequis : story 12.4 (site public).

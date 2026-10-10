@@ -4,7 +4,9 @@
 // pendant le chargement ; le <picture> derrière est le repli (mouvement réduit, échec de chargement, économie de données).
 // Deux boutons (retour d'Anne, ticket #40) : le diagnostic, et « Estimation offerte » vers l'agenda de /contact#reserver.
 // Les fichiers vidéo sont produits par `npm run video` (scripts/video.mjs) ; s'ils manquent, la balise <video> est masquée.
+// Deux tailles (story 8.13) : 1280 px pour les écrans de 900 px de large au plus (téléphones), 1920 px sinon.
 import fs from 'node:fs';
+import path from 'node:path';
 import Picture from '../Picture.astro';
 import Signature from '../Signature.astro';
 import { image } from '../../lib/images';
@@ -15,13 +17,15 @@ interface Props { lang: Lang }
 const { lang } = Astro.props;
 const d = await dicoAccueil(lang);
 const poster = image(hero.poster)!;
-const videoDispo = fs.existsSync(new URL('../../../public/video/ouverture.mp4', import.meta.url));
+// Chemin pris depuis le dossier site/ (comme src/lib/contenu.ts) : depuis l'adaptateur Cloudflare (story 10.2), le code est regroupé
+// ailleurs à la construction et un chemin relatif à ce fichier ne trouvait plus la vidéo, qui disparaissait de l'accueil.
+const videoDispo = fs.existsSync(path.resolve(process.cwd(), 'public/video/ouverture.mp4'));
 ---
 <section class="hero" data-sec="ouverture" aria-labelledby="hero-titre">
   <div class="hero-fond" aria-hidden="true">
     <Picture id={hero.poster} alt="" sizes="100vw" loading="eager" fetchpriority="high" class="hero-poster" />
     <video class:list={['hero-video', !videoDispo && 'hero-video-absente']} poster={poster.jpg} muted autoplay loop playsinline preload="metadata" tabindex="-1" aria-hidden="true">
-      {videoDispo && <source src="/video/ouverture.webm" type="video/webm" />}
+      {videoDispo && <source src="/video/ouverture-telephone.mp4" type="video/mp4" media="(max-width: 900px)" />}
       {videoDispo && <source src="/video/ouverture.mp4" type="video/mp4" />}
     </video>
     <div class="hero-voile"></div>
