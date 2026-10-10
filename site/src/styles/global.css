@@ -9,6 +9,8 @@
 @font-face { font-family: 'Jost'; src: url('/fonts/jost-400-normal.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
 @font-face { font-family: 'Jost'; src: url('/fonts/jost-500-normal.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
 @font-face { font-family: 'Jost'; src: url('/fonts/jost-400-italic.woff2') format('woff2'); font-weight: 400; font-style: italic; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+/* Caveat (écriture à la main, OFL) : seulement pour les langues notées sous le portrait de l'accueil (D-42). Fichier réduit aux majuscules et à « · » (24 Ko). */
+@font-face { font-family: 'Caveat'; src: url('/fonts/caveat-500-majuscules.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
 
 :root {
   --nav-h: 72px;            /* hauteur réelle de la barre, mise à jour par l'îlot nav (réduite : 56px) */
@@ -21,6 +23,7 @@
   --filet-brun-fort: rgba(38, 32, 26, .12);
   --filet-ecru: rgba(247, 242, 234, .18);
   --voile-ecru: rgba(247, 242, 234, .86);
+  --avt-font-main: 'Caveat', 'Segoe Print', cursive; /* notes manuscrites (D-42) */
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -53,7 +56,7 @@ figure, blockquote { margin: 0; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 /* Page — la nav est fixe dès le premier pixel ; les pages sans hero réservent sa hauteur */
-.page-int { padding-top: var(--nav-h); }
+.page-int { padding-top: calc(var(--nav-h) + 14px); } /* + l'écart au-dessus de la barre en verre (D-42) */
 .conteneur { padding-left: var(--marge); padding-right: var(--marge); }
 main { display: block; }
 
@@ -140,7 +143,7 @@ html[data-js] [data-reveal="petit"][data-shown] { animation: avtPetit .5s ease-o
 .seulement-mobile { display: none; }
 @media (max-width: 899px) {
   :root { --marge: var(--marge-m); }
-  .page-int { padding-top: var(--nav-h-mobile); }
+  .page-int { padding-top: calc(var(--nav-h-mobile) + 10px); }
   .seulement-desktop { display: none !important; }
   .seulement-mobile { display: block; }
   .btn { padding: 15px 24px; font-size: 15px; }
