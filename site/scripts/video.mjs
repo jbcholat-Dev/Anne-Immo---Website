@@ -12,7 +12,7 @@
 //
 // --duree 0 : jusqu'à la fin. --recadrage r : garde la fraction r du cadre (coin haut gauche, 16:9) puis remet à
 //   l'échelle (sert à sortir une incrustation d'angle) ; 1 = pas de recadrage.
-// Qualité (story 8.12, 2026-10-10, montage de 52 s) : l'ancien réglage (1440 px, crf 30, 7,8 Mo ; WebM VP9 en plus) donnait une image
+// Qualité (story 8.13, 2026-10-10, montage de 52 s) : l'ancien réglage (1440 px, crf 30, 7,8 Mo ; WebM VP9 en plus) donnait une image
 // pâteuse, VMAF 77 (MP4) et 60 (WebM, pourtant servi en premier à Chrome et Firefox) sur 100 face à la source. Mesures à 1920 px :
 // crf 23 → 30 Mo, VMAF 94 (au-dessus de la limite de 25 Mio par fichier de Cloudflare) ; crf 26 → 21 Mo, 92 ; crf 27 → 18 Mo, 91 (retenu).
 // Le WebM VP9 est abandonné : à poids égal il notait moins bien que le H.264 (1920 px, 23 Mo, VMAF 75).

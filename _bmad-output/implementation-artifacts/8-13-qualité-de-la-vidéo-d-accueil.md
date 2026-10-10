@@ -1,11 +1,11 @@
 ---
-story: 8.12
+story: 8.13
 epic: 8 — Structure et visuel
 statut: review
 date: 2026-10-10
 ---
 
-# Story 8.12 — Qualité de la vidéo d'accueil
+# Story 8.13 — Qualité de la vidéo d'accueil
 
 ## Objectif
 Retour de JB (2026-10-10) : « le grain n'est pas très bon » sur la vidéo d'accueil. Décision de JB le même jour : réencoder plus fin, avec une version allégée pour les téléphones.
