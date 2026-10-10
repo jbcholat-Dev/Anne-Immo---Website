@@ -11,28 +11,31 @@ const d = await dicoAccueil(lang);
   <div class="parler-bande">
     <div class="parler-int" data-reveal="titre">
       <h2 id="parler-titre">{d.accueil.parler_titre}</h2>
-      <p>{d.accueil.parler_texte}</p>
+      <p class="note-main parler-note">{d.accueil.parler_texte}</p>
       <div class="parler-boutons">
-        <a href={`${r('contact', lang)}#reserver`} class="btn btn-ecru btn-m">{d.accueil.parler_rdv}</a>
-        <a href={`${r('contact', lang)}#ecrire`} class="btn btn-contour-ecru btn-m">{d.accueil.parler_ecrire}</a>
+        <a href={`${r('contact', lang)}#reserver`} class="btn btn-primaire">{d.accueil.parler_rdv}</a>
+        <a href={`${r('contact', lang)}#ecrire`} class="btn btn-contour-ecru">{d.accueil.parler_ecrire}</a>
       </div>
     </div>
   </div>
 </section>
 <style>
-  .parler { position: relative; overflow: hidden; background: var(--avt-ecru); }
+  /* Concept « Magazine et matière » : la vague du lac sort du bleu du diagnostic et ouvre une dernière page à l'encre,
+     « Parler à Anne » en très grand, la phrase d'Anne écrite à la main. */
+  .parler { position: relative; overflow: hidden; background: var(--avt-klein); }
   .parler-vague { position: relative; height: 96px; }
-  .parler-vague svg { position: absolute; left: 0; top: 0; width: 100%; height: 96px; fill: var(--avt-klein); }
-  .parler-bande { position: relative; background: var(--avt-klein); color: var(--avt-ecru); padding: 44px var(--marge) 84px; text-align: center; }
-  .parler-int { max-width: 640px; margin: 0 auto; }
-  .parler h2 { font-size: 52px; color: var(--avt-ecru); margin-bottom: 12px; }
-  .parler p { font-size: 17px; margin-bottom: 30px; }
-  .parler-boutons { display: flex; gap: 16px; justify-content: center; }
+  .parler-vague svg { position: absolute; left: 0; top: 0; width: 100%; height: 96px; fill: var(--avt-brun); }
+  .parler-bande { position: relative; background: var(--avt-brun); color: var(--avt-ecru); padding: 40px var(--marge) 110px; }
+  .parler-int { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 24px 48px; }
+  .parler h2 { grid-column: 1 / -1; font-size: clamp(88px, 10vw, 156px); line-height: .9; letter-spacing: -.01em; color: var(--avt-ecru); }
+  .parler-note { font-size: 34px; color: var(--avt-ecru); transform: rotate(-2deg); transform-origin: left; }
+  .parler-boutons { display: flex; gap: 14px; }
   @media (max-width: 899px) {
     .parler-vague, .parler-vague svg { height: 52px; }
-    .parler-bande { padding: 24px var(--marge-m) 52px; }
-    .parler h2 { font-size: 34px; margin-bottom: 8px; }
-    .parler p { font-size: 16px; margin-bottom: 24px; }
+    .parler-bande { padding: 24px var(--marge-m) 64px; }
+    .parler-int { grid-template-columns: 1fr; }
+    .parler h2 { font-size: 64px; }
+    .parler-note { font-size: 27px; }
     .parler-boutons { flex-direction: column; gap: 12px; }
   }
 </style>

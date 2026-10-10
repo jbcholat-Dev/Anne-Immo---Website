@@ -12,22 +12,34 @@ const a = await avisParId(accueil.extrait.avis);
 const note = String(inst.note).replace('.', ',');
 ---
 <section class="preuve" data-sec="preuve" aria-label="Avis Immodvisor">
-  <div class="preuve-note"><b>{note}</b><span>{d.accueil.preuve_sur} {inst.nombre_avis} {d.accueil.preuve_avis}</span></div>
-  <p class="preuve-extrait">« {accueil.extrait.phrase} » <span class="preuve-auteur">{a.data.auteur}, {roleLibelle(a, lang)}</span></p>
-  <a href={inst.url_fiche} class="lien-souligne-ecru preuve-lien" rel="noopener" target="_blank">{d.accueil.preuve_lien}</a>
+  <div class="preuve-note">
+    <b>{note}</b><span class="preuve-sur">/ 5</span>
+    <span class="preuve-nb">{inst.nombre_avis} {d.accueil.preuve_avis}</span>
+  </div>
+  <figure class="preuve-citation">
+    <blockquote class="preuve-extrait" lang="fr"><span class="preuve-guillemet" aria-hidden="true">«</span>{accueil.extrait.phrase}&nbsp;»</blockquote>
+    <figcaption><span class="preuve-auteur">{a.data.auteur}, {roleLibelle(a, lang)}</span> <a href={inst.url_fiche} class="preuve-lien" rel="noopener" target="_blank">{d.accueil.preuve_lien}</a></figcaption>
+  </figure>
 </section>
 <style>
-  .preuve { display: flex; align-items: center; gap: 32px; padding: 26px var(--marge); background: var(--avt-klein); color: var(--avt-ecru); }
-  .preuve-note { display: flex; align-items: baseline; gap: 8px; flex: none; }
-  .preuve-note b { font-family: var(--avt-font-display); font-weight: 400; font-size: 44px; font-variant-numeric: tabular-nums; line-height: 1; }
-  .preuve-note span { font-size: 15px; color: var(--avt-text-on-dark-muted); }
-  .preuve-extrait { flex: 1; font-size: 15.5px; line-height: 1.55; max-width: 64ch; }
-  .preuve-auteur { color: var(--avt-text-on-dark-muted); font-size: 13.5px; }
-  .preuve-lien { flex: none; font-size: 14.5px; }
+  /* Concept « Magazine et matière » : la preuve devient une grande citation de page de magazine, sur le papier, entre deux filets. */
+  .preuve { position: relative; display: grid; grid-template-columns: 260px 1fr; gap: 64px; align-items: center; margin: 0 var(--marge); padding: 72px 0 0; }
+  .preuve-note { display: grid; grid-template-columns: auto 1fr; align-items: baseline; column-gap: 10px; border-right: 1px solid var(--filet-brun-fort); padding-right: 40px; }
+  .preuve-note b { font-family: var(--avt-font-display); font-weight: 400; font-size: 150px; line-height: .8; color: var(--avt-klein); font-variant-numeric: tabular-nums; }
+  .preuve-sur { font-family: var(--avt-font-display); font-size: 30px; color: var(--avt-klein); }
+  .preuve-nb { grid-column: 1 / -1; margin-top: 14px; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; font-weight: 500; color: var(--avt-text-muted); }
+  .preuve-extrait { position: relative; font-family: var(--avt-font-display); font-size: 38px; line-height: 1.22; max-width: 30ch; margin: 0; color: var(--avt-brun); }
+  .preuve-guillemet { position: absolute; left: -.62em; top: -.08em; color: var(--avt-terra); font-size: 1.7em; line-height: 1; }
+  .preuve-citation figcaption { margin-top: 20px; font-size: 15px; display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; }
+  .preuve-auteur { color: var(--avt-text-muted); }
+  .preuve-lien { font-size: 14.5px; border-bottom: 1px solid currentColor; }
+  .preuve-lien:hover { text-decoration: none; }
   @media (max-width: 899px) {
-    .preuve { flex-direction: column; align-items: flex-start; gap: 10px; padding: 20px var(--marge-m); }
-    .preuve-note b { font-size: 36px; }
-    .preuve-note span, .preuve-extrait { font-size: 14.5px; }
-    .preuve-lien { font-size: 14px; border-bottom-color: var(--avt-terra); }
+    .preuve { grid-template-columns: 1fr; gap: 28px; padding: 48px 0 0; }
+    .preuve-note { border-right: 0; padding-right: 0; border-bottom: 1px solid var(--filet-brun-fort); padding-bottom: 22px; }
+    .preuve-note b { font-size: 104px; }
+    .preuve-sur { font-size: 24px; }
+    .preuve-extrait { font-size: 26px; padding-left: 22px; }
+    .preuve-guillemet { left: -.1em; font-size: 1.3em; }
   }
 </style>

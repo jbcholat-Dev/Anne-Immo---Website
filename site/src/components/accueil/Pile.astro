@@ -3,12 +3,12 @@
 // Stories réelles d'abord, complétées par des ventes réelles « à venir » (même gabarit, photo = bloc réservé A-02) jusqu'à six cartes.
 // Une vente « à venir » dont la story existe n'est pas reprise (sinon la commune apparaît deux fois). Citation courte quand un avis est relié.
 import Picture from '../Picture.astro';
-import Reserve from '../Reserve.astro';
 import { r, type Lang } from '../../i18n';
 import { dicoAccueil } from '../../lib/textes';
 import { stories, photoPrincipale, avisDeStory, avisParId, roleLibelle } from '../../lib/contenu';
 import { accueil, phrasesStories } from '../../config/site';
 import { tiret } from '../../lib/texte';
+import Rubrique from './Rubrique.astro';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const d = await dicoAccueil(lang);
@@ -42,6 +42,7 @@ for (const v of accueil.aVenir.filter((v) => !dejaRacontees.has(v.slug)).slice(0
     lien: null,
   });
 }
+const [une, ...suite] = cartes;
 function premierePhrase(texte: string) {
   const t = texte.trim().replace(/\s+/g, ' ');
   const m = t.match(/^[^.!?]{20,220}[.!?]/);
@@ -49,54 +50,85 @@ function premierePhrase(texte: string) {
 }
 ---
 <section class="ventes" data-sec="ventes" aria-labelledby="ventes-titre">
+  <Rubrique num="01" nom={lang === 'fr' ? 'Les ventes' : 'Sales'} />
   <div class="ventes-tete" data-reveal="titre">
     <h2 id="ventes-titre">{d.accueil.ventes_titre}</h2>
-    <a href={r('realisation', lang)} class="lien">{d.accueil.ventes_lien}</a>
   </div>
-  <div class="pile">
-    {cartes.map((c, i) => (
-      <article class="carte" data-pile data-carte={i + 1}>
-        <div class="carte-texte">
-          {c.sousTitre && <div class="chapeau-muet carte-etiquette">{c.sousTitre}</div>}
-          <h3>{tiret(c.titre)}</h3>
-          <p class="carte-phrase">{c.lien ? `« ${c.phrase} »` : c.phrase}</p>
-          {c.citation && <p class="carte-citation">« {c.citation.texte} » <span>{c.citation.auteur} · {c.citation.role}</span></p>}
-          {c.lien && <a href={c.lien} class="lien">{d.accueil.voir_vente}</a>}
+  {une && (
+    <article class="une" data-reveal="bloc">
+      <div class="une-photo tirage">
+        {une.photo && <Picture id={une.photo} alt={une.alt} sizes="(max-width: 899px) 100vw, 58vw" />}
+      </div>
+      <div class="une-texte">
+        <div class="une-etiquette">{lang === 'fr' ? 'À la une' : 'Featured'}</div>
+        <h3>{tiret(une.titre)}</h3>
+        {une.phrase && <p class="une-phrase">« {une.phrase} »</p>}
+        {une.citation && <p class="une-citation">« {une.citation.texte} » <span>{une.citation.auteur} · {une.citation.role}</span></p>}
+        {une.lien && <a href={une.lien} class="lien-fleche">{d.accueil.voir_vente} <span aria-hidden="true">→</span></a>}
+      </div>
+    </article>
+  )}
+  <ol class="sommaire" data-reveal="bloc">
+    {suite.map((c, i) => (
+      <li class="sommaire-ligne">
+        <span class="sommaire-num">{String(i + 2).padStart(2, '0')}</span>
+        <div class="sommaire-texte">
+          <h3>{c.lien ? <a href={c.lien}>{tiret(c.titre)}</a> : tiret(c.titre)}</h3>
+          {c.phrase && <p>{c.lien ? `« ${c.phrase} »` : c.phrase}</p>}
+          {c.sousTitre && <span class="sommaire-etiquette">{c.sousTitre}</span>}
         </div>
-        <div class="carte-photo">
-          {c.photo ? <Picture id={c.photo} alt={c.alt} sizes="(max-width: 899px) 100vw, 60vw" /> : <Reserve label={`Actif attendu A-02 · ${c.titre} · photo maîtresse · 2400 px`} ton="placement" lecture={i === 3} style="height:100%;border-radius:12px" />}
+        <div class="sommaire-photo">
+          {c.photo ? <Picture id={c.photo} alt={c.alt} sizes="220px" /> : <span class="sommaire-vide" aria-hidden="true"></span>}
         </div>
-      </article>
+      </li>
     ))}
-  </div>
+  </ol>
+  <a href={r('realisation', lang)} class="lien-fleche ventes-tout">{d.accueil.ventes_lien} <span aria-hidden="true">→</span></a>
 </section>
 
 <style>
-  .ventes { position: relative; background: var(--avt-ecru); padding: 120px 0 0; }
-  .ventes-tete { display: flex; align-items: baseline; justify-content: space-between; padding: 0 var(--marge); margin-bottom: 56px; gap: 24px; }
-  .ventes-tete h2 { font-size: 56px; }
-  .pile { position: relative; padding: 0 var(--marge) 60px; }
-  .carte { position: sticky; top: calc(var(--nav-h) + 24px); height: 600px; margin-bottom: 30px; display: grid; grid-template-columns: 1fr 1.25fr; gap: 48px; background: var(--avt-galet); border-radius: 16px; padding: 48px 56px; z-index: 1; }
-  .carte-texte { display: flex; flex-direction: column; justify-content: flex-end; gap: 18px; }
-  .carte-etiquette { margin-bottom: -6px; }
-  .carte h3 { font-size: 44px; }
-  .carte-phrase { font-size: 18px; line-height: 1.55; max-width: 38ch; }
-  .carte-citation { font-size: 14.5px; line-height: 1.5; max-width: 38ch; border-left: 2px solid var(--avt-terra); padding-left: 12px; color: var(--avt-brun); }
-  .carte-citation span { color: var(--avt-text-muted); }
-  .carte-photo { position: relative; margin-top: -70px; border-radius: 12px; overflow: hidden; background: var(--avt-placeholder); }
-  .carte-photo :global(picture), .carte-photo :global(img) { width: 100%; height: 100%; }
-  .carte-photo :global(img) { object-fit: cover; }
-  @media (prefers-reduced-motion: reduce) { .carte { position: relative; top: auto; } }
+  /* Concept « Magazine et matière » : la pile collante laisse place à une vente « à la une » (grande photo tirée sur papier),
+     puis un sommaire numéroté des autres ventes, comme la table des matières d'un magazine. */
+  .ventes { position: relative; padding: 120px var(--marge) 110px; }
+  .ventes-tete { margin-bottom: 64px; }
+  .ventes-tete h2 { font-size: 64px; line-height: 1.04; max-width: 17ch; letter-spacing: -.005em; }
+  .une { display: grid; grid-template-columns: 1.45fr 1fr; gap: 64px; align-items: end; margin-bottom: 88px; }
+  .une-photo { height: 620px; }
+  .une-photo :global(picture), .une-photo :global(img) { width: 100%; height: 100%; }
+  .une-photo :global(img) { object-fit: cover; }
+  .une-texte { display: flex; flex-direction: column; gap: 18px; padding-bottom: 8px; }
+  .une-etiquette { font-size: 12.5px; letter-spacing: .2em; text-transform: uppercase; font-weight: 500; color: var(--avt-terra-deep); }
+  .une h3 { font-size: 60px; line-height: 1; }
+  .une-phrase { font-family: var(--avt-font-display); font-size: 25px; line-height: 1.35; }
+  .une-citation { font-size: 15px; line-height: 1.55; border-left: 2px solid var(--avt-terra); padding-left: 14px; }
+  .une-citation span { color: var(--avt-text-muted); }
+  .sommaire { list-style: none; border-top: 1px solid var(--avt-brun); }
+  .sommaire-ligne { display: grid; grid-template-columns: 90px 1fr 220px; gap: 32px; align-items: center; padding: 28px 0; border-bottom: 1px solid var(--filet-brun-fort); }
+  .sommaire-num { font-family: var(--avt-font-display); font-size: 44px; color: var(--avt-terra-deep); line-height: 1; font-variant-numeric: tabular-nums; }
+  .sommaire-texte h3 { font-size: 38px; line-height: 1.1; }
+  .sommaire-texte h3 a { color: var(--avt-brun); }
+  .sommaire-texte h3 a:hover { color: var(--avt-klein); text-decoration: none; }
+  .sommaire-texte p { font-size: 16px; line-height: 1.55; margin-top: 8px; max-width: 62ch; color: var(--avt-text-muted); }
+  .sommaire-etiquette { display: inline-block; margin-top: 10px; font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase; font-weight: 500; color: var(--avt-text-muted); }
+  .sommaire-photo { height: 140px; border-radius: 4px; overflow: hidden; }
+  .sommaire-photo :global(picture), .sommaire-photo :global(img) { width: 100%; height: 100%; }
+  .sommaire-photo :global(img) { object-fit: cover; transition: transform .6s var(--ease-bloc); }
+  .sommaire-ligne:hover .sommaire-photo :global(img) { transform: scale(1.04); }
+  .sommaire-vide { display: block; width: 100%; height: 100%; background: repeating-linear-gradient(-45deg, transparent 0 9px, var(--filet-brun-fort) 9px 10px); }
+  .ventes-tout { display: inline-flex; margin-top: 40px; }
   @media (max-width: 899px) {
-    .ventes { padding-top: 64px; }
-    .ventes-tete { flex-direction: column; gap: 6px; margin-bottom: 28px; }
+    .ventes { padding: 64px var(--marge-m) 64px; }
+    .ventes-tete { margin-bottom: 32px; }
     .ventes-tete h2 { font-size: 36px; line-height: 1.1; }
-    .pile { padding: 0 16px 40px; }
-    .carte { top: calc(var(--nav-h-mobile) + 12px); height: auto; margin-bottom: 14px; display: flex; flex-direction: column; gap: 14px; border-radius: 14px; padding: 16px 16px 22px; }
-    .carte-texte { order: 2; gap: 14px; }
-    .carte-photo { order: 1; height: 240px; border-radius: 10px; margin-top: -30px; }
-    .carte h3 { font-size: 30px; }
-    .carte-phrase { font-size: 16px; line-height: 1.5; }
-    .carte-citation { font-size: 14px; }
+    .une { grid-template-columns: 1fr; gap: 24px; margin-bottom: 48px; }
+    .une-photo { height: 300px; }
+    .une h3 { font-size: 40px; }
+    .une-phrase { font-size: 21px; }
+    .sommaire-ligne { grid-template-columns: 48px 1fr; gap: 14px; padding: 22px 0; }
+    .sommaire-num { font-size: 30px; align-self: start; }
+    .sommaire-texte h3 { font-size: 28px; }
+    .sommaire-texte p { font-size: 15px; }
+    .sommaire-photo { grid-column: 2; height: 170px; }
+    .sommaire-photo:has(.sommaire-vide) { display: none; }
   }
 </style>

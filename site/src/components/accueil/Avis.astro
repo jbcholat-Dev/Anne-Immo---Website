@@ -2,6 +2,7 @@
 // § 1.5 Ils ont travaillé avec Anne (D-8, D-9) : trois avis Immodvisor entiers, vendeurs et acheteurs, le premier relié à sa story avec la photo du bien.
 import Picture from '../Picture.astro';
 import AvisCarte from '../AvisCarte.astro';
+import Rubrique from './Rubrique.astro';
 import { r, type Lang } from '../../i18n';
 import { dicoAccueil } from '../../lib/textes';
 import { avisParId, storyDeAvis, storyVisible, photoPrincipale, roleLibelle, dateLibelle, paragraphes, phraseDeAvis, instantane } from '../../lib/contenu';
@@ -19,37 +20,50 @@ const liste = await Promise.all(accueil.avis.map(async (id) => {
 const contexte = (x: (typeof liste)[number]) => [roleLibelle(x.a, lang), x.story?.data.commune, dateLibelle(x.a.data.date, lang)].filter(Boolean).join(' · ');
 ---
 <section class="avis" data-sec="avis" aria-labelledby="avis-titre">
+  <Rubrique num="04" nom={lang === 'fr' ? 'Ils racontent' : 'In their words'} />
   <div class="avis-tete" data-reveal="titre"><h2 id="avis-titre">{d.accueil.avis_titre}</h2>{lang === 'en' && <p class="texte-muet avis-note">Verified Immodvisor reviews, quoted in full in their original language (French).</p>}</div>
   <div class="avis-grille" data-reveal="bloc">
     {liste.map((x, i) => (
-      <AvisCarte phrase={phraseDeAvis(x.a)} texte={paragraphes(x.a.body)} lignes={6} lang={lang} class={i === 0 ? 'avis-relie' : 'avis-seul'}>
+      <AvisCarte phrase={phraseDeAvis(x.a)} texte={paragraphes(x.a.body)} lignes={i === 0 ? 9 : 6} taille={i === 0 ? 'grande' : 'grille'} lang={lang} class={i === 0 ? 'avis-relie' : 'avis-seul'}>
         {i === 0 && x.photo && x.story && (
-          <div class="avis-photo" slot="tete"><Picture id={x.photo} alt={`${x.story.data.type_bien} vendu à ${x.story.data.commune}`} sizes="(max-width: 899px) 100vw, 33vw" /></div>
+          <div class="avis-photo tirage" slot="tete"><Picture id={x.photo} alt={`${x.story.data.type_bien} vendu à ${x.story.data.commune}`} sizes="(max-width: 899px) 100vw, 40vw" /></div>
         )}
         {x.a.data.auteur}{' '}<span class="texte-muet">· {contexte(x)}</span>
         {x.slug && x.story && <div class="avis-lien"><a href={`${r('realisation', 'fr')}/${x.slug}`} hreflang="fr">{d.accueil.voir_vente}{lang === 'en' && ' (in French)'}</a></div>}
       </AvisCarte>
     ))}
   </div>
-  <div class="avis-tous"><a href={inst.url_fiche} rel="noopener" target="_blank">{d.accueil.avis_tous.replace('{n}', String(inst.nombre_avis))}</a></div>
+  <div class="avis-tous"><a href={inst.url_fiche} rel="noopener" target="_blank" class="lien-fleche">{d.accueil.avis_tous.replace('{n}', String(inst.nombre_avis))} <span aria-hidden="true">→</span></a></div>
 </section>
 <style>
-  .avis { position: relative; background: var(--avt-brume); padding: 96px var(--marge); }
-  .avis-tete { margin: 0 0 48px; }
-  .avis-tete h2 { font-size: 40px; }
+  /* Concept « Magazine et matière » : le courrier des lecteurs. Le premier avis en grand, à côté de la photo de la vente,
+     les deux autres en colonnes, séparés par des filets plutôt que posés sur des cartes. Les avis restent entiers (D-9). */
+  .avis { position: relative; padding: 110px var(--marge); }
+  .avis-tete { margin: 0 0 56px; }
+  .avis-tete h2 { font-size: 64px; line-height: 1.04; }
   .avis-note { font-size: 14px; margin-top: 10px; }
-  .avis-grille { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; align-items: start; }
-  .avis-photo { height: 220px; background: var(--avt-galet); }
+  .avis-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 0 64px; align-items: start; }
+  .avis-grille :global(.avis-carte) { background: transparent; border-radius: 0; overflow: visible; }
+  .avis-grille :global(.avis-carte-corps) { padding: 32px 0 0; }
+  .avis-grille :global(.avis-relie) { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1.1fr; gap: 64px; align-items: center; padding-bottom: 64px; margin-bottom: 8px; border-bottom: 1px solid var(--avt-brun); }
+  .avis-grille :global(.avis-relie .avis-carte-corps) { padding: 0; }
+  .avis-grille :global(.avis-relie .avis-carte-phrase) { font-size: 40px; line-height: 1.2; }
+  .avis-grille :global(.avis-seul + .avis-seul) { border-left: 1px solid var(--filet-brun-fort); padding-left: 64px; margin-left: -32px; }
+  .avis-photo { height: 520px; }
   .avis-photo :global(picture), .avis-photo :global(img) { width: 100%; height: 100%; }
   .avis-photo :global(img) { object-fit: cover; }
   .avis-lien { margin-top: 10px; font-size: 14.5px; }
-  .avis-tous { margin-top: 40px; font-size: 13.5px; }
+  .avis-tous { margin-top: 48px; font-size: 15px; }
   @media (max-width: 899px) {
-    .avis { padding: 56px var(--marge-m); }
+    .avis { padding: 64px var(--marge-m); }
     .avis-tete { margin-bottom: 28px; }
-    .avis-tete h2 { font-size: 32px; }
-    .avis-grille { grid-template-columns: 1fr; gap: 20px; }
-    .avis-photo { height: 200px; }
-    .avis-tous { margin-top: 26px; }
+    .avis-tete h2 { font-size: 36px; }
+    .avis-grille { grid-template-columns: 1fr; gap: 0; }
+    .avis-grille :global(.avis-relie) { grid-template-columns: 1fr; gap: 26px; padding-bottom: 40px; }
+    .avis-grille :global(.avis-relie .avis-carte-phrase) { font-size: 26px; }
+    .avis-grille :global(.avis-seul) { border-bottom: 1px solid var(--filet-brun-fort); padding-bottom: 28px; }
+    .avis-grille :global(.avis-seul + .avis-seul) { border-left: 0; padding-left: 0; margin-left: 0; }
+    .avis-photo { height: 260px; }
+    .avis-tous { margin-top: 28px; }
   }
 </style>

@@ -2,34 +2,47 @@
 // § 1.6 Le diagnostic : une phrase, la durée, le bouton ; trois livrables en encarts galet.
 import { r, type Lang } from '../../i18n';
 import { dicoAccueil } from '../../lib/textes';
+import Rubrique from './Rubrique.astro';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const d = await dicoAccueil(lang);
 ---
 <section class="diag" data-sec="diagnostic" aria-labelledby="diag-titre">
-  <div data-reveal="titre">
-    <h2 id="diag-titre">{d.accueil.diag_titre}</h2>
-    <p class="diag-texte"><span class="seulement-desktop">{d.accueil.diag_texte}</span><span class="seulement-mobile">{d.accueil.diag_texte_m}</span></p>
-    <a href={r('diagnostic', lang)} class="btn btn-primaire">{d.accueil.diag_cta}</a>
-  </div>
-  <div class="diag-livrables" data-reveal="bloc">
-    <div class="diag-livrable"><b>/100</b><span>{d.accueil.diag_score}</span></div>
-    <div class="diag-livrable"><b>3</b><span>{d.accueil.diag_axes}</span></div>
-    <div class="diag-livrable"><b>1</b><span>{d.accueil.diag_plan}</span></div>
+  <div class="diag-int">
+    <Rubrique num="05" nom={lang === 'fr' ? 'Votre vente' : 'Your sale'} ton="sombre" />
+    <div class="diag-grille">
+      <div data-reveal="titre">
+        <h2 id="diag-titre">{d.accueil.diag_titre}</h2>
+        <p class="diag-texte"><span class="seulement-desktop">{d.accueil.diag_texte}</span><span class="seulement-mobile">{d.accueil.diag_texte_m}</span></p>
+        <a href={r('diagnostic', lang)} class="btn btn-ecru">{d.accueil.diag_cta}</a>
+      </div>
+      <div class="diag-chiffre" data-reveal="bloc">
+        <span class="diag-cent" aria-hidden="true"><small>/</small>100</span>
+        <ul class="diag-livrables">
+          <li><b>100</b> {d.accueil.diag_score}</li>
+          <li><b>3</b> {d.accueil.diag_axes}</li>
+          <li><b>1</b> {d.accueil.diag_plan}</li>
+        </ul>
+      </div>
+    </div>
   </div>
 </section>
 <style>
-  .diag { position: relative; background: var(--avt-ecru); padding: 120px var(--marge); display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
-  .diag h2 { font-size: 48px; margin-bottom: 20px; }
-  .diag-texte { font-size: 17px; line-height: 1.6; margin-bottom: 28px; max-width: 44ch; }
-  .diag-livrables { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
-  .diag-livrable { background: var(--avt-galet); border-radius: 12px; padding: 24px; min-height: 150px; display: flex; flex-direction: column; justify-content: space-between; }
-  .diag-livrable b { font-family: var(--avt-font-display); font-weight: 400; font-size: 40px; color: var(--avt-klein); line-height: 1; }
-  .diag-livrable span { font-size: 14px; }
+  /* Concept « Magazine et matière » : un aplat bleu Klein pleine largeur, « /100 » en très grand, les trois livrables en liste. */
+  .diag { position: relative; background: var(--avt-klein); color: var(--avt-ecru); padding: 100px var(--marge) 110px; }
+  .diag-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: end; }
+  .diag h2 { font-size: 72px; line-height: 1; color: var(--avt-ecru); margin-bottom: 24px; max-width: 12ch; }
+  .diag-texte { font-size: 18px; line-height: 1.6; margin-bottom: 32px; max-width: 42ch; }
+  .diag-cent { display: block; font-family: var(--avt-font-display); font-size: 240px; line-height: .8; letter-spacing: -.02em; text-align: right; }
+  .diag-cent small { font-size: .45em; vertical-align: .55em; margin-right: .05em; opacity: .7; }
+  .diag-livrables { list-style: none; margin-top: 28px; border-top: 1px solid rgba(247, 242, 234, .4); }
+  .diag-livrables li { display: flex; gap: 18px; align-items: baseline; padding: 12px 0; border-bottom: 1px solid rgba(247, 242, 234, .2); font-size: 15px; }
+  .diag-livrables b { font-family: var(--avt-font-display); font-weight: 400; font-size: 24px; min-width: 64px; }
   @media (max-width: 899px) {
-    .diag { padding: 64px var(--marge-m); grid-template-columns: 1fr; gap: 28px; }
-    .diag h2 { font-size: 34px; margin-bottom: 12px; }
-    .diag-texte { font-size: 16px; margin-bottom: 20px; }
-    .diag-livrables { display: none; }
+    .diag { padding: 56px var(--marge-m) 64px; }
+    .diag-grille { grid-template-columns: 1fr; gap: 36px; }
+    .diag h2 { font-size: 42px; margin-bottom: 14px; }
+    .diag-texte { font-size: 16px; margin-bottom: 22px; }
+    .diag-cent { font-size: 120px; text-align: left; }
   }
 </style>

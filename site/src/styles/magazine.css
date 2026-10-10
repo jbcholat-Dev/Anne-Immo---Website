@@ -1,0 +1,95 @@
+/* ============================================================================
+   CONCEPT « Magazine et matière » — branche d'essai claude/concept-magazine-matiere.
+   Ne pas fusionner tel quel : essai à comparer (fil Structure et visuel, demande de JB du 2026-10-10).
+
+   Idée : le site se lit comme un magazine de maison. Rubriques numérotées, très grands titres,
+   filets fins plutôt que cartes arrondies, une vente à la une puis un sommaire. Et de la matière :
+   un grain de papier sur toute la page, des photos tirées sur papier (bord blanc, ombre portée),
+   quelques notes écrites à la main avec les mots d'Anne.
+   Polices de la charte gardées (D-31 : Gilda Display, Jost). Une troisième, Caveat (écriture à la main,
+   licence OFL, 51 Ko), sert uniquement aux notes. Le verre reste en accent sur la barre de navigation.
+
+   Les règles propres à chaque section vivent dans les composants de l'accueil (modifiés sur cette branche) ;
+   ce fichier porte ce qui est commun à toutes les pages.
+   ========================================================================== */
+
+@font-face { font-family: 'Caveat'; src: url('/fonts/caveat-500.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+
+html[data-concept="magazine"] {
+  --mag-main: 'Caveat', 'Segoe Print', cursive;
+  --verre-clair: linear-gradient(155deg, rgba(251, 248, 242, .9) 0%, rgba(247, 242, 234, .78) 100%); /* plus couvrant que l'essai « verre » : la barre passe aussi sur le bleu et l'encre */
+  --verre-flou: blur(22px) saturate(170%);
+  --verre-bord: rgba(255, 255, 255, .62);
+  --verre-bord-sombre: rgba(255, 255, 255, .30);
+  --verre-relief: inset 0 1px 0 rgba(255, 255, 255, .85), inset 0 -1px 0 rgba(38, 32, 26, .06), 0 18px 50px rgba(38, 32, 26, .12), 0 2px 8px rgba(38, 32, 26, .06);
+  --verre-relief-sombre: inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 -1px 0 rgba(0, 0, 0, .18), 0 24px 60px rgba(0, 0, 0, .28);
+}
+
+/* --- Matière : un grain de papier sur toute la page (bruit fractal, fixe, sans clic) --------- */
+html[data-concept="magazine"] body::after {
+  content: ""; position: fixed; inset: 0; z-index: 2147483000; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .15 0 0 0 0 .12 0 0 0 0 .1 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  opacity: .22; mix-blend-mode: multiply;
+}
+
+/* --- Les notes à la main : Caveat, en encre bleue ou écru selon le fond ---------------------- */
+html[data-concept="magazine"] .note-main { font-family: var(--mag-main); font-weight: 500; line-height: 1.1; letter-spacing: 0; text-transform: none; }
+
+/* --- Photos tirées sur papier : bord blanc cassé, ombre portée, coin net ---------------------- */
+html[data-concept="magazine"] .tirage {
+  background: #FFFDF8; padding: 12px; border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(38, 32, 26, .12), 0 18px 40px -12px rgba(38, 32, 26, .28);
+}
+html[data-concept="magazine"] .tirage img { border-radius: 0; }
+@media (max-width: 899px) { html[data-concept="magazine"] .tirage { padding: 8px; } }
+
+/* --- Lien fléché (remplace les petits liens bleus) ------------------------------------------ */
+html[data-concept="magazine"] .lien-fleche {
+  display: inline-flex; align-items: baseline; gap: 10px; font-size: 15px; font-weight: 500; letter-spacing: .02em;
+  color: var(--avt-brun); border-bottom: 1px solid var(--avt-brun); padding-bottom: 4px;
+}
+html[data-concept="magazine"] .lien-fleche span { transition: transform .3s var(--ease-bloc); }
+html[data-concept="magazine"] .lien-fleche:hover { text-decoration: none; color: var(--avt-klein); border-bottom-color: var(--avt-klein); }
+html[data-concept="magazine"] .lien-fleche:hover span { transform: translateX(4px); }
+
+/* --- Lettrine : la première lettre d'un texte de portrait, en Gilda Display terracotta ------- */
+html[data-concept="magazine"] .lettrine > span:not(.seulement-mobile) { display: block; }
+html[data-concept="magazine"] .lettrine > span::first-letter {
+  float: left; font-family: var(--avt-font-display); font-size: 4.4em; line-height: .8; margin: .06em .1em 0 0; color: var(--avt-terra-deep);
+}
+
+/* --- La barre de navigation : le verre en accent (gélule flottante) -------------------------- */
+html[data-concept="magazine"] .nav {
+  top: 14px; left: 24px; right: 24px; border-radius: 999px;
+  background: var(--verre-clair); -webkit-backdrop-filter: var(--verre-flou); backdrop-filter: var(--verre-flou);
+  border: 1px solid var(--verre-bord); box-shadow: var(--verre-relief);
+  transition: height .35s ease, background .35s ease, color .35s ease, top .35s ease;
+}
+html[data-concept="magazine"] .nav .nav-int { padding: 0 28px 0 18px; }
+html[data-concept="magazine"] .nav[data-reduit] { top: 10px; background: var(--verre-clair); -webkit-backdrop-filter: var(--verre-flou); backdrop-filter: var(--verre-flou); border: 1px solid var(--verre-bord); }
+html[data-concept="magazine"] .nav[data-sombre]:not([data-reduit]) {
+  background: linear-gradient(155deg, rgba(38, 32, 26, .30), rgba(38, 32, 26, .16)); border: 1px solid var(--verre-bord-sombre); box-shadow: var(--verre-relief-sombre);
+}
+html[data-concept="magazine"] .nav-menu {
+  background: var(--verre-clair); -webkit-backdrop-filter: var(--verre-flou); backdrop-filter: var(--verre-flou);
+  border: 1px solid var(--verre-bord); border-radius: 18px; top: calc(100% + 8px); box-shadow: var(--verre-relief);
+}
+html[data-concept="magazine"] .nav-item:hover .nav-menu::before { content: ""; position: absolute; left: 0; right: 0; top: -10px; height: 10px; }
+html[data-concept="magazine"] .page-int { padding-top: calc(var(--nav-h) + 14px); }
+@media (max-width: 899px) {
+  html[data-concept="magazine"] .nav { top: 10px; left: 12px; right: 12px; }
+  html[data-concept="magazine"] .nav .nav-int { padding: 0 10px 0 14px; }
+}
+
+/* --- Pages intérieures : titres plus grands et plus serrés, comme des titres d'article --------- */
+html[data-concept="magazine"] .page-int h1 { letter-spacing: -.005em; line-height: 1.02; }
+
+/* --- Replis ---------------------------------------------------------------------------------- */
+@media (prefers-reduced-transparency: reduce) {
+  html[data-concept="magazine"] .nav, html[data-concept="magazine"] .nav-menu { background: var(--avt-ecru); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  html[data-concept="magazine"] .nav[data-sombre]:not([data-reduit]) { background: rgba(38, 32, 26, .78); }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html[data-concept="magazine"] .nav, html[data-concept="magazine"] .nav-menu { background: rgba(247, 242, 234, .94); }
+}
+@media print { html[data-concept="magazine"] body::after { display: none; } }
