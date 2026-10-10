@@ -5,6 +5,7 @@
 // Deux boutons (retour d'Anne, ticket #40) : le diagnostic, et « Estimation offerte » vers l'agenda de /contact#reserver.
 // Les fichiers vidéo sont produits par `npm run video` (scripts/video.mjs) ; s'ils manquent, la balise <video> est masquée.
 import fs from 'node:fs';
+import path from 'node:path';
 import Picture from '../Picture.astro';
 import Signature from '../Signature.astro';
 import { image } from '../../lib/images';
@@ -15,7 +16,9 @@ interface Props { lang: Lang }
 const { lang } = Astro.props;
 const d = await dicoAccueil(lang);
 const poster = image(hero.poster)!;
-const videoDispo = fs.existsSync(new URL('../../../public/video/ouverture.mp4', import.meta.url));
+// Chemin pris depuis le dossier site/ (comme src/lib/contenu.ts) : depuis l'adaptateur Cloudflare (story 10.2), le code est regroupé
+// ailleurs à la construction et un chemin relatif à ce fichier ne trouvait plus la vidéo, qui disparaissait de l'accueil.
+const videoDispo = fs.existsSync(path.resolve(process.cwd(), 'public/video/ouverture.mp4'));
 ---
 <section class="hero" data-sec="ouverture" aria-labelledby="hero-titre">
   <div class="hero-fond" aria-hidden="true">

@@ -11,7 +11,7 @@ photos:
   - photos/photo-019.jpg
   - photos/allinges-exp-immo-018-hd.webp
   - photos/dji_0568.webp
-statut: brouillon
+statut: publie
 autorisations: false
 temoignages:
   - citation: null

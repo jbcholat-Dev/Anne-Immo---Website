@@ -27,7 +27,7 @@ Position dans l'ordre prévu : 9 (aperçu en ligne) → 8 et 7 → **11.1 (cette
 1. **Recherche** : ce qui fonctionne en 2026 pour un mandataire immobilier local (fiche Google et avis Google, pages par commune, contenu qui répond aux questions des vendeurs, réseaux, publicité locale Google et Meta). Méthode : `bmad-deep-recon`, type « domain » ou « technical ».
 2. **Choix** : quels leviers Anne peut tenir dans la durée, dans quel ordre, avec quel budget.
 3. **Impacts** : nouvelles pages (par commune, par question), nouveau type de contenu dans l'architecture (AD-1 le permet), version anglaise comme atout pour les acheteurs suisses et étrangers, mesure (AD-11 : sans cookie).
-4. **Sorties** : ce document rempli ; amendement de la spec (capacité CAP-12 « Visibilité », story 11.4) ; stories de contenu ajoutées à l'epic 11 ; actions d'Anne (fiche Google, story 11.2, faisable dès maintenant).
+4. **Sorties** : ce document rempli ; amendement de la spec (capacité CAP-13 « Visibilité », story 11.4 ; CAP-12 est l’espace de travail d’Anne depuis le 2026-10-09) ; stories de contenu ajoutées à l'epic 11 ; actions d'Anne (fiche Google, story 11.2, faisable dès maintenant).
 
 ## Rappels
 

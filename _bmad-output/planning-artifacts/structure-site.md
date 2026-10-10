@@ -319,7 +319,7 @@ Grille de toutes les stories : photo, commune, une phrase. Pas de filtre tant qu
 **Ce qui la distingue de la landing ScoreApp :** elle donne l'information nécessaire à une décision, puis s'arrête. Pas d'agitation du problème, pas de comparatif avec les agences, pas de statistique d'accroche. Trois blocs de preuve, et une sortie pour qui n'est pas prêt.
 
 ### Au-dessus de la ligne de flottaison — l'offre
-Le titre, une phrase sur ce qu'on obtient, les trois livrables en une ligne chacun (score de maturité sur 100, diagnostic personnalisé, recommandations concrètes), la durée, la gratuité, **le bouton**. Une image sobre.
+Le titre, une phrase sur ce qu'on obtient, les trois livrables en une ligne chacun (score de maturité sur 100, diagnostic personnalisé, recommandations concrètes), la durée, la gratuité, **le bouton**. Une image sobre : l'aperçu du rapport en feuille A4 (D-38, 2026-10-10), précédée du nom et du portrait d'Anne.
 
 **Annoncer le prix à payer, ici.** Une ligne dit que le résultat complet s'obtient contre ses coordonnées, téléphone compris, avec un lien vers la politique de confidentialité. Le visiteur qui découvre un formulaire à quatre champs après 17 écrans abandonne au moment où ça coûte le plus cher — une réponse complète, non captée. Le dire d'emblée coûte quelques départs et sauve des abandons tardifs.
 

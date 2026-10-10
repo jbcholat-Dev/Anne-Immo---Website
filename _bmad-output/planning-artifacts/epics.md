@@ -161,6 +161,9 @@ Le site est trouvé par les vendeurs et acheteurs du Chablais qui cherchent sur 
 - **Epic 12 : Lancement public**
 Le site est en ligne sur annevialtissot.fr, trouvable, légal, avec des formulaires qui fonctionnent. **AD-9, AD-10, AD-16 ; NFR3.** **État :** à faire.
 
+- **Epic 13 : Espace de travail d'Anne**
+Anne démarre chaque journée devant ses contacts et sait qui appeler, qui relancer et comment faire avancer chacun ; Modelo ne sert plus qu'à formaliser un mandat. **CAP-12 ; AD-14 (amendée), AD-18, AD-19, AD-20.** **État :** en cours ; spec (13.1) et architecture (13.2) écrites, construction découpée en stories 13.3 à 13.11.
+
 Ordre prévu : 9 (aperçu) → 8 et 7 en parallèle sur l'aperçu → 11.1 (cadrage visibilité) → 10 (backend) → 6 (anglais) → 11 (suite) → 12 (lancement).
 
 
@@ -597,6 +600,21 @@ Repères de vocabulaire, utilisés dans tout le document :
 - **Build** : la construction du site, la commande `npm run build` qui transforme le code et le contenu en pages prêtes à mettre en ligne. **Commit** : un enregistrement daté dans l'historique Git, identifié par un code court (hash).
 - **Story** a deux sens ici : une story BMAD (une unité de travail, ce document) et une story de vente (le récit d'un bien vendu, `contenu-anne/stories/`). Le contexte lève l'ambiguïté.
 
+### Story 5.4: L'origine des campagnes gardée depuis la landing
+
+En tant qu'Anne,
+je veux savoir de quelle campagne vient un contact arrivé par la landing du diagnostic,
+afin de savoir quelles publications et quels e-mails m'amènent des vendeurs.
+
+**Critères d'acceptation :**
+
+**Étant donné** une arrivée sur `/diagnostic` avec des paramètres `utm_*` dans l'adresse
+**Quand** le visiteur clique sur « Démarrer le diagnostic », le guide ou le contact
+**Alors** les paramètres `utm_*` suivent dans l'adresse, et eux seuls, sans rien déposer dans le navigateur (AD-11)
+**Et** le contact capté porte sa campagne, déjà enregistrée par le noyau.
+
+**État :** fait — PR n° 74 fusionnée le 10/10/2026 (origine des campagnes gardée, nom et portrait d'Anne en haut, aperçu du rapport A4, D-38). Story : `_bmad-output/implementation-artifacts/5-4-origine-des-campagnes-gardée-depuis-la-landing.md`.
+
 ## Epic 6: Version anglaise
 
 Le visiteur anglophone lit le site en anglais, page par page, sans jamais tomber sur un écran mi-traduit : ce qui est traduit est livré en entier, ce qui ne l'est pas n'existe pas en anglais.
@@ -982,7 +1000,7 @@ afin de ne plus dépendre d'un passage par le Drive et par Claude pour chaque co
 
 **Étant donné** l'adresse `/admin` du site et un compte GitHub collaborateur du dépôt
 **Quand** Anne (ou JB) se connecte et enregistre une fiche
-**Alors** le changement part sur une branche avec sa demande de fusion, Cloudflare en construit un aperçu protégé, et rien n'est en ligne tant que JB n'a pas fusionné
+**Alors** le changement part sur une branche avec sa demande de fusion, Cloudflare en construit un aperçu protégé, et rien n'est en ligne tant que la demande n'est pas fusionnée (depuis le 2026-10-10 : fusion automatique quand la fiche quitte le statut « Brouillon », story 9.7)
 **Et** les photos envoyées sont réduites dans le navigateur (WebP, 3 200 px au plus) avant d'entrer dans le dépôt ; les HD n'y entrent jamais
 **Et** le site public ne montre que les stories « publie » ; l'aperçu montre aussi les brouillons
 **Et** les avis Immodvisor restent en lecture seule, sauf la vente concernée et « cité sur l'accueil ».
@@ -1348,6 +1366,23 @@ afin que rien ne se perde entre ce que je vois et ce que Claude corrige.
 
 **État :** en revue — code et test local faits le 2026-09-26 (worker.ts, composant RetourApercu, routes testées avec wrangler dev) ; l'essai réel attend la clé GitHub que JB colle dans Cloudflare (action J15).
 
+### Story 9.7: Fusion automatique des PR de contenu et de suivi
+
+En tant que JB,
+je veux que les demandes de fusion qui ne changent pas le code du site (enregistrements de l'espace d'édition, documents de suivi) fusionnent seules dans `main`,
+afin de ne garder la main que sur les changements qui ont un impact sur le site.
+
+**Critères d'acceptation :**
+
+**Étant donné** une PR ouverte vers `main` depuis une branche du dépôt, hors brouillon et sans l'étiquette `a-valider`
+**Quand** elle ne touche que `contenu-anne/` depuis une branche `cms/…`, ou que des documents de suivi (`_bmad-output/`, `_bmad/`, `.claude/`, `maquettes/`, `.md` hors des dossiers lus par le site)
+**Et** que la construction Cloudflare est au vert sur son dernier commit
+**Alors** elle est fusionnée automatiquement, sans intervention de JB
+**Et** toute autre PR attend la fusion de JB
+**Et** la règle ne peut pas être modifiée par la PR qu'elle examine.
+
+**État :** en relecture (2026-10-10). Décision de JB du 2026-10-10. RUNBOOK § 2 bis.
+
 ## Epic 10: Capture des leads et backend
 
 Un prospect qui remplit un formulaire ou termine le diagnostic est enregistré côté site, Anne est prévenue, et rien n'est perdu ni exposé (AD-4 « écrire d'abord, diffuser ensuite »). Aujourd'hui tout est simulé dans le navigateur (voir `site/README.md`, section « TODO(backend) ») ; cet epic remplace chaque simulation par le noyau serveur décrit dans le spine, une story à la fois, sans jamais casser le site en ligne.
@@ -1656,7 +1691,7 @@ afin de savoir quoi corriger dans ma vente, et dans quel ordre.
 ## Epic 11: Référencement et visibilité
 
 Le site d'Anne est trouvé par les vendeurs et acheteurs du Chablais qui cherchent sur Google, et pas seulement par ceux qui ont l'adresse.
-**Capacités couvertes :** CAP-2 (preuve sociale, avis cohérents avec la fiche Google), CAP-10 (une adresse par langue), contrainte « Performance, mobile et SEO local » de la spec (cible : Chablais et bassin lémanique), et la future CAP-12 « Visibilité » (à créer à la story 11.4). **Décisions :** AD-13 (référencement généré, cohérent avec la fiche Google, contenu long sur le domaine), AD-3 (une adresse par langue, sitemap et hreflang générés depuis le contenu réel), AD-2 (une langue livrée est complète ou n'existe pas), AD-11 (aucun traceur, aucun script tiers), AD-1 (tout contenu est un objet typé).
+**Capacités couvertes :** CAP-2 (preuve sociale, avis cohérents avec la fiche Google), CAP-10 (une adresse par langue), contrainte « Performance, mobile et SEO local » de la spec (cible : Chablais et bassin lémanique), et la future CAP-13 « Visibilité » (à créer à la story 11.4 ; CAP-12 est prise depuis le 2026-10-09 par l’espace de travail d’Anne). **Décisions :** AD-13 (référencement généré, cohérent avec la fiche Google, contenu long sur le domaine), AD-3 (une adresse par langue, sitemap et hreflang générés depuis le contenu réel), AD-2 (une langue livrée est complète ou n'existe pas), AD-11 (aucun traceur, aucun script tiers), AD-1 (tout contenu est un objet typé).
 
 ### Story 11.1: Session de cadrage de la stratégie de visibilité
 
@@ -1747,7 +1782,7 @@ afin que le travail de visibilité soit suivi comme le reste (règle « tout tra
 
 **Étant donné** `strategie-visibilite.md` validé (story 11.1)
 **Quand** Claude amende la spec avec `bmad-spec` (l'outil de la méthode qui met la spec à jour sans en perdre le reste)
-**Alors** la spec passe en version 6 avec une capacité **CAP-12 « Visibilité »** (intention, critère de succès mesurable, tiré du document de stratégie), les Open Questions et Assumptions touchées sont mises à jour, et l'entrée est journalisée dans `.memlog.md` de la spec le jour même
+**Alors** la spec passe en version suivante avec une capacité **CAP-13 « Visibilité »** (intention, critère de succès mesurable, tiré du document de stratégie), les Open Questions et Assumptions touchées sont mises à jour, et l'entrée est journalisée dans `.memlog.md` de la spec le jour même
 **Et** si le cadrage crée un nouveau type de contenu (page locale, article), le spine est amendé (inventaire AD-1, table de correspondance capacité / architecture) et `structure-site.md` reçoit la nouvelle liste des pages, par le même mécanisme que les amendements du 2026-09-07 et du 2026-09-13.
 
 **Étant donné** la liste des pages et contenus décidés
@@ -2044,3 +2079,142 @@ afin de les ajuster sans passer par JB ou Claude.
 **Alors** le texte apparaît à son endroit sur la page française, sans changer la mise en page
 **Et** une version téléphone laissée vide reprend le texte complet
 **Et** un texte obligatoire vidé fait échouer la construction avant toute mise en ligne
+
+
+## Epic 13: Espace de travail d'Anne
+
+Anne démarre chaque journée devant ses contacts et sait qui appeler, qui relancer et comment faire avancer chacun, quel que soit le canal d'arrivée du contact (téléphone, événement, site). L'espace part de `/gestion` (story 10.7) et devient son outil principal ; Modelo n'est utilisé qu'à la signature d'un mandat.
+**Capacités couvertes :** CAP-12 (spec v6, 2026-10-09). **Décisions :** AD-14 (amendée par CAP-12 : recopie Modelo au mandat seulement), AD-18 (droits RGPD depuis l'espace), AD-4 et AD-6 (un contact n'est jamais créé deux fois), une décision d'architecture à écrire pour Leedflow et la boîte Gmail.
+
+### Story 13.1: Spécification de l'espace de travail
+
+En tant que JB,
+je veux que l'espace de travail quotidien d'Anne soit décrit dans la spec avant toute construction,
+afin que ce qu'on construit corresponde à sa façon réelle de travailler et reste transférable.
+
+**Critères d'acceptation :**
+**Étant donné** les réponses de JB sur la façon de travailler d'Anne (2026-10-09)
+**Quand** la spec est amendée
+**Alors** elle passe en version 6 avec une capacité CAP-12 (intention, critères de succès vérifiables), AD-14 est amendée dans la contrainte Modelo, et les questions ouvertes (Leedflow, Gmail, contacts du jeu concours) sont listées
+**Et** l'entrée est journalisée dans `.memlog.md` de la spec le jour même
+
+### Story 13.2: Décision d'architecture pour Leedflow et la boîte e-mail
+
+En tant que JB,
+je veux une décision écrite sur la façon dont les résumés d'appels Leedflow et les e-mails d'Anne arrivent sur la fiche d'un contact,
+afin de construire l'enrichissement sur un accès réel, pas supposé.
+
+**Critères d'acceptation :**
+**Étant donné** les réponses du support Leedflow (API, webhook, MCP, hébergement, contrat RGPD) et le choix d'accès à Gmail
+**Quand** la décision est prise
+**Alors** elle est ajoutée au spine d'architecture (nouvelle AD) avec ce qu'on perd en choisissant autrement, et AD-14 y est amendée
+**Et** le spine porte aussi la décision de JB du 2026-10-09 : l'espace de travail est une application séparée du site (son propre Worker et sa propre adresse, même dépôt) qui partage la base D1 des leads, après avoir vérifié que deux Workers peuvent utiliser la même base ; `/gestion` y est déplacé
+**Et** les stories de construction de l'epic 13 sont découpées et ajoutées ici (pipeline, page « Aujourd'hui », vue par étapes, saisie et import, recopie Modelo au mandat, enrichissement)
+
+### Story 13.3: Application séparée sur la base partagée
+
+En tant que JB,
+je veux l'espace de travail dans sa propre application, liée à la même base que le site,
+afin qu'une mise en ligne de l'un ne touche jamais l'autre (AD-19).
+
+**Critères d'acceptation :**
+**Étant donné** un second Worker `espace/` et sa propre application Access
+**Quand** une demande est envoyée depuis le site
+**Alors** elle apparaît aussitôt dans l'espace, sans copie (base D1 partagée vérifiée en premier)
+**Et** `/gestion` (liste, fiche, relance, droits RGPD) est déplacé dans l'espace et ses essais (`e2e-gestion`) passent ; le site n'a plus de page privée
+
+### Story 13.4: Contacts et pipeline
+
+En tant qu'Anne,
+je veux qu'une personne soit un seul contact, avec un parcours, une étape, une prochaine action datée et un historique,
+afin de savoir où en est chacun (CAP-12, AD-20).
+
+**Critères d'acceptation :**
+**Étant donné** les tables `contact` et `contact_evenement`
+**Quand** une même personne fait deux demandes (même téléphone ou même e-mail)
+**Alors** elles se rangent sur un seul contact, les demandes existantes comprises
+**Et** un contact actif ne peut pas être enregistré sans prochaine action datée ; En sommeil exige une date de réveil ; Perdu exige un motif
+
+### Story 13.5: Page « Aujourd'hui »
+
+En tant qu'Anne,
+je veux ouvrir ma journée sur les nouveaux contacts, les actions du jour et en retard, et mes rendez-vous,
+afin de savoir qui appeler et comment le faire avancer.
+
+**Critères d'acceptation :**
+**Étant donné** des contacts nouveaux, dus, en retard et en sommeil à réveiller
+**Quand** Anne ouvre l'espace, sur téléphone ou ordinateur
+**Alors** la page les montre dans cet ordre, retards en tête, comme la maquette
+**Et** depuis une ligne elle appelle, note le résultat et fixe la prochaine action sans quitter la page
+
+### Story 13.6: Vue pipeline et fiche contact
+
+En tant qu'Anne,
+je veux voir mes vendeurs et mes acheteurs par étape, et tout l'historique d'un contact,
+afin de piloter l'ensemble et de préparer chaque appel.
+
+**Critères d'acceptation :**
+**Étant donné** des contacts à plusieurs étapes des deux parcours
+**Quand** Anne déplace une carte vers une autre colonne
+**Alors** l'étape change, une prochaine action est demandée et l'événement est noté
+**Et** la fiche montre étape, prochaine action, coordonnées, bien concerné et historique, avec l'export et l'effacement de 10.7
+
+### Story 13.7: Saisie à la main et import d'une liste
+
+En tant qu'Anne,
+je veux créer un contact en moins d'une minute et importer la liste d'un événement,
+afin que les contacts du téléphone et des jeux concours soient suivis comme les autres.
+
+**Critères d'acceptation :**
+**Étant donné** un formulaire de saisie et un import de tableur (.xlsx ou .csv)
+**Quand** la liste contient des personnes déjà connues
+**Alors** elles sont complétées, jamais recréées, et l'aperçu dit combien sont nouvelles
+**Et** sans la case « les participants ont accepté d'être recontactés », les contacts importés sont marqués « rappel individuel seulement »
+
+### Story 13.8: Demandes des portails d'annonces
+
+En tant qu'Anne,
+je veux que chaque demande faite sur mes annonces arrive dans l'espace,
+afin de ne plus aller la chercher dans Modelo ou dans ma boîte (AD-20, AD-14).
+
+**Critères d'acceptation :**
+**Étant donné** un filtre Gmail qui transfère les e-mails de `inbound@nettymail.com` vers l'adresse reçue par l'espace
+**Quand** une demande Leboncoin arrive
+**Alors** un contact acheteur est créé ou complété, rattaché à la référence du bien, avec le message dans l'historique
+**Et** un même e-mail reçu deux fois ne crée rien de plus ; un e-mail illisible est gardé et signalé à Anne
+
+### Story 13.9: Recopie dans Modelo à la signature
+
+En tant qu'Anne,
+je veux une fiche prête à copier dans Modelo seulement quand je signe un mandat,
+afin de ne plus rien saisir dans Modelo avant (AD-14 amendée).
+
+**Critères d'acceptation :**
+**Étant donné** un contact qui passe à « Mandat exclusif signé » ou « Mandat de recherche signé »
+**Quand** l'étape change
+**Alors** le contact porte « À recopier dans Modelo » avec la fiche prête à copier, qu'Anne marque faite
+**Et** les demandes du site ne créent plus de recopie Modelo d'office
+
+### Story 13.10: Résumés d'appels Leedflow
+
+En tant qu'Anne,
+je veux que le résumé de chaque appel se range sur la fiche du bon contact,
+afin de ne plus rien noter à la main après un appel.
+
+**Critères d'acceptation :**
+**Étant donné** l'accès que Leedflow aura confirmé (webhook, API ou MCP) et son contrat de sous-traitance
+**Quand** un appel se termine
+**Alors** son résumé est rattaché au contact de même numéro, ou proposé comme nouveau contact sur la page « Aujourd'hui »
+**Et** une proposition d'étape ou de relance tirée du résumé attend l'accord d'Anne. **Bloquée** par la réponse du support Leedflow (action J33)
+
+### Story 13.11: E-mails des clients (différée)
+
+En tant qu'Anne,
+je veux voir dans l'historique d'un contact les e-mails échangés avec lui,
+afin d'avoir toute la relation au même endroit.
+
+**Critères d'acceptation :**
+**Étant donné** un choix d'accès à Gmail fait par JB (lecture serveur avec validation Google, ou relève par Claude)
+**Quand** un e-mail est échangé avec l'adresse d'un contact
+**Alors** il apparaît dans son historique. **Différée** : l'espace est complet sans (AD-20)
+

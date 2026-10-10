@@ -1,0 +1,94 @@
+---
+// Aperçu du rapport de diagnostic, en feuille A4 (story 5.4, demande de JB du 2026-10-10) : montre ce que le visiteur obtient
+// au lieu d'une photo de maison. Valeurs d'exemple, marquées comme telles ; aucun nom fictif (défaut reproché au mockup ScoreApp).
+// Libellés des axes et du profil repris de questions.json et bareme.json pour rester fidèles à la vraie page de résultats.
+import contenu from '../content/diagnostic/questions.json';
+import bareme from '../content/diagnostic/bareme.json';
+const cat = contenu.categories as Record<string, { resultat?: string; max?: number }>;
+const exemple = { score: 62, axes: [['preparation', 28], ['visibilite', 21], ['efficacite', 13]] as const };
+const profil = bareme.profils.find((p) => exemple.score >= p.min && exemple.score <= p.max)!;
+const tour = 2 * Math.PI * 52;
+---
+<figure class="ra" aria-label="Exemple de rapport de diagnostic : un score sur 100, trois axes notés et des recommandations">
+  <div class="ra-feuille ra-dessous" aria-hidden="true"></div>
+  <div class="ra-feuille" aria-hidden="true">
+    <div class="ra-entete">
+      <span class="ra-marque"><span class="ra-rond"></span>Anne Vial-Tissot</span>
+      <span class="ra-exemple">Exemple</span>
+    </div>
+    <p class="ra-chapeau">Diagnostic de vente</p>
+    <p class="ra-titre">Votre rapport personnalisé</p>
+    <div class="ra-score">
+      <svg viewBox="0 0 120 120" class="ra-anneau">
+        <circle cx="60" cy="60" r="52" class="ra-fond" />
+        <circle cx="60" cy="60" r="52" class="ra-plein" stroke-dasharray={`${(tour * exemple.score) / 100} ${tour}`} transform="rotate(-90 60 60)" />
+        <text x="60" y="64" text-anchor="middle" class="ra-chiffre">{exemple.score}</text>
+        <text x="60" y="84" text-anchor="middle" class="ra-sur">/ 100</text>
+      </svg>
+      <div>
+        <p class="ra-profil">{profil.libelle}</p>
+        <span class="ra-ligne" style="width:92%"></span><span class="ra-ligne" style="width:70%"></span>
+      </div>
+    </div>
+    <ul class="ra-axes">
+      {exemple.axes.map(([id, v]) => {
+        const max = cat[id].max!;
+        return <li><span class="ra-axe">{cat[id].resultat}</span><span class="ra-val">{v} / {max}</span><span class="ra-barre"><span style={`width:${(v / max) * 100}%`}></span></span></li>;
+      })}
+    </ul>
+    <p class="ra-sous">Vos recommandations</p>
+    <ol class="ra-recos">
+      {[88, 74, 81].map((w, i) => <li><span class="ra-num">{i + 1}</span><span class="ra-ligne" style={`width:${w}%`}></span></li>)}
+    </ol>
+  </div>
+</figure>
+<style>
+  .ra { position: relative; width: 100%; max-width: 380px; margin: 0 auto; aspect-ratio: 1 / 1.414; }
+  .ra-feuille { position: absolute; inset: 0; background: var(--avt-ecru); border-radius: 6px; box-shadow: 0 18px 40px rgba(38, 32, 26, .14), 0 2px 6px rgba(38, 32, 26, .08); padding: 8% 8% 7%; display: flex; flex-direction: column; gap: 12px; font-family: var(--avt-font-text); color: var(--avt-brun); overflow: hidden; transform: rotate(-1.2deg); }
+  .ra-dessous { transform: rotate(3deg) translate(4%, 2%); background: var(--avt-placeholder); box-shadow: 0 10px 24px rgba(38, 32, 26, .1); }
+  .ra-entete { display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
+  .ra-marque { display: flex; align-items: center; gap: 7px; font-family: var(--avt-font-display); font-size: 13px; }
+  .ra-rond { width: 14px; height: 14px; border-radius: 999px; background: linear-gradient(var(--avt-klein) 50%, var(--avt-terra) 50%); }
+  .ra-exemple { font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--avt-text-muted); border: 1px solid var(--avt-galet); border-radius: 999px; padding: 3px 8px; }
+  .ra-chapeau { font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--avt-text-muted); margin-top: 4px; }
+  .ra-titre { font-family: var(--avt-font-display); font-size: 22px; line-height: 1.1; margin-top: -6px; }
+  .ra-score { display: grid; grid-template-columns: 96px 1fr; gap: 16px; align-items: center; padding: 12px 0; border-top: 1px solid var(--avt-galet); border-bottom: 1px solid var(--avt-galet); }
+  .ra-anneau { width: 96px; height: 96px; }
+  .ra-fond { fill: none; stroke: var(--avt-galet); stroke-width: 9; }
+  .ra-plein { fill: none; stroke: var(--avt-terra); stroke-width: 9; stroke-linecap: round; }
+  .ra-chiffre { font-family: var(--avt-font-display); font-size: 36px; fill: var(--avt-brun); }
+  .ra-sur { font-size: 11px; fill: var(--avt-text-muted); }
+  .ra-profil { font-family: var(--avt-font-display); font-size: 15px; line-height: 1.2; color: var(--avt-terra-deep); margin-bottom: 8px; }
+  .ra-ligne { display: block; height: 6px; border-radius: 3px; background: var(--avt-galet); margin-top: 6px; }
+  .ra-axes { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .ra-axes li { display: grid; grid-template-columns: 1fr auto; row-gap: 5px; font-size: 11.5px; }
+  .ra-val { color: var(--avt-text-muted); }
+  .ra-barre { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: var(--avt-galet); overflow: hidden; }
+  .ra-barre span { display: block; height: 100%; background: var(--avt-klein); border-radius: 3px; }
+  .ra-sous { font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--avt-text-muted); margin-top: 2px; }
+  .ra-recos { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+  .ra-recos li { display: flex; align-items: center; gap: 10px; }
+  .ra-recos .ra-ligne { margin-top: 0; flex: none; }
+  .ra-num { font-family: var(--avt-font-display); font-size: 15px; color: var(--avt-klein); width: 12px; }
+  /* Cadres plus étroits (900 à 1 199 px, et téléphone) : on retire les lignes de texte simulées et la 3e recommandation, sinon la feuille déborde */
+  @media (max-width: 1199px) {
+    .ra-titre { font-size: 18px; }
+    .ra-score .ra-ligne, .ra-recos li:nth-child(3) { display: none; }
+    .ra-profil { margin-bottom: 0; }
+  }
+  @media (min-width: 900px) and (max-width: 1199px) {
+    .ra-recos li:nth-child(2) { display: none; }
+  }
+  @media (max-width: 899px) {
+    .ra { max-width: 300px; }
+    .ra-feuille { gap: 8px; }
+    .ra-score { padding: 8px 0; }
+    .ra-titre { font-size: 18px; }
+    .ra-score { grid-template-columns: 76px 1fr; gap: 12px; }
+    .ra-anneau { width: 76px; height: 76px; }
+    .ra-profil { font-size: 13px; }
+    .ra-axes { gap: 6px; }
+    .ra-recos { gap: 5px; }
+    .ra-axes li { font-size: 10.5px; }
+  }
+</style>

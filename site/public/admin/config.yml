@@ -1,5 +1,6 @@
 # Espace d'édition du site d'Anne (Sveltia CMS) — story 7.13, décision du 2026-10-05.
-# Chaque enregistrement devient un fichier de contenu-anne/ dans le dépôt, via une demande de fusion que JB valide.
+# Chaque enregistrement devient un fichier de contenu-anne/ dans le dépôt, via une demande de fusion (PR).
+# Elle fusionne seule quand la fiche passe en « En relecture » ou « Prêt » et que la construction est au vert (story 9.7, RUNBOOK § 2 bis).
 # Réglage complet : https://sveltiacms.app/en/docs — à modifier par PR, jamais depuis l'espace d'édition.
 
 backend:
@@ -16,7 +17,8 @@ backend:
     deleteMedia: "Contenu ({{author-login}}) : photo « {{path}} » supprimée"
 
 # Brouillons : chaque modification part sur une branche avec sa demande de fusion ;
-# Cloudflare en construit un aperçu protégé ; JB fusionne sur GitHub pour mettre en ligne (bouton « Publier » masqué : publish: false).
+# Cloudflare en construit un aperçu protégé. Statut « Brouillon » = PR en brouillon, rien ne part ;
+# « En relecture » ou « Prêt » = la PR fusionne seule (story 9.7). Bouton « Publier » masqué (publish: false).
 publish_mode: editorial_workflow
 
 site_url: https://annevialtissot.fr
@@ -57,7 +59,7 @@ collections:
     format: frontmatter
     create: true
     delete: false
-    publish: false   # la mise en ligne se fait en fusionnant la demande sur GitHub (JB), pas depuis l'espace d'édition
+    publish: false   # la mise en ligne se fait par la fusion de la demande sur GitHub (automatique, story 9.7), pas depuis l'espace d'édition
     slug: "{{commune}}-{{annee_vente}}"
     identifier_field: commune
     summary: "{{commune}} · {{type_bien}} · {{annee_vente}} · {{statut}}"

@@ -17,7 +17,7 @@ photos:
   - photos/evian-les-bains-exp-realty-044-hd.webp
   - blob:https://anne-vial-tissot-site.jbcholat.workers.dev/f768a0ee-ccd1-4ce7-802c-e233b97c26a4
   - blob:https://anne-vial-tissot-site.jbcholat.workers.dev/b09159ea-3ad1-4b20-8262-a374d8f62e9b
-statut: brouillon
+statut: publie
 autorisations: false
 temoignages:
   - citation: null
