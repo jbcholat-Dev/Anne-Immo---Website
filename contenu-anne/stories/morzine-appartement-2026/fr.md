@@ -10,7 +10,7 @@ photos:
   - photos/photo-7006.jpg
   - photos/photo-6987.jpg
   - photos/photo-7027.jpg
-statut: brouillon
+statut: publie
 autorisations: false
 temoignages:
   - citation: null

@@ -17,7 +17,7 @@ photos:
   - photos/armoy-exp-immo-021-hd.webp
   - photos/armoy-exp-immo-032-hd.webp
   - photos/armoy-exp-immo-034-hd.webp
-statut: brouillon
+statut: publie
 autorisations: false
 temoignages:
   - citation: null
