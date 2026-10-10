@@ -1000,7 +1000,7 @@ afin de ne plus dépendre d'un passage par le Drive et par Claude pour chaque co
 
 **Étant donné** l'adresse `/admin` du site et un compte GitHub collaborateur du dépôt
 **Quand** Anne (ou JB) se connecte et enregistre une fiche
-**Alors** le changement part sur une branche avec sa demande de fusion, Cloudflare en construit un aperçu protégé, et rien n'est en ligne tant que JB n'a pas fusionné
+**Alors** le changement part sur une branche avec sa demande de fusion, Cloudflare en construit un aperçu protégé, et rien n'est en ligne tant que la demande n'est pas fusionnée (depuis le 2026-10-10 : fusion automatique quand la fiche quitte le statut « Brouillon », story 9.7)
 **Et** les photos envoyées sont réduites dans le navigateur (WebP, 3 200 px au plus) avant d'entrer dans le dépôt ; les HD n'y entrent jamais
 **Et** le site public ne montre que les stories « publie » ; l'aperçu montre aussi les brouillons
 **Et** les avis Immodvisor restent en lecture seule, sauf la vente concernée et « cité sur l'accueil ».
@@ -1365,6 +1365,23 @@ afin que rien ne se perde entre ce que je vois et ce que Claude corrige.
 **Alors** il le lit, le traite comme une story (ou répond pourquoi non) et le ferme en citant le commit.
 
 **État :** en revue — code et test local faits le 2026-09-26 (worker.ts, composant RetourApercu, routes testées avec wrangler dev) ; l'essai réel attend la clé GitHub que JB colle dans Cloudflare (action J15).
+
+### Story 9.7: Fusion automatique des PR de contenu et de suivi
+
+En tant que JB,
+je veux que les demandes de fusion qui ne changent pas le code du site (enregistrements de l'espace d'édition, documents de suivi) fusionnent seules dans `main`,
+afin de ne garder la main que sur les changements qui ont un impact sur le site.
+
+**Critères d'acceptation :**
+
+**Étant donné** une PR ouverte vers `main` depuis une branche du dépôt, hors brouillon et sans l'étiquette `a-valider`
+**Quand** elle ne touche que `contenu-anne/` depuis une branche `cms/…`, ou que des documents de suivi (`_bmad-output/`, `_bmad/`, `.claude/`, `maquettes/`, `.md` hors des dossiers lus par le site)
+**Et** que la construction Cloudflare est au vert sur son dernier commit
+**Alors** elle est fusionnée automatiquement, sans intervention de JB
+**Et** toute autre PR attend la fusion de JB
+**Et** la règle ne peut pas être modifiée par la PR qu'elle examine.
+
+**État :** en relecture (2026-10-10). Décision de JB du 2026-10-10. RUNBOOK § 2 bis.
 
 ## Epic 10: Capture des leads et backend
 

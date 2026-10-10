@@ -1,0 +1,39 @@
+# Fusion automatique des PR sans impact sur le code du site (story 9.7, décision de JB du 2026-10-10).
+# Règle complète et liste des fichiers concernés : .github/scripts/fusion-auto.mjs et RUNBOOK § 2 bis.
+#
+# pull_request_target (et non pull_request) : le workflow et le script sont toujours ceux de main,
+# jamais ceux de la PR examinée ; une PR ne peut donc pas changer la règle pour se fusionner elle-même.
+# Le code de la PR n'est jamais récupéré ni exécuté ici.
+
+name: Fusion automatique
+
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, reopened, synchronize, ready_for_review, labeled, unlabeled]
+  check_run:
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+
+concurrency:
+  group: fusion-auto-${{ github.event.pull_request.number || github.event.check_run.head_sha || 'toutes' }}
+
+jobs:
+  fusion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          sparse-checkout: .github/scripts
+          persist-credentials: false
+      - name: Trier et fusionner
+        run: node .github/scripts/fusion-auto.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
