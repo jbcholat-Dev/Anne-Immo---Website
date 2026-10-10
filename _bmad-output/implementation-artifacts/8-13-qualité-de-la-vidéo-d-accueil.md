@@ -1,7 +1,7 @@
 ---
 story: 8.13
 epic: 8 — Structure et visuel
-statut: review
+statut: done
 date: 2026-10-10
 ---
 
@@ -39,4 +39,4 @@ Capture de comparaison d'un détail : `/mnt/project-files/captures/video-qualite
 - Navigateur de test (Chromium, site construit servi en local) : à 390 px de large la page demande `ouverture-telephone.mp4`, à 1440 px `ouverture.mp4`. Le Chromium de test ne lit pas le H.264 (codec absent de cette version libre, présent dans Chrome, Edge, Firefox et Safari) : la lecture se vérifie sur l'aperçu de la branche.
 
 ## Ce qui reste
-- JB regarde le rendu sur l'aperçu de la branche avant la fusion.
+- Rien. JB a validé le rendu ; PR #108 fusionnée le 2026-10-10.
