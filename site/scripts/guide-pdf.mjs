@@ -92,11 +92,22 @@ const police = (nom, fichier, poids, style = 'normal') =>
   `@font-face{font-family:'${nom}';src:url(data:font/woff2;base64,${fs.readFileSync(path.join(POLICES, fichier)).toString('base64')}) format('woff2');font-weight:${poids};font-style:${style}}`;
 const logo = fs.readFileSync(path.join(RACINE, 'design-system/assets/logo-horizontal-descripteur.svg'), 'utf8');
 
+// En-tête et pied de page : boîtes de marge CSS (@page), aux polices du document ; aucune sur la couverture (@page :first).
+const symbole = `data:image/svg+xml;base64,${Buffer.from(fs.readFileSync(path.join(RACINE, 'design-system/assets/symbole-seul.svg'), 'utf8').replace('<svg ', '<svg width="13" height="13" ')).toString('base64')}`;
+const marges = `
+@page { size: A4; margin: 30mm 20mm 24mm;
+  @top-left { content: url("${symbole}") "  Anne VIAL-TISSOT"; font-family: 'Gilda Display', serif; font-size: 9pt; color: #26201A; vertical-align: bottom; padding-bottom: 2.5mm; margin-bottom: 7mm; border-bottom: .5pt solid #E9E0D2; }
+  @top-right { content: "Les 10 erreurs des vendeurs"; font-family: 'Jost', sans-serif; font-size: 7pt; letter-spacing: .12em; text-transform: uppercase; color: #5C5248; vertical-align: bottom; padding-bottom: 2.5mm; margin-bottom: 7mm; border-bottom: .5pt solid #E9E0D2; }
+  @bottom-left { content: "annevialtissot.fr${provisoire ? '  ·  version provisoire' : ''}"; font-family: 'Jost', sans-serif; font-size: 7.5pt; color: #5C5248; vertical-align: top; padding-top: 2.5mm; margin-top: 7mm; border-top: .5pt solid #E9E0D2; }
+  @bottom-right { content: "— " counter(page) " / " counter(pages); font-family: 'Gilda Display', serif; font-size: 10pt; color: #002FA7; vertical-align: top; padding-top: 2mm; margin-top: 7mm; border-top: .5pt solid #E9E0D2; }
+}
+@page :first { margin: 0; @top-left { content: none; } @top-right { content: none; } @bottom-left { content: none; } @bottom-right { content: none; } }`;
+
 const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>${echapper(titre)}</title><style>
 ${police('Gilda Display', 'gilda-display-400.woff2', 400)}${police('Jost', 'jost-400-normal.woff2', 400)}${police('Jost', 'jost-500-normal.woff2', 500)}${police('Jost', 'jost-400-italic.woff2', 400, 'italic')}
-@page { size: A4; margin: 22mm 20mm 24mm; }
+${marges}
 body { font-family: 'Jost', sans-serif; color: #26201A; font-size: 10.5pt; line-height: 1.6; margin: 0; }
-.couverture { height: 245mm; display: flex; flex-direction: column; justify-content: space-between; break-after: page; }
+.couverture { height: 297mm; box-sizing: border-box; padding: 22mm 20mm 24mm; display: flex; flex-direction: column; justify-content: space-between; break-after: page; }
 .couverture .logo svg { width: 62mm; height: auto; }
 .couverture h1 { font-family: 'Gilda Display', serif; font-weight: 400; font-size: 40pt; line-height: 1.08; color: #002FA7; margin: 0 0 8mm; }
 .couverture .sous { font-size: 14pt; line-height: 1.4; max-width: 120mm; }
@@ -139,9 +150,7 @@ const page = await navigateur.newPage();
 await page.setContent(html, { waitUntil: 'load' });
 fs.mkdirSync(path.dirname(SORTIE), { recursive: true });
 await page.pdf({
-  path: SORTIE, format: 'A4', printBackground: true, preferCSSPageSize: true, displayHeaderFooter: true,
-  headerTemplate: '<span></span>',
-  footerTemplate: `<div style="font-family:sans-serif;font-size:7.5pt;color:#5C5248;width:100%;padding:0 20mm;display:flex;justify-content:space-between"><span>Anne VIAL-TISSOT · annevialtissot.fr${provisoire ? ' · version provisoire' : ''}</span><span class="pageNumber"></span></div>`,
+  path: SORTIE, format: 'A4', printBackground: true, preferCSSPageSize: true,
 });
 // La couverture seule, en image, pour la page /guide (bloc A-10) : même mise en page, sans la mention provisoire
 // (le site public ne se construit qu'avec un guide relu). Une page A4 à l'écran, marges de @page reprises en bordure.
