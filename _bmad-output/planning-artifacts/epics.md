@@ -1213,6 +1213,20 @@ afin de voir ce qu'on dit d'Anne sans affronter un pavé de texte.
 **Et** au-delà de quelques lignes l'avis est replié derrière « Lire la suite », sans jamais être tronqué dans la page
 **Et** une phrase qui ne figure pas telle quelle dans l'avis n'est pas affichée
 
+### Story 8.14: Barre en verre et portrait de magazine
+
+En tant que visiteur,
+je veux une barre de navigation plus légère et un portrait d'Anne plus vivant,
+afin que le site paraisse moins fade sans changer ce qu'il dit (choix de JB parmi les essais « Verre du lac » et « Magazine et matière », D-42).
+
+**Critères d'acceptation :**
+
+**Étant donné** n'importe quelle page
+**Quand** elle s'affiche ou défile
+**Alors** la barre de navigation est une gélule de verre dépoli qui flotte au-dessus de la page, fumée sur la vidéo d'accueil, lisible sur tous les fonds
+**Et** sur l'accueil, le bloc « Anne » montre la photo tirée sur papier, les langues écrites à la main dessous, une lettrine au début du texte et un lien fléché
+**Et** si le visiteur a demandé de réduire la transparence, ou si le navigateur ne sait pas flouter, la barre est pleine
+
 ### Story 9.1: Comptes et connexion du dépôt
 
 En tant que JB,
