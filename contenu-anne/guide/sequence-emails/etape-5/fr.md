@@ -24,7 +24,7 @@ Si vous avez refait vos photos, vérifié votre prix sur les ventes réelles, fi
 
 Vous savez ce qu'il faudrait faire. Mais vous ne savez pas par où commencer, vous n'êtes pas sûr de bien faire, ou vous n'avez simplement pas le temps.
 
-C'est normal. Vendre un bien demande du temps, de la méthode et une bonne connaissance du marché local.
+C'est normal. Vendre un bien demande du temps, de la méthode et une bonne connaissance du marché local : il faut en moyenne **101 jours** pour vendre un logement ancien (réseau Laforêt, septembre 2026).
 
 ## Les deux chemins possibles
 

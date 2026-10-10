@@ -25,6 +25,8 @@ Parmi ceux qui demandent une visite, beaucoup ne sont pas prêts :
 - ils doivent d'abord vendre leur propre bien, qui n'est pas en vente ;
 - leur financement n'est pas validé.
 
+Ce dernier point pèse lourd : fin 2022, quand les taux montaient, près d'**un compromis sur dix** est retombé, le plus souvent parce que l'acheteur n'avait pas obtenu son prêt (PAP.fr, novembre 2022).
+
 ## La solution : 4 questions avant chaque visite
 
 ### 1. « Qu'est-ce qui vous a plu dans l'annonce ? »
@@ -63,5 +65,7 @@ Merci, je reviens vers vous avec une proposition de rendez-vous. »
 À très vite,
 
 Anne
+
+Vous préférez que quelqu'un filtre les visites à votre place ? C'est une partie de mon travail : https://annevialtissot.fr/vendre
 
 P.S. : Dans trois jours, on parle des pièges administratifs qui font capoter une vente après le compromis.

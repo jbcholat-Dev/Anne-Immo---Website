@@ -26,6 +26,8 @@ Les acheteurs qui ont le budget de votre bien ne le voient pas : ils filtrent le
 
 Résultat : peu ou pas de visites. Les semaines passent, l'annonce vieillit, et les acheteurs finissent par se demander pourquoi elle ne part pas. Quand vous baissez enfin, ils négocient plus fort.
 
+Les acheteurs le savent : en régions, ils obtiennent en moyenne **5,1 %** de baisse sur le prix affiché, et **9 ventes sur 10** sont négociées (réseau Laforêt, septembre 2026). Un prix trop haut au départ, c'est une négociation plus dure à l'arrivée.
+
 À l'inverse, un prix trop bas « pour vendre vite » se vend vite... et vous laisse de l'argent sur la table.
 
 ## La méthode : partir des ventes réelles
@@ -37,7 +39,7 @@ Les prix de vente réels sont publics. La base DVF (« Demandes de valeurs fonci
 3. **Ajustez selon ce qui distingue votre bien** : vue, exposition, état, extérieurs, prestations.
 4. **Comparez avec les annonces en cours** : ce sont vos concurrents directs aujourd'hui.
 
-Vous obtenez une fourchette que vous pouvez expliquer à chaque acheteur.
+Vous obtenez une fourchette que vous pouvez expliquer à chaque acheteur. Pour vous situer : dans le secteur Léman, le prix médian d'un appartement ancien vendu entre août 2025 et juillet 2026 est de **3 910 € le m²** (notaires des Savoie). Votre bien peut s'en écarter nettement, dans un sens ou dans l'autre : c'est tout l'intérêt de l'analyse.
 
 ## Un cas réel : un chalet à Essert-Romand
 

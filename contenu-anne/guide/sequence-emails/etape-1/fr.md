@@ -14,7 +14,7 @@ Si elles ne viennent pas, ou si elles ne sont pas sérieuses, le problème comme
 
 ## Le problème : on ne vous remarque pas
 
-Un acheteur fait défiler des dizaines d'annonces. Il décide en un coup d'œil, sur la première photo, s'il ouvre la vôtre ou s'il passe à la suivante.
+Un acheteur fait défiler des dizaines d'annonces. Il décide en un coup d'œil, sur la première photo, s'il ouvre la vôtre ou s'il passe à la suivante. Une étude universitaire américaine qui a suivi le regard d'acheteurs devant des annonces l'a mesuré : la photo est, avec le descriptif chiffré, ce qu'ils regardent en premier.
 
 **Regardez vos photos actuelles.** Sont-elles :
 
@@ -50,4 +50,4 @@ L'histoire complète : https://annevialtissot.fr/realisation/anthy-t3-2024
 
 Anne
 
-P.S. : Besoin d'un nom de photographe dans le Chablais ? Répondez à cet e-mail.
+P.S. : Besoin d'un nom de photographe dans le Chablais ? Répondez à cet e-mail. Et pour voir comment je présente les biens qu'on me confie : https://annevialtissot.fr/realisation

@@ -23,6 +23,8 @@ Ce qui bloque une vente après le compromis est presque toujours connu d'avance 
 
 Chaque document qui manque donne du temps à l'acheteur pour douter, renégocier ou se retirer. Et c'est vous qui êtes pressé.
 
+Le DPE mérite une attention particulière : selon les notaires, sur les ventes de 2024, une maison ancienne classée G s'est vendue en moyenne **25 % moins cher** qu'une maison classée D. Et pour une maison classée E, F ou G, un audit énergétique doit aussi être remis à l'acheteur dès la première visite.
+
 ## Un cas réel : à Morzine, il fallait d'abord créer la copropriété
 
 Un appartement dans une grande bâtisse familiale, divisée en trois logements. Jamais personne n'avait mis les lots en copropriété : tout était resté « en famille ».
@@ -65,4 +67,4 @@ L'histoire complète : https://annevialtissot.fr/realisation/morzine-appartement
 
 Anne
 
-P.S. : Un doute sur une pièce de votre dossier ? Répondez à cet e-mail.
+P.S. : Un doute sur une pièce de votre dossier ? Répondez à cet e-mail, ou réservez 30 minutes pour le passer en revue ensemble : https://annevialtissot.fr/contact
