@@ -58,7 +58,6 @@ html[data-concept="verre"] .diag-livrable, html[data-concept="verre"] .avis-cart
 html[data-concept="verre"] .nav::before,
 html[data-concept="verre"] .carte::before,
 html[data-concept="verre"] .diag-livrable::before,
-html[data-concept="verre"] .hero-contenu::before,
 html[data-concept="verre"] .preuve::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
   background: radial-gradient(120% 60% at 30% -10%, rgba(255, 255, 255, .55), transparent 55%);
@@ -87,14 +86,12 @@ html[data-concept="verre"] .nav-menu a:hover, html[data-concept="verre"] .nav-me
 html[data-concept="verre"] .nav-item:hover .nav-menu::before { content: ""; position: absolute; left: 0; right: 0; top: -10px; height: 10px; } /* pont de survol */
 html[data-concept="verre"] .page-int { padding-top: calc(var(--nav-h) + 14px); }
 
-/* --- Ouverture : le nom d'Anne sur une plaque de verre fumé posée sur la vidéo -------------- */
-html[data-concept="verre"] .hero-voile { background: linear-gradient(180deg, rgba(38, 32, 26, .18) 0%, rgba(38, 32, 26, .05) 40%, rgba(38, 32, 26, .30) 100%); }
-html[data-concept="verre"] .hero-contenu {
-  max-width: none; width: max-content; bottom: 150px; padding: 40px 48px 44px; border-radius: 28px;
-  background: linear-gradient(155deg, rgba(38, 32, 26, .26), rgba(38, 32, 26, .12)); -webkit-backdrop-filter: blur(18px) saturate(160%); backdrop-filter: blur(18px) saturate(160%);
-  border: 1px solid var(--verre-bord-sombre); box-shadow: var(--verre-relief-sombre);
-}
-html[data-concept="verre"] .hero h1 { font-size: 84px; text-shadow: 0 2px 24px rgba(0, 0, 0, .18); }
+/* --- Ouverture : le nom d'Anne posé directement sur la vidéo, sans plaque (retour de JB du 10/10 :
+   la plaque de verre « c'est trop »). Un voile plus dense en bas à gauche garde le texte lisible. --- */
+html[data-concept="verre"] .hero-voile { background: linear-gradient(180deg, rgba(38, 32, 26, .18) 0%, rgba(38, 32, 26, .04) 38%, rgba(38, 32, 26, .42) 100%), linear-gradient(90deg, rgba(38, 32, 26, .28) 0%, transparent 60%); }
+html[data-concept="verre"] .hero h1 { font-size: 84px; text-shadow: 0 2px 28px rgba(0, 0, 0, .35); }
+html[data-concept="verre"] .hero-contenu p { text-shadow: 0 1px 12px rgba(0, 0, 0, .45); }
+html[data-concept="verre"] .hero-contenu { max-width: none; bottom: 150px; }
 /* Bouton secondaire en verre (au lieu du simple contour) */
 html[data-concept="verre"] .btn-contour-ecru {
   background: rgba(255, 255, 255, .14); border-color: rgba(255, 255, 255, .55);
@@ -151,8 +148,7 @@ html[data-concept="verre"] .parler-bande { background: linear-gradient(180deg, v
 
 /* --- Réfraction (Chromium seulement) : le bord du verre déforme légèrement ce qui passe derrière.
    Activée par l'attribut data-refraction posé en tête de page quand le navigateur sait faire. ---- */
-html[data-concept="verre"][data-refraction] .nav,
-html[data-concept="verre"][data-refraction] .hero-contenu {
+html[data-concept="verre"][data-refraction] .nav {
   -webkit-backdrop-filter: url(#verre-refraction) blur(16px) saturate(170%);
   backdrop-filter: url(#verre-refraction) blur(16px) saturate(170%);
 }
@@ -161,7 +157,7 @@ html[data-concept="verre"][data-refraction] .hero-contenu {
 @media (max-width: 899px) {
   html[data-concept="verre"] .nav { top: 10px; left: 12px; right: 12px; }
   html[data-concept="verre"] .nav .nav-int { padding: 0 10px 0 14px; }
-  html[data-concept="verre"] .hero-contenu { width: auto; left: 14px; right: 14px; top: auto; bottom: 118px; padding: 24px 22px 26px; border-radius: 22px; }
+  html[data-concept="verre"] .hero-contenu { bottom: auto; }
   html[data-concept="verre"] .hero h1 { font-size: 52px; }
   html[data-concept="verre"] .preuve { margin: -96px 12px 0; padding: 18px 20px; }
   html[data-concept="verre"] .carte { border-radius: 22px; }
@@ -172,11 +168,11 @@ html[data-concept="verre"][data-refraction] .hero-contenu {
   html[data-concept="verre"] .nav, html[data-concept="verre"] .nav[data-reduit], html[data-concept="verre"] .carte,
   html[data-concept="verre"] .diag-livrable, html[data-concept="verre"] .avis-carte, html[data-concept="verre"] .pilier,
   html[data-concept="verre"] .nav-menu { background: var(--avt-ecru); -webkit-backdrop-filter: none; backdrop-filter: none; }
-  html[data-concept="verre"] .nav[data-sombre]:not([data-reduit]), html[data-concept="verre"] .hero-contenu { background: rgba(38, 32, 26, .78); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  html[data-concept="verre"] .nav[data-sombre]:not([data-reduit]) { background: rgba(38, 32, 26, .78); -webkit-backdrop-filter: none; backdrop-filter: none; }
   html[data-concept="verre"] .preuve { background: var(--avt-klein); -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   html[data-concept="verre"] .nav, html[data-concept="verre"] .carte, html[data-concept="verre"] .diag-livrable,
   html[data-concept="verre"] .avis-carte, html[data-concept="verre"] .pilier, html[data-concept="verre"] .nav-menu { background: rgba(247, 242, 234, .94); }
-  html[data-concept="verre"] .hero-contenu, html[data-concept="verre"] .nav[data-sombre]:not([data-reduit]) { background: rgba(38, 32, 26, .72); }
+  html[data-concept="verre"] .nav[data-sombre]:not([data-reduit]) { background: rgba(38, 32, 26, .72); }
 }

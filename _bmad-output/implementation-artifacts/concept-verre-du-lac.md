@@ -15,7 +15,7 @@ C'est une première réponse à la note de créativité de l'accueil (5,5/10, no
 Tout le concept tient dans `site/src/styles/verre.css`. `Base.astro` le charge, pose `data-concept="verre"` et ajoute un filtre SVG de réfraction. Un concept se retire donc en trois lignes.
 - **Fond** : trois nappes de couleur très douces et fixes, bleu du lac et terracotta, sous l'écru, pour qu'il y ait quelque chose à voir à travers le verre.
 - **Navigation** : une gélule de verre qui flotte, fumée sur la vidéo et claire ensuite. Le menu « À propos » est en verre aussi.
-- **Ouverture** : le nom, la phrase et les deux boutons sur une plaque de verre fumé posée sur la vidéo. Le bandeau des avis devient une barre de verre bleu qui chevauche le bas de la vidéo.
+- **Ouverture** : le nom, la phrase et les deux boutons posés directement sur la vidéo, sans plaque (retour de JB du 2026-10-10 : la plaque de verre « c'est trop ») ; un voile plus sombre en bas à gauche et une ombre douce sous le texte gardent la lecture. Le bandeau des avis devient une barre de verre bleu qui chevauche le bas de la vidéo.
 - **Ventes** : cartes de verre empilées ; la carte du dessous se voit floutée à travers celle du dessus. Cela corrige aussi le défaut noté le 2026-10-08, où deux cartes semblaient n'en faire qu'une.
 - **Méthode, avis, diagnostic** : piliers, cartes d'avis et tuiles en verre, sur des taches de couleur.
 - **Réfraction**, c'est-à-dire le bord du verre qui déforme légèrement ce qui passe derrière : seulement dans Chrome et Edge, les seuls navigateurs qui savent faire. Safari et Firefox montrent un verre dépoli simple.
@@ -27,6 +27,5 @@ Tout le concept tient dans `site/src/styles/verre.css`. `Base.astro` le charge, 
 
 ## Ce qui reste, si le concept est retenu
 - Contraste de la barre de navigation quand elle passe sur le bandeau bleu « Parler à Anne ».
-- Sur téléphone, la plaque de l'ouverture cache une partie du visage d'Anne selon l'image de la vidéo.
 - Appliquer le verre aux autres pages : seuls la navigation et les boutons y sont touchés aujourd'hui.
 - En faire une décision de design (D-n), puis une story, avant toute fusion.
