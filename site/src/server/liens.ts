@@ -1,5 +1,5 @@
-// Liens signés envoyés par e-mail (story 10.5, AD-8, AD-16) : téléchargement du guide (7 jours) et désabonnement de la
-// séquence. Chaque lien porte une empreinte HMAC SHA-256 calculée avec le secret LIEN_SECRET (posé dans Cloudflare,
+// Liens signés envoyés par e-mail (story 10.5, AD-8, AD-16) : téléchargement du guide (7 jours), du rapport PDF du
+// diagnostic (7 jours, story 10.10) et désabonnement de la séquence. Chaque lien porte une empreinte HMAC SHA-256 calculée avec le secret LIEN_SECRET (posé dans Cloudflare,
 // jamais dans le dépôt) : impossible à deviner ou à modifier sans ce secret. Sans secret, aucun lien n'est produit.
 import type { EnvSite } from './env';
 
@@ -36,6 +36,22 @@ export async function verifierGuide(env: EnvSite, url: URL): Promise<string | nu
   if (!env.LIEN_SECRET || !ID.test(l) || !/^\d{1,12}$/.test(e) || !s) return null;
   if (Number(e) * 1000 < Date.now()) return null;
   return egales(s, await empreinte(env.LIEN_SECRET, `guide.${l}.${e}`)) ? l : null;
+}
+
+/** Lien de téléchargement du rapport PDF du diagnostic (story 10.10), valable 7 jours. Null sans secret. */
+export async function lienRapport(env: EnvSite, leadId: string, maintenant = Date.now()): Promise<string | null> {
+  if (!env.LIEN_SECRET) return null;
+  const expire = Math.floor((maintenant + DUREE_GUIDE_MS) / 1000);
+  const s = await empreinte(env.LIEN_SECRET, `rapport.${leadId}.${expire}`);
+  return `${urlSite(env)}/api/diagnostic/rapport?l=${leadId}&e=${expire}&s=${s}`;
+}
+
+/** Le lead d'un lien de rapport valable, sinon null. Une empreinte de guide n'ouvre pas un rapport (préfixe différent). */
+export async function verifierRapport(env: EnvSite, url: URL): Promise<string | null> {
+  const [l, e, s] = ['l', 'e', 's'].map((k) => url.searchParams.get(k) ?? '');
+  if (!env.LIEN_SECRET || !ID.test(l) || !/^\d{1,12}$/.test(e) || !s) return null;
+  if (Number(e) * 1000 < Date.now()) return null;
+  return egales(s, await empreinte(env.LIEN_SECRET, `rapport.${l}.${e}`)) ? l : null;
 }
 
 /** Lien de désabonnement d'un lead (sans date de fin : il doit marcher depuis n'importe quel e-mail de la séquence). */

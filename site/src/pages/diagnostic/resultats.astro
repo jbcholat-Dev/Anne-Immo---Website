@@ -8,7 +8,7 @@ import contenu from '../../content/diagnostic/questions.json';
 import bareme from '../../content/diagnostic/bareme.json';
 import { ouvrir } from '../../server/resultats';
 import { envSite } from '../../server/env';
-import { lienDesabonnement } from '../../server/liens';
+import { lienDesabonnement, lienRapport } from '../../server/liens';
 import { NOMBRE_ETAPES, PREMIER_DELAI } from '../../server/sequence';
 
 export const prerender = false;
@@ -35,13 +35,15 @@ const A = r?.orientation === 'A';
 const n = (t?: string) => (t ?? '').replace('{n}', String(NOMBRE_ETAPES));
 const premier = PREMIER_DELAI <= 1 ? 'demain' : `dans ${PREMIER_DELAI} jours`;
 const desabonnement = r ? ((await lienDesabonnement(envSite, r.id)) ?? '/confidentialite') : '/confidentialite';
+// Rapport PDF personnalisé (story 10.10) : lien signé de 7 jours, le même que dans l'e-mail du résumé. Sans secret, pas de bouton.
+const rapport = r ? await lienRapport(envSite, r.id) : null;
 ---
 <Quiz titre="Vos résultats — Diagnostic — Anne VIAL-TISSOT" mode="resultats">
   <div class="rs" data-resultats data-ton={profil?.ton}>
     {!r && (
       <div class="rs-expire" data-expire>
         <h1>Ce lien n'est plus valable</h1>
-        <p>Vos résultats s'affichent pendant 24 heures, dans le navigateur où vous avez fait le diagnostic. Leur résumé vous a été envoyé par e-mail. Pour un diagnostic à jour, refaites-le : il prend cinq minutes.</p>
+        <p>Vos résultats s'affichent pendant 24 heures, dans le navigateur où vous avez fait le diagnostic. Leur résumé vous a été envoyé par e-mail, avec le lien de votre rapport personnalisé (PDF), valable 7 jours. Pour un diagnostic à jour, refaites-le : il prend cinq minutes.</p>
         <a href="/diagnostic/questions" class="btn btn-primaire">Refaire le diagnostic</a>
         <a href="/contact" class="rs-refaire">Écrire à Anne</a>
       </div>
@@ -58,15 +60,20 @@ const desabonnement = r ? ((await lienDesabonnement(envSite, r.id)) ?? '/confide
           <section class="rs-axe"><div><div class="chapeau">{a.nom}<span class="seulement-mobile"> · {a.brut} / {a.max}</span></div><div class="rs-sous"><b>{a.brut}</b><span>/ {a.max} · {a.pourcent} %</span></div><div class="rs-barre"><div style={`width:${a.pourcent}%`}></div></div></div>
             <p class="rs-insight">{a.fb.insight}</p><div class="rs-impact"><div class="chapeau-muet">Impact chiffré</div><p>{a.fb.impact}</p></div></section>
         ))}</div>
+        {/* Sortie A : encart du rapport ; sortie B : le bouton principal mène au rapport (décision de JB du 2026-10-10). */}
+        {rapport && A && (
+          <div class="rs-guide rs-rapport"><div class="rs-guide-int"><div class="rs-guide-couv"></div><div><div class="rs-guide-titre">Votre rapport personnalisé</div><div class="rs-guide-sous">PDF à votre nom : vos réponses et mes recommandations, axe par axe, vos priorités d'abord. Le lien est aussi dans l'e-mail du résumé, valable 7 jours.</div></div></div><a href={rapport} class="btn btn-secondaire btn-m" target="_blank" rel="noopener" data-rapport>Télécharger mon rapport</a></div>
+        )}
         <div class="rs-sortie"><div><h2>{s.titre}</h2><p class="seulement-desktop">{s.texte}</p><p class="seulement-mobile">{s.texte_court ?? s.texte}</p></div>
           <div class="rs-sortie-boutons">
             {A
               ? <><a href="/contact#reserver" class="btn btn-ecru">{s.cta}</a><a href="/contact#ecrire" class="btn btn-contour-ecru">{s.cta2}</a></>
-              : <button type="button" class="btn btn-ecru" data-guide>{s.cta}</button>}
+              : rapport
+                ? <a href={rapport} class="btn btn-ecru" target="_blank" rel="noopener" data-rapport>{s.cta}</a>
+                : <button type="button" class="btn btn-ecru" data-guide>{s.cta}</button>}
           </div></div>
-        {A
-          ? <div class="rs-guide"><div class="rs-guide-int"><div class="rs-guide-couv"></div><div><div class="rs-guide-titre">Les 10 erreurs fatales des vendeurs particuliers</div><div class="rs-guide-sous">Guide PDF, à la charte · A-10</div></div></div><button type="button" class="btn btn-secondaire btn-m" data-guide>Recevoir le guide</button></div>
-          : <div class="rs-sequence"><p>{n(s.sequence)}</p><button type="button" class="btn btn-secondaire btn-m" data-sequence hidden={r.newsletter}>{s.sequence_cta}</button><span data-sequence-deja hidden={!r.newsletter} class="texte-muet" style="font-size:14px">Inscription à la séquence enregistrée.</span></div>}
+        {(A || rapport) && <div class="rs-guide"><div class="rs-guide-int"><div class="rs-guide-couv"></div><div><div class="rs-guide-titre">Les 10 erreurs fatales des vendeurs particuliers</div><div class="rs-guide-sous">Guide PDF, à la charte · A-10</div></div></div><button type="button" class="btn btn-secondaire btn-m" data-guide>Recevoir le guide</button></div>}
+        {!A && <div class="rs-sequence"><p>{n(s.sequence)}</p><button type="button" class="btn btn-secondaire btn-m" data-sequence hidden={r.newsletter}>{s.sequence_cta}</button><span data-sequence-deja hidden={!r.newsletter} class="texte-muet" style="font-size:14px">Inscription à la séquence enregistrée.</span></div>}
         <div class="rs-etats" data-etats hidden>
           <div class="rs-etat-sequence" data-etat-guide hidden>Le guide est parti. Vérifiez {r.email}. Le lien de téléchargement est valable 7 jours. <a href="#" data-lien-guide target="_blank" rel="noopener">Ouvrir le guide maintenant</a></div>
           <div class="rs-etat-sequence" data-etat-sequence hidden>Séquence de {NOMBRE_ETAPES} e-mails confirmée. Le premier arrive {premier}. <a href={desabonnement}>Se désinscrire</a> à tout moment.</div>
@@ -145,6 +152,10 @@ const desabonnement = r ? ((await lienDesabonnement(envSite, r.id)) ?? '/confide
   .rs-guide-sous { font-size: 14px; color: var(--avt-text-muted); }
   .rs-sequence { margin: 0 var(--marge) 96px; display: flex; align-items: center; justify-content: space-between; gap: 32px; border: 1px solid var(--filet-brun-fort); border-radius: 16px; padding: 28px 36px; font-size: 16px; line-height: 1.5; }
   .rs-sequence p { max-width: 60ch; }
+  .rs-rapport { margin-bottom: 40px; }
+  .rs-guide:has(+ .rs-sequence) { margin-bottom: 24px; }
+  .rs-rapport .rs-guide-couv { background: var(--avt-klein); border-left: 4px solid var(--avt-terra); }
+  .rs-rapport .rs-guide-sous { max-width: 52ch; margin-top: 4px; }
   .rs-etats { margin: 0 var(--marge) 96px; display: flex; flex-direction: column; gap: 14px; max-width: 560px; }
   .rs-etat-sequence { border: 1px solid var(--filet-brun-fort); border-radius: 14px; padding: 18px 20px; font-size: 14.5px; line-height: 1.5; }
   @media (max-width: 899px) {
@@ -174,6 +185,8 @@ const desabonnement = r ? ((await lienDesabonnement(envSite, r.id)) ?? '/confide
     .rs-guide, .rs-sequence { margin: 0 var(--marge-m) 32px; border-radius: 14px; padding: 20px; flex-direction: column; align-items: stretch; gap: 14px; }
     .rs-guide-int { gap: 14px; }
     .rs-guide-couv { width: 44px; height: 58px; }
+    .rs-rapport { margin-bottom: 28px; }
+    .rs-guide:has(+ .rs-sequence) { margin-bottom: 16px; }
     .rs-guide-titre { font-size: 20px; }
     .rs-etats { margin: 0 var(--marge-m) 40px; }
   }

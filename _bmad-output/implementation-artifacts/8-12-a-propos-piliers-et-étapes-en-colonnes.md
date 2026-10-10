@@ -28,7 +28,7 @@ Ajoutés le même soir au même lot :
 ## Ce qui est fait
 - L'emplacement photo A-05 « Anne en situation » à côté du titre « Ma méthode » est retiré. Le titre, le sous-titre et l'introduction occupent seuls l'en-tête.
 - Les trois piliers sont sur une rangée de trois colonnes, sous un filet. Chaque colonne a son titre au-dessus de son texte.
-- Les étapes 01, 02 et 03 de « Concrètement » sont aussi sur trois colonnes, chacune sous un filet fin. Les partenaires de l'étape 02 passent sur deux colonnes de cartes (une seule entre 900 et 1 199 px). Remplacé le même soir par le parcours vertical de la story 8.13 (choix de JB, D-42).
+- Les étapes 01, 02 et 03 de « Concrètement » sont aussi sur trois colonnes, chacune sous un filet fin. Les partenaires de l'étape 02 passent sur deux colonnes de cartes (une seule entre 900 et 1 199 px). Remplacé le même soir par le parcours vertical de la story 8.15 (choix de JB, D-43).
 - Les cartes partenaires sont maintenant alignées. Avant, la première ligne était décalée par un espacement hérité.
 - Sur téléphone, piliers et étapes restent l'un sous l'autre. « Mon engagement » et « Parlons de votre projet » ne changent pas.
 - Regroupement fait dans `site/src/pages/a-propos.astro` : les rangs consécutifs de même sorte forment une rangée. Le texte d'Anne et son découpage (`site/src/lib/contenu.ts`) ne changent pas, et l'espace d'édition fonctionne comme avant.

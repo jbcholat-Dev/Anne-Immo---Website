@@ -1,11 +1,11 @@
 ---
-story: 8.13
+story: 8.15
 epic: 8 — Structure et visuel
 statut: review
 date: 2026-10-10
 ---
 
-# Story 8.13 — À propos : étapes 01 à 03 en parcours
+# Story 8.15 — À propos : étapes 01 à 03 en parcours
 
 ## Objectif
 Demande de JB du 2026-10-10 (20 h 46), capture à l'appui : la partie « Concrètement » (01 Audit, 02 Coordination, 03 Accompagnement) est mal mise en page. Les cadres des partenaires ne sont pas de la même taille, et deux grands vides restent sur les côtés. JB veut les numéros à côté des titres, éventuellement des flèches ou un déroulé qui mène d'une étape à l'autre, et trois propositions.
@@ -15,7 +15,7 @@ Demande de JB du 2026-10-10 (20 h 46), capture à l'appui : la partie « Concrè
   - frise : trois colonnes reliées par une ligne fléchée ;
   - flèches : grands numéros et petite flèche entre les colonnes ;
   - parcours : étapes l'une sous l'autre, sur toute la largeur.
-- Choix de JB sur la carte de décision : **Parcours** (décision D-42 dans `maquettes/lot-3-complet/DECISIONS.md`).
+- Choix de JB sur la carte de décision : **Parcours** (décision D-43 dans `maquettes/lot-3-complet/DECISIONS.md`).
 - `site/src/pages/a-propos.astro` :
   - chaque étape a un rond bleu Klein numéroté à côté de son titre ; le titre est à gauche, le texte à droite ;
   - une ligne terracotta fléchée relie les étapes ;

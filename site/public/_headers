@@ -1,0 +1,3 @@
+# Polices du site autorisées hors du site : les e-mails envoyés aux prospects les appellent (story 10.9).
+/fonts/*
+  Access-Control-Allow-Origin: *
