@@ -2,17 +2,15 @@
 // 02 Diagnostic — landing autonome (§ 6) : l'offre au-dessus de la ligne de flottaison, ligne de transparence, trois blocs de crédibilité, sortie basse vers le guide.
 import Page from '../../layouts/Page.astro';
 import Picture from '../../components/Picture.astro';
-import Reserve from '../../components/Reserve.astro';
 import Portrait from '../../components/Portrait.astro';
+import RapportApercu from '../../components/RapportApercu.astro';
 import { instantane, avisParId, roleLibelle, photoPrincipale, storyVisible } from '../../lib/contenu';
 import { accueil } from '../../config/site';
 import { r } from '../../i18n';
 const inst = await instantane();
 const a = await avisParId(accueil.extrait.avis);
 const storyVignette = await storyVisible('appartement-cascade-2024');
-const storySobre = await storyVisible('maison-premium-2025');
 const vignette = storyVignette ? photoPrincipale(storyVignette) : null;
-const imageSobre = storySobre ? photoPrincipale(storySobre) : null;
 const note = String(inst.note).replace('.', ',');
 ---
 <Page titre="Diagnostic — Découvrez en 3 minutes si votre stratégie de vente va réellement fonctionner" description="Quinze questions sur votre bien, votre annonce et vos visites. Un score de maturité sur 100, un diagnostic sur trois axes, des recommandations concrètes. Trois minutes, gratuit." courante="diagnostic" ogImage="/img/stories/maison-premium-2025/photo-047-1280.jpg">
@@ -30,7 +28,7 @@ const note = String(inst.note).replace('.', ',');
       <p class="dl-transparence">Le résultat complet s'obtient contre vos coordonnées, téléphone compris. <a href={r('confidentialite')}>Ce que nous en faisons</a>.</p>
     </div>
     <div class="dl-image">
-      {imageSobre ? <Picture id={imageSobre} alt="Un bien vendu par Anne à Allinges" sizes="(max-width: 899px) 100vw, 520px" /> : <Reserve label="A-02 · image sobre · un bien vendu, sans incrustation" style="height:100%" />}
+      <RapportApercu />
     </div>
   </div>
   <div class="dl-blocs">
@@ -80,9 +78,7 @@ const note = String(inst.note).replace('.', ',');
   .dl-bouton { padding: 17px 34px; font-size: 17px; }
   .dl-duree { font-size: 14.5px; color: var(--avt-text-muted); }
   .dl-transparence { font-size: 13.5px; line-height: 1.55; color: var(--avt-text-muted); max-width: 60ch; }
-  .dl-image { height: 560px; border-radius: 12px; overflow: hidden; background: var(--avt-galet); }
-  .dl-image :global(picture), .dl-image :global(img) { width: 100%; height: 100%; }
-  .dl-image :global(img) { object-fit: cover; }
+  .dl-image { height: 560px; border-radius: 12px; overflow: hidden; background: var(--avt-galet); display: flex; align-items: center; justify-content: center; padding: 40px; }
   .dl-blocs { padding: 0 var(--marge) 80px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; }
   .dl-bloc { background: var(--avt-galet); border-radius: 16px; padding: 32px; display: flex; flex-direction: column; gap: 16px; }
   .dl-bloc :global(.dl-portrait) { width: 72px; height: 72px; border-radius: 999px; background: var(--avt-placeholder); font-size: 9px; padding: 0; letter-spacing: .08em; }
@@ -104,7 +100,7 @@ const note = String(inst.note).replace('.', ',');
   @media (min-width: 900px) and (max-width: 1199px) {
     .dl-offre { grid-template-columns: minmax(0, 1fr) minmax(0, 360px); gap: 48px; }
     .dl-offre h1 { font-size: 48px; }
-    .dl-image { height: 460px; }
+    .dl-image { height: 540px; padding: 32px; }
   }
   @media (max-width: 899px) {
     .dl-offre { padding: 32px var(--marge-m) 40px; display: block; }
@@ -116,7 +112,7 @@ const note = String(inst.note).replace('.', ',');
     .dl-bouton { padding: 17px 24px; font-size: 16px; }
     .dl-duree { text-align: center; font-size: 13.5px; }
     .dl-transparence { font-size: 13px; }
-    .dl-image { height: 260px; margin-top: 40px; }
+    .dl-image { height: auto; margin-top: 40px; padding: 32px 24px 40px; }
     .dl-blocs { padding: 0 var(--marge-m) 40px; grid-template-columns: 1fr; gap: 14px; }
     .dl-bloc { border-radius: 14px; padding: 22px; gap: 10px; }
     .dl-bloc :global(.dl-portrait) { display: none; }
