@@ -29,8 +29,11 @@ Le vendeur qui a fait le diagnostic télécharge un rapport PDF à son nom : ses
 - E-mail du résumé : bouton « Télécharger mon rapport (PDF) » et « valable 7 jours » à la place de la phrase des 24 heures (ancienne phrase gardée sans secret).
 - `site/scripts/e2e-rapport.mjs` : essai de bout en bout. La maquette `maquette-rapport.mjs` est retirée (remplacée par le vrai rapport).
 
+- Décision de JB (2026-10-10, 20 h 48) : en sortie B, le bouton « Téléchargez votre plan d'action personnalisé » mène au rapport ; le guide reste proposé juste en dessous ; texte de la sortie B (`feedbacks.json`) ajusté (« votre plan d'action personnalisé détaille… » au lieu de « je vais vous envoyer un guide »). En sortie A, l'encart « Votre rapport personnalisé » reste.
+- Retour de JB (2026-10-10, 20 h 49) : texte superposé page 4 du rapport de Marc. Cause : le gabarit mesurait les pages avant le chargement des polices (police de secours plus large), les emplacements de la deuxième carte d'une page tombaient trop bas. Corrigé (mesure en média « print », polices chargées d'abord) ; `e2e-rapport` vérifie désormais qu'aucun mot ne se superpose à un autre.
+
 ## Ce qui est vérifié
-- `node scripts/e2e-rapport.mjs` : 19 constats bons. Deux vendeurs (Claire, profil à risque, sortie B, 10 priorités ; Marc, profil préparé, sortie A, aucune priorité) : bouton et lien de 7 jours sur la page de résultats, e-mail du résumé avec le bouton du rapport, PDF de 8 pages lu par `pdftotext` (nom, date, score, pied « n / 8 », réponses), 404 pour un lien modifié, expiré, signé pour le guide, d'un lead inconnu ou vide. Images des pages relues (couverture, axe).
+- `node scripts/e2e-rapport.mjs` : 23 constats bons (dont : aucun texte superposé, bouton principal de la sortie B vers le rapport). Version précédente : 19. Deux vendeurs (Claire, profil à risque, sortie B, 10 priorités ; Marc, profil préparé, sortie A, aucune priorité) : bouton et lien de 7 jours sur la page de résultats, e-mail du résumé avec le bouton du rapport, PDF de 8 pages lu par `pdftotext` (nom, date, score, pied « n / 8 », réponses), 404 pour un lien modifié, expiré, signé pour le guide, d'un lead inconnu ou vide. Images des pages relues (couverture, axe).
 - Temps de fabrication sur le serveur local : 60 à 75 ms par rapport. Taille du Worker : 1,19 Mo compressé.
 - Non-régression : `e2e-diagnostic` 31, `e2e-guide` 38, `e2e-formulaires` 25 constats bons ; `maquette-emails` tous bons ; `npm run check` 0 erreur ; `npm run build` sans erreur ; `node scripts/liens.mjs` 26 pages, 1661 liens, 0 cassé.
 
@@ -40,4 +43,3 @@ Le vendeur qui a fait le diagnostic télécharge un rapport PDF à son nom : ses
 - Plan Workers Paid (action J10 de JB) avant le lancement : le plan gratuit limite le calcul à 10 ms par requête, le rapport en demande environ 60.
 - Relecture des textes du rapport par Anne ; refaire le gabarit après ses corrections (`node scripts/rapport-gabarit.mjs`).
 - Après fusion : téléchargement réel sur l'aperçu, depuis la page de résultats et depuis l'e-mail.
-- À trancher par JB : le bouton de la sortie B « Téléchargez votre plan d'action personnalisé » envoie encore le guide.

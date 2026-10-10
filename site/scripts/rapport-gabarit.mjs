@@ -169,7 +169,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const navigateur = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   const page = await navigateur.newPage({ viewport: { width: 794, height: 1123 } });
   await page.setContent(`<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Rapport de diagnostic</title><style>${CSS}</style></head><body></body></html>`);
-  await page.evaluate(() => document.fonts.ready);
+  // Mesurer dans les conditions de l'impression : média « print » et polices chargées avant toute mise en page
+  // (sinon les blocs sont mesurés avec une police de secours plus large et les emplacements tombent trop bas).
+  await page.emulateMedia({ media: 'print' });
+  await page.evaluate(() => Promise.all([...document.fonts].map((f) => f.load())));
   const { parties, nombre } = await page.evaluate(paginer, flux);
   await page.evaluate(() => document.fonts.ready);
   const debordes = Object.entries(parties).filter(([, p]) => p.debordement).map(([c]) => c);

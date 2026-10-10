@@ -158,7 +158,7 @@ Sur `/contact`, le bouton « Voir les créneaux d'Anne » charge l'agenda de Cal
 
 ## Rapport PDF du diagnostic (story 10.10)
 
-- **Ce que reçoit le vendeur** : un PDF à son nom (8 pages environ) : couverture avec son score et son profil, « Par où commencer » (ses priorités, dans l'ordre), une partie par axe (score, constat, impact chiffré, puis les recommandations tirées des 10 erreurs du guide, chacune marquée « En priorité », « À améliorer » ou « Point solide » avec sa réponse et ses points), et la suite proposée (sortie A ou B). Il le télécharge depuis le bouton « Télécharger mon rapport » de la page de résultats ou depuis l'e-mail du résumé, par un lien personnel valable 7 jours.
+- **Ce que reçoit le vendeur** : un PDF à son nom (8 pages environ) : couverture avec son score et son profil, « Par où commencer » (ses priorités, dans l'ordre), une partie par axe (score, constat, impact chiffré, puis les recommandations tirées des 10 erreurs du guide, chacune marquée « En priorité », « À améliorer » ou « Point solide » avec sa réponse et ses points), et la suite proposée (sortie A ou B). Il le télécharge depuis la page de résultats (encart « Votre rapport personnalisé » en sortie A, bouton principal « Téléchargez votre plan d'action personnalisé » en sortie B, le guide restant proposé en dessous) ou depuis l'e-mail du résumé, par un lien personnel valable 7 jours.
 - **Fabrication** : `scripts/rapport-gabarit.mjs` met en page à la charte, une fois, toutes les pages possibles (3 couvertures, 3 niveaux par axe, 2 suites), avec des emplacements vides dont il note la position. Au téléchargement, `src/server/rapport.ts` (bibliothèque pdf-lib, dans le Worker) choisit les pages du vendeur et y écrit son nom, ses scores, ses barres, ses étiquettes et ses réponses. Rien n'est stocké : le PDF est refait à chaque téléchargement depuis le lead.
 - **Lien** : `/api/diagnostic/rapport?l=…&e=…&s=…`, signé avec `LIEN_SECRET` (préfixe `rapport.`, distinct du guide). Faux, expiré, lead effacé : 404 « Ce lien n'est plus valable ». Sans secret, pas de bouton et l'e-mail garde l'ancienne phrase.
 - **Textes** : `contenu-anne/guide/rapport-diagnostic.md` (brouillon à relire par Anne). Le gabarit embarque une empreinte de ses sources ; `e2e-rapport` signale un gabarit à refaire.
@@ -223,7 +223,7 @@ La maquette dessine 1 440 px (ordinateur) et 390 px (téléphone). Entre 900 et 
 
 ## Vérification faite (voir `.verif/`)
 
-Story 10.10 : `node scripts/e2e-rapport.mjs` : 19 constats bons (deux vendeurs, profil à risque sortie B et profil préparé sortie A, PDF de 8 pages lus) · `e2e-diagnostic` 31, `e2e-guide` 38, `e2e-formulaires` 25 : tous bons · `maquette-emails` : tous bons · `npm run check` : 0 erreur · `node scripts/liens.mjs` : 26 pages, 1661 liens, 0 cassé.
+Story 10.10 : `node scripts/e2e-rapport.mjs` : 23 constats bons (dont aucun texte superposé) (deux vendeurs, profil à risque sortie B et profil préparé sortie A, PDF de 8 pages lus) · `e2e-diagnostic` 31, `e2e-guide` 38, `e2e-formulaires` 25 : tous bons · `maquette-emails` : tous bons · `npm run check` : 0 erreur · `node scripts/liens.mjs` : 26 pages, 1661 liens, 0 cassé.
 
 Story 10.7 : `node scripts/e2e-gestion.mjs` : 39 constats bons (voir la story) · `e2e-formulaires`, `e2e-diagnostic`, `e2e-rendez-vous`, `e2e-guide` : tous bons · `npm run check` : 0 erreur · `node scripts/liens.mjs` : 26 pages, 1600 liens, 0 cassé · `npm run verif` : aucune erreur console · `node scripts/ecrans.mjs` : rien à signaler.
 

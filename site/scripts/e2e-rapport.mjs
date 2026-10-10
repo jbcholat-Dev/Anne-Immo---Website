@@ -36,6 +36,21 @@ const diagnostic = (prenom, nom, choix) =>
     body: JSON.stringify({ lang: 'fr', turnstile: 'jeton', journey_id: 'essai', submission_id: sid(), reponses: reponses(choix), prenom, nom, email: `${prenom.toLowerCase()}+${ESSAI}@example.com`, telephone: '06 12 34 56 78', privacy: 'on' }),
   }).then((r) => r.json());
 const texteDe = (fichier) => execFileSync('pdftotext', ['-layout', fichier, '-'], { encoding: 'utf8' });
+// Mots qui se chevauchent sur une même page (texte écrit par le serveur posé sur le texte du gabarit, par exemple).
+function chevauchements(fichier) {
+  const html = execFileSync('pdftotext', ['-bbox', fichier, '-'], { encoding: 'utf8' });
+  const trouves = [];
+  html.split('<page ').slice(1).forEach((page, n) => {
+    const mots = [...page.matchAll(/<word xMin="([\d.]+)" yMin="([\d.]+)" xMax="([\d.]+)" yMax="([\d.]+)">([^<]*)<\/word>/g)].map((m) => ({ x0: +m[1], y0: +m[2], x1: +m[3], y1: +m[4], t: m[5] }))
+      .filter((m) => m.t.replace(/[\s\u200b]/g, '') !== ''); // les emplacements vides du gabarit ne comptent pas
+    for (let i = 0; i < mots.length; i++) for (let j = i + 1; j < mots.length; j++) {
+      const a = mots[i], b = mots[j];
+      const l = Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0), h = Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0);
+      if (l > 1 && h > 0.4 * Math.min(a.y1 - a.y0, b.y1 - b.y0)) trouves.push(`page ${n + 1} : « ${a.t} » / « ${b.t} »`);
+    }
+  });
+  return trouves;
+}
 const pagesDe = (fichier) => Number(/Pages:\s+(\d+)/.exec(execFileSync('pdfinfo', [fichier], { encoding: 'utf8' }))[1]);
 
 try {
@@ -50,6 +65,9 @@ try {
     const lien = (/href="([^"]*\/api\/diagnostic\/rapport\?[^"]+)"[^>]*data-rapport/.exec(html)?.[1] ?? '').replace(/&amp;/g, '&');
     const fin = Number(new URL(lien || U).searchParams.get('e'));
     constat(lien.startsWith(`${U}/api/diagnostic/rapport?l=${lead.id}&e=`) && Math.abs(fin * 1000 - (avant + 7 * 86400000)) < 120000, `${prenom} (${sc.profil}, sortie ${lead.orientation}) : bouton « Télécharger mon rapport » sur la page de résultats, lien de 7 jours`);
+    const principal = /<div class="rs-sortie-boutons">\s*<a href="([^"]*)"/.exec(html)?.[1]?.replace(/&amp;/g, '&') ?? '';
+    constat(sortie === 'B' ? principal === lien && html.includes('data-guide') : html.includes('Votre rapport personnalisé'),
+      sortie === 'B' ? `${prenom} : le bouton principal de la sortie B mène au rapport, le guide reste proposé en dessous` : `${prenom} : encart « Votre rapport personnalisé » en sortie A`);
     constat(sc.profil === profil && lead.orientation === sortie, `${prenom} : profil ${profil} et sortie ${sortie} comme prévu`);
 
     // 2. L'e-mail du résumé porte le même genre de lien, à la place de la phrase des 24 heures.
@@ -73,6 +91,8 @@ try {
     constat(pagesDe(fichier) === attendues && new RegExp(`\\b${attendues}\\s*/\\s*${attendues}\\b`).test(texte), `${prenom} : ${attendues} pages, pied de page numéroté`);
     const priorites = (texte.match(/EN PRIORITÉ/g) ?? []).length;
     constat(prenom === 'Claire' ? priorites >= 5 : !texte.includes('EN PRIORITÉ') && texte.includes('Aucun point faible'), `${prenom} : ${priorites} recommandation(s) « En priorité »`);
+    const chev = chevauchements(fichier);
+    constat(chev.length === 0, `${prenom} : aucun texte superposé${chev.length ? ` (${chev.slice(0, 3).join(' ; ')})` : ''}`);
     constat(texte.includes('Votre réponse :'), `${prenom} : réponses du vendeur en clair sous chaque recommandation`);
     temps.sort((a, b) => a - b);
     console.log(`  temps de fabrication (serveur local, 5 appels) : médiane ${Math.round(temps[2])} ms, plus rapide ${Math.round(temps[0])} ms`);
