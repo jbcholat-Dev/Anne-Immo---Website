@@ -1,7 +1,7 @@
 ---
 story: 10.7
 epic: 10 — Capture des leads et backend
-statut: review
+statut: done
 date: 2026-10-08
 ---
 
@@ -47,8 +47,10 @@ Anne consulte ses demandes, relance un e-mail manqué, marque une recopie dans M
 - `e2e-formulaires`, `e2e-diagnostic`, `e2e-rendez-vous`, `e2e-guide` : tous les constats bons.
 - `npm run build` sans erreur ; `npm run check` : 0 erreur ; `node scripts/liens.mjs` : 26 pages, 1600 liens, 0 cassé ; `npm run verif` : aucune erreur console ; `node scripts/ecrans.mjs` : rien à signaler.
 
+## Vérifié en ligne (2026-10-09, après la fusion des PR n° 55 et 71, par JB)
+- `/gestion` sur l'aperçu, après le code d'Access : en-tête « Gestion des demandes » avec le compte `jbcholat@gmail.com`, « Les 6 dernières demandes » (guide, rendez-vous, diagnostic B, guide, estimation, contact du 8 octobre), toutes marquées test, e-mails « ok », Modelo « à recopier » (capture de JB).
+
 ## Ce qui reste
 - ~~JB : donner l'AUD de l'application Access de l'aperçu (action J32)~~ : donné le 2026-10-09, mis dans `ACCESS_AUD`.
-- Essai en ligne après la fusion : ouvrir `/gestion`, relancer, exporter et effacer une demande de test.
 - Anne : valider la politique de confidentialité (durée de 3 ans) avec les autres pages légales.
 - Au lancement (story 12.4) : application Access sur `annevialtissot.fr/gestion`, son AUD ajouté (RUNBOOK § 4 quinquies).
