@@ -60,11 +60,11 @@ development_status:
   4-4-mentions-légales-confidentialité-cookies-et-page-404: done
   epic-4-retrospective: optional
 
-  epic-5: in-progress
+  epic-5: done
   5-1-landing-du-diagnostic: done
   5-2-parcours-de-17-écrans-avec-reprise-et-abandon: done
   5-3-gate-de-capture-calcul-du-score-page-de-résultats: done
-  5-4-origine-des-campagnes-gardée-depuis-la-landing: review
+  5-4-origine-des-campagnes-gardée-depuis-la-landing: done
   epic-5-retrospective: optional
 
   epic-6: in-progress

@@ -1,7 +1,7 @@
 ---
 story: 5.4
 epic: 5 — Diagnostic
-statut: review
+statut: done
 date: 2026-10-09
 origine: demande de JB du 2026-10-09 (fil « Page diagnostic en page d'atterrissage ») — la landing doit servir de destination aux campagnes réseaux sociaux et e-mail
 ---
@@ -27,5 +27,7 @@ Les paramètres de campagne (`utm_source`, `utm_campaign`…, les étiquettes qu
 - La suite (parcours → contact enregistré avec sa campagne → e-mail d'Anne qui affiche la campagne) existait déjà et est couverte par `scripts/e2e-diagnostic.mjs`.
 
 ## Ce qui reste
+Story close : PR n° 74 fusionnée par JB le 2026-10-10. Les suites ci-dessous vivent ailleurs.
 - Compter les visites et le taux de complétion par campagne : story 10.8 (mesure d'audience Cloudflare Web Analytics et événements du parcours), à faire avant la première campagne payante.
+- Aligner l'aperçu A4 sur la mise en page du rapport PDF (story 10.10, fil « Back-end du site ») une fois validée par JB.
 - Revue de la page avec Anne (jamais revue en séance) ; version anglaise de la landing (epic 6) si des campagnes visent la clientèle anglophone.

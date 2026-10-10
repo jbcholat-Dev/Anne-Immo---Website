@@ -613,7 +613,7 @@ afin de savoir quelles publications et quels e-mails m'amènent des vendeurs.
 **Alors** les paramètres `utm_*` suivent dans l'adresse, et eux seuls, sans rien déposer dans le navigateur (AD-11)
 **Et** le contact capté porte sa campagne, déjà enregistrée par le noyau.
 
-**État :** en revue (2026-10-09). Story : `_bmad-output/implementation-artifacts/5-4-origine-des-campagnes-gardée-depuis-la-landing.md`.
+**État :** fait — PR n° 74 fusionnée le 10/10/2026 (origine des campagnes gardée, nom et portrait d'Anne en haut, aperçu du rapport A4, D-38). Story : `_bmad-output/implementation-artifacts/5-4-origine-des-campagnes-gardée-depuis-la-landing.md`.
 
 ## Epic 6: Version anglaise
 
