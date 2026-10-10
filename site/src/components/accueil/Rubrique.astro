@@ -1,0 +1,15 @@
+---
+// Concept « Magazine et matière » : l'en-tête de rubrique, comme dans un magazine. Un numéro, un nom, un filet.
+// Les noms de rubrique sont des propositions, à faire valider par Anne si le concept est retenu.
+interface Props { num: string; nom: string; ton?: 'clair' | 'sombre' }
+const { num, nom, ton = 'clair' } = Astro.props;
+---
+<div class:list={['rubrique', `rubrique-${ton}`]} aria-hidden="true"><span class="rubrique-num">{num}</span><span class="rubrique-nom">{nom}</span></div>
+<style>
+  .rubrique { display: flex; align-items: baseline; gap: 16px; padding-top: 14px; border-top: 1px solid var(--avt-brun); margin-bottom: 40px; }
+  .rubrique-num { font-family: var(--avt-font-display); font-size: 22px; color: var(--avt-terra-deep); font-variant-numeric: tabular-nums; }
+  .rubrique-nom { font-size: 12.5px; letter-spacing: .2em; text-transform: uppercase; font-weight: 500; }
+  .rubrique-sombre { border-top-color: rgba(247, 242, 234, .5); color: var(--avt-ecru); }
+  .rubrique-sombre .rubrique-num { color: var(--avt-ecru); }
+  @media (max-width: 899px) { .rubrique { margin-bottom: 26px; } }
+</style>

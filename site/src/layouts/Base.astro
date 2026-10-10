@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css';
+// Concept « Magazine et matière » (branche d'essai, ne pas fusionner tel quel) : la peau commune à toutes les pages.
+import '../styles/magazine.css';
 import Sprite from '../components/Sprite.astro';
 import RetourApercu from '../components/RetourApercu.astro';
 import type { Lang } from '../i18n';
@@ -11,7 +13,7 @@ const indexable = import.meta.env.PUBLIC_INDEXATION === 'oui';
 const robots = noindex || !indexable;
 ---
 <!doctype html>
-<html lang={lang}>
+<html lang={lang} data-concept="magazine">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

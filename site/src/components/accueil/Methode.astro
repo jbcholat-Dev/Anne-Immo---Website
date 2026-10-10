@@ -2,6 +2,7 @@
 // § 1.4 Ma méthode, en un coup d'œil (D-15) : trois piliers, puis le refrain révélé ligne par ligne (seul texte animé de la page).
 import { r, type Lang } from '../../i18n';
 import { dicoAccueil } from '../../lib/textes';
+import Rubrique from './Rubrique.astro';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const d = await dicoAccueil(lang);
@@ -14,42 +15,47 @@ const piliers = d.piliers ?? [
 const refrain = d.refrain ?? ['No bad surprises.', 'No file left dragging.', 'Sales that go all the way.'];
 ---
 <section class="methode" data-sec="methode" aria-labelledby="methode-titre">
+  <Rubrique num="03" nom={lang === 'fr' ? 'La méthode' : 'Method'} />
   <div class="methode-tete" data-reveal="titre">
     <h2 id="methode-titre">{d.accueil.methode_titre}</h2>
-    <a href={r('methode', lang)} class="lien seulement-desktop">{d.accueil.methode_lien}</a>
   </div>
   <div class="piliers" data-reveal="bloc">
-    {piliers.map((p) => (
-      <div class="pilier"><div class="chapeau">{p.titre}</div><p>{p.texte}</p></div>
+    {piliers.map((p, i) => (
+      <div class="pilier"><span class="pilier-num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span><h3>{p.titre}</h3><p>{p.texte}</p></div>
     ))}
   </div>
   <div class="refrain" data-refrain aria-label={lang === 'fr' ? 'Refrain de la marque' : 'Brand refrain'}>
     {refrain.map((l) => <div data-ligne>{l}</div>)}
   </div>
-  <a href={r('methode', lang)} class="lien seulement-mobile methode-lien-m">{d.accueil.methode_lien}</a>
+  <a href={r('methode', lang)} class="lien-fleche methode-lien">{d.accueil.methode_lien} <span aria-hidden="true">→</span></a>
 </section>
 <style>
-  .methode { position: relative; background: var(--avt-ecru); padding: 100px var(--marge) 110px; }
-  .methode-tete { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 48px; gap: 24px; }
-  .methode-tete h2 { font-size: 48px; }
-  .piliers { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; margin-bottom: 96px; }
-  .pilier { border-top: 1px solid var(--avt-brun); padding-top: 20px; }
-  .pilier .chapeau { margin-bottom: 12px; }
+  /* Concept « Magazine et matière » : la méthode sur un papier plus soutenu (galet), trois piliers numérotés en grand,
+     puis le refrain en très grand, révélé ligne par ligne comme avant. */
+  .methode { position: relative; background: var(--avt-galet); padding: 100px var(--marge) 110px; }
+  .methode-tete { margin-bottom: 56px; }
+  .methode-tete h2 { font-size: 64px; line-height: 1.04; max-width: 14ch; }
+  .piliers { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 48px; margin-bottom: 110px; }
+  .pilier { border-top: 1px solid var(--avt-brun); padding-top: 22px; }
+  .pilier-num { display: block; font-family: var(--avt-font-display); font-size: 88px; line-height: .9; color: var(--avt-terra); margin-bottom: 18px; }
+  .pilier h3 { font-size: 32px; margin-bottom: 12px; }
   .pilier p { font-size: 17px; line-height: 1.6; }
-  .refrain { font-family: var(--avt-font-display); font-size: 64px; line-height: 1.15; max-width: 22ch; }
-  .refrain div { color: var(--avt-placeholder); transition: color .6s ease; }
+  .refrain { font-family: var(--avt-font-display); font-size: 92px; line-height: 1.04; letter-spacing: -.01em; }
+  .refrain div { color: rgba(38, 32, 26, .16); transition: color .6s ease; }
   .refrain div[data-on] { color: var(--avt-brun); }
+  .refrain div:last-child[data-on] { color: var(--avt-klein); }
   html:not([data-js]) .refrain div { color: var(--avt-brun); }
+  .methode-lien { display: inline-flex; margin-top: 44px; }
   @media (prefers-reduced-motion: reduce) { .refrain div { color: var(--avt-brun); } }
   @media (max-width: 899px) {
-    .methode { padding: 48px var(--marge-m) 64px; }
-    .methode-tete { margin-bottom: 28px; }
-    .methode-tete h2 { font-size: 32px; }
-    .piliers { grid-template-columns: 1fr; gap: 22px; margin-bottom: 48px; }
-    .pilier { padding-top: 14px; }
-    .pilier .chapeau { font-size: 12px; margin-bottom: 8px; }
+    .methode { padding: 56px var(--marge-m) 64px; }
+    .methode-tete { margin-bottom: 32px; }
+    .methode-tete h2 { font-size: 36px; }
+    .piliers { grid-template-columns: 1fr; gap: 28px; margin-bottom: 56px; }
+    .pilier-num { font-size: 56px; margin-bottom: 10px; }
+    .pilier h3 { font-size: 26px; margin-bottom: 8px; }
     .pilier p { font-size: 16px; line-height: 1.55; }
-    .refrain { font-size: 36px; }
-    .methode-lien-m { display: inline-block; margin-top: 28px; }
+    .refrain { font-size: 40px; line-height: 1.1; }
+    .methode-lien { margin-top: 28px; }
   }
 </style>

@@ -6,7 +6,6 @@
 // Les fichiers vidéo sont produits par `npm run video` (scripts/video.mjs) ; s'ils manquent, la balise <video> est masquée.
 import fs from 'node:fs';
 import Picture from '../Picture.astro';
-import Signature from '../Signature.astro';
 import { image } from '../../lib/images';
 import { hero } from '../../config/site';
 import { r, type Lang } from '../../i18n';
@@ -27,12 +26,14 @@ const videoDispo = fs.existsSync(new URL('../../../public/video/ouverture.mp4', 
     <div class="hero-voile"></div>
   </div>
   <div class="hero-contenu">
-    <h1 id="hero-titre" data-reveal="titre">Anne <span class="hero-nom">VIAL‑TISSOT</span></h1>
-    <Signature largeur={260} hauteur={10} class="hero-signature" />
-    <p class="hero-ligne" data-reveal="petit">{d.accueil.hero_ligne}</p>
-    <div class="hero-boutons" data-reveal="petit">
-      <a href={r('diagnostic', lang)} class="btn btn-primaire"><span class="seulement-desktop">{d.accueil.hero_cta}</span><span class="seulement-mobile">{d.accueil.hero_cta_m}</span></a>
-      <a href={`${r('contact', lang)}#reserver`} class="btn btn-contour-ecru">{d.accueil.hero_estimation}</a>
+    <p class="hero-surtitre" data-reveal="petit">{d.accueil.hero_ligne}</p>
+    <h1 id="hero-titre" data-reveal="titre"><span class="hero-prenom">Anne</span> <span class="hero-nom">VIAL‑TISSOT</span></h1>
+    <div class="hero-pied" data-reveal="petit">
+      <div class="hero-boutons">
+        <span class="note-main hero-note seulement-desktop" aria-hidden="true">{lang === 'fr' ? 'trois minutes, gratuit' : 'three minutes, free'}</span>
+        <a href={r('diagnostic', lang)} class="btn btn-primaire"><span class="seulement-desktop">{d.accueil.hero_cta}</span><span class="seulement-mobile">{d.accueil.hero_cta_m}</span></a>
+        <a href={`${r('contact', lang)}#reserver`} class="btn btn-contour-ecru">{d.accueil.hero_estimation}</a>
+      </div>
     </div>
   </div>
 </section>
@@ -44,21 +45,27 @@ const videoDispo = fs.existsSync(new URL('../../../public/video/ouverture.mp4', 
   .hero-video { object-position: center; }
   .hero-video-absente { display: none; } /* fichiers vidéo absents : le poster <picture> suffit */
   .hero-voile { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(38, 32, 26, .34) 0%, rgba(38, 32, 26, .22) 34%, rgba(38, 32, 26, .58) 72%, rgba(38, 32, 26, .88) 100%); pointer-events: none; }
-  .hero-contenu { position: absolute; left: var(--marge); right: var(--marge); bottom: 84px; max-width: 760px; }
-  .hero h1 { font-size: 96px; letter-spacing: .02em; line-height: 1; color: var(--avt-ecru); white-space: nowrap; }
-  .hero-signature { margin-top: 14px; }
-  .hero-ligne { font-size: 19px; line-height: 1.5; margin-top: 18px; color: var(--avt-ecru); max-width: 44ch; }
-  .hero-boutons { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+  /* Concept « Magazine et matière » : une couverture de magazine. Le nom en très grand, sur deux lignes, en bas à gauche ;
+     la ligne d'Anne en sur-titre ; la signature et les deux boutons en pied de couverture, sur un filet. */
+  .hero-contenu { position: absolute; left: var(--marge); right: var(--marge); bottom: 64px; }
+  .hero-surtitre { font-size: 13px; letter-spacing: .2em; text-transform: uppercase; font-weight: 500; color: var(--avt-ecru); margin-bottom: 18px; text-shadow: 0 1px 12px rgba(0, 0, 0, .4); }
+  .hero h1 { font-size: clamp(96px, 11.2vw, 176px); letter-spacing: -.01em; line-height: .86; color: var(--avt-ecru); text-shadow: 0 2px 30px rgba(0, 0, 0, .25); }
+  .hero-prenom { display: block; font-size: .56em; letter-spacing: .02em; margin-left: .06em; }
+  .hero-nom { display: block; white-space: nowrap; }
+  .hero-pied { display: flex; align-items: center; justify-content: flex-end; gap: 24px; margin-top: 28px; padding-top: 22px; border-top: 1px solid rgba(247, 242, 234, .35); }
+  .hero-boutons { position: relative; display: flex; flex-wrap: wrap; gap: 12px; }
+  /* Une note à la main (les mots d'Anne, repris du bloc diagnostic) qui pointe le bouton principal */
+  .hero-note { position: absolute; right: calc(100% + 18px); top: 6px; color: var(--avt-ecru); font-size: 26px; transform: rotate(-6deg); white-space: nowrap; }
   @media (prefers-reduced-motion: reduce) { .hero-video { display: none; } }
   @media (max-width: 899px) {
     .hero { height: 780px; }
     .hero-voile { background: linear-gradient(180deg, rgba(38, 32, 26, .62) 0%, rgba(38, 32, 26, .54) 30%, rgba(38, 32, 26, .32) 56%, rgba(38, 32, 26, .48) 78%, rgba(38, 32, 26, .88) 100%); }
-    .hero-contenu { bottom: auto; top: 110px; left: var(--marge-m); right: var(--marge-m); }
-    .hero h1 { font-size: 48px; white-space: normal; }
-    .hero-nom { display: block; }
-    .hero-signature { width: 150px !important; height: 8px !important; margin-top: 10px; }
-    .hero-ligne { font-size: 16px; margin-top: 14px; }
-    .hero-boutons { margin-top: 22px; }
+    .hero-contenu { left: var(--marge-m); right: var(--marge-m); bottom: 36px; }
+    .hero-surtitre { font-size: 11.5px; letter-spacing: .16em; margin-bottom: 12px; }
+    .hero h1 { font-size: 12.4vw; }
+    .hero-prenom { font-size: .8em; }
+    .hero-pied { flex-direction: column; align-items: flex-start; gap: 16px; margin-top: 18px; padding-top: 16px; }
+    .hero-boutons { flex-direction: column; align-items: stretch; width: 100%; }
   }
 </style>
 
