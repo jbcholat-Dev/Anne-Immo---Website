@@ -14,7 +14,7 @@ photos:
   - photos/dsc_0299.webp
   - photos/dsc_0300.webp
   - photos/dsc_0303.webp
-statut: brouillon
+statut: publie
 autorisations: false
 temoignages:
   - citation: null
