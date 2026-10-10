@@ -31,6 +31,7 @@ La spec (`_bmad-output/specs/spec-anne-website/SPEC.md`) exige que le site soit 
 - **Chaque écart avec la maquette, la spec ou l'architecture est écrit** dans `site/README.md` § « Écarts assumés », avec sa raison.
 - **Tout ce que la v1 simule** (formulaires, gate du diagnostic, envoi du guide) est marqué `TODO(backend)` dans le code et listé dans `site/README.md`. Ne pas en ajouter sans mettre la liste à jour.
 - **Un travail est « fait » quand il est vérifié** : `npm run build`, `npm run check`, liens (`scripts/liens.mjs`), captures (`npm run verif`) pour tout changement visuel. Le résultat de la vérification est cité dans la story.
+- **Fusion automatique (story 9.7, décision de JB du 2026-10-10)** : JB ne valide que les PR qui changent le site. Une PR qui ne touche que des documents (`_bmad-output/`, `_bmad/`, `.claude/`, `maquettes/`, fichiers `.md` hors de `contenu-anne/`, `site/src/`, `site/public/`, `site/prive/`, `design-system/`, `.github/`) ou un enregistrement de l'espace d'édition (branche `cms/…`, `contenu-anne/` seulement) fusionne seul une fois la construction Cloudflare au vert. Conséquences pour Claude : séparer le suivi (story close, statut de sprint, RUNBOOK) du code dans des PR distinctes quand le suivi peut partir seul ; ouvrir une PR en brouillon tant qu'elle n'est pas prête ; mettre l'étiquette `a-valider` sur une PR de documents que JB doit relire (une décision qu'il n'a pas encore prise, par exemple). Règle complète : RUNBOOK § 2 bis.
 
 ### Tableau de bord de JB
 
@@ -56,7 +57,7 @@ Le repère de vérité en cas de contradiction : la **spec v5** pour ce que le s
 |---|---|
 | `RUNBOOK.md` | La notice de secours : comptes, adresse d'aperçu, comment remettre en ligne, bascule en production, pièges irréversibles. |
 | `site/` | Le code du site (Astro 7, sortie statique). `site/README.md` décrit l'état réel, `site/PLAN.md` le plan de construction. |
-| `contenu-anne/` | Contenu d'Anne rangé au format du site : stories, avis Immodvisor, photos web, légal, guide. Anne modifie ce contenu par l'espace d'édition du site (`/admin`, Sveltia CMS, story 7.13) : chaque enregistrement est une demande de fusion que JB valide. Le dossier Google Drive « Contenu site Anne », rangé à l'identique, reste l'archive des photos HD et des vidéos (RUNBOOK § 1). Les vidéos et photos HD restent sur Drive, hors Git. |
+| `contenu-anne/` | Contenu d'Anne rangé au format du site : stories, avis Immodvisor, photos web, légal, guide. Anne modifie ce contenu par l'espace d'édition du site (`/admin`, Sveltia CMS, story 7.13) : chaque enregistrement est une demande de fusion, qui fusionne seule quand la fiche passe en « En relecture » ou « Prêt » (story 9.7). Le dossier Google Drive « Contenu site Anne », rangé à l'identique, reste l'archive des photos HD et des vidéos (RUNBOOK § 1). Les vidéos et photos HD restent sur Drive, hors Git. |
 | `design-system/` | Charte : couleurs, typographies, logos, composants. `tokens/tokens.css` est copié dans le site. |
 | `maquettes/lot-3-complet/` | Maquette de référence (61 écrans) et `DECISIONS.md` (D-1 → D-26). |
 | `_bmad-output/specs/spec-anne-website/` | La spec (contrat, 11 capacités CAP-1 → CAP-11) et son journal `.memlog.md`. |
