@@ -899,6 +899,226 @@
     ],
     "jpg": "/img/stories/auberge-decoupee-2024/photo-031-1280.jpg"
   },
+  "stories/bernex-chalet-2024/bernex-chalet-exp-immo-009-hd": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-009-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-009-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-009-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-009-hd-1280.jpg"
+  },
+  "stories/bernex-chalet-2024/bernex-chalet-exp-immo-013-hd": {
+    "largeur": 3199,
+    "hauteur": 2133,
+    "ratio": 1.4998,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-013-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-013-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-013-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-013-hd-1280.jpg"
+  },
+  "stories/bernex-chalet-2024/bernex-chalet-exp-immo-014-hd": {
+    "largeur": 3199,
+    "hauteur": 2138,
+    "ratio": 1.4963,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-014-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-014-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-014-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-014-hd-1280.jpg"
+  },
+  "stories/bernex-chalet-2024/bernex-chalet-exp-immo-021-hd": {
+    "largeur": 3200,
+    "hauteur": 2130,
+    "ratio": 1.5023,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-021-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-021-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-021-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-021-hd-1280.jpg"
+  },
+  "stories/bernex-chalet-2024/bernex-chalet-exp-immo-024-hd": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-024-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-024-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-024-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-024-hd-1280.jpg"
+  },
+  "stories/bernex-chalet-2024/bernex-chalet-exp-immo-027-hd": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-027-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-027-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-027-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-027-hd-1280.jpg"
+  },
+  "stories/bernex-chalet-2024/bernex-chalet-exp-immo-028-hd": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-028-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-028-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-028-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-028-hd-1280.jpg"
+  },
+  "stories/bernex-chalet-2024/bernex-chalet-exp-immo-033-hd": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-033-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-033-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-033-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-033-hd-1280.jpg"
+  },
+  "stories/bernex-chalet-2024/bernex-chalet-exp-immo-035-hd": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-035-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-035-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-035-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-035-hd-1280.jpg"
+  },
+  "stories/bernex-chalet-2024/bernex-chalet-exp-immo-039-hd": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-039-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-039-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-039-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-039-hd-1280.jpg"
+  },
+  "stories/bernex-chalet-2024/bernex-chalet-exp-immo-040-hd": {
+    "largeur": 3200,
+    "hauteur": 2132,
+    "ratio": 1.5009,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-040-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-040-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-040-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/bernex-chalet-2024/bernex-chalet-exp-immo-040-hd-1280.jpg"
+  },
   "stories/essert-romand-chalet-2026/essert-romand-exp-immo-002-hd-copie": {
     "largeur": 3200,
     "hauteur": 2132,
@@ -1519,6 +1739,326 @@
     ],
     "jpg": "/img/stories/morzine-appartement-2026/photo-7027-1280.jpg"
   },
+  "stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-001-hd": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-001-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-001-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-001-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-001-hd-1280.jpg"
+  },
+  "stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-002-hd": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-002-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-002-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-002-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-002-hd-1280.jpg"
+  },
+  "stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-004-hd": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-004-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-004-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-004-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-004-hd-1280.jpg"
+  },
+  "stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-007-hd": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-007-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-007-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-007-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-007-hd-1280.jpg"
+  },
+  "stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-009-hd": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-009-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-009-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-009-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-009-hd-1280.jpg"
+  },
+  "stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-012-hd": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-012-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-012-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-012-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-012-hd-1280.jpg"
+  },
+  "stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-015-hd": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-015-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-015-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-015-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-015-hd-1280.jpg"
+  },
+  "stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-016-hd": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-016-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-016-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-016-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-016-hd-1280.jpg"
+  },
+  "stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-020-hd": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-020-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-020-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-020-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-020-hd-1280.jpg"
+  },
+  "stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-021-hd": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-021-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-021-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-021-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-021-hd-1280.jpg"
+  },
+  "stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-023-hd": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-023-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-023-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-023-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-023-hd-1280.jpg"
+  },
+  "stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-026-hd": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-026-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-026-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-026-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-026-hd-1280.jpg"
+  },
+  "stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-027-hd": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-027-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-027-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-027-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-027-hd-1280.jpg"
+  },
+  "stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-034-hd": {
+    "largeur": 3200,
+    "hauteur": 2145,
+    "ratio": 1.4918,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-034-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-034-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-034-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-034-hd-1280.jpg"
+  },
+  "stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-035-hd": {
+    "largeur": 3200,
+    "hauteur": 2120,
+    "ratio": 1.5094,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-035-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-035-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-035-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-035-hd-1280.jpg"
+  },
+  "stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-037-hd": {
+    "largeur": 3200,
+    "hauteur": 2133,
+    "ratio": 1.5002,
+    "webp": [
+      {
+        "w": 640,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-037-hd-640.webp"
+      },
+      {
+        "w": 1280,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-037-hd-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-037-hd-1920.webp"
+      }
+    ],
+    "jpg": "/img/stories/sciez-villa-2025/sciez-sur-leman-exp-immopur-037-hd-1280.jpg"
+  },
   "photos/essert-romand-013-hd": {
     "largeur": 5472,
     "hauteur": 3650,
@@ -1540,8 +2080,8 @@
     "jpg": "/img/photos/essert-romand-013-hd-1280.jpg"
   },
   "photos/ouverture-poster": {
-    "largeur": 1440,
-    "hauteur": 810,
+    "largeur": 1920,
+    "hauteur": 1080,
     "ratio": 1.7778,
     "webp": [
       {
@@ -1551,6 +2091,10 @@
       {
         "w": 1280,
         "src": "/img/photos/ouverture-poster-1280.webp"
+      },
+      {
+        "w": 1920,
+        "src": "/img/photos/ouverture-poster-1920.webp"
       }
     ],
     "jpg": "/img/photos/ouverture-poster-1280.jpg"
