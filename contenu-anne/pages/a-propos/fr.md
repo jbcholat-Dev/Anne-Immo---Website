@@ -122,4 +122,14 @@ Une vente de transition, un bien de famille, des délais qui demandent de la pat
 
 # Réseau eXp
 
-À écrire par Anne : comment je travaille avec le réseau eXp France, et ce qu'il apporte à mes clients (par exemple la visibilité internationale des biens, les outils, l'entraide entre conseillers).
+<!-- Texte provisoire écrit par Claude le 2026-10-10 (story 7.21), à partir de sources publiques sur eXp France. Anne le remplace par le sien dans l'espace d'édition. -->
+
+Je suis conseillère immobilière indépendante, membre du réseau eXp France. Je travaille à mon compte, au plus près du Chablais et du bassin lémanique, tout en m'appuyant sur un groupe international : eXp France est la filiale française d'eXp Realty, un réseau né aux États-Unis et présent aujourd'hui dans de nombreux pays.
+
+## Ce que cela change pour vous
+
+**Une ouverture à l'international.** Le réseau permet aux conseillers de se recommander des clients d'un pays à l'autre. Si vous arrivez de l'étranger pour vous installer dans la région, ou si vous partez vivre ailleurs, je peux vous mettre en relation avec un conseiller eXp sur place. Avec les quatre langues que je parle, c'est un vrai atout pour une clientèle internationale.
+
+**Des outils et un appui juridique.** eXp met à ma disposition ses outils de travail, des réunions et formations régulières, et un service juridique pour répondre aux questions que soulève chaque dossier.
+
+**L'entraide entre conseillers.** Le réseau repose sur le partage d'expérience entre conseillers. Pour vous, cela veut dire une interlocutrice unique, moi, avec tout un réseau derrière.
