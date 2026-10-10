@@ -12,7 +12,7 @@ photos:
   - photos/anthy-sur-leman-exp-immo-018-hd.webp
   - photos/anthy-sur-leman-exp-immo-016-hd.webp
   - photos/anthy-sur-leman-exp-immo-020-hd.webp
-statut: a-relire
+statut: publie
 autorisations: false
 temoignages:
   - citation: ''
