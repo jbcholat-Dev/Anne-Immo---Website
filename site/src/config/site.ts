@@ -17,9 +17,9 @@ export const identite = {
 
 /** Réseaux sociaux (story 7.7) : un réseau sans adresse de profil n'est affiché nulle part (avant le 2026-10-10, un lien vers la plateforme le remplaçait). Adresses à reporter depuis `contenu-anne/legal/identite.md`. */
 const tousReseaux: { id: 'instagram' | 'youtube' | 'linkedin'; label: string; url: string | null }[] = [
-  { id: 'instagram', label: 'Instagram', url: null },
-  { id: 'youtube', label: 'YouTube', url: null },
-  { id: 'linkedin', label: 'LinkedIn', url: null },
+  { id: 'instagram', label: 'Instagram', url: 'https://www.instagram.com/anne_vialtissot/' },
+  { id: 'youtube', label: 'YouTube', url: 'https://www.youtube.com/@AnneImmo74' },
+  { id: 'linkedin', label: 'LinkedIn', url: 'https://www.linkedin.com/in/avialtissot/' },
 ];
 export const reseaux = tousReseaux.filter((s): s is typeof s & { url: string } => !!s.url);
 

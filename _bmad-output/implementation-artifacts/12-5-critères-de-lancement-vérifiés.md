@@ -41,12 +41,12 @@ Recommandation : lancement **minimal**, design actuel. Décalés d'environ une s
 Chaque point porte sa preuve et sa date quand il est coché.
 
 **Contenu (Anne)**
-- [ ] Coordonnées A-13 reçues et reportées (RSAC et greffe, carte pro, adresse pro, téléphone, e-mail)
-- [ ] Ventes à publier confirmées par Anne (au minimum Thonon, Armoy, Allinges) et passées en `publie`
+- [ ] Coordonnées A-13 reçues et reportées (RSAC et greffe, carte pro, adresse pro, téléphone, e-mail). Point de JB du 2026-10-10 : Anne exerce sous la carte T d'eXp France ; à demander à Anne : son numéro RSAC (inscription obligatoire d'un agent commercial au greffe) et le numéro de son attestation d'habilitation eXp, en plus du numéro de carte T d'eXp France.
+- [x] Ventes passées en `publie` depuis l'espace d'édition le 2026-10-10 au soir (PR n° 83 à 89, fusionnées par Claude à la demande de JB) : Thonon, Armoy, Anthy T3, Anthy T4, Évian, Bernex, Essert-Romand. Restent en brouillon : Allinges, Sciez, Morzine.
 - [ ] Mentions légales, confidentialité et cookies validées par écrit par Anne ; pastille « À valider par Anne » retirée de `/confidentialite`
 - [ ] Guide relu, `statut: publie`, PDF refait (`node scripts/guide-pdf.mjs`)
 - [ ] Six e-mails de la séquence relus, `statut: publie`
-- [ ] Adresses des réseaux sociaux, ou « pas de profil »
+- [x] Adresses des réseaux sociaux données par JB le 2026-10-10 (Instagram, YouTube, LinkedIn), reportées dans `site/src/config/site.ts` et `contenu-anne/legal/identite.md`
 
 **Bascule (JB, avec Claude)** : ordre du RUNBOOK § 4
 - [ ] Domaine `annevialtissot.fr` rattaché au Worker ; `www` et `.com` redirigés en 301 vers `https://annevialtissot.fr`
