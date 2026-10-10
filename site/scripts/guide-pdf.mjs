@@ -3,7 +3,8 @@
 // avec les couleurs et les polices du site, puis imprimé en PDF par le navigateur d'essai (Playwright).
 // Le PDF est rangé dans site/prive/, hors du dossier public : il n'est servi que par un lien signé (/api/guide/telecharger).
 // Tant qu'Anne n'a pas relu le texte, il porte la mention « version provisoire » (statut dans contenu-anne/guide/guide.md).
-// Lancer : `node scripts/guide-pdf.mjs` (après chaque correction du texte), puis committer site/prive/guide.pdf.
+// Fait aussi l'image de la couverture pour la page /guide (site/public/img/guide-couverture.jpg).
+// Lancer : `node scripts/guide-pdf.mjs` (après chaque correction du texte), puis committer site/prive/guide.pdf et l'image.
 import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from 'playwright';
@@ -13,6 +14,7 @@ const RACINE = path.resolve(ICI, '..');
 const SOURCE = path.join(RACINE, 'contenu-anne/guide/texte-actuel.md');
 const FICHE = path.join(RACINE, 'contenu-anne/guide/guide.md');
 const SORTIE = path.join(ICI, 'prive/guide.pdf');
+const COUVERTURE = path.join(ICI, 'public/img/guide-couverture.jpg');
 const POLICES = path.join(ICI, 'public/fonts');
 
 const statut = /^statut:\s*(\S+)/m.exec(fs.readFileSync(FICHE, 'utf8'))?.[1] ?? 'brouillon';
@@ -107,5 +109,15 @@ await page.pdf({
   headerTemplate: '<span></span>',
   footerTemplate: `<div style="font-family:sans-serif;font-size:7.5pt;color:#5C5248;width:100%;padding:0 20mm;display:flex;justify-content:space-between"><span>Anne VIAL-TISSOT · annevialtissot.fr${provisoire ? ' · version provisoire' : ''}</span><span class="pageNumber"></span></div>`,
 });
+// La couverture seule, en image, pour la page /guide (bloc A-10) : même mise en page, sans la mention provisoire
+// (le site public ne se construit qu'avec un guide relu). Une page A4 à l'écran, marges de @page reprises en bordure.
+const couverture = html.replace(/<\/section>[\s\S]*<\/body>/, '</section></body>')
+  .replace('<div class="provisoire">Version provisoire, en cours de relecture par Anne</div>', '')
+  .replace('</style>', 'html,body{margin:0}body{width:210mm;height:297mm;padding:22mm 20mm 24mm;box-sizing:border-box;background:#fff}.couverture{height:100%}</style>');
+const vue = await navigateur.newPage({ viewport: { width: 794, height: 1123 }, deviceScaleFactor: 1.2 });
+await vue.setContent(couverture, { waitUntil: 'load' });
+fs.mkdirSync(path.dirname(COUVERTURE), { recursive: true });
+await vue.screenshot({ path: COUVERTURE, type: 'jpeg', quality: 82 });
 await navigateur.close();
+console.log(`${path.relative(RACINE, COUVERTURE)} : ${Math.round(fs.statSync(COUVERTURE).size / 1024)} Ko.`);
 console.log(`${path.relative(RACINE, SORTIE)} : ${Math.round(fs.statSync(SORTIE).size / 1024)} Ko, ${provisoire ? 'version provisoire' : 'version relue'}.`);

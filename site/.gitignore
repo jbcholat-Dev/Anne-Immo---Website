@@ -6,3 +6,5 @@ dist/
 .wrangler/
 # Généré par `npm run types` (wrangler types), recréé avant chaque `npm run check`
 worker-configuration.d.ts
+# Écrit par scripts/lancement.mjs pendant la construction de production chez Cloudflare, jamais committé
+.env.production

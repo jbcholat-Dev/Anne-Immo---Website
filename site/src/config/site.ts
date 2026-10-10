@@ -5,20 +5,32 @@ export const identite = {
   statut: 'agent commercial indépendant en immobilier, mandataire du réseau eXp France',
   zone: 'Chablais et bassin lémanique',
   langues: ['Français', 'English', 'Español', 'Português'],
-  rsac: null as string | null,          // A-13 attendu
+  rsac: '977 986 264' as string | null, // = SIREN (immatriculation du 2023-09-01, annuaire des entreprises) ; à confirmer par Anne sur son attestation RSAC
+  greffe: 'Thonon-les-Bains' as string | null, // greffe compétent pour Sciez (déduit) ; à confirmer par Anne
   cartePro: null as string | null,      // A-13 attendu
   hebergeur: 'Cloudflare, Inc., 101 Townsend Street, San Francisco, CA 94107, États-Unis · +1 650 319 8930 · www.cloudflare.com' as string | null, // choisi par l'architecture (story 7.6), à relire par JB
   telephone: null as string | null,     // A-13 attendu
   email: null as string | null,         // A-13 attendu
+  adresse: '812 chemin de la Tatte, 74140 Sciez' as string | null, // siège de l'entreprise (SIRET 977 986 264 00017), mentions légales seulement
   immodvisor: 'https://www.immodvisor.com/professionnels/mandataire-immobilier/pro/exp-france-anne-vial-tissot-70511',
 };
 
-/** Réseaux sociaux — TODO(contenu) : URLs des profils d'Anne (pas encore fournies). Liens vers les plateformes en attendant. */
-export const reseaux = [
-  { id: 'instagram', label: 'Instagram', url: 'https://www.instagram.com/' },
-  { id: 'youtube', label: 'YouTube', url: 'https://www.youtube.com/' },
-  { id: 'linkedin', label: 'LinkedIn', url: 'https://www.linkedin.com/' },
-] as const;
+/** Réseaux sociaux (story 7.7) : un réseau sans adresse de profil n'est affiché nulle part (avant le 2026-10-10, un lien vers la plateforme le remplaçait). Adresses à reporter depuis `contenu-anne/legal/identite.md`. */
+const tousReseaux: { id: 'instagram' | 'youtube' | 'linkedin'; label: string; url: string | null }[] = [
+  { id: 'instagram', label: 'Instagram', url: 'https://www.instagram.com/anne_vialtissot/' },
+  { id: 'youtube', label: 'YouTube', url: 'https://www.youtube.com/@AnneImmo74' },
+  { id: 'linkedin', label: 'LinkedIn', url: 'https://www.linkedin.com/in/avialtissot/' },
+];
+export const reseaux = tousReseaux.filter((s): s is typeof s & { url: string } => !!s.url);
+
+/** Site public (réglage PUBLIC_INDEXATION = « oui », story 9.2) : rien de ce qui sert à relire l'aperçu n'y apparaît. */
+export const sitePublic = import.meta.env.PUBLIC_INDEXATION === 'oui';
+
+// Garde-fou de lancement (story 12.5) : les mentions légales exigent les coordonnées A-13 ; le site public ne se construit pas sans elles.
+if (sitePublic) {
+  const manquent = (['rsac', 'greffe', 'cartePro', 'adresse', 'telephone', 'email'] as const).filter((k) => !identite[k]);
+  if (manquent.length) throw new Error(`Lancement refusé : coordonnées légales manquantes (${manquent.join(', ')}), à reporter depuis contenu-anne/legal/identite.md dans src/config/site.ts.`);
+}
 
 /** Choix éditoriaux de la v1 (point ouvert 4, D-9) — à confirmer par Anne (voir README). */
 export const accueil = {

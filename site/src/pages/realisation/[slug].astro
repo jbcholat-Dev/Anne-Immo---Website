@@ -1,5 +1,6 @@
 ---
 // 06 Story — fiche d'une vente : photo maîtresse, contexte, récit d'Anne, témoignages (vendeur / acheteur, rôle affiché), galerie, CTA.
+import { sitePublic } from '../../config/site';
 import Page from '../../layouts/Page.astro';
 import Picture from '../../components/Picture.astro';
 import { image } from '../../lib/images';
@@ -57,7 +58,7 @@ const alt = `${story.data.type_bien} vendu à ${story.data.commune}`;
       <div class="recit"><Content /></div>
       <h2 class="chapeau">{titreTemoignages}</h2>
       <div class="temoignages">
-        {temoignages.length === 0 && <Reserve label="Actif attendu A-07 · témoignage, cité et attribué (vendeur ou acheteur)" style="height:160px" />}
+        {temoignages.length === 0 && !sitePublic && <Reserve label="Actif attendu A-07 · témoignage, cité et attribué (vendeur ou acheteur)" style="height:160px" />}
         {temoignages.map((t) => (
           <AvisCarte taille="grande" phrase={t.phrase} texte={t.texte} lignes={8}>{t.prenom}{' '}<span class="texte-muet">· {t.role}{t.source && ` · ${t.source}`}</span></AvisCarte>
         ))}
