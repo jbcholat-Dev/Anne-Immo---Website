@@ -50,14 +50,23 @@ Décision de JB du 2026-10-10 : il ne valide lui-même que les demandes de fusio
 - Revenir à la version précédente : Deployments → version précédente → Rollback.
 - Depuis une machine vierge : `git clone`, `cd site`, `npm ci`, `npm run build`, puis `npx wrangler deploy` (demande une connexion Cloudflare, `npx wrangler login`).
 
-## 4. Basculer en production (à faire au lancement, story 12.4)
+## 4. Basculer en production (story 12.4, liste de contrôle : story 12.5)
 
-1. Domaine acheté chez Infomaniak, serveurs de noms pointés vers Cloudflare (story 12.1).
-2. Cloudflare → projet → Domains → Add Domain : `annevialtissot.fr` ; `.com` en redirection permanente vers `.fr`.
-3. Dans `site/wrangler.jsonc`, passer `ENVIRONNEMENT` à `production` (les e-mails partent alors vers Anne et les prospects, et non plus vers `BOITE_TEST`) et brancher la base `anne-leads` (story 12.4).
-3 bis. Settings → Build → Variables : ajouter `PUBLIC_INDEXATION` = `oui`, puis relancer un build. Vérifier `/robots.txt` = `Allow: /` et l'absence de `noindex`.
-4. Access : retirer la protection sur `annevialtissot.fr` (la garder sur l'adresse `workers.dev`, ou éteindre cette adresse).
-5. Critères de lancement de la story 12.5 tous cochés avant l'étape 3.
+**Principe** : rien ne change dans `wrangler.jsonc`. La bascule se fait pendant la construction, par `site/scripts/lancement.mjs`, et **seulement** pour la branche `main` quand la variable de construction `LANCEMENT` vaut `oui` : base `anne-leads`, `ENVIRONNEMENT=production` (e-mails envoyés à Anne et aux prospects, plus à `BOITE_TEST`), `URL_SITE=https://annevialtissot.fr`, `PUBLIC_INDEXATION=oui` (site indexable, ventes « publie » seulement, garde-fous). Les branches restent des aperçus sur la base d'aperçu, même après le lancement. Le journal de construction le dit en une ligne (« lancement : PRODUCTION… » ou « lancement : aperçu… »).
+
+**Préalables** : liste de contrôle de la story 12.5 côté contenu (sinon la construction de `main` échoue avec « Lancement refusé : … » et l'ancienne version reste en ligne, rien ne casse).
+
+**Dans l'ordre** (≈ 1 h 30) :
+1. Cloudflare → Workers & Pages → `anne-vial-tissot-site` → Settings → Domains & Routes → Add → Custom domain : `annevialtissot.fr`, puis `www.annevialtissot.fr`. Cloudflare crée les enregistrements DNS.
+2. Redirections 301 (permanentes) vers `https://annevialtissot.fr` en gardant le chemin : `www.annevialtissot.fr` et `annevialtissot.com` (domaine `.com` → Rules → Redirect Rules, ou Page Rules ; le `.com` a besoin d'un enregistrement DNS proxifié, par exemple `A @ 192.0.2.1` orange, pour que la règle s'applique).
+3. Turnstile → widget `site-anne` → Settings → Hostnames : ajouter `annevialtissot.fr` (et `www.annevialtissot.fr`). Sans cela, tous les formulaires échouent sur le domaine.
+4. Zero Trust → Access → Applications → Add → Self-hosted, nom `Gestion`, domaines `annevialtissot.fr/gestion` et `annevialtissot.fr/api/gestion`, règle `Anne et JB`. Copier son AUD (§ 4 quinquies) et le donner à Claude : il l'ajoute à `ACCESS_AUD` par une PR à fusionner **avant** l'étape 6.
+5. Settings → Build → Variables and secrets : ajouter `LANCEMENT` = `oui` (texte). Puis Deployments → relancer la construction de `main` (ou fusionner la PR suivante). Vérifier dans le journal : « lancement : PRODUCTION ».
+6. Access : retirer la protection de `annevialtissot.fr` (seule l'application `Gestion` y reste) ; la garder sur l'adresse `workers.dev`.
+7. Cal.com (compte d'Anne) → Settings → Developer → Webhooks : adresse `https://annevialtissot.fr/api/webhook-cal`, même secret.
+8. Vérifier en fenêtre privée : l'accueil s'ouvre sans code ; `https://annevialtissot.fr/robots.txt` = `Allow: /` ; `https://annevialtissot.com/vendre` arrive sur `https://annevialtissot.fr/vendre` ; `/gestion` demande le code ; `GET /api/sante` = `{"ok":true,…}`. Puis un essai réel de chaque formulaire (contact, estimation, guide, diagnostic, rendez-vous) : Anne reçoit les e-mails ; effacer ces essais depuis `/gestion` (droits RGPD).
+
+**Retour arrière** : supprimer la variable `LANCEMENT` et relancer la construction de `main` (le site redevient l'aperçu sur la base d'aperçu), et remettre Access sur `annevialtissot.fr`. Plus rapide pour un code fautif : Deployments → version précédente → Rollback.
 
 ## 4 bis. Retours sur l'aperçu (story 9.6)
 
@@ -141,8 +150,8 @@ Rien n'est à effacer chez Resend : le site n'y garde aucun contact. Chaque expo
 
 ## 5. Pièges irréversibles
 
-- Ne jamais mettre `PUBLIC_INDEXATION=oui` sur une adresse d'aperçu : Google mémoriserait une version incomplète.
-- Ne jamais éteindre Access tant que des photos sans autorisation écrite sont sur le site.
+- Ne jamais mettre `PUBLIC_INDEXATION=oui` en variable de construction : elle vaudrait pour toutes les branches et Google pourrait mémoriser une version incomplète. Le lancement passe par `LANCEMENT=oui`, que seule `main` écoute (§ 4).
+- Ne jamais publier une vente sans l'accord de ses clients (photos et avis cité). Décision de JB du 2026-10-05 : les clients des ventes actuelles ont tous donné le leur ; « publie » suffit (story 7.14).
 - Effacement RGPD depuis `/gestion` (§ 4 quinquies) : définitif, aucune sauvegarde n'est restaurée pour une seule personne.
 - Ne jamais retirer Access de `annevialtissot.fr` sans avoir d'abord protégé `/gestion` par sa propre application et ajouté son AUD à `ACCESS_AUD` (§ 4 quinquies) : le serveur refuserait tout, mais Anne n'aurait plus accès.
 - Base de données (backend, epic 10) : elle se crée avec une juridiction UE irréversible ; commande et noms au § 4 quater, écrits avant la création (AD-10).
@@ -167,3 +176,4 @@ Rien n'est à effacer chez Resend : le site n'y garde aucun contact. Chaque expo
 - 2026-10-09 : décision de spécifier l'espace de travail d'Anne (spec v6, CAP-12, epic 13) : `/gestion` deviendra son pipeline de contacts, et la recopie dans Modelo ne sera demandée qu'à la signature d'un mandat. Rien ne change encore dans les comptes ni la mise en ligne ; un compte Leedflow (déjà souscrit par Anne) entrera dans la carte des comptes quand l'accès sera branché (story 13.2).
 - 2026-10-10 : § 2 bis, fusion automatique des PR de contenu (espace d'édition) et de suivi (documents) ; JB ne valide plus que les PR qui changent le site (story 9.7).
 - 2026-10-10 : architecture de l'espace de travail d'Anne (story 13.2, AD-19, AD-20) : future application séparée `espace/` sur la même base que le site, adresse proposée `espace.annevialtissot.fr` ; les demandes des portails (e-mails de Modelo) y arriveront par un filtre Gmail vers une adresse reçue par Cloudflare (proposée `entrant.annevialtissot.fr`). Rien ne change encore dans les comptes ni la mise en ligne ; les réglages seront décrits ici aux stories 13.3 et 13.8.
+- 2026-10-10 : audit avant le lancement (story 12.5). § 4 réécrit : la bascule se fait par la variable de construction `LANCEMENT=oui`, écoutée par `main` seulement (`site/scripts/lancement.mjs`) ; les aperçus de branches gardent la base d'aperçu et la boîte de test après le lancement. Ajouts : Turnstile sur le domaine, application Access « Gestion », webhook Cal.com, retour arrière.

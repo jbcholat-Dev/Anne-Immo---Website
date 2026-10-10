@@ -1,13 +1,15 @@
 ---
 import Legal from '../layouts/Legal.astro';
 import { identite } from '../config/site';
+// Une valeur absente s'affiche en pastille « à compléter » sur l'aperçu ; le site public ne se construit pas sans elle (src/config/site.ts).
 const ac = (v: string | null, libelle: string) => v ?? libelle;
+const coordonnees = [identite.adresse, identite.telephone, identite.email].filter(Boolean).join(' · ');
 ---
 <Legal titre="Mentions légales" courante="mentions" lockup description="Éditeur, coordonnées et hébergeur du site d'Anne Vial-Tissot, agent commercial indépendant, réseau eXp France.">
   <h2>Éditeur</h2>
-  <p>{identite.nomCourt}, {identite.statut}. RSAC n° <span class="a-completer">{ac(identite.rsac, 'à compléter · A-13')}</span>, greffe de <span class="a-completer">ville</span>. Carte professionnelle du réseau eXp France n° <span class="a-completer">{ac(identite.cartePro, 'référence')}</span>. Directrice de la publication : {identite.nomCourt}.</p>
+  <p>{identite.nomCourt}, {identite.statut}. RSAC n° {identite.rsac ?? <span class="a-completer">à compléter · A-13</span>}, greffe de {identite.greffe ?? <span class="a-completer">ville</span>}. Carte professionnelle du réseau eXp France n° {identite.cartePro ?? <span class="a-completer">référence</span>}. Directrice de la publication : {identite.nomCourt}.</p>
   <h2>Coordonnées</h2>
-  <p>Adresse professionnelle, téléphone, e-mail : <span class="a-completer">{ac(identite.telephone, 'les mêmes que sur la fiche Google Business et le pied de page · A-13')}</span>.</p>
+  <p>{identite.adresse && identite.telephone && identite.email ? coordonnees : <>Adresse professionnelle, téléphone, e-mail : <span class="a-completer">{ac(coordonnees || null, 'les mêmes que sur la fiche Google Business et le pied de page · A-13')}</span>.</>}</p>
   <h2>Hébergeur</h2>
   <p>{identite.hebergeur ?? <span class="a-completer">Nom, adresse, téléphone de l'hébergeur · A-13</span>}</p>
   <h2>Propriété intellectuelle</h2>

@@ -48,7 +48,7 @@ Navigation (D-2, D-6 A, D-17, D-21, D-28) : réseaux · symbole seul | Accueil �
 
 **Réel** : **la vidéo d'ouverture A-01** (montage d'Anne, 52 s depuis le 2026-10-05, en boucle, sans son ; son poster = sa première image, D-27 — voir § Vidéo d'ouverture) ; les 3 récits d'Anne (Thonon, Armoy, Allinges) et leurs 13 photos ; la note 5/5 et les 18 avis Immodvisor (`instantane.md`, avis cités tels quels, jamais corrigés) ; les textes d'À propos, de la méthode, du diagnostic (libellés live + barème + 9 feedbacks) ; les logos et lockups eXp du design system.
 
-**Blocs réservés « Actif attendu »** (galet, dimensions réelles, jamais un trou) : A-02 photos des trois ventes « à venir » de la pile (Sciez, Essert-Romand, Anthy — ventes réelles du registre sans story rédigée) · A-04 portrait (accueil, À propos, landing ; remplacé par la photo dès qu'elle est mise dans l'espace d'édition, story 7.16) · A-05 Anne en situation · A-07 témoignages de story quand aucun avis n'est relié · A-10 couverture du guide · A-13 RSAC, carte pro, coordonnées (l'hébergeur, Cloudflare, est renseigné depuis le 2026-10-04) (`src/config/site.ts`, `identite`) · A-15 vidéo méthode (bloc absent, D-12).
+**Blocs réservés « Actif attendu »** (galet, dimensions réelles, jamais un trou) : A-02 photos des trois ventes « à venir » de la pile (Sciez, Essert-Romand, Anthy — ventes réelles du registre sans story rédigée) · A-04 portrait (accueil, À propos, landing ; remplacé par la photo dès qu'elle est mise dans l'espace d'édition, story 7.16) · A-05 Anne en situation · A-07 témoignages de story quand aucun avis n'est relié · A-10 couverture du guide (remplacé depuis le 2026-10-10 par l'image de la couverture du PDF, `public/img/guide-couverture.jpg`, refaite par `scripts/guide-pdf.mjs`) · A-13 RSAC, carte pro, coordonnées (l'hébergeur, Cloudflare, est renseigné depuis le 2026-10-04) (`src/config/site.ts`, `identite`) · A-15 vidéo méthode (bloc absent, D-12).
 
 **Textes marqués « Point ouvert » / « Contenu à écrire par Anne »** (pastille terra-deep, comme dans la maquette) : Acheter (D-5), section Cible (point ouvert 1), champs de l'estimation (point ouvert 2). À retirer avec le contenu définitif.
 
@@ -62,7 +62,7 @@ Tous dans `src/config/site.ts` :
 - **Cartes 4-6 de la pile** : Sciez villa 2025, Essert-Romand chalet 2026, Anthy T3 2024 (registre `_suivi-stories.md`), photo réservée, citation de l'avis rapproché quand la confiance est « forte ».
 - **Phrase d'Anne par carte** (`phrasesStories`) : extraite telle quelle du récit.
 - **Stories affichées malgré `statut: brouillon`** sur l'aperçu, pour que JB voie le site plein ; le site public filtre sur `statut === 'publie'` (`stories()` dans `src/lib/contenu.ts`). Reste à obtenir la version sans logo eXp des photos d'Essert-Romand.
-- **Réseaux sociaux** : URLs des profils inconnues → liens vers les plateformes en attendant (`reseaux`).
+- **Réseaux sociaux** : un réseau sans adresse de profil n'est affiché nulle part (`reseaux`, depuis le 2026-10-10 ; avant, un lien vers la plateforme le remplaçait).
 
 ## Diagnostic — règles appliquées
 
@@ -90,6 +90,10 @@ Chaque endroit est marqué `TODO(backend)` dans le code (`grep -rn "TODO(backend
 ## Mise en ligne (story 9.2)
 
 Cloudflare Workers Builds : dossier racine `site`, construction `npm ci && npm run build`, mise en ligne `npx wrangler deploy` (branche `main`) et `npx wrangler versions upload` (autres branches). Depuis la story 10.2, `npm run build` se termine par `scripts/migrations-ci.mjs`, qui applique les migrations de la base quand la construction tourne chez Cloudflare (`WORKERS_CI=1`), et ne fait rien en local. Tant que le réglage de construction `PUBLIC_INDEXATION` ne vaut pas `oui`, toutes les pages portent `noindex, nofollow` et `robots.txt` interdit tout : c'est l'aperçu. La production passe ce réglage à `oui` (story 12.4). Voir `.env.example`.
+
+**Lancement (stories 12.4 et 12.5)** : `npm run build` lance `scripts/lancement.mjs` avant `astro build`. Chez Cloudflare, sur la branche `main` et seulement si la variable de construction `LANCEMENT` vaut `oui`, il bascule la configuration en production (base `anne-leads`, `ENVIRONNEMENT=production`, `URL_SITE=https://annevialtissot.fr`) et écrit `PUBLIC_INDEXATION=oui` dans `.env.production` (jamais committé). Toute autre branche reste un aperçu. Essai : `node scripts/lancement.mjs --essai`. Pas-à-pas : RUNBOOK § 4.
+
+**Site public** (`sitePublic`, `src/config/site.ts`) : les marques « Point ouvert » / « Contenu à écrire par Anne », les blocs réservés A-05 et A-07, les cartes « à venir » de la pile et le bouton « Un retour ? » ne s'affichent que sur l'aperçu.
 
 ## Noyau serveur et base des leads (story 10.2)
 
@@ -199,11 +203,14 @@ La maquette dessine 1 440 px (ordinateur) et 390 px (téléphone). Entre 900 et 
 ## Garde-fous de contenu (stories 6.2 et 7.9)
 
 - **Anglais complet ou rien** (AD-2) : `src/i18n/index.ts` fait échouer la construction si `en.json` n'a pas exactement les clés de `fr.json` ou laisse un texte vide, en nommant les clés en cause.
+- **Coordonnées légales** (story 12.5) : le site public ne se construit pas tant qu'une valeur A-13 de `identite` manque (`rsac`, `greffe`, `cartePro`, `adresse`, `telephone`, `email`, `src/config/site.ts`). Sur l'aperçu, elles s'affichent en pastilles « à compléter ».
 - **Plus de vérification d'autorisation dans le code** (décision de JB du 2026-10-05, story 7.14) : les clients des ventes actuelles ont donné leur accord ; « publie » suffit. Le champ `autorisations` des anciennes fiches est toléré mais ignoré.
 - **Témoignage d'une vente = son avis Immodvisor** (story 7.14) : la fiche affiche les avis dont le champ `story` désigne la vente, vendeur d'abord, cités tels quels. La liste `temoignages` de l'en-tête n'est plus proposée dans l'espace d'édition ; si une citation y est écrite à la main, elle passe avant l'avis.
 - Ce qu'Anne doit fournir est listé dans `contenu-anne/A-FOURNIR.md`.
 
 ## Vérification faite (voir `.verif/`)
+
+Story 12.5 (préparation du lancement) : `npm run build` sans erreur · `npm run check` : 0 erreur · `node scripts/liens.mjs` : 26 pages, 1301 liens, 0 cassé · construction de production simulée (`WORKERS_CI=1 WORKERS_CI_BRANCH=main LANCEMENT=oui`) : refusée sans coordonnées, réussie avec des valeurs fictives, aucune marque de travail ni `noindex` dans les pages publiques · `node scripts/verif.mjs --pages=/,/guide,/a-propos,/realisation` en mode public : aucune erreur console.
 
 Story 10.7 : `node scripts/e2e-gestion.mjs` : 39 constats bons (voir la story) · `e2e-formulaires`, `e2e-diagnostic`, `e2e-rendez-vous`, `e2e-guide` : tous bons · `npm run check` : 0 erreur · `node scripts/liens.mjs` : 26 pages, 1600 liens, 0 cassé · `npm run verif` : aucune erreur console · `node scripts/ecrans.mjs` : rien à signaler.
 
