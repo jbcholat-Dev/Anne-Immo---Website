@@ -11,6 +11,8 @@ date: 2026-10-10
 Décision de JB du 2026-10-10 : il ne garde la validation que des demandes de fusion (PR) qui ont un impact sur le site (code, mise en page, back-end, réglages). Les enregistrements de l'espace d'édition d'Anne et les PR « légères » (suivi, notes, RUNBOOK, documents) fusionnent seuls dans `main`.
 
 ## Ce qui est fait
+- Précision de JB du 2026-10-10 (« tu les merges toi-même ») : le fil Claude qui ouvre une PR légère la fusionne lui-même dès la construction au vert ; le programme ci-dessous fusionne les enregistrements de l'espace d'édition (aucun fil n'est actif quand Anne enregistre) et rattrape une PR légère oubliée.
+- Au 2026-10-10, aucune PR CMS ni PR légère ouverte n'attendait (PR n° 74 et 72 : code ; n° 20 : essai de design en brouillon) : rien à fusionner.
 - `.github/workflows/fusion-auto.yml` : programme GitHub Actions lancé à chaque ouverture, nouveau commit, sortie du brouillon ou changement d'étiquette d'une PR vers `main`, et à chaque fin de construction Cloudflare. Lancement à la main possible (Actions → Run workflow) : repasse toutes les PR ouvertes.
 - `.github/scripts/fusion-auto.mjs` : la règle de tri.
   - **contenu** : branche `cms/…` (espace d'édition Sveltia) qui ne touche que `contenu-anne/` ;
