@@ -16,7 +16,7 @@ photos:
   - photos/bernex-chalet-exp-immo-035-hd.webp
   - photos/bernex-chalet-exp-immo-039-hd.webp
   - photos/bernex-chalet-exp-immo-040-hd.webp
-statut: brouillon
+statut: publie
 ---
 
 # Un chalet à Bernex, vendu au bout du monde
