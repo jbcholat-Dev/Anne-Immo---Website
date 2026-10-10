@@ -147,6 +147,15 @@ development_status:
   epic-12-retrospective: optional
 
   epic-13: in-progress
-  13-1-spécification-de-l-espace-de-travail: review
-  13-2-décision-d-architecture-pour-leedflow-et-la-boîte-e-mail: backlog
+  13-1-spécification-de-l-espace-de-travail: done
+  13-2-décision-d-architecture-pour-leedflow-et-la-boîte-e-mail: review
+  13-3-application-séparée-sur-la-base-partagée: backlog
+  13-4-contacts-et-pipeline: backlog
+  13-5-page-aujourd-hui: backlog
+  13-6-vue-pipeline-et-fiche-contact: backlog
+  13-7-saisie-à-la-main-et-import-d-une-liste: backlog
+  13-8-demandes-des-portails-d-annonces: backlog
+  13-9-recopie-dans-modelo-à-la-signature: backlog
+  13-10-résumés-d-appels-leedflow: backlog
+  13-11-e-mails-des-clients-différée: backlog
   epic-13-retrospective: optional

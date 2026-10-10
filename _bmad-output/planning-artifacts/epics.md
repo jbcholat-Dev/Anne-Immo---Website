@@ -162,7 +162,7 @@ Le site est trouvé par les vendeurs et acheteurs du Chablais qui cherchent sur 
 Le site est en ligne sur annevialtissot.fr, trouvable, légal, avec des formulaires qui fonctionnent. **AD-9, AD-10, AD-16 ; NFR3.** **État :** à faire.
 
 - **Epic 13 : Espace de travail d'Anne**
-Anne démarre chaque journée devant ses contacts et sait qui appeler, qui relancer et comment faire avancer chacun ; Modelo ne sert plus qu'à formaliser un mandat. **CAP-12 ; AD-14 (amendée), AD-18.** **État :** à définir ; spec écrite (story 13.1), architecture et découpage à suivre.
+Anne démarre chaque journée devant ses contacts et sait qui appeler, qui relancer et comment faire avancer chacun ; Modelo ne sert plus qu'à formaliser un mandat. **CAP-12 ; AD-14 (amendée), AD-18, AD-19, AD-20.** **État :** en cours ; spec (13.1) et architecture (13.2) écrites, construction découpée en stories 13.3 à 13.11.
 
 Ordre prévu : 9 (aperçu) → 8 et 7 en parallèle sur l'aperçu → 11.1 (cadrage visibilité) → 10 (backend) → 6 (anglais) → 11 (suite) → 12 (lancement).
 
@@ -2075,4 +2075,111 @@ afin de construire l'enrichissement sur un accès réel, pas supposé.
 **Alors** elle est ajoutée au spine d'architecture (nouvelle AD) avec ce qu'on perd en choisissant autrement, et AD-14 y est amendée
 **Et** le spine porte aussi la décision de JB du 2026-10-09 : l'espace de travail est une application séparée du site (son propre Worker et sa propre adresse, même dépôt) qui partage la base D1 des leads, après avoir vérifié que deux Workers peuvent utiliser la même base ; `/gestion` y est déplacé
 **Et** les stories de construction de l'epic 13 sont découpées et ajoutées ici (pipeline, page « Aujourd'hui », vue par étapes, saisie et import, recopie Modelo au mandat, enrichissement)
+
+### Story 13.3: Application séparée sur la base partagée
+
+En tant que JB,
+je veux l'espace de travail dans sa propre application, liée à la même base que le site,
+afin qu'une mise en ligne de l'un ne touche jamais l'autre (AD-19).
+
+**Critères d'acceptation :**
+**Étant donné** un second Worker `espace/` et sa propre application Access
+**Quand** une demande est envoyée depuis le site
+**Alors** elle apparaît aussitôt dans l'espace, sans copie (base D1 partagée vérifiée en premier)
+**Et** `/gestion` (liste, fiche, relance, droits RGPD) est déplacé dans l'espace et ses essais (`e2e-gestion`) passent ; le site n'a plus de page privée
+
+### Story 13.4: Contacts et pipeline
+
+En tant qu'Anne,
+je veux qu'une personne soit un seul contact, avec un parcours, une étape, une prochaine action datée et un historique,
+afin de savoir où en est chacun (CAP-12, AD-20).
+
+**Critères d'acceptation :**
+**Étant donné** les tables `contact` et `contact_evenement`
+**Quand** une même personne fait deux demandes (même téléphone ou même e-mail)
+**Alors** elles se rangent sur un seul contact, les demandes existantes comprises
+**Et** un contact actif ne peut pas être enregistré sans prochaine action datée ; En sommeil exige une date de réveil ; Perdu exige un motif
+
+### Story 13.5: Page « Aujourd'hui »
+
+En tant qu'Anne,
+je veux ouvrir ma journée sur les nouveaux contacts, les actions du jour et en retard, et mes rendez-vous,
+afin de savoir qui appeler et comment le faire avancer.
+
+**Critères d'acceptation :**
+**Étant donné** des contacts nouveaux, dus, en retard et en sommeil à réveiller
+**Quand** Anne ouvre l'espace, sur téléphone ou ordinateur
+**Alors** la page les montre dans cet ordre, retards en tête, comme la maquette
+**Et** depuis une ligne elle appelle, note le résultat et fixe la prochaine action sans quitter la page
+
+### Story 13.6: Vue pipeline et fiche contact
+
+En tant qu'Anne,
+je veux voir mes vendeurs et mes acheteurs par étape, et tout l'historique d'un contact,
+afin de piloter l'ensemble et de préparer chaque appel.
+
+**Critères d'acceptation :**
+**Étant donné** des contacts à plusieurs étapes des deux parcours
+**Quand** Anne déplace une carte vers une autre colonne
+**Alors** l'étape change, une prochaine action est demandée et l'événement est noté
+**Et** la fiche montre étape, prochaine action, coordonnées, bien concerné et historique, avec l'export et l'effacement de 10.7
+
+### Story 13.7: Saisie à la main et import d'une liste
+
+En tant qu'Anne,
+je veux créer un contact en moins d'une minute et importer la liste d'un événement,
+afin que les contacts du téléphone et des jeux concours soient suivis comme les autres.
+
+**Critères d'acceptation :**
+**Étant donné** un formulaire de saisie et un import de tableur (.xlsx ou .csv)
+**Quand** la liste contient des personnes déjà connues
+**Alors** elles sont complétées, jamais recréées, et l'aperçu dit combien sont nouvelles
+**Et** sans la case « les participants ont accepté d'être recontactés », les contacts importés sont marqués « rappel individuel seulement »
+
+### Story 13.8: Demandes des portails d'annonces
+
+En tant qu'Anne,
+je veux que chaque demande faite sur mes annonces arrive dans l'espace,
+afin de ne plus aller la chercher dans Modelo ou dans ma boîte (AD-20, AD-14).
+
+**Critères d'acceptation :**
+**Étant donné** un filtre Gmail qui transfère les e-mails de `inbound@nettymail.com` vers l'adresse reçue par l'espace
+**Quand** une demande Leboncoin arrive
+**Alors** un contact acheteur est créé ou complété, rattaché à la référence du bien, avec le message dans l'historique
+**Et** un même e-mail reçu deux fois ne crée rien de plus ; un e-mail illisible est gardé et signalé à Anne
+
+### Story 13.9: Recopie dans Modelo à la signature
+
+En tant qu'Anne,
+je veux une fiche prête à copier dans Modelo seulement quand je signe un mandat,
+afin de ne plus rien saisir dans Modelo avant (AD-14 amendée).
+
+**Critères d'acceptation :**
+**Étant donné** un contact qui passe à « Mandat exclusif signé » ou « Mandat de recherche signé »
+**Quand** l'étape change
+**Alors** le contact porte « À recopier dans Modelo » avec la fiche prête à copier, qu'Anne marque faite
+**Et** les demandes du site ne créent plus de recopie Modelo d'office
+
+### Story 13.10: Résumés d'appels Leedflow
+
+En tant qu'Anne,
+je veux que le résumé de chaque appel se range sur la fiche du bon contact,
+afin de ne plus rien noter à la main après un appel.
+
+**Critères d'acceptation :**
+**Étant donné** l'accès que Leedflow aura confirmé (webhook, API ou MCP) et son contrat de sous-traitance
+**Quand** un appel se termine
+**Alors** son résumé est rattaché au contact de même numéro, ou proposé comme nouveau contact sur la page « Aujourd'hui »
+**Et** une proposition d'étape ou de relance tirée du résumé attend l'accord d'Anne. **Bloquée** par la réponse du support Leedflow (action J33)
+
+### Story 13.11: E-mails des clients (différée)
+
+En tant qu'Anne,
+je veux voir dans l'historique d'un contact les e-mails échangés avec lui,
+afin d'avoir toute la relation au même endroit.
+
+**Critères d'acceptation :**
+**Étant donné** un choix d'accès à Gmail fait par JB (lecture serveur avec validation Google, ou relève par Claude)
+**Quand** un e-mail est échangé avec l'adresse d'un contact
+**Alors** il apparaît dans son historique. **Différée** : l'espace est complet sans (AD-20)
 
