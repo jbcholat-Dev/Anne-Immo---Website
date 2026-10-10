@@ -162,3 +162,13 @@ development_status:
   13-10-résumés-d-appels-leedflow: backlog
   13-11-e-mails-des-clients-différée: backlog
   epic-13-retrospective: optional
+
+  epic-14: in-progress
+  14-1-décision-de-principe-des-campagnes: done
+  14-2-spec-et-architecture-des-campagnes: backlog
+  14-3-fiche-offre-dans-l-espace-d-édition: backlog
+  14-4-page-d-offre-datée: backlog
+  14-5-inscription-au-tirage: backlog
+  14-6-tirage-et-liste-des-participants: backlog
+  14-7-bandeau-d-accueil-pendant-une-offre: backlog
+  epic-14-retrospective: optional

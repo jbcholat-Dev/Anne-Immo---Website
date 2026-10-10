@@ -52,9 +52,6 @@ Il faut être irréprochable.
 **4. Coordination inexistante**
 Pas de vision d'ensemble de votre projet. Un audit de votre situation est important afin de définir les différentes parties prenantes et de les coordonner.
 
-|  |
-| --- |
-
 # Ma méthode : Bon sens, rigueur et pragmatisme
 
 Je ne réinvente pas les choses. Je fais simplement ce qui doit être fait — complètement.
@@ -100,31 +97,31 @@ Parce qu'un projet immobilier mérite mieux que des improvisations.
 
 Si vous avez une question, une préoccupation ou simplement envie d'échanger sur votre situation, je suis là pour vous guider.
 
-# Cible
+# Cibles
 
 Chaque projet est différent et chaque client mérite une attention particulière. Que vous soyez primo-accédants, investisseurs, en mobilité professionnelle ou seniors, mon approche sera sur-mesure et adaptée à vos besoins.
 
 ## Primo-accédants
 
-Un premier achat, un budget à cadrer, un financement à monter avant la première visite.
+Le premier achat est souvent une étape angoissante pour les primo-accédants. Je vous accompagne tout au long du processus avec pédagogie et disponibilité. Chaque étape est expliquée, toutes les réponses à vos questions sont apportées.  
 
 ## Investisseurs
 
-Rendement, fiscalité, revente : le bien est regardé comme un actif, pas comme un coup de cœur.
+Rendement, fiscalité, revente : le bien est regardé comme un actif, pas comme un coup de cœur. Des dossiers présentés sous le prisme des investisseurs, avec pertinence et pro activité sur le potentiel de transformation et de revente.
 
 ## Cadres en mobilité
 
-Une arrivée ou un départ daté, un calendrier qui ne bouge pas, souvent à distance.
+Je peux vous accompagner en mandat de recherche pour préparer votre installation en toute sérénité. Pré-sélection de biens, visites en amont appuyées par des vidéos pour vous permettre de valider ou non la sélection. Lors de votre venue, nous partons visiter la short list de biens. 
 
 ## Seniors
 
-Une vente de transition, un bien de famille, des délais qui demandent de la patience.
+Que ce soit pour un changement de projet de vie (vente d'une maison pour un appartement) ou préparer votre succession.
 
 # Réseau eXp
 
-<!-- Texte provisoire écrit par Claude le 2026-10-10 (story 7.21), à partir de sources publiques sur eXp France. Anne le remplace par le sien dans l'espace d'édition. -->
+Je m'appuie sur un réseau mondial présent dans plus de 30 pays avec plus de 88 000 collaborateurs dans le monde et plus de 900 agents en France. Ce réseau me permet de bénéficier d'outils innovants et d'un back office premium. L'aspect international est une forte valeur ajoutée, notamment au niveau du bassin lemanique, qui attire de plus en plus une clientèle étrangère.
 
-Je suis conseillère immobilière indépendante, membre du réseau eXp France. Je travaille à mon compte, au plus près du Chablais et du bassin lémanique, tout en m'appuyant sur un groupe international : eXp France est la filiale française d'eXp Realty, un réseau né aux États-Unis et présent aujourd'hui dans de nombreux pays.
+<!-- « Ce que cela change pour vous » : ajouté par Claude le 2026-10-10 à la demande de JB (story 7.21), sous le texte d'Anne. -->
 
 ## Ce que cela change pour vous
 
