@@ -31,6 +31,12 @@ Les e-mails que le site envoie aux prospects au nom d'Anne (accusés de récepti
 - `e2e-formulaires`, `e2e-diagnostic`, `e2e-guide`, `e2e-rendez-vous`, `e2e-gestion` : tous les constats bons après la refonte des messages.
 - `npm run check` : 0 erreur.
 
+## Retours de JB du 2026-10-10 sur la première maquette
+- Première allure (carte blanche sur fond écru, polices Georgia et Helvetica) refusée par JB : ni la police, ni le cadre ne conviennent.
+- Trois allures préparées pour comparaison dans la même maquette (version 2 de l'artefact) : **lettre sobre** (fond blanc, logo, filet terracotta), **bandeau de marque** (bandeau bleu Klein, logo en négatif `design-system/assets/logo-horizontal-negatif.svg`), **texte quasi brut** (Arial, liens simples, logo en signature). Chacune est visible telle qu'Apple Mail ou l'iPhone l'affichent (polices du site) et telle que Gmail ou Outlook l'affichent (Arial).
+- Polices : les e-mails appellent maintenant Gilda Display et Jost depuis `annevialtissot.fr/fonts/` (en-tête `Access-Control-Allow-Origin` posé par `public/_headers`) ; Gmail et Outlook les ignorent et prennent Arial. Le code garde les trois allures (`ALLURE` dans `email-html.ts`, « lettre » par défaut) jusqu'au choix de JB ; les deux autres seront retirées ensuite.
+- Le résumé du diagnostic renverra au futur rapport PDF (story 10.10) au lieu des « 24 heures dans le navigateur ».
+
 ## Ce qui reste
-- **Validation de la maquette par JB et Anne** (critère de la story) ; retouches éventuelles.
+- **Choix de l'allure par JB**, puis validation avec Anne (critère de la story) ; retirer les allures non retenues ; logo en négatif ajouté au dépôt si le bandeau est choisi.
 - Après fusion : un vrai envoi sur l'aperçu vers une boîte de test, lu dans Gmail sur ordinateur et sur téléphone (Outlook et Apple Mail si un compte est disponible) ; captures citées ici.

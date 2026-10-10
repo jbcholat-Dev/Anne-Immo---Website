@@ -56,7 +56,8 @@ try {
     const pj = e.attachments?.[0];
     constat(!!e.html && !!e.text && pj?.content_id === 'logo' && e.html.includes('src="cid:logo"'), `${nom} : HTML et texte, logo joint`);
     const images = [...e.html.matchAll(/<img[^>]+src="([^"]+)"/g)].map((m) => m[1]);
-    constat(images.every((s) => s.startsWith('cid:')) && !/url\(http/.test(e.html), `${nom} : aucune image ni police chargée depuis un serveur`);
+    const distants = [...e.html.matchAll(/url\(['"]?(https?:[^'")]+)/g)].map((m) => m[1]);
+    constat(images.every((s) => s.startsWith('cid:')) && distants.every((u) => u.startsWith('https://annevialtissot.fr/fonts/')), `${nom} : aucune image distante, polices appelées seulement depuis annevialtissot.fr`);
     const visible = e.html.replace(/<[^>]+>/g, ' ');
     constat(!/\*\*|\]\(|^#{2,3} |\[Prénom\]/m.test(visible) && !/\*\*|\[Prénom\]/.test(e.text), `${nom} : aucune marque Markdown ni [Prénom] restante`);
     fs.writeFileSync(path.join(OUT, `${nom}.html`), e.html.replace(/cid:logo/g, logo));
