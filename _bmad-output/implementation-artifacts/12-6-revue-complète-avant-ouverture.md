@@ -1,5 +1,7 @@
 # Story 12.6 : Revue complète du site avant l'ouverture au public
 
+Statut : **terminée** le 2026-10-11 à 20 h 28 (PR n° 125 et n° 126 fusionnées par JB).
+
 Epic 12, Lancement public. Ouverte le 2026-10-11 à 19 h 31 à la demande de JB (« avant de lancer la publication, une revue complète du site sur tous les axes : contenu, sécurité et autres, pour savoir si tout est cohérent »), fil « Revue complète avant ouverture ».
 
 ## Objectif
@@ -42,4 +44,24 @@ Synthèse complète (constats, preuves, classement) : artefact « Revue avant ou
 
 ## Ce qui reste
 
-Voir la synthèse. Médiateur et barème : faits (ci-dessus). Le reste (textes, séquence d'e-mails, téléphone cliquable, réglages Cloudflare, SEO) en stories après l'ouverture.
+Plus rien ne bloque l'ouverture côté site : il reste à retirer le code d'accès général, sur l'accord d'Anne (story 12.4, fil « Bascule en production »).
+
+Constats de la revue non corrigés, à reprendre en stories après l'ouverture (preuves dans la synthèse) :
+
+- À corriger vite :
+  - séquence d'e-mails envoyée aussi aux contacts « Achat » et aux estimations, qui n'ont pas fait le diagnostic (les e-mails 5 et 6 disent « Vous avez reçu votre diagnostic ») : `src/server/leads.ts` ;
+  - guide, page 2 : trois familles d'erreurs (« Invisibilité, Prix inadapté, Absence de méthode ») différentes du sommaire (« Préparation, Visibilité, Efficacité commerciale ») ;
+  - page `/guide` : « Le financement vérifié trop tard » annoncé, absent du guide (`src/pages/guide.astro:9`) ;
+  - À propos : chiffres d'eXp sans date ni source (« plus de 30 pays, 88 000 collaborateurs, plus de 900 agents en France »), à confirmer par Anne ou à retirer ;
+  - « Sabine/François · vendeuse » et « Ce qu'elle en dit » pour un couple (accueil et fiche d'Essert-Romand, règle de genre de `src/lib/contenu.ts`) ;
+  - toute personne ajoutée au code d'accès de l'aperçu pourrait ouvrir `/gestion` et lire les vraies demandes (l'aperçu sert la production) ; la règle ne contient aujourd'hui que les adresses d'Anne et de JB ;
+  - la fusion automatique couvre `CLAUDE.md` et `.claude/`, qui pilotent les fils Claude (`.github/scripts/fusion-auto.mjs`) ; à remettre sous la validation de JB.
+- Plus tard :
+  - visibilité sur Google (plan du site, description structurée, lien FR/EN, image de partage des fiches, deux fiches d'Anthy au même titre) : epic visibilité ;
+  - page anglaise des réalisations vide ;
+  - Cloudflare : DNSSEC désactivé (RUNBOOK § 4 ter), TLS minimal 1.0 ;
+  - sécurité de second rang : programme de l'espace d'édition chargé depuis unpkg sans contrôle d'empreinte, jeton anti-robot sans contrôle du domaine, empreinte des adresses non salée dans les journaux, `npm audit` (3 failles « high » dans les outils de construction) ;
+  - guide PDF téléchargeable depuis le dépôt public (`site/prive/guide.pdf`) ;
+  - pages Cookies et Confidentialité : mesure d'audience annoncée sans outil installé, rien sur Cal.com hors de l'UE ;
+  - à faire confirmer par Anne : Essert-Romand « six mois en vente ailleurs » contre « depuis juin » dans le récit ; Armoy, avis d'un acheteur sous un récit de vendeurs ;
+  - story 12.5 : Allinges et Morzine sont publiées, cases « domaine rattaché » et « LANCEMENT » à cocher (fil de la bascule).
