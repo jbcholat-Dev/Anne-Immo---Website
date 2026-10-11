@@ -1,7 +1,7 @@
 ---
 story: 8.15
 epic: 8 — Structure et visuel
-statut: review
+statut: done
 date: 2026-10-10
 ---
 
@@ -33,4 +33,4 @@ Demande de JB du 2026-10-10 (20 h 46), capture à l'appui : la partie « Concrè
 - Captures de la partie à 1 440, 1 024 et 390 px : `/mnt/project-files/tickets/etapes-propositions/final-d.png`, `final-t.png`, `final-m.png`.
 
 ## Ce qui reste
-- Accord de JB et fusion de la PR n° 96, qui porte aussi la story 8.12.
+- Rien. PR n° 96 fusionnée par JB le 2026-10-11 (commit de fusion 83c15e6).
