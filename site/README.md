@@ -60,7 +60,7 @@ Navigation (D-2, D-6 A, D-17, D-21, D-28, D-42) : réseaux · symbole seul | Acc
 Tous dans `src/config/site.ts` :
 
 - **Les 3 avis de l'accueil** : Alexandra V. (vendeuse, reliée à la story de Thonon avec sa photo), JcbAnthy (vendeur), Rémi (acheteur). L'instantané proposait JcbAnthy + Sabine/François + Rémi ; Sabine/François (très long) est gardé en citation courte sur la carte Essert-Romand de la pile.
-- **Liaisons avis → story assumées** tant que le champ `story` des fiches d'avis est vide (`liaisonsAssumees`) : Alexandra V. → `appartement-cascade-2024` (« projet vente et achat » = la vente en cascade), RHL acheteur → `auberge-decoupee-2024`. Anne confirme en remplissant `story:` dans la fiche ; ce tableau est alors ignoré.
+- **Liaisons avis → story** : toutes écrites dans le champ `story` des fiches d'avis depuis la correspondance de JB du 2026-10-11 (story 7.22) ; le tableau `liaisonsAssumees` de `src/config/site.ts` est vide et ne sert plus que de secours.
 - **Bande preuve** : une phrase d'Alexandra V. — Acheter : RHL + JamesW.
 - **Cartes 4-6 de la pile** : Sciez villa 2025, Essert-Romand chalet 2026, Anthy T3 2024 (registre `_suivi-stories.md`), photo réservée, citation de l'avis rapproché quand la confiance est « forte ».
 - **Phrase d'Anne par carte** (`phrasesStories`) : extraite telle quelle du récit.
@@ -231,6 +231,7 @@ La maquette dessine 1 440 px (ordinateur) et 390 px (téléphone). Entre 900 et 
 - **Coordonnées légales** (story 12.5) : le site public ne se construit pas tant qu'une valeur A-13 de `identite` manque (`rsac`, `greffe`, `cartePro`, `adresse`, `telephone`, `email`, `src/config/site.ts`). Sur l'aperçu, elles s'affichent en pastilles « à compléter ».
 - **Plus de vérification d'autorisation dans le code** (décision de JB du 2026-10-05, story 7.14) : les clients des ventes actuelles ont donné leur accord ; « publie » suffit. Le champ `autorisations` des anciennes fiches est toléré mais ignoré.
 - **Témoignage d'une vente = son avis Immodvisor** (story 7.14) : la fiche affiche les avis dont le champ `story` désigne la vente, vendeur d'abord, cités tels quels. La liste `temoignages` de l'en-tête n'est plus proposée dans l'espace d'édition ; si une citation y est écrite à la main, elle passe avant l'avis.
+  Liaisons du 2026-10-11 (story 7.22, correspondance de JB) : Anthy T3 ← JcbAnthy, Laetitia · Anthy T4 ← fleursd'eau · Thonon ← Alexandra V., Rémi · Armoy ← RHL (achat), Erwan B, Vérojo (Bonjour, vendeur d'Armoy, volontairement non relié à la demande de JB) · Bernex ← Albert · Essert-Romand ← Sabine/François · Morzine ← Sergio, JamesW · Sciez ← IsalineP (affiché quand la vente sera publiée). Évian et Allinges n'ont aucun avis relié.
 - Ce qu'Anne doit fournir est listé dans `contenu-anne/A-FOURNIR.md`.
 
 ## Vérification faite (voir `.verif/`)
