@@ -33,7 +33,7 @@ Les scripts Playwright utilisent `/opt/pw-browsers/chromium` s'il existe, sinon 
 | `/` | Accueil — hero vidéo/poster avec deux boutons (diagnostic ; « Estimation offerte » vers `/contact#reserver`, D-30), bande Klein, pile de 6 cartes collantes (D-16), méthode + refrain, « Ils ont travaillé avec Anne », diagnostic, Anne, fermeture Klein (D-22) | maquette `01-accueil-*`, `contenu-anne/` |
 | `/realisation`, `/realisation/<slug>` | Réalisations (index + fiches ; visionneuse plein écran sur les photos, D-35) | `contenu-anne/stories/*/fr.md` (récits d'Anne, tels quels) |
 | `/a-propos` `#qui-suis-je` `#methode` `#cible` `#reseau-exp` | À propos, page longue à ancres (Cible et Réseau eXp lus dans le texte d'Anne, D-34), repère collant, **sans** bloc vidéo A-15 (D-12) | maquette `apropos-*` ; textes lus dans `contenu-anne/pages/a-propos/fr.md` (story 7.17) |
-| `/vendre` (`#estimation`) | deux portes + formulaire d'estimation (8 champs, D-4) | maquette `04-vendre-*` |
+| `/vendre` (`#estimation`) | deux portes, vidéo de l'espace vendeur (aperçu seulement, story 15.2) + formulaire d'estimation (8 champs, D-4) | maquette `04-vendre-*` |
 | `/acheter` | profils, recherche accompagnée, avis d'acheteurs (§ 5.4), CTA → contact préréglé Achat | maquette `04b-acheter-*` |
 | `/diagnostic` | landing autonome | maquette `05-diagnostic-*` |
 | `/diagnostic/questions` | 17 écrans, 15 numéros, nav masquée, reprise, abandon, gate | `quiz-contenu.md` (libellés) |
@@ -173,6 +173,13 @@ Sur `/contact`, le bouton « Voir les créneaux d'Anne » charge l'agenda de Cal
 - **Encodage** : `npm run video` (`scripts/video.mjs`, binaire `ffmpeg-static`) → `public/video/ouverture.mp4` (ordinateur : H.264, 1920 px, crf 27, 30 i/s, sans son, faststart) + `ouverture-telephone.mp4` (téléphone : 1280 px, crf 26) + `contenu-anne/photos/ouverture-poster.jpg` (première image) ; puis `npm run images` dérive le poster (`photos/ouverture-poster`). Options : `--debut`, `--duree`, `--crf`, `--largeur`, `--recadrage`.
 - **Dans la page** (`src/components/accueil/Hero.astro`) : `<video muted autoplay loop playsinline preload="metadata">` avec deux `<source>` MP4 (`ouverture-telephone.mp4` pour les écrans de 900 px de large au plus, `ouverture.mp4` sinon ; story 8.15), écrites seulement si `public/video/ouverture.mp4` existe au build (sinon la balise est masquée par `.hero-video-absente` et le poster `<picture>` reste). Vidéo masquée sous `prefers-reduced-motion` ; non chargée si le navigateur annonce l'économie de données (`navigator.connection.saveData`).
 - **Poids finaux** : voir la story 8.3 (`_bmad-output/implementation-artifacts/8-3-vidéo-d-ouverture-intégrée.md`).
+
+## Vidéo de l'espace vendeur (story 15.2)
+
+- **Ce que c'est** : 52 s d'animation sans son sur la page Vendre (bloc « Après la signature ») : les huit étapes d'une vente, puis des maquettes de l'espace vendeur (avancement, visites, marché, point de la semaine). Tout ce qu'on y voit est inventé et marqué « Maquette · exemple fictif » ; le portail (epic 15) n'existe pas encore.
+- **Fabrication** : pas de logiciel de montage. `scripts/video-portail/scene.html` décrit l'animation image par image (`rendu(t)`) ; `node scripts/video-portail.mjs` la fait dessiner par le navigateur de Playwright (30 images par seconde) et l'assemble avec ffmpeg → `public/video/portail-vendeur.mp4` (1920 px, 1,3 Mo), `portail-vendeur-telephone.mp4` (1280 px, 0,8 Mo) et `portail-vendeur-poster.jpg`. Les textes de la vidéo sont en tête de `scene.html` (`TEXTES`) ; après une modification, relancer le script. `--images 4,20,35` sort des images fixes dans `.verif/video-portail/` pour relire la mise en page.
+- **Dans la page** : la vidéo se lance quand elle entre à l'écran et s'arrête quand elle en sort ; sous « réduire les animations », elle attend un clic. Textes du bloc dans `contenu-anne/textes/vendre.yml` (`espace`, modifiables dans l'espace d'édition).
+- **Visible sur l'aperçu seulement** (`!sitePublic` dans `src/pages/vendre.astro`) tant qu'Anne n'a pas validé les textes et que JB n'a pas décidé de montrer au public un service pas encore construit.
 
 ## Polices (stories 8.1 et 8.8)
 

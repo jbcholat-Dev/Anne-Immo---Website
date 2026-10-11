@@ -16,3 +16,9 @@ estimation:
 formulaire:
   titre: "Demander une estimation"
   intro: "L'estimation ne se fait pas en ligne. Anne vous rappelle sous un jour ouvré, pose ses questions, puis se déplace pour voir le bien. Le chiffre vient après la visite, jamais avant."
+espace:
+  chapeau: "Après la signature"
+  titre: "Votre vente, sous vos yeux"
+  texte: "Dès le mandat exclusif signé, vous suivez votre vente dans un espace en ligne rien qu'à vous : l'étape en cours, chaque visite avec le retour des acheteurs, le marché de votre commune et, chaque semaine, le point d'Anne."
+  texte_court: "Dès le mandat signé, vous suivez votre vente en ligne : l'étape en cours, les visites, le marché, le point de la semaine."
+  note: "L'espace est en préparation : la vidéo montre une maquette, avec un exemple fictif."

@@ -7,6 +7,9 @@ import { r } from '../i18n';
 import { textes, court } from '../lib/textes';
 // Textes modifiables par Anne : contenu-anne/textes/vendre.yml (story 7.20).
 const x = await textes('vendre');
+// Vidéo « l'espace vendeur » (story 15.2), fabriquée par scripts/video-portail.mjs. Le portail (epic 15) n'existe pas encore :
+// le bloc ne s'affiche que sur l'aperçu tant qu'Anne n'a pas validé ses textes et que JB n'a pas décidé de le montrer au public.
+const espaceVisible = !sitePublic;
 ---
 <Page titre={`${x.titre} — Anne VIAL-TISSOT`} description={x.description} courante="vendre">
   <div class="v-tete">
@@ -28,12 +31,35 @@ const x = await textes('vendre');
       <a href="#estimation" class="btn btn-secondaire v-porte-cta">{x.estimation.bouton}</a>
     </section>
   </div>
+  {espaceVisible && (
+    <section class="v-espace" aria-labelledby="espace-titre">
+      <div class="v-espace-texte">
+        <div class="chapeau">{x.espace.chapeau} <span class="marqueur">À valider par Anne</span></div>
+        <h2 id="espace-titre">{x.espace.titre}</h2>
+        <p class="seulement-desktop">{x.espace.texte}</p>
+        <p class="seulement-mobile">{court(x.espace.texte_court, x.espace.texte)}</p>
+        <p class="v-espace-note">{x.espace.note}</p>
+      </div>
+      <video class="v-espace-video" muted loop playsinline preload="none" poster="/video/portail-vendeur-poster.jpg" width="1920" height="1080" aria-label="Maquette animée de l'espace vendeur : les étapes de la vente, les visites, le marché, le point de la semaine" data-espace-video>
+        <source src="/video/portail-vendeur-telephone.mp4" type="video/mp4" media="(max-width: 900px)" />
+        <source src="/video/portail-vendeur.mp4" type="video/mp4" />
+      </video>
+    </section>
+  )}
   <section id="estimation" class="v-estimation" aria-labelledby="estimation-titre">
     <div class="v-estimation-tete"><h2 id="estimation-titre">{x.formulaire.titre}</h2>{!sitePublic && <span class="marqueur">Point ouvert 2 · champs du formulaire</span>}</div>
     <p class="v-estimation-intro">{x.formulaire.intro}</p>
     <FormulaireEstimation />
   </section>
   <script src="../islands/formulaires.ts"></script>
+  <script>
+    // La vidéo de l'espace vendeur se lance quand elle entre à l'écran ; sous « réduire les animations », elle attend un clic.
+    const v = document.querySelector<HTMLVideoElement>('[data-espace-video]');
+    if (v) {
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) v.controls = true;
+      else new IntersectionObserver(([e]) => { if (e.isIntersecting) v.play().catch(() => { v.controls = true; }); else v.pause(); }, { threshold: 0.4 }).observe(v);
+    }
+  </script>
 </Page>
 <style>
   .v-tete { padding: 88px var(--marge) 40px; }
@@ -46,6 +72,11 @@ const x = await textes('vendre');
   .v-porte h2 { font-size: 40px; }
   .v-porte p { font-size: 17px; line-height: 1.6; max-width: 46ch; }
   .v-porte-cta { margin-top: auto; padding: 15px 30px; font-size: 15.5px; }
+  .v-espace { padding: 0 var(--marge) 96px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 56px; align-items: center; }
+  .v-espace-texte h2 { font-size: 44px; margin: 14px 0 18px; }
+  .v-espace-texte p { font-size: 17px; line-height: 1.6; max-width: 40ch; }
+  .v-espace-note { margin-top: 16px; font-size: 14.5px !important; color: var(--avt-text-muted); }
+  .v-espace-video { width: 100%; height: auto; aspect-ratio: 16 / 9; border-radius: 16px; background: var(--avt-ecru); box-shadow: 0 24px 60px rgba(38, 32, 26, .12); }
   .v-estimation { background: var(--avt-galet); padding: 96px var(--marge); scroll-margin-top: calc(var(--nav-h) + 24px); }
   .v-estimation-tete { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
   .v-estimation h2 { font-size: 52px; }
@@ -59,6 +90,11 @@ const x = await textes('vendre');
     .v-porte h2 { font-size: 30px; }
     .v-porte p { font-size: 15.5px; }
     .v-porte-cta { padding: 15px 24px; }
+    .v-espace { padding: 8px 16px 40px; grid-template-columns: 1fr; gap: 20px; }
+    .v-espace-texte { padding: 0 calc(var(--marge-m) - 16px); }
+    .v-espace-texte h2 { font-size: 30px; margin: 10px 0 12px; }
+    .v-espace-texte p { font-size: 15.5px; }
+    .v-espace-video { border-radius: 12px; }
     .v-estimation { padding: 40px var(--marge-m) 48px; }
     .v-estimation h2 { font-size: 34px; }
     .v-estimation-intro { font-size: 15px; padding-left: 14px; margin-bottom: 20px; }

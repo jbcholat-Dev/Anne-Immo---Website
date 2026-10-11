@@ -100,6 +100,7 @@ const textesVendre = defineCollection({ loader: fichierTextes('vendre'), schema:
   diagnostic: z.object({ titre: texte, titre_court: vide, texte, texte_court: vide, bouton: texte }),
   estimation: z.object({ titre: texte, texte, texte_court: vide, bouton: texte }),
   formulaire: z.object({ titre: texte, intro: texte }),
+  espace: z.object({ chapeau: texte, titre: texte, texte, texte_court: vide, note: texte }),
 }) });
 const bloc = z.object({ chapeau: texte, titre: texte, texte, texte_court: vide });
 const textesAcheter = defineCollection({ loader: fichierTextes('acheter'), schema: z.object({
