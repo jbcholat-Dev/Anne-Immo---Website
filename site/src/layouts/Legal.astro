@@ -1,5 +1,5 @@
 ---
-// Gabarit des trois pages légales (10-legal-mentions) : sommaire collant à gauche, lockup positif en tête des mentions, valeurs A-13 à compléter.
+// Gabarit des pages légales (10-legal-mentions ; barème d'honoraires ajouté le 2026-10-11, story 12.6) : sommaire collant à gauche, lockup positif en tête des mentions, valeurs A-13 à compléter.
 import Page from './Page.astro';
 import Lockup from '../components/Lockup.astro';
 import { r, type RouteKey } from '../i18n';
@@ -7,6 +7,7 @@ interface Props { titre: string; courante: RouteKey; lockup?: boolean; descripti
 const { titre, courante, lockup = false, description } = Astro.props;
 const pages: { key: RouteKey; label: string }[] = [
   { key: 'mentions', label: 'Mentions légales' }, { key: 'confidentialite', label: 'Politique de confidentialité' }, { key: 'cookies', label: 'Cookies' },
+  { key: 'honoraires', label: 'Barème d’honoraires' },
 ];
 ---
 <Page titre={`${titre} — Anne VIAL-TISSOT`} description={description} courante={courante}>

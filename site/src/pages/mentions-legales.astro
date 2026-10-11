@@ -1,6 +1,7 @@
 ---
 import Legal from '../layouts/Legal.astro';
 import { identite } from '../config/site';
+import { r } from '../i18n';
 // Une valeur absente s'affiche en pastille « à compléter » sur l'aperçu ; le site public ne se construit pas sans elle (src/config/site.ts).
 const ac = (v: string | null, libelle: string) => v ?? libelle;
 const coordonnees = [identite.adresse, identite.telephone, identite.email].filter(Boolean).join(' · ');
@@ -10,6 +11,10 @@ const coordonnees = [identite.adresse, identite.telephone, identite.email].filte
   <p>{identite.nomCourt}, {identite.statut}. RSAC n° {identite.rsac ?? <span class="a-completer">à compléter · A-13</span>}, greffe de {identite.greffe ?? <span class="a-completer">ville</span>}. Elle exerce sous la carte professionnelle n° {identite.cartePro ?? <span class="a-completer">référence</span>}{identite.titulaireCarte && <>, titulaire : {identite.titulaireCarte}</>}{identite.attestation && <> ; attestation d'habilitation n° {identite.attestation}</>}.{identite.assurance && <> Responsabilité civile professionnelle : {identite.assurance}.</>} Directrice de la publication : {identite.nomCourt}.</p>
   <h2>Coordonnées</h2>
   <p>{identite.adresse && identite.telephone && identite.email ? coordonnees : <>Adresse professionnelle, téléphone, e-mail : <span class="a-completer">{ac(coordonnees || null, 'les mêmes que sur la fiche Google Business et le pied de page · A-13')}</span>.</>}</p>
+  <h2>Honoraires</h2>
+  <p>Le barème des honoraires de transaction est consultable sur la page <a href={r('honoraires')}>Barème d’honoraires</a>. Agent commercial, {identite.nomCourt} ne peut recevoir ni détenir aucun fonds, effet ou valeur.</p>
+  <h2>Médiation de la consommation</h2>
+  <p>En cas de différend, vous pouvez adresser une réclamation écrite à {identite.nomCourt}{identite.email && <> ({identite.email})</>}. Si la réponse ne vous satisfait pas, ou en l’absence de réponse dans un délai de 30 jours, vous pouvez saisir gratuitement le médiateur de la consommation, inscrit sur la liste des médiateurs agréés par la Commission d’évaluation et de contrôle de la médiation de la consommation : {identite.mediateur.nom}, {identite.mediateur.adresse}, <a href={identite.mediateur.site} rel="noopener" target="_blank">{identite.mediateur.site.replace('https://', '')}</a>.</p>
   <h2>Hébergeur</h2>
   <p>{identite.hebergeur ?? <span class="a-completer">Nom, adresse, téléphone de l'hébergeur · A-13</span>}</p>
   <h2>Propriété intellectuelle</h2>

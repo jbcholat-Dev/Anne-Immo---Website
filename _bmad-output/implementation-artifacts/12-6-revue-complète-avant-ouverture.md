@@ -23,13 +23,16 @@ Synthèse complète (constats, preuves, classement) : artefact « Revue avant ou
 - Adresse de référence des pages (balise `canonical` et `og:url`) sans « .html » : `https://annevialtissot.fr/a-propos` au lieu de `…/a-propos.html`, `/` au lieu de `/index.html`.
 - Accueil, carte d'Allinges : la phrase « le prix a été repositionné. Non pas baissé » n'était plus dans le récit, qui dit que le prix était au-dessus du marché ; remplacée par une phrase extraite telle quelle du récit.
 
+- Mentions obligatoires (2026-10-11, 20 h 11, documents transmis par JB) : page `/honoraires` (barème résidentiel, commercial et terrains, recopié du barème d'équipe eXp sans aucune mention de son ancien titulaire), liée depuis le pied de page, le sommaire des pages légales et les mentions légales ; section « Médiation de la consommation » (MEDIMMOCONSO, 1 allée du Parc de Mesemena, 44505 La Baule, www.medimmoconso.fr) et phrase « ne peut recevoir ni détenir aucun fonds » dans les mentions légales. Médiateur reporté dans `contenu-anne/legal/identite.md` et dans le formulaire de l'espace d'édition. Coquille du barème d'origine corrigée (« et à la charge » → « est à la charge »).
+
 ## Vérifié
 
 - `npm run check` : 0 erreur. `PUBLIC_INDEXATION=oui npm run build` : réussi ; `node scripts/liens.mjs` : 25 pages, 1452 liens, 0 cassé.
 - Balises `canonical` de la construction publique : `/`, `/a-propos`, `/realisation`, `/realisation/anthy-t3-2024`, `/en`, `/diagnostic/questions`.
 - `node scripts/e2e-formulaires.mjs`, `e2e-gestion.mjs`, `e2e-guide.mjs` : « Tous les constats sont bons ».
+- Barème et médiateur : `PUBLIC_INDEXATION=oui npm run build` réussi, `npm run check` 0 erreur, `node scripts/liens.mjs` 26 pages, 1541 liens, 0 cassé ; aucune occurrence de l'ancien titulaire dans le site construit ni dans le dépôt ; captures 1440 et 390 de `/honoraires` et `/mentions-legales` : aucun débordement (largeur de page = largeur d'écran), montants insécables sur téléphone.
 - Serveur local (`wrangler dev`) : `POST /api/retour` avec un faux en-tête d'adresse et sans jeton → 403 `acces` ; `/a-propos` et `/gestion` portent `Strict-Transport-Security`, `X-Frame-Options: DENY`, `Referrer-Policy`.
 
 ## Ce qui reste
 
-Voir la synthèse. À demander à Anne avant l'ouverture : le médiateur de la consommation et le lien du barème d'honoraires d'eXp, à ajouter aux mentions légales. Le reste (textes, séquence d'e-mails, téléphone cliquable, réglages Cloudflare, SEO) en stories après l'ouverture.
+Voir la synthèse. Médiateur et barème : faits (ci-dessus). Le reste (textes, séquence d'e-mails, téléphone cliquable, réglages Cloudflare, SEO) en stories après l'ouverture.
