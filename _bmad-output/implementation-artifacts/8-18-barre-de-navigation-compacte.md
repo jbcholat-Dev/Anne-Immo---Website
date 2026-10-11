@@ -1,7 +1,7 @@
 ---
 story: 8.18
 epic: 8 — Site : finitions
-statut: done
+statut: done (annulée le 2026-10-11 au soir)
 date: 2026-10-11
 origine: ticket n° 116 de JB (« Un retour ? », écran de 1 920 px, 2026-10-11) — « on a des choses tout à droite, des choses tout à gauche et un grand vide au milieu » ; essai sur la branche claude/essai-barre-compacte, validé par JB le 2026-10-11
 décision: D-44
@@ -32,3 +32,9 @@ Sur un grand écran, la barre en verre (D-42) traversait tout l'écran avec un g
 ## Ce qui reste
 - `design-system/` : ajouter la barre compacte au composant « navigation », avec D-42.
 - Ticket n° 116 à fermer en citant le commit de fusion.
+
+## Retour arrière (2026-10-11, 20 h 24)
+JB, avant l'ouverture publique : « revenir sur la barre de navigation précédente. Donc pas la version compacte, la version étendue avec à gauche les réseaux sociaux. »
+- `site/src/components/Nav.astro` remis à son état d'avant la PR #119 (barre en verre pleine largeur de D-42, réseaux à gauche du symbole, Contact en lien simple).
+- D-44 marquée annulée dans `DECISIONS.md` ; `site/README.md` revenu à la description de D-42.
+- Vérification : voir la PR du retour arrière.
