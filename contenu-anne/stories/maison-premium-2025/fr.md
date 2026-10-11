@@ -30,7 +30,7 @@ temoignages:
 
 ## Le cas : Maison premium, 1 an sur le marché, 0 offre
 
-Une maison de standing alliant modernité et charme de l'ancien, beaux volumes, belles surfaces, cadre premium, grand terrain (5000m2). 
+Une maison de standing alliant modernité et charme de l'ancien, beaux volumes, belles surfaces, cadre premium, grand terrain (5 000 m²). 
 
 2 agences, 1 an sur le marché et aucune offre. 
 

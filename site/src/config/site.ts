@@ -22,6 +22,12 @@ export const identite = {
   immodvisor: 'https://www.immodvisor.com/professionnels/mandataire-immobilier/pro/exp-france-anne-vial-tissot-70511',
 };
 
+/** Téléphone d'Anne pour les visiteurs (revue du 2026-10-11, story 12.6) : affichage « 06 … » et lien d'appel « tel:+33… ». */
+export const telephone = {
+  affiche: (identite.telephone ?? '').replace(/^\+33\s?/, '0'),
+  lien: `tel:${(identite.telephone ?? '').replace(/\s/g, '')}`,
+};
+
 /** Réseaux sociaux (story 7.7) : un réseau sans adresse de profil n'est affiché nulle part (avant le 2026-10-10, un lien vers la plateforme le remplaçait). Adresses à reporter depuis `contenu-anne/legal/identite.md`. */
 const tousReseaux: { id: 'instagram' | 'youtube' | 'linkedin'; label: string; url: string | null }[] = [
   { id: 'instagram', label: 'Instagram', url: 'https://www.instagram.com/anne_vialtissot/' },

@@ -14,9 +14,7 @@
 
 **Les 10 erreurs fatales des vendeurs particuliers**
 Et comment les éviter pour vendre plus vite et au meilleur prix
-Par Anne Vial-Tissot, experte immobilière Léman & Chablais
-
-> ⚠️ à vérifier : « Experte immobilière » est-il le titre que tu veux ? Le site te présente comme « consultante en immobilier, mandataire du réseau eXp France ».
+Par Anne Vial-Tissot, conseillère en immobilier · Chablais, Léman
 
 ## Pourquoi tant de ventes s'enlisent
 
@@ -261,7 +259,7 @@ Si vous avez coché les 5, vous êtes bien préparé. Sinon, vous savez ce qu'il
 
 Bonne vente,
 **Anne Vial-Tissot**
-Experte immobilière Léman & Chablais
+Conseillère en immobilier · Chablais, Léman
 
 ## Sources
 
