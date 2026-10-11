@@ -44,7 +44,7 @@ Les scripts Playwright utilisent `/opt/pw-browsers/chromium` s'il existe, sinon 
 | `/404` | page introuvable | — |
 | `/en`, `/en/track-record` | accueil EN et index « Track record » (vide : aucune story traduite, AD-2). Les autres entrées EN renvoient aux pages FR pour cette v1, sans écran mi-traduit. | `src/content/ui/en.json` |
 
-Navigation (D-2, D-6 A, D-17, D-21, D-28) : réseaux · symbole seul | Accueil · À propos ▾ (Qui suis-je ? · Ma méthode · Cible) · Réalisations · Vendre · Acheter · Contact · FR EN (sous-menu À propos : Qui suis-je ? · Ma méthode · Cible · Réseau eXp, D-34 ; « Réalisations » au pluriel, index titré « Quelques réalisations », D-29). Fixe dès le premier pixel, réduite à 56 px au défilement, jamais masquée ; menu mobile plein écran avec Accueil puis « À propos » en accordéon (lien + chevron). Pied de page `00-footer` partout.
+Navigation (D-2, D-17, D-21, D-28, D-42, D-44) : sur ordinateur, gélule centrée compacte, symbole | Accueil · À propos ▾ (Qui suis-je ? · Ma méthode · Cible) · Réalisations · Vendre · Acheter · FR EN · Contact en pastille (réseaux au pied de page et dans le menu du téléphone, D-44) (sous-menu À propos : Qui suis-je ? · Ma méthode · Cible · Réseau eXp, D-34 ; « Réalisations » au pluriel, index titré « Quelques réalisations », D-29). Fixe dès le premier pixel, réduite à 56 px au défilement, jamais masquée ; menu mobile plein écran avec Accueil puis « À propos » en accordéon (lien + chevron). Pied de page `00-footer` partout.
 
 ## Réel vs placeholder
 
@@ -194,6 +194,7 @@ Charte v3 (D-31, 2026-10-08) : Gilda Display (titres, une seule graisse) et Jost
 - **Pas de Lenis** (défilement inertiel du brief scroll-craft) : JS minimal, défilement natif ; à ajouter en îlot si JB le souhaite (≈ 10 Ko).
 - **Tiret des titres** : Italiana n'avait pas de glyphe visible pour le tiret ASCII, et Gilda Display (D-31) n'a pas de tiret insécable (le navigateur le dessine avec la police de secours) ; les titres (« VIAL‑TISSOT », communes) emploient le tiret insécable U+2011 (`src/lib/texte.ts`).
 - **Barre de navigation en verre** (D-42, story 8.14) : une gélule de verre dépoli qui flotte au-dessus de la page, fumée sur la vidéo d'accueil, réduite (56 px) dès 40 px de défilement ; la maquette dessinait une barre pleine largeur écru. Pleine si « réduire la transparence » est demandé ou si le navigateur ne sait pas flouter. Le menu « À propos » est plein (un flou imbriqué dans la barre ne verrait pas la page).
+- **Barre compacte et centrée sur ordinateur** (D-44, story 8.18, ticket n° 116) : la gélule prend la largeur de son contenu au lieu de traverser l'écran ; les réseaux sortent de la barre (la maquette et D-6 les plaçaient à gauche du symbole) ; Contact devient une pastille bleue.
 - **Portrait de l'accueil en mise en page de magazine** (D-42) : photo tirée sur papier et penchée, langues écrites à la main (Caveat), lettrine ; la maquette montrait une photo simple et les langues en petites capitales.
 - **Section Cible** conservée avec ses textes de placement (point ouvert 1 non tranché) ; **menu « À propos » à trois sous-entrées**.
 - **Accueil EN sans la pile** (aucune story traduite, AD-2) ; avis cités en français, signalés comme tels ; entrées de nav EN vers les pages FR.

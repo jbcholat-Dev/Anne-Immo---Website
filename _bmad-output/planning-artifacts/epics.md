@@ -1233,6 +1233,20 @@ afin que le site paraisse moins fade sans changer ce qu'il dit (choix de JB parm
 **Et** sur l'accueil, le bloc « Anne » montre la photo tirée sur papier, les langues écrites à la main dessous, une lettrine au début du texte et un lien fléché
 **Et** si le visiteur a demandé de réduire la transparence, ou si le navigateur ne sait pas flouter, la barre est pleine
 
+### Story 8.18: Barre de navigation compacte
+
+En tant que visiteur sur un grand écran,
+je veux une barre de navigation ramassée au centre,
+afin de ne plus voir des éléments collés aux deux bords et un grand vide au milieu (ticket n° 116 de JB, D-44).
+
+**Critères d'acceptation :**
+
+**Étant donné** un écran d'ordinateur (900 px et plus)
+**Quand** la page s'affiche ou défile
+**Alors** la barre est une gélule centrée, à la largeur de son contenu : symbole, filet, liens, FR EN, Contact en pastille bleue
+**Et** les réseaux ne sont plus dans la barre, mais restent dans le pied de page et le menu du téléphone
+**Et** sur téléphone, la barre ne change pas
+
 ### Story 9.1: Comptes et connexion du dépôt
 
 En tant que JB,
