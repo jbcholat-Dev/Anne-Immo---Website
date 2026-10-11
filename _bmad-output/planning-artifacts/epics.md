@@ -165,10 +165,10 @@ Le site est en ligne sur annevialtissot.fr, trouvable, légal, avec des formulai
 Anne démarre chaque journée devant ses contacts et sait qui appeler, qui relancer et comment faire avancer chacun ; Modelo ne sert plus qu'à formaliser un mandat. **CAP-12 ; AD-14 (amendée), AD-18, AD-19, AD-20.** **État :** en cours ; spec (13.1) et architecture (13.2) écrites, construction découpée en stories 13.3 à 13.11.
 
 - **Epic 15 : Portail des vendeurs sous mandat**
-Un vendeur qui a signé un mandat avec Anne suit sa vente sur un espace privé : étape, visites et retours, prochaines actions, informations de marché. **Capacité à écrire (spec v7 ou suivante) ; s'appuie sur CAP-12, AD-19, AD-20.** **État :** à définir ; la story 15.1 est la session de cadrage (idée de JB du 2026-10-11).
+Un vendeur qui a signé un mandat avec Anne suit sa vente sur un espace privé : étape, visites et retours, prochaines actions, informations de marché. **Capacité à écrire (spec v7 ou suivante) ; s'appuie sur CAP-12, AD-19, AD-20.** **État :** à définir ; cadrage (15.1) : réponses de JB du 2026-10-11 notées, capacité à écrire.
 
 - **Epic 16 : Espace des acheteurs**
-Un acheteur accompagné par Anne retrouve dans un espace soigné la sélection de biens qu'elle lui prépare : photos, annonces, liens, notes de visite. **Capacité à écrire ; touche le non-goal « galerie ou vitrine de biens » de la spec.** **État :** à définir ; la story 16.1 est la session de cadrage (idée de JB du 2026-10-11).
+Un acheteur accompagné par Anne retrouve dans un espace soigné la sélection de biens qu'elle lui prépare : photos, annonces, liens, notes de visite. **Capacité à écrire ; touche le non-goal « galerie ou vitrine de biens » de la spec.** **État :** à définir ; cadrage (16.1) : espace privé par acheteur sous mandat de recherche (JB, 2026-10-11), capacité à écrire.
 
 Ordre prévu : 9 (aperçu) → 8 et 7 en parallèle sur l'aperçu → 11.1 (cadrage visibilité) → 10 (backend) → 6 (anglais) → 11 (suite) → 12 (lancement).
 
@@ -2356,7 +2356,7 @@ afin que la construction parte d'une capacité écrite et pas d'une idée.
 
 Un acheteur accompagné par Anne retrouve, dans un espace privé au niveau du site, les biens qu'elle a repérés pour lui : photos, annonces, liens, notes de sa visite en premier, et peut dire ce qui l'intéresse. C'est la forme concrète de la recherche accompagnée (« Anne repère, visite en premier, présélectionne », spec CAP-6) et le support des mandats de recherche (parcours acheteur de CAP-12). Origine : idée de JB du 2026-10-11 (même fil). **À cadrer après le lancement public.**
 
-**Capacités couvertes :** aucune dans la spec v6. **Point à trancher :** la spec exclut une « galerie ou vitrine de biens en ligne » (non-goals) et la gestion des annonces dans l'espace de travail (CAP-12). Un espace privé par acheteur reste compatible si la spec le dit ; une vitrine publique demande de lever le non-goal. **Décisions liées :** AD-19, AD-20, AD-18, D-5 (les acheteurs passent par le même chemin de contact).
+**Capacités couvertes :** aucune dans la spec v6. **Tranché le 2026-10-11 (JB) :** espace privé par acheteur sous mandat de recherche, pas de vitrine publique. La spec exclut une « galerie ou vitrine de biens en ligne » (non-goals) et la gestion des annonces dans l'espace de travail (CAP-12). Un espace privé par acheteur reste compatible si la spec le dit ; une vitrine publique demande de lever le non-goal. **Décisions liées :** AD-19, AD-20, AD-18, D-5 (les acheteurs passent par le même chemin de contact).
 
 ### Story 16.1: Session de cadrage de l'espace acheteurs
 
