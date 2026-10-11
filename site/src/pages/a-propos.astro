@@ -2,9 +2,11 @@
 // 07 À propos (D-11, D-12, D-15) : une page longue à quatre ancres — Qui suis-je ? · Ma méthode · Cible · Réseau eXp — repère collant, sans le bloc vidéo A-15 (absent : pas de trou).
 // Story 8.9 (retours d'Anne n° 58 à 61) : Cible et Réseau eXp lus dans le texte d'Anne (modifiables dans l'espace d'édition), refrain retiré,
 // « Mon engagement » et « Parlons de votre projet » centrés, bouton de rendez-vous sous « Parlons de votre projet ».
+// Story 8.12 (retours d'Anne n° 90, 94, 95) : photo A-05 retirée à côté de « Ma méthode » ; les trois piliers côte à côte ;
+// « Réserver un créneau » de « Parlons de votre projet » en bleu (n° 102).
+// Story 8.15 (choix de JB du 2026-10-10, D-43) : étapes 01 à 03 en parcours vertical, numéro rond à côté du titre, sans cadres, reliées par une ligne fléchée.
 import { sitePublic } from '../config/site';
 import Page from '../layouts/Page.astro';
-import Reserve from '../components/Reserve.astro';
 import Portrait from '../components/Portrait.astro';
 import Signature from '../components/Signature.astro';
 import CtaFin from '../components/CtaFin.astro';
@@ -27,6 +29,14 @@ const ciblesDefaut = [
 const cible = texte.cible;
 const reseau = texte.reseau;
 const centre = (t: string) => /engagement|parlons/i.test(t);
+// Les rangs consécutifs de même sorte (piliers, étapes « Concrètement ») forment une rangée de colonnes ; les autres restent seuls.
+const sorte = (rg: (typeof methode.rangs)[number]) => (rg.niveau === 4 ? 'etape' : /^pilier/i.test(rg.chapeau) ? 'pilier' : '');
+const groupes: { sorte: string; rangs: typeof methode.rangs }[] = [];
+for (const rg of methode.rangs) {
+  const g = groupes.at(-1);
+  if (sorte(rg) && g?.sorte === sorte(rg)) g.rangs.push(rg);
+  else groupes.push({ sorte: sorte(rg), rangs: [rg] });
+}
 ---
 <Page titre="À propos — Anne VIAL-TISSOT" description="Le parcours, la méthode — bon sens, rigueur et pragmatisme — et les profils qu'Anne accompagne. Une seule page, trois temps de lecture." courante="apropos">
   <div class="ap-tete">
@@ -75,34 +85,38 @@ const centre = (t: string) => /engagement|parlons/i.test(t);
         <video controls preload="none" src={video}></video>
       </div>
     )}
-    <div class="ap-methode-tete" data-seul={sitePublic ? '' : undefined}>
-      <div>
-        <h2 id="methode-titre">{methode.titre}</h2>
-        {methode.sous && <p class="ap-methode-sous">{methode.sous}</p>}
-        {methode.intro && <div class="ap-methode-intro ap-md" set:html={methode.intro} />}
-      </div>
-      {!sitePublic && <Reserve label="A-05 · Anne en situation · terrain" class="ap-situation" />}
+    <div class="ap-methode-tete">
+      <h2 id="methode-titre">{methode.titre}</h2>
+      {methode.sous && <p class="ap-methode-sous">{methode.sous}</p>}
+      {methode.intro && <div class="ap-methode-intro ap-md" set:html={methode.intro} />}
     </div>
     <div class="ap-piliers">
-      {methode.rangs.map((rg, i) => {
-        const premierConcret = methode.concretement && rg.niveau === 4 && methode.rangs.findIndex((x) => x.niveau === 4) === i;
-        const [avant, apres] = rg.html.split('<!--grille-->');
-        return <>
-          {premierConcret && <div class="ap-rang-filet ap-concretement"><h3>{methode.concretement}</h3></div>}
-          <div class:list={['ap-rang', { 'ap-rang-filet': rg.niveau === 3, 'ap-rang-centre': rg.niveau === 3 && centre(rg.titre) }]}>
-            <div>{rg.chapeau && <div class="chapeau">{rg.chapeau}</div>}{rg.niveau === 3 ? <h3>{rg.titre}</h3> : <h4>{rg.titre}</h4>}</div>
-            <div class="ap-rang-texte ap-md">
-              <Fragment set:html={avant} />
-              {rg.partenaires && <div class="ap-partenaires">{rg.partenaires.map(([n, d]) => <div>{n}<br /><span class="texte-muet">{d}</span></div>)}</div>}
-              {apres && <Fragment set:html={apres} />}
-              {/parlons/i.test(rg.titre) && (
-                <div class="ap-boutons">
-                  <a href={`${r('contact')}#reserver`} class="btn btn-primaire btn-m">Réserver un créneau</a>
-                  <a href={`${r('contact')}#ecrire`} class="btn btn-secondaire btn-m">Écrire à Anne</a>
-                </div>
-              )}
+      {groupes.map((g) => {
+        const rang = (rg: (typeof methode.rangs)[number]) => {
+          const [avant, apres] = rg.html.split('<!--grille-->');
+          return (
+            <div class:list={['ap-rang', { 'ap-rang-filet': rg.niveau === 3 && !g.sorte, 'ap-rang-centre': rg.niveau === 3 && centre(rg.titre) }]}>
+              {rg.niveau === 4
+                ? <div class="ap-etape-tete"><span class="ap-num" aria-hidden="true">{rg.chapeau}</span><h4><span class="sr-only">Étape {rg.chapeau} : </span>{rg.titre}</h4></div>
+                : <div>{rg.chapeau && <div class="chapeau">{rg.chapeau}</div>}<h3>{rg.titre}</h3></div>}
+              <div class="ap-rang-texte ap-md">
+                <Fragment set:html={avant} />
+                {rg.partenaires && <ul class="ap-acteurs">{rg.partenaires.map(([n, d]) => <li><span class="ap-acteur">{n}</span> <span class="texte-muet">{d}</span></li>)}</ul>}
+                {apres && <Fragment set:html={apres} />}
+                {/parlons/i.test(rg.titre) && (
+                  <div class="ap-boutons">
+                    <a href={`${r('contact')}#reserver`} class="btn btn-klein btn-m">Réserver un créneau</a>
+                    <a href={`${r('contact')}#ecrire`} class="btn btn-secondaire btn-m">Écrire à Anne</a>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          );
+        };
+        return <>
+          {g.sorte === 'etape' && methode.concretement && <div class="ap-rang-filet ap-concretement"><h3>{methode.concretement}</h3></div>}
+          {g.sorte === 'etape' ? <div class="ap-etapes">{g.rangs.map(rang)}</div>
+            : g.sorte ? <div class="ap-colonnes ap-colonnes-pilier ap-rang-filet">{g.rangs.map(rang)}</div> : rang(g.rangs[0])}
         </>;
       })}
     </div>
@@ -173,32 +187,49 @@ const centre = (t: string) => /engagement|parlons/i.test(t);
   .ap-md :global(strong) { font-weight: 500; }
   .ap-rang-texte.ap-md :global(p), .ap-rang-texte.ap-md :global(ul) { margin-bottom: 0; }
   .ap-rang-texte.ap-md :global(* + *) { margin-top: 16px; }
-  .ap-rang-texte.ap-md :global(.ap-partenaires) { margin-top: 20px; }
+  .ap-rang-texte.ap-md :global(.ap-boutons > *) { margin-top: 0; }
   .ap-methode-intro.ap-md :global(p) { margin-bottom: 0; }
   .ap-boutons { display: flex; gap: 14px; flex-wrap: wrap; }
   .ap-methode { border-top: 1px solid var(--filet-brun-fort); padding-top: 8px; }
   .ap-video { margin: 0 var(--marge); background: var(--avt-galet); border-radius: 16px; padding: 40px 48px; }
   .ap-video video { width: 100%; border-radius: 12px; margin-top: 18px; }
-  .ap-methode-tete { padding: 96px var(--marge) 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: end; }
-  .ap-methode-tete[data-seul] { grid-template-columns: minmax(0, 760px); } /* site public sans la photo A-05 */
+  .ap-methode-tete { padding: 96px var(--marge) 80px; }
   .ap-methode-tete h2 { font-size: 64px; line-height: 1.02; margin-bottom: 20px; }
   .ap-methode-sous { font-size: 22px; line-height: 1.4; color: var(--avt-klein); font-weight: 500; margin-bottom: 18px; }
   .ap-methode-intro { font-size: 19px; line-height: 1.6; max-width: 48ch; }
-  .ap-methode-tete :global(.ap-situation) { height: 360px; }
   .ap-piliers { padding: 0 var(--marge) 96px; display: flex; flex-direction: column; gap: 64px; }
   .ap-rang { display: grid; grid-template-columns: 320px 1fr; gap: 80px; }
   .ap-rang-centre { grid-template-columns: minmax(320px, 420px) 1fr; align-items: center; }
   .ap-rang-centre .ap-boutons { margin-top: 24px; }
   .ap-rang-filet { border-top: 1px solid var(--avt-brun); padding-top: 36px; }
   .ap-rang .chapeau { margin-bottom: 12px; }
+  /* Rangée de colonnes (story 8.12) : chaque pilier ou étape a son titre au-dessus de son texte. */
+  .ap-colonnes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 56px; }
+  .ap-colonnes .ap-rang { display: block; }
+  .ap-colonnes .ap-rang h3, .ap-colonnes .ap-rang h4 { margin-bottom: 18px; }
+  /* Étapes 01 à 03 en parcours vertical : titre à gauche, texte à droite, reliés par une ligne fléchée (story 8.15, D-43). */
+  .ap-etapes { display: flex; flex-direction: column; }
+  .ap-etape-tete { display: flex; position: relative; }
+  .ap-etape-tete h4 { font-size: 30px; line-height: 1.15; margin: 0; }
+  .ap-num { font-family: var(--avt-font-display); color: var(--avt-klein); flex: none; font-variant-numeric: tabular-nums; }
+  .ap-acteurs { list-style: none; padding: 0 !important; display: grid !important; grid-template-columns: 1fr; gap: 0 !important; margin: 18px 0 !important; }
+  .ap-acteurs li { padding: 9px 0; border-top: 1px solid var(--filet-brun); font-size: 15.5px; line-height: 1.4; margin: 0 !important; }
+  .ap-acteurs li:last-child { border-bottom: 1px solid var(--filet-brun); }
+  .ap-acteur { font-weight: 500; }
+  .ap-etapes .ap-rang { position: relative; display: grid; grid-template-columns: 420px minmax(0, 1fr); gap: 80px; padding-bottom: 56px; }
+  .ap-etapes .ap-etape-tete { align-items: flex-start; gap: 24px; margin: 0; }
+  .ap-etapes .ap-num { width: 56px; height: 56px; border-radius: 50%; background: var(--avt-klein); color: var(--avt-ecru); display: grid; place-items: center; font-size: 22px; position: relative; z-index: 1; }
+  .ap-etapes .ap-etape-tete h4 { padding-top: 8px; }
+  .ap-etapes .ap-rang:not(:last-child)::before { content: ''; position: absolute; left: 27px; top: 64px; bottom: 8px; border-left: 1.5px solid var(--avt-terra); }
+  .ap-etapes .ap-rang:not(:last-child)::after { content: ''; position: absolute; left: 23px; bottom: 8px; width: 8px; height: 8px; border-right: 1.5px solid var(--avt-terra); border-bottom: 1.5px solid var(--avt-terra); transform: rotate(45deg); }
+  .ap-etapes .ap-acteurs { grid-template-columns: 1fr 1fr; column-gap: 32px !important; }
+  .ap-etapes .ap-acteurs li:nth-last-child(2) { border-bottom: 1px solid var(--filet-brun); }
   .ap-rang h3 { font-size: 44px; }
   .ap-rang h4 { font-size: 34px; }
   .ap-concretement h3 { font-size: 44px; }
   .ap-rang-texte { max-width: 64ch; font-size: 17px; line-height: 1.7; }
   .ap-rang-texte p + p { margin-top: 16px; }
   .ap-avant-grille { margin-bottom: 20px; }
-  .ap-partenaires { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
-  .ap-partenaires div { background: var(--avt-galet); border-radius: 10px; padding: 16px; font-size: 14px; line-height: 1.4; }
   .ap-coordonne { font-weight: 500; color: var(--avt-klein); }
   .ap-cible { background: var(--avt-brume); padding: 96px var(--marge); }
   .ap-cible-tete { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
@@ -216,6 +247,11 @@ const centre = (t: string) => /engagement|parlons/i.test(t);
   .ap-espace { height: 96px; }
   /* Largeurs intermédiaires (900 à 1199 px, sans artboard) : colonnes proportionnelles, sinon le texte déborde (story 8.2) */
   @media (min-width: 900px) and (max-width: 1199px) {
+    .ap-colonnes { gap: 32px; }
+    .ap-colonnes .ap-rang h3 { font-size: 36px; }
+    .ap-colonnes .ap-rang h4 { font-size: 28px; }
+    .ap-etape-tete h4 { font-size: 26px; }
+    .ap-etapes .ap-rang { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; }
     .ap-qui { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; }
     .ap-portrait :global(.ap-portrait-reserve) { height: 520px; }
     .ap-nom { font-size: 48px; }
@@ -249,17 +285,24 @@ const centre = (t: string) => /engagement|parlons/i.test(t);
     .ap-methode-tete h2 { font-size: 40px; line-height: 1.05; margin-bottom: 14px; }
     .ap-methode-sous { font-size: 17px; margin-bottom: 12px; }
     .ap-methode-intro { font-size: 16px; }
-    .ap-methode-tete :global(.ap-situation) { height: 240px; margin-top: 32px; }
     .ap-piliers { padding: 0 var(--marge-m) 48px; gap: 36px; }
     .ap-rang { display: block; }
+    .ap-colonnes { display: flex; flex-direction: column; gap: 36px; }
+    /* Sur téléphone, le parcours passe sur une colonne : le texte sous le titre, la ligne fléchée à gauche. */
+    .ap-etapes .ap-rang { display: block !important; padding: 0 0 36px 64px !important; border: 0 !important; }
+    .ap-etapes .ap-etape-tete { flex-direction: row !important; align-items: flex-start !important; margin: 0 0 12px -64px !important; gap: 16px !important; }
+    .ap-etapes .ap-num { width: 44px !important; height: 44px !important; border-radius: 50%; display: grid !important; place-items: center; font-size: 18px !important; line-height: 1 !important; }
+    .ap-etapes .ap-etape-tete h4 { font-size: 24px; padding-top: 6px; }
+    .ap-etapes .ap-rang:not(:last-child)::before { content: '' !important; position: absolute; left: 21px; top: 52px; bottom: 8px; right: auto; border-left: 1.5px solid var(--avt-terra); border-top: 0; font-size: 0; }
+    .ap-etapes .ap-rang:not(:last-child)::after { content: '' !important; position: absolute; left: 17px; top: auto; right: auto; bottom: 8px; width: 8px; height: 8px; border-right: 1.5px solid var(--avt-terra); border-bottom: 1.5px solid var(--avt-terra); transform: rotate(45deg); font-size: 0; }
+    .ap-etapes .ap-acteurs { grid-template-columns: 1fr !important; }
+    .ap-etapes .ap-acteurs li:nth-last-child(2) { border-bottom: 0; }
     .ap-rang-filet { padding-top: 20px; }
     .ap-rang .chapeau { font-size: 12px; margin-bottom: 8px; }
     .ap-rang h3 { font-size: 32px; margin-bottom: 12px; }
     .ap-rang h4 { font-size: 26px; margin-bottom: 10px; }
     .ap-concretement h3 { font-size: 28px; margin-bottom: 0; }
     .ap-rang-texte { font-size: 16px; line-height: 1.6; }
-    .ap-partenaires { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-    .ap-partenaires div { padding: 14px; line-height: 1.35; }
     .ap-cible { padding: 56px var(--marge-m); }
     .ap-cible h2 { font-size: 34px; }
     .ap-cible-intro { font-size: 16px; margin-bottom: 28px; }

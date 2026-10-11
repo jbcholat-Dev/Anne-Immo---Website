@@ -10,7 +10,7 @@
   <g transform="translate(-4 8)">
     <g clip-path="url(#symc)">
       <rect x="36" y="34" width="104" height="104" fill="#002FA7"/>
-      <path d="M 36 85 C 54 79, 70 90, 88 84 C 106 78, 122 87, 140 82 L 140 138 L 36 138 Z" fill="#C4623E"/>
+      <path d="M 36 85 C 54 79, 70 90, 88 84 C 106 78, 122 87, 140 82 L 140 138 L 36 138 Z" fill="#A34E30"/>
     </g>
     <g clip-path="url(#symc)"><text class="avt" x="116" y="146" text-anchor="middle" fill="#F7F2EA">AVT</text></g>
     <g clip-path="url(#symo)"><text class="avt" x="116" y="146" text-anchor="middle" fill="#26201A">AVT</text></g>

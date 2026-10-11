@@ -49,6 +49,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   outline: 2.5px solid var(--avt-klein); outline-offset: 2px;
 }
 button { font-family: inherit; cursor: pointer; }
+/* Pointeur : le rond du logo d'Anne au lieu de la main, sur tout ce qui se clique (ticket n° 105, story 8.12). Bord écru pour rester visible sur fond sombre ; la main reste en secours. */
+a[href], button:not([disabled]), summary, label[for], [role="button"], select { cursor: url('/curseur.svg') 12 12, pointer; }
 img, video, svg { display: block; max-width: 100%; }
 ul, ol { margin: 0; padding: 0; }
 figure, blockquote { margin: 0; }
@@ -70,7 +72,8 @@ main { display: block; }
 
 /* Ligne-signature (horizon terracotta) */
 .signature { width: 260px; height: 10px; display: block; }
-.signature path { fill: none; stroke: var(--avt-terra); stroke-width: 2.6; stroke-linecap: round; }
+/* Le tracé vit dans le symbole #avt-signature (Sprite) : « .signature path » ne l'atteint pas à travers <use>, le trait se règle donc sur le <svg>, dont le symbole hérite (ticket n° 101). */
+.signature { fill: none; stroke: var(--avt-terra); stroke-width: 2.6; stroke-linecap: round; }
 
 /* Boutons pilule — D-25 : terra-deep provisoire (5,3:1), survol brun */
 .btn { display: inline-flex; align-items: center; justify-content: center; border-radius: var(--avt-radius-btn); padding: 16px 32px; font-weight: 500; font-size: 16px; line-height: 1.2; text-decoration: none; border: 1.5px solid transparent; min-height: 48px; transition: background .2s ease, color .2s ease; text-align: center; }
@@ -86,6 +89,8 @@ main { display: block; }
 .btn-contour-ecru:hover { background: rgba(247, 242, 234, .12); color: var(--avt-ecru); }
 .btn-klein { background: var(--avt-klein); color: var(--avt-ecru); border-color: var(--avt-klein); }
 .btn-klein:hover { background: var(--avt-brun); border-color: var(--avt-brun); }
+.btn-noir { background: var(--avt-brun); color: var(--avt-ecru); border-color: var(--avt-brun); } /* ticket n° 106 : « Estimation offerte » de l'ouverture */
+.btn-noir:hover { background: #000; border-color: #000; color: var(--avt-ecru); }
 .btn-m { padding: 14px 28px; font-size: 15px; }
 .btn-bloc { display: flex; width: 100%; }
 
