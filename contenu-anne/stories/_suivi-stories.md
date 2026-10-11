@@ -94,7 +94,7 @@ Anne a classé les photos HD par vente dans `contenu-anne/Stories  photos/` (9 d
 | Dossier photos | Story | Vente au suivi | Photos (dates) | Avis rapprochés | Photo principale suggérée |
 |---|---|---|---|---|---|
 | `THONON_VALCIC_T3` | `appartement-cascade-2024` ✍️ | VALCIC BLIEZ + RABIER VALCIC (2024) | 11 (mai 2024) ⚠️ basse qualité (boîtier ~6 Mpx) | Alexandra V., Rémi (JB, 2026-10-11) | DSC_0303 (cuisine + vue) |
-| `ARMOY_PEILLEX_projet marchands` | `auberge-decoupee-2024` ✍️ | PEILLEX RHL (2024) | 12 (mars 2024) | RHL acheteur, Erwan B, Vérojo (JB, 2026-10-11) | 003 (vue lac) · 031 (aérien, les bâtiments) |
+| `ARMOY_PEILLEX_projet marchands` | `auberge-decoupee-2024` ✍️ | PEILLEX RHL (2024) | 12 (mars 2024) | RHL (achat et vente), Bonjour, Erwan B, Vérojo, Cat D, RaphaelD (JB, 2026-10-11) | 003 (vue lac) · 031 (aérien, les bâtiments) |
 | `ALLINGES_MORAND_villa` | `maison-premium-2025` ✍️ | MORAND MUFFAT | 18 (nov. 2024) | — | 047 |
 | `ANTHY_BOGLI_T3 RDJ` | `anthy-t3-2024` *proposé* | BOEGLI BRAIZE (2024) | 11 (nov.-déc. 2023) | JcbAnthy, Laetitia (JB, 2026-10-11) | 002 (jardin) |
 | `ANTHY_LOIEZ_T4` | `anthy-t4-2025` *proposé* | LOIEZ BRAIZE (2025) | 13 (nov. 2024), 1 portrait | fleursd'eau (JB, 2026-10-11) | 025 (drone lac) |
@@ -103,6 +103,6 @@ Anne a classé les photos HD par vente dans `contenu-anne/Stories  photos/` (9 d
 | `ESSERT_BAUD_chalet` | `essert-romand-chalet-2026` *proposé* | BAUD HOFMANNER… (2026) | 17 (nov. 2025) | Sabine/François (JB, 2026-10-11) | 036 (drone, chalet sous la neige) |
 | `EVIAN_LEBORGNE_T4` | `evian-t4-2026` *proposé* | LEBORGNE JOHNSON BAILLY (2026) | 23 (avr. 2026), 1 portrait | — | 038 (façade) |
 
-✍️ = story rédigée. **Correspondance avis ↔ ventes donnée par JB le 2026-10-11** (story 7.22) : toutes les liaisons sont écrites dans le champ `story` des fiches d'avis. Hors dossier photos : Morzine (VIVIAND WAKELIN) ← Sergio (vendeur) et JamesW (acheteur). fleursd'eau = LOIEZ (Anthy T4), confirmé par JB. Bonjour = PEILLEX (vendeur d'Armoy), volontairement non relié à la vente (JB, 2026-10-11). Sans vente reliée : Bonjour, RHL vendeur, Cat D, EC Cremer, RaphaelD.
+✍️ = story rédigée. **Correspondance avis ↔ ventes donnée par JB le 2026-10-11** (story 7.22) : toutes les liaisons sont écrites dans le champ `story` des fiches d'avis. Hors dossier photos : Morzine (VIVIAND WAKELIN) ← Sergio (vendeur) et JamesW (acheteur). fleursd'eau = LOIEZ (Anthy T4), confirmé par JB. Bonjour = PEILLEX (vendeur d'Armoy). Seconde liste de JB (même soir) : RHL vendeur, Cat D, RaphaelD et Bonjour vont aussi sur Armoy. Sans vente reliée : EC Cremer.
 
 **À savoir sur le stock photo** (inventaire du 2026-09-22) : aucune photo sans date ni sous 2 400 px ; pas de doublon ; **7 dossiers sur 9 n'ont aucune photo en portrait** — la règle « dont une en portrait » du gabarit est assouplie (le site recadre en 4:5 depuis le paysage). **Essert-Romand : les 17 photos portent le logo eXp incrusté** — demander au photographe la version sans logo avant de publier. Les 3 stories rédigées ont une sélection proposée par Claude (à ajuster par Anne) et leurs versions web produites. Aucune piscine à Allinges ni à Sciez (cohérent avec la story « maison premium »).
