@@ -98,7 +98,7 @@ body { font-family: 'Jost', sans-serif; color: #26201A; font-size: 10.5pt; line-
 .couverture .logo svg { width: 64mm; height: auto; }
 h1 { font-family: 'Gilda Display', serif; font-weight: 400; font-size: 34pt; line-height: 1.1; color: #002FA7; margin: 0 0 4mm; }
 .pour { color: #5C5248; } .pied-couv { font-size: 12pt; color: #5C5248; }
-.filet { width: 40mm; height: 2px; background: #C4623E; margin: 8mm 0; }
+.filet { width: 40mm; height: 2px; background: #A34E30; margin: 8mm 0; }
 .score { line-height: 1; margin: 2mm 0; }
 .pastille { display: inline-block; padding: 1.5mm 4mm; border-radius: 99px; background: #E7EDF9; color: #002FA7; font-weight: 500; font-size: 10pt; margin: 4mm 0 3mm; }
 .profil { max-width: 130mm; font-size: 11pt; }
@@ -109,7 +109,7 @@ h2 { font-family: 'Gilda Display', serif; font-weight: 400; font-size: 24pt; lin
 .liste { height: 175mm; margin-top: 6mm; }
 .chapeau { font-size: 8.5pt; letter-spacing: .1em; text-transform: uppercase; color: #5C5248; margin-bottom: 2mm; }
 .axe-score { margin-bottom: 2mm; line-height: 1; } .axe-barre { max-width: 90mm; margin-bottom: 6mm; }
-.insight { font-size: 11pt; } .impact { background: #F7F2EA; border-left: 3px solid #C4623E; padding: 3mm 5mm; margin: 4mm 0 8mm; } .impact p { margin: 0; }
+.insight { font-size: 11pt; } .impact { background: #F7F2EA; border-left: 3px solid #A34E30; padding: 3mm 5mm; margin: 4mm 0 8mm; } .impact p { margin: 0; }
 h4 { font-family: 'Gilda Display', serif; font-weight: 400; font-size: 16pt; margin: 0 0 4mm; }
 .reco { border: 1px solid #E9E0D2; border-radius: 3mm; padding: 4mm 5mm 3mm; margin-bottom: 4mm; }
 .reco-tete { display: flex; justify-content: space-between; gap: 4mm; align-items: flex-start; } h3 { font-weight: 500; font-size: 11.5pt; margin: 0 0 1mm; }

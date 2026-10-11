@@ -124,15 +124,15 @@ body { font-family: 'Jost', sans-serif; color: #26201A; font-size: 10.5pt; line-
 .couverture .logo svg { width: 62mm; height: auto; }
 .couverture h1 { font-family: 'Gilda Display', serif; font-weight: 400; font-size: 40pt; line-height: 1.08; color: #002FA7; margin: 0 0 8mm; }
 .couverture .sous { font-size: 14pt; line-height: 1.4; max-width: 120mm; }
-.couverture .ligne { width: 40mm; height: 2px; background: #C4623E; margin: 10mm 0; }
+.couverture .ligne { width: 40mm; height: 2px; background: #A34E30; margin: 10mm 0; }
 .couverture .auteur { font-size: 11pt; color: #5C5248; }
 .provisoire { font-size: 9pt; color: #A34E30; letter-spacing: .08em; text-transform: uppercase; }
 h2 { font-family: 'Gilda Display', serif; font-weight: 400; font-size: 24pt; line-height: 1.12; color: #002FA7; margin: 0 0 7mm; break-after: avoid; }
 .partie { break-before: page; }
 .surtitre { font-size: 8pt; letter-spacing: .14em; text-transform: uppercase; color: #5C5248; margin-bottom: 3mm; }
-.erreur h2 { padding-bottom: 5mm; border-bottom: 2px solid #C4623E; display: inline-block; }
+.erreur h2 { padding-bottom: 5mm; border-bottom: 2px solid #A34E30; display: inline-block; }
 .cas, .solution { padding: 4mm 5mm; border-radius: 2.5mm; margin: 4mm 0; break-inside: avoid; }
-.cas { background: #F3ECE0; border-left: 3px solid #C4623E; }
+.cas { background: #F3ECE0; border-left: 3px solid #A34E30; }
 .solution { background: #E7EDF9; border-left: 3px solid #002FA7; }
 .etiquette { display: block; font-size: 7.5pt; letter-spacing: .14em; text-transform: uppercase; color: #5C5248; margin-bottom: 1.5mm; }
 .sommaire { break-before: page; break-inside: avoid; }
