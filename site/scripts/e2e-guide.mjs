@@ -155,13 +155,13 @@ try {
   constat(lead4.orientation === 'B' && !!confB && confB.text.includes(`/api/guide/telecharger?l=${lead4.id}`), 'diagnostic en sortie B : le résumé des résultats porte le lien du guide');
   await page.goto(`${U}${r.url}`, { waitUntil: 'networkidle' });
   constat((await page.textContent('.rs-sequence p'))?.includes(`${etapes.length} e-mails`), `résultats : « séquence de ${etapes.length} e-mails » (nombre réel)`);
-  await page.click('.rs-sortie [data-guide]');
+  await page.click('.rs-guide [data-guide]');
   await page.waitForSelector('[data-etat-guide]:not([hidden])', { timeout: 10000 }).catch(() => {});
   const lienRes = await page.getAttribute('[data-etat-guide] [data-lien-guide]', 'href').catch(() => null);
   constat(await page.isVisible('[data-etat-guide]') && !!lienRes && lienRes.includes(`l=${lead4.id}`), 'bouton du guide : « Le guide est parti… 7 jours » et lien à ouvrir');
   await attendre(lead4.id, 'guide');
   constat(mails(lead4.id).filter((e) => e.idempotence.endsWith(':guide')).length === 1, 'e-mail du guide envoyé pour le lead du navigateur');
-  await page.click('.rs-sortie [data-guide]');
+  await page.click('.rs-guide [data-guide]');
   await pause(1500);
   constat(mails(lead4.id).filter((e) => e.idempotence.endsWith(':guide')).length === 1, 'second clic : pas de second e-mail');
   await page.click('[data-sequence]');

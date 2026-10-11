@@ -82,14 +82,3 @@ export function sujetEtape(e: EtapeSequence, prenom: string | null): string {
   const s = e.sujet.replace(/\[Prénom\],?\s*/g, '').trim();
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
-
-/** Le texte d'un e-mail de la séquence, prêt à envoyer en texte brut : prénom remplacé, marques Markdown retirées. */
-export function texteEtape(e: EtapeSequence, prenom: string | null): string {
-  return e.corps
-    .replace(/\[Prénom\]/g, prenom ?? '')
-    .replace(/^Bonjour ,/m, 'Bonjour,')
-    .replace(/^#{1,3} (.+)$/gm, (_, t: string) => t.toUpperCase())
-    .replace(/\*\*(.+?)\*\*/g, '$1')
-    .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1$2')
-    .replace(/\n{3,}/g, '\n\n');
-}

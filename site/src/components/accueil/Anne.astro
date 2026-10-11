@@ -1,7 +1,8 @@
 ---
 // § 1.7 Anne : portrait (A-04, bloc réservé tant qu'aucun portrait n'est envoyé, story 7.16), trois lignes, les quatre langues, « En savoir plus » → /a-propos#qui-suis-je.
+// Mise en page « portrait de magazine » (D-42, story 8.14, reprise de l'essai « Magazine et matière ») : photo tirée sur papier et penchée,
+// langues écrites à la main sous la photo (Caveat), lettrine terracotta, lien fléché.
 import Portrait from '../Portrait.astro';
-import Signature from '../Signature.astro';
 import { r, type Lang } from '../../i18n';
 import { dicoAccueil } from '../../lib/textes';
 interface Props { lang: Lang }
@@ -9,31 +10,51 @@ const { lang } = Astro.props;
 const d = await dicoAccueil(lang);
 ---
 <section class="anne" data-sec="anne" aria-labelledby="anne-titre">
-  <div class="anne-portrait" data-reveal="bloc">
-    <Portrait label={d.accueil.anne_portrait} class="seulement-desktop anne-reserve" sizes="420px" />
-    <Portrait label={d.accueil.anne_portrait_m} class="seulement-mobile anne-reserve-m" sizes="100vw" />
-  </div>
-  <div data-reveal="titre">
-    <h2 id="anne-titre">{d.accueil.anne_titre}</h2>
-    <Signature largeur={150} hauteur={9} class="anne-signature" />
-    <p class="anne-texte"><span class="seulement-desktop">{d.accueil.anne_texte}</span><span class="seulement-mobile">{d.accueil.anne_texte_m}</span></p>
-    <p class="anne-langues"><span class="seulement-desktop">{d.accueil.anne_langues}</span><span class="seulement-mobile">{d.accueil.anne_langues_m}</span></p>
-    <a href={r('qui', lang)} class="lien">{d.accueil.anne_lien}</a>
+  <div class="anne-rubrique" aria-hidden="true">{lang === 'fr' ? 'Portrait' : 'Profile'}</div>
+  <div class="anne-grille">
+    <figure class="anne-portrait" data-reveal="bloc">
+      <div class="anne-tirage">
+        <Portrait label={d.accueil.anne_portrait} class="seulement-desktop anne-reserve" sizes="440px" />
+        <Portrait label={d.accueil.anne_portrait_m} class="seulement-mobile anne-reserve-m" sizes="100vw" />
+      </div>
+      <figcaption class="anne-langues-main" aria-hidden="true">{d.accueil.anne_langues_m}</figcaption>
+    </figure>
+    <div data-reveal="titre">
+      <h2 id="anne-titre">{d.accueil.anne_titre}</h2>
+      <p class="anne-texte"><span class="seulement-desktop">{d.accueil.anne_texte}</span><span class="seulement-mobile">{d.accueil.anne_texte_m}</span></p>
+      <p class="sr-only">{d.accueil.anne_langues}</p>
+      <a href={r('qui', lang)} class="anne-lien">{d.accueil.anne_lien} <span aria-hidden="true">→</span></a>
+    </div>
   </div>
 </section>
 <style>
-  .anne { position: relative; display: grid; grid-template-columns: 420px 1fr; gap: 64px; padding: 40px var(--marge) 120px; align-items: center; background: var(--avt-ecru); }
-  .anne-portrait :global(.anne-reserve) { height: 520px; }
-  .anne h2 { font-size: 48px; }
-  .anne-signature { margin-top: 8px; }
-  .anne-texte { font-size: 17px; line-height: 1.7; max-width: 56ch; margin: 22px 0 18px; }
-  .anne-langues { font-size: 13.5px; letter-spacing: .1em; color: var(--avt-text-muted); margin-bottom: 22px; }
+  .anne { position: relative; padding: 40px var(--marge) 120px; background: var(--avt-ecru); }
+  .anne-rubrique { padding-top: 14px; border-top: 1px solid var(--avt-brun); margin-bottom: 40px; font-size: 12.5px; letter-spacing: .2em; text-transform: uppercase; font-weight: 500; }
+  .anne-grille { display: grid; grid-template-columns: 440px 1fr; gap: 88px; align-items: center; }
+  .anne-portrait { position: relative; }
+  /* Le tirage : bord blanc cassé, ombre portée, légèrement penché */
+  .anne-tirage { background: #FFFDF8; padding: 12px; border-radius: 2px; transform: rotate(-1.5deg); box-shadow: 0 1px 2px rgba(38, 32, 26, .12), 0 18px 40px -12px rgba(38, 32, 26, .28); }
+  .anne-portrait :global(.anne-reserve) { height: 540px; border-radius: 2px; }
+  .anne-portrait :global(.anne-reserve-m) { border-radius: 2px; }
+  .anne-langues-main { position: absolute; right: -40px; bottom: -34px; font-family: var(--avt-font-main); font-weight: 500; font-size: 30px; line-height: 1.1; color: var(--avt-klein); transform: rotate(-4deg); }
+  .anne h2 { font-size: 72px; line-height: 1; }
+  .anne-texte { font-size: 19px; line-height: 1.7; max-width: 50ch; margin: 28px 0; }
+  /* Lettrine : la première lettre en Gilda Display terracotta, sur trois lignes */
+  .anne-texte > span:not(.seulement-mobile) { display: block; }
+  .anne-texte > span::first-letter { float: left; font-family: var(--avt-font-display); font-size: 4.4em; line-height: .8; margin: .06em .1em 0 0; color: var(--avt-terra-deep); }
+  .anne-lien { display: inline-flex; align-items: baseline; gap: 10px; font-size: 15px; font-weight: 500; letter-spacing: .02em; color: var(--avt-brun); border-bottom: 1px solid var(--avt-brun); padding-bottom: 4px; }
+  .anne-lien span { transition: transform .3s var(--ease-bloc); }
+  .anne-lien:hover { text-decoration: none; color: var(--avt-klein); border-bottom-color: var(--avt-klein); }
+  .anne-lien:hover span { transform: translateX(4px); }
   @media (max-width: 899px) {
-    .anne { grid-template-columns: 1fr; gap: 22px; padding: 0 var(--marge-m) 64px; }
-    .anne-portrait :global(.anne-reserve-m) { height: 360px; }
-    .anne h2 { font-size: 34px; }
-    .anne-signature { display: none; }
-    .anne-texte { font-size: 16px; line-height: 1.6; margin: 14px 0 12px; }
-    .anne-langues { font-size: 12.5px; margin-bottom: 16px; }
+    .anne { padding: 16px var(--marge-m) 72px; }
+    .anne-rubrique { margin-bottom: 26px; }
+    .anne-grille { grid-template-columns: 1fr; gap: 44px; }
+    .anne-tirage { padding: 8px; }
+    .anne-portrait :global(.anne-reserve-m) { height: 380px; }
+    .anne-langues-main { right: 8px; bottom: -30px; font-size: 26px; }
+    .anne h2 { font-size: 44px; }
+    .anne-texte { font-size: 16.5px; line-height: 1.65; margin: 18px 0 14px; }
   }
+  @media (prefers-reduced-motion: reduce) { .anne-lien span { transition: none; } }
 </style>

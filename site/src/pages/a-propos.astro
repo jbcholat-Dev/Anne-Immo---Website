@@ -147,11 +147,11 @@ const centre = (t: string) => /engagement|parlons/i.test(t);
   .ap-tete { padding: 88px var(--marge) 40px; }
   .ap-tete h1 { font-size: 84px; line-height: 1; margin-bottom: 18px; }
   .ap-tete p { font-size: 19px; line-height: 1.6; max-width: 56ch; }
-  .ap-repere { position: sticky; top: var(--nav-h); z-index: 4; background: rgba(247, 242, 234, .94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-top: 1px solid var(--filet-brun); border-bottom: 1px solid var(--filet-brun); padding: 0 var(--marge); }
+  .ap-repere { position: sticky; top: calc(var(--nav-h) + 10px); z-index: 4; background: rgba(247, 242, 234, .94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-top: 1px solid var(--filet-brun); border-bottom: 1px solid var(--filet-brun); padding: 0 var(--marge); }
   .ap-repere nav { display: flex; gap: 36px; font-size: 15px; }
   .ap-repere a { color: var(--avt-brun); padding: 20px 0; border-bottom: 2.5px solid transparent; }
   .ap-repere a[aria-current] { color: var(--avt-klein); border-bottom-color: var(--avt-terra); font-weight: 500; }
-  section { scroll-margin-top: calc(var(--nav-h) + 60px); }
+  section { scroll-margin-top: calc(var(--nav-h) + 78px); }
   .ap-qui { padding: 72px var(--marge) 96px; display: grid; grid-template-columns: 520px 1fr; gap: 96px; align-items: start; }
   .ap-portrait { position: sticky; top: calc(var(--nav-h) + 24px); display: flex; flex-direction: column; gap: 18px; }
   .ap-portrait :global(.ap-portrait-reserve) { height: 660px; }
@@ -224,10 +224,10 @@ const centre = (t: string) => /engagement|parlons/i.test(t);
     .ap-tete { padding: 48px var(--marge-m) 28px; }
     .ap-tete h1 { font-size: 52px; margin-bottom: 12px; }
     .ap-tete p { font-size: 16px; }
-    .ap-repere { top: var(--nav-h-mobile); padding: 0 var(--marge-m); }
+    .ap-repere { top: calc(var(--nav-h-mobile) + 10px); padding: 0 var(--marge-m); }
     .ap-repere nav { gap: 20px; font-size: 14px; }
     .ap-repere a { padding: 16px 0; }
-    section { scroll-margin-top: calc(var(--nav-h-mobile) + 52px); }
+    section { scroll-margin-top: calc(var(--nav-h-mobile) + 66px); }
     .ap-qui { padding: 16px var(--marge-m) 48px; display: block; }
     .ap-portrait { position: static; margin-bottom: 36px; }
     .ap-portrait :global(.ap-portrait-reserve-m) { height: 420px; }

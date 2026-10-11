@@ -1213,6 +1213,20 @@ afin de voir ce qu'on dit d'Anne sans affronter un pavé de texte.
 **Et** au-delà de quelques lignes l'avis est replié derrière « Lire la suite », sans jamais être tronqué dans la page
 **Et** une phrase qui ne figure pas telle quelle dans l'avis n'est pas affichée
 
+### Story 8.14: Barre en verre et portrait de magazine
+
+En tant que visiteur,
+je veux une barre de navigation plus légère et un portrait d'Anne plus vivant,
+afin que le site paraisse moins fade sans changer ce qu'il dit (choix de JB parmi les essais « Verre du lac » et « Magazine et matière », D-42).
+
+**Critères d'acceptation :**
+
+**Étant donné** n'importe quelle page
+**Quand** elle s'affiche ou défile
+**Alors** la barre de navigation est une gélule de verre dépoli qui flotte au-dessus de la page, fumée sur la vidéo d'accueil, lisible sur tous les fonds
+**Et** sur l'accueil, le bloc « Anne » montre la photo tirée sur papier, les langues écrites à la main dessous, une lettrine au début du texte et un lien fléché
+**Et** si le visiteur a demandé de réduire la transparence, ou si le navigateur ne sait pas flouter, la barre est pleine
+
 ### Story 9.1: Comptes et connexion du dépôt
 
 En tant que JB,
@@ -1667,6 +1681,26 @@ afin que le prospect reconnaisse ma marque et lise volontiers la séquence jusqu
 **Étant donné** le gabarit
 **Quand** JB et Anne le relisent
 **Alors** une maquette d'e-mail est validée avant le branchement, et les captures de chaque e-mail (ordinateur et téléphone) sont citées dans la story.
+
+### Story 10.10: Rapport PDF personnalisé du diagnostic
+
+Ajoutée le 2026-10-10 à la demande de JB : le diagnostic doit déboucher sur un rapport à télécharger, et non sur des résultats visibles 24 heures dans le navigateur.
+
+En tant que vendeur qui a fait le diagnostic,
+je veux recevoir un rapport PDF à mon nom, avec mes scores et des recommandations pour chaque axe,
+afin de savoir quoi corriger dans ma vente, et dans quel ordre.
+
+**Critères d'acceptation :**
+
+**Étant donné** un diagnostic soumis avec les coordonnées
+**Quand** le prospect ouvre la page de résultats ou l'e-mail du résumé
+**Alors** il peut télécharger un rapport PDF à la charte : couverture (prénom, date, score global, profil), une section par axe (Préparation à la vente, Visibilité & Attractivité, Efficacité commerciale) avec le score, le constat de son niveau et les recommandations tirées des 10 erreurs du guide, toutes présentes quel que soit le score, celles des questions où il a perdu des points marquées « en priorité », puis la suite proposée (rendez-vous ou guide)
+**Et** le lien est signé et valable 7 jours, comme celui du guide (AD-8, amendement AD-5 du 2026-10-10)
+**Et** les textes viennent d'un seul fichier d'Anne (`contenu-anne/guide/rapport-diagnostic.md`), validé par elle avant la mise en ligne.
+
+**Étant donné** le rapport
+**Quand** JB et Anne le relisent
+**Alors** une maquette du PDF est validée avant le branchement.
 
 ## Epic 11: Référencement et visibilité
 
