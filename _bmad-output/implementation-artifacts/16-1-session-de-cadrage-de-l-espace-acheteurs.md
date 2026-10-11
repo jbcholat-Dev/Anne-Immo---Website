@@ -29,6 +29,11 @@ La spec v6 exclut une « galerie ou vitrine de biens en ligne » (non-goals) et 
 2. Réservé aux mandats de recherche signés ? Recommandation : oui.
 3. Pour Anne : comment présente-t-elle une sélection aujourd'hui, et quelles règles eXp sur la diffusion des annonces ?
 
+## Réponses de JB (2026-10-11, 09:29)
+1. **Espace privé** par acheteur, pas de vitrine publique. Anne le fait déjà à la main : recherches personnalisées, photos, commentaires des acheteurs. L'espace reprend cette pratique.
+2. Réservé aux acheteurs qui ont signé un **mandat de recherche**.
+3. Pas de règle eXp particulière.
+
 ## Ce qui est fait
 - Epic 16 et story 16.1 ajoutées à `_bmad-output/planning-artifacts/epics.md` et au statut de sprint ; idée et questions journalisées dans `.memlog.md` de la spec.
 
@@ -36,4 +41,5 @@ La spec v6 exclut une « galerie ou vitrine de biens en ligne » (non-goals) et 
 Documents seulement, aucun changement du site : pas de construction ni de captures à faire.
 
 ## Ce qui reste
-- Réponses de JB et d'Anne, puis capacité dans la spec (et réécriture du non-goal si besoin), AD dans le spine, découpage des stories.
+- Savoir quel outil Anne utilise aujourd'hui pour ses sélections (pour reprendre l'existant).
+- Capacité dans la spec, avec le non-goal « galerie ou vitrine » précisé : pas de vitrine publique, un espace privé par acheteur sous mandat de recherche est permis, AD dans le spine, découpage des stories.

@@ -27,6 +27,12 @@ Une fois le mandat signé, le client a un portail dédié : avancement, personne
 3. Une seule application pour vendeurs et acheteurs ? Recommandation : oui.
 4. Pour Anne : comment tient-elle ses vendeurs au courant aujourd'hui, et le réseau eXp a-t-il des règles sur un tel portail ?
 
+## Réponses de JB (2026-10-11, 09:29)
+1. Nom des visiteurs : **non**, le vendeur voit un profil et un retour.
+2. Textes de Claude : **relus par Anne** avant envoi (« on ne veut pas envoyer n'importe quoi »).
+3. **Une seule application** « espace client » pour vendeurs et acheteurs.
+4. Pas de règle eXp particulière. Aujourd'hui, Anne tient ses vendeurs au courant surtout par téléphone et lors des visites : le portail ne remplace rien, il s'ajoute.
+
 ## Ce qui est fait
 - Epic 15 et story 15.1 ajoutées à `_bmad-output/planning-artifacts/epics.md` et au statut de sprint ; idée et questions journalisées dans `.memlog.md` de la spec.
 
@@ -34,5 +40,5 @@ Une fois le mandat signé, le client a un portail dédié : avancement, personne
 Documents seulement, aucun changement du site : pas de construction ni de captures à faire.
 
 ## Ce qui reste
-- Réponses de JB et d'Anne, puis capacité dans la spec, AD dans le spine, découpage des stories.
+- Capacité dans la spec, AD dans le spine, découpage des stories.
 - Démarrage de la construction après le lancement (12.4) et les stories 13.4 à 13.6.
