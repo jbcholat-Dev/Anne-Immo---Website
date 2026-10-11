@@ -1,7 +1,7 @@
 ---
 story: 7.22
 epic: 7 — Contenu d'Anne
-statut: review
+statut: done
 date: 2026-10-11
 ---
 
@@ -39,3 +39,5 @@ Champ `story` (« Vente concernée » dans l'espace d'édition) rempli dans 13 f
 ## Ce qui reste
 - Évian et Allinges : aucun avis Immodvisor connu.
 - Avis sans vente : Bonjour (choix de JB), RHL vendeur, Cat D, EC Cremer, RaphaelD.
+
+Fusionnée dans main le 2026-10-11 avec l'accord de JB (PR n° 130).
