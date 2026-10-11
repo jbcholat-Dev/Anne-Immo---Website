@@ -92,8 +92,19 @@ const estCourante = (k: RouteKey) => courante === k || (k === 'apropos' && ['qui
 <script src="../islands/nav.ts"></script>
 
 <style>
-  .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 40; height: var(--nav-h); background: var(--avt-ecru); border-bottom: 1px solid var(--filet-brun); color: var(--avt-brun); transition: height .35s ease, background .35s ease, color .35s ease; }
-  .nav-int { height: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--marge); }
+  /* Barre en verre (D-42, story 8.14, reprise de l'essai « Magazine et matière ») : une gélule qui flotte au-dessus de la page,
+     verre dépoli clair (flou + saturation), liseré lumineux, ombre douce. Assez couvrante pour rester lisible sur le bleu et l'encre. */
+  .nav {
+    --verre: linear-gradient(155deg, rgba(251, 248, 242, .9) 0%, rgba(247, 242, 234, .78) 100%);
+    --verre-flou: blur(22px) saturate(170%);
+    --verre-bord: rgba(255, 255, 255, .62);
+    --verre-relief: inset 0 1px 0 rgba(255, 255, 255, .85), inset 0 -1px 0 rgba(38, 32, 26, .06), 0 18px 50px rgba(38, 32, 26, .12), 0 2px 8px rgba(38, 32, 26, .06);
+    position: fixed; top: 14px; left: 24px; right: 24px; z-index: 40; height: var(--nav-h); border-radius: 999px;
+    background: var(--verre); -webkit-backdrop-filter: var(--verre-flou); backdrop-filter: var(--verre-flou);
+    border: 1px solid var(--verre-bord); box-shadow: var(--verre-relief); color: var(--avt-brun);
+    transition: height .35s ease, background .35s ease, color .35s ease, top .35s ease;
+  }
+  .nav-int { height: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 28px 0 18px; }
   .nav-gauche { display: flex; align-items: center; gap: 18px; }
   .nav-reseaux { display: flex; gap: 10px; }
   .nav-social { width: 36px; height: 36px; border-radius: 999px; border: 1.5px solid currentColor; display: inline-flex; align-items: center; justify-content: center; color: inherit; }
@@ -108,9 +119,10 @@ const estCourante = (k: RouteKey) => courante === k || (k === 'apropos' && ['qui
   .nav-lien[aria-current="page"] { color: var(--avt-klein); }
   .nav-chevron { font-size: 10px; }
   .nav-item { position: relative; display: flex; align-items: center; height: var(--nav-h); }
-  .nav-menu { position: absolute; left: -16px; top: 100%; width: 300px; background: var(--avt-ecru); border: 1px solid rgba(38, 32, 26, .1); border-top: 0; border-radius: 0 0 14px 14px; padding: 8px; box-shadow: 0 18px 40px rgba(38, 32, 26, .14); display: none; flex-direction: column; color: var(--avt-brun); }
+  .nav-menu { position: absolute; left: -16px; top: calc(100% + 8px); width: 300px; background: rgba(251, 248, 242, .97); border: 1px solid var(--verre-bord); /* plein : un flou imbriqué dans la barre ne voit pas la page */ border-radius: 18px; padding: 8px; box-shadow: var(--verre-relief); display: none; flex-direction: column; color: var(--avt-brun); }
+  .nav-menu::before { content: ""; position: absolute; left: 0; right: 0; top: -10px; height: 10px; } /* pont de survol entre la barre et le menu */
   .nav-menu a { display: block; padding: 14px 16px; border-radius: 10px; font-size: 15px; font-weight: 400; color: var(--avt-brun); }
-  .nav-menu a:hover, .nav-menu a:focus-visible { background: var(--avt-brume); text-decoration: none; }
+  .nav-menu a:hover, .nav-menu a:focus-visible { background: rgba(255, 255, 255, .55); text-decoration: none; }
   .nav-item:hover .nav-menu, .nav-item:focus-within .nav-menu { display: flex; }
   .nav-item:hover > .nav-lien, .nav-item:focus-within > .nav-lien { color: var(--avt-klein); }
   .nav-langue { display: inline-flex; gap: 6px; font-size: 13px; letter-spacing: .06em; margin-left: 8px; }
@@ -119,16 +131,16 @@ const estCourante = (k: RouteKey) => courante === k || (k === 'apropos' && ['qui
   .nav-burger { display: none; width: 44px; height: 44px; border: 0; background: transparent; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 0; color: inherit; }
   .nav-burger span { width: 22px; height: 1.5px; background: currentColor; display: block; }
 
-  /* Sur le hero (accueil) : transparente, tout en écru, jusqu'au premier défilement */
-  .nav[data-sombre]:not([data-reduit]) { background: transparent; border-bottom-color: transparent; color: var(--avt-ecru); }
+  /* Sur la vidéo d'accueil : verre fumé, tout en écru, jusqu'au premier défilement */
+  .nav[data-sombre]:not([data-reduit]) { background: linear-gradient(155deg, rgba(38, 32, 26, .30), rgba(38, 32, 26, .16)); border-color: rgba(255, 255, 255, .30); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 -1px 0 rgba(0, 0, 0, .18), 0 24px 60px rgba(0, 0, 0, .28); color: var(--avt-ecru); }
   .nav[data-sombre]:not([data-reduit]) .nav-filet { background: rgba(247, 242, 234, .3); }
   .nav[data-sombre]:not([data-reduit]) .nav-lien[aria-current="page"] { color: var(--avt-ecru); }
   .nav[data-sombre]:not([data-reduit]) .nav-langue a { color: rgba(247, 242, 234, .7); }
   .nav[data-sombre]:not([data-reduit]) .nav-langue a[aria-current] { color: var(--avt-ecru); }
   .nav[data-sombre]:not([data-reduit]) .nav-social:hover { background: rgba(247, 242, 234, .12); }
 
-  /* Réduite au défilement : 56 px, écru 86 % + flou 8 px, sans les réseaux (00-nav-reduit) */
-  .nav[data-reduit] { height: 56px; background: var(--voile-ecru); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom-color: var(--filet-brun); }
+  /* Réduite au défilement : 56 px, remonte un peu, sans les réseaux (00-nav-reduit) */
+  .nav[data-reduit] { height: 56px; top: 10px; }
   .nav[data-reduit] .nav-reseaux, .nav[data-reduit] .nav-filet { display: none; }
   .nav[data-reduit] .nav-logo-svg { width: 30px; height: 30px; }
   .nav[data-reduit] .nav-desktop { gap: 28px; font-size: 13.5px; }
@@ -163,9 +175,20 @@ const estCourante = (k: RouteKey) => courante === k || (k === 'apropos' && ['qui
     .nav-gauche { gap: 14px; }
   }
 
+  /* Replis : « réduire la transparence » demandé, ou navigateur sans flou d'arrière-plan → surfaces pleines */
+  @media (prefers-reduced-transparency: reduce) {
+    .nav { background: var(--avt-ecru); -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .nav[data-sombre]:not([data-reduit]) { background: rgba(38, 32, 26, .78); }
+  }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .nav { background: rgba(247, 242, 234, .96); }
+    .nav[data-sombre]:not([data-reduit]) { background: rgba(38, 32, 26, .72); }
+  }
+
   @media (max-width: 899px) {
-    .nav { height: var(--nav-h-mobile); }
-    .nav[data-reduit] { height: var(--nav-h-mobile); }
+    .nav { height: var(--nav-h-mobile); top: 10px; left: 12px; right: 12px; }
+    .nav-int { padding: 0 10px 0 14px; }
+    .nav[data-reduit] { height: var(--nav-h-mobile); top: 10px; }
     .nav-reseaux, .nav-filet, .nav-desktop { display: none !important; }
     .nav-logo-svg, .nav[data-reduit] .nav-logo-svg { width: 32px; height: 32px; }
     .nav-burger { display: flex; }

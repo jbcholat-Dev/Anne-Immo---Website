@@ -105,6 +105,12 @@ La nav passe de 4 entrées + bouton à **5 entrées (À propos ▾ · Réalisati
 4. Le formulaire « Parler de votre projet » de la page Acheter : le même que Contact, ou dédié ? (D-5)
 5. Preuve sociale (D-9) : quels trois avis Immodvisor pour la section « Ils ont travaillé avec Anne » — idéalement deux vendeurs + un acheteur, et au moins un relié à une story rédigée.
 
+## Décision du 2026-10-10 (JB, après les essais de concept « Verre du lac » et « Magazine et matière » — story 8.14)
+
+| # | Décision | Statut | À propager |
+|---|---|---|---|
+| D-42 | **Barre de navigation en verre et portrait de magazine sur l'accueil.** Des deux essais (PR #76 et #79), JB ne garde que ces deux éléments ; le reste des essais n'est pas retenu. Barre : une gélule de verre dépoli clair (flou + saturation, liseré lumineux) qui flotte à 14 px du haut et 24 px des bords (10 et 12 px sur téléphone), fumée sur la vidéo d'accueil, pleine si le visiteur a demandé de réduire la transparence ; remplace la barre pleine largeur écru (et sa version réduite « écru 86 % + flou »). Portrait : sur-titre « Portrait » sur un filet, photo tirée sur papier (bord blanc cassé, ombre) penchée de 1,5°, langues d'Anne écrites à la main sous la photo (police Caveat, OFL, réduite aux majuscules, 24 Ko), lettrine terracotta, lien fléché. Ce qu'on perd : une police de plus à charger sur l'accueil, et le bord net de la barre pleine largeur. | ✅ | `site/src/components/Nav.astro` · `site/src/components/accueil/Anne.astro` · `site/src/styles/global.css` · `design-system/` à compléter (composant barre) · story 8.14. |
+
 ## Pages — état de validation
 
 | Page | Desktop | Mobile | Commentaire |
