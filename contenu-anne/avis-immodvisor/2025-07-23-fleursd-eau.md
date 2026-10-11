@@ -7,8 +7,8 @@ role: vendeur                  # vendeur (« Mise en vente ») | acheteur (« Ac
 titre: "Nous recommanderons chaleureusement mme VIAL-TISSOT"
 vente_candidate: anthy-t4-2025      # vente rapprochée (registre : stories/_suivi-stories.md § Ventes photographiées) — proposition de Claude
 dossier_photos: 
-confiance: moyenne               # forte | moyenne | faible | aucun
-indice: "Correspondance de JB du 2026-10-11 : LOIEZ, vendeuse de l'appartement T4 d'Anthy ; le pseudonyme « fleursd'eau » est rapproché par Claude (seul avis vendeur de 2025 restant, vente LOIEZ 2025), à confirmer."
+confiance: forte               # forte | moyenne | faible | aucun
+indice: "Correspondance de JB du 2026-10-11 : LOIEZ, vendeuse de l'appartement T4 d'Anthy ; pseudonyme « fleursd'eau » confirmé par JB le 2026-10-11."
 story: anthy-t4-2025   # la vente confirmée par Anne (slug) — seul champ lu par le site
 retenu: false               # true = cité en entier dans « Ils ont travaillé avec Anne »
 ---
