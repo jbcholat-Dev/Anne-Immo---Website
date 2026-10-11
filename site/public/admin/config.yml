@@ -342,6 +342,7 @@ collections:
           - { name: adresse_professionnelle, label: Adresse professionnelle, widget: string, required: false, hint: "Affichée seulement dans les mentions légales." }
           - { name: telephone, label: Téléphone, widget: string, required: false, hint: "Format international, ex. +33 6 …" }
           - { name: email, label: E-mail, widget: string, required: false }
+          - { name: mediateur, label: Médiateur de la consommation, widget: string, required: false, hint: "Nom, adresse et site du médiateur (celui d'eXp)." }
           - { name: url_immodvisor, label: Fiche Immodvisor, widget: string }
           - { name: zone, label: Zone, widget: string }
           - { name: langues, label: Langues, widget: list, required: false }

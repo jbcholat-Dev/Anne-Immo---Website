@@ -3,7 +3,7 @@ commune: Anthy-sur-Léman
 type_bien: Appartement (T3, rez-de-jardin)
 annee_vente: 2024
 delai_vente: 2 mois
-particularite: "Un appartement encombré où les acquéreurs auraient eu du mal à se projetter : tout s'est joué sur la préparation avant la mise en vente."
+particularite: "Un appartement encombré où les acquéreurs auraient eu du mal à se projeter : tout s'est joué sur la préparation avant la mise en vente."
 photo_principale: photos/anthy-sur-leman-exp-immo-014-hd.webp
 photos:
   - photos/anthy-sur-leman-exp-immo-002-hd.webp
@@ -31,7 +31,7 @@ temoignages:
 
 Un couple de retraités m'a appelée pour vendre leur appartement les pieds dans l'eau. Ils avaient acheté cet appartement sur plan 25 ans auparavant. L'heure était venue pour eux de s'en séparer.
 
-Ils ne savaient pas par quel bout commencer. Ils ont eu besoin d'être guider dans tous le processus.
+Ils ne savaient pas par quel bout commencer. Ils ont eu besoin d'être guidés dans tout le processus.
 
 ## Préparation de la mise en vente
 

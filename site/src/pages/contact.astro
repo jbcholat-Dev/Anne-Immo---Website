@@ -4,6 +4,7 @@
 import Page from '../layouts/Page.astro';
 import FormulaireContact from '../components/FormulaireContact.astro';
 import { textes, court } from '../lib/textes';
+import { telephone } from '../config/site';
 // Textes modifiables par Anne : contenu-anne/textes/contact.yml (story 7.20).
 const x = await textes('contact');
 ---
@@ -11,6 +12,7 @@ const x = await textes('contact');
   <div class="ct-tete">
     <h1>{x.titre}</h1>
     <p><span class="seulement-desktop">{x.intro}</span><span class="seulement-mobile">{court(x.intro_court, x.intro)}</span></p>
+    <p class="ct-tel">Par téléphone : <a href={telephone.lien} class="lien">{telephone.affiche}</a></p>
   </div>
   <div class="ct-corps">
     <section aria-label={x.rendez_vous.titre} class="ct-rdv" id="reserver" data-rdv>
@@ -83,6 +85,8 @@ const x = await textes('contact');
   .ct-tete { padding: 80px var(--marge) 32px; }
   .ct-tete h1 { font-size: 72px; margin-bottom: 14px; }
   .ct-tete p { font-size: 18px; line-height: 1.6; max-width: 56ch; }
+  .ct-tete .ct-tel { margin-top: 12px; }
+  .ct-tel a { white-space: nowrap; }
   .ct-corps { padding: 32px var(--marge) 96px; display: grid; grid-template-columns: 1.15fr 1fr; gap: 64px; align-items: start; }
   .ct-rdv { background: var(--avt-galet); border-radius: 16px; padding: 36px; scroll-margin-top: calc(var(--nav-h) + 24px); }
   .ct-rdv h2 { font-size: 32px; margin-bottom: 6px; }

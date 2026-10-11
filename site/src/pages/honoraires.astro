@@ -1,0 +1,57 @@
+---
+// Barème d'honoraires (affichage obligatoire des prix d'un professionnel de l'immobilier, arrêté du 10 janvier 2017), story 12.6.
+// Source : barème d'équipe eXp transmis par JB le 2026-10-11 (PDF), recopié sans le nom ni les coordonnées de l'ancien titulaire.
+// À tenir à jour ici si le barème change ; le PDF d'origine reste hors du dépôt.
+import Legal from '../layouts/Legal.astro';
+import { identite } from '../config/site';
+
+const residentiel = [
+  ['Jusqu’à 100 000 €', '9 000 €', '9 000 €'],
+  ['De 100 000 € à 200 000 €', '7 %', '9 000 €'],
+  ['De 200 000 € à 400 000 €', '6 %', '14 000 €'],
+  ['De 400 000 € à 600 000 €', '5,5 %', '24 000 €'],
+  ['De 600 000 € à 1 000 000 €', '5 %', '32 000 €'],
+  ['Plus de 1 000 000 €', '4,5 %', '45 000 €'],
+];
+const commercial = [
+  ['Jusqu’à 100 000 €', '10 000 €', '9 000 €'],
+  ['De 100 000 € à 200 000 €', '8 %', '9 000 €'],
+  ['De 200 000 € à 400 000 €', '7 %', '14 000 €'],
+  ['De 400 000 € à 600 000 €', '6 %', '24 000 €'],
+  ['De 600 000 € à 1 000 000 €', '5 %', '32 000 €'],
+  ['Plus de 1 000 000 €', '5 %', '45 000 €'],
+];
+// Montants insécables : « 200 000 € » ne se coupe pas en fin de ligne sur téléphone.
+const nb = (t: string) => t.replace(/(\d) (?=\d)/g, '$1\u202f').replace(/ (€|%)/g, '\u00a0$1');
+const baremes = [
+  { titre: 'Immobilier résidentiel', lignes: residentiel },
+  { titre: 'Immobilier commercial et terrains', lignes: commercial },
+];
+---
+<Legal titre="Barème d’honoraires" courante="honoraires" description="Honoraires de transaction d'Anne Vial-Tissot, agent commercial du réseau eXp France : immobilier résidentiel, commercial et terrains.">
+  <p>Transaction de biens immobiliers. Honoraires toutes taxes comprises (TVA au taux actuel de 20&nbsp;%), calculés sur le prix de vente affiché, honoraires inclus.</p>
+  {baremes.map((b) => (
+    <>
+      <h2>{b.titre}</h2>
+      <div class="bareme-cadre">
+        <table class="bareme">
+          <thead><tr><th scope="col">Prix de vente affiché, honoraires inclus</th><th scope="col">Honoraires TTC</th><th scope="col">Minimum perçu TTC</th></tr></thead>
+          <tbody>{b.lignes.map(([prix, taux, minimum]) => <tr><th scope="row">{nb(prix)}</th><td>{nb(taux)}</td><td>{nb(minimum)}</td></tr>)}</tbody>
+        </table>
+      </div>
+    </>
+  ))}
+  <h2>Qui paie</h2>
+  <p>Le montant de ces honoraires est à la charge de la partie, vendeur ou acquéreur, mentionnée à l’article « Rémunération » du mandat. Agent commercial, {identite.nomCourt} ne peut recevoir ni détenir aucun fonds, effet ou valeur.</p>
+  <h2>Professionnel</h2>
+  <p>{identite.nomCourt}, {identite.statut}. RSAC n° {identite.rsac}, greffe de {identite.greffe} · {identite.telephone} · {identite.email}. Carte professionnelle n° {identite.cartePro}, titulaire : {identite.titulaireCarte}, tél. 0805 119 690.</p>
+</Legal>
+<style>
+  .bareme-cadre { overflow-x: auto; margin: 0 0 32px; }
+  .bareme { width: 100%; border-collapse: collapse; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .bareme th, .bareme td { padding: 12px 14px; border-bottom: 1px solid var(--avt-galet); text-align: right; }
+  .bareme th:first-child { text-align: left; }
+  .bareme thead th { font-weight: 500; font-size: 13px; color: var(--avt-text-muted); vertical-align: bottom; }
+  .bareme tbody th { font-weight: 400; }
+  @media (max-width: 899px) { .bareme th, .bareme td { padding: 10px 8px; font-size: 14px; } }
+</style>
