@@ -1,3 +1,13 @@
+# En-têtes de sécurité de toutes les pages fixes (revue du 2026-10-11, story 12.6) : le site ne peut pas être affiché
+# dans un cadre sur un autre site, le navigateur reste en HTTPS, l'adresse complète des pages n'est pas transmise aux
+# autres sites. Les mêmes en-têtes sont posés par worker.ts sur les pages calculées par le serveur (/gestion, résultats…).
+/*
+  Strict-Transport-Security: max-age=31536000
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+
 # Polices du site autorisées hors du site : les e-mails envoyés aux prospects les appellent (story 10.9).
 /fonts/*
   Access-Control-Allow-Origin: *
