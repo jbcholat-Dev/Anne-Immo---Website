@@ -1,7 +1,7 @@
 ---
 story: 8.12
 epic: 8 — Structure et visuel
-statut: review
+statut: done
 date: 2026-10-10
 tickets: 90, 94, 95, 99, 101, 102, 104, 105, 106
 ---
@@ -51,7 +51,6 @@ Ajoutés le même soir au même lot :
 - Captures dans le même dossier : ouverture avant et après (ligne et boutons), pied de page, « Parlons de votre projet ».
 
 ## Ce qui reste
-- Accord de JB sur la PR, fusion.
-- Fermer les tickets n° 90, 94, 95, 99, 101, 102, 104, 105 et 106 en citant le commit.
-- Couleur de la couverture du PDF du guide (`site/scripts/guide-pdf.mjs`, #C4623E) : à passer en #A34E30 après la fusion de la PR n° 80, qui modifie ce même fichier.
-- Le bouton noir sur la vidéo sombre de l'ouverture contraste peu : à montrer à Anne.
+- Rien dans cette story. PR n° 96 fusionnée par JB le 2026-10-11 (commit de fusion 83c15e6) ; tickets n° 90, 94, 95, 99, 101, 102, 104, 105 et 106 fermés en citant ce commit.
+- La couleur de la couverture du PDF du guide (#C4623E → #A34E30) passe dans la story 8.16.
+- Le bouton noir sur la vidéo sombre de l'ouverture contraste peu : à montrer à Anne (suivi dans la story 8.16).
