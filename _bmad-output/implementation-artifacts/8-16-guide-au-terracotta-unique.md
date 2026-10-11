@@ -1,7 +1,7 @@
 ---
 story: 8.16
 epic: 8 — Structure et visuel
-statut: review
+statut: done
 date: 2026-10-11
 ---
 
@@ -24,5 +24,5 @@ Suite de la story 8.12 (décision D-40, un seul terracotta, le « terracotta pro
 - `npm run build` OK ; `npm run check` : 0 erreur ; liens : 26 pages, 1 659 liens, 0 cassé.
 
 ## Ce qui reste
-- Accord de JB et fusion de la PR.
-- Montrer à Anne le bouton noir « Estimation offerte » sur la vidéo sombre de l'ouverture, qui contraste peu.
+- Rien. PR n° 112 fusionnée par JB le 2026-10-11.
+- Le contraste du bouton noir « Estimation offerte » sur la vidéo sombre de l'ouverture passe dans la story 8.4 (retouches avec Anne, encore à écrire).
