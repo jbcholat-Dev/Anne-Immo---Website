@@ -5,7 +5,6 @@
 // Story 8.12 (retours d'Anne n° 90, 94, 95) : photo A-05 retirée à côté de « Ma méthode » ; les trois piliers côte à côte ;
 // « Réserver un créneau » de « Parlons de votre projet » en bleu (n° 102).
 // Story 8.15 (choix de JB du 2026-10-10, D-43) : étapes 01 à 03 en parcours vertical, numéro rond à côté du titre, sans cadres, reliées par une ligne fléchée.
-import { sitePublic } from '../config/site';
 import Page from '../layouts/Page.astro';
 import Portrait from '../components/Portrait.astro';
 import Signature from '../components/Signature.astro';
@@ -128,7 +127,7 @@ for (const rg of methode.rangs) {
       {cible.intro && <div class="ap-cible-intro ap-md" set:html={cible.intro} />}
       <div class="ap-cibles">{cible.profils.map((b) => <div><h3 class="chapeau">{b.titre}</h3><div class="ap-md" set:html={b.html} /></div>)}</div>
     </> : <>
-      <div class="ap-cible-tete"><h2 id="cible-titre">Cible</h2>{!sitePublic && <span class="marqueur">Point ouvert 1 · contenu à écrire par Anne</span>}</div>
+      <div class="ap-cible-tete"><h2 id="cible-titre">Cible</h2></div>
       <p class="ap-cible-intro">Quatre profils qu'Anne accompagne le plus souvent.</p>
       <div class="ap-cibles">{ciblesDefaut.map(([t, x]) => <div><h3 class="chapeau">{t}</h3><p>{x}</p></div>)}</div>
     </>}

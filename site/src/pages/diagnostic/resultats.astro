@@ -72,7 +72,7 @@ const rapport = r ? await lienRapport(envSite, r.id) : null;
                 ? <a href={rapport} class="btn btn-ecru" target="_blank" rel="noopener" data-rapport>{s.cta}</a>
                 : <button type="button" class="btn btn-ecru" data-guide>{s.cta}</button>}
           </div></div>
-        {(A || rapport) && <div class="rs-guide"><div class="rs-guide-int"><div class="rs-guide-couv"></div><div><div class="rs-guide-titre">Les 10 erreurs fatales des vendeurs particuliers</div><div class="rs-guide-sous">Guide PDF, à la charte · A-10</div></div></div><button type="button" class="btn btn-secondaire btn-m" data-guide>Recevoir le guide</button></div>}
+        {(A || rapport) && <div class="rs-guide"><div class="rs-guide-int"><img src="/img/guide-couverture.jpg" alt="" class="rs-guide-couv rs-guide-image" width="953" height="1348" /><div><div class="rs-guide-titre">Les 10 erreurs fatales des vendeurs particuliers</div><div class="rs-guide-sous">Le guide PDF d'Anne, offert et envoyé par e-mail.</div></div></div><button type="button" class="btn btn-secondaire btn-m" data-guide>Recevoir le guide</button></div>}
         {!A && <div class="rs-sequence"><p>{n(s.sequence)}</p><button type="button" class="btn btn-secondaire btn-m" data-sequence hidden={r.newsletter}>{s.sequence_cta}</button><span data-sequence-deja hidden={!r.newsletter} class="texte-muet" style="font-size:14px">Inscription à la séquence enregistrée.</span></div>}
         <div class="rs-etats" data-etats hidden>
           <div class="rs-etat-sequence" data-etat-guide hidden>Le guide est parti. Vérifiez {r.email}. Le lien de téléchargement est valable 7 jours. <a href="#" data-lien-guide target="_blank" rel="noopener">Ouvrir le guide maintenant</a></div>
@@ -154,6 +154,7 @@ const rapport = r ? await lienRapport(envSite, r.id) : null;
   .rs-sequence p { max-width: 60ch; }
   .rs-rapport { margin-bottom: 40px; }
   .rs-guide:has(+ .rs-sequence) { margin-bottom: 24px; }
+  .rs-guide-image { height: auto; aspect-ratio: 953 / 1348; object-fit: cover; background: none; box-shadow: 0 1px 2px rgba(38, 32, 26, .08), 0 6px 16px rgba(38, 32, 26, .12); }
   .rs-rapport .rs-guide-couv { background: var(--avt-klein); border-left: 4px solid var(--avt-terra); }
   .rs-rapport .rs-guide-sous { max-width: 52ch; margin-top: 4px; }
   .rs-etats { margin: 0 var(--marge) 96px; display: flex; flex-direction: column; gap: 14px; max-width: 560px; }
