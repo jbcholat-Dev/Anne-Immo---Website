@@ -154,7 +154,7 @@ development_status:
   12-1-nom-de-domaine-acheté-et-dns-chez-cloudflare: in-progress
   12-2-mentions-légales-et-politique-de-confidentialité-validées-pa: backlog
   12-3-propriété-et-transfert: backlog
-  12-4-bascule-en-production: in-progress
+  12-4-bascule-en-production: done
   12-5-critères-de-lancement-vérifiés: in-progress
   12-6-revue-complète-avant-ouverture: done
   12-7-aperçu-permanent-après-le-lancement: done
