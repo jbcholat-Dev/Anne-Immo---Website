@@ -21,6 +21,8 @@ Depuis la bascule (story 12.4, `LANCEMENT=oui`), la branche `main` est construit
 - Construction Cloudflare de la branche `apercu` (2026-10-11, build `a225dbf0`) : réussie, journal « lancement : aperçu (branche apercu), configuration inchangée », base `anne-leads-apercu`, alias `https://apercu-anne-vial-tissot-site.jbcholat.workers.dev`.
 - Sans code, cette adresse renvoie vers l'écran de connexion Cloudflare Access (302), comme l'ancien aperçu.
 
+- PR n° 131 fusionnée par JB le 2026-10-11 : le programme « Aperçu » a aussitôt recopié `main` dans `apercu` (les deux branches pointent sur `884f3ee`).
+
 ## Ce qui reste
 
-- Vérifier, après la fusion de cette PR, que la fusion suivante dans `main` met bien `apercu` à jour.
+Rien. Story close le 2026-10-11.
