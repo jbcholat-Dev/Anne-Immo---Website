@@ -3,136 +3,67 @@ etape: 6
 delai_jours: 15
 sujet: "[Prénom], on fait le point ?"
 angle: récapitulatif et proposition de rendez-vous
-statut: brouillon
+statut: publie
 ---
 
 Bonjour [Prénom],
 
-Ça fait maintenant 15 jours qu'on échange.
+Cela fait maintenant quinze jours qu'on échange.
 
-Vous avez reçu :
-
-- Votre diagnostic personnalisé (score [XX]/100)
-- Le guide des 10 erreurs fatales
-- La checklist 25 points
-- 6 focus détaillés (visibilité, pricing, qualification, dossier admin, KPIs, stratégie)
-
-**Question : où en êtes-vous ?**
+Vous avez reçu votre diagnostic, le guide des 10 erreurs et quatre e-mails : la présentation, le prix, les visites, le dossier administratif.
 
 ## Si vous avez avancé
 
-Bravo. Vous êtes sur la bonne voie.
+Bravo. Continuez, regardez vos chiffres toutes les deux semaines (vues de l'annonce, demandes, visites, offres) et ajustez.
 
-Si vous avez appliqué ne serait-ce que 50% de ce que je vous ai partagé, vous êtes déjà dans le top 20% des vendeurs les mieux préparés.
-
-Continuez. Suivez vos KPIs. Ajustez toutes les 2 semaines.
-
-Et si vous avez besoin d'un coup de main sur un point précis, répondez à cet email. Je suis là.
+Si vous avez besoin d'un coup de main sur un point précis, répondez à cet e-mail.
 
 ## Si vous êtes bloqué
 
-Je comprends.
+Vendre un bien demande du temps, de l'énergie et de l'expertise, et on n'a pas toujours tout cela sous la main.
 
-Vendre un bien, c'est un projet complexe. Ça demande du temps, de l'énergie, et de l'expertise.
+C'est pour ces vendeurs-là que je propose un accompagnement complet, de l'estimation jusqu'à la signature.
 
-Et parfois, on n'a juste pas tout ça sous la main.
+## Ce que comprend mon accompagnement
 
-C'est normal.
+### 1. Le prix et la stratégie
 
-**C'est exactement pour ça que j'ai créé le "Pack Mise en Marché Premium".**
+- Analyse des ventes réelles comparables et connaissance du terrain
+- Un prix que l'on peut justifier à chaque acheteur
+- Un plan de mise en vente adapté à votre bien
 
-## 📦 Le Pack Mise en Marché Premium
+### 2. La présentation et la mise en marché
 
-C'est mon accompagnement complet pour les vendeurs qui veulent :
+- Préparation du bien, désencombrement si besoin
+- Photos, vidéo, visite virtuelle et vues au drone par un professionnel
+- Annonce rédigée et diffusée sur les portails, et auprès du réseau eXp
 
-- Vendre vite (sous 90 jours)
-- Au bon prix (pas de bradage)
-- Sans stress (je gère tout)
+### 3. Le suivi jusqu'à la signature
 
-**Ce qui est inclus :**
+- Filtrage des acheteurs avant chaque visite
+- Organisation des visites et retours réguliers
+- Constitution du dossier administratif, vérifications en mairie
+- Coordination avec le notaire et les courtiers
+- Négociation et suivi jusqu'à l'acte
 
-### ✅ Étape 1 : Estimation & Stratégie (Semaine 1)
+Des exemples concrets, vente par vente : https://annevialtissot.fr/realisation
 
-- Analyse DVF complète (10-15 comparables)
-- Expertise locale terrain
-- Stratégie de pricing optimale
-- Roadmap de vente sur-mesure
+## On en parle ?
 
-### ✅ Étape 2 : Production & Mise en Marché (Semaine 2-3)
+Je vous propose un rendez-vous de 30 minutes, gratuit et sans engagement :
 
-- Shooting photo pro (15-20 clichés HDR)
-- Vidéo de présentation (optionnel)
-- Plan 2D coté
-- Rédaction annonce optimisée
-- Diffusion sur 10+ plateformes
-- Dossier de présentation imprimé
+- un regard sur votre annonce actuelle, si elle est en ligne ;
+- les points forts et les points faibles de votre bien ;
+- les prochaines étapes, que vous vendiez seul ou avec moi.
 
-### ✅ Étape 3 : Gestion Opérationnelle (Jusqu'à la signature)
+**Réservez ici : https://annevialtissot.fr/contact**
 
-- Qualification systématique des acquéreurs (script + process)
-- Coordination visites
-- Coordination courtiers pour pré-qualification financière
-- Suivi KPIs hebdomadaire + ajustements
-- Constitution dossier administratif complet
-- Vérification urbanisme (mairie)
-- Coordination notaire
-- Négociation
-- Sécurisation jusqu'à la signature
-
-**Résultat : vous gagnez 30-40h de votre temps + vous maximisez votre prix de vente + vous dormez tranquille.**
-
-## 🎁 Offre spéciale : Audit gratuit
-
-Vous avez terminé le diagnostic il y a 15 jours.
-
-Si vous réservez un rendez-vous stratégique dans les **7 prochains jours**, je vous offre :
-
-**✅ Un audit complet gratuit de 45 minutes**
-
-Au programme :
-
-- Analyse de votre annonce actuelle (si déjà en ligne)
-- Estimation flash de votre bien
-- Diagnostic de votre stratégie actuelle
-- Plan d'action personnalisé
-- Réponses à toutes vos questions
-
-**Sans engagement. Sans pression.**
-
-Juste un échange honnête pour voir si on peut travailler ensemble.
-
-**Réservez votre audit gratuit ici : [lien]**
-
-*(Offre valable jusqu'au [Date + 7 jours])*
-
-## 📞 Dernier appel
-
-Vous avez deux options :
-
-**Option 1 : Vous continuez seul(e)**
-
-Vous avez toutes les ressources. Vous appliquez. Vous ajustez. Ça peut marcher.
-
-Je vous souhaite une excellente vente.
-
-**Option 2 : On travaille ensemble**
-
-Vous déléguez. Je gère tout. Vous signez dans 60-90 jours.
-
-Réservez votre audit gratuit : [lien]
-
----
-
-C'est le dernier email de cette séquence.
-
-Merci de m'avoir lue jusqu'ici.
+C'est le dernier e-mail de cette série. Merci de m'avoir lue jusqu'ici.
 
 Quelle que soit votre décision, je vous souhaite une vente rapide et au bon prix.
 
-À très bientôt (j'espère),
-
 **Anne Vial-Tissot**
 
-Experte Immobilière Léman & Chablais
+Experte immobilière Léman & Chablais
 
-P.S. : Même si vous ne réservez pas d'audit, répondez-moi pour me dire où vous en êtes. J'aime savoir si mes conseils ont été utiles. 😊
+P.S. : Même si vous ne réservez pas, répondez-moi pour me dire où vous en êtes. J'aime savoir si ces conseils vous ont été utiles.

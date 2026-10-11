@@ -148,8 +148,8 @@ development_status:
   12-1-nom-de-domaine-acheté-et-dns-chez-cloudflare: in-progress
   12-2-mentions-légales-et-politique-de-confidentialité-validées-pa: backlog
   12-3-propriété-et-transfert: backlog
-  12-4-bascule-en-production: backlog
-  12-5-critères-de-lancement-vérifiés: backlog
+  12-4-bascule-en-production: in-progress
+  12-5-critères-de-lancement-vérifiés: in-progress
   epic-12-retrospective: optional
 
   epic-13: in-progress

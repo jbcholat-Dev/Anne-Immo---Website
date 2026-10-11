@@ -50,7 +50,7 @@ Navigation (D-2, D-6 A, D-17, D-21, D-28) : réseaux · symbole seul | Accueil �
 
 **Réel** : **la vidéo d'ouverture A-01** (montage d'Anne, 52 s depuis le 2026-10-05, en boucle, sans son ; son poster = sa première image, D-27 — voir § Vidéo d'ouverture) ; les 3 récits d'Anne (Thonon, Armoy, Allinges) et leurs 13 photos ; la note 5/5 et les 18 avis Immodvisor (`instantane.md`, avis cités tels quels, jamais corrigés) ; les textes d'À propos, de la méthode, du diagnostic (libellés live + barème + 9 feedbacks) ; les logos et lockups eXp du design system.
 
-**Blocs réservés « Actif attendu »** (galet, dimensions réelles, jamais un trou) : A-02 photos des trois ventes « à venir » de la pile (Sciez, Essert-Romand, Anthy — ventes réelles du registre sans story rédigée) · A-04 portrait (accueil, À propos, landing ; remplacé par la photo dès qu'elle est mise dans l'espace d'édition, story 7.16) · A-05 Anne en situation · A-07 témoignages de story quand aucun avis n'est relié · A-10 couverture du guide · A-13 RSAC, carte pro, coordonnées (l'hébergeur, Cloudflare, est renseigné depuis le 2026-10-04) (`src/config/site.ts`, `identite`) · A-15 vidéo méthode (bloc absent, D-12).
+**Blocs réservés « Actif attendu »** (galet, dimensions réelles, jamais un trou) : A-02 photos des trois ventes « à venir » de la pile (Sciez, Essert-Romand, Anthy — ventes réelles du registre sans story rédigée) · A-04 portrait (accueil, À propos, landing ; remplacé par la photo dès qu'elle est mise dans l'espace d'édition, story 7.16) · A-05 Anne en situation · A-07 témoignages de story quand aucun avis n'est relié · A-10 couverture du guide (remplacé depuis le 2026-10-10 par l'image de la couverture du PDF, `public/img/guide-couverture.jpg`, refaite par `scripts/guide-pdf.mjs`) · A-13 RSAC, carte pro, coordonnées (l'hébergeur, Cloudflare, est renseigné depuis le 2026-10-04) (`src/config/site.ts`, `identite`) · A-15 vidéo méthode (bloc absent, D-12).
 
 **Textes marqués « Point ouvert » / « Contenu à écrire par Anne »** (pastille terra-deep, comme dans la maquette) : Acheter (D-5), section Cible (point ouvert 1), champs de l'estimation (point ouvert 2). À retirer avec le contenu définitif.
 
@@ -64,7 +64,7 @@ Tous dans `src/config/site.ts` :
 - **Cartes 4-6 de la pile** : Sciez villa 2025, Essert-Romand chalet 2026, Anthy T3 2024 (registre `_suivi-stories.md`), photo réservée, citation de l'avis rapproché quand la confiance est « forte ».
 - **Phrase d'Anne par carte** (`phrasesStories`) : extraite telle quelle du récit.
 - **Stories affichées malgré `statut: brouillon`** sur l'aperçu, pour que JB voie le site plein ; le site public filtre sur `statut === 'publie'` (`stories()` dans `src/lib/contenu.ts`). Reste à obtenir la version sans logo eXp des photos d'Essert-Romand.
-- **Réseaux sociaux** : URLs des profils inconnues → liens vers les plateformes en attendant (`reseaux`).
+- **Réseaux sociaux** : un réseau sans adresse de profil n'est affiché nulle part (`reseaux`, depuis le 2026-10-10 ; avant, un lien vers la plateforme le remplaçait).
 
 ## Diagnostic — règles appliquées
 
@@ -92,6 +92,10 @@ Chaque endroit est marqué `TODO(backend)` dans le code (`grep -rn "TODO(backend
 ## Mise en ligne (story 9.2)
 
 Cloudflare Workers Builds : dossier racine `site`, construction `npm ci && npm run build`, mise en ligne `npx wrangler deploy` (branche `main`) et `npx wrangler versions upload` (autres branches). Depuis la story 10.2, `npm run build` se termine par `scripts/migrations-ci.mjs`, qui applique les migrations de la base quand la construction tourne chez Cloudflare (`WORKERS_CI=1`), et ne fait rien en local. Tant que le réglage de construction `PUBLIC_INDEXATION` ne vaut pas `oui`, toutes les pages portent `noindex, nofollow` et `robots.txt` interdit tout : c'est l'aperçu. La production passe ce réglage à `oui` (story 12.4). Voir `.env.example`.
+
+**Lancement (stories 12.4 et 12.5)** : `npm run build` lance `scripts/lancement.mjs` avant `astro build`. Chez Cloudflare, sur la branche `main` et seulement si la variable de construction `LANCEMENT` vaut `oui`, il bascule la configuration en production (base `anne-leads`, `ENVIRONNEMENT=production`, `URL_SITE=https://annevialtissot.fr`) et écrit `PUBLIC_INDEXATION=oui` dans `.env.production` (jamais committé). Toute autre branche reste un aperçu. Essai : `node scripts/lancement.mjs --essai`. Pas-à-pas : RUNBOOK § 4.
+
+**Site public** (`sitePublic`, `src/config/site.ts`) : les marques « Point ouvert » / « Contenu à écrire par Anne », les blocs réservés A-05 et A-07, les cartes « à venir » de la pile et le bouton « Un retour ? » ne s'affichent que sur l'aperçu.
 
 ## Noyau serveur et base des leads (story 10.2)
 
@@ -142,7 +146,7 @@ Sur `/contact`, le bouton « Voir les créneaux d'Anne » charge l'agenda de Cal
 ## Guide et séquence (story 10.5)
 
 - **Ce que voit le prospect** : sur `/guide`, après l'envoi, « Le lien de téléchargement est dans votre boîte, valable 7 jours » et un bouton « Ouvrir le guide maintenant ». Sur les résultats du diagnostic, le bouton du guide envoie le guide sans quitter la page (« Le guide est parti »), et le bouton de la séquence affiche « Séquence de N e-mails confirmée. Le premier arrive dans X jours. » (N et X lus dans les textes d'Anne, pas en dur).
-- **PDF** : `prive/guide.pdf`, hors de `public/` (aucune adresse publique), embarqué dans le Worker à la construction (`?inline`). Fabriqué par `node scripts/guide-pdf.mjs` depuis `contenu-anne/guide/texte-actuel.md`, aux polices et au logo de la charte ; marqué « version provisoire » tant que `contenu-anne/guide/guide.md` n'est pas en `statut: publie`. À relancer après chaque correction du texte.
+- **PDF** : `prive/guide.pdf`, hors de `public/` (aucune adresse publique), embarqué dans le Worker à la construction (`?inline`). Fabriqué par `node scripts/guide-pdf.mjs` depuis `contenu-anne/guide/texte-actuel.md`, aux polices et au logo de la charte ; une erreur par page, dans l'ordre des questions du diagnostic (erreur n° N = question qN, `AXE_ERREUR` dans le script, à tenir alignée sur `contenu-anne/guide/rapport-diagnostic.md`), sources en dernière page ; marqué « version provisoire » tant que `contenu-anne/guide/guide.md` n'est pas en `statut: publie`. À relancer après chaque correction du texte.
 - **Lien signé** (`src/server/liens.ts`) : `/api/guide/telecharger?l=<lead>&e=<expiration>&s=<empreinte>`, empreinte HMAC SHA-256 (calcul avec le secret `LIEN_SECRET` qui rend le lien impossible à deviner ou à modifier), valable 7 jours. Lien faux, périmé ou lead inconnu : 404 « Ce lien n'est plus valable ». Sans secret, aucun lien n'est produit (les e-mails partent sans lien).
 - **E-mails** : demande depuis `/guide` → `confirm_prospect` porte le lien. Bouton des résultats → `POST /api/diagnostic/guide` (navigateur des résultats seulement) écrit une ligne `guide`. Le résumé de la sortie B porte aussi le lien.
 - **Séquence** (`src/server/sequence.ts`) : les textes d'Anne `contenu-anne/guide/sequence-emails/etape-1` à `etape-6` (l'étape 0 est le résumé déjà envoyé). À l'inscription (case de `/guide`, case du gate ou bouton des résultats), une ligne `sequence:<n>` par étape, à envoyer à inscription + `delai_jours`. La tâche planifiée (toutes les 15 minutes, `worker.ts`) envoie celles qui sont arrivées à échéance, dans la langue du lead ; une étape retirée entre-temps est annulée.
@@ -176,6 +180,7 @@ Charte v3 (D-31, 2026-10-08) : Gilda Display (titres, une seule graisse) et Jost
 
 ## Écarts assumés avec la maquette / les briefs
 
+- **Mentions légales au lancement** (story 12.5, 2026-10-10) : la carte professionnelle affichée est la carte T d'eXp Global France, sous laquelle Anne exerce, avec l'assurance RCP du réseau ; le numéro d'attestation d'habilitation d'Anne (`identite.attestation`) sera ajouté quand elle l'aura retrouvé, il ne bloque pas la construction.
 - **Contenu limité à 1312 px sur grand écran** (D-36, ticket n° 65) : la maquette est dessinée à 1440 px ; au-delà, la marge latérale grandit au lieu du contenu, pour que les cartes ne s'étirent pas sur un écran de 1920 px ou plus.
 - **Landing du diagnostic** (story 5.4, D-38) : l'image de l'offre est un aperçu du rapport en feuille A4 (valeurs d'exemple, marqué « Exemple ») au lieu de la photo d'un bien d'Allinges, et une ligne « Anne Vial-Tissot · conseillère en immobilier, Chablais et Léman » avec son portrait précède le titre. Absents de la maquette ; ajoutés parce que la page sert de destination aux campagnes et qu'un visiteur venu d'une publicité doit voir chez qui il arrive et ce qu'il obtient. Entre 900 et 1 199 px et sur téléphone, la feuille montre moins de recommandations pour ne pas déborder.
 - **Gate du diagnostic sans score** (story 10.4) : la maquette affichait le score sur 100 au-dessus du formulaire ; AD-5 interdit que le résultat existe dans le navigateur avant les coordonnées (c'est le défaut reproché à ScoreApp). Le gate garde son chapeau « Votre diagnostic est prêt » et annonce le score sans le donner.
@@ -197,7 +202,7 @@ Charte v3 (D-31, 2026-10-08) : Gilda Display (titres, une seule graisse) et Jost
 - **Écarts de la story 10.7** : l'espace est à `/gestion` et non `/admin`, déjà pris par l'espace d'édition Sveltia CMS (story 7.13) ; le second facteur exigé (MFA) est le code à usage unique envoyé par e-mail par Access, sans autre facteur (voir RUNBOOK § 4 quinquies pour le renforcer) ; rien n'est effacé chez Resend car le site n'y crée aucun contact ni audience, il n'y fait qu'envoyer des e-mails (Resend garde ses journaux d'envoi selon sa propre politique) ; la purge tourne à chaque passage de la tâche (toutes les 15 minutes) au lieu d'une fois par jour, sans effet visible.
 - **Écarts de la story 10.9** : les polices du site (Gilda Display, Jost) ne s'affichent que dans Apple Mail et sur iPhone, qui les chargent depuis `annevialtissot.fr/fonts/` (autorisé par `public/_headers`) ; Gmail et Outlook ne chargent aucune police extérieure et affichent Arial. Le logo est joint à l'e-mail plutôt qu'appelé depuis le site (l'aperçu est derrière Access, les messageries bloquent les images distantes, et aucun pixel de suivi n'est possible). Allure « lettre sobre » (fond blanc, logo, filet terracotta), choisie par JB le 2026-10-10 parmi trois maquettes.
 - **Écarts de la story 10.10** : rapport en français seulement (le diagnostic l'est aussi). Polices du PDF converties une fois de woff2 en TTF dans `prive/polices/` (pdf-lib ne sait pas réduire une police woff2), licences jointes. Le gabarit est un fichier fabriqué, commité, à refaire quand les textes changent. Fabriquer le PDF demande environ 60 ms de calcul par téléchargement, au-delà des 10 ms du plan Workers gratuit : le plan Workers Paid (action J10) est nécessaire avant le lancement. Worker : 1,19 Mo compressé (limite 3 Mo en gratuit, 10 Mo en payant).
-- Pages légales : textes de structure conformes à AD-16 (finalités, bases légales, 3 ans), **à faire valider par Anne** avant publication ; les valeurs A-13 sont des pastilles « à compléter ».
+- Pages légales : textes de structure conformes à AD-16 (finalités, bases légales, 3 ans), validés pour Anne le 2026-10-10 (accord transmis par JB) ; coordonnées A-13 renseignées dans `src/config/site.ts`.
 
 ## Largeurs intermédiaires (story 8.2)
 
@@ -218,11 +223,14 @@ La maquette dessine 1 440 px (ordinateur) et 390 px (téléphone). Entre 900 et 
 ## Garde-fous de contenu (stories 6.2 et 7.9)
 
 - **Anglais complet ou rien** (AD-2) : `src/i18n/index.ts` fait échouer la construction si `en.json` n'a pas exactement les clés de `fr.json` ou laisse un texte vide, en nommant les clés en cause.
+- **Coordonnées légales** (story 12.5) : le site public ne se construit pas tant qu'une valeur A-13 de `identite` manque (`rsac`, `greffe`, `cartePro`, `adresse`, `telephone`, `email`, `src/config/site.ts`). Sur l'aperçu, elles s'affichent en pastilles « à compléter ».
 - **Plus de vérification d'autorisation dans le code** (décision de JB du 2026-10-05, story 7.14) : les clients des ventes actuelles ont donné leur accord ; « publie » suffit. Le champ `autorisations` des anciennes fiches est toléré mais ignoré.
 - **Témoignage d'une vente = son avis Immodvisor** (story 7.14) : la fiche affiche les avis dont le champ `story` désigne la vente, vendeur d'abord, cités tels quels. La liste `temoignages` de l'en-tête n'est plus proposée dans l'espace d'édition ; si une citation y est écrite à la main, elle passe avant l'avis.
 - Ce qu'Anne doit fournir est listé dans `contenu-anne/A-FOURNIR.md`.
 
 ## Vérification faite (voir `.verif/`)
+
+Story 12.5 (préparation du lancement) : `npm run build` sans erreur · `npm run check` : 0 erreur · `node scripts/liens.mjs` : 26 pages, 1301 liens, 0 cassé · construction de production simulée (`WORKERS_CI=1 WORKERS_CI_BRANCH=main LANCEMENT=oui`) : refusée sans coordonnées, réussie avec des valeurs fictives, aucune marque de travail ni `noindex` dans les pages publiques · `node scripts/verif.mjs --pages=/,/guide,/a-propos,/realisation` en mode public : aucune erreur console.
 
 Story 10.10 : `node scripts/e2e-rapport.mjs` : 23 constats bons (dont aucun texte superposé) (deux vendeurs, profil à risque sortie B et profil préparé sortie A, PDF de 8 pages lus) · `e2e-diagnostic` 31, `e2e-guide` 38, `e2e-formulaires` 25 : tous bons · `maquette-emails` : tous bons · `npm run check` : 0 erreur · `node scripts/liens.mjs` : 26 pages, 1661 liens, 0 cassé.
 

@@ -2,6 +2,7 @@
 // 07 À propos (D-11, D-12, D-15) : une page longue à quatre ancres — Qui suis-je ? · Ma méthode · Cible · Réseau eXp — repère collant, sans le bloc vidéo A-15 (absent : pas de trou).
 // Story 8.9 (retours d'Anne n° 58 à 61) : Cible et Réseau eXp lus dans le texte d'Anne (modifiables dans l'espace d'édition), refrain retiré,
 // « Mon engagement » et « Parlons de votre projet » centrés, bouton de rendez-vous sous « Parlons de votre projet ».
+import { sitePublic } from '../config/site';
 import Page from '../layouts/Page.astro';
 import Reserve from '../components/Reserve.astro';
 import Portrait from '../components/Portrait.astro';
@@ -74,13 +75,13 @@ const centre = (t: string) => /engagement|parlons/i.test(t);
         <video controls preload="none" src={video}></video>
       </div>
     )}
-    <div class="ap-methode-tete">
+    <div class="ap-methode-tete" data-seul={sitePublic ? '' : undefined}>
       <div>
         <h2 id="methode-titre">{methode.titre}</h2>
         {methode.sous && <p class="ap-methode-sous">{methode.sous}</p>}
         {methode.intro && <div class="ap-methode-intro ap-md" set:html={methode.intro} />}
       </div>
-      <Reserve label="A-05 · Anne en situation · terrain" class="ap-situation" />
+      {!sitePublic && <Reserve label="A-05 · Anne en situation · terrain" class="ap-situation" />}
     </div>
     <div class="ap-piliers">
       {methode.rangs.map((rg, i) => {
@@ -113,7 +114,7 @@ const centre = (t: string) => /engagement|parlons/i.test(t);
       {cible.intro && <div class="ap-cible-intro ap-md" set:html={cible.intro} />}
       <div class="ap-cibles">{cible.profils.map((b) => <div><h3 class="chapeau">{b.titre}</h3><div class="ap-md" set:html={b.html} /></div>)}</div>
     </> : <>
-      <div class="ap-cible-tete"><h2 id="cible-titre">Cible</h2><span class="marqueur">Point ouvert 1 · contenu à écrire par Anne</span></div>
+      <div class="ap-cible-tete"><h2 id="cible-titre">Cible</h2>{!sitePublic && <span class="marqueur">Point ouvert 1 · contenu à écrire par Anne</span>}</div>
       <p class="ap-cible-intro">Quatre profils qu'Anne accompagne le plus souvent.</p>
       <div class="ap-cibles">{ciblesDefaut.map(([t, x]) => <div><h3 class="chapeau">{t}</h3><p>{x}</p></div>)}</div>
     </>}
@@ -179,6 +180,7 @@ const centre = (t: string) => /engagement|parlons/i.test(t);
   .ap-video { margin: 0 var(--marge); background: var(--avt-galet); border-radius: 16px; padding: 40px 48px; }
   .ap-video video { width: 100%; border-radius: 12px; margin-top: 18px; }
   .ap-methode-tete { padding: 96px var(--marge) 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: end; }
+  .ap-methode-tete[data-seul] { grid-template-columns: minmax(0, 760px); } /* site public sans la photo A-05 */
   .ap-methode-tete h2 { font-size: 64px; line-height: 1.02; margin-bottom: 20px; }
   .ap-methode-sous { font-size: 22px; line-height: 1.4; color: var(--avt-klein); font-weight: 500; margin-bottom: 18px; }
   .ap-methode-intro { font-size: 19px; line-height: 1.6; max-width: 48ch; }

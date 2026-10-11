@@ -3,7 +3,7 @@
 import Page from '../layouts/Page.astro';
 import { avisParId, storyDeAvis, storyVisible, roleLibelle, dateLibelle, paragraphes, phraseDeAvis, instantane } from '../lib/contenu';
 import AvisCarte from '../components/AvisCarte.astro';
-import { acheter } from '../config/site';
+import { acheter, sitePublic } from '../config/site';
 import { r } from '../i18n';
 import { textes, court } from '../lib/textes';
 const inst = await instantane();
@@ -13,7 +13,7 @@ const x = await textes('acheter');
 ---
 <Page titre={`${x.titre} — Anne VIAL-TISSOT`} description={x.description} courante="acheter">
   <div class="ac-tete">
-    <div class="ac-tete-rang"><h1>{x.titre}</h1><span class="marqueur">Contenu à écrire par Anne</span></div>
+    <div class="ac-tete-rang"><h1>{x.titre}</h1>{!sitePublic && <span class="marqueur">Contenu à écrire par Anne</span>}</div>
     <p class="seulement-desktop">{x.intro}</p>
     <p class="seulement-mobile">{court(x.intro_court, x.intro)}</p>
     <a href={`${r('contact')}?projet=achat#ecrire`} class="btn btn-primaire seulement-mobile ac-cta-haut">{x.bouton}</a>

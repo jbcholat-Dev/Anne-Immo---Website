@@ -3,7 +3,6 @@
 // Story 10.5 : la demande est enregistrée, Anne est prévenue et le prospect reçoit un lien signé valable 7 jours (48 heures dans
 // la maquette, 7 jours par AD-8), aussi affiché dans la confirmation. La case « séquence » annonce le nombre réel d'e-mails.
 import Page from '../layouts/Page.astro';
-import Reserve from '../components/Reserve.astro';
 import Case from '../components/Case.astro';
 import ChampPiege from '../components/ChampPiege.astro';
 import { NOMBRE_ETAPES } from '../server/sequence';
@@ -11,9 +10,9 @@ const erreurs = ['Le prix fixé sans comparables', 'Le dossier incomplet au comp
 ---
 <Page titre="Le guide — Les 10 erreurs fatales des vendeurs particuliers — Anne VIAL-TISSOT" description="Un guide court pour vendre sans mauvaise surprise, écrit par Anne. Envoyé par e-mail." courante="guide">
   <div class="g-corps">
-    <Reserve label="A-10 · couverture du guide rebrandé · A4" class="g-couv" />
+    <img src="/img/guide-couverture.jpg" alt="Couverture du guide « Les 10 erreurs fatales des vendeurs particuliers »" class="g-couv" width="953" height="1348" loading="eager" />
     <div class="g-texte">
-      <div class="g-tete-m seulement-mobile"><Reserve label="A-10 couverture" class="g-couv-m" /><div><h1>Les 10 erreurs fatales des vendeurs particuliers</h1><p class="g-intro">Un guide court pour vendre sans mauvaise surprise.</p></div></div>
+      <div class="g-tete-m seulement-mobile"><img src="/img/guide-couverture.jpg" alt="" class="g-couv-m" width="953" height="1348" /><div><h1>Les 10 erreurs fatales des vendeurs particuliers</h1><p class="g-intro">Un guide court pour vendre sans mauvaise surprise.</p></div></div>
       <h1 class="seulement-desktop">Les 10 erreurs fatales des vendeurs particuliers</h1>
       <p class="g-intro seulement-desktop">Un guide court pour vendre sans mauvaise surprise, écrit par Anne.</p>
       <ul>{erreurs.map((e) => <li>{e}</li>)}</ul>
@@ -47,7 +46,7 @@ const erreurs = ['Le prix fixé sans comparables', 'Le dossier incomplet au comp
 </Page>
 <style>
   .g-corps { padding: 80px var(--marge) 96px; display: grid; grid-template-columns: 420px 1fr 480px; gap: 72px; align-items: start; }
-  .g-corps :global(.g-couv) { height: 560px; border-radius: 6px; }
+  .g-corps :global(.g-couv) { width: 100%; height: auto; border-radius: 6px; box-shadow: 0 1px 2px rgba(38, 32, 26, .08), 0 12px 32px rgba(38, 32, 26, .12); } /* A-10 : couverture du PDF (scripts/guide-pdf.mjs) */
   .g-texte h1 { font-size: 56px; line-height: 1.05; margin-bottom: 20px; }
   .g-intro { font-size: 17px; line-height: 1.6; margin-bottom: 24px; max-width: 44ch; }
   .g-texte ul { padding-left: 20px; font-size: 16px; line-height: 1.7; display: flex; flex-direction: column; gap: 4px; }
@@ -66,7 +65,6 @@ const erreurs = ['Le prix fixé sans comparables', 'Le dossier incomplet au comp
   /* Largeurs intermédiaires (900 à 1399 px, sans artboard) : colonnes proportionnelles, sinon le texte déborde (story 8.2) */
   @media (min-width: 900px) and (max-width: 1399px) {
     .g-corps { grid-template-columns: minmax(0, 280px) minmax(0, 1fr) minmax(0, 400px); gap: 48px; }
-    .g-corps :global(.g-couv) { height: 380px; }
     .g-texte h1 { font-size: 44px; }
   }
   @media (min-width: 900px) and (max-width: 1099px) {
@@ -79,7 +77,7 @@ const erreurs = ['Le prix fixé sans comparables', 'Le dossier incomplet au comp
     .g-corps > :global(.g-couv) { display: none; }
     .g-texte { padding: 0 var(--marge-m); }
     .g-tete-m { display: flex; gap: 18px; align-items: flex-start; margin-bottom: 20px; }
-    .g-tete-m :global(.g-couv-m) { width: 110px; height: 150px; flex: none; border-radius: 4px; font-size: 9px; padding: 8px; }
+    .g-tete-m :global(.g-couv-m) { width: 110px; height: auto; flex: none; border-radius: 4px; box-shadow: 0 6px 16px rgba(38, 32, 26, .14); }
     .g-texte h1 { font-size: 30px; line-height: 1.08; margin-bottom: 10px; }
     .g-intro { font-size: 14.5px; margin-bottom: 0; }
     .g-texte ul { margin: 0 0 28px; font-size: 15px; }
