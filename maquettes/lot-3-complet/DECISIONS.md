@@ -111,6 +111,12 @@ La nav passe de 4 entrées + bouton à **5 entrées (À propos ▾ · Réalisati
 |---|---|---|---|
 | D-42 | **Barre de navigation en verre et portrait de magazine sur l'accueil.** Des deux essais (PR #76 et #79), JB ne garde que ces deux éléments ; le reste des essais n'est pas retenu. Barre : une gélule de verre dépoli clair (flou + saturation, liseré lumineux) qui flotte à 14 px du haut et 24 px des bords (10 et 12 px sur téléphone), fumée sur la vidéo d'accueil, pleine si le visiteur a demandé de réduire la transparence ; remplace la barre pleine largeur écru (et sa version réduite « écru 86 % + flou »). Portrait : sur-titre « Portrait » sur un filet, photo tirée sur papier (bord blanc cassé, ombre) penchée de 1,5°, langues d'Anne écrites à la main sous la photo (police Caveat, OFL, réduite aux majuscules, 24 Ko), lettrine terracotta, lien fléché. Ce qu'on perd : une police de plus à charger sur l'accueil, et le bord net de la barre pleine largeur. | ✅ | `site/src/components/Nav.astro` · `site/src/components/accueil/Anne.astro` · `site/src/styles/global.css` · `design-system/` à compléter (composant barre) · story 8.14. |
 
+## Décision du 2026-10-11 (JB, ticket n° 116 — story 8.18)
+
+| # | Décision | Statut | À propager |
+|---|---|---|---|
+| D-44 | **Barre de navigation compacte sur ordinateur.** La gélule de verre (D-42) ne traverse plus l'écran : elle est centrée et prend la largeur de son contenu (640 px), dans l'ordre symbole · filet · Accueil · À propos ▾ · Réalisations · Vendre · Acheter · FR EN · **Contact** en pastille bleue Klein. Les icônes des réseaux sortent de la barre (remplace D-6 variante A) ; elles restent dans le pied de page et dans le menu du téléphone. Téléphone inchangé. Raison : sur un écran de 1 920 px, la barre pleine largeur laissait un grand vide au milieu. Ce qu'on perd : les réseaux d'Anne ne sont plus visibles en haut de page sur ordinateur (c'était sa demande, D-6). | ✅ | `site/src/components/Nav.astro` · story 8.18 · `design-system/` (composant barre, avec D-42). |
+
 ## Pages — état de validation
 
 | Page | Desktop | Mobile | Commentaire |
