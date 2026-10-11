@@ -7,8 +7,8 @@ role: vendeur                  # vendeur (« Mise en vente ») | acheteur (« Ac
 titre: "Excellente qualité de service"
 vente_candidate: appartement-cascade-2024      # vente rapprochée (registre : stories/_suivi-stories.md § Ventes photographiées) — proposition de Claude
 dossier_photos: "THONON_VALCIC_T3"
-confiance: moyenne               # forte | moyenne | faible | aucun
-indice: "« Projet vente et achat d'un bien », famille ; initiale V ↔ VALCIC, dont la story est justement une vente et un achat synchronisés (suivi : VALCIC BLIEZ + RABIER VALCIC)."
+confiance: forte               # forte | moyenne | faible | aucun
+indice: "Correspondance de JB du 2026-10-11 : VALCIC, vendeuse de l'appartement T3 de Thonon."
 story: appartement-cascade-2024   # la vente confirmée par Anne (slug) — seul champ lu par le site
 phrase: "Elle est une professionnelle de qualité, qui traite l'entier du dossier avec sérieux et rigueur durant toutes les étapes du projet."   # phrase mise en avant, recopiée mot pour mot de l'avis (story 8.10)
 retenu: false               # true = cité en entier dans « Ils ont travaillé avec Anne »
