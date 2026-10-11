@@ -62,7 +62,8 @@ export const acheter = { avis: ['2024-09-09-rhl-achat', '2026-08-24-jamesw'] };
 export const phrasesStories: Record<string, string> = {
   'appartement-cascade-2024': "De plusieurs mois sans offre à une vente en cascade réussie. C'est une question de stratégie commerciale, puis d'orchestration complexe.",
   'auberge-decoupee-2024': "Ne pas chercher l'acheteur, mais créer les conditions stratégiques pour qu'il existe.",
-  'maison-premium-2025': "Avec tous ces services, le prix a été repositionné. Non pas baissé — justifié maintenant par une stratégie complète.",
+  // Revue du 2026-10-11 (story 12.6) : l'ancienne phrase (« le prix a été repositionné. Non pas baissé ») n'est plus dans le récit, qui dit l'inverse.
+  'maison-premium-2025': "Au lieu d'attendre que l'objection paralyse, nous l'avons anticipée.",
 };
 
 /** Accroche courte par story pour l'index Réalisation (dérivée de la particularité du front matter). */
