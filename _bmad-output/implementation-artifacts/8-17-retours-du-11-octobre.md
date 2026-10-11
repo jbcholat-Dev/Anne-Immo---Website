@@ -1,7 +1,7 @@
 ---
 story: 8.17
 epic: 8 — Structure et visuel
-statut: review
+statut: done
 date: 2026-10-11
 ---
 
@@ -27,5 +27,4 @@ Le quatrième ticket du lot (n° 116, barre de navigation plus compacte sur gran
 - Captures : `/mnt/project-files/tickets/avis-114/` (Acheter ordinateur et téléphone) et `/mnt/project-files/tickets/resultats-117/`.
 
 ## Ce qui reste
-- Accord de JB et fusion de la PR ; fermer les tickets n° 114, 115 et 117 en citant le commit.
-- La sortie A du diagnostic dit « un expert qui optimise les derniers 10 % » : texte d'Anne, gardé ; question posée à JB.
+Rien. PR n° 118 fusionnée par JB le 2026-10-11 (commit e3e8f21) ; tickets n° 114, 115 et 117 fermés avec un commentaire citant le commit. La phrase « les derniers 10 % » est gardée (décision de JB du 2026-10-11).
