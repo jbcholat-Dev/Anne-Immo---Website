@@ -3,7 +3,7 @@
 import Page from '../layouts/Page.astro';
 import { avisParId, storyDeAvis, storyVisible, roleLibelle, dateLibelle, paragraphes, phraseDeAvis, instantane } from '../lib/contenu';
 import AvisCarte from '../components/AvisCarte.astro';
-import { acheter, sitePublic } from '../config/site';
+import { acheter } from '../config/site';
 import { r } from '../i18n';
 import { textes, court } from '../lib/textes';
 const inst = await instantane();
@@ -13,7 +13,7 @@ const x = await textes('acheter');
 ---
 <Page titre={`${x.titre} — Anne VIAL-TISSOT`} description={x.description} courante="acheter">
   <div class="ac-tete">
-    <div class="ac-tete-rang"><h1>{x.titre}</h1>{!sitePublic && <span class="marqueur">Contenu à écrire par Anne</span>}</div>
+    <div class="ac-tete-rang"><h1>{x.titre}</h1></div>
     <p class="seulement-desktop">{x.intro}</p>
     <p class="seulement-mobile">{court(x.intro_court, x.intro)}</p>
     <a href={`${r('contact')}?projet=achat#ecrire`} class="btn btn-primaire seulement-mobile ac-cta-haut">{x.bouton}</a>
@@ -67,7 +67,7 @@ const x = await textes('acheter');
   .ac-avis { padding: 96px var(--marge) 0; }
   .ac-avis h2 { font-size: 40px; margin-bottom: 10px; }
   .ac-avis-intro { font-size: 15px; color: var(--avt-text-muted); margin-bottom: 40px; max-width: 64ch; }
-  .ac-avis-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
+  .ac-avis-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: stretch; }
   .ac-avis-lien { margin-top: 10px; font-size: 14.5px; }
   .ac-avis-tous { margin-top: 32px; font-size: 13.5px; }
   .ac-cta { padding: 56px var(--marge) 96px; }

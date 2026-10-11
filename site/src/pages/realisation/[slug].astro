@@ -1,6 +1,5 @@
 ---
 // 06 Story — fiche d'une vente : photo maîtresse, contexte, récit d'Anne, témoignages (vendeur / acheteur, rôle affiché), galerie, CTA.
-import { sitePublic } from '../../config/site';
 import Page from '../../layouts/Page.astro';
 import Picture from '../../components/Picture.astro';
 import { image } from '../../lib/images';
@@ -25,7 +24,7 @@ const vues = [principale, ...secondaires].filter((p) => p && image(p.cle)).map((
   return { src: img.webp.at(-1)?.src ?? img.jpg, l: img.largeur, h: img.hauteur };
 });
 const decalage = principale && image(principale.cle) ? 1 : 0;
-// Témoignages : ceux du front matter (A-07) d'abord ; sinon les avis Immodvisor reliés (v1) ; sinon bloc réservé.
+// Témoignages : ceux du front matter (A-07) d'abord ; sinon les avis Immodvisor reliés (v1) ; sinon rien (story 8.17, ticket n° 115 : plus de bloc réservé).
 const propres = story.data.temoignages.filter((t) => t.citation);
 const avis = propres.length ? [] : await avisDeStory(story.id);
 const temoignages = propres.length
@@ -56,13 +55,14 @@ const alt = `${story.data.type_bien} vendu à ${story.data.commune}`;
       </div>
       <h2 class="chapeau">Le récit d'Anne</h2>
       <div class="recit"><Content /></div>
-      <h2 class="chapeau">{titreTemoignages}</h2>
-      <div class="temoignages">
-        {temoignages.length === 0 && !sitePublic && <Reserve label="Actif attendu A-07 · témoignage, cité et attribué (vendeur ou acheteur)" style="height:160px" />}
-        {temoignages.map((t) => (
-          <AvisCarte taille="grande" phrase={t.phrase} texte={t.texte} lignes={8}>{t.prenom}{' '}<span class="texte-muet">· {t.role}{t.source && ` · ${t.source}`}</span></AvisCarte>
-        ))}
-      </div>
+      {temoignages.length > 0 && <>
+        <h2 class="chapeau">{titreTemoignages}</h2>
+        <div class="temoignages">
+          {temoignages.map((t) => (
+            <AvisCarte taille="grande" phrase={t.phrase} texte={t.texte} lignes={8}>{t.prenom}{' '}<span class="texte-muet">· {t.role}{t.source && ` · ${t.source}`}</span></AvisCarte>
+          ))}
+        </div>
+      </>}
     </div>
   </div>
   {secondaires.length > 0 && (
