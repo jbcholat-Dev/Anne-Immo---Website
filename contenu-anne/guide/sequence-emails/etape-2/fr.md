@@ -1,113 +1,66 @@
 ---
 etape: 2
 delai_jours: 4
-sujet: "L'erreur à 50 000€ que font 80% des vendeurs"
-angle: prix : analyse des ventes réelles (DVF), cas Armoy
-statut: brouillon
+sujet: "Le prix : l'erreur qui coûte le plus cher"
+angle: prix fondé sur les ventes réelles (DVF), cas réel d'Essert-Romand
+statut: publie
 ---
 
 Bonjour [Prénom],
 
-Aujourd'hui, on parle de l'erreur la plus coûteuse que font les vendeurs particuliers.
+Aujourd'hui, on parle de l'erreur la plus coûteuse pour un vendeur : un prix qu'on ne sait pas justifier.
 
-Celle qui peut vous faire perdre **50 000€ sans même que vous vous en rendiez compte.**
+## Le problème : un prix fixé « au feeling »
 
-L'erreur de pricing.
+Vous reconnaîtrez peut-être l'un de ces raisonnements :
 
-## Le problème : vous fixez votre prix "au feeling"
+- « J'ai acheté 300 000 € il y a cinq ans, j'ai fait des travaux, je vends 400 000 €. »
+- « Mon voisin a vendu 450 000 €, je mets 460 000 €. »
+- « L'estimation en ligne dit entre 380 000 et 420 000 €, je mets 440 000 € pour avoir de la marge. »
 
-Voici comment 80% des vendeurs fixent leur prix :
+Aucun ne part de ce que les acheteurs ont réellement payé pour des biens comparables.
 
-- "J'ai acheté 300K il y a 5 ans, je vends 400K"
-- "Mon voisin a vendu 450K, je mets 460K"
-- "L'estimateur en ligne dit 380-420K, je mets 440K pour avoir de la marge"
+## Ce qui se passe quand le prix est trop haut
 
-**Ces 3 méthodes sont des catastrophes.**
+Les acheteurs qui ont le budget de votre bien ne le voient pas : ils filtrent les annonces par prix. Ceux qui le voient le comparent à des biens mieux placés ou mieux équipés au même prix.
 
-Pourquoi ?
+Résultat : peu ou pas de visites. Les semaines passent, l'annonce vieillit, et les acheteurs finissent par se demander pourquoi elle ne part pas. Quand vous baissez enfin, ils négocient plus fort.
 
-Parce que le marché immobilier est ultra-sensible au prix. Un écart de 5-10% peut vous faire perdre 80% de votre audience.
+Les acheteurs le savent : en régions, ils obtiennent en moyenne **5,1 %** de baisse sur le prix affiché, et **9 ventes sur 10** sont négociées (réseau Laforêt, septembre 2026). Un prix trop haut au départ, c'est une négociation plus dure à l'arrivée.
 
-## Ce qui se passe quand vous surévaluez de 10%
+À l'inverse, un prix trop bas « pour vendre vite » se vend vite... et vous laisse de l'argent sur la table.
 
-**Scénario 1 : Blocage total**
+## La méthode : partir des ventes réelles
 
-Votre bien vaut 400K. Vous le mettez à 440K.
+Les prix de vente réels sont publics. La base DVF (« Demandes de valeurs foncières »), tenue par l'État, recense les ventes des cinq dernières années.
 
-Résultat :
+1. **Trouvez des biens comparables vendus récemment** : même type, même secteur, surface proche.
+2. **Regardez les prix de vente réels au m²**, pas les prix affichés dans les annonces.
+3. **Ajustez selon ce qui distingue votre bien** : vue, exposition, état, extérieurs, prestations.
+4. **Comparez avec les annonces en cours** : ce sont vos concurrents directs aujourd'hui.
 
-- Les acheteurs à 400K ne vous contactent pas (budget dépassé)
-- Les acheteurs à 440K comparent avec des biens mieux situés ou mieux équipés
+Vous obtenez une fourchette que vous pouvez expliquer à chaque acheteur. Pour vous situer : dans le secteur Léman, le prix médian d'un appartement ancien vendu entre août 2025 et juillet 2026 est de **3 910 € le m²** (notaires des Savoie). Votre bien peut s'en écarter nettement, dans un sens ou dans l'autre : c'est tout l'intérêt de l'analyse.
 
-Vous êtes entre deux eaux. Résultat : 0 visite.
+## Un cas réel : un chalet à Essert-Romand
 
-Au bout de 3 mois, vous baissez à 420K. Mais maintenant, les acheteurs se demandent "pourquoi il ne se vend pas ?". Ils négocient encore plus fort.
+Un couple m'a été recommandé à l'automne. Leur chalet était en vente depuis juin dans deux agences, sans une seule visite.
 
-Vous finissez par vendre 390K, soit 10K de moins que si vous aviez mis le bon prix dès le départ.
+Le prix avait été fixé sans aucune comparaison avec les ventes du secteur. Plutôt qu'une forte baisse d'un coup, j'ai proposé un premier ajustement pour tester la réaction du marché, puis un second quatre semaines plus tard, à partir des retours. Chaque chiffre était documenté, expliqué, comparé. En parallèle, nous avons désencombré le chalet et refait toute la présentation.
 
-**Scénario 2 : Sous-évaluation**
+**Résultat : quatre visites en quelques semaines, puis deux offres au prix demandé après deux mois de commercialisation.**
 
-Votre bien vaut 400K. Un estimateur en ligne vous dit 350-400K. Vous mettez 360K "pour vendre vite".
-
-Vous vendez effectivement en 2 semaines.
-
-Mais vous venez de brader votre bien de 40K.
-
-## La méthode DVF : le pricing scientifique
-
-La seule méthode fiable, c'est l'analyse des **transactions réelles** (pas des annonces) de biens comparables.
-
-C'est ce qu'on appelle l'analyse DVF (Demandes de Valeurs Foncières).
-
-Voici comment ça marche :
-
-1. **Identifier 10-15 biens comparables** vendus dans le secteur sur les 12 derniers mois
-	- Même type (maison/appart)
-	- Même secteur (rayon 2-3 km max)
-	- Même gamme de surface (+/- 20%)
-2. **Analyser les prix au m² réels** (pas les prix affichés, les prix de vente)
-3. **Appliquer les ajustements** :
-	- Vue/exposition : +/- 5-10%
-	- État général : +/- 10-15%
-	- Prestations : +/- 5%
-	- Extérieurs : +10-20%
-4. **Valider avec les annonces actuelles** (votre concurrence directe)
-
-À la fin, vous avez une fourchette précise.
-
-## Cas réel : Armoy, juillet 2024
-
-Client contacte après 4 mois de vente infructueuse. Bien mis à 450K (selon estimation en ligne).
-
-J'analyse les DVF : les biens comparables se vendent entre 390K et 410K.
-
-**Son bien était surévalué de 10-15%.**
-
-On repositionne à 415K (prix juste + petite marge négo).
-
-**Résultat :**
-
-- 3 demandes de visite la première semaine
-- 2 offres sous 10 jours
-- Vente à 405K (après négo)
-
-**Si on était resté à 450K, il y serait encore.**
+L'histoire complète : https://annevialtissot.fr/realisation/essert-romand-chalet-2026
 
 ## Votre action cette semaine
 
-Si vous n'avez pas fait d'analyse DVF rigoureuse :
+1. Ouvrez https://app.dvf.etalab.gouv.fr (gratuit, données publiques).
+2. Cherchez les ventes récentes dans votre commune et autour.
+3. Notez une dizaine de biens comparables et leur prix au m².
+4. Comparez avec votre prix actuel.
 
-1. Allez sur [app.dvf.etalab.gouv.fr](http://app.dvf.etalab.gouv.fr) (base de données publique)
-2. Cherchez les transactions des 12 derniers mois dans votre secteur
-3. Identifiez 10 biens comparables
-4. Calculez le prix médian au m²
-5. Appliquez à votre bien
+Si l'exercice vous paraît flou, je peux le faire avec vous. Réservez 30 minutes : https://annevialtissot.fr/contact
 
-Si vous n'êtes pas à l'aise avec ça, **je peux le faire pour vous.**
-
-Réservez un rendez-vous de 30 minutes, on fait l'analyse ensemble : [lien]
-
-**Demain, on parle de qualification des visiteurs.**
+**Dans deux jours, on parle des visites.**
 
 À très vite,
 

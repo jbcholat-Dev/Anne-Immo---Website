@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "node scripts/images.mjs && astro build && node scripts/migrations-ci.mjs",
+    "build": "node scripts/images.mjs && node scripts/lancement.mjs && astro build && node scripts/migrations-ci.mjs",
     "preview": "astro preview",
     "check": "wrangler types && astro check && tsc -p tsconfig.worker.json",
     "images": "node scripts/images.mjs",

@@ -34,7 +34,7 @@ const legal: { key: RouteKey; label: string }[] = [
     </div>
     <div class="pied-statut">
       <div class="pied-statut-ligne">{d.footer.statut}</div>
-      {d.footer.copyright}
+      {d.footer.copyright} · {identite.rsac ? `RSAC ${identite.rsac}${identite.greffe ? ` ${identite.greffe}` : ''}` : d.footer.rsac_manquant}
     </div>
   </div>
 </footer>

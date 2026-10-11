@@ -29,12 +29,14 @@ const estCourante = (k: RouteKey) => courante === k || (k === 'apropos' && ['qui
 <header class="nav" data-nav data-sombre={sombre ? '1' : undefined}>
   <div class="nav-int">
     <div class="nav-gauche">
-      <div class="nav-reseaux">
-        {reseaux.map((s) => (
-          <a href={s.url} aria-label={s.label} class="nav-social" rel="noopener" target="_blank"><svg width="19" height="19" aria-hidden="true"><use href={`#ico-${s.id}`}></use></svg></a>
-        ))}
-      </div>
-      <span class="nav-filet" aria-hidden="true"></span>
+      {reseaux.length > 0 && <>
+        <div class="nav-reseaux">
+          {reseaux.map((s) => (
+            <a href={s.url} aria-label={s.label} class="nav-social" rel="noopener" target="_blank"><svg width="19" height="19" aria-hidden="true"><use href={`#ico-${s.id}`}></use></svg></a>
+          ))}
+        </div>
+        <span class="nav-filet" aria-hidden="true"></span>
+      </>}
       <a href={r('accueil', lang)} class="nav-logo" aria-label={d.nav.accueil}><Logo taille={38} class="nav-logo-svg" /></a>
     </div>
     <nav aria-label={d.nav.principale} class="nav-desktop">
@@ -80,12 +82,12 @@ const estCourante = (k: RouteKey) => courante === k || (k === 'apropos' && ['qui
       <a href={bascule(courante ?? null, 'fr')} aria-current={lang === 'fr' ? 'true' : undefined} lang="fr">FR</a>
       <a href={bascule(courante ?? null, 'en')} aria-current={lang === 'en' ? 'true' : undefined} lang="en">EN</a>
     </div>
-    <div class="menu-mobile-reseaux">
+    {reseaux.length > 0 && <div class="menu-mobile-reseaux">
       <span class="chapeau-muet" style="letter-spacing:.1em">{d.nav.reseaux}</span>
       {reseaux.map((s) => (
         <a href={s.url} aria-label={s.label} rel="noopener" target="_blank"><svg width="23" height="23" aria-hidden="true"><use href={`#ico-${s.id}`}></use></svg></a>
       ))}
-    </div>
+    </div>}
   </div>
 </div>
 

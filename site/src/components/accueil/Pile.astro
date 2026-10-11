@@ -7,7 +7,7 @@ import Reserve from '../Reserve.astro';
 import { r, type Lang } from '../../i18n';
 import { dicoAccueil } from '../../lib/textes';
 import { stories, photoPrincipale, avisDeStory, avisParId, roleLibelle } from '../../lib/contenu';
-import { accueil, phrasesStories } from '../../config/site';
+import { accueil, phrasesStories, sitePublic } from '../../config/site';
 import { tiret } from '../../lib/texte';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
@@ -30,7 +30,8 @@ for (const s of toutes) {
 const MAX_CARTES = 6; // D-16
 cartes.splice(MAX_CARTES);
 const dejaRacontees = new Set(toutes.map((s) => s.id));
-for (const v of accueil.aVenir.filter((v) => !dejaRacontees.has(v.slug)).slice(0, MAX_CARTES - cartes.length)) {
+// Site public : pas de carte « à venir », sa photo n'est qu'un bloc réservé (story 12.5).
+for (const v of (sitePublic ? [] : accueil.aVenir).filter((v) => !dejaRacontees.has(v.slug)).slice(0, MAX_CARTES - cartes.length)) {
   const a = v.avis ? await avisParId(v.avis) : null;
   cartes.push({
     titre: v.commune,
