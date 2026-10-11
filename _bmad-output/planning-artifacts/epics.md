@@ -164,6 +164,12 @@ Le site est en ligne sur annevialtissot.fr, trouvable, légal, avec des formulai
 - **Epic 13 : Espace de travail d'Anne**
 Anne démarre chaque journée devant ses contacts et sait qui appeler, qui relancer et comment faire avancer chacun ; Modelo ne sert plus qu'à formaliser un mandat. **CAP-12 ; AD-14 (amendée), AD-18, AD-19, AD-20.** **État :** en cours ; spec (13.1) et architecture (13.2) écrites, construction découpée en stories 13.3 à 13.11.
 
+- **Epic 15 : Portail des vendeurs sous mandat**
+Un vendeur qui a signé un mandat avec Anne suit sa vente sur un espace privé : étape, visites et retours, prochaines actions, informations de marché. **Capacité à écrire (spec v7 ou suivante) ; s'appuie sur CAP-12, AD-19, AD-20.** **État :** à définir ; la story 15.1 est la session de cadrage (idée de JB du 2026-10-11).
+
+- **Epic 16 : Espace des acheteurs**
+Un acheteur accompagné par Anne retrouve dans un espace soigné la sélection de biens qu'elle lui prépare : photos, annonces, liens, notes de visite. **Capacité à écrire ; touche le non-goal « galerie ou vitrine de biens » de la spec.** **État :** à définir ; la story 16.1 est la session de cadrage (idée de JB du 2026-10-11).
+
 Ordre prévu : 9 (aperçu) → 8 et 7 en parallèle sur l'aperçu → 11.1 (cadrage visibilité) → 10 (backend) → 6 (anglais) → 11 (suite) → 12 (lancement).
 
 
@@ -2323,3 +2329,45 @@ afin que les visiteurs habituels la voient aussi.
 **Alors** l'accueil montre une ligne menant à la page de l'offre, qui disparaît d'elle-même à la date de fin.
 
 **État de l'epic :** à faire — responsable : JB (cadrage, règlement), Anne (texte de l'offre, photographe, accord de son réseau eXp), Claude (spec, construction) ; prérequis : story 12.4 (site public).
+
+
+## Epic 15: Portail des vendeurs sous mandat
+
+Un vendeur qui a signé un mandat exclusif avec Anne ouvre un espace privé et voit où en est sa vente : l'étape, les visites faites et leurs retours, ce qu'Anne prévoit ensuite, et des informations sur le marché de sa commune. Le vendeur n'a plus besoin d'appeler pour savoir, et Anne montre son travail. Origine : idée de JB du 2026-10-11 (fil « Portail vendeurs et espace acheteurs »). **À cadrer après le lancement public, à construire après les stories 13.4 à 13.6** : le portail montre ce qu'Anne note dans son espace de travail, il n'a pas de données à lui.
+
+**Capacités couvertes :** aucune dans la spec v6 ; une capacité nouvelle sera écrite au cadrage. **Décisions liées :** AD-19 (applications séparées sur la base partagée), AD-20 (un contact, des événements, rien ne change d'étape sans Anne), AD-18 (droits RGPD), AD-9 (aucun secret dans le dépôt : la clé de l'API Claude reste côté serveur).
+
+### Story 15.1: Session de cadrage du portail vendeurs
+
+En tant que JB,
+je veux décider ce que le vendeur voit, comment il se connecte et ce que Claude y écrit,
+afin que la construction parte d'une capacité écrite et pas d'une idée.
+
+**Critères d'acceptation :**
+**Étant donné** les réponses de JB et d'Anne aux questions de cadrage du 2026-10-11 (ce qui est montré des visiteurs, relecture par Anne des textes écrits par Claude, source des informations de marché, une ou deux applications pour vendeurs et acheteurs)
+**Quand** le cadrage est fait
+**Alors** la spec reçoit une capacité « portail vendeurs » (intention, critères de succès vérifiables), le spine une AD (hébergement, connexion des clients, données exposées, usage de l'API Claude), et les stories de construction sont découpées ici
+**Et** les décisions sont journalisées le jour même.
+
+**État de l'epic :** à définir — responsable : JB (cadrage), Anne (ce qu'elle montre déjà à ses vendeurs, accord du réseau eXp), Claude (spec, architecture, construction) ; prérequis : story 12.4 (site public), stories 13.4 à 13.6 (contacts, étapes, événements).
+
+
+## Epic 16: Espace des acheteurs
+
+Un acheteur accompagné par Anne retrouve, dans un espace privé au niveau du site, les biens qu'elle a repérés pour lui : photos, annonces, liens, notes de sa visite en premier, et peut dire ce qui l'intéresse. C'est la forme concrète de la recherche accompagnée (« Anne repère, visite en premier, présélectionne », spec CAP-6) et le support des mandats de recherche (parcours acheteur de CAP-12). Origine : idée de JB du 2026-10-11 (même fil). **À cadrer après le lancement public.**
+
+**Capacités couvertes :** aucune dans la spec v6. **Point à trancher :** la spec exclut une « galerie ou vitrine de biens en ligne » (non-goals) et la gestion des annonces dans l'espace de travail (CAP-12). Un espace privé par acheteur reste compatible si la spec le dit ; une vitrine publique demande de lever le non-goal. **Décisions liées :** AD-19, AD-20, AD-18, D-5 (les acheteurs passent par le même chemin de contact).
+
+### Story 16.1: Session de cadrage de l'espace acheteurs
+
+En tant que JB,
+je veux décider la forme de l'espace acheteurs et ce qu'on a le droit d'y montrer,
+afin de construire un service premium sans contredire la spec ni les règles des annonces.
+
+**Critères d'acceptation :**
+**Étant donné** les réponses de JB et d'Anne aux questions de cadrage du 2026-10-11 (espace privé par acheteur ou vitrine publique, biens d'autres agences ou seulement ceux d'Anne, qui peut y entrer, réutilisation des photos)
+**Quand** le cadrage est fait
+**Alors** la spec reçoit une capacité « espace acheteurs » et, si besoin, le non-goal « galerie ou vitrine » est réécrit ; le spine reçoit une AD ; les stories de construction sont découpées ici
+**Et** les décisions sont journalisées le jour même.
+
+**État de l'epic :** à définir — responsable : JB (cadrage), Anne (comment elle présente aujourd'hui une sélection à un acheteur, règles eXp sur la diffusion des annonces), Claude (spec, architecture, construction) ; prérequis : story 12.4, parcours acheteur de l'epic 13.
