@@ -52,13 +52,13 @@ Chaque point porte sa preuve et sa date quand il est coché.
 
 **Bascule (JB, avec Claude)** : ordre du RUNBOOK § 4
 - [ ] Domaine `annevialtissot.fr` rattaché au Worker ; `www` et `.com` redirigés en 301 vers `https://annevialtissot.fr`
-- [ ] Turnstile : `annevialtissot.fr` ajouté aux domaines du widget `site-anne`
-- [ ] Application Access « Gestion » créée sur `/gestion` et `/api/gestion`, son AUD ajouté à `ACCESS_AUD`
+- [x] Turnstile : `annevialtissot.fr` ajouté aux domaines du widget `site-anne` (2026-10-11, par l'API : `annevialtissot.fr`, `www.annevialtissot.fr`, `jbcholat.workers.dev`)
+- [x] Application Access « Gestion » créée sur `/gestion` et `/api/gestion`, son AUD ajouté à `ACCESS_AUD` (2026-10-11, par l'API, AUD `916beab7…d5ae`, PR de ce jour). Application temporaire « Lancement - site ferme en attendant Anne » posée sur `annevialtissot.fr` et `www` (règle `Anne et JB`) : à supprimer à l'ouverture au public
 - [ ] Variable de construction `LANCEMENT=oui`, construction de `main` relancée et réussie
 - [ ] Access retiré de `annevialtissot.fr` (gardé sur `workers.dev`)
 - [ ] Webhook Cal.com pointé sur `https://annevialtissot.fr/api/webhook-cal`
 - [ ] Essais en ligne : accueil sans écran de connexion, `/robots.txt` autorise, `.com` redirige, `/gestion` demande le code, un contact, un guide, un diagnostic et un rendez-vous reçus par Anne puis effacés depuis `/gestion`
-- [ ] Si la PR n° 72 (rapport PDF du diagnostic) est fusionnée avant le lancement : formule Cloudflare Workers Paid souscrite par JB (action J10 du tableau de bord), car le rapport demande environ 60 ms de calcul et la formule gratuite plafonne à 10 ms ; sans elle, le téléchargement du rapport échoue chez les visiteurs (signalé par le fil Back-end le 2026-10-10)
+- [x] Workers Paid souscrit par JB (confirmé le 2026-10-11 à 18 h 32). Si la PR n° 72 (rapport PDF du diagnostic) est fusionnée avant le lancement : formule Cloudflare Workers Paid souscrite par JB (action J10 du tableau de bord), car le rapport demande environ 60 ms de calcul et la formule gratuite plafonne à 10 ms ; sans elle, le téléchargement du rapport échoue chez les visiteurs (signalé par le fil Back-end le 2026-10-10)
 - [ ] Accord écrit d'Anne pour le lancement
 
 ## Ce qui reste
