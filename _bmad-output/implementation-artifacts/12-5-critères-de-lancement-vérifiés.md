@@ -51,15 +51,15 @@ Chaque point porte sa preuve et sa date quand il est coché.
 - [x] Adresses des réseaux sociaux données par JB le 2026-10-10 (Instagram, YouTube, LinkedIn), reportées dans `site/src/config/site.ts` et `contenu-anne/legal/identite.md`
 
 **Bascule (JB, avec Claude)** : ordre du RUNBOOK § 4
-- [ ] Domaine `annevialtissot.fr` rattaché au Worker ; `www` et `.com` redirigés en 301 vers `https://annevialtissot.fr`
+- [x] Domaine `annevialtissot.fr` rattaché au Worker ; `www` et `.com` redirigés en 301 vers `https://annevialtissot.fr` (2026-10-11, par l'API : domaine personnalisé du Worker ; enregistrements `AAAA 100::` proxifiés pour `www.annevialtissot.fr`, `annevialtissot.com`, `www.annevialtissot.com` ; règle de redirection 301 par zone, chemin et requête gardés. Vérifié : `.com/vendre` → `.fr/vendre`, `www.fr/vendre?x=1` → `.fr/vendre?x=1`)
 - [x] Turnstile : `annevialtissot.fr` ajouté aux domaines du widget `site-anne` (2026-10-11, par l'API : `annevialtissot.fr`, `www.annevialtissot.fr`, `jbcholat.workers.dev`)
 - [x] Application Access « Gestion » créée sur `/gestion` et `/api/gestion`, son AUD ajouté à `ACCESS_AUD` (2026-10-11, par l'API, AUD `916beab7…d5ae`, PR de ce jour). Application temporaire « Lancement - site ferme en attendant Anne » posée sur `annevialtissot.fr` et `www` (règle `Anne et JB`) : à supprimer à l'ouverture au public
-- [ ] Variable de construction `LANCEMENT=oui`, construction de `main` relancée et réussie
-- [ ] Access retiré de `annevialtissot.fr` (gardé sur `workers.dev`)
+- [x] Variable de construction `LANCEMENT=oui`, construction de `main` relancée et réussie (2026-10-11 à 21 h 23, déclencheur de `main` ; construction `f06a5594` à la fusion de la PR n° 124 : journal « lancement : PRODUCTION », base `anne-leads`, `ENVIRONNEMENT=production`, `URL_SITE=https://annevialtissot.fr`)
+- [x] Access retiré de `annevialtissot.fr` (gardé sur `workers.dev`) le 2026-10-11 à 22 h 50 sur l'accord de JB : application temporaire supprimée, et application « anne-vial-tissot-site - Cloudflare Workers » restreinte aux adresses `anne-vial-tissot-site.jbcholat.workers.dev` et `*-anne-vial-tissot-site.jbcholat.workers.dev` (piège : sa destination « Worker » couvrait aussi le domaine personnalisé)
 - [ ] Webhook Cal.com pointé sur `https://annevialtissot.fr/api/webhook-cal`
-- [ ] Essais en ligne : accueil sans écran de connexion, `/robots.txt` autorise, `.com` redirige, `/gestion` demande le code, un contact, un guide, un diagnostic et un rendez-vous reçus par Anne puis effacés depuis `/gestion`
+- [ ] Essais en ligne (2026-10-11, par Claude : accueil, `/vendre`, `/guide`, `/realisation` en 200 sans connexion ; `/robots.txt` = `Allow: /` ; `/api/sante` = `{"ok":true,"migrations":6}` ; `/gestion` et `/api/gestion` demandent le code ; `/api/retour` refuse sans code (403) ; en-têtes HSTS et `X-Frame-Options` présents ; aperçus `workers.dev` toujours protégés. **Reste à JB** : les essais réels des formulaires) : accueil sans écran de connexion, `/robots.txt` autorise, `.com` redirige, `/gestion` demande le code, un contact, un guide, un diagnostic et un rendez-vous reçus par Anne puis effacés depuis `/gestion`
 - [x] Workers Paid souscrit par JB (confirmé le 2026-10-11 à 18 h 32). Si la PR n° 72 (rapport PDF du diagnostic) est fusionnée avant le lancement : formule Cloudflare Workers Paid souscrite par JB (action J10 du tableau de bord), car le rapport demande environ 60 ms de calcul et la formule gratuite plafonne à 10 ms ; sans elle, le téléchargement du rapport échoue chez les visiteurs (signalé par le fil Back-end le 2026-10-10)
-- [ ] Accord écrit d'Anne pour le lancement
+- [x] Accord pour l'ouverture : « ok pour ouvrir », JB, 2026-10-11 à 22 h 49 (fil « Bascule en production »)
 
 ## Ce qui reste
 
