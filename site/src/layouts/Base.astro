@@ -2,7 +2,8 @@
 import '../styles/global.css';
 import Sprite from '../components/Sprite.astro';
 import RetourApercu from '../components/RetourApercu.astro';
-import type { Lang } from '../i18n';
+import { routes, type Lang } from '../i18n';
+import { identite, reseaux } from '../config/site';
 interface Props { titre: string; description?: string; lang?: Lang; classe?: string; noindex?: boolean; ogImage?: string }
 const { titre, description = '', lang = 'fr', classe = '', noindex = false, ogImage } = Astro.props;
 // Adresse de référence sans « .html » (les pages sont construites en fichiers, mais servies sans l'extension) : sinon Google reçoit une adresse redirigée.
@@ -10,6 +11,31 @@ const canonical = new URL(Astro.url.pathname.replace(/(\/index)?\.html$/, '') ||
 // Réglage d'indexation (story 9.2) : tant que PUBLIC_INDEXATION n'est pas « oui », aucune page n'est indexable (aperçu).
 const indexable = import.meta.env.PUBLIC_INDEXATION === 'oui';
 const robots = noindex || !indexable;
+// Liens de langue (story 11.3, AD-3) : seulement pour une page qui existe vraiment dans les deux langues (accueil, réalisations).
+// Une page FR seule n'annonce aucune traduction ; x-default = la version française.
+const chemin = canonical.pathname;
+const paire = Object.values(routes).find((p) => p.en.startsWith('/en') && (p.fr === chemin || p.en === chemin));
+const alternes = paire && !robots
+  ? [['fr', paire.fr], ['en', paire.en], ['x-default', paire.fr]].map(([l, h]) => [l, new URL(h, Astro.site).href])
+  : [];
+// Données structurées (story 11.3, AD-13) : la fiche d'Anne lue par Google, tirée de `identite`, sur l'accueil seulement.
+// Un champ vide (null) est omis.
+const fiche = !robots && (chemin === routes.accueil.fr || chemin === routes.accueil.en)
+  ? JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'RealEstateAgent',
+      name: identite.nom,
+      alternateName: identite.nomCourt,
+      url: new URL('/', Astro.site).href,
+      ...(ogImage ? { image: new URL(ogImage, Astro.site).href } : {}),
+      ...(identite.telephone ? { telephone: identite.telephone.replace(/\s/g, '') } : {}),
+      ...(identite.email ? { email: identite.email } : {}),
+      areaServed: identite.zone,
+      knowsLanguage: ['fr', 'en', 'es', 'pt'],
+      memberOf: { '@type': 'Organization', name: 'eXp France', url: 'https://www.expfrance.fr' },
+      sameAs: [...reseaux.map((s) => s.url), identite.immodvisor],
+    }).replace(/</g, '\\u003c')
+  : null;
 ---
 <!doctype html>
 <html lang={lang}>
@@ -20,6 +46,8 @@ const robots = noindex || !indexable;
     {description && <meta name="description" content={description} />}
     {robots && <meta name="robots" content="noindex, nofollow" />}
     <link rel="canonical" href={canonical} />
+    {alternes.map(([l, h]) => <link rel="alternate" hreflang={l} href={h} />)}
+    {fiche && <script type="application/ld+json" set:html={fiche} />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta property="og:title" content={titre} />
     {description && <meta property="og:description" content={description} />}
