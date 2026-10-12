@@ -88,7 +88,17 @@ Chaque endroit est marqué `TODO(backend)` dans le code (`grep -rn "TODO(backend
 4. ~~Gabarit Cal.com statique de `/contact`~~ : **agenda Cal.com réel et webhook depuis la story 10.6** (voir « Rendez-vous Cal.com »).
 5. ~~Envoi du guide à la main par Anne~~ : **lien signé envoyé par le site depuis la story 10.5**. Reste simulé : le PDF lui-même est une version provisoire tant qu'Anne n'a pas relu le guide (`contenu-anne/guide/guide.md`, `statut: brouillon`).
 6. Adaptateur Cloudflare (`@astrojs/cloudflare`, `worker.ts` pour le cron), D1 `eu`, migrations, ~~admin~~ (espace de gestion réel depuis la story 10.7, voir « Gestion des demandes »), mesure d'audience, `funnel_event` (AD-10 → AD-18). `astro.config.mjs` reste `output: 'static'` jusque-là.
-7. Données structurées `RealEstateAgent` depuis `identite` (AD-13) une fois A-13 fourni.
+7. ~~Données structurées `RealEstateAgent`~~ : **en place depuis la story 11.3** (voir « Référencement »).
+
+## Référencement (story 11.3)
+
+En production seulement (pages sans `noindex`) :
+
+- **Plan du site** `sitemap.xml` : écrit après la construction par `integrations/plan-du-site.mjs`, depuis les pages réellement construites. Une page `noindex` (404, questions du diagnostic, désabonnement) et l'espace d'édition `/admin` en sont exclus. `robots.txt` l'annonce. Sur l'aperçu, le plan est vide et `robots.txt` n'en parle pas.
+- **Liens de langue** (`hreflang`) dans `Base.astro`, seulement pour les pages qui existent dans les deux langues (`routes` de `src/i18n` dont la version anglaise commence par `/en` : accueil, réalisations). Le plan du site les recopie.
+- **Fiche d'Anne pour Google** (données structurées JSON-LD `RealEstateAgent`) sur l'accueil FR et EN, tirée de `identite` et `reseaux` (`src/config/site.ts`) ; un champ vide est omis.
+
+Ce qui reste hors du code : inscription du site dans Google Search Console et envoi du plan (JB), fiche Google Business Profile (story 11.2).
 
 ## Mise en ligne (story 9.2)
 
