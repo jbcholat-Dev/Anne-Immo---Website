@@ -25,7 +25,8 @@ Que Google trouve toutes les pages du site, comprenne leur langue et sache qui e
 - Construction en mode aperçu (`npm run build`) : plan vide, `robots.txt` « Disallow: / », aucun lien de langue.
 - `npm run check` : 0 erreur. `node scripts/liens.mjs` : 26 pages, 1701 liens, 0 cassé.
 
+- En production, après la fusion de la PR n° 137 par JB (2026-10-12) : `https://annevialtissot.fr/sitemap.xml` répond 200 avec 23 adresses, `robots.txt` l'annonce, l'accueil porte le bloc JSON-LD et ses liens de langue.
+
 ## Ce qui reste
 
-- Après fusion : vérifier `https://annevialtissot.fr/sitemap.xml` et l'accueil dans le test des résultats enrichis de Google.
-- JB : inscrire le site dans Google Search Console, envoyer le plan, demander l'indexation de l'accueil (action ajoutée au tableau de bord).
+Rien dans le code. Story close le 2026-10-12. Hors du code, JB inscrit le site dans Google Search Console, envoie le plan et demande l'indexation de l'accueil (action J39 du tableau de bord).
