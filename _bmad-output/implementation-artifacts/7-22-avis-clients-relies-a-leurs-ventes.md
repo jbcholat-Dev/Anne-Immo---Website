@@ -41,3 +41,7 @@ Champ `story` (« Vente concernée » dans l'espace d'édition) rempli dans 13 f
 - Avis sans vente : Bonjour (choix de JB), RHL vendeur, Cat D, EC Cremer, RaphaelD.
 
 Fusionnée dans main le 2026-10-11 avec l'accord de JB (PR n° 130).
+
+## Complément du 2026-10-11 au soir (seconde liste de JB, pseudonyme par pseudonyme)
+JB a envoyé la liste par pseudonyme : RaphaelD, Cat D, Bonjour (PEILLEX) et RHL (les deux avis) = Armoy. Ces 4 avis sont reliés à `auberge-decoupee-2024`, qui en compte désormais 7. Le reste de la liste confirme les liaisons déjà fusionnées. Seul EC Cremer n'est relié à aucune vente.
+Vérification : `npm run build`, `npm run check` (0 erreur), `scripts/liens.mjs` (0 lien cassé), page Armoy : 7 avis cités.
