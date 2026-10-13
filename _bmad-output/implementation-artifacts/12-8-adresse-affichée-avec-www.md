@@ -29,4 +29,4 @@ Les pages du site n'écrivent pas l'adresse en toutes lettres : rien à changer.
 
 ## Ce qui reste
 
-Rien après fusion de la PR par JB.
+Rien. PR n° 140 fusionnée par JB le 2026-10-13 ; story close.
