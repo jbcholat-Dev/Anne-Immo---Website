@@ -98,6 +98,8 @@ En production seulement (pages sans `noindex`) :
 - **Liens de langue** (`hreflang`) dans `Base.astro`, seulement pour les pages qui existent dans les deux langues (`routes` de `src/i18n` dont la version anglaise commence par `/en` : accueil, réalisations). Le plan du site les recopie.
 - **Fiche d'Anne pour Google** (données structurées JSON-LD `RealEstateAgent`) sur l'accueil FR et EN, tirée de `identite` et `reseaux` (`src/config/site.ts`) ; un champ vide est omis.
 
+- **Icône du site** (story 12.9) : `favicon.svg` (symbole cercle-horizon de la charte) plus des copies en image classique tirées de lui : `favicon.ico` (16, 32 et 48 px), `favicon-96.png`, `favicon-192.png`, `apple-touch-icon.png` (180 px sur fond blanc, pour l'écran d'accueil d'un iPhone). Google affiche cette icône à côté du site dans ses résultats ; il demande un carré de 48 px ou d'un multiple de 48. Pour les refaire après un changement de `favicon.svg` : voir la story 12.9.
+
 Ce qui reste hors du code : inscription du site dans Google Search Console et envoi du plan (JB), fiche Google Business Profile (story 11.2).
 
 ## Mise en ligne (story 9.2)
