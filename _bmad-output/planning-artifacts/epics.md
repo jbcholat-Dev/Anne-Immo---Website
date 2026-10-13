@@ -1735,6 +1735,17 @@ afin de savoir quoi corriger dans ma vente, et dans quel ordre.
 **Quand** JB et Anne le relisent
 **Alors** une maquette du PDF est validée avant le branchement.
 
+
+### Story 10.11: Réponses du diagnostic lisibles dans l'espace de gestion
+
+Ajoutée le 2026-10-13 sur le retour d'Anne (ticket GitHub #144) : sur la fiche d'un diagnostic dans `/gestion`, les réponses s'affichaient en JSON brut.
+
+**Acceptance Criteria:**
+
+**Given** Anne ouvre la fiche d'une demande issue du diagnostic
+**When** la page s'affiche
+**Then** elle voit le score, le profil, les trois sous-scores, un lien vers le rapport PDF du vendeur, puis chaque question suivie de la réponse en clair, rangées par thème, avec les points des questions notées
+**And** aucun JSON brut n'est affiché
 ## Epic 11: Référencement et visibilité
 
 Le site d'Anne est trouvé par les vendeurs et acheteurs du Chablais qui cherchent sur Google, et pas seulement par ceux qui ont l'adresse.

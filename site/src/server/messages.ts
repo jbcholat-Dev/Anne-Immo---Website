@@ -88,16 +88,23 @@ function resultat(l: LigneLead): { scores: Scores; profil: string; axes: string[
   return { scores, profil, axes };
 }
 
-/** Les réponses du diagnostic en clair, une ligne par question, pour qu'Anne prépare son appel. */
-function reponsesLisibles(l: LigneLead): string[] {
-  if (!l.answers) return [];
-  const { reponses, autre } = JSON.parse(l.answers) as { reponses: Record<string, string[]>; autre: Record<string, string> };
+/** Les réponses du diagnostic en clair, question par question (notification à Anne, fiche de /gestion, story 10.11). */
+export function reponsesDiagnostic(answers: string | null | undefined): { id: string; categorie: string; question: string; reponse: string }[] {
+  if (!answers) return [];
+  let lu: { reponses?: Record<string, string[]>; autre?: Record<string, string> };
+  try { lu = JSON.parse(answers); } catch { return []; }
+  const reponses = lu.reponses ?? {}, autre = lu.autre ?? {};
   return contenu.ecrans.flatMap((e) => {
     const ids = reponses[e.id] ?? [];
     if (e.type === 'texte' || !ids.length) return [];
     const libelles = ids.map((id) => (id === 'autre' ? `autre : ${autre[e.id] ?? ''}` : (e.options ?? []).find((o) => o.id === id)?.libelle ?? id));
-    return [`${e.question} ${libelles.join(', ')}`];
+    return [{ id: e.id, categorie: e.categorie, question: e.question, reponse: libelles.join(', ') }];
   });
+}
+
+/** Les réponses du diagnostic en clair, une ligne par question, pour qu'Anne prépare son appel. */
+function reponsesLisibles(l: LigneLead): string[] {
+  return reponsesDiagnostic(l.answers).map((r) => `${r.question} ${r.reponse}`);
 }
 
 const SIGNATURE = 'Anne VIAL-TISSOT\nConseillère en immobilier · Chablais, Léman · réseau eXp France\nwww.annevialtissot.fr';
