@@ -117,6 +117,12 @@ La nav passe de 4 entrées + bouton à **5 entrées (À propos ▾ · Réalisati
 |---|---|---|---|
 | D-44 | **Barre de navigation compacte sur ordinateur.** La gélule de verre (D-42) ne traverse plus l'écran : elle est centrée et prend la largeur de son contenu (640 px), dans l'ordre symbole · filet · Accueil · À propos ▾ · Réalisations · Vendre · Acheter · FR EN · **Contact** en pastille bleue Klein. Les icônes des réseaux sortent de la barre (remplace D-6 variante A) ; elles restent dans le pied de page et dans le menu du téléphone. Téléphone inchangé. Raison : sur un écran de 1 920 px, la barre pleine largeur laissait un grand vide au milieu. Ce qu'on perd : les réseaux d'Anne ne sont plus visibles en haut de page sur ordinateur (c'était sa demande, D-6). **Annulée le 2026-10-11 au soir par JB, avant l'ouverture publique** : retour à la barre étendue de D-42, réseaux à gauche (D-6 A). | ❌ annulée | `site/src/components/Nav.astro` · story 8.18 · `design-system/` (composant barre, avec D-42). |
 
+## Décision du 2026-10-13 (retour d'Anne, ticket n° 143 — story 8.20)
+
+| # | Décision | Statut | À propager |
+|---|---|---|---|
+| D-45 | **La ligne signature souligne le nom de famille, comme dans le logo.** Sous le grand nom de l'accueil et sous « Anne Vial‑Tissot » d'À propos, le trait terracotta commence sous « VIAL‑TISSOT » et en prend toute la largeur, au lieu de partir sous « Anne ». Le trait garde la même épaisseur quelle que soit sa longueur. Ce qu'on perd : rien ; la vague du trait est un peu plus étirée sur l'accueil. | ✅ | `site/src/components/accueil/Hero.astro` · `site/src/pages/a-propos.astro` · `site/src/components/Sprite.astro` · story 8.20. |
+
 ## Pages — état de validation
 
 | Page | Desktop | Mobile | Commentaire |
