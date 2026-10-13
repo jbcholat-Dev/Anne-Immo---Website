@@ -30,6 +30,7 @@ Synthèse complète (constats, preuves, classement) : artefact « Revue avant ou
 - Commentaires de JB sur la synthèse (2026-10-11, 20 h 12 à 20 h 14, « à corriger tout de suite ») :
   - numéro d'Anne : affiché sur `/contact` en lien d'appel (« Par téléphone : 06 71 99 17 54 ») ; le lien « Ou appeler Anne directement » du formulaire d'estimation appelle le numéro au lieu de renvoyer vers `/contact` (`telephone` dans `src/config/site.ts`) ;
   - parcours d'Anne : « on enlève à propos » ; les précisions d'À propos qui contredisaient l'accueil sont retirées (« en France et à l'étranger (Brésil) — Groupe BEL puis Danone », « au Vietnam et au Brésil ») ; l'accueil garde « Danone à Évian puis Bel au Brésil » ;
+    complément du 2026-10-11 à 20 h 35 (capture de JB, « t'as pas enlevé, à propos, qu'est-ce qu'un doublon ») : la phrase de parcours de l'en-tête d'À propos avait été reformulée au lieu d'être retirée et répétait « Mon parcours » juste en dessous ; elle est retirée, l'en-tête commence par « Chaque vente est menée comme un projet » ;
   - un seul titre, « Conseillère en immobilier » : signature retirée du texte de l'étape 6 (le site ajoute la sienne, comme aux étapes 1 à 5), couverture et conclusion du guide corrigées, note « à vérifier » retirée, PDF refait (16 pages) ;
   - fautes des textes d'Anne (hors avis) : se projeter, être guidés dans tout le processus, composée, par où commencer, des agences, 5 000 m², entrepreneuriale, ses multiples facettes, systématiquement, Éclairer, proactivité, lémanique, « Pourquoi l'immobilier ? ».
 
@@ -40,6 +41,7 @@ Synthèse complète (constats, preuves, classement) : artefact « Revue avant ou
 - `node scripts/e2e-formulaires.mjs`, `e2e-gestion.mjs`, `e2e-guide.mjs` : « Tous les constats sont bons ».
 - Barème et médiateur : `PUBLIC_INDEXATION=oui npm run build` réussi, `npm run check` 0 erreur, `node scripts/liens.mjs` 26 pages, 1541 liens, 0 cassé ; aucune occurrence de l'ancien titulaire dans le site construit ni dans le dépôt ; captures 1440 et 390 de `/honoraires` et `/mentions-legales` : aucun débordement (largeur de page = largeur d'écran), montants insécables sur téléphone.
 - Commentaires de JB : `npm run check` 0 erreur ; `PUBLIC_INDEXATION=oui npm run build` réussi ; `node scripts/liens.mjs` 26 pages, 1542 liens, 0 cassé ; lien `tel:+33671991754` présent sur `/contact` et dans le formulaire de `/vendre` ; `node scripts/guide-pdf.mjs` : 16 pages, « conseillère en immobilier » en couverture et en conclusion ; `e2e-guide` et `e2e-formulaires` : tous bons ; captures 1440 et 390 de `/contact` sans débordement.
+- Complément À propos : `npm run check` 0 erreur ; `PUBLIC_INDEXATION=oui npm run build` réussi ; `node scripts/liens.mjs` 26 pages, 1686 liens, 0 cassé ; « Dix ans » absent de `a-propos.html` ; captures 1440 et 390 sans débordement.
 - Serveur local (`wrangler dev`) : `POST /api/retour` avec un faux en-tête d'adresse et sans jeton → 403 `acces` ; `/a-propos` et `/gestion` portent `Strict-Transport-Security`, `X-Frame-Options: DENY`, `Referrer-Policy`.
 
 ## Ce qui reste
