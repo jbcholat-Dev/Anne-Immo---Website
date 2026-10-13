@@ -105,7 +105,7 @@ export async function fabriquerRapport(d: DonneesRapport): Promise<Uint8Array> {
   const nomComplet = `${d.prenom} ${d.nom}`.trim();
   doc.setTitle(`Rapport de diagnostic · ${lisible(jost, nomComplet)}`);
   doc.setAuthor('Anne VIAL-TISSOT');
-  doc.setCreator('annevialtissot.fr');
+  doc.setCreator('www.annevialtissot.fr');
 
   const axes = (Object.keys(AXES) as Categorie[]).map((k) => {
     const c = d.scores.categories[k];
@@ -178,7 +178,7 @@ export async function fabriquerRapport(d: DonneesRapport): Promise<Uint8Array> {
   // Pied de chaque page : nom et numéro.
   const pages = doc.getPages();
   pages.forEach((p, n) => {
-    const gauche = ajuster(jost, `Rapport de diagnostic · ${nomComplet} · annevialtissot.fr`, 7.5, 400).texte;
+    const gauche = ajuster(jost, `Rapport de diagnostic · ${nomComplet} · www.annevialtissot.fr`, 7.5, 400).texte;
     p.drawText(gauche, { x: 56.7, y: 28, size: 7.5, font: jost, color: C.muet });
     const num = `${n + 1} / ${pages.length}`;
     p.drawText(num, { x: 538.6 - jost.widthOfTextAtSize(num, 7.5), y: 28, size: 7.5, font: jost, color: C.muet });

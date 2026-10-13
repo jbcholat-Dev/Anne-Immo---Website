@@ -58,7 +58,7 @@ function main() {
         <div class="chapeau">Votre score global</div><div class="score">${slot('score', '120mm', 64)}</div>
         <div class="pastille">${echapper(p.libelle)}</div><p class="profil">${echapper(p.texte)}</p>
         <div class="resume">${Object.keys(MAX).map((k) => `<div><div class="resume-rang"><span>${NOMS[k]}</span>${slot(`valeur_${k}`, '30mm', 10, ';text-align:right')}</div><div class="barre" data-slot="barre_${k}"></div></div>`).join('')}</div></div>
-      <div class="pied-couv">Anne VIAL-TISSOT · Conseillère en immobilier · Chablais, Léman · annevialtissot.fr</div></div>`] });
+      <div class="pied-couv">Anne VIAL-TISSOT · Conseillère en immobilier · Chablais, Léman · www.annevialtissot.fr</div></div>`] });
   }
   flux.push({ cle: 'priorites', fixe: true, blocs: [`<h2>Par où commencer</h2>${s.Introduction.map((p) => `<p>${enLigne(p)}</p>`).join('')}<div class="liste" data-slot="liste"></div>`] });
   Object.keys(MAX).forEach((k, n) => {
@@ -80,8 +80,8 @@ function main() {
     const sortie = feedbacks.sorties[o];
     flux.push({ cle: `suite/${o}`, blocs: [`<h2>${echapper(sortie.titre)}</h2><p>${echapper(sortie.texte)}</p>
       ${s.Conclusion.map((p) => `<p>${enLigne(p)}</p>`).join('')}
-      <div class="cta"><h3>${o === 'A' ? 'Parlons de votre vente' : 'Un regard extérieur sur votre vente'}</h3><p>Rendez-vous stratégique de 30 minutes, gratuit et sans engagement : nous passons en revue vos priorités et je vous dis ce que je ferais à votre place.</p><p><b>annevialtissot.fr/contact</b> · ou répondez simplement à l'e-mail qui accompagne ce rapport.</p></div>
-      <div class="signature"><b>Anne VIAL-TISSOT</b>Conseillère en immobilier · Chablais · Léman · réseau eXp France<br>annevialtissot.fr</div>`] });
+      <div class="cta"><h3>${o === 'A' ? 'Parlons de votre vente' : 'Un regard extérieur sur votre vente'}</h3><p>Rendez-vous stratégique de 30 minutes, gratuit et sans engagement : nous passons en revue vos priorités et je vous dis ce que je ferais à votre place.</p><p><b>www.annevialtissot.fr/contact</b> · ou répondez simplement à l'e-mail qui accompagne ce rapport.</p></div>
+      <div class="signature"><b>Anne VIAL-TISSOT</b>Conseillère en immobilier · Chablais · Léman · réseau eXp France<br>www.annevialtissot.fr</div>`] });
   }
   return flux;
 }

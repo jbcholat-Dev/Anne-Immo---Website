@@ -100,8 +100,8 @@ function reponsesLisibles(l: LigneLead): string[] {
   });
 }
 
-const SIGNATURE = 'Anne VIAL-TISSOT\nConseillère en immobilier · Chablais, Léman · réseau eXp France\nhttps://annevialtissot.fr';
-const SIGNATURE_EN = 'Anne VIAL-TISSOT\nReal estate advisor · Chablais, Lake Geneva · eXp France network\nhttps://annevialtissot.fr';
+const SIGNATURE = 'Anne VIAL-TISSOT\nConseillère en immobilier · Chablais, Léman · réseau eXp France\nwww.annevialtissot.fr';
+const SIGNATURE_EN = 'Anne VIAL-TISSOT\nReal estate advisor · Chablais, Lake Geneva · eXp France network\nwww.annevialtissot.fr';
 
 export function notifierAnne(l: LigneLead): Message {
   const nomComplet = [l.prenom, l.nom].filter(Boolean).join(' ');
@@ -120,7 +120,7 @@ export function notifierAnne(l: LigneLead): Message {
       `Rendez-vous « Premier échange » le ${rendezVous(l.rdv_start)} (heure de Paris), par téléphone.`,
       ...(l.message ? [`Note du prospect : ${l.message}`] : []),
     ] : [l.message ?? '']),
-    `Demande du ${dateParis(l.created_at)} via annevialtissot.fr (${ORIGINE[l.source] ?? l.source}${detail}).`,
+    `Demande du ${dateParis(l.created_at)} via www.annevialtissot.fr (${ORIGINE[l.source] ?? l.source}${detail}).`,
     `Séquence d'e-mails : ${l.newsletter_opt_in_at ? 'acceptée' : 'non demandée'}.`,
     l.lang === 'en' ? 'Demande faite depuis la version anglaise du site.' : '',
     campagne ? `Campagne : ${campagne}.` : '',
