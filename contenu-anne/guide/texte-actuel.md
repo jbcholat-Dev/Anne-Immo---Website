@@ -14,9 +14,7 @@
 
 **Les 10 erreurs fatales des vendeurs particuliers**
 Et comment les éviter pour vendre plus vite et au meilleur prix
-Par Anne Vial-Tissot, experte immobilière Léman & Chablais
-
-> ⚠️ à vérifier : « Experte immobilière » est-il le titre que tu veux ? Le site te présente comme « consultante en immobilier, mandataire du réseau eXp France ».
+Par Anne Vial-Tissot, conseillère en immobilier · Chablais, Léman
 
 ## Pourquoi tant de ventes s'enlisent
 
@@ -34,7 +32,7 @@ Elles se rangent en trois familles :
 - **Prix inadapté** : un prix qu'on ne sait pas justifier bloque la vente ou vous fait perdre de l'argent.
 - **Absence de méthode** : du temps perdu avec des visiteurs qui ne peuvent pas acheter, et des problèmes découverts trop tard.
 
-Chaque erreur est illustrée, quand c'est possible, par une de mes ventes réelles, racontée en entier sur annevialtissot.fr.
+Chaque erreur est illustrée, quand c'est possible, par une de mes ventes réelles, racontée en entier sur www.annevialtissot.fr.
 
 ## Erreur n° 1 : fixer le prix au « feeling » sans analyse comparative
 
@@ -42,7 +40,7 @@ Vous fixez votre prix selon l'une de ces méthodes : « J'ai acheté 300 000 €
 
 **La réalité.** Le marché immobilier est très local. Dans le secteur Léman, le prix médian d'un appartement ancien vendu entre août 2025 et juillet 2026 est de **3 910 € le m²** selon les notaires (3), mais deux appartements de la même rue peuvent s'en écarter nettement. Les acheteurs filtrent les annonces par prix : au-dessus du marché, votre bien n'apparaît même pas devant ceux qui ont le bon budget, et ceux qui le voient le comparent à des biens mieux placés.
 
-**Cas réel : un chalet à Essert-Romand.** En vente depuis juin dans deux agences, sans une seule visite. Le prix avait été fixé sans comparaison avec les ventes du secteur. Plutôt qu'une forte baisse d'un coup, j'ai proposé un premier ajustement pour tester le marché, puis un second quatre semaines plus tard. Chaque chiffre était documenté et expliqué. Résultat : quatre visites en quelques semaines, puis deux offres au prix demandé après deux mois de commercialisation. [Lire l'histoire complète sur annevialtissot.fr →](https://annevialtissot.fr/realisation/essert-romand-chalet-2026)
+**Cas réel : un chalet à Essert-Romand.** En vente depuis juin dans deux agences, sans une seule visite. Le prix avait été fixé sans comparaison avec les ventes du secteur. Plutôt qu'une forte baisse d'un coup, j'ai proposé un premier ajustement pour tester le marché, puis un second quatre semaines plus tard. Chaque chiffre était documenté et expliqué. Résultat : quatre visites en quelques semaines, puis deux offres au prix demandé après deux mois de commercialisation. [Lire l'histoire complète sur www.annevialtissot.fr →](https://annevialtissot.fr/realisation/essert-romand-chalet-2026)
 
 1. Identifier une dizaine de biens comparables : même type, même secteur, vendus récemment
 2. Analyser leurs prix de vente réels au m² dans la base DVF (app.dvf.etalab.gouv.fr, publique et gratuite)
@@ -83,7 +81,7 @@ Vous pensez que votre DPE de 2019 est encore bon parce que « le DPE dure 10 ans
 
 Vous signez un compromis, puis le notaire réclame des documents que vous n'avez pas, ou découvre un problème d'urbanisme (extension non déclarée, travaux sans autorisation). Signature repoussée, acheteur qui doute, parfois annulation.
 
-**Cas réel : à Morzine, il fallait d'abord créer la copropriété.** Une bâtisse familiale divisée en trois logements, jamais mise en copropriété : sans elle, ni acte ni prêt possibles pour l'acheteur. Géomètre, notaire, accord de chaque propriétaire : six mois de préparation avant la première annonce, puis une vente sans mauvaise surprise. [Lire l'histoire complète sur annevialtissot.fr →](https://annevialtissot.fr/realisation/morzine-appartement-2026)
+**Cas réel : à Morzine, il fallait d'abord créer la copropriété.** Une bâtisse familiale divisée en trois logements, jamais mise en copropriété : sans elle, ni acte ni prêt possibles pour l'acheteur. Géomètre, notaire, accord de chaque propriétaire : six mois de préparation avant la première annonce, puis une vente sans mauvaise surprise. [Lire l'histoire complète sur www.annevialtissot.fr →](https://annevialtissot.fr/realisation/morzine-appartement-2026)
 
 **Documents à réunir AVANT la mise en vente**
 
@@ -120,7 +118,7 @@ Le problème n'est pas le bien, mais sa présentation.
 4. Nettoyer : un grand ménage avant les photos et avant chaque visite
 5. Éclairer : ouvrir tous les volets, allumer toutes les lumières lors des visites
 
-**Cas réel : un appartement au bord du lac à Anthy-sur-Léman.** Un couple de retraités vendait l'appartement acheté sur plan 25 ans plus tôt. Rien n'a été retouché sur le bien lui-même. Nous avons désencombré pièce par pièce, puis fait réaliser photos, vidéo, visite virtuelle et vues au drone. Deux mois après la remise en vente, la deuxième visite s'est conclue par une offre au prix visé, sans négociation. [Lire l'histoire complète sur annevialtissot.fr →](https://annevialtissot.fr/realisation/anthy-t3-2024)
+**Cas réel : un appartement au bord du lac à Anthy-sur-Léman.** Un couple de retraités vendait l'appartement acheté sur plan 25 ans plus tôt. Rien n'a été retouché sur le bien lui-même. Nous avons désencombré pièce par pièce, puis fait réaliser photos, vidéo, visite virtuelle et vues au drone. Deux mois après la remise en vente, la deuxième visite s'est conclue par une offre au prix visé, sans négociation. [Lire l'histoire complète sur www.annevialtissot.fr →](https://annevialtissot.fr/realisation/anthy-t3-2024)
 
 ## Erreur n° 5 : sous-estimer l'importance des photos professionnelles
 
@@ -128,7 +126,7 @@ Le problème n'est pas le bien, mais sa présentation.
 
 **Ce que ça vous coûte.** Peu de demandes, donc peu de visites, donc pas d'offre. Les semaines passent avant que vous compreniez que le problème vient des photos, et pendant ce temps votre annonce vieillit sur les portails.
 
-**Cas réel : une maison de standing à Allinges.** Un an sur le marché avec deux agences, aucune offre. Entre autres obstacles, la présentation était minimale : photos standards, ni vidéo ni visite virtuelle. Nous avons tout refait avec un professionnel (photos, vidéo, drone, visite virtuelle), en plus d’autres ajustements (prix, home staging virtuel). Vente conclue trois mois plus tard. [Lire l'histoire complète sur annevialtissot.fr →](https://annevialtissot.fr/realisation/maison-premium-2025)
+**Cas réel : une maison de standing à Allinges.** Un an sur le marché avec deux agences, aucune offre. Entre autres obstacles, la présentation était minimale : photos standards, ni vidéo ni visite virtuelle. Nous avons tout refait avec un professionnel (photos, vidéo, drone, visite virtuelle), en plus d’autres ajustements (prix, home staging virtuel). Vente conclue trois mois plus tard. [Lire l'histoire complète sur www.annevialtissot.fr →](https://annevialtissot.fr/realisation/maison-premium-2025)
 
 **La solution.** Confiez vos photos à un photographe spécialisé en immobilier. Demandez deux ou trois devis : c'est un petit investissement au regard du prix de votre bien et des mois qu'il peut vous faire gagner.
 
@@ -173,7 +171,7 @@ Vous mettez votre annonce sur Le Bon Coin et vous attendez. Ou pire : vous la me
 - Facebook Marketplace : local, proximité géographique
 - Réseaux sociaux : pour montrer le bien en vidéo
 
-**Cas réel : un chalet à Bernex, vendu à l'autre bout du monde.** Au-delà des portails français, le réseau eXp m'a donné une visibilité sur les portails internationaux. Deux semaines après le lancement, une première visite et une offre au prix demandé, de la part d'acquéreurs installés en Malaisie. [Lire l'histoire complète sur annevialtissot.fr →](https://annevialtissot.fr/realisation/bernex-chalet-2024)
+**Cas réel : un chalet à Bernex, vendu à l'autre bout du monde.** Au-delà des portails français, le réseau eXp m'a donné une visibilité sur les portails internationaux. Deux semaines après le lancement, une première visite et une offre au prix demandé, de la part d'acquéreurs installés en Malaisie. [Lire l'histoire complète sur www.annevialtissot.fr →](https://annevialtissot.fr/realisation/bernex-chalet-2024)
 
 **Diffusion large = plus de demandes = plus de chances d'offres = meilleur prix**
 
@@ -257,11 +255,11 @@ Avant de mettre en vente, vérifiez que vous avez :
 
 Si vous avez coché les 5, vous êtes bien préparé. Sinon, vous savez ce qu'il vous reste à faire.
 
-**Besoin d'aide ?** Pour un regard personnalisé sur votre situation, réservez un rendez-vous de 30 minutes sur annevialtissot.fr/contact.
+**Besoin d'aide ?** Pour un regard personnalisé sur votre situation, réservez un rendez-vous de 30 minutes sur www.annevialtissot.fr/contact.
 
 Bonne vente,
 **Anne Vial-Tissot**
-Experte immobilière Léman & Chablais
+Conseillère en immobilier · Chablais, Léman
 
 ## Sources
 

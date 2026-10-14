@@ -100,8 +100,8 @@ function reponsesLisibles(l: LigneLead): string[] {
   });
 }
 
-const SIGNATURE = 'Anne VIAL-TISSOT\nConseillère en immobilier · Chablais, Léman · réseau eXp France\nhttps://annevialtissot.fr';
-const SIGNATURE_EN = 'Anne VIAL-TISSOT\nReal estate advisor · Chablais, Lake Geneva · eXp France network\nhttps://annevialtissot.fr';
+const SIGNATURE = 'Anne VIAL-TISSOT\nConseillère en immobilier · Chablais, Léman · réseau eXp France\nwww.annevialtissot.fr';
+const SIGNATURE_EN = 'Anne VIAL-TISSOT\nReal estate advisor · Chablais, Lake Geneva · eXp France network\nwww.annevialtissot.fr';
 
 export function notifierAnne(l: LigneLead): Message {
   const nomComplet = [l.prenom, l.nom].filter(Boolean).join(' ');
@@ -120,7 +120,7 @@ export function notifierAnne(l: LigneLead): Message {
       `Rendez-vous « Premier échange » le ${rendezVous(l.rdv_start)} (heure de Paris), par téléphone.`,
       ...(l.message ? [`Note du prospect : ${l.message}`] : []),
     ] : [l.message ?? '']),
-    `Demande du ${dateParis(l.created_at)} via annevialtissot.fr (${ORIGINE[l.source] ?? l.source}${detail}).`,
+    `Demande du ${dateParis(l.created_at)} via www.annevialtissot.fr (${ORIGINE[l.source] ?? l.source}${detail}).`,
     `Séquence d'e-mails : ${l.newsletter_opt_in_at ? 'acceptée' : 'non demandée'}.`,
     l.lang === 'en' ? 'Demande faite depuis la version anglaise du site.' : '',
     campagne ? `Campagne : ${campagne}.` : '',
@@ -165,7 +165,11 @@ export function notifierAnne(l: LigneLead): Message {
 }
 
 const PIED_SEQUENCE = (n: number) => `Vous recevrez aussi ${n} e-mails de conseils, à quelques jours d'intervalle. Chacun contient un lien pour arrêter.`;
-const bonjour = (l: LigneLead) => `${l.lang === 'en' ? 'Hello' : 'Bonjour'} ${l.prenom ?? ''}`.trim() + ',';
+/** Texte saisi par le visiteur, rendu inerte pour le petit Markdown des e-mails : sans crochets, pas de lien déguisé
+ *  (« [Payer ici](https://…) ») dans un e-mail signé par Anne et envoyé à l'adresse que le visiteur a tapée. */
+const saisie = (s: string | null | undefined) => (s ?? '').replace(/\[/g, '(').replace(/\]/g, ')');
+
+const bonjour = (l: LigneLead) => `${l.lang === 'en' ? 'Hello' : 'Bonjour'} ${saisie(l.prenom)}`.trim() + ',';
 
 /** `lienGuide` : lien signé du guide (null si le secret des liens manque : l'e-mail renvoie alors à la page du guide). */
 export function confirmerProspect(l: LigneLead, lienGuide: string | null = null, etapes = 0, lienRapport: string | null = null): Message {
@@ -206,21 +210,21 @@ export function confirmerProspect(l: LigneLead, lienGuide: string | null = null,
   if (l.lang === 'en') {
     const corps =
       l.source === 'estimation'
-        ? `Your valuation request has reached me. I will call you back within one working day${tel ? ` on ${tel}` : ''} to ask a few questions about the property in ${l.commune_bien}, then we will arrange a visit. No figure is given in writing before that visit.`
+        ? `Your valuation request has reached me. I will call you back within one working day${tel ? ` on ${tel}` : ''} to ask a few questions about the property in ${saisie(l.commune_bien)}, then we will arrange a visit. No figure is given in writing before that visit.`
         : `Your message has reached me. I will reply within one working day, by e-mail${tel ? ` or on ${tel}` : ''}.`;
     return auProspect(
       l.source === 'estimation' ? 'Your valuation request to Anne VIAL-TISSOT' : 'Your message to Anne VIAL-TISSOT',
-      [bonjour(l), '', corps, ...(l.message ? ['', 'Your message:', '', `> ${l.message.replace(/\n/g, '\n> ')}`] : []), '', 'To add anything, simply reply to this e-mail.'].join('\n'),
+      [bonjour(l), '', corps, ...(l.message ? ['', 'Your message:', '', `> ${saisie(l.message).replace(/\n/g, '\n> ')}`] : []), '', 'To add anything, simply reply to this e-mail.'].join('\n'),
       'en', 'Your request has reached Anne.',
     );
   }
   const corps =
     l.source === 'estimation'
-      ? `Votre demande d'estimation est bien arrivée. Je vous rappelle sous un jour ouvré${tel ? ` au ${tel}` : ''}, pour quelques questions sur votre bien à ${l.commune_bien}, puis nous fixerons une visite. Aucun chiffre n'est donné par écrit avant cette visite.`
+      ? `Votre demande d'estimation est bien arrivée. Je vous rappelle sous un jour ouvré${tel ? ` au ${tel}` : ''}, pour quelques questions sur votre bien à ${saisie(l.commune_bien)}, puis nous fixerons une visite. Aucun chiffre n'est donné par écrit avant cette visite.`
       : `Votre message est bien arrivé. Je vous réponds sous un jour ouvré, par e-mail${tel ? ` ou au ${tel}` : ''}.`;
   return auProspect(
     l.source === 'estimation' ? "Votre demande d'estimation à Anne VIAL-TISSOT" : 'Votre message à Anne VIAL-TISSOT',
-    [bonjour(l), '', corps, ...(l.message ? ['', 'Pour rappel, votre message :', '', `> ${l.message.replace(/\n/g, '\n> ')}`] : []), '', 'Pour ajouter une précision, répondez simplement à cet e-mail.'].join('\n'),
+    [bonjour(l), '', corps, ...(l.message ? ['', 'Pour rappel, votre message :', '', `> ${saisie(l.message).replace(/\n/g, '\n> ')}`] : []), '', 'Pour ajouter une précision, répondez simplement à cet e-mail.'].join('\n'),
     'fr', l.source === 'estimation' ? 'Votre demande d\'estimation est bien arrivée.' : 'Votre message est bien arrivé.',
   );
 }
@@ -239,12 +243,12 @@ export function envoyerGuide(l: LigneLead, lienGuide: string): Message {
 /** Un e-mail de la séquence d'Anne (`sequence:<étape>`), avec le lien de désabonnement en pied. Le texte d'Anne est
  * mis en forme tel qu'elle l'a écrit : seul « [Prénom] » est remplacé. */
 export function etapeSequence(l: LigneLead, e: EtapeSequence, lienDesabonnement: string): Message {
-  const md = e.corps.replace(/\[Prénom\]/g, l.prenom ?? '').replace(/^(Bonjour|Hello) ,/m, '$1,');
+  const md = e.corps.replace(/\[Prénom\]/g, saisie(l.prenom)).replace(/^(Bonjour|Hello) ,/m, '$1,');
   const pied = l.lang === 'en'
     ? { texte: `You receive this e-mail because you asked for Anne's advice series. To stop: ${lienDesabonnement}`,
       md: `You receive this e-mail because you asked for Anne's advice series. [Stop receiving these e-mails](${lienDesabonnement})` }
     : { texte: `Vous recevez cet e-mail parce que vous avez demandé la série de conseils d'Anne. Pour ne plus la recevoir : ${lienDesabonnement}`,
       md: `Vous recevez cet e-mail parce que vous avez demandé la série de conseils d'Anne. [Ne plus recevoir ces e-mails](${lienDesabonnement})` };
   const apercu = enTexte(md).split('\n').map((x) => x.trim()).filter((x) => x && !/^(Bonjour|Hello)\b/.test(x))[0] ?? '';
-  return auProspect(sujetEtape(e, l.prenom), md, l.lang, apercu.slice(0, 140), pied);
+  return auProspect(sujetEtape(e, l.prenom && saisie(l.prenom)), md, l.lang, apercu.slice(0, 140), pied);
 }

@@ -1,7 +1,7 @@
 ---
 titre: À propos
 sous_titre: |-
-  Dix ans dans la Finance d'entreprise en France et à l'étranger (Brésil) — Groupe BEL puis Danone — avant l'immobilier. Chaque vente est menée comme un projet : un audit de votre situation, une coordination des différents interlocuteurs, un accompagnement jusqu'à la réussite de votre projet. Sur le Chablais et le bassin lémanique, au service d'une clientèle locale et internationale. 
+  Chaque vente est menée comme un projet : un audit de votre situation, une coordination des différents interlocuteurs, un accompagnement jusqu'à la réussite de votre projet. Sur le Chablais et le bassin lémanique, au service d'une clientèle locale et internationale. 
   Langues parlées : Français, anglais, espagnol, portugais.
 video: ''
 portrait: jyhell-2023-104.webp
@@ -15,11 +15,11 @@ statut: brouillon
 
 ## Mon parcours : comment j'en suis venue à l'immobilier
 
-Après un Master 2 en Finance et un parcours international d’une dizaine d’années dans des grands groupes agroalimentaires (au Vietnam et au Brésil) j’ai décidé de m'orienter vers l'immobilier.
+Après un Master 2 en Finance et un parcours international d’une dizaine d’années dans de grands groupes agroalimentaires, j’ai décidé de m'orienter vers l'immobilier.
 
-Pourquoi l'immobilier?
+Pourquoi l'immobilier ?
 
-En 2016, nous décidons avec mon frère et mon mari, de nous lancer dans l’investissement locatif. L’objectif, rénover et valoriser le parc immobilier ancien pour proposer à la location des appartements refaits à neuf. Début d’une aventure entreprenariale qui m’a fait découvrir le secteur de l’immobilier et ces multiples facettes (financement, juridique, urbanisme, gestion administrative, optimisation fiscale). Mais aussi, mon goût pour la décoration et l’agencement intérieur, repenser et valoriser les espaces.
+En 2016, nous décidons avec mon frère et mon mari, de nous lancer dans l’investissement locatif. L’objectif, rénover et valoriser le parc immobilier ancien pour proposer à la location des appartements refaits à neuf. Début d’une aventure entrepreneuriale qui m’a fait découvrir le secteur de l’immobilier et ses multiples facettes (financement, juridique, urbanisme, gestion administrative, optimisation fiscale). Mais aussi, mon goût pour la décoration et l’agencement intérieur, repenser et valoriser les espaces.
 
 Pendant des années, j'ai fait parler les chiffres. Avec rigueur, avec précision… mais avec ce sentiment, au fil du temps, de passer à côté de l'essentiel : les gens.
 
@@ -33,7 +33,7 @@ Car acheter ou vendre un bien, ce n'est jamais qu'une transaction. C'est une ét
 
 En devenant Conseillère en immobilier, j'ai vite noté les manquements de ce métier et pourquoi la profession était autant décriée.
 
-**1. Financement non validé sytématiquement**
+**1. Financement non validé systématiquement**
 Des promesses signées sans la validation d'un courtier en financement.
 
 **2. Formalités administratives oubliées**
@@ -47,7 +47,7 @@ Il faut être irréprochable.
 - Fournir un dossier administratif et technique solide
 - Anticiper les questions / demandes
 - Avoir un réseau de confiance : des artisans et entreprises de travaux pour chiffrer votre projet
-- Eclairer de manière objective, pour décider en toute sérénité
+- Éclairer de manière objective, pour décider en toute sérénité
 
 **4. Coordination inexistante**
 Pas de vision d'ensemble de votre projet. Un audit de votre situation est important afin de définir les différentes parties prenantes et de les coordonner.
@@ -107,7 +107,7 @@ Le premier achat est souvent une étape angoissante pour les primo-accédants. J
 
 ## Investisseurs
 
-Rendement, fiscalité, revente : le bien est regardé comme un actif, pas comme un coup de cœur. Des dossiers présentés sous le prisme des investisseurs, avec pertinence et pro activité sur le potentiel de transformation et de revente.
+Rendement, fiscalité, revente : le bien est regardé comme un actif, pas comme un coup de cœur. Des dossiers présentés sous le prisme des investisseurs, avec pertinence et proactivité sur le potentiel de transformation et de revente.
 
 ## Cadres en mobilité
 
@@ -119,7 +119,7 @@ Que ce soit pour un changement de projet de vie (vente d'une maison pour un appa
 
 # Réseau eXp
 
-Je m'appuie sur un réseau mondial présent dans plus de 30 pays avec plus de 88 000 collaborateurs dans le monde et plus de 900 agents en France. Ce réseau me permet de bénéficier d'outils innovants et d'un back office premium. L'aspect international est une forte valeur ajoutée, notamment au niveau du bassin lemanique, qui attire de plus en plus une clientèle étrangère.
+Je m'appuie sur un réseau mondial présent dans plus de 30 pays avec plus de 88 000 collaborateurs dans le monde et plus de 900 agents en France. Ce réseau me permet de bénéficier d'outils innovants et d'un back office premium. L'aspect international est une forte valeur ajoutée, notamment au niveau du bassin lémanique, qui attire de plus en plus une clientèle étrangère.
 
 <!-- « Ce que cela change pour vous » : ajouté par Claude le 2026-10-10 à la demande de JB (story 7.21), sous le texte d'Anne. -->
 

@@ -41,10 +41,11 @@ Les scripts Playwright utilisent `/opt/pw-browsers/chromium` s'il existe, sinon 
 | `/contact` (`#reserver`, `#ecrire`) | Agenda Cal.com chargé au clic (story 10.6) + « Écrire à Anne » (champ projet vente/achat) | maquette `08-contact-*` |
 | `/guide` | guide « 10 erreurs », capture téléphone facultatif | maquette `09-guide-*` |
 | `/mentions-legales`, `/confidentialite`, `/cookies` | légal, lockup positif en tête des mentions, valeurs A-13 à compléter | maquette `10-legal-*` |
+| `/honoraires` | barème d'honoraires (résidentiel, commercial et terrains), lien dans le pied de page et les mentions légales (story 12.6) | hors maquette, gabarit des pages légales |
 | `/404` | page introuvable | — |
 | `/en`, `/en/track-record` | accueil EN et index « Track record » (vide : aucune story traduite, AD-2). Les autres entrées EN renvoient aux pages FR pour cette v1, sans écran mi-traduit. | `src/content/ui/en.json` |
 
-Navigation (D-2, D-17, D-21, D-28, D-42, D-44) : sur ordinateur, gélule centrée compacte, symbole | Accueil · À propos ▾ (Qui suis-je ? · Ma méthode · Cible) · Réalisations · Vendre · Acheter · FR EN · Contact en pastille (réseaux au pied de page et dans le menu du téléphone, D-44) (sous-menu À propos : Qui suis-je ? · Ma méthode · Cible · Réseau eXp, D-34 ; « Réalisations » au pluriel, index titré « Quelques réalisations », D-29). Fixe dès le premier pixel, réduite à 56 px au défilement, jamais masquée ; menu mobile plein écran avec Accueil puis « À propos » en accordéon (lien + chevron). Pied de page `00-footer` partout.
+Navigation (D-2, D-6 A, D-17, D-21, D-28, D-42) : réseaux · symbole seul | Accueil · À propos ▾ (Qui suis-je ? · Ma méthode · Cible) · Réalisations · Vendre · Acheter · Contact · FR EN (sous-menu À propos : Qui suis-je ? · Ma méthode · Cible · Réseau eXp, D-34 ; « Réalisations » au pluriel, index titré « Quelques réalisations », D-29). Fixe dès le premier pixel, réduite à 56 px au défilement, jamais masquée ; menu mobile plein écran avec Accueil puis « À propos » en accordéon (lien + chevron). Pied de page `00-footer` partout.
 
 ## Réel vs placeholder
 
@@ -59,7 +60,7 @@ Navigation (D-2, D-17, D-21, D-28, D-42, D-44) : sur ordinateur, gélule centré
 Tous dans `src/config/site.ts` :
 
 - **Les 3 avis de l'accueil** : Alexandra V. (vendeuse, reliée à la story de Thonon avec sa photo), JcbAnthy (vendeur), Rémi (acheteur). L'instantané proposait JcbAnthy + Sabine/François + Rémi ; Sabine/François (très long) est gardé en citation courte sur la carte Essert-Romand de la pile.
-- **Liaisons avis → story assumées** tant que le champ `story` des fiches d'avis est vide (`liaisonsAssumees`) : Alexandra V. → `appartement-cascade-2024` (« projet vente et achat » = la vente en cascade), RHL acheteur → `auberge-decoupee-2024`. Anne confirme en remplissant `story:` dans la fiche ; ce tableau est alors ignoré.
+- **Liaisons avis → story** : toutes écrites dans le champ `story` des fiches d'avis depuis la correspondance de JB du 2026-10-11 (story 7.22) ; le tableau `liaisonsAssumees` de `src/config/site.ts` est vide et ne sert plus que de secours.
 - **Bande preuve** : une phrase d'Alexandra V. — Acheter : RHL + JamesW.
 - **Cartes 4-6 de la pile** : Sciez villa 2025, Essert-Romand chalet 2026, Anthy T3 2024 (registre `_suivi-stories.md`), photo réservée, citation de l'avis rapproché quand la confiance est « forte ».
 - **Phrase d'Anne par carte** (`phrasesStories`) : extraite telle quelle du récit.
@@ -87,7 +88,19 @@ Chaque endroit est marqué `TODO(backend)` dans le code (`grep -rn "TODO(backend
 4. ~~Gabarit Cal.com statique de `/contact`~~ : **agenda Cal.com réel et webhook depuis la story 10.6** (voir « Rendez-vous Cal.com »).
 5. ~~Envoi du guide à la main par Anne~~ : **lien signé envoyé par le site depuis la story 10.5**. Reste simulé : le PDF lui-même est une version provisoire tant qu'Anne n'a pas relu le guide (`contenu-anne/guide/guide.md`, `statut: brouillon`).
 6. Adaptateur Cloudflare (`@astrojs/cloudflare`, `worker.ts` pour le cron), D1 `eu`, migrations, ~~admin~~ (espace de gestion réel depuis la story 10.7, voir « Gestion des demandes »), mesure d'audience, `funnel_event` (AD-10 → AD-18). `astro.config.mjs` reste `output: 'static'` jusque-là.
-7. Données structurées `RealEstateAgent` depuis `identite` (AD-13) une fois A-13 fourni.
+7. ~~Données structurées `RealEstateAgent`~~ : **en place depuis la story 11.3** (voir « Référencement »).
+
+## Référencement (story 11.3)
+
+En production seulement (pages sans `noindex`) :
+
+- **Plan du site** `sitemap.xml` : écrit après la construction par `integrations/plan-du-site.mjs`, depuis les pages réellement construites. Une page `noindex` (404, questions du diagnostic, désabonnement) et l'espace d'édition `/admin` en sont exclus. `robots.txt` l'annonce. Sur l'aperçu, le plan est vide et `robots.txt` n'en parle pas.
+- **Liens de langue** (`hreflang`) dans `Base.astro`, seulement pour les pages qui existent dans les deux langues (`routes` de `src/i18n` dont la version anglaise commence par `/en` : accueil, réalisations). Le plan du site les recopie.
+- **Fiche d'Anne pour Google** (données structurées JSON-LD `RealEstateAgent`) sur l'accueil FR et EN, tirée de `identite` et `reseaux` (`src/config/site.ts`) ; un champ vide est omis.
+
+- **Icône du site** (story 12.9) : `favicon.svg` (symbole cercle-horizon de la charte) plus des copies en image classique tirées de lui : `favicon.ico` (16, 32 et 48 px), `favicon-96.png`, `favicon-192.png`, `apple-touch-icon.png` (180 px sur fond blanc, pour l'écran d'accueil d'un iPhone). Google affiche cette icône à côté du site dans ses résultats ; il demande un carré de 48 px ou d'un multiple de 48. Pour les refaire après un changement de `favicon.svg` : voir la story 12.9.
+
+Ce qui reste hors du code : inscription du site dans Google Search Console et envoi du plan (JB), fiche Google Business Profile (story 11.2).
 
 ## Mise en ligne (story 9.2)
 
@@ -100,7 +113,7 @@ Cloudflare Workers Builds : dossier racine `site`, construction `npm ci && npm r
 ## Noyau serveur et base des leads (story 10.2)
 
 - **Construction** : `npm run build` produit `dist/client/` (les pages, servies telles quelles) et `dist/server/` (le Worker et sa configuration `wrangler.json`, générée depuis `wrangler.jsonc`). Les scripts de vérification lisent `dist/client/`.
-- **Point d'entrée** : `worker.ts` (`main` de `wrangler.jsonc`). Il sert lui-même `/api/retour` et confie le reste à Astro (`handle`), donc les routes de `src/pages/api/` (`export const prerender = false`). `scheduled` (toutes les 15 minutes) réessaie les e-mails en échec depuis la story 10.3. Toutes les pages restent prérendues.
+- **Point d'entrée** : `worker.ts` (`main` de `wrangler.jsonc`). Il sert lui-même `/api/retour` et confie le reste à Astro (`handle`), donc les routes de `src/pages/api/` (`export const prerender = false`). En-têtes de sécurité (story 12.6) : `public/_headers` (`/*`) pour les pages fixes et `securiser()` dans `worker.ts` pour les réponses du serveur, mêmes valeurs (HSTS un an, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`) ; pas encore de CSP (scripts en ligne, Turnstile, unpkg pour `/admin`). `scheduled` (toutes les 15 minutes) réessaie les e-mails en échec depuis la story 10.3. Toutes les pages restent prérendues.
 - **Base** : liaison `DB`, base D1 `anne-leads-apercu` (juridiction UE) pour toutes les mises en ligne tant que le site n'est pas lancé ; la base de production `anne-leads` sera branchée à la story 12.4. Schéma : `migrations/0001-lead.sql` (table `lead`, AD-6), `0002-lead-delivery.sql`, `0003-jeton-resultats.sql` (story 10.4) `0004-rendez-vous.sql` (story 10.6) et `0005-envoi-du-guide.sql` (story 10.5, canal `guide`). En local : `npm run base:local`, puis `npx wrangler dev` (après `npm run build`).
 - **Santé** : `GET /api/sante` répond `{ "ok": true, "migrations": 6 }` (depuis la story 10.7) si la base répond, 503 sinon. Aucune donnée personnelle.
 - **Réglages écartés** : pas de sessions Astro (`session: false`, donc pas de stockage KV créé automatiquement) ; images en `passthrough` (le site prépare ses images lui-même), donc pas de liaison Cloudflare Images.
@@ -129,7 +142,7 @@ Cloudflare Workers Builds : dossier racine `site`, construction `npm ci && npm r
 
 ## Retours sur l'aperçu (story 9.6)
 
-Sur l'aperçu (site non indexable), chaque page porte un bouton « Un retour ? » (`src/components/RetourApercu.astro`, inclus par `Base.astro`). La remarque part en POST vers `/api/retour`, servie par `worker.ts` (point d'entrée Cloudflare, `main` de `wrangler.jsonc`, `run_worker_first: ["/api/*"]`), qui crée un ticket GitHub étiqueté `retour-apercu` avec la page, l'auteur (en-tête `cf-access-authenticated-user-email` posé par Cloudflare Access), l'écran et la date. Secret `GITHUB_TOKEN` côté Cloudflare, jamais dans le dépôt (`.dev.vars` en local, ignoré ; modèle `.dev.vars.example`). En production le bouton n'est pas rendu. Le bouton est masqué quand `navigator.webdriver` est vrai (captures Playwright). `worker.ts` sera remplacé par le noyau serveur de l'epic 10.
+Sur l'aperçu (site non indexable), chaque page porte un bouton « Un retour ? » (`src/components/RetourApercu.astro`, inclus par `Base.astro`). La remarque part en POST vers `/api/retour`, servie par `worker.ts` (point d'entrée Cloudflare, `main` de `wrangler.jsonc`, `run_worker_first: ["/api/*"]`), qui crée un ticket GitHub étiqueté `retour-apercu` avec la page, l'auteur, l'écran et la date. Depuis la revue du 2026-10-11 (story 12.6), `/api/retour` vérifie lui-même le jeton Cloudflare Access (`compteAcces`, comme `/gestion`) et refuse tout envoi sans jeton (403) : Access ne couvre plus tout `annevialtissot.fr`, et l'auteur est l'adresse lue dans le jeton vérifié. Secret `GITHUB_TOKEN` côté Cloudflare, jamais dans le dépôt (`.dev.vars` en local, ignoré ; modèle `.dev.vars.example`). En production le bouton n'est pas rendu. Le bouton est masqué quand `navigator.webdriver` est vrai (captures Playwright). `worker.ts` sera remplacé par le noyau serveur de l'epic 10.
 
 ## Rendez-vous Cal.com (story 10.6)
 
@@ -194,7 +207,6 @@ Charte v3 (D-31, 2026-10-08) : Gilda Display (titres, une seule graisse) et Jost
 - **Pas de Lenis** (défilement inertiel du brief scroll-craft) : JS minimal, défilement natif ; à ajouter en îlot si JB le souhaite (≈ 10 Ko).
 - **Tiret des titres** : Italiana n'avait pas de glyphe visible pour le tiret ASCII, et Gilda Display (D-31) n'a pas de tiret insécable (le navigateur le dessine avec la police de secours) ; les titres (« VIAL‑TISSOT », communes) emploient le tiret insécable U+2011 (`src/lib/texte.ts`).
 - **Barre de navigation en verre** (D-42, story 8.14) : une gélule de verre dépoli qui flotte au-dessus de la page, fumée sur la vidéo d'accueil, réduite (56 px) dès 40 px de défilement ; la maquette dessinait une barre pleine largeur écru. Pleine si « réduire la transparence » est demandé ou si le navigateur ne sait pas flouter. Le menu « À propos » est plein (un flou imbriqué dans la barre ne verrait pas la page).
-- **Barre compacte et centrée sur ordinateur** (D-44, story 8.18, ticket n° 116) : la gélule prend la largeur de son contenu au lieu de traverser l'écran ; les réseaux sortent de la barre (la maquette et D-6 les plaçaient à gauche du symbole) ; Contact devient une pastille bleue.
 - **Portrait de l'accueil en mise en page de magazine** (D-42) : photo tirée sur papier et penchée, langues écrites à la main (Caveat), lettrine ; la maquette montrait une photo simple et les langues en petites capitales.
 - **Section Cible** conservée avec ses textes de placement (point ouvert 1 non tranché) ; **menu « À propos » à trois sous-entrées**.
 - **Accueil EN sans la pile** (aucune story traduite, AD-2) ; avis cités en français, signalés comme tels ; entrées de nav EN vers les pages FR.
@@ -207,7 +219,7 @@ Charte v3 (D-31, 2026-10-08) : Gilda Display (titres, une seule graisse) et Jost
 - **Écarts de la story 10.7** : l'espace est à `/gestion` et non `/admin`, déjà pris par l'espace d'édition Sveltia CMS (story 7.13) ; le second facteur exigé (MFA) est le code à usage unique envoyé par e-mail par Access, sans autre facteur (voir RUNBOOK § 4 quinquies pour le renforcer) ; rien n'est effacé chez Resend car le site n'y crée aucun contact ni audience, il n'y fait qu'envoyer des e-mails (Resend garde ses journaux d'envoi selon sa propre politique) ; la purge tourne à chaque passage de la tâche (toutes les 15 minutes) au lieu d'une fois par jour, sans effet visible.
 - **Écarts de la story 10.9** : les polices du site (Gilda Display, Jost) ne s'affichent que dans Apple Mail et sur iPhone, qui les chargent depuis `annevialtissot.fr/fonts/` (autorisé par `public/_headers`) ; Gmail et Outlook ne chargent aucune police extérieure et affichent Arial. Le logo est joint à l'e-mail plutôt qu'appelé depuis le site (l'aperçu est derrière Access, les messageries bloquent les images distantes, et aucun pixel de suivi n'est possible). Allure « lettre sobre » (fond blanc, logo, filet terracotta), choisie par JB le 2026-10-10 parmi trois maquettes.
 - **Écarts de la story 10.10** : rapport en français seulement (le diagnostic l'est aussi). Polices du PDF converties une fois de woff2 en TTF dans `prive/polices/` (pdf-lib ne sait pas réduire une police woff2), licences jointes. Le gabarit est un fichier fabriqué, commité, à refaire quand les textes changent. Fabriquer le PDF demande environ 60 ms de calcul par téléchargement, au-delà des 10 ms du plan Workers gratuit : le plan Workers Paid (action J10) est nécessaire avant le lancement. Worker : 1,19 Mo compressé (limite 3 Mo en gratuit, 10 Mo en payant).
-- Pages légales : textes de structure conformes à AD-16 (finalités, bases légales, 3 ans), validés pour Anne le 2026-10-10 (accord transmis par JB) ; coordonnées A-13 renseignées dans `src/config/site.ts`.
+- Pages légales : textes de structure conformes à AD-16 (finalités, bases légales, 3 ans), validés pour Anne le 2026-10-10 (accord transmis par JB) ; coordonnées A-13 renseignées dans `src/config/site.ts`. Ajouts du 2026-10-11 (story 12.6) : médiateur de la consommation (MEDIMMOCONSO, celui d'eXp, `identite.mediateur`) et barème d'honoraires (`src/pages/honoraires.astro`, recopié du barème d'équipe eXp transmis par JB, sans le nom de l'ancien titulaire ; le PDF d'origine reste hors du dépôt). Écart assumé : la page n'est pas dans la maquette ; elle reprend le gabarit des pages légales.
 
 ## Largeurs intermédiaires (story 8.2)
 
@@ -231,6 +243,7 @@ La maquette dessine 1 440 px (ordinateur) et 390 px (téléphone). Entre 900 et 
 - **Coordonnées légales** (story 12.5) : le site public ne se construit pas tant qu'une valeur A-13 de `identite` manque (`rsac`, `greffe`, `cartePro`, `adresse`, `telephone`, `email`, `src/config/site.ts`). Sur l'aperçu, elles s'affichent en pastilles « à compléter ».
 - **Plus de vérification d'autorisation dans le code** (décision de JB du 2026-10-05, story 7.14) : les clients des ventes actuelles ont donné leur accord ; « publie » suffit. Le champ `autorisations` des anciennes fiches est toléré mais ignoré.
 - **Témoignage d'une vente = son avis Immodvisor** (story 7.14) : la fiche affiche les avis dont le champ `story` désigne la vente, vendeur d'abord, cités tels quels. La liste `temoignages` de l'en-tête n'est plus proposée dans l'espace d'édition ; si une citation y est écrite à la main, elle passe avant l'avis.
+  Liaisons du 2026-10-11 (story 7.22, correspondance de JB) : Anthy T3 ← JcbAnthy, Laetitia · Anthy T4 ← fleursd'eau · Thonon ← Alexandra V., Rémi · Armoy ← RHL (achat et vente), Bonjour, Erwan B, Vérojo, Cat D, RaphaelD · Bernex ← Albert · Essert-Romand ← Sabine/François · Morzine ← Sergio, JamesW · Sciez ← IsalineP (affiché quand la vente sera publiée). Évian et Allinges n'ont aucun avis relié.
 - Ce qu'Anne doit fournir est listé dans `contenu-anne/A-FOURNIR.md`.
 
 ## Vérification faite (voir `.verif/`)

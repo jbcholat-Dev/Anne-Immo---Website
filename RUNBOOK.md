@@ -19,7 +19,8 @@ Mots de passe : jamais dans ce dépôt, jamais manipulés par Claude. Coffre par
 
 ## 2. L'aperçu (état actuel)
 
-- Adresse : https://anne-vial-tissot-site.jbcholat.workers.dev
+- **Depuis le lancement (2026-10-11, story 12.7)** : l'aperçu est la branche `apercu`, adresse **https://apercu-anne-vial-tissot-site.jbcholat.workers.dev** (base d'aperçu, e-mails vers `BOITE_TEST`, bouton « Un retour ? »). Elle recopie `main` à chaque fusion (`.github/workflows/apercu.yml`) ; ne jamais y commiter directement. L'ancienne adresse https://anne-vial-tissot-site.jbcholat.workers.dev sert désormais la **production** (vraie base, vrais e-mails), toujours derrière Access.
+- Adresse avant le lancement : https://anne-vial-tissot-site.jbcholat.workers.dev
 - Qui peut l'ouvrir : les adresses listées dans la règle Zero Trust `Anne et JB` (Access controls → Policies). Pour inviter quelqu'un : ajouter son adresse à cette règle. Session : 24 h.
 - Non indexé : toutes les pages portent `noindex, nofollow` et `/robots.txt` interdit tout, tant que la variable de construction `PUBLIC_INDEXATION` n'est pas à `oui`.
 - Mise à jour : automatique à chaque fusion dans `main` (Cloudflare Workers Builds). Réglages du projet : dossier racine `site`, construction `npm ci && npm run build`, mise en ligne `npx wrangler deploy`.
@@ -70,12 +71,12 @@ Décision de JB du 2026-10-10 : il ne valide lui-même que les demandes de fusio
 
 ## 4 bis. Retours sur l'aperçu (story 9.6)
 
-- Le bouton « Un retour ? » de l'aperçu crée des tickets GitHub étiquetés `retour-apercu` : https://github.com/jbcholat-Dev/Anne-Immo---Website/issues?q=is%3Aissue+is%3Aopen+label%3Aretour-apercu
+- Le bouton « Un retour ? » de l'aperçu (depuis le lancement : https://apercu-anne-vial-tissot-site.jbcholat.workers.dev, § 2) crée des tickets GitHub étiquetés `retour-apercu` : https://github.com/jbcholat-Dev/Anne-Immo---Website/issues?q=is%3Aissue+is%3Aopen+label%3Aretour-apercu
 - Il a besoin d'une clé GitHub, secret `GITHUB_TOKEN` du projet Cloudflare. **Clé créée le 2026-09-26, à renouveler avant le 2026-09-26 + 1 an** (action à prévoir dans le tableau de bord un mois avant). Pour la créer : GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token ; nom `cloudflare-retours-apercu` ; expiration 1 an ; Repository access : Only select repositories → `Anne-Immo---Website` ; Permissions → Repository permissions → Issues : Read and write (rien d'autre). Copier la clé une seule fois.
 - Pour la poser : Cloudflare → Workers & Pages → anne-vial-tissot-site → Settings → Variables and Secrets → Add → type Secret, nom `GITHUB_TOKEN`, valeur = la clé → Deploy. Aucun redéploiement du code n'est nécessaire.
 - Pour la retirer ou la remplacer : même écran (supprimer, ou Edit) ; côté GitHub, révoquer l'ancienne clé.
 - Sans clé, le bouton répond « L'envoi n'est pas encore branché » ; rien n'est perdu côté site, la remarque est à envoyer à JB.
-- Fin de vie : le bouton n'existe pas en production ; `worker.ts` est remplacé par le noyau serveur de l'epic 10.
+- Le bouton n'existe pas en production. `/api/retour` vérifie lui-même le jeton Cloudflare Access (story 12.6) : seuls Anne et JB peuvent créer un ticket.
 
 ## 4 ter. Si JB quitte le projet : reprendre les domaines
 
@@ -130,7 +131,7 @@ Contrôle : `GET /api/sante` répond `{"ok":true,"migrations":N}` (N = nombre de
 
 **Comment c'est protégé** : deux verrous. 1) Cloudflare Access demande un code envoyé par e-mail aux seules adresses de la règle `Anne et JB`. 2) Le serveur vérifie lui-même le jeton signé qu'Access joint à chaque requête ; il ne l'accepte que s'il vient de l'équipe `https://dry-truth-5a0d.cloudflareaccess.com` (`ACCESS_EQUIPE`) et d'une application dont l'identifiant figure dans `ACCESS_AUD` (`site/wrangler.jsonc`). Si `ACCESS_AUD` est vide, l'espace est fermé à tous (403). Ces deux valeurs sont publiques, elles vont dans le dépôt ; aucun secret à poser.
 
-**Réglage de `ACCESS_AUD`** : Cloudflare → Zero Trust → Access → Applications → l'application → Overview (ou Basic information) → « Application Audience (AUD) Tag », une longue suite de lettres et chiffres. Sur l'aperçu : l'AUD de l'application qui protège tout `anne-vial-tissot-site.jbcholat.workers.dev` (destination « Workers », adresses de production et d'aperçu), posé le 2026-10-09 : `614e9c87…3280`. Plusieurs applications : les séparer par des virgules. Changer la valeur demande une PR (mise en ligne à la fusion).
+**Réglage de `ACCESS_AUD`** : Cloudflare → Zero Trust → Access → Applications → l'application → Overview (ou Basic information) → « Application Audience (AUD) Tag », une longue suite de lettres et chiffres. Sur l'aperçu : l'AUD de l'application qui protège tout `anne-vial-tissot-site.jbcholat.workers.dev` (destination « Workers », adresses de production et d'aperçu), posé le 2026-10-09 : `614e9c87…3280`. En production : l'application `Gestion` (`annevialtissot.fr/gestion` et `/api/gestion`, règle `Anne et JB`), créée le 2026-10-11 par l'API, AUD `916beab7…d5ae`. Plusieurs applications : les séparer par des virgules. Changer la valeur demande une PR (mise en ligne à la fusion).
 
 **Au lancement (story 12.4)** : Access ne protège plus `annevialtissot.fr` en entier (§ 4, étape 4). Avant de retirer cette protection, créer une application Access « Gestion » sur `annevialtissot.fr/gestion` et `annevialtissot.fr/api/gestion` (Self-hosted, règle `Anne et JB`), et ajouter son AUD à `ACCESS_AUD`. Vérifier en fenêtre privée : `/gestion` demande le code ; sans code, `curl https://annevialtissot.fr/gestion` répond 403.
 
@@ -179,3 +180,4 @@ Rien n'est à effacer chez Resend : le site n'y garde aucun contact. Chaque expo
 - 2026-10-10 : audit avant le lancement (story 12.5). § 4 réécrit : la bascule se fait par la variable de construction `LANCEMENT=oui`, écoutée par `main` seulement (`site/scripts/lancement.mjs`) ; les aperçus de branches gardent la base d'aperçu et la boîte de test après le lancement. Ajouts : Turnstile sur le domaine, application Access « Gestion », webhook Cal.com, retour arrière.
 - 2026-10-10 (soir) : décision de JB, lancement minimal le 2026-10-11 avec le design actuel ; transfert du dépôt et coffre (12.3), surveillance (10.8) et fiche Google (11.2) après le lancement, écarts notés dans la story 12.5.
 - 2026-10-10 : décision des campagnes promotionnelles temporaires (epic 14, après le lancement) : une page par offre, créée par Anne dans l'espace d'édition et datée ; chaque offre est un tirage au sort parmi les inscrits (choix de JB), donc un règlement écrit à publier avec l'offre. Rien ne change encore dans les comptes ni la mise en ligne.
+- 2026-10-11 : **site ouvert au public sur https://annevialtissot.fr** (stories 12.4 et 12.5), tout par l'API Cloudflare avec un jeton limité de JB. Domaine personnalisé du Worker, redirections 301 de `www` et du `.com` (règles de redirection des zones, enregistrements `AAAA 100::` proxifiés), Turnstile étendu à `www`, application Access `Gestion` (AUD `916beab7…`, PR n° 124), `LANCEMENT=oui` sur le déclencheur de `main`. **Piège** : l'application Access de destination « Worker » protège aussi les domaines personnalisés du Worker ; elle est désormais limitée aux adresses `anne-vial-tissot-site.jbcholat.workers.dev` et `*-anne-vial-tissot-site.jbcholat.workers.dev`. Aperçu permanent : branche `apercu` (story 12.7, § 2). Retour arrière : § 4.

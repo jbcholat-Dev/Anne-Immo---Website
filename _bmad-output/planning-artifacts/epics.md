@@ -1247,6 +1247,19 @@ afin de ne plus voir des éléments collés aux deux bords et un grand vide au m
 **Et** les réseaux ne sont plus dans la barre, mais restent dans le pied de page et le menu du téléphone
 **Et** sur téléphone, la barre ne change pas
 
+### Story 8.19: Boutons de l'ouverture en bas sur téléphone
+
+En tant que visiteur sur téléphone,
+je veux voir le visage d'Anne dans la vidéo d'ouverture,
+afin que les boutons ne le recouvrent pas (retour de JB du 2026-10-12, site en production).
+
+**Critères d'acceptation :**
+
+**Étant donné** l'accueil sur un téléphone
+**Quand** la page s'ouvre
+**Alors** l'ouverture prend la hauteur de l'écran visible, le nom et la ligne restent en haut, les deux boutons sont posés en bas, l'un sous l'autre
+**Et** sur ordinateur, rien ne change
+
 ### Story 9.1: Comptes et connexion du dépôt
 
 En tant que JB,

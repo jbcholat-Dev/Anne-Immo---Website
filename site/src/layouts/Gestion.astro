@@ -14,7 +14,12 @@ const compte = Astro.request.headers.get(ENTETE_COMPTE) ?? '';
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
     <title>{titre} · Gestion des demandes</title>
+    <!-- Icône du site (story 12.9) : Google reprend dans ses résultats une icône carrée de 48 px ou multiple ; le .ico sert les robots qui ne lisent que /favicon.ico -->
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96" />
+    <link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   </head>
   <body>
     <header class="g-tete">

@@ -3,7 +3,7 @@ commune: Armoy
 type_bien: Propriété anciens gîtes touristiques
 annee_vente: 2024
 delai_vente: ''
-particularite: Une propriété de 6 000 m² composé de gîtes touristiques. Des vendeurs avec un projet de vendre depuis de nombreuses années mais sans savoir pas où commencer.
+particularite: Une propriété de 6 000 m² composée de gîtes touristiques. Des vendeurs avec un projet de vendre depuis de nombreuses années mais sans savoir par où commencer.
 photo_principale: photos/photo-003.jpg
 photos:
   - photos/armoy-exp-immo-028-hd.webp

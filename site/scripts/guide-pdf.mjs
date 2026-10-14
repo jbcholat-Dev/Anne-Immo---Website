@@ -111,7 +111,7 @@ const marges = `
 @page { size: A4; margin: 30mm 20mm 24mm;
   @top-left { content: url("${symbole}") "  Anne VIAL-TISSOT"; font-family: 'Gilda Display', serif; font-size: 9pt; color: #26201A; vertical-align: bottom; padding-bottom: 2.5mm; margin-bottom: 7mm; border-bottom: .5pt solid #E9E0D2; }
   @top-right { content: "Les 10 erreurs des vendeurs"; font-family: 'Jost', sans-serif; font-size: 7pt; letter-spacing: .12em; text-transform: uppercase; color: #5C5248; vertical-align: bottom; padding-bottom: 2.5mm; margin-bottom: 7mm; border-bottom: .5pt solid #E9E0D2; }
-  @bottom-left { content: "annevialtissot.fr${provisoire ? '  ·  version provisoire' : ''}"; font-family: 'Jost', sans-serif; font-size: 7.5pt; color: #5C5248; vertical-align: top; padding-top: 2.5mm; margin-top: 7mm; border-top: .5pt solid #E9E0D2; }
+  @bottom-left { content: "www.annevialtissot.fr${provisoire ? '  ·  version provisoire' : ''}"; font-family: 'Jost', sans-serif; font-size: 7.5pt; color: #5C5248; vertical-align: top; padding-top: 2.5mm; margin-top: 7mm; border-top: .5pt solid #E9E0D2; }
   @bottom-right { content: "— " counter(page) " / " counter(pages); font-family: 'Gilda Display', serif; font-size: 10pt; color: #002FA7; vertical-align: top; padding-top: 2mm; margin-top: 7mm; border-top: .5pt solid #E9E0D2; }
 }
 @page :first { margin: 0; @top-left { content: none; } @top-right { content: none; } @bottom-left { content: none; } @bottom-right { content: none; } }`;
@@ -162,7 +162,7 @@ blockquote { margin: 4mm 0; padding: 4mm 6mm; background: #E7EDF9; border-radius
 <section class="couverture">
   <div class="logo">${logo}</div>
   <div><h1>${echapper(titre)}</h1><div class="sous">${echapper(sousTitre)}</div><div class="ligne"></div><div class="auteur">${echapper(auteur)}</div></div>
-  <div>${provisoire ? '<div class="provisoire">Version provisoire, en cours de relecture par Anne</div>' : ''}<div class="auteur">annevialtissot.fr</div></div>
+  <div>${provisoire ? '<div class="provisoire">Version provisoire, en cours de relecture par Anne</div>' : ''}<div class="auteur">www.annevialtissot.fr</div></div>
 </section>
 ${corps}
 </body></html>`;

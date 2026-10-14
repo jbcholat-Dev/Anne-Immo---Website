@@ -3,6 +3,7 @@
 import Champ from './Champ.astro';
 import Case from './Case.astro';
 import ChampPiege from './ChampPiege.astro';
+import { telephone } from '../config/site';
 ---
 <form data-formulaire="estimation" class="form-estimation" novalidate>
   <div class="form-grille">
@@ -19,7 +20,7 @@ import ChampPiege from './ChampPiege.astro';
     <div class="form-large alerte-douce" data-erreurs-globales hidden role="alert"></div>
     <div class="form-large" data-echec hidden tabindex="-1">
       <div class="alerte" role="alert">L'envoi n'a pas abouti. Vos informations sont conservées dans le formulaire : rien à ressaisir.</div>
-      <a href="/contact" class="lien form-echec-lien">Ou appeler Anne directement</a>
+      <a href={telephone.lien} class="lien form-echec-lien">Ou appeler Anne directement au {telephone.affiche}</a>
     </div>
     <button type="submit" class="btn btn-primaire form-large form-bouton">Demander une estimation</button>
   </div>

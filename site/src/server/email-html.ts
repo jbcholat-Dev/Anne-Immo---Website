@@ -173,7 +173,7 @@ ${h.apercu ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;co
 <table role="presentation" width="48" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0 32px;"><tr><td height="2" bgcolor="${C.terra}" style="height:2px;line-height:2px;font-size:0;background:${C.terra};">&nbsp;</td></tr></table>
 ${corps}
 <p style="margin:32px 0 0;font-family:${SERIF};font-size:20px;line-height:1.3;color:${C.brun};">Anne VIAL-TISSOT</p>
-<p style="margin:4px 0 0;font-family:${SANS};font-size:14px;line-height:1.5;color:${C.muet};">${s.role}<br>${s.zone}<br><a href="https://annevialtissot.fr" style="${styleLien}">annevialtissot.fr</a></p>
+<p style="margin:4px 0 0;font-family:${SANS};font-size:14px;line-height:1.5;color:${C.muet};">${s.role}<br>${s.zone}<br><a href="https://annevialtissot.fr" style="${styleLien}">www.annevialtissot.fr</a></p>
 ${pied}
 </td></tr>
 </table>

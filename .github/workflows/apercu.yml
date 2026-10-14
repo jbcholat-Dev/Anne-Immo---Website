@@ -1,0 +1,32 @@
+# Aperçu permanent après le lancement (story 12.7).
+# Depuis la bascule, main est le site public : l'adresse workers.dev sert la production, sans bouton « Un retour ? ».
+# La branche `apercu` recopie main à chaque fusion. Cloudflare la construit comme toute branche autre que main :
+# base d'aperçu, e-mails vers BOITE_TEST, site non indexable, bouton « Un retour ? » qui crée les tickets retour-apercu.
+# Adresse stable : https://apercu-anne-vial-tissot-site.jbcholat.workers.dev (protégée par Cloudflare Access).
+# Ne jamais commiter directement sur `apercu` : chaque fusion dans main l'écrase.
+
+name: Aperçu
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apercu
+  cancel-in-progress: true
+
+jobs:
+  recopier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Recopier main dans apercu
+        run: git push --force origin HEAD:refs/heads/apercu

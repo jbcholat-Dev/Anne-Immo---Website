@@ -30,7 +30,7 @@ temoignages:
 
 # Six mois sans visite, plus de nouvelles des agences
 
-Un couple m'a été recommandé à l'automne. Leur chalet était en vente depuis le mois de juin dans 2 agences, sans une seule visite. Plus de nouvelles de agences, mes clients étaient dans une incompréhension totale.
+Un couple m'a été recommandé à l'automne. Leur chalet était en vente depuis le mois de juin dans 2 agences, sans une seule visite. Plus de nouvelles des agences, mes clients étaient dans une incompréhension totale.
 
 Dès ma première visite, j'ai vu deux problèmes. Le prix avait été fixé sans aucune justification : pas de comparaison avec les ventes du secteur, rien pour l'expliquer. Et le chalet était mal présenté : encombré, avec des photos de mauvaise qualité qui ne donnaient aucune envie de venir le voir.
 
