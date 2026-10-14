@@ -4,6 +4,12 @@ import Gestion from '../../layouts/Gestion.astro';
 import { ENTETE_COMPTE } from '../../server/acces';
 import { envSite } from '../../server/env';
 import { canal, detailLead, ETATS, quand, rejouable, SOURCES } from '../../server/gestion';
+import { lienRapport } from '../../server/liens';
+import { reponsesDiagnostic } from '../../server/messages';
+import { pointsQuestion, type Reponses } from '../../server/scoring';
+import type { Scores } from '../../server/diagnostic';
+import bareme from '../../content/diagnostic/bareme.json';
+import contenu from '../../content/diagnostic/questions.json';
 
 export const prerender = false;
 if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
@@ -35,7 +41,30 @@ const valeur = (k: string, v: unknown) => {
   if (['answers', 'scores', 'utm'].includes(k) && typeof v === 'string') { try { return JSON.stringify(JSON.parse(v), null, 2); } catch { return v; } }
   return String(v);
 };
-const champs = Object.entries(l).filter(([k, v]) => !MASQUES.includes(k) && v !== null && v !== '');
+// Diagnostic en clair (story 10.11, ticket #144) : score, profil, sous-scores, puis chaque réponse sous sa question,
+// rangée par thème, avec ses points pour les questions notées ; et le rapport PDF du vendeur. Le JSON brut n'est plus affiché.
+const diag = l.source === 'diagnostic' && typeof l.scores === 'string' && typeof l.answers === 'string' ? (() => {
+  try {
+    const scores = JSON.parse(l.scores as string) as Scores;
+    const reponses = (JSON.parse(l.answers as string) as { reponses?: Reponses }).reponses ?? {};
+    const cats = contenu.categories as Record<string, { libelle?: string; max?: number }>;
+    const lignes = reponsesDiagnostic(l.answers as string).map((r) => {
+      const q = r.id === 'q10b' ? 'q10' : r.id;
+      const notee = /^q(0\d|10)$/.test(q) && r.id !== 'q10a';
+      return { ...r, points: notee ? pointsQuestion(q, reponses) : null };
+    });
+    const themes = [...new Set(lignes.map((r) => r.categorie))].map((c) => ({ c, nom: cats[c]?.libelle || 'Autres réponses', lignes: lignes.filter((r) => r.categorie === c) }));
+    return {
+      total: scores.total,
+      profil: bareme.profils.find((p) => p.id === scores.profil)?.libelle ?? scores.profil,
+      axes: (['preparation', 'visibilite', 'efficacite'] as const).map((k) => ({ nom: cats[k]?.libelle ?? k, ...scores.categories[k] })),
+      themes,
+    };
+  } catch { return null; }
+})() : null;
+const rapport = diag ? await lienRapport(envSite, id) : null;
+const DIAG = ['answers', 'scores', 'band'];
+const champs = Object.entries(l).filter(([k, v]) => !MASQUES.includes(k) && !(diag && DIAG.includes(k)) && v !== null && v !== '');
 const recopie = fiche?.envois.some((e) => e.channel === 'modelo' && e.status === 'delivered');
 const nom = [l.prenom, l.nom].filter(Boolean).join(' ') || String(l.email ?? '');
 ---
@@ -58,6 +87,22 @@ const nom = [l.prenom, l.nom].filter(Boolean).join(' ') || String(l.email ?? '')
           {champs.map(([k, v]) => <><dt>{LIBELLES[k] ?? k}</dt><dd>{valeur(k, v)}</dd></>)}
         </dl>
       </section>
+      {diag && (
+        <section class="g-cadre" data-diagnostic>
+          <h2>Diagnostic</h2>
+          <p class="g-diag-score"><b>{diag.total} / 100</b> · {diag.profil}{l.orientation && <span class="g-muet"> · sortie {String(l.orientation)}</span>}</p>
+          <ul class="g-diag-axes">{diag.axes.map((a) => <li>{a.nom} : <b>{a.brut} / {a.max}</b> <span class="g-muet">({a.pourcent} %)</span></li>)}</ul>
+          {rapport && <p><a class="g-bouton" href={rapport} target="_blank" rel="noopener" data-rapport-gestion>Ouvrir le rapport PDF du vendeur</a></p>}
+          {diag.themes.map((t) => (
+            <div class="g-diag-theme">
+              <h3>{t.nom}</h3>
+              <dl class="g-diag-reponses">
+                {t.lignes.map((r) => <><dt>{r.question}</dt><dd data-reponse={r.id}>{r.reponse}{r.points !== null && <span class="g-muet"> · {r.points} / 10 points</span>}</dd></>)}
+              </dl>
+            </div>
+          ))}
+        </section>
+      )}
       <section>
         <h2>Envois</h2>
         <div class="g-table-zone">

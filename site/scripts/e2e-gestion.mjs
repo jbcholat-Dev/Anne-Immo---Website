@@ -84,6 +84,19 @@ try {
   html = await r.text();
   const tokenLead = sql(`SELECT token FROM lead WHERE id = '${lead2}'`)[0]?.token;
   constat(r.status === 200 && html.includes('+33601020304') && html.includes('data-envois') && (!tokenLead || !html.includes(tokenLead)), 'fiche : champs lisibles, envois, aucun jeton technique affiché');
+  // Fiche d'un diagnostic (story 10.11, ticket #144) : réponses en clair sous chaque question, points, rapport PDF ; plus de JSON brut.
+  const ORDRE = ['q01', 'q02', 'q03', 'q04', 'q05', 'q06', 'q07', 'q08', 'q09', 'q10a', 'q10b', 'q11a', 'q11b', 'q12', 'q13', 'q14', 'q15'];
+  const CHOIX = ['q01.a', 'q02.b', 'q03.b', 'q04.b', 'q05.c', 'q06.b', ['q07.a', 'q07.b'], 'q08.b', 'q09.b', 'q10a.b', 'q10b.a', 'q11a.c', 'q11b.a', 'q12.d', ['q13.a', 'q13.c'], 'q14.b', []];
+  const sd = sid();
+  await poster('diagnostic', { submission_id: sd, journey_id: 'essai', prenom: 'Denise', nom: 'Essai', email: `denise+${ESSAI}@example.com`, telephone: '06 12 34 56 78',
+    reponses: Object.fromEntries(ORDRE.map((q, i) => [q, Array.isArray(CHOIX[i]) ? CHOIX[i] : [CHOIX[i]]])) });
+  const leadDiag = leadDe(sd);
+  r = await appeler(`${U}/gestion/lead?id=${leadDiag}`, { headers: avecJeton() });
+  html = await r.text();
+  constat(r.status === 200 && html.includes('data-diagnostic') && html.includes('Comment avez-vous déterminé le prix de vente de votre bien ?')
+    && /data-reponse="q01"[^>]*>[^<]+<span class="g-muet"> · \d+ \/ 10 points/.test(html) && html.includes('Préparation à la vente') && html.includes('Situation actuelle')
+    && !html.includes('&quot;reponses&quot;') && !html.includes('"reponses"'), 'fiche d\'un diagnostic : réponses en clair sous chaque question, rangées par thème, avec leurs points, sans JSON');
+  constat(html.includes('data-rapport-gestion') && html.includes(`/api/diagnostic/rapport?l=${leadDiag}&amp;e=`), 'fiche d\'un diagnostic : lien vers le rapport PDF du vendeur');
   r = await appeler(`${U}/gestion/lead?id=01ARZ3NDEKTSV4RRFFQ69G5FAV`, { headers: avecJeton() });
   constat(r.status === 404, 'fiche d\'une demande inconnue : 404');
 
@@ -155,6 +168,9 @@ try {
     await page.goto(`${U}/gestion/lead?id=${recent}`, { waitUntil: 'networkidle' });
     await page.screenshot({ path: path.join(OUT, `gestion-fiche-${nom}.png`), fullPage: true });
     constat(await page.isVisible('[data-fiche]'), `fiche sur ${nom} : affichée`);
+    await page.goto(`${U}/gestion/lead?id=${leadDiag}`, { waitUntil: 'networkidle' });
+    await page.screenshot({ path: path.join(OUT, `gestion-diagnostic-${nom}.png`), fullPage: true });
+    constat(await page.isVisible('[data-diagnostic]') && !(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)), `fiche d'un diagnostic sur ${nom} : affichée, sans défilement horizontal`);
     if (nom === 'ordinateur') {
       await page.goto(`${U}/gestion?q=${encodeURIComponent(`recent+${ESSAI}@example.com`)}`, { waitUntil: 'networkidle' });
       await page.screenshot({ path: path.join(OUT, 'gestion-droits-ordinateur.png'), fullPage: true });
