@@ -18,7 +18,7 @@ Montrer concrètement à un acheteur ce qu'il suivra pendant sa recherche avec A
 4. 23,5-31 s · Onglet Sélection : « Les biens retenus pour vous, avec le pour et le contre. » Trois maisons dessinées, prix, un plus et un moins chacune, l'une « Pas encore en ligne » ; un clic sur « Ça m'intéresse ».
 5. 31-38 s · Onglet Visites : « Anne visite en premier. » Compteurs (14 étudiés, 6 visités par Anne) et trois comptes rendus (à voir ensemble, écartée, en réserve).
 6. 38-45,5 s · Onglet Le point : « Chaque semaine, le point d'Anne. » Message qui s'écrit mot à mot.
-7. 45,5-52 s · « Anne travaille pour vous, pas pour le bien. » (la phrase de la page Acheter, dite à l'acheteur), puis le logo.
+7. 45,5-52 s · « Moins de visites. La bonne maison. », puis le logo. (Première fin, « Anne travaille pour vous, pas pour le bien. », refusée par JB le 2026-10-14.)
 
 ## Ce qui est fait
 - `site/scripts/video-portail/scene-acheteur.html`, rendu par `node scripts/video-portail.mjs --film acheteur` → `public/video/portail-acheteur.mp4` (1,3 Mo), version téléphone (0,8 Mo), poster.
