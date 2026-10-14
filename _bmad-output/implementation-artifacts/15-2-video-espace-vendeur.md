@@ -18,7 +18,7 @@ Montrer concrètement à un vendeur, avant qu'il signe, ce qu'il suivra de sa ve
 4. 23,5-31 s · Onglet Visites : « Chaque visite, avec le retour des acheteurs. » Compteurs, trois visites avec profil (sans nom) et retour.
 5. 31-38 s · Onglet Marché : « Le marché autour de chez vous, en chiffres réels. » Ventes comparables de la commune (DVF), médiane, place de la maison.
 6. 38-45,5 s · Onglet Le point : « Chaque semaine, le point d'Anne. » Message qui s'écrit mot à mot.
-7. 45,5-52 s · Le refrain de l'accueil s'allume ligne à ligne, puis le logo.
+7. 45,5-52 s · « Votre vente, suivie de bout en bout. Vous savez toujours où elle en est. », puis le logo. (Le refrain de l'accueil, prévu d'abord, est remplacé à la demande de JB du 2026-10-14 : il parle moins aux vendeurs.)
 
 ## Ce qui est fait
 - Animation écrite en HTML (`site/scripts/video-portail/scene.html`), rendue image par image et encodée par `site/scripts/video-portail.mjs` (Playwright + ffmpeg, déjà dans le projet) : `public/video/portail-vendeur.mp4` 1,3 Mo, version téléphone 0,8 Mo, poster.
@@ -37,5 +37,6 @@ Montrer concrètement à un vendeur, avant qu'il signe, ce qu'il suivra de sa ve
 - Captures du bloc : `/mnt/project-files/captures/video-portail/vendre-ordinateur.png` et `vendre-telephone.png` ; pas de débordement horizontal (largeur de page = largeur d'écran à 1440 et 390 px).
 
 ## Ce qui reste
+- 2026-10-14 : JB valide le scénario, sauf la fin (refrain de l'accueil), remplacée par une phrase propre aux vendeurs.
 - Validation des textes par Anne (vidéo et bloc), puis décision de JB sur l'ouverture au public.
 - Sur téléphone, la vidéo 16:9 est petite (les maquettes se lisent mal à 390 px) : une version verticale dédiée est recommandée si JB valide le scénario.

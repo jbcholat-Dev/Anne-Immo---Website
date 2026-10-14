@@ -238,7 +238,8 @@ const TEXTES = {
     titre: 'Le point de la semaine', de: 'Anne VIAL-TISSOT', date: 'Lundi 12 octobre',
     texte: 'Bonjour, trois visites cette semaine, dont une seconde visite samedi pour le couple de Genève. Les retours se rejoignent : la maison plaît, la cuisine inquiète. Je vous propose de faire chiffrer sa rénovation pour rassurer les prochains visiteurs. Je vous appelle mardi pour en parler. Anne',
   },
-  refrain: ['Pas de mauvaise surprise.', 'Pas de dossier qui traîne.', 'Des ventes qui vont au bout.'],
+  // Fin propre aux vendeurs (JB, 2026-10-14) : le refrain de l'accueil ne parle pas assez à ce public.
+  refrain: ['Votre vente, suivie de bout en bout.', 'Vous savez toujours où elle en est.'],
 };
 
 // ——— Construction ———
@@ -365,7 +366,7 @@ function rendu(t) {
   const mots = document.querySelectorAll('#mots span');
   mots.forEach((e, i) => { e.style.opacity = sortie(clamp((t3 - 1 - i * .085) / .3)); });
 
-  // 7. Fermeture : le refrain s'allume ligne à ligne, comme sur l'accueil
+  // 7. Fermeture : la phrase de fin s'allume ligne à ligne, comme le refrain de l'accueil
   const s7 = $("#s7"); s7.style.opacity = vis(t, S.s7[0], S.s7[1], .8);
   const t7 = t - S.s7[0];
   document.querySelectorAll('#refrain div').forEach((e, i) => { e.style.color = melange('D9CFBD', '26201A', douce(p(t7, .6 + i * .8, 1.3 + i * .8))); });
