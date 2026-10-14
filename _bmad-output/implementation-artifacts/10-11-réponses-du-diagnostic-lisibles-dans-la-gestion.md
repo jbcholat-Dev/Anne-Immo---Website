@@ -1,7 +1,7 @@
 ---
 story: 10.11
 epic: 10 — Capture des leads et backend
-statut: review
+statut: done
 date: 2026-10-13
 ---
 
@@ -22,4 +22,4 @@ La seconde partie du ticket (« les données ne sont pas protégées, aucun code
 - `e2e-diagnostic` 31, `e2e-formulaires` 25 : bons. `npm run check` : 0 erreur. `npm run build` : sans erreur.
 
 ## Ce qui reste
-- Fusion par JB, puis fermeture du ticket #144 (automatique à la fusion).
+- Rien. PR #146 fusionnée par JB le 2026-10-14 ; ticket #144 fermé à la fusion.
