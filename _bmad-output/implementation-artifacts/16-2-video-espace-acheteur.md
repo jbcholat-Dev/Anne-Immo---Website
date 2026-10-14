@@ -1,7 +1,7 @@
 ---
 story: 16.2
 epic: 16 — Espace des acheteurs
-statut: review
+statut: done
 date: 2026-10-14
 origine: demande de JB du 2026-10-14 (fil « Vidéo de l'espace vendeur ») : garder la vidéo vendeurs et en faire une pour les acheteurs
 ---
@@ -40,3 +40,6 @@ Montrer concrètement à un acheteur ce qu'il suivra pendant sa recherche avec A
 ## Ce qui reste
 - Validation des textes et des étapes par Anne, puis décision de JB sur l'ouverture au public (recommandation : quand l'espace client existe).
 - Version verticale pour le téléphone, comme pour la vidéo vendeurs.
+
+## Clôture
+2026-10-14 : JB valide la fusion (PR #122). Le bloc reste visible sur l'aperçu seulement ; sa mise au public attend la relecture d'Anne et la décision de JB.

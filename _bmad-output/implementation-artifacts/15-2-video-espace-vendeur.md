@@ -1,7 +1,7 @@
 ---
 story: 15.2
 epic: 15 — Portail des vendeurs sous mandat
-statut: review
+statut: done
 date: 2026-10-11
 origine: demande de JB du 2026-10-11 (fil « Vidéo de l'espace vendeur »)
 ---
@@ -40,3 +40,6 @@ Montrer concrètement à un vendeur, avant qu'il signe, ce qu'il suivra de sa ve
 - 2026-10-14 : JB valide la vidéo vendeurs telle quelle (une fin remplacée un instant a été remise : sa remarque visait les acheteurs) et demande une seconde vidéo pour les acheteurs, story 16.2.
 - Validation des textes par Anne (vidéo et bloc), puis décision de JB sur l'ouverture au public.
 - Sur téléphone, la vidéo 16:9 est petite (les maquettes se lisent mal à 390 px) : une version verticale dédiée est recommandée si JB valide le scénario.
+
+## Clôture
+2026-10-14 : JB valide la fusion (PR #122). Le bloc reste visible sur l'aperçu seulement ; sa mise au public attend la relecture d'Anne et la décision de JB.
