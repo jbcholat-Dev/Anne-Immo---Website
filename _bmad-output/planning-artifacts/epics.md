@@ -2422,3 +2422,15 @@ afin de construire un service premium sans contredire la spec ni les règles des
 **Et** les décisions sont journalisées le jour même.
 
 **État de l'epic :** à définir — responsable : JB (cadrage), Anne (comment elle présente aujourd'hui une sélection à un acheteur, règles eXp sur la diffusion des annonces), Claude (spec, architecture, construction) ; prérequis : story 12.4, parcours acheteur de l'epic 13.
+
+### Story 16.2: Vidéo « l'espace acheteur » sur la page Acheter
+
+En tant qu'acheteur qui hésite à confier sa recherche à Anne,
+je veux voir concrètement ce que je suivrai pendant la recherche,
+afin de comprendre ce qu'apporte le mandat de recherche.
+
+**Critères d'acceptation :**
+**Étant donné** la page Acheter
+**Quand** le visiteur arrive au bloc « Pendant la recherche »
+**Alors** une courte vidéo animée (même moteur et même charte que la story 15.2) montre les étapes d'un achat puis des maquettes de l'espace acheteur (recherche, sélection avec le pour et le contre, visites faites par Anne, point de la semaine), avec la mention « maquette, exemple fictif »
+**Et** le bloc ne s'affiche sur le site public qu'une fois les textes validés par Anne et la décision de JB prise, l'espace n'existant pas encore.

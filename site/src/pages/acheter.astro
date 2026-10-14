@@ -3,6 +3,8 @@
 import Page from '../layouts/Page.astro';
 import { avisParId, storyDeAvis, storyVisible, roleLibelle, dateLibelle, paragraphes, phraseDeAvis, instantane } from '../lib/contenu';
 import AvisCarte from '../components/AvisCarte.astro';
+import EspaceVideo from '../components/EspaceVideo.astro';
+import { sitePublic } from '../config/site';
 import { acheter } from '../config/site';
 import { r } from '../i18n';
 import { textes, court } from '../lib/textes';
@@ -10,6 +12,8 @@ const inst = await instantane();
 const avis = await Promise.all(acheter.avis.map(async (id) => { const a = await avisParId(id); const slug = storyDeAvis(a); const story = await storyVisible(slug); return { a, slug, story }; }));
 // Textes modifiables par Anne : contenu-anne/textes/acheter.yml (story 7.20).
 const x = await textes('acheter');
+// Vidéo « l'espace acheteur » (story 16.2) : l'espace acheteurs (epic 16) n'existe pas encore, le bloc ne s'affiche que sur l'aperçu.
+const espaceVisible = !sitePublic;
 ---
 <Page titre={`${x.titre} — Anne VIAL-TISSOT`} description={x.description} courante="acheter">
   <div class="ac-tete">
@@ -32,6 +36,7 @@ const x = await textes('acheter');
       ))}
     </div>
   </section>
+  {espaceVisible && <div class="ac-espace"><EspaceVideo film="acheteur" textes={x.espace} description="Maquette animée de l'espace acheteur : la recherche, la sélection de biens, les visites d'Anne, le point de la semaine" /></div>}
   <section class="ac-avis" aria-labelledby="ac-avis-titre">
     <h2 id="ac-avis-titre">{x.avis.titre}</h2>
     <p class="ac-avis-intro"><span class="seulement-desktop">{x.avis.intro}</span><span class="seulement-mobile">{court(x.avis.intro_court, x.avis.intro)}</span></p>
@@ -64,6 +69,7 @@ const x = await textes('acheter');
   .ac-num { font-family: var(--avt-font-display); font-size: 44px; line-height: 1; color: var(--avt-terra); }
   .ac-temp h3 { font-size: 28px; margin-bottom: 12px; }
   .ac-temp p { font-size: 16px; line-height: 1.6; }
+  .ac-espace { padding-top: 96px; }
   .ac-avis { padding: 96px var(--marge) 0; }
   .ac-avis h2 { font-size: 40px; margin-bottom: 10px; }
   .ac-avis-intro { font-size: 15px; color: var(--avt-text-muted); margin-bottom: 40px; max-width: 64ch; }
@@ -78,6 +84,7 @@ const x = await textes('acheter');
     .ac-tete p { font-size: 16px; margin-bottom: 18px; }
     .ac-profils { padding: 0 var(--marge-m) 40px; grid-template-columns: 1fr; gap: 28px; }
     .ac-profils section { padding-top: 18px; }
+    .ac-espace { padding-top: 40px; }
     .ac-profils h2 { font-size: 12px; margin-bottom: 8px; }
     .ac-profils h3 { font-size: 30px; margin-bottom: 10px; }
     .ac-profils p { font-size: 16px; line-height: 1.6; }

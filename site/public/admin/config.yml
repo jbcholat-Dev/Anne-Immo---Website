@@ -279,6 +279,15 @@ collections:
               - { name: titre, label: Titre, widget: string }
               - { name: intro, label: Introduction, widget: text }
               - { name: intro_court, label: "Introduction (téléphone)", widget: text, required: false, hint: "Ce que voit un téléphone. Laisser vide : le texte complet." }
+          - name: espace
+            label: "Bloc « Votre espace acheteur » (vidéo)"
+            widget: object
+            fields:
+              - { name: chapeau, label: Petit titre, widget: string }
+              - { name: titre, label: Titre, widget: string }
+              - { name: texte, label: Texte, widget: text }
+              - { name: texte_court, label: "Texte (téléphone)", widget: text, required: false, hint: "Ce que voit un téléphone. Laisser vide : le texte complet." }
+              - { name: note, label: "Note sous la vidéo", widget: text }
 
       - name: contact
         label: Contact

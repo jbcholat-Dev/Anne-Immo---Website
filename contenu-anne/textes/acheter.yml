@@ -34,3 +34,9 @@ avis:
   titre: "Ils ont acheté avec Anne"
   intro: "Avis Immodvisor d'acheteurs, repris entiers — la même source vérifiable que sur l'accueil."
   intro_court: "Avis Immodvisor d'acheteurs, entiers."
+espace:
+  chapeau: "Pendant la recherche"
+  titre: "Votre recherche, sous vos yeux"
+  texte: "Dès le mandat de recherche signé, vous suivez votre recherche dans un espace en ligne rien qu'à vous : vos critères, les biens retenus avec leur pour et leur contre, les visites qu'Anne a faites pour vous et, chaque semaine, son point."
+  texte_court: "Dès le mandat de recherche signé, vous suivez votre recherche en ligne : la sélection, les visites d'Anne, le point de la semaine."
+  note: "L'espace est en préparation : la vidéo montre une maquette, avec un exemple fictif."
