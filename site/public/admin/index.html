@@ -7,9 +7,11 @@
   <title>Espace d'édition — Anne VIAL-TISSOT</title>
   <link href="/admin/config.yml" type="application/yaml" rel="cms-config-url">
   <!-- Story 7.13 : Sveltia CMS, l'espace où Anne et JB modifient le contenu (décision du 2026-10-05).
-       Version figée : la changer volontairement, après essai sur l'aperçu. Configuration : config.yml (même dossier). -->
+       Version figée : la changer volontairement, après essai sur l'aperçu. Configuration : config.yml (même dossier).
+       Empreinte (integrity, story 12.10) : le navigateur refuse le programme s'il a été modifié chez unpkg. Changer de version
+       impose de recalculer l'empreinte : curl -sL <adresse> | openssl dgst -sha384 -binary | openssl base64 -A -->
 </head>
 <body>
-  <script src="https://unpkg.com/@sveltia/cms@0.229.0/dist/sveltia-cms.js"></script>
+  <script src="https://unpkg.com/@sveltia/cms@0.229.0/dist/sveltia-cms.js" integrity="sha384-7UzSMzLyz+OPQAMgiUyOhH0RD60gmdQfgu6s7daTg868WnElfvyBsIUHOS1YWF22" crossorigin="anonymous"></script>
 </body>
 </html>
