@@ -31,6 +31,7 @@ Le module « Claude Security » n'était pas installé dans le projet : le scan 
 
 ## Ce qui reste (recommandations, non faites ici)
 
+0. **Dépôt GitHub public** (le plus important) : constaté le 2026-10-14 (`"visibility": "public"`). Tout le monde peut lire le code, les fiches de ventes, le registre des avis et l'historique. Action J22 du tableau de bord, ouverte depuis le 2026-10-05 : passer le dépôt en privé (Settings → Danger zone → Change visibility). La mise en ligne Cloudflare et l'espace d'édition continuent de fonctionner ; seules les minutes gratuites des programmes GitHub (Actions) deviennent limitées (2 000 par mois), largement suffisantes ici.
 1. **Formulaire utilisable pour écrire à n'importe qui** (moyen) : la confirmation recopie le message du visiteur et part de `anne@annevialtissot.fr` vers l'adresse saisie. Quelqu'un peut donc envoyer un texte de son choix, avec une adresse web que la messagerie rendra cliquable, à une tierce personne, au nom d'Anne. Turnstile et la limite de fréquence freinent les envois en masse. Décision de JB à prendre : ne plus recopier le message dans la confirmation (recommandé), ou neutraliser les adresses web qu'il contient.
 2. **Politique de sécurité du contenu (CSP)** (faible) : aucun en-tête `Content-Security-Policy`. À poser d'abord en mode « rapport seul » après inventaire des scripts (Turnstile, Cal.com), puis en blocage.
 3. **HSTS** (faible) : ajouter `includeSubDomains` une fois sûr qu'aucun sous-domaine ne sert en HTTP.
