@@ -1,7 +1,7 @@
 ---
 story: 8.20
 epic: 8 — Structure et visuel
-statut: review
+statut: done
 date: 2026-10-13
 ---
 
@@ -22,4 +22,4 @@ Retour d'Anne du 2026-10-13 sur l'accueil (bouton « Un retour ? », ticket n° 
 - Captures après correction, accueil et À propos, ordinateur et téléphone : `/mnt/project-files/tickets/logo-143/`.
 
 ## Ce qui reste
-Fusion par JB, puis fermeture du ticket n° 143 en citant le commit.
+Rien. Fusionnée par JB le 2026-10-14 (PR #145, commit de fusion dd08599) ; ticket n° 143 fermé en citant ce commit.
