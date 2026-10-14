@@ -13,6 +13,7 @@ Le 2026-10-13, Anne a trouvé que le guide « sonnait IA » et avait retravaill�
 ## Ce qui est fait
 - `contenu-anne/guide/texte-actuel.md` réécrit (skill Humanizer) : moins de formules toutes faites (« Mauvaise nouvelle », « Attention danger », « Pas X, mais Y », chaînes de « = », triades), moins d'intertitres en gras (« La réalité. », « La solution. »), phrases plus directes, conclusion sans slogan. Rien d'autre ne change : mêmes 10 erreurs dans le même ordre (erreur n° N = question qN du diagnostic), mêmes chiffres, mêmes sources (1 à 7), mêmes 5 ventes réelles et liens. Vérifié par comparaison automatique : aucun nombre du texte n'a disparu ni n'a été ajouté.
 - `contenu-anne/guide/rapport-diagnostic.md` : les recommandations reprennent le guide. Retirés car sans source : « 4 mois de plus », « 5 % maximum au-dessus », « 15 à 20 % d'écart des estimateurs », « 300 à 600 € » de diagnostics, « DPE 10 ans » (faux pour un DPE d'avant juillet 2021), « 3 secondes », « 15 à 20 photos », « 300 à 500 € » de photographe, « 0 à 500 € » de home staging, « 4 à 5 sites », « 2 fois plus vite », « 2 à 3 heures », « page 3, 4, 5 », « mercredi ou jeudi soir », seuils chiffrés des indicateurs, « 20 à 30 heures ». Ajoutés, sourcés comme dans le guide : marge de 5,1 % (Laforêt), DPE caducs depuis 2025 et décote de 25 % d'une maison G (notaires), un compromis sur dix retombé fin 2022 (PAP), délai moyen de 101 jours (Laforêt). Logic-Immo et Instagram retirés de la liste des portails, comme dans le guide.
+- `site/src/content/diagnostic/feedbacks.json` (décision de JB du 2026-10-14, option « Sourcer ») : les constats et « Impacts chiffrés » des 3 axes × 3 niveaux, affichés sur la page de résultats et dans le rapport, n'ont plus de chiffre sans source. Retirés : « 15-25 % », « délai multiplié par 3 », « 5-10 % », « 30 à 60 jours », « 5-8 % », « 10-20 appels », « 12-20 contacts », « 40 % », « ratio 15:1 », « 2-3 heures », « diviser par 2 », « les 10 % de vendeurs », « 3 à 6 mois ». À la place : DPE caducs et décote de 25 % d'une maison G (notaires), marge de 5,1 % et 9 ventes sur 10 négociées (Laforêt), délai moyen de 101 jours (Laforêt), un compromis sur dix retombé fin 2022 faute de prêt (PAP). Textes des sorties A et B inchangés.
 - PDF refaits : `site/prive/guide.pdf` (`node scripts/guide-pdf.mjs`, 16 pages comme avant) et gabarit du rapport (`node scripts/rapport-gabarit.mjs` : `prive/rapport/gabarit.pdf`, `src/server/rapport-gabarit.json`). Couverture du guide inchangée.
 
 ## Vérification
@@ -20,9 +21,10 @@ Le 2026-10-13, Anne a trouvé que le guide « sonnait IA » et avait retravaill�
 - `npm run check` : 0 erreur.
 - `node scripts/e2e-rapport.mjs` : tous les constats bons (deux vendeurs, PDF de 8 pages lus, aucun texte superposé, médiane 51 ms).
 - `node scripts/e2e-guide.mjs` : tous les constats bons.
+- Après `feedbacks.json` : gabarit refait (22 pages), `e2e-rapport` et `e2e-diagnostic` tous bons ; page de résultats regardée sur téléphone (`.verif/diag-R-resultats.png`) et page 3 du rapport : encarts lisibles.
 - `node scripts/liens.mjs` : 27 pages, 1863 liens, 0 cassé.
 - Pages du rapport regardées (`.verif/rapport/Claire-3.png`) : recommandations lisibles, pas de débordement.
 
 ## Ce qui reste
 - Anne relit le guide réécrit.
-- Les encarts « Impact chiffré » et les constats du diagnostic (`site/src/content/diagnostic/feedbacks.json`, affichés sur la page de résultats et dans le rapport) gardent des chiffres sans source (« 15-25 % », « délai multiplié par 3 », « 10-20 appels »…). Question posée à JB le 2026-10-14.
+- Anne relit les nouveaux constats du diagnostic.
