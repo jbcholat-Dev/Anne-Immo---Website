@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-26-2026 15:10
-last_updated: 14-10-2026 22:10
+last_updated: 14-10-2026 22:25
 project: Site Anne Vial-Tissot
 project_key: NOKEY
 tracking_system: file-system
@@ -119,6 +119,7 @@ development_status:
   8-17-retours-du-11-octobre: done
   8-18-barre-de-navigation-compacte: done   # annulée le 2026-10-11 au soir (JB) : retour à la barre étendue D-42
   8-19-boutons-de-l-ouverture-en-bas-sur-telephone: done
+  8-20-ligne-signature-sous-le-nom-de-famille: done
   epic-8-retrospective: optional
 
   epic-9: in-progress
@@ -142,6 +143,7 @@ development_status:
   10-8-surveillance-mesure-et-test-synthétique: backlog
   10-9-e-mails-du-site-à-la-charte: in-progress
   10-10-rapport-pdf-personnalisé-du-diagnostic: review
+  10-11-réponses-du-diagnostic-lisibles-dans-la-gestion: done
   epic-10-retrospective: optional
 
   epic-11: in-progress
@@ -162,6 +164,7 @@ development_status:
   12-7-aperçu-permanent-après-le-lancement: done
   12-8-adresse-affichée-avec-www: done
   12-9-icône-du-site-dans-les-résultats-google: review
+  12-10-scan-de-securite-apres-ouverture: review
   epic-12-retrospective: optional
 
   epic-13: in-progress
