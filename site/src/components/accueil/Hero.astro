@@ -2,7 +2,9 @@
 // § 1.1 Ouverture (D-1, D-19, D-10) : vidéo drone plein cadre 900 px, voile, bloc nom + positionnement + CTA posé en bas (84 px).
 // A-01 réelle (story 8.3, D-27) : le montage d'Anne (52 s depuis le 2026-10-05, story 7.15) tourne en boucle, sans son ; le poster est sa première image, affichée
 // pendant le chargement ; le <picture> derrière est le repli (mouvement réduit, échec de chargement, économie de données).
+// Sur téléphone, les boutons sont posés en bas de l'écran pour dégager le visage d'Anne (retour de JB du 2026-10-12, story 8.19).
 // Deux boutons (retour d'Anne, ticket #40) : le diagnostic, et « Estimation offerte » vers l'agenda de /contact#reserver, en noir (ticket n° 106).
+// La ligne signature est sous « VIAL‑TISSOT », comme dans le logo, et non sous « Anne » (ticket n° 143) : elle vit dans le nom et en prend la largeur.
 // Les fichiers vidéo sont produits par `npm run video` (scripts/video.mjs) ; s'ils manquent, la balise <video> est masquée.
 // Deux tailles (story 8.13) : 1280 px pour les écrans de 900 px de large au plus (téléphones), 1920 px sinon.
 import fs from 'node:fs';
@@ -31,8 +33,7 @@ const videoDispo = fs.existsSync(path.resolve(process.cwd(), 'public/video/ouver
     <div class="hero-voile"></div>
   </div>
   <div class="hero-contenu">
-    <h1 id="hero-titre" data-reveal="titre">Anne <span class="hero-nom">VIAL‑TISSOT</span></h1>
-    <Signature largeur={260} hauteur={10} class="hero-signature" />
+    <h1 id="hero-titre" data-reveal="titre">Anne <span class="hero-nom">VIAL‑TISSOT<Signature largeur={260} hauteur={10} class="hero-signature" /></span></h1>
     <p class="hero-ligne" data-reveal="petit">{d.accueil.hero_ligne}</p>
     <div class="hero-boutons" data-reveal="petit">
       <a href={r('diagnostic', lang)} class="btn btn-primaire"><span class="seulement-desktop">{d.accueil.hero_cta}</span><span class="seulement-mobile">{d.accueil.hero_cta_m}</span></a>
@@ -50,19 +51,22 @@ const videoDispo = fs.existsSync(path.resolve(process.cwd(), 'public/video/ouver
   .hero-voile { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(38, 32, 26, .34) 0%, rgba(38, 32, 26, .22) 34%, rgba(38, 32, 26, .58) 72%, rgba(38, 32, 26, .88) 100%); pointer-events: none; }
   .hero-contenu { position: absolute; left: var(--marge); right: var(--marge); bottom: 84px; max-width: 760px; }
   .hero h1 { font-size: 96px; letter-spacing: .02em; line-height: 1; color: var(--avt-ecru); white-space: nowrap; }
-  .hero-signature { margin-top: 14px; }
-  .hero-ligne { font-size: 19px; line-height: 1.5; margin-top: 18px; color: var(--avt-ecru); max-width: 44ch; }
+  .hero-nom { position: relative; display: inline-block; }
+  .hero-nom :global(.hero-signature) { position: absolute; left: 0; top: calc(100% + 14px); width: 100% !important; height: 12px !important; }
+  .hero-ligne { font-size: 19px; line-height: 1.5; margin-top: 44px; color: var(--avt-ecru); max-width: 44ch; }
   .hero-boutons { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
   @media (prefers-reduced-motion: reduce) { .hero-video { display: none; } }
   @media (max-width: 899px) {
-    .hero { height: 780px; }
+    /* Téléphone (retour de JB du 2026-10-12) : l'ouverture prend la hauteur de l'écran visible et les boutons descendent en bas,
+       pour ne plus couvrir le visage d'Anne dans la vidéo. 100svh = hauteur de l'écran avec les barres du navigateur affichées. */
+    .hero { height: 780px; height: 100svh; min-height: 560px; max-height: 860px; }
     .hero-voile { background: linear-gradient(180deg, rgba(38, 32, 26, .62) 0%, rgba(38, 32, 26, .54) 30%, rgba(38, 32, 26, .32) 56%, rgba(38, 32, 26, .48) 78%, rgba(38, 32, 26, .88) 100%); }
-    .hero-contenu { bottom: auto; top: 110px; left: var(--marge-m); right: var(--marge-m); }
+    .hero-contenu { top: 110px; bottom: 28px; left: var(--marge-m); right: var(--marge-m); display: flex; flex-direction: column; align-items: flex-start; }
     .hero h1 { font-size: 48px; white-space: normal; }
-    .hero-nom { display: block; }
-    .hero-signature { width: 150px !important; height: 8px !important; margin-top: 10px; }
-    .hero-ligne { font-size: 16px; margin-top: 14px; }
-    .hero-boutons { margin-top: 22px; }
+    .hero-nom { display: block; width: fit-content; }
+    .hero-nom :global(.hero-signature) { top: calc(100% + 8px); height: 8px !important; }
+    .hero-ligne { font-size: 16px; margin-top: 30px; }
+    .hero-boutons { margin-top: auto; padding-top: 22px; flex-direction: column; align-items: stretch; width: 100%; gap: 10px; }
   }
 </style>
 

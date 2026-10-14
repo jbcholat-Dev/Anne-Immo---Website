@@ -44,6 +44,7 @@ export const routes = {
   mentions: { fr: '/mentions-legales', en: '/mentions-legales' },
   confidentialite: { fr: '/confidentialite', en: '/confidentialite' },
   cookies: { fr: '/cookies', en: '/cookies' },
+  honoraires: { fr: '/honoraires', en: '/honoraires' },
 } as const;
 export type RouteKey = keyof typeof routes;
 export const r = (key: RouteKey, lang: Lang = 'fr') => routes[key][lang];

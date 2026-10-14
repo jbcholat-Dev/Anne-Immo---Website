@@ -33,7 +33,7 @@ export async function exporter(env: EnvSite, email: string, compte: string) {
   const maintenant = new Date().toISOString();
   if (leads.length) await env.DB.prepare('UPDATE lead SET last_activity_at = ?2 WHERE lower(email) = ?1').bind(adresse, maintenant).run();
   await noter(env, 'acces', adresse, leads.length, compte);
-  return { responsable: 'Anne VIAL-TISSOT, annevialtissot.fr', exporte_le: maintenant, email: adresse, demandes };
+  return { responsable: 'Anne VIAL-TISSOT, www.annevialtissot.fr', exporte_le: maintenant, email: adresse, demandes };
 }
 
 /** Efface toutes les demandes d'une adresse et leurs envois (droit à l'effacement). Renvoie le nombre de demandes effacées. */

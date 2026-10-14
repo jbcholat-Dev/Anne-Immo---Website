@@ -1,6 +1,6 @@
 # Site web d'Anne VIAL-TISSOT — instructions pour Claude
 
-Projet : le site `annevialtissot.fr` d'Anne, consultante en immobilier (Chablais, Léman, réseau eXp France).
+Projet : le site `annevialtissot.fr` d'Anne (en ligne depuis le 2026-10-11 ; aperçu réservé : https://apercu-anne-vial-tissot-site.jbcholat.workers.dev, RUNBOOK § 2), consultante en immobilier (Chablais, Léman, réseau eXp France).
 JB (jbcholat) pilote le projet en tant que chef de produit. Anne fournit le contenu et valide le rendu.
 
 ## 1. Comment parler à JB

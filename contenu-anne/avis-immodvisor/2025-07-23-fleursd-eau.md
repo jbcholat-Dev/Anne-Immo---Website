@@ -5,11 +5,11 @@ date: 2025-07-23
 note: 5
 role: vendeur                  # vendeur (« Mise en vente ») | acheteur (« Achat »)
 titre: "Nous recommanderons chaleureusement mme VIAL-TISSOT"
-vente_candidate:       # vente rapprochée (registre : stories/_suivi-stories.md § Ventes photographiées) — proposition de Claude
+vente_candidate: anthy-t4-2025      # vente rapprochée (registre : stories/_suivi-stories.md § Ventes photographiées) — proposition de Claude
 dossier_photos: 
-confiance: faible               # forte | moyenne | faible | aucun
-indice: "Vendeur, bien habité par les propriétaires, avis de juillet 2025 : une vente 2025 (LOIEZ, BURNET, MORAND ?)."
-story:                           # la vente confirmée par Anne (slug) — seul champ lu par le site
+confiance: forte               # forte | moyenne | faible | aucun
+indice: "Correspondance de JB du 2026-10-11 : LOIEZ, vendeuse de l'appartement T4 d'Anthy ; pseudonyme « fleursd'eau » confirmé par JB le 2026-10-11."
+story: anthy-t4-2025   # la vente confirmée par Anne (slug) — seul champ lu par le site
 retenu: false               # true = cité en entier dans « Ils ont travaillé avec Anne »
 ---
 

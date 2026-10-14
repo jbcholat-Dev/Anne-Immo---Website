@@ -6,8 +6,9 @@
 //   car les messageries postent sans en-tête Origin, ce que le contrôle d'origine d'Astro refuserait ;
 // - le reste est confié à Astro (handle), qui sert les routes de src/pages/api/ (ex. /api/sante, /api/webhook-cal),
 //   la page de résultats du diagnostic et la page /desabonnement.
-// Le site est protégé par Cloudflare Access : seules les personnes autorisées atteignent /api/retour,
-// et Access transmet leur adresse dans l'en-tête cf-access-authenticated-user-email.
+// /api/retour n'accepte que les personnes connectées par Cloudflare Access (jeton vérifié ici, comme pour /gestion) :
+// depuis l'ouverture au public, Access ne couvre plus tout annevialtissot.fr, et sans ce contrôle n'importe qui pourrait
+// créer des tickets retour-apercu dans le dépôt. L'auteur du ticket est l'adresse lue dans le jeton vérifié.
 // /gestion et /api/gestion/* : espace de gestion des demandes d'Anne (story 10.7). Le jeton de Cloudflare Access y est vérifié
 // ici, avant tout le reste (src/server/acces.ts) ; sans jeton valable, rien n'est servi (403).
 // `scheduled` : tâche planifiée, toutes les 15 minutes (wrangler.jsonc) : réessaie les e-mails en échec (story 10.3),
@@ -31,24 +32,44 @@ const json = (data: unknown, status = 200) =>
     headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' },
   });
 
+// En-têtes de sécurité, les mêmes que public/_headers (qui ne vaut que pour les pages fixes).
+const SECURITE: Record<string, string> = {
+  'Strict-Transport-Security': 'max-age=31536000',
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
+};
+
+function securiser(reponse: Response): Response {
+  if (reponse.status === 101) return reponse;
+  const r = new Response(reponse.body, reponse);
+  for (const [nom, valeur] of Object.entries(SECURITE)) if (!r.headers.has(nom)) r.headers.set(nom, valeur);
+  return r;
+}
+
 export default {
   async fetch(request, env, ctx) {
-    const url = new URL(request.url);
-    if (url.pathname === '/api/retour') return retour(request, env);
-    if (url.pathname === '/api/desabonnement') return desabonnementUnClic(request, env, url);
-    if (/^\/(api\/)?gestion(\/|\.|$)/i.test(url.pathname)) return gestion(request, env, ctx);
-    // Partout ailleurs, l'en-tête interne du compte ne peut venir que d'un visiteur : il est retiré.
-    if (request.headers.has(ENTETE_COMPTE)) {
-      const entetes = new Headers(request.headers);
-      entetes.delete(ENTETE_COMPTE);
-      return handle(new Request(request, { headers: entetes }), env, ctx);
-    }
-    return handle(request, env, ctx);
+    return securiser(await repondre(request, env, ctx));
   },
   async scheduled(_controller, env, ctx) {
     ctx.waitUntil(Promise.all([rejouer(env), purger(env)]));
   },
 } satisfies ExportedHandler<EnvSite>;
+
+async function repondre(request: Request, env: EnvSite, ctx: ExecutionContext): Promise<Response> {
+  const url = new URL(request.url);
+  if (url.pathname === '/api/retour') return retour(request, env);
+  if (url.pathname === '/api/desabonnement') return desabonnementUnClic(request, env, url);
+  if (/^\/(api\/)?gestion(\/|\.|$)/i.test(url.pathname)) return gestion(request, env, ctx);
+  // Partout ailleurs, l'en-tête interne du compte ne peut venir que d'un visiteur : il est retiré.
+  if (request.headers.has(ENTETE_COMPTE)) {
+    const entetes = new Headers(request.headers);
+    entetes.delete(ENTETE_COMPTE);
+    return handle(new Request(request, { headers: entetes }), env, ctx);
+  }
+  return handle(request, env, ctx);
+}
 
 /** Espace de gestion : seulement avec un jeton Access valable ; l'adresse vérifiée est transmise aux pages par un en-tête interne. */
 async function gestion(request: Request, env: EnvSite, ctx: ExecutionContext): Promise<Response> {
@@ -80,6 +101,8 @@ async function desabonnementUnClic(request: Request, env: EnvSite, url: URL): Pr
 
 async function retour(request: Request, env: EnvSite): Promise<Response> {
   if (request.method !== 'POST') return json({ ok: false, error: { code: 'methode' } }, 405);
+  const auteur = await compteAcces(env, request);
+  if (!auteur) return json({ ok: false, error: { code: 'acces' } }, 403);
   if (!env.GITHUB_TOKEN) return json({ ok: false, error: { code: 'cle_absente' } }, 503);
 
   let corps: Record<string, unknown>;
@@ -93,7 +116,6 @@ async function retour(request: Request, env: EnvSite): Promise<Response> {
   const page = typeof corps.page === 'string' && corps.page.startsWith('/') ? corps.page.slice(0, 300) : '/';
   const ecran = typeof corps.ecran === 'string' ? corps.ecran.slice(0, 60) : '';
 
-  const auteur = request.headers.get('cf-access-authenticated-user-email') || 'inconnu';
   const navigateur = (request.headers.get('user-agent') || '').slice(0, 200);
   const origine = new URL(request.url).origin;
   const titre = `[Retour aperçu] ${page} : ${texte.split('\n')[0].slice(0, 70)}`;

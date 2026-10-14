@@ -62,8 +62,6 @@ C'est le dernier e-mail de cette série. Merci de m'avoir lue jusqu'ici.
 
 Quelle que soit votre décision, je vous souhaite une vente rapide et au bon prix.
 
-**Anne Vial-Tissot**
-
-Experte immobilière Léman & Chablais
+Anne
 
 P.S. : Même si vous ne réservez pas, répondez-moi pour me dire où vous en êtes. J'aime savoir si ces conseils vous ont été utiles.

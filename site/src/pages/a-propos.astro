@@ -5,7 +5,6 @@
 // Story 8.12 (retours d'Anne n° 90, 94, 95) : photo A-05 retirée à côté de « Ma méthode » ; les trois piliers côte à côte ;
 // « Réserver un créneau » de « Parlons de votre projet » en bleu (n° 102).
 // Story 8.15 (choix de JB du 2026-10-10, D-43) : étapes 01 à 03 en parcours vertical, numéro rond à côté du titre, sans cadres, reliées par une ligne fléchée.
-import { sitePublic } from '../config/site';
 import Page from '../layouts/Page.astro';
 import Portrait from '../components/Portrait.astro';
 import Signature from '../components/Signature.astro';
@@ -63,8 +62,7 @@ for (const rg of methode.rangs) {
       <p class="ap-zone seulement-desktop">Chablais · bassin lémanique · réseau eXp France</p>
     </div>
     <div class="ap-texte">
-      <h2 id="qui-titre" class="ap-nom">Anne Vial‑Tissot</h2>
-      <Signature largeur={180} hauteur={9} class="ap-signature" />
+      <h2 id="qui-titre" class="ap-nom">Anne <span class="ap-nom-famille">Vial‑Tissot<Signature largeur={180} hauteur={9} class="ap-signature" /></span></h2>
       {qui.map((b) => <>
         {b.titre && <h3 class="chapeau">{b.titre}</h3>}
         <div class="ap-md" set:html={b.html} />
@@ -128,7 +126,7 @@ for (const rg of methode.rangs) {
       {cible.intro && <div class="ap-cible-intro ap-md" set:html={cible.intro} />}
       <div class="ap-cibles">{cible.profils.map((b) => <div><h3 class="chapeau">{b.titre}</h3><div class="ap-md" set:html={b.html} /></div>)}</div>
     </> : <>
-      <div class="ap-cible-tete"><h2 id="cible-titre">Cible</h2>{!sitePublic && <span class="marqueur">Point ouvert 1 · contenu à écrire par Anne</span>}</div>
+      <div class="ap-cible-tete"><h2 id="cible-titre">Cible</h2></div>
       <p class="ap-cible-intro">Quatre profils qu'Anne accompagne le plus souvent.</p>
       <div class="ap-cibles">{ciblesDefaut.map(([t, x]) => <div><h3 class="chapeau">{t}</h3><p>{x}</p></div>)}</div>
     </>}
@@ -172,8 +170,10 @@ for (const rg of methode.rangs) {
   .ap-langues { font-size: 13.5px; letter-spacing: .1em; color: var(--avt-text-muted); }
   .ap-zone { font-size: 14px; }
   .ap-texte { max-width: 62ch; font-size: 17px; line-height: 1.75; }
-  .ap-nom { font-size: 64px; line-height: 1.02; margin-bottom: 8px; }
-  .ap-signature { margin-bottom: 36px; }
+  .ap-nom { font-size: 64px; line-height: 1.02; margin-bottom: 53px; }
+  /* Ligne signature sous le nom de famille, comme dans le logo (ticket n° 143). */
+  .ap-nom-famille { position: relative; display: inline-block; }
+  .ap-nom-famille :global(.ap-signature) { position: absolute; left: 0; top: calc(100% + 8px); width: 100% !important; height: 9px !important; }
   .ap-texte h3.chapeau { font-family: var(--avt-font-text); margin: 0 0 12px; }
   .ap-texte p { margin-bottom: 40px; }
   .ap-texte p.ap-intro-liste { margin-bottom: 16px; }
@@ -268,8 +268,8 @@ for (const rg of methode.rangs) {
     .ap-portrait { position: static; margin-bottom: 36px; }
     .ap-portrait :global(.ap-portrait-reserve-m) { height: 420px; }
     .ap-texte { font-size: 16px; line-height: 1.65; }
-    .ap-nom { font-size: 40px; line-height: 1.05; margin-bottom: 6px; }
-    .ap-signature { width: 140px !important; height: 8px !important; margin-bottom: 28px; }
+    .ap-nom { font-size: 40px; line-height: 1.05; margin-bottom: 42px; }
+    .ap-nom-famille :global(.ap-signature) { top: calc(100% + 6px); height: 8px !important; }
     .ap-texte h3.chapeau { font-size: 12px; margin-bottom: 10px; }
     .ap-texte p, .ap-texte ul, .ap-texte > .ap-md { margin-bottom: 30px; }
     .ap-md :global(p), .ap-md :global(ul) { margin-bottom: 16px; }

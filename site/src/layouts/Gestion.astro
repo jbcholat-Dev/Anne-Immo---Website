@@ -14,7 +14,12 @@ const compte = Astro.request.headers.get(ENTETE_COMPTE) ?? '';
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
     <title>{titre} · Gestion des demandes</title>
+    <!-- Icône du site (story 12.9) : Google reprend dans ses résultats une icône carrée de 48 px ou multiple ; le .ico sert les robots qui ne lisent que /favicon.ico -->
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96" />
+    <link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   </head>
   <body>
     <header class="g-tete">
@@ -55,4 +60,10 @@ const compte = Astro.request.headers.get(ENTETE_COMPTE) ?? '';
   .g-cadre label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
   .g-cadre input[type=text] { min-height: 40px; padding: 6px 12px; border: 1.5px solid var(--avt-brun); border-radius: 8px; background: #fff; font: inherit; max-width: 420px; }
   .g-muet { color: var(--avt-text-muted); font-size: 14px; }
+  .g-cadre h2, .g-cadre h3 { margin: 0; } .g-cadre h3 { font-size: 16px; font-weight: 500; }
+  .g-diag-score { font-size: 18px; margin: 0; } .g-diag-axes { margin: 0; padding-left: 20px; font-size: 15px; }
+  .g-diag-theme { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--avt-galet); padding-top: 12px; }
+  .g-diag-reponses { margin: 0; display: grid; gap: 4px 0; font-size: 15px; }
+  .g-diag-reponses dt { color: var(--avt-text-muted); margin-top: 6px; }
+  .g-diag-reponses dd { margin: 0; font-weight: 500; overflow-wrap: anywhere; }
 </style>

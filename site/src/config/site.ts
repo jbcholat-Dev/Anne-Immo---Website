@@ -17,7 +17,15 @@ export const identite = {
   telephone: '+33 6 71 99 17 54' as string | null, // donné par JB le 2026-10-10
   email: 'anne.vialtissot@expfrance.fr' as string | null, // adresse eXp, donnée par JB le 2026-10-10
   adresse: '812 chemin de la Tatte, 74140 Sciez' as string | null, // siège de l'entreprise (SIRET 977 986 264 00017), mentions légales seulement
+  /** Médiateur de la consommation (art. L.616-1 du Code de la consommation), celui du réseau eXp, transmis par JB le 2026-10-11. */
+  mediateur: { nom: 'MEDIMMOCONSO', adresse: '1 allée du Parc de Mesemena, 44505 La Baule', site: 'https://www.medimmoconso.fr' },
   immodvisor: 'https://www.immodvisor.com/professionnels/mandataire-immobilier/pro/exp-france-anne-vial-tissot-70511',
+};
+
+/** Téléphone d'Anne pour les visiteurs (revue du 2026-10-11, story 12.6) : affichage « 06 … » et lien d'appel « tel:+33… ». */
+export const telephone = {
+  affiche: (identite.telephone ?? '').replace(/^\+33\s?/, '0'),
+  lien: `tel:${(identite.telephone ?? '').replace(/\s/g, '')}`,
 };
 
 /** Réseaux sociaux (story 7.7) : un réseau sans adresse de profil n'est affiché nulle part (avant le 2026-10-10, un lien vers la plateforme le remplaçait). Adresses à reporter depuis `contenu-anne/legal/identite.md`. */
@@ -62,7 +70,8 @@ export const acheter = { avis: ['2024-09-09-rhl-achat', '2026-08-24-jamesw'] };
 export const phrasesStories: Record<string, string> = {
   'appartement-cascade-2024': "De plusieurs mois sans offre à une vente en cascade réussie. C'est une question de stratégie commerciale, puis d'orchestration complexe.",
   'auberge-decoupee-2024': "Ne pas chercher l'acheteur, mais créer les conditions stratégiques pour qu'il existe.",
-  'maison-premium-2025': "Avec tous ces services, le prix a été repositionné. Non pas baissé — justifié maintenant par une stratégie complète.",
+  // Revue du 2026-10-11 (story 12.6) : l'ancienne phrase (« le prix a été repositionné. Non pas baissé ») n'est plus dans le récit, qui dit l'inverse.
+  'maison-premium-2025': "Au lieu d'attendre que l'objection paralyse, nous l'avons anticipée.",
 };
 
 /** Accroche courte par story pour l'index Réalisation (dérivée de la particularité du front matter). */

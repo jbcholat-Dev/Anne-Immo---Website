@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-26-2026 15:10
-last_updated: 11-10-2026 09:30
+last_updated: 14-10-2026 21:40
 project: Site Anne Vial-Tissot
 project_key: NOKEY
 tracking_system: file-system
@@ -96,6 +96,7 @@ development_status:
   7-19-ventes-de-sciez-et-de-bernex: in-progress
   7-20-textes-des-pages-dans-l-espace-d-edition: done
   7-21-texte-provisoire-reseau-exp: done
+  7-22-avis-clients-relies-a-leurs-ventes: done
   epic-7-retrospective: optional
 
   epic-8: in-progress
@@ -114,7 +115,10 @@ development_status:
   8-14-barre-en-verre-et-portrait-de-magazine: done
   8-15-a-propos-étapes-en-parcours: done
   8-16-guide-au-terracotta-unique: done
-  8-18-barre-de-navigation-compacte: done
+  8-17-retours-du-11-octobre: done
+  8-18-barre-de-navigation-compacte: done   # annulée le 2026-10-11 au soir (JB) : retour à la barre étendue D-42
+  8-19-boutons-de-l-ouverture-en-bas-sur-telephone: done
+  8-20-ligne-signature-sous-le-nom-de-famille: done
   epic-8-retrospective: optional
 
   epic-9: in-progress
@@ -138,12 +142,13 @@ development_status:
   10-8-surveillance-mesure-et-test-synthétique: backlog
   10-9-e-mails-du-site-à-la-charte: in-progress
   10-10-rapport-pdf-personnalisé-du-diagnostic: review
+  10-11-réponses-du-diagnostic-lisibles-dans-la-gestion: done
   epic-10-retrospective: optional
 
-  epic-11: backlog
+  epic-11: in-progress
   11-1-session-de-cadrage-de-la-stratégie-de-visibilité: backlog
-  11-2-fiche-google-business-profile-créée-et-cohérente-avec-le-sit: backlog
-  11-3-bases-techniques-du-référencement-dans-le-site: backlog
+  11-2-fiche-google-business-profile-créée-et-cohérente-avec-le-sit: in-progress
+  11-3-bases-techniques-du-référencement-dans-le-site: done
   11-4-amendement-de-la-spec-et-découpage-des-stories-de-contenu-is: backlog
   11-5-publicité-locale-test-à-petit-budget-après-lancement: backlog
   epic-11-retrospective: optional
@@ -152,8 +157,13 @@ development_status:
   12-1-nom-de-domaine-acheté-et-dns-chez-cloudflare: in-progress
   12-2-mentions-légales-et-politique-de-confidentialité-validées-pa: backlog
   12-3-propriété-et-transfert: backlog
-  12-4-bascule-en-production: in-progress
+  12-4-bascule-en-production: done
   12-5-critères-de-lancement-vérifiés: in-progress
+  12-6-revue-complète-avant-ouverture: done
+  12-7-aperçu-permanent-après-le-lancement: done
+  12-8-adresse-affichée-avec-www: done
+  12-9-icône-du-site-dans-les-résultats-google: review
+  12-10-scan-de-securite-apres-ouverture: review
   epic-12-retrospective: optional
 
   epic-13: in-progress
