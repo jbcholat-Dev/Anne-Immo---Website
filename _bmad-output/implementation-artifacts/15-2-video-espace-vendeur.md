@@ -23,7 +23,7 @@ Montrer concrètement à un vendeur, avant qu'il signe, ce qu'il suivra de sa ve
 ## Ce qui est fait
 - Animation écrite en HTML (`site/scripts/video-portail/scene.html`), rendue image par image et encodée par `site/scripts/video-portail.mjs` (Playwright + ffmpeg, déjà dans le projet) : `public/video/portail-vendeur.mp4` 1,3 Mo, version téléphone 0,8 Mo, poster.
 - Bloc « Après la signature » sur `/vendre`, entre les deux portes et le formulaire ; textes dans `contenu-anne/textes/vendre.yml` (`espace`) et dans l'espace d'édition (`public/admin/config.yml`), schéma dans `src/content.config.ts`.
-- Affiché sur l'aperçu seulement, avec la pastille « À valider par Anne ».
+- Affiché sur l'aperçu seulement. Sans pastille « À valider par Anne » depuis le 2026-10-14 : la story 8.17 a retiré toutes les pastilles du site.
 - `site/README.md` § « Vidéo de l'espace vendeur ».
 
 ## Choix faits par défaut

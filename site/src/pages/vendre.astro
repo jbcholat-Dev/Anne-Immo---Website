@@ -1,5 +1,6 @@
 ---
 // 08 Vendre (D-4) : hub à deux portes — le diagnostic (page autonome) et la demande d'estimation (formulaire sur cette page).
+import { sitePublic } from '../config/site';
 import Page from '../layouts/Page.astro';
 import FormulaireEstimation from '../components/FormulaireEstimation.astro';
 import { r } from '../i18n';
@@ -33,7 +34,7 @@ const espaceVisible = !sitePublic;
   {espaceVisible && (
     <section class="v-espace" aria-labelledby="espace-titre">
       <div class="v-espace-texte">
-        <div class="chapeau">{x.espace.chapeau} <span class="marqueur">À valider par Anne</span></div>
+        <div class="chapeau">{x.espace.chapeau}</div>
         <h2 id="espace-titre">{x.espace.titre}</h2>
         <p class="seulement-desktop">{x.espace.texte}</p>
         <p class="seulement-mobile">{court(x.espace.texte_court, x.espace.texte)}</p>
