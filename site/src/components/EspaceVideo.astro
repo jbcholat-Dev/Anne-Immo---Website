@@ -1,0 +1,47 @@
+---
+// Bloc « votre espace client » en vidéo (stories 15.2 et 16.2) : un texte et une vidéo animée de maquettes,
+// fabriquée par scripts/video-portail.mjs (portail-vendeur.mp4 ou portail-acheteur.mp4). Sur les pages Vendre et Acheter.
+// L'espace client (epics 15 et 16) n'existe pas encore : les pages ne montrent ce bloc que sur l'aperçu.
+import { court } from '../lib/textes';
+interface Props {
+  film: 'vendeur' | 'acheteur';
+  textes: { chapeau: string; titre: string; texte: string; texte_court?: string | null; note: string };
+  description: string; // pour les lecteurs d'écran
+}
+const { film, textes: x, description } = Astro.props;
+const id = `espace-${film}-titre`;
+---
+<section class="espace" aria-labelledby={id}>
+  <div class="espace-texte">
+    <div class="chapeau">{x.chapeau}</div>
+    <h2 id={id}>{x.titre}</h2>
+    <p class="seulement-desktop">{x.texte}</p>
+    <p class="seulement-mobile">{court(x.texte_court, x.texte)}</p>
+    <p class="espace-note">{x.note}</p>
+  </div>
+  <video class="espace-video" muted loop playsinline preload="none" poster={`/video/portail-${film}-poster.jpg`} width="1920" height="1080" aria-label={description} data-espace-video>
+    <source src={`/video/portail-${film}-telephone.mp4`} type="video/mp4" media="(max-width: 900px)" />
+    <source src={`/video/portail-${film}.mp4`} type="video/mp4" />
+  </video>
+</section>
+<script>
+  // La vidéo se lance quand elle entre à l'écran et s'arrête quand elle en sort ; sous « réduire les animations », elle attend un clic.
+  document.querySelectorAll<HTMLVideoElement>('[data-espace-video]').forEach((v) => {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) v.controls = true;
+    else new IntersectionObserver(([e]) => { if (e.isIntersecting) v.play().catch(() => { v.controls = true; }); else v.pause(); }, { threshold: 0.4 }).observe(v);
+  });
+</script>
+<style>
+  .espace { padding: 0 var(--marge) 96px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 56px; align-items: center; }
+  .espace-texte h2 { font-size: 44px; margin: 14px 0 18px; }
+  .espace-texte p { font-size: 17px; line-height: 1.6; max-width: 40ch; }
+  .espace-texte .espace-note { margin-top: 16px; font-size: 14.5px; color: var(--avt-text-muted); }
+  .espace-video { width: 100%; height: auto; aspect-ratio: 16 / 9; border-radius: 16px; background: var(--avt-ecru); box-shadow: 0 24px 60px rgba(38, 32, 26, .12); }
+  @media (max-width: 899px) {
+    .espace { padding: 8px 16px 40px; grid-template-columns: 1fr; gap: 20px; }
+    .espace-texte { padding: 0 calc(var(--marge-m) - 16px); }
+    .espace-texte h2 { font-size: 30px; margin: 10px 0 12px; }
+    .espace-texte p { font-size: 15.5px; }
+    .espace-video { border-radius: 12px; }
+  }
+</style>

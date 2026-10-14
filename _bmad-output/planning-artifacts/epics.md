@@ -2390,6 +2390,19 @@ afin que la construction parte d'une capacité écrite et pas d'une idée.
 **État de l'epic :** à définir — responsable : JB (cadrage), Anne (ce qu'elle montre déjà à ses vendeurs, accord du réseau eXp), Claude (spec, architecture, construction) ; prérequis : story 12.4 (site public), stories 13.4 à 13.6 (contacts, étapes, événements).
 
 
+### Story 15.2: Vidéo « l'espace vendeur » sur la page Vendre
+
+En tant que vendeur qui hésite à signer,
+je veux voir concrètement ce que je suivrai de ma vente après le mandat,
+afin de comprendre ce que l'exclusivité avec Anne m'apporte.
+
+**Critères d'acceptation :**
+**Étant donné** la page Vendre
+**Quand** le visiteur arrive au bloc « Après la signature »
+**Alors** une courte vidéo animée (moins d'une minute, sans son, dans la charte) montre les étapes de la vente puis des maquettes de l'espace vendeur (avancement, visites, marché, point de la semaine), avec la mention « maquette, exemple fictif »
+**Et** le bloc ne s'affiche sur le site public qu'une fois les textes validés par Anne et la décision de JB prise, le portail n'existant pas encore.
+
+
 ## Epic 16: Espace des acheteurs
 
 Un acheteur accompagné par Anne retrouve, dans un espace privé au niveau du site, les biens qu'elle a repérés pour lui : photos, annonces, liens, notes de sa visite en premier, et peut dire ce qui l'intéresse. C'est la forme concrète de la recherche accompagnée (« Anne repère, visite en premier, présélectionne », spec CAP-6) et le support des mandats de recherche (parcours acheteur de CAP-12). Origine : idée de JB du 2026-10-11 (même fil). **À cadrer après le lancement public.**
@@ -2409,3 +2422,15 @@ afin de construire un service premium sans contredire la spec ni les règles des
 **Et** les décisions sont journalisées le jour même.
 
 **État de l'epic :** à définir — responsable : JB (cadrage), Anne (comment elle présente aujourd'hui une sélection à un acheteur, règles eXp sur la diffusion des annonces), Claude (spec, architecture, construction) ; prérequis : story 12.4, parcours acheteur de l'epic 13.
+
+### Story 16.2: Vidéo « l'espace acheteur » sur la page Acheter
+
+En tant qu'acheteur qui hésite à confier sa recherche à Anne,
+je veux voir concrètement ce que je suivrai pendant la recherche,
+afin de comprendre ce qu'apporte le mandat de recherche.
+
+**Critères d'acceptation :**
+**Étant donné** la page Acheter
+**Quand** le visiteur arrive au bloc « Pendant la recherche »
+**Alors** une courte vidéo animée (même moteur et même charte que la story 15.2) montre les étapes d'un achat puis des maquettes de l'espace acheteur (recherche, sélection avec le pour et le contre, visites faites par Anne, point de la semaine), avec la mention « maquette, exemple fictif »
+**Et** le bloc ne s'affiche sur le site public qu'une fois les textes validés par Anne et la décision de JB prise, l'espace n'existant pas encore.

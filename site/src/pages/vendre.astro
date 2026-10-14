@@ -1,11 +1,16 @@
 ---
 // 08 Vendre (D-4) : hub à deux portes — le diagnostic (page autonome) et la demande d'estimation (formulaire sur cette page).
+import { sitePublic } from '../config/site';
 import Page from '../layouts/Page.astro';
 import FormulaireEstimation from '../components/FormulaireEstimation.astro';
+import EspaceVideo from '../components/EspaceVideo.astro';
 import { r } from '../i18n';
 import { textes, court } from '../lib/textes';
 // Textes modifiables par Anne : contenu-anne/textes/vendre.yml (story 7.20).
 const x = await textes('vendre');
+// Vidéo « l'espace vendeur » (story 15.2), fabriquée par scripts/video-portail.mjs. Le portail (epic 15) n'existe pas encore :
+// le bloc ne s'affiche que sur l'aperçu tant qu'Anne n'a pas validé ses textes et que JB n'a pas décidé de le montrer au public.
+const espaceVisible = !sitePublic;
 ---
 <Page titre={`${x.titre} — Anne VIAL-TISSOT`} description={x.description} courante="vendre">
   <div class="v-tete">
@@ -27,6 +32,7 @@ const x = await textes('vendre');
       <a href="#estimation" class="btn btn-secondaire v-porte-cta">{x.estimation.bouton}</a>
     </section>
   </div>
+  {espaceVisible && <EspaceVideo film="vendeur" textes={x.espace} description="Maquette animée de l'espace vendeur : les étapes de la vente, les visites, le marché, le point de la semaine" />}
   <section id="estimation" class="v-estimation" aria-labelledby="estimation-titre">
     <div class="v-estimation-tete"><h2 id="estimation-titre">{x.formulaire.titre}</h2></div>
     <p class="v-estimation-intro">{x.formulaire.intro}</p>
@@ -58,7 +64,7 @@ const x = await textes('vendre');
     .v-porte h2 { font-size: 30px; }
     .v-porte p { font-size: 15.5px; }
     .v-porte-cta { padding: 15px 24px; }
-    .v-estimation { padding: 40px var(--marge-m) 48px; }
+              .v-estimation { padding: 40px var(--marge-m) 48px; }
     .v-estimation h2 { font-size: 34px; }
     .v-estimation-intro { font-size: 15px; padding-left: 14px; margin-bottom: 20px; }
   }

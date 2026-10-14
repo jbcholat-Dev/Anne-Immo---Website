@@ -100,6 +100,7 @@ const textesVendre = defineCollection({ loader: fichierTextes('vendre'), schema:
   diagnostic: z.object({ titre: texte, titre_court: vide, texte, texte_court: vide, bouton: texte }),
   estimation: z.object({ titre: texte, texte, texte_court: vide, bouton: texte }),
   formulaire: z.object({ titre: texte, intro: texte }),
+  espace: z.object({ chapeau: texte, titre: texte, texte, texte_court: vide, note: texte }),
 }) });
 const bloc = z.object({ chapeau: texte, titre: texte, texte, texte_court: vide });
 const textesAcheter = defineCollection({ loader: fichierTextes('acheter'), schema: z.object({
@@ -109,6 +110,7 @@ const textesAcheter = defineCollection({ loader: fichierTextes('acheter'), schem
   investisseurs: bloc,
   recherche: z.object({ titre: texte, intro: texte, intro_court: vide, temps: z.array(z.object({ titre: texte, texte, texte_court: vide })).min(1) }),
   avis: z.object({ titre: texte, intro: texte, intro_court: vide }),
+  espace: z.object({ chapeau: texte, titre: texte, texte, texte_court: vide, note: texte }),
 }) });
 const textesContact = defineCollection({ loader: fichierTextes('contact'), schema: z.object({
   ...page,

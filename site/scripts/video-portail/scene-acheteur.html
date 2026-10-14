@@ -1,0 +1,422 @@
+<!doctype html>
+<!--
+  Vidéo « l'espace acheteur » de la page Acheter (story 16.2), sur le même moteur que celle des vendeurs (scene.html, story 15.2) : une animation écrite en HTML, image par image.
+  scripts/video-portail.mjs ouvre cette page dans un navigateur sans fenêtre, appelle rendu(t) pour chaque
+  image (30 par seconde), photographie la page et assemble le film avec ffmpeg. Aucune horloge : la même
+  seconde donne toujours la même image. Les textes sont en tête du script (TEXTES), à faire valider par Anne.
+  Tout ce que montre le portail est une maquette : personnes, chiffres et dates sont inventés.
+-->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: 'Gilda Display'; src: url('../../public/fonts/gilda-display-400.woff2') format('woff2'); }
+  @font-face { font-family: 'Jost'; src: url('../../public/fonts/jost-400-normal.woff2') format('woff2'); font-weight: 400; }
+  @font-face { font-family: 'Jost'; src: url('../../public/fonts/jost-500-normal.woff2') format('woff2'); font-weight: 500; }
+  @font-face { font-family: 'Jost'; src: url('../../public/fonts/jost-400-italic.woff2') format('woff2'); font-weight: 400; font-style: italic; }
+  :root {
+    --ecru: #F7F2EA; --brun: #26201A; --klein: #002FA7; --terra: #A34E30; --galet: #E9E0D2; --brume: #E7EDF9;
+    --muet: #5C5248; --vide: #D9CFBD; --papier: #FCFAF6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--ecru); color: var(--brun); font-family: 'Jost', sans-serif; }
+  .scene { position: absolute; inset: 0; opacity: 0; }
+  .chapeau { font: 500 22px/1 'Jost'; letter-spacing: .16em; text-transform: uppercase; color: var(--klein); }
+  .titre { font-family: 'Gilda Display', serif; font-weight: 400; color: var(--brun); }
+  .muet { color: var(--muet); }
+  .maquette { position: absolute; right: 48px; bottom: 34px; font: 500 16px/1 'Jost'; letter-spacing: .14em; text-transform: uppercase; color: var(--muet); opacity: .8; }
+
+  /* 1. Ouverture */
+  #s1 { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 30px; }
+  #s1 svg { width: 120px; height: 120px; }
+  #s1 .titre { font-size: 104px; line-height: 1.05; }
+  #s1 .sous { font-size: 34px; line-height: 1.4; color: var(--muet); max-width: 30ch; }
+
+  /* 2. Les étapes */
+  #s2 .tete { position: absolute; left: 140px; top: 150px; }
+  #s2 .tete .titre { font-size: 76px; margin-top: 22px; }
+  #frise { position: absolute; left: 140px; top: 520px; width: 1640px; height: 300px; }
+  #frise svg { position: absolute; left: 0; top: 0; overflow: visible; }
+  .etape { position: absolute; top: 0; width: 200px; margin-left: -100px; text-align: center; }
+  .etape .point { width: 30px; height: 30px; border-radius: 50%; background: var(--ecru); border: 3px solid var(--brun); margin: 25px auto 0; }
+  .etape .num { font-family: 'Gilda Display'; font-size: 30px; margin-top: 26px; color: var(--muet); }
+  .etape .lib { font-size: 25px; line-height: 1.25; margin-top: 8px; }
+  #crochet { position: absolute; top: -130px; height: 90px; border: 3px solid var(--klein); border-bottom: 0; border-radius: 16px 16px 0 0; }
+  #crochet span { position: absolute; left: 50%; top: -58px; transform: translateX(-50%); white-space: nowrap; font: 500 27px/1 'Jost'; color: var(--klein); }
+
+  /* 3 à 6. Le portail */
+  #legendes { position: absolute; left: 120px; top: 0; width: 560px; height: 1080px; }
+  .legende { position: absolute; left: 0; top: 330px; width: 560px; }
+  .legende .titre { font-size: 64px; line-height: 1.1; margin-top: 24px; }
+  .legende .sous { font-size: 28px; line-height: 1.45; color: var(--muet); margin-top: 26px; }
+  .legende .trait { width: 120px; height: 14px; margin-top: 34px; }
+
+  #fenetre { position: absolute; left: 760px; top: 130px; width: 1060px; height: 820px; background: var(--papier); border-radius: 22px;
+    box-shadow: 0 2px 0 rgba(38,32,26,.04), 0 30px 80px rgba(38,32,26,.16); overflow: hidden; }
+  #barre { height: 92px; display: flex; align-items: center; gap: 18px; padding: 0 36px; border-bottom: 1.5px solid var(--galet); }
+  #barre svg { width: 46px; height: 46px; }
+  #barre .nom { font-family: 'Gilda Display'; font-size: 30px; }
+  #barre .bien { margin-left: auto; font-size: 22px; color: var(--muet); }
+  #barre .bien b { font-weight: 500; color: var(--brun); }
+  #corps { position: absolute; top: 92px; left: 0; right: 0; bottom: 0; display: flex; }
+  #nav { width: 250px; border-right: 1.5px solid var(--galet); padding: 34px 0; position: relative; }
+  .onglet { height: 64px; display: flex; align-items: center; padding-left: 36px; font-size: 23px; color: var(--muet); position: relative; z-index: 1; }
+  .onglet.actif { color: var(--brun); font-weight: 500; }
+  #curseur { position: absolute; left: 0; width: 100%; height: 64px; background: var(--brume); border-left: 5px solid var(--klein); }
+  #panneaux { position: relative; flex: 1; }
+  .panneau { position: absolute; inset: 0; padding: 40px 48px; opacity: 0; }
+  .panneau h3 { font-family: 'Gilda Display'; font-weight: 400; font-size: 40px; }
+  .panneau .ss { font-size: 21px; color: var(--muet); margin-top: 8px; }
+
+  /* Avancement */
+  .marches { position: relative; margin-top: 34px; }
+  .marche { display: flex; align-items: center; height: 74px; gap: 26px; position: relative; }
+  .marche .rond { width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--vide); background: var(--papier); flex: none; position: relative; z-index: 1; }
+  .marche.faite .rond { background: var(--klein); border-color: var(--klein); }
+  .marche.encours .rond { border-color: var(--terra); background: var(--papier); box-shadow: 0 0 0 8px rgba(163,78,48,.15); }
+  .marche .lib { font-size: 25px; }
+  .marche .date { margin-left: auto; font-size: 20px; color: var(--muet); }
+  .marche.encours .date { color: var(--terra); font-weight: 500; }
+  .rail { position: absolute; left: 14px; top: 37px; width: 3px; height: 296px; background: var(--vide); }
+  .rail i { position: absolute; left: 0; top: 0; width: 100%; background: var(--klein); }
+  .rdv { margin-top: 26px; background: var(--galet); border-radius: 14px; padding: 22px 28px; display: flex; gap: 22px; align-items: center; }
+  .rdv .jour { font-family: 'Gilda Display'; font-size: 44px; line-height: 1; text-align: center; width: 70px; }
+  .rdv .jour small { display: block; font: 500 15px/1 'Jost'; letter-spacing: .12em; text-transform: uppercase; color: var(--terra); margin-bottom: 6px; }
+  .rdv .quoi { font-size: 22px; line-height: 1.4; }
+  .rdv .quoi b { font-weight: 500; display: block; }
+
+  /* Visites */
+  .compte { display: flex; gap: 40px; margin-top: 24px; }
+  .compte div { font-size: 20px; color: var(--muet); }
+  .compte b { display: block; font: 400 52px/1 'Gilda Display'; color: var(--brun); margin-bottom: 6px; }
+  .visite { margin-top: 20px; border: 1.5px solid var(--galet); border-radius: 14px; padding: 18px 24px; background: #fff; }
+  .visite .haut { display: flex; align-items: center; gap: 14px; font-size: 19px; color: var(--muet); }
+  .visite .haut b { font-weight: 500; color: var(--brun); }
+  .visite .etiquette { margin-left: auto; font: 500 16px/1 'Jost'; padding: 8px 14px; border-radius: 999px; }
+  .et-klein { background: var(--brume); color: var(--klein); }
+  .et-terra { background: rgba(163,78,48,.12); color: var(--terra); }
+  .et-gris { background: var(--galet); color: var(--muet); }
+  .visite p { font-size: 21px; line-height: 1.4; margin-top: 10px; font-style: italic; }
+
+  /* Ma recherche : critères */
+  .criteres { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+  .criteres span { font-size: 19px; padding: 9px 16px; border-radius: 999px; background: var(--galet); }
+  .criteres span.ok { background: var(--brume); color: var(--klein); font-weight: 500; }
+  #p0 .marches { margin-top: 22px; }
+  #p0 .marche { height: 62px; }
+  #p0 .rail { height: 248px; top: 31px; }
+  #p0 .rdv { margin-top: 18px; }
+
+  /* Sélection */
+  .biens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 26px; }
+  .bien-c { border: 1.5px solid var(--galet); border-radius: 14px; background: #fff; overflow: hidden; position: relative; display: flex; flex-direction: column; }
+  .bien-c svg.ill { display: block; width: 100%; height: 150px; }
+  .bien-c .txt { padding: 14px 16px 16px; }
+  .bien-c .lieu { font-family: 'Gilda Display'; font-size: 22px; white-space: nowrap; }
+  .bien-c .prix { font-size: 17px; color: var(--muet); margin-top: 4px; }
+  .bien-c .pc { font-size: 16.5px; line-height: 1.4; margin-top: 10px; }
+  .bien-c .pc .plus { color: var(--klein); }
+  .bien-c .pc .moins { color: var(--terra); margin-top: 4px; }
+  .bien-c .hors { position: absolute; left: 12px; top: 12px; font: 500 14px/1 'Jost'; letter-spacing: .06em; text-transform: uppercase; background: var(--brun); color: var(--ecru); padding: 7px 11px; border-radius: 999px; }
+  .bien-c .interet { margin: auto 16px 16px; height: 46px; border-radius: 999px; border: 2px solid var(--brun); display: flex; align-items: center; justify-content: center; gap: 8px; font: 500 17px/1 'Jost'; }
+  .bien-c .interet.oui { background: var(--terra); border-color: var(--terra); color: var(--ecru); }
+  #doigt { position: absolute; width: 34px; height: 34px; border-radius: 50%; background: rgba(38,32,26,.25); border: 2px solid rgba(38,32,26,.5); pointer-events: none; opacity: 0; z-index: 5; }
+
+  /* Marché */
+  .chiffres { display: flex; gap: 44px; margin-top: 26px; }
+  .chiffres div { font-size: 19px; color: var(--muet); }
+  .chiffres b { display: block; font: 400 46px/1 'Gilda Display'; color: var(--brun); margin-bottom: 6px; }
+  #nuage { position: relative; margin-top: 90px; height: 300px; }
+  #nuage .axe { position: absolute; left: 0; right: 0; top: 200px; height: 2px; background: var(--brun); opacity: .5; }
+  #nuage .vente { position: absolute; width: 22px; height: 22px; margin-left: -11px; border-radius: 50%; background: var(--klein); opacity: .75; }
+  #nuage .grad { position: absolute; top: 216px; font-size: 18px; color: var(--muet); transform: translateX(-50%); }
+  #nuage .repere { position: absolute; top: 4px; height: 212px !important; width: 0; height: 196px; border-left: 3px dashed var(--terra); }
+  #nuage .repere span { position: absolute; top: -8px; left: 10px; white-space: nowrap; font: 500 21px/1 'Jost'; color: var(--terra); }
+  #nuage .mediane { position: absolute; top: 30px; width: 0; height: 186px; border-left: 2px solid var(--brun); }
+  #nuage .mediane span { position: absolute; top: -34px; right: 10px; white-space: nowrap; font-size: 19px; color: var(--muet); }
+  .source { position: absolute; left: 48px; bottom: 34px; font-size: 17px; color: var(--muet); }
+
+  /* Le point */
+  .lettre { margin-top: 28px; background: #fff; border: 1.5px solid var(--galet); border-radius: 16px; padding: 32px 36px; }
+  .lettre .de { display: flex; align-items: center; gap: 18px; padding-bottom: 20px; border-bottom: 1.5px solid var(--galet); }
+  .lettre .de svg { width: 54px; height: 54px; }
+  .lettre .de b { font-weight: 500; font-size: 22px; display: block; }
+  .lettre .de span { font-size: 18px; color: var(--muet); }
+  #mots { font-size: 23px; line-height: 1.55; margin-top: 22px; min-height: 290px; }
+  #mots span { opacity: 0; }
+
+  /* 7. Fermeture */
+  #s7 { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 70px; }
+  #refrain { font-family: 'Gilda Display'; font-size: 80px; line-height: 1.18; text-align: center; }
+  #refrain div { color: var(--vide); }
+  #s7 .logo { width: 560px; }
+</style>
+</head>
+<body>
+  <!-- Symbole de la marque (cercle-horizon), réutilisé -->
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <symbol id="symbole" viewBox="0 0 100 100">
+        <clipPath id="sclip"><circle cx="50" cy="50" r="46"/></clipPath>
+        <g clip-path="url(#sclip)"><rect x="4" y="4" width="92" height="92" fill="#002FA7"/><path d="M 4 56 C 22 50, 38 61, 52 55 C 66 49, 82 57, 96 52 L 96 96 L 4 96 Z" fill="#A34E30"/></g>
+      </symbol>
+    </defs>
+  </svg>
+
+  <section class="scene" id="s1">
+    <svg><use href="#symbole"/></svg>
+    <div class="chapeau" data-t="s1.chapeau"></div>
+    <h1 class="titre" data-t="s1.titre"></h1>
+    <p class="sous" data-t="s1.sous"></p>
+  </section>
+
+  <section class="scene" id="s2">
+    <div class="tete"><div class="chapeau" data-t="s2.chapeau"></div><h2 class="titre" data-t="s2.titre"></h2></div>
+    <div id="frise">
+      <svg width="1640" height="80"><path id="vague" fill="none" stroke="#A34E30" stroke-width="4" stroke-linecap="round"/></svg>
+      <div id="crochet"><span data-t="s2.crochet"></span></div>
+    </div>
+  </section>
+
+  <section class="scene" id="portail">
+    <div id="legendes"></div>
+    <div id="fenetre">
+      <div id="barre"><svg><use href="#symbole"/></svg><span class="nom" data-t="portail.nom"></span><span class="bien" data-t="portail.bien"></span></div>
+      <div id="corps">
+        <div id="nav"><div id="curseur"></div></div>
+        <div id="panneaux">
+          <div class="panneau" id="p0">
+            <h3 data-t="recherche.titre"></h3>
+            <div class="criteres"></div>
+            <div class="marches"><div class="rail"><i></i></div></div>
+            <div class="rdv"><div class="jour" data-t="recherche.rdv_jour"></div><div class="quoi" data-t="recherche.rdv"></div></div>
+          </div>
+          <div class="panneau" id="p1">
+            <h3 data-t="selection.titre"></h3><p class="ss" data-t="selection.ss"></p>
+            <div class="biens"></div>
+            <div id="doigt"></div>
+          </div>
+          <div class="panneau" id="p2">
+            <h3 data-t="visites.titre"></h3>
+            <div class="compte"></div>
+            <div class="liste"></div>
+          </div>
+          <div class="panneau" id="p3">
+            <h3 data-t="point.titre"></h3>
+            <div class="lettre">
+              <div class="de"><svg><use href="#symbole"/></svg><div><b data-t="point.de"></b><span data-t="point.date"></span></div></div>
+              <div id="mots"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene" id="s7">
+    <div id="refrain"></div>
+    <svg class="logo" viewBox="0 0 680 160">
+      <use href="#symbole" x="24" y="26" width="108" height="108"/>
+      <text x="158" y="90" style="font-family:'Gilda Display';font-size:46px;letter-spacing:1.6px;fill:#26201A">Anne VIAL-TISSOT</text>
+      <path id="signature" d="M 280 109 C 350 103, 490 111, 576 106" fill="none" stroke="#A34E30" stroke-width="4.5" stroke-linecap="round"/>
+    </svg>
+  </section>
+
+  <div class="maquette" data-t="maquette"></div>
+
+<script>
+// ——— Textes (à faire valider par Anne avant la mise en ligne publique) ———
+const TEXTES = {
+  maquette: 'Maquette · exemple fictif',
+  s1: { chapeau: 'Acheter avec Anne', titre: 'Votre recherche,<br>sous vos yeux.', sous: 'Un espace en ligne rien qu’à vous, de votre projet à la remise des clés.' },
+  s2: { chapeau: 'Les étapes', titre: 'Huit étapes, toujours dans cet ordre.', crochet: 'Votre espace s’ouvre à la signature du mandat de recherche' },
+  etapes: ['Votre projet', 'Financement validé', 'Mandat de recherche', 'Anne repère', 'Elle visite en premier', 'Vos visites', 'Offre et compromis', 'Les clés'],
+  crochetDe: 2,
+  legendes: [
+    { chapeau: 'Votre espace acheteur', titre: 'Où en est votre recherche, à tout moment.', sous: 'Vos critères, l’étape en cours, la prochaine visite.' },
+    { chapeau: 'La sélection', titre: 'Les biens retenus pour vous, avec le pour et le contre.', sous: 'Y compris ceux qui ne sont pas encore en ligne. Un clic pour dire ce qui vous intéresse.' },
+    { chapeau: 'Les visites', titre: 'Anne visite en premier.', sous: 'Vous ne vous déplacez que pour les biens qui en valent la peine.' },
+    { chapeau: 'Le point de la semaine', titre: 'Chaque semaine, le point d’Anne.', sous: 'Ce qu’elle a vu, ce qu’elle recommande, la suite.' },
+  ],
+  portail: { nom: 'Votre espace acheteur', bien: 'Maison · <b>bord du Léman</b>' },
+  onglets: ['Ma recherche', 'Sélection', 'Visites', 'Le point'],
+  recherche: {
+    titre: 'Ma recherche',
+    criteres: [['Maison, 4 chambres', ''], ['Jardin', ''], ['Thonon · Anthy · Sciez', ''], ['Jusqu’à 780 000 €', ''], ['Financement validé', 'ok']],
+    marches: [['Mandat de recherche signé', '2 sept.'], ['Biens repérés et visités par Anne', 'en cours'], ['Vos visites', ''], ['Offre et compromis', ''], ['Les clés', '']],
+    encours: 1,
+    rdv_jour: '<small>Sam.</small>17', rdv: '<b>Visite ensemble, 10 h</b>La maison d’Anthy, retenue par Anne jeudi.',
+  },
+  selection: {
+    titre: 'Sélection', ss: '3 biens retenus sur 14 étudiés',
+    biens: [
+      ['Anthy', '745 000 € · 5 pièces · 140 m²', '+ Vue lac, jardin plat', '− Toiture à refaire, chiffrée 25 000 €', 'Pas encore en ligne', 0],
+      ['Sciez', '698 000 € · 5 pièces · 128 m²', '+ Lumineuse, au calme', '− Garage simple', '', 1],
+      ['Thonon-les-Bains', '770 000 € · 6 pièces · 155 m²', '+ À pied des écoles', '− Jardin en pente', '', 2],
+    ],
+    interet: 'Ça m’intéresse', interetOui: 'Intéressé',
+  },
+  visites: {
+    titre: 'Visites', compte: [['14', 'biens étudiés'], ['6', 'visités par Anne'], ['1', 'visite ensemble']],
+    liste: [
+      ['Jeu. 15 oct.', 'Maison, Anthy · visitée par Anne', 'À voir ensemble', 'et-klein', '« Elle coche vos critères. La toiture est à reprendre, j’ai fait chiffrer les travaux par un couvreur. »'],
+      ['Mar. 13 oct.', 'Maison, Douvaine · visitée par Anne', 'Écartée', 'et-gris', '« Belle sur les photos, mais la route est bien plus passante que l’annonce ne le dit. »'],
+      ['Sam. 10 oct.', 'Maison, Sciez · visitée par Anne', 'En réserve', 'et-terra', '« Très lumineuse. Un seul garage : à voir si cela vous convient. »'],
+    ],
+  },
+  point: {
+    titre: 'Le point de la semaine', de: 'Anne VIAL-TISSOT', date: 'Lundi 12 octobre',
+    texte: 'Bonjour, deux maisons visitées pour vous cette semaine. Celle d’Anthy coche vos critères ; la toiture est à reprendre, j’ai fait chiffrer les travaux, ce qui laisse une marge pour négocier. Celle de Douvaine ne vaut pas le déplacement. Je vous propose de visiter Anthy ensemble samedi à 10 h. Anne',
+  },
+  // Fin choisie par JB le 2026-10-14 (après « Anne travaille pour vous, pas pour le bien » et « Moins de visites. La bonne maison. »).
+  refrain: ['Trouvons ensemble', 'le bien de vos rêves.'],
+};
+
+// ——— Construction ———
+const $ = (s, r = document) => r.querySelector(s);
+const get = (k) => k.split('.').reduce((o, x) => o[x], TEXTES);
+document.querySelectorAll('[data-t]').forEach((el) => { el.innerHTML = get(el.dataset.t); });
+
+// Frise des étapes : une ligne d'horizon ondulée (la signature de la charte) qui relie huit points.
+const LARG = 1640, N = TEXTES.etapes.length, X = (i) => 70 + i * (LARG - 140) / (N - 1);
+let d = `M 0 40`;
+for (let i = 0; i < 16; i++) { const x0 = i * LARG / 16, x1 = (i + 1) * LARG / 16; d += ` C ${x0 + LARG / 48} ${i % 2 ? 46 : 34}, ${x1 - LARG / 48} ${i % 2 ? 34 : 46}, ${x1} 40`; }
+$('#vague').setAttribute('d', d);
+const LONG = $('#vague').getTotalLength();
+$('#vague').style.strokeDasharray = LONG;
+TEXTES.etapes.forEach((lib, i) => {
+  const e = document.createElement('div'); e.className = 'etape'; e.style.left = X(i) + 'px';
+  e.innerHTML = `<div class="point"></div><div class="num">${i + 1}</div><div class="lib">${lib}</div>`;
+  $('#frise').appendChild(e);
+});
+const crochet = $('#crochet'); crochet.style.left = (X(TEXTES.crochetDe) - 40) + 'px'; crochet.style.width = (X(7) - X(TEXTES.crochetDe) + 80) + 'px';
+
+TEXTES.legendes.forEach((l) => {
+  const e = document.createElement('div'); e.className = 'legende';
+  e.innerHTML = `<div class="chapeau">${l.chapeau}</div><h2 class="titre">${l.titre}</h2><p class="sous">${l.sous}</p>
+    <svg class="trait" viewBox="0 0 120 14"><path d="M 2 8 C 30 2, 60 13, 118 6" fill="none" stroke="#A34E30" stroke-width="4" stroke-linecap="round"/></svg>`;
+  $('#legendes').appendChild(e);
+});
+TEXTES.onglets.forEach((o) => { const e = document.createElement('div'); e.className = 'onglet'; e.textContent = o; $('#nav').appendChild(e); });
+TEXTES.recherche.criteres.forEach(([c, cl]) => $('#p0 .criteres').insertAdjacentHTML('beforeend', `<span class="${cl}">${cl ? '✓ ' : ''}${c}</span>`));
+TEXTES.recherche.marches.forEach(([lib, date]) => {
+  const e = document.createElement('div'); e.className = 'marche'; e.innerHTML = `<div class="rond"></div><div class="lib">${lib}</div><div class="date">${date}</div>`;
+  $('#p0 .marches').appendChild(e);
+});
+// Illustrations des biens : des maisons dessinées dans les couleurs de la charte (pas de photo de vrai bien).
+const ILL = [
+  `<rect width="300" height="150" fill="#E7EDF9"/><path d="M0 92 C60 80 110 98 170 88 C220 80 260 92 300 86 V150 H0Z" fill="#002FA7" opacity=".85"/><path d="M0 70 L60 40 L110 62 L170 30 L240 58 L300 44 V100 H0Z" fill="#D9CFBD" opacity=".7"/><rect x="0" y="112" width="300" height="38" fill="#E9E0D2"/><rect x="120" y="78" width="96" height="56" fill="#F7F2EA"/><path d="M112 82 L168 52 L224 82Z" fill="#A34E30"/><rect x="134" y="94" width="18" height="18" fill="#002FA7" opacity=".6"/><rect x="186" y="94" width="18" height="18" fill="#002FA7" opacity=".6"/><rect x="160" y="108" width="16" height="26" fill="#26201A" opacity=".7"/>`,
+  `<rect width="300" height="150" fill="#F7F2EA"/><circle cx="240" cy="40" r="20" fill="#E9E0D2"/><rect x="0" y="118" width="300" height="32" fill="#E9E0D2"/><rect x="70" y="72" width="150" height="62" fill="#fff" stroke="#D9CFBD"/><path d="M60 76 L145 40 L230 76Z" fill="#26201A" opacity=".8"/><rect x="88" y="88" width="22" height="22" fill="#002FA7" opacity=".55"/><rect x="180" y="88" width="22" height="22" fill="#002FA7" opacity=".55"/><rect x="136" y="100" width="20" height="34" fill="#A34E30"/><circle cx="40" cy="104" r="22" fill="#5C5248" opacity=".35"/>`,
+  `<rect width="300" height="150" fill="#E9E0D2"/><path d="M0 130 L300 96 V150 H0Z" fill="#D9CFBD"/><rect x="96" y="56" width="120" height="70" fill="#F7F2EA"/><rect x="96" y="56" width="120" height="10" fill="#A34E30"/><rect x="112" y="78" width="20" height="26" fill="#002FA7" opacity=".55"/><rect x="146" y="78" width="20" height="26" fill="#002FA7" opacity=".55"/><rect x="180" y="78" width="20" height="26" fill="#002FA7" opacity=".55"/><circle cx="250" cy="96" r="26" fill="#5C5248" opacity=".3"/>`,
+];
+TEXTES.selection.biens.forEach(([lieu, prix, plus, moins, hors, k]) => {
+  $('#p1 .biens').insertAdjacentHTML('beforeend', `<div class="bien-c"><svg class="ill" viewBox="0 0 300 150" preserveAspectRatio="xMidYMid slice">${ILL[k]}</svg>${hors ? `<span class="hors">${hors}</span>` : ''}
+    <div class="txt"><div class="lieu">${lieu}</div><div class="prix">${prix}</div><div class="pc"><div class="plus">${plus}</div><div class="moins">${moins}</div></div></div>
+    <div class="interet">♡ ${TEXTES.selection.interet}</div></div>`);
+});
+TEXTES.visites.compte.forEach(([n, l]) => { $('#p2 .compte').insertAdjacentHTML('beforeend', `<div><b>${n}</b>${l}</div>`); });
+TEXTES.visites.liste.forEach(([j, profil, et, cl, avis]) => {
+  $('#p2 .liste').insertAdjacentHTML('beforeend', `<div class="visite"><div class="haut"><b>${j}</b>${profil}<span class="etiquette ${cl}">${et}</span></div><p>${avis}</p></div>`);
+});
+$('#mots').innerHTML = TEXTES.point.texte.replace(' Anne', '\nAnne').split(/( |\n)/).filter((m) => m !== ' ').map((m) => m === '\n' ? '<br><br>' : `<span>${m} </span>`).join('');
+TEXTES.refrain.forEach((l) => $('#refrain').insertAdjacentHTML('beforeend', `<div>${l}</div>`));
+
+// ——— Temps ———
+const clamp = (x) => Math.max(0, Math.min(1, x));
+const p = (t, a, b) => clamp((t - a) / (b - a));
+const sortie = (x) => 1 - Math.pow(1 - x, 3);
+const douce = (x) => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const vis = (t, a, b, f = .6) => Math.min(p(t, a, a + f), 1 - p(t, b - f, b));
+const melange = (a, b, x) => { const ha = a.match(/\w\w/g).map((h) => parseInt(h, 16)), hb = b.match(/\w\w/g).map((h) => parseInt(h, 16)); return `rgb(${ha.map((v, i) => Math.round(v + (hb[i] - v) * x)).join(',')})`; };
+
+// Découpage (secondes)
+const S = { s1: [0, 5.5], s2: [5.5, 16], portail: [16, 45.5], s7: [45.5, 52] };
+const ONGLETS = [16, 23.5, 31, 38]; // début de chaque onglet du portail
+const DUREE = 52;
+
+function rendu(t) {
+  // 1. Ouverture
+  const s1 = $('#s1'); s1.style.opacity = vis(t, ...S.s1);
+  [...s1.children].forEach((e, i) => { const x = sortie(p(t, .2 + i * .35, 1.2 + i * .35)); e.style.opacity = x; e.style.transform = `translateY(${(1 - x) * 30}px)`; });
+
+  // 2. Les étapes
+  const s2 = $('#s2'); s2.style.opacity = vis(t, ...S.s2);
+  const t2 = t - S.s2[0];
+  [...$('#s2 .tete').children].forEach((e, i) => { const x = sortie(p(t2, .3 + i * .3, 1.3 + i * .3)); e.style.opacity = x; e.style.transform = `translateY(${(1 - x) * 24}px)`; });
+  const trace = douce(p(t2, 1, 6.2));
+  $('#vague').style.strokeDashoffset = LONG * (1 - trace);
+  document.querySelectorAll('.etape').forEach((e, i) => {
+    const seuil = X(i) / LARG; const x = sortie(clamp((trace - seuil + .02) / .08));
+    e.style.opacity = x; e.style.transform = `translateY(${(1 - x) * 20}px)`;
+    const D = TEXTES.crochetDe, actif = i >= D && t2 > 6.8;
+    const a = sortie(p(t2, 6.8 + (i - D) * .15, 7.4 + (i - D) * .15));
+    e.querySelector('.point').style.background = i >= D ? melange('F7F2EA', '002FA7', a) : '';
+    e.querySelector('.point').style.borderColor = i >= D ? melange('26201A', '002FA7', a) : '';
+    e.querySelector('.num').style.color = actif ? melange('5C5248', '002FA7', a) : '';
+  });
+  const c = sortie(p(t2, 7.2, 8.2)); crochet.style.opacity = c; crochet.style.transform = `translateY(${(1 - c) * 20}px)`;
+
+  // 3 à 6. Le portail
+  const po = $('#portail'); po.style.opacity = vis(t, ...S.portail, .8);
+  const tp = t - S.portail[0];
+  const f = sortie(p(tp, 0, 1.2));
+  $('#fenetre').style.transform = `translateY(${(1 - f) * 80}px) scale(${.96 + .04 * f})`;
+  let o = 0; ONGLETS.forEach((d, i) => { if (t >= d) o = i; });
+  // le curseur glisse d'un onglet à l'autre
+  let pos = 0; ONGLETS.forEach((d, i) => { if (i) pos += douce(p(t, d - .2, d + .4)); });
+  $('#curseur').style.top = (34 + pos * 64) + 'px';
+  document.querySelectorAll('.onglet').forEach((e, i) => e.classList.toggle('actif', i === Math.round(pos)));
+  document.querySelectorAll('.legende').forEach((e, i) => {
+    const fin = i < 3 ? ONGLETS[i + 1] : S.portail[1];
+    const a = Math.min(sortie(p(t, ONGLETS[i] + .3, ONGLETS[i] + 1.1)), 1 - p(t, fin - .5, fin));
+    e.style.opacity = a; e.style.transform = `translateY(${(1 - sortie(p(t, ONGLETS[i] + .3, ONGLETS[i] + 1.1))) * 26}px)`;
+    e.querySelector('.trait path').style.strokeDasharray = 130; e.querySelector('.trait path').style.strokeDashoffset = 130 * (1 - sortie(p(t, ONGLETS[i] + .9, ONGLETS[i] + 1.8)));
+  });
+  document.querySelectorAll('.panneau').forEach((e, i) => {
+    const fin = i < 3 ? ONGLETS[i + 1] : 99;
+    const a = Math.min(sortie(p(t, ONGLETS[i] + (i ? .1 : .5), ONGLETS[i] + .7)), 1 - p(t, fin - .35, fin));
+    e.style.opacity = a; e.style.transform = `translateX(${(1 - sortie(p(t, ONGLETS[i], ONGLETS[i] + .8))) * 30}px)`;
+  });
+  // Ma recherche : critères, puis les étapes se cochent, le rail se remplit
+  const t0 = t - ONGLETS[0];
+  document.querySelectorAll('#p0 .criteres span').forEach((e, i) => { const x = sortie(p(t0, .6 + i * .12, 1.1 + i * .12)); e.style.opacity = x; e.style.transform = `scale(${.9 + .1 * x})`; });
+  const EC = TEXTES.recherche.encours;
+  document.querySelectorAll('.marche').forEach((e, i) => {
+    const x = sortie(p(t0, 1.4 + i * .2, 2 + i * .2)); e.style.opacity = x; e.style.transform = `translateX(${(1 - x) * 20}px)`;
+    e.classList.toggle('faite', i < EC && t0 > 2.6 + i * .5); e.classList.toggle('encours', i === EC && t0 > 2.6 + EC * .5 + .4);
+  });
+  $('.rail i').style.height = (douce(p(t0, 2.6, 2.6 + EC * .5 + .4)) * EC * 62) + 'px';
+  const r = sortie(p(t0, 4, 4.8)); $('.rdv').style.opacity = r; $('.rdv').style.transform = `translateY(${(1 - r) * 24}px)`;
+  // Sélection : les cartes arrivent, puis un clic sur « Ça m'intéresse » de la première
+  const t1 = t - ONGLETS[1];
+  document.querySelectorAll('.bien-c').forEach((e, i) => { const x = sortie(p(t1, .7 + i * .35, 1.5 + i * .35)); e.style.opacity = x; e.style.transform = `translateY(${(1 - x) * 36}px)`; });
+  const btn = $('.bien-c .interet'), doigt = $('#doigt');
+  const rb = btn.getBoundingClientRect(), rp = $('#p1').getBoundingClientRect();
+  const bx = rb.left - rp.left + rb.width / 2, by = rb.top - rp.top + rb.height / 2;
+  const dm = douce(p(t1, 3.4, 4.4));
+  doigt.style.left = (bx + 160 * (1 - dm) - 17) + 'px'; doigt.style.top = (by + 120 * (1 - dm) - 17) + 'px';
+  doigt.style.opacity = Math.min(p(t1, 3.2, 3.5), 1 - p(t1, 5.2, 5.6));
+  doigt.style.transform = `scale(${t1 > 4.5 && t1 < 4.75 ? .8 : 1})`;
+  const oui = t1 > 4.6; btn.classList.toggle('oui', oui); btn.textContent = oui ? `♥ ${TEXTES.selection.interetOui}` : `♡ ${TEXTES.selection.interet}`;
+  // Visites : compteurs puis cartes
+  const t2b = t - ONGLETS[2];
+  document.querySelectorAll('#p2 .compte div').forEach((e, i) => { const x = sortie(p(t2b, .6 + i * .2, 1.2 + i * .2)); e.style.opacity = x; });
+  document.querySelectorAll('.visite').forEach((e, i) => { const x = sortie(p(t2b, 1.4 + i * .9, 2.2 + i * .9)); e.style.opacity = x; e.style.transform = `translateY(${(1 - x) * 30}px)`; });
+  // Le point : le texte s'écrit mot à mot
+  const t3 = t - ONGLETS[3];
+  const mots = document.querySelectorAll('#mots span');
+  mots.forEach((e, i) => { e.style.opacity = sortie(clamp((t3 - 1 - i * .085) / .3)); });
+
+  // 7. Fermeture : la phrase de fin s'allume ligne à ligne, comme le refrain de l'accueil
+  const s7 = $("#s7"); s7.style.opacity = vis(t, S.s7[0], S.s7[1], .8);
+  const t7 = t - S.s7[0];
+  document.querySelectorAll('#refrain div').forEach((e, i) => { e.style.color = melange('D9CFBD', '26201A', douce(p(t7, .6 + i * .8, 1.3 + i * .8))); });
+  const l = sortie(p(t7, 3.2, 4)); $('#s7 .logo').style.opacity = l;
+  $('#signature').style.strokeDasharray = 300; $('#signature').style.strokeDashoffset = 300 * (1 - douce(p(t7, 3.6, 4.6)));
+  $('.maquette').style.opacity = .8 * vis(t, S.s2[0], S.portail[1], .8);
+}
+window.rendu = rendu; window.DUREE = DUREE;
+rendu(Number(new URLSearchParams(location.search).get('t') || 0));
+</script>
+</body>
+</html>

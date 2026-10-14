@@ -1,0 +1,381 @@
+<!doctype html>
+<!--
+  Vidéo « l'espace vendeur » de la page Vendre (story 15.2) : une animation écrite en HTML, image par image.
+  scripts/video-portail.mjs ouvre cette page dans un navigateur sans fenêtre, appelle rendu(t) pour chaque
+  image (30 par seconde), photographie la page et assemble le film avec ffmpeg. Aucune horloge : la même
+  seconde donne toujours la même image. Les textes sont en tête du script (TEXTES), à faire valider par Anne.
+  Tout ce que montre le portail est une maquette : personnes, chiffres et dates sont inventés.
+-->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: 'Gilda Display'; src: url('../../public/fonts/gilda-display-400.woff2') format('woff2'); }
+  @font-face { font-family: 'Jost'; src: url('../../public/fonts/jost-400-normal.woff2') format('woff2'); font-weight: 400; }
+  @font-face { font-family: 'Jost'; src: url('../../public/fonts/jost-500-normal.woff2') format('woff2'); font-weight: 500; }
+  @font-face { font-family: 'Jost'; src: url('../../public/fonts/jost-400-italic.woff2') format('woff2'); font-weight: 400; font-style: italic; }
+  :root {
+    --ecru: #F7F2EA; --brun: #26201A; --klein: #002FA7; --terra: #A34E30; --galet: #E9E0D2; --brume: #E7EDF9;
+    --muet: #5C5248; --vide: #D9CFBD; --papier: #FCFAF6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--ecru); color: var(--brun); font-family: 'Jost', sans-serif; }
+  .scene { position: absolute; inset: 0; opacity: 0; }
+  .chapeau { font: 500 22px/1 'Jost'; letter-spacing: .16em; text-transform: uppercase; color: var(--klein); }
+  .titre { font-family: 'Gilda Display', serif; font-weight: 400; color: var(--brun); }
+  .muet { color: var(--muet); }
+  .maquette { position: absolute; right: 48px; bottom: 34px; font: 500 16px/1 'Jost'; letter-spacing: .14em; text-transform: uppercase; color: var(--muet); opacity: .8; }
+
+  /* 1. Ouverture */
+  #s1 { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 30px; }
+  #s1 svg { width: 120px; height: 120px; }
+  #s1 .titre { font-size: 104px; line-height: 1.05; }
+  #s1 .sous { font-size: 34px; line-height: 1.4; color: var(--muet); max-width: 30ch; }
+
+  /* 2. Les étapes */
+  #s2 .tete { position: absolute; left: 140px; top: 150px; }
+  #s2 .tete .titre { font-size: 76px; margin-top: 22px; }
+  #frise { position: absolute; left: 140px; top: 520px; width: 1640px; height: 300px; }
+  #frise svg { position: absolute; left: 0; top: 0; overflow: visible; }
+  .etape { position: absolute; top: 0; width: 200px; margin-left: -100px; text-align: center; }
+  .etape .point { width: 30px; height: 30px; border-radius: 50%; background: var(--ecru); border: 3px solid var(--brun); margin: 25px auto 0; }
+  .etape .num { font-family: 'Gilda Display'; font-size: 30px; margin-top: 26px; color: var(--muet); }
+  .etape .lib { font-size: 25px; line-height: 1.25; margin-top: 8px; }
+  #crochet { position: absolute; top: -130px; height: 90px; border: 3px solid var(--klein); border-bottom: 0; border-radius: 16px 16px 0 0; }
+  #crochet span { position: absolute; left: 50%; top: -58px; transform: translateX(-50%); white-space: nowrap; font: 500 27px/1 'Jost'; color: var(--klein); }
+
+  /* 3 à 6. Le portail */
+  #legendes { position: absolute; left: 120px; top: 0; width: 560px; height: 1080px; }
+  .legende { position: absolute; left: 0; top: 330px; width: 560px; }
+  .legende .titre { font-size: 64px; line-height: 1.1; margin-top: 24px; }
+  .legende .sous { font-size: 28px; line-height: 1.45; color: var(--muet); margin-top: 26px; }
+  .legende .trait { width: 120px; height: 14px; margin-top: 34px; }
+
+  #fenetre { position: absolute; left: 760px; top: 130px; width: 1060px; height: 820px; background: var(--papier); border-radius: 22px;
+    box-shadow: 0 2px 0 rgba(38,32,26,.04), 0 30px 80px rgba(38,32,26,.16); overflow: hidden; }
+  #barre { height: 92px; display: flex; align-items: center; gap: 18px; padding: 0 36px; border-bottom: 1.5px solid var(--galet); }
+  #barre svg { width: 46px; height: 46px; }
+  #barre .nom { font-family: 'Gilda Display'; font-size: 30px; }
+  #barre .bien { margin-left: auto; font-size: 22px; color: var(--muet); }
+  #barre .bien b { font-weight: 500; color: var(--brun); }
+  #corps { position: absolute; top: 92px; left: 0; right: 0; bottom: 0; display: flex; }
+  #nav { width: 250px; border-right: 1.5px solid var(--galet); padding: 34px 0; position: relative; }
+  .onglet { height: 64px; display: flex; align-items: center; padding-left: 36px; font-size: 23px; color: var(--muet); position: relative; z-index: 1; }
+  .onglet.actif { color: var(--brun); font-weight: 500; }
+  #curseur { position: absolute; left: 0; width: 100%; height: 64px; background: var(--brume); border-left: 5px solid var(--klein); }
+  #panneaux { position: relative; flex: 1; }
+  .panneau { position: absolute; inset: 0; padding: 40px 48px; opacity: 0; }
+  .panneau h3 { font-family: 'Gilda Display'; font-weight: 400; font-size: 40px; }
+  .panneau .ss { font-size: 21px; color: var(--muet); margin-top: 8px; }
+
+  /* Avancement */
+  .marches { position: relative; margin-top: 34px; }
+  .marche { display: flex; align-items: center; height: 74px; gap: 26px; position: relative; }
+  .marche .rond { width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--vide); background: var(--papier); flex: none; position: relative; z-index: 1; }
+  .marche.faite .rond { background: var(--klein); border-color: var(--klein); }
+  .marche.encours .rond { border-color: var(--terra); background: var(--papier); box-shadow: 0 0 0 8px rgba(163,78,48,.15); }
+  .marche .lib { font-size: 25px; }
+  .marche .date { margin-left: auto; font-size: 20px; color: var(--muet); }
+  .marche.encours .date { color: var(--terra); font-weight: 500; }
+  .rail { position: absolute; left: 14px; top: 37px; width: 3px; height: 296px; background: var(--vide); }
+  .rail i { position: absolute; left: 0; top: 0; width: 100%; background: var(--klein); }
+  .rdv { margin-top: 26px; background: var(--galet); border-radius: 14px; padding: 22px 28px; display: flex; gap: 22px; align-items: center; }
+  .rdv .jour { font-family: 'Gilda Display'; font-size: 44px; line-height: 1; text-align: center; width: 70px; }
+  .rdv .jour small { display: block; font: 500 15px/1 'Jost'; letter-spacing: .12em; text-transform: uppercase; color: var(--terra); margin-bottom: 6px; }
+  .rdv .quoi { font-size: 22px; line-height: 1.4; }
+  .rdv .quoi b { font-weight: 500; display: block; }
+
+  /* Visites */
+  .compte { display: flex; gap: 40px; margin-top: 24px; }
+  .compte div { font-size: 20px; color: var(--muet); }
+  .compte b { display: block; font: 400 52px/1 'Gilda Display'; color: var(--brun); margin-bottom: 6px; }
+  .visite { margin-top: 20px; border: 1.5px solid var(--galet); border-radius: 14px; padding: 18px 24px; background: #fff; }
+  .visite .haut { display: flex; align-items: center; gap: 14px; font-size: 19px; color: var(--muet); }
+  .visite .haut b { font-weight: 500; color: var(--brun); }
+  .visite .etiquette { margin-left: auto; font: 500 16px/1 'Jost'; padding: 8px 14px; border-radius: 999px; }
+  .et-klein { background: var(--brume); color: var(--klein); }
+  .et-terra { background: rgba(163,78,48,.12); color: var(--terra); }
+  .et-gris { background: var(--galet); color: var(--muet); }
+  .visite p { font-size: 21px; line-height: 1.4; margin-top: 10px; font-style: italic; }
+
+  /* Marché */
+  .chiffres { display: flex; gap: 44px; margin-top: 26px; }
+  .chiffres div { font-size: 19px; color: var(--muet); }
+  .chiffres b { display: block; font: 400 46px/1 'Gilda Display'; color: var(--brun); margin-bottom: 6px; }
+  #nuage { position: relative; margin-top: 90px; height: 300px; }
+  #nuage .axe { position: absolute; left: 0; right: 0; top: 200px; height: 2px; background: var(--brun); opacity: .5; }
+  #nuage .vente { position: absolute; width: 22px; height: 22px; margin-left: -11px; border-radius: 50%; background: var(--klein); opacity: .75; }
+  #nuage .grad { position: absolute; top: 216px; font-size: 18px; color: var(--muet); transform: translateX(-50%); }
+  #nuage .repere { position: absolute; top: 4px; height: 212px !important; width: 0; height: 196px; border-left: 3px dashed var(--terra); }
+  #nuage .repere span { position: absolute; top: -8px; left: 10px; white-space: nowrap; font: 500 21px/1 'Jost'; color: var(--terra); }
+  #nuage .mediane { position: absolute; top: 30px; width: 0; height: 186px; border-left: 2px solid var(--brun); }
+  #nuage .mediane span { position: absolute; top: -34px; right: 10px; white-space: nowrap; font-size: 19px; color: var(--muet); }
+  .source { position: absolute; left: 48px; bottom: 34px; font-size: 17px; color: var(--muet); }
+
+  /* Le point */
+  .lettre { margin-top: 28px; background: #fff; border: 1.5px solid var(--galet); border-radius: 16px; padding: 32px 36px; }
+  .lettre .de { display: flex; align-items: center; gap: 18px; padding-bottom: 20px; border-bottom: 1.5px solid var(--galet); }
+  .lettre .de svg { width: 54px; height: 54px; }
+  .lettre .de b { font-weight: 500; font-size: 22px; display: block; }
+  .lettre .de span { font-size: 18px; color: var(--muet); }
+  #mots { font-size: 23px; line-height: 1.55; margin-top: 22px; min-height: 290px; }
+  #mots span { opacity: 0; }
+
+  /* 7. Fermeture */
+  #s7 { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 70px; }
+  #refrain { font-family: 'Gilda Display'; font-size: 80px; line-height: 1.18; text-align: center; }
+  #refrain div { color: var(--vide); }
+  #s7 .logo { width: 560px; }
+</style>
+</head>
+<body>
+  <!-- Symbole de la marque (cercle-horizon), réutilisé -->
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <symbol id="symbole" viewBox="0 0 100 100">
+        <clipPath id="sclip"><circle cx="50" cy="50" r="46"/></clipPath>
+        <g clip-path="url(#sclip)"><rect x="4" y="4" width="92" height="92" fill="#002FA7"/><path d="M 4 56 C 22 50, 38 61, 52 55 C 66 49, 82 57, 96 52 L 96 96 L 4 96 Z" fill="#A34E30"/></g>
+      </symbol>
+    </defs>
+  </svg>
+
+  <section class="scene" id="s1">
+    <svg><use href="#symbole"/></svg>
+    <div class="chapeau" data-t="s1.chapeau"></div>
+    <h1 class="titre" data-t="s1.titre"></h1>
+    <p class="sous" data-t="s1.sous"></p>
+  </section>
+
+  <section class="scene" id="s2">
+    <div class="tete"><div class="chapeau" data-t="s2.chapeau"></div><h2 class="titre" data-t="s2.titre"></h2></div>
+    <div id="frise">
+      <svg width="1640" height="80"><path id="vague" fill="none" stroke="#A34E30" stroke-width="4" stroke-linecap="round"/></svg>
+      <div id="crochet"><span data-t="s2.crochet"></span></div>
+    </div>
+  </section>
+
+  <section class="scene" id="portail">
+    <div id="legendes"></div>
+    <div id="fenetre">
+      <div id="barre"><svg><use href="#symbole"/></svg><span class="nom" data-t="portail.nom"></span><span class="bien" data-t="portail.bien"></span></div>
+      <div id="corps">
+        <div id="nav"><div id="curseur"></div></div>
+        <div id="panneaux">
+          <div class="panneau" id="p0">
+            <h3 data-t="avancement.titre"></h3><p class="ss" data-t="avancement.ss"></p>
+            <div class="marches"><div class="rail"><i></i></div></div>
+            <div class="rdv"><div class="jour" data-t="avancement.rdv_jour"></div><div class="quoi" data-t="avancement.rdv"></div></div>
+          </div>
+          <div class="panneau" id="p1">
+            <h3 data-t="visites.titre"></h3>
+            <div class="compte"></div>
+            <div class="liste"></div>
+          </div>
+          <div class="panneau" id="p2">
+            <h3 data-t="marche.titre"></h3><p class="ss" data-t="marche.ss"></p>
+            <div class="chiffres"></div>
+            <div id="nuage"><div class="axe"></div></div>
+            <p class="source" data-t="marche.source"></p>
+          </div>
+          <div class="panneau" id="p3">
+            <h3 data-t="point.titre"></h3>
+            <div class="lettre">
+              <div class="de"><svg><use href="#symbole"/></svg><div><b data-t="point.de"></b><span data-t="point.date"></span></div></div>
+              <div id="mots"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene" id="s7">
+    <div id="refrain"></div>
+    <svg class="logo" viewBox="0 0 680 160">
+      <use href="#symbole" x="24" y="26" width="108" height="108"/>
+      <text x="158" y="90" style="font-family:'Gilda Display';font-size:46px;letter-spacing:1.6px;fill:#26201A">Anne VIAL-TISSOT</text>
+      <path id="signature" d="M 280 109 C 350 103, 490 111, 576 106" fill="none" stroke="#A34E30" stroke-width="4.5" stroke-linecap="round"/>
+    </svg>
+  </section>
+
+  <div class="maquette" data-t="maquette"></div>
+
+<script>
+// ——— Textes (à faire valider par Anne avant la mise en ligne publique) ———
+const TEXTES = {
+  maquette: 'Maquette · exemple fictif',
+  s1: { chapeau: 'Vendre avec Anne', titre: 'Votre vente,<br>sous vos yeux.', sous: 'Un espace en ligne rien qu’à vous, de la signature du mandat à celle de l’acte.' },
+  s2: { chapeau: 'Les étapes', titre: 'Huit étapes, toujours dans cet ordre.', crochet: 'Votre espace s’ouvre à la signature du mandat' },
+  etapes: ['Premier échange', 'Visite du bien', 'Stratégie et estimation', 'Mandat exclusif', 'Photos et annonce', 'Visites et offres', 'Compromis', 'Signature chez le notaire'],
+  legendes: [
+    { chapeau: 'Votre espace vendeur', titre: 'Où en est votre vente, à tout moment.', sous: 'Chaque étape, chaque date, le prochain rendez-vous.' },
+    { chapeau: 'Les visites', titre: 'Chaque visite, avec le retour des acheteurs.', sous: 'Le profil et l’avis de chaque visiteur, sans leur nom.' },
+    { chapeau: 'Le marché', titre: 'Le marché autour de chez vous, en chiffres réels.', sous: 'Les ventes comparables de votre commune, tirées des données publiques.' },
+    { chapeau: 'Le point de la semaine', titre: 'Chaque semaine, le point d’Anne.', sous: 'Ce qui s’est passé, ce qu’elle recommande, la suite.' },
+  ],
+  portail: { nom: 'Votre espace vendeur', bien: 'Maison · <b>Thonon-les-Bains</b>' },
+  onglets: ['Avancement', 'Visites', 'Marché', 'Le point'],
+  avancement: {
+    titre: 'Avancement', ss: 'En vente depuis 24 jours',
+    marches: [['Mandat exclusif signé', '12 sept.'], ['Photos et annonce en ligne', '19 sept.'], ['Visites et offres', 'en cours'], ['Compromis de vente', ''], ['Signature chez le notaire', '']],
+    rdv_jour: '<small>Sam.</small>17', rdv: '<b>Seconde visite, 14 h</b>Le couple venu le 10 octobre revient avec un artisan.',
+  },
+  visites: {
+    titre: 'Visites', compte: [['7', 'visites'], ['2', 'secondes visites'], ['1', 'offre en attente']],
+    liste: [
+      ['Sam. 10 oct.', 'Couple, deux enfants, travaille à Genève', 'Seconde visite', 'et-klein', '« Le jardin et le calme les ont séduits. Ils reviennent avec un artisan pour chiffrer la cuisine. »'],
+      ['Jeu. 8 oct.', 'Couple de retraités, arrive de Lyon', 'Réfléchissent', 'et-terra', '« Très bonne impression, mais l’escalier les fait hésiter. »'],
+      ['Mar. 6 oct.', 'Investisseur de la région', 'Pas pour lui', 'et-gris', '« Prix jugé cohérent ; il cherche plutôt un appartement. »'],
+    ],
+  },
+  marche: {
+    titre: 'Le marché', ss: 'Maisons vendues à Thonon-les-Bains, 12 derniers mois',
+    chiffres: [['23', 'ventes comparables'], ['4 480 €', 'prix médian au m²'], ['4 650 €', 'votre prix au m²']],
+    mediane: 'médiane', repere: 'votre maison',
+    source: 'Source : ventes publiques (DVF) · chiffres d’exemple',
+  },
+  point: {
+    titre: 'Le point de la semaine', de: 'Anne VIAL-TISSOT', date: 'Lundi 12 octobre',
+    texte: 'Bonjour, trois visites cette semaine, dont une seconde visite samedi pour le couple de Genève. Les retours se rejoignent : la maison plaît, la cuisine inquiète. Je vous propose de faire chiffrer sa rénovation pour rassurer les prochains visiteurs. Je vous appelle mardi pour en parler. Anne',
+  },
+  // Le refrain de l'accueil, qui parle aux vendeurs (JB, 2026-10-14 : il garde cette fin pour la vidéo vendeurs).
+  refrain: ['Pas de mauvaise surprise.', 'Pas de dossier qui traîne.', 'Des ventes qui vont au bout.'],
+};
+
+// ——— Construction ———
+const $ = (s, r = document) => r.querySelector(s);
+const get = (k) => k.split('.').reduce((o, x) => o[x], TEXTES);
+document.querySelectorAll('[data-t]').forEach((el) => { el.innerHTML = get(el.dataset.t); });
+
+// Frise des étapes : une ligne d'horizon ondulée (la signature de la charte) qui relie huit points.
+const LARG = 1640, N = TEXTES.etapes.length, X = (i) => 70 + i * (LARG - 140) / (N - 1);
+let d = `M 0 40`;
+for (let i = 0; i < 16; i++) { const x0 = i * LARG / 16, x1 = (i + 1) * LARG / 16; d += ` C ${x0 + LARG / 48} ${i % 2 ? 46 : 34}, ${x1 - LARG / 48} ${i % 2 ? 34 : 46}, ${x1} 40`; }
+$('#vague').setAttribute('d', d);
+const LONG = $('#vague').getTotalLength();
+$('#vague').style.strokeDasharray = LONG;
+TEXTES.etapes.forEach((lib, i) => {
+  const e = document.createElement('div'); e.className = 'etape'; e.style.left = X(i) + 'px';
+  e.innerHTML = `<div class="point"></div><div class="num">${i + 1}</div><div class="lib">${lib}</div>`;
+  $('#frise').appendChild(e);
+});
+const crochet = $('#crochet'); crochet.style.left = (X(3) - 40) + 'px'; crochet.style.width = (X(7) - X(3) + 80) + 'px';
+
+TEXTES.legendes.forEach((l) => {
+  const e = document.createElement('div'); e.className = 'legende';
+  e.innerHTML = `<div class="chapeau">${l.chapeau}</div><h2 class="titre">${l.titre}</h2><p class="sous">${l.sous}</p>
+    <svg class="trait" viewBox="0 0 120 14"><path d="M 2 8 C 30 2, 60 13, 118 6" fill="none" stroke="#A34E30" stroke-width="4" stroke-linecap="round"/></svg>`;
+  $('#legendes').appendChild(e);
+});
+TEXTES.onglets.forEach((o) => { const e = document.createElement('div'); e.className = 'onglet'; e.textContent = o; $('#nav').appendChild(e); });
+TEXTES.avancement.marches.forEach(([lib, date]) => {
+  const e = document.createElement('div'); e.className = 'marche'; e.innerHTML = `<div class="rond"></div><div class="lib">${lib}</div><div class="date">${date}</div>`;
+  $('#p0 .marches').appendChild(e);
+});
+TEXTES.visites.compte.forEach(([n, l]) => { $('#p1 .compte').insertAdjacentHTML('beforeend', `<div><b>${n}</b>${l}</div>`); });
+TEXTES.visites.liste.forEach(([j, profil, et, cl, avis]) => {
+  $('#p1 .liste').insertAdjacentHTML('beforeend', `<div class="visite"><div class="haut"><b>${j}</b>${profil}<span class="etiquette ${cl}">${et}</span></div><p>${avis}</p></div>`);
+});
+TEXTES.marche.chiffres.forEach(([n, l]) => { $('#p2 .chiffres').insertAdjacentHTML('beforeend', `<div><b>${n}</b>${l}</div>`); });
+// Nuage de ventes (prix au m², inventés) sur une échelle de 3 000 à 6 500 €/m².
+const VENTES = [3350, 3600, 3720, 3900, 3980, 4100, 4180, 4250, 4320, 4400, 4450, 4480, 4520, 4600, 4700, 4780, 4850, 4990, 5100, 5250, 5400, 5700, 6100];
+const NW = 660, PX = (v) => 20 + (v - 3000) / 3500 * NW;
+const nuage = $('#nuage');
+VENTES.forEach((v, i) => { const e = document.createElement('div'); e.className = 'vente'; e.style.left = PX(v) + 'px'; e.style.top = (160 - (i % 4) * 30) + "px"; nuage.appendChild(e); });
+[3000, 4000, 5000, 6000].forEach((v) => nuage.insertAdjacentHTML('beforeend', `<div class="grad" style="left:${PX(v)}px">${(v / 1000).toFixed(0)} 000 €</div>`));
+nuage.insertAdjacentHTML('beforeend', `<div class="mediane" style="left:${PX(4480)}px"><span>${TEXTES.marche.mediane}</span></div><div class="repere" style="left:${PX(4650)}px"><span>${TEXTES.marche.repere}</span></div>`);
+$('#mots').innerHTML = TEXTES.point.texte.replace(' Anne', '\nAnne').split(/( |\n)/).filter((m) => m !== ' ').map((m) => m === '\n' ? '<br><br>' : `<span>${m} </span>`).join('');
+TEXTES.refrain.forEach((l) => $('#refrain').insertAdjacentHTML('beforeend', `<div>${l}</div>`));
+
+// ——— Temps ———
+const clamp = (x) => Math.max(0, Math.min(1, x));
+const p = (t, a, b) => clamp((t - a) / (b - a));
+const sortie = (x) => 1 - Math.pow(1 - x, 3);
+const douce = (x) => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const vis = (t, a, b, f = .6) => Math.min(p(t, a, a + f), 1 - p(t, b - f, b));
+const melange = (a, b, x) => { const ha = a.match(/\w\w/g).map((h) => parseInt(h, 16)), hb = b.match(/\w\w/g).map((h) => parseInt(h, 16)); return `rgb(${ha.map((v, i) => Math.round(v + (hb[i] - v) * x)).join(',')})`; };
+
+// Découpage (secondes)
+const S = { s1: [0, 5.5], s2: [5.5, 16], portail: [16, 45.5], s7: [45.5, 52] };
+const ONGLETS = [16, 23.5, 31, 38]; // début de chaque onglet du portail
+const DUREE = 52;
+
+function rendu(t) {
+  // 1. Ouverture
+  const s1 = $('#s1'); s1.style.opacity = vis(t, ...S.s1);
+  [...s1.children].forEach((e, i) => { const x = sortie(p(t, .2 + i * .35, 1.2 + i * .35)); e.style.opacity = x; e.style.transform = `translateY(${(1 - x) * 30}px)`; });
+
+  // 2. Les étapes
+  const s2 = $('#s2'); s2.style.opacity = vis(t, ...S.s2);
+  const t2 = t - S.s2[0];
+  [...$('#s2 .tete').children].forEach((e, i) => { const x = sortie(p(t2, .3 + i * .3, 1.3 + i * .3)); e.style.opacity = x; e.style.transform = `translateY(${(1 - x) * 24}px)`; });
+  const trace = douce(p(t2, 1, 6.2));
+  $('#vague').style.strokeDashoffset = LONG * (1 - trace);
+  document.querySelectorAll('.etape').forEach((e, i) => {
+    const seuil = X(i) / LARG; const x = sortie(clamp((trace - seuil + .02) / .08));
+    e.style.opacity = x; e.style.transform = `translateY(${(1 - x) * 20}px)`;
+    const actif = i >= 3 && t2 > 6.8;
+    const a = sortie(p(t2, 6.8 + (i - 3) * .15, 7.4 + (i - 3) * .15));
+    e.querySelector('.point').style.background = i >= 3 ? melange('F7F2EA', '002FA7', a) : '';
+    e.querySelector('.point').style.borderColor = i >= 3 ? melange('26201A', '002FA7', a) : '';
+    e.querySelector('.num').style.color = actif ? melange('5C5248', '002FA7', a) : '';
+  });
+  const c = sortie(p(t2, 7.2, 8.2)); crochet.style.opacity = c; crochet.style.transform = `translateY(${(1 - c) * 20}px)`;
+
+  // 3 à 6. Le portail
+  const po = $('#portail'); po.style.opacity = vis(t, ...S.portail, .8);
+  const tp = t - S.portail[0];
+  const f = sortie(p(tp, 0, 1.2));
+  $('#fenetre').style.transform = `translateY(${(1 - f) * 80}px) scale(${.96 + .04 * f})`;
+  let o = 0; ONGLETS.forEach((d, i) => { if (t >= d) o = i; });
+  // le curseur glisse d'un onglet à l'autre
+  let pos = 0; ONGLETS.forEach((d, i) => { if (i) pos += douce(p(t, d - .2, d + .4)); });
+  $('#curseur').style.top = (34 + pos * 64) + 'px';
+  document.querySelectorAll('.onglet').forEach((e, i) => e.classList.toggle('actif', i === Math.round(pos)));
+  document.querySelectorAll('.legende').forEach((e, i) => {
+    const fin = i < 3 ? ONGLETS[i + 1] : S.portail[1];
+    const a = Math.min(sortie(p(t, ONGLETS[i] + .3, ONGLETS[i] + 1.1)), 1 - p(t, fin - .5, fin));
+    e.style.opacity = a; e.style.transform = `translateY(${(1 - sortie(p(t, ONGLETS[i] + .3, ONGLETS[i] + 1.1))) * 26}px)`;
+    e.querySelector('.trait path').style.strokeDasharray = 130; e.querySelector('.trait path').style.strokeDashoffset = 130 * (1 - sortie(p(t, ONGLETS[i] + .9, ONGLETS[i] + 1.8)));
+  });
+  document.querySelectorAll('.panneau').forEach((e, i) => {
+    const fin = i < 3 ? ONGLETS[i + 1] : 99;
+    const a = Math.min(sortie(p(t, ONGLETS[i] + (i ? .1 : .5), ONGLETS[i] + .7)), 1 - p(t, fin - .35, fin));
+    e.style.opacity = a; e.style.transform = `translateX(${(1 - sortie(p(t, ONGLETS[i], ONGLETS[i] + .8))) * 30}px)`;
+  });
+  // Avancement : les étapes se cochent une à une, le rail se remplit
+  const t0 = t - ONGLETS[0];
+  document.querySelectorAll('.marche').forEach((e, i) => {
+    const x = sortie(p(t0, .8 + i * .25, 1.4 + i * .25)); e.style.opacity = x; e.style.transform = `translateX(${(1 - x) * 20}px)`;
+    e.classList.toggle('faite', i < 2 && t0 > 2.2 + i * .5); e.classList.toggle('encours', i === 2 && t0 > 3.2);
+  });
+  $('.rail i').style.height = (douce(p(t0, 2.2, 3.4)) * 148) + 'px';
+  const r = sortie(p(t0, 3.8, 4.6)); $('.rdv').style.opacity = r; $('.rdv').style.transform = `translateY(${(1 - r) * 24}px)`;
+  // Visites : compteurs puis cartes
+  const t1 = t - ONGLETS[1];
+  document.querySelectorAll('#p1 .compte div').forEach((e, i) => { const x = sortie(p(t1, .6 + i * .2, 1.2 + i * .2)); e.style.opacity = x; });
+  document.querySelectorAll('.visite').forEach((e, i) => { const x = sortie(p(t1, 1.4 + i * .9, 2.2 + i * .9)); e.style.opacity = x; e.style.transform = `translateY(${(1 - x) * 30}px)`; });
+  // Marché : chiffres, puis les ventes tombent, puis la médiane et la maison
+  const t2b = t - ONGLETS[2];
+  document.querySelectorAll('#p2 .chiffres div').forEach((e, i) => { const x = sortie(p(t2b, .6 + i * .25, 1.2 + i * .25)); e.style.opacity = x; });
+  document.querySelectorAll('#nuage .vente').forEach((e, i) => { const x = sortie(p(t2b, 1.4 + i * .08, 1.9 + i * .08)); e.style.opacity = .75 * x; e.style.transform = `translateY(${(1 - x) * -40}px)`; });
+  const m = sortie(p(t2b, 3.6, 4.2)); $('#nuage .mediane').style.opacity = m;
+  const h = sortie(p(t2b, 4.4, 5)); $('#nuage .repere').style.opacity = h; $('#nuage .repere').style.transform = `scaleY(${.4 + .6 * h})`; $('#nuage .repere').style.transformOrigin = 'bottom';
+  // Le point : le texte s'écrit mot à mot
+  const t3 = t - ONGLETS[3];
+  const mots = document.querySelectorAll('#mots span');
+  mots.forEach((e, i) => { e.style.opacity = sortie(clamp((t3 - 1 - i * .085) / .3)); });
+
+  // 7. Fermeture : la phrase de fin s'allume ligne à ligne, comme le refrain de l'accueil
+  const s7 = $("#s7"); s7.style.opacity = vis(t, S.s7[0], S.s7[1], .8);
+  const t7 = t - S.s7[0];
+  document.querySelectorAll('#refrain div').forEach((e, i) => { e.style.color = melange('D9CFBD', '26201A', douce(p(t7, .6 + i * .8, 1.3 + i * .8))); });
+  const l = sortie(p(t7, 3.2, 4)); $('#s7 .logo').style.opacity = l;
+  $('#signature').style.strokeDasharray = 300; $('#signature').style.strokeDashoffset = 300 * (1 - douce(p(t7, 3.6, 4.6)));
+  $('.maquette').style.opacity = .8 * vis(t, S.s2[0], S.portail[1], .8);
+}
+window.rendu = rendu; window.DUREE = DUREE;
+rendu(Number(new URLSearchParams(location.search).get('t') || 0));
+</script>
+</body>
+</html>
