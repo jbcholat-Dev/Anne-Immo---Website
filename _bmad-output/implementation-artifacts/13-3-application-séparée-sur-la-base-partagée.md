@@ -30,8 +30,13 @@ Donner à l'espace de travail d'Anne sa propre application (Worker `anne-espace`
 - `site` : `npm run build`, types du Worker sans erreur ; `node scripts/e2e-gestion.mjs` : **49 vérifications sur 49** après la scission de `gestion.ts`.
 - Non vérifié : la liaison d'une même base D1 à deux Workers chez Cloudflare (jeton Cloudflare de Claude expiré) ; constatée à la première construction du projet `anne-espace` (RUNBOOK § 4 sexies, étape 1).
 
+## Mise en place Cloudflare (2026-10-15 au soir, JB guidé dans le fil)
+- Projet `anne-espace` créé depuis le dépôt (racine `/espace`, `npm ci && npm run build`, `npx wrangler deploy`, clé de construction du site) : construction au vert en 53 s, base `anne-leads` liée au Worker (vue d'ensemble Cloudflare). **Hypothèse (1) vérifiée** : une même base D1 sert deux Workers.
+- Adresse `espace.annevialtissot.fr` rattachée ; vérifié par Claude : `curl` répondait 403 (message de l'espace) avant Access.
+- Application Access `espace` (Public DNS, règle `Anne et JB`) : vérifié par Claude, l'adresse renvoie vers la page de connexion d'Access (302) ; l'AUD `a01520f8…f5e6` est lu dans cette redirection et posé dans `espace/wrangler.jsonc` (PR de suivi). `anne-espace.jbcholat.workers.dev` répond 403.
+
 ## Ce qui reste
-- JB : fusionner la PR, puis mise en place Cloudflare (RUNBOOK § 4 sexies, ≈ 20 min), envoyer l'AUD ; Claude le pose (PR).
+- ~~JB : fusionner la PR, puis mise en place Cloudflare~~ fait le 2026-10-15 ; JB fusionne la PR de l'AUD, puis vérifie qu'il entre avec son code.
 - Anne : essayer l'espace (même usage que `/gestion`).
 - Phase 2 : retrait de `/gestion` du site.
 - Hypothèses (2) Email Routing et (3) code de confirmation Gmail : reportées à la story 13.8, seule concernée.

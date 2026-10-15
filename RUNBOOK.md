@@ -163,6 +163,8 @@ Rien n'est à effacer chez Resend : le site n'y garde aucun contact. Chaque expo
 4. Facultatif : projet `anne-espace` → Settings → Variables and Secrets → secret `LIEN_SECRET`, même texte que celui du site (sans lui, la fiche d'un diagnostic n'affiche pas le lien du rapport PDF).
 5. Vérifier en fenêtre privée : `https://espace.annevialtissot.fr` demande le code, puis montre les demandes ; sans code, `curl -I https://espace.annevialtissot.fr/gestion` répond 403.
 
+**Fait le 2026-10-15** (par JB) : projet `anne-espace` (construction au vert du premier coup, base `anne-leads` liée : une même base D1 sert bien deux Workers), adresse `espace.annevialtissot.fr`, application Access `espace` (onglet Public DNS, règle `Anne et JB`, AUD `a01520f8…f5e6`, lu sur la page de connexion d'Access). Les adresses `workers.dev` de l'espace sont coupées (Domains → Worker URL) : elles répondraient de toute façon 403, faute de jeton de la bonne application. Piège évité : ne pas choisir l'onglet « Workers » à la création de l'application Access (il couvre toutes les adresses du Worker, § 6, 2026-10-11) ; l'onglet « Domains » du projet propose aussi d'acheter un domaine : y chercher `annevialtissot.fr` seul, puis ajouter le sous-domaine.
+
 **Phase 2** (après l'essai d'Anne) : le site renvoie `/gestion` vers l'espace ; l'application Access `Gestion` du site et son AUD pourront alors être retirés.
 
 **Plus tard** : clé Leedflow (story 13.10) en secret `LEEDFLOW_API_KEY` de ce Worker seulement, posée par JB.
