@@ -155,6 +155,7 @@ Sur `/contact`, le bouton « Voir les créneaux d'Anne » charge l'agenda de Cal
 - **Contrôle d'accès** (`src/server/acces.ts`, `worker.ts`) : Cloudflare Access (le portail qui demande un code envoyé par e-mail) protège l'adresse, et le serveur vérifie en plus le jeton signé qu'Access joint à chaque requête : signature RS256 avec les clés publiques de l'équipe (`ACCESS_EQUIPE`), application (`ACCESS_AUD`, liste séparée par des virgules), émetteur, date d'expiration, adresse présente. Sans jeton valable : 403, rien n'est servi, même si Access était mal réglé. `ACCESS_AUD` vide = espace fermé à tous. L'adresse vérifiée passe aux pages par l'en-tête interne `x-gestion-compte`, retiré de toute requête qui vient d'ailleurs. Réponses en `no-store` et `noindex`.
 - **Purge** (`src/server/purge.ts`) : à chaque passage de la tâche planifiée, les demandes sans activité depuis `CONSERVATION_ANS` (3) ans sont supprimées avec leurs envois. La politique de confidentialité lit la même constante : une seule source pour la durée.
 - **Migration** `0006-droits-rgpd.sql` : table `droit_exerce`, index sur `last_activity_at`.
+- **Partage avec l'espace d'Anne** (story 13.3, 2026-10-15) : les lectures et écritures de la gestion sont dans `src/server/gestion-donnees.ts`, sans aucun envoi d'e-mail, pour que l'application `espace/` les réutilise ; `src/server/gestion.ts` n'ajoute que l'envoi immédiat d'une relance. Le `/gestion` du site reste en service jusqu'à la phase 2 de la story 13.3 (voir `espace/README.md`).
 
 ## Guide et séquence (story 10.5)
 

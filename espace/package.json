@@ -1,0 +1,27 @@
+{
+  "name": "anne-espace",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Espace de travail d'Anne VIAL-TISSOT (epic 13, AD-19) : application séparée du site, sur la même base de contacts. Réservée à Anne et JB (Cloudflare Access).",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "node scripts/partage.mjs && astro dev",
+    "build": "node scripts/partage.mjs && node scripts/base.mjs && astro build",
+    "check": "wrangler types && astro check && tsc -p tsconfig.worker.json",
+    "types": "wrangler types",
+    "base:local": "wrangler d1 migrations apply DB --local"
+  },
+  "dependencies": {
+    "astro": "^7.3.4"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@astrojs/cloudflare": "^14.3.3",
+    "@types/node": "^26.6.2",
+    "typescript": "^6.0.3",
+    "wrangler": "^4.141.0"
+  }
+}

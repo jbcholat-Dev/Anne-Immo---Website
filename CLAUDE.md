@@ -57,6 +57,7 @@ Le repère de vérité en cas de contradiction : la **spec v5** pour ce que le s
 |---|---|
 | `RUNBOOK.md` | La notice de secours : comptes, adresse d'aperçu, comment remettre en ligne, bascule en production, pièges irréversibles. |
 | `site/` | Le code du site (Astro 7, sortie statique). `site/README.md` décrit l'état réel, `site/PLAN.md` le plan de construction. |
+| `espace/` | L'espace de travail privé d'Anne (epic 13), une application à part sur la même base que le site, son propre Worker `anne-espace`. `espace/README.md` décrit son état. |
 | `contenu-anne/` | Contenu d'Anne rangé au format du site : stories, avis Immodvisor, photos web, légal, guide. Anne modifie ce contenu par l'espace d'édition du site (`/admin`, Sveltia CMS, story 7.13) : chaque enregistrement est une demande de fusion, qui fusionne seule quand la fiche passe en « En relecture » ou « Prêt » (story 9.7). Le dossier Google Drive « Contenu site Anne », rangé à l'identique, reste l'archive des photos HD et des vidéos (RUNBOOK § 1). Les vidéos et photos HD restent sur Drive, hors Git. |
 | `design-system/` | Charte : couleurs, typographies, logos, composants. `tokens/tokens.css` est copié dans le site. |
 | `maquettes/lot-3-complet/` | Maquette de référence (61 écrans) et `DECISIONS.md` (D-1 → D-26). |
@@ -86,6 +87,10 @@ node scripts/email-logo.mjs    # refait le logo joint aux e-mails (site/src/serv
 node scripts/rapport-gabarit.mjs  # refait le gabarit du rapport PDF du diagnostic après un changement de ses textes (story 10.10), puis npm run build
 node scripts/e2e-rapport.mjs     # rapport PDF de bout en bout sur le serveur local : bouton, e-mail, PDF lu, liens refusés (même préalable)
 node scripts/guide-pdf.mjs     # refait le PDF du guide (site/prive/guide.pdf) depuis contenu-anne/guide/texte-actuel.md
+
+cd ../espace           # l'espace d'Anne (story 13.3)
+npm install && npm run build && npm run check
+node scripts/e2e-espace.mjs    # site et espace sur la même base locale : accès, relance, Modelo, droits RGPD (préalable en tête du fichier)
 ```
 
 ## 5. Règles de contenu et de sécurité
