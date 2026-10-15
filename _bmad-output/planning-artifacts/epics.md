@@ -2252,6 +2252,7 @@ afin de ne plus rien saisir dans Modelo avant (AD-14 amendée).
 **Quand** l'étape change
 **Alors** le contact porte « À recopier dans Modelo » avec la fiche prête à copier, qu'Anne marque faite
 **Et** les demandes du site ne créent plus de recopie Modelo d'office
+**Et** si le contact existe déjà dans Modelo (créé par la synchronisation Leedflow ↔ Modelo d'Anne, confirmée par JB le 2026-10-15), la fiche se limite à ce qui manque (mandat, bien) au lieu d'une recopie complète
 
 ### Story 13.10: Résumés d'appels Leedflow
 
@@ -2260,10 +2261,12 @@ je veux que le résumé de chaque appel se range sur la fiche du bon contact,
 afin de ne plus rien noter à la main après un appel.
 
 **Critères d'acceptation :**
-**Étant donné** l'accès que Leedflow aura confirmé (webhook, API ou MCP) et son contrat de sous-traitance
-**Quand** un appel se termine
-**Alors** son résumé est rattaché au contact de même numéro, ou proposé comme nouveau contact sur la page « Aujourd'hui »
-**Et** une proposition d'étape ou de relance tirée du résumé attend l'accord d'Anne. **Bloquée** par la réponse du support Leedflow (action J33)
+**Étant donné** la clé d'API Leedflow d'Anne posée en secret du Worker de l'espace (AD-20, entrée 4)
+**Quand** la relève planifiée passe (toutes les 10 minutes)
+**Alors** chaque nouvel appel, message vocal ou SMS d'un numéro connu est noté dans l'historique du contact avec son résumé, sa durée et son sens, une seule fois, et complété si le résumé arrive après coup
+**Et** un numéro inconnu est proposé sur la page « Aujourd'hui » (créer le contact ou ignorer), jamais créé d'office
+**Et** une tâche détectée par Leedflow est proposée comme prochaine action, qu'Anne accepte ou ignore
+**Et** la transcription complète et l'enregistrement restent dans Leedflow ; l'historique passé est repris une fois pour les numéros déjà connus
 
 ### Story 13.11: E-mails des clients (différée)
 
