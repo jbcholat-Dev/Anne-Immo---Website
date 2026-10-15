@@ -1,7 +1,7 @@
 ---
 story: 15.3
 epic: 15 — Portail des vendeurs sous mandat (vaut aussi pour la vidéo acheteurs de l'epic 16)
-statut: review
+statut: done
 date: 2026-10-15
 origine: JB, 2026-10-15 : « je veux qu'elles soient sur le main » (fil « Vidéo de l'espace vendeur »)
 ---
@@ -20,7 +20,8 @@ Montrer sur annevialtissot.fr les deux vidéos des stories 15.2 (Vendre) et 16.2
 - Textes pas encore relus par Anne (action du tableau de bord) : une correction passera par l'espace d'édition (textes du bloc) ou par Claude (textes de la vidéo).
 
 ## Vérification (2026-10-15)
-- Voir la PR : `npm run build`, `npm run check`, `node scripts/liens.mjs`, puis contrôle sur annevialtissot.fr après la mise en ligne.
+- `npm run build` (aussi en mode public : les deux vidéos sont dans `vendre.html` et `acheter.html`), `npm run check` (0 erreur), `node scripts/liens.mjs` (0 lien cassé).
+- PR #151 fusionnée le 2026-10-15 (commit 823bc54) après construction Cloudflare au vert. Contrôle en ligne : https://annevialtissot.fr/vendre contient `portail-vendeur`, https://annevialtissot.fr/acheter contient `portail-acheteur`, `/video/portail-vendeur.mp4` et `/video/portail-acheteur-poster.jpg` répondent 200.
 
 ## Ce qui reste
 - Relecture d'Anne.
