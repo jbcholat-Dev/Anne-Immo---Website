@@ -27,8 +27,9 @@
     // Adresse du site dans les liens que l'espace affiche (rapport du diagnostic).
     "URL_SITE": "https://apercu-anne-vial-tissot-site.jbcholat.workers.dev",
     // Équipe Cloudflare Access qui signe les jetons, et identifiant (AUD) de l'application Access « Espace d'Anne ».
-    // Valeurs publiques. Tant que l'AUD est vide, l'espace refuse tout le monde (403).
+    // Valeurs publiques. Sans AUD, l'espace refuse tout le monde (403). Application « espace » (Public DNS,
+    // espace.annevialtissot.fr, règle « Anne et JB »), créée par JB le 2026-10-15. Voir RUNBOOK.md § 4 sexies.
     "ACCESS_EQUIPE": "https://dry-truth-5a0d.cloudflareaccess.com",
-    "ACCESS_AUD": ""
+    "ACCESS_AUD": "a01520f8a1fa3a113cc347c435471a902a2fadc05cb3c90080671407fd24f5e6"
   }
 }
