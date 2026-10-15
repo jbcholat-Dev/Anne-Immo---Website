@@ -2281,6 +2281,17 @@ afin d'avoir toute la relation au même endroit.
 **Quand** un e-mail est échangé avec l'adresse d'un contact
 **Alors** il apparaît dans son historique. **Différée** : l'espace est complet sans (AD-20)
 
+### Story 13.12: Parcours d'Anne pour trouver et qualifier des contacts
+
+En tant que JB,
+je veux revoir les parcours d'Anne centrés sur la recherche et la qualification de contacts vendeurs,
+afin de construire un espace qui l'aide à trouver des mandats, pas seulement à suivre ses contacts.
+
+**Critères d'acceptation :**
+**Étant donné** le document de parcours (story 13.12) et l'entretien mené avec Anne
+**Quand** les parcours sont validés par Anne et JB
+**Alors** la maquette et les stories 13.4 à 13.7 sont mises à jour avant leur construction. Demande de JB du 2026-10-16
+
 
 ## Epic 14: Campagnes promotionnelles temporaires
 
