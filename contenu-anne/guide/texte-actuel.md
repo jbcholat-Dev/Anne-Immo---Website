@@ -4,6 +4,8 @@
 >
 > **Passe du 2026-10-10 (demande de JB).** Les chiffres sans source et les « cas réels » inventés ont été retirés ; les cas sont désormais de vraies ventes d'Anne publiées sur le site (Allinges, Anthy, Bernex, Morzine, Essert-Romand). Les faits sur les diagnostics ont été vérifiés (DPE antérieurs au 1er juillet 2021 caducs depuis le 1er janvier 2025, électricité et gaz 3 ans, audit énergétique pour les maisons E, F et G). Il reste à Anne à relire.
 >
+> **Passe du 2026-10-15 (ticket n° 154 d'Anne).** L'erreur n° 2 est réécrite à sa demande : elle couvre désormais les trois changements de règles du DPE (janvier 2025, 2026 et 2027), sources 8 et 9 vérifiées.
+>
 > **Ce qu'on attend de toi** : corrige directement dans ce fichier, ou note tes changements dans `corrections.md`. Les passages marqués **⚠️ à vérifier** sont des chiffres ou des « cas réels » dont on ne connaît pas la source : garde-les seulement si tu peux les justifier (une vente à toi, une étude citée), sinon on les retire ou on les reformule.
 >
 > Source : https://gamma.app/docs/Les-10-Erreurs-Fatales-des-Vendeurs-Particuliers-ulo8r3jjjj4mh70 (même texte dans Notion, « [Marketing] – Lead Magnets et Séquence Email – 2025-10-23 »).
@@ -51,11 +53,14 @@ Vous fixez votre prix selon l'une de ces méthodes : « J'ai acheté 300 000 €
 
 **La fourchette stratégique.** En régions, les acheteurs obtiennent en moyenne **5,1 %** de baisse sur le prix affiché, et 9 ventes sur 10 sont négociées (1). Gardez une marge de cet ordre, mais seulement celle que vous pouvez justifier face à un acheteur.
 
-## Erreur n° 2 : ignorer la réforme DPE de juillet 2021
+## Erreur n° 2 : ne pas se tenir informé des nouvelles règles de calcul du DPE
 
-**Attention danger.** Depuis le 1er juillet 2021, le DPE (diagnostic de performance énergétique) se calcule avec une nouvelle méthode. **Les DPE réalisés avant cette date ne sont plus valables depuis le 1er janvier 2025.**
+**Attention danger.** Les règles du DPE (diagnostic de performance énergétique) ont changé trois fois en trois ans. Un vendeur qui ne les suit pas se retrouve avec un diagnostic périmé, ou avec une étiquette qui ne correspond plus à son bien. Trois dates à retenir :
+- **1er janvier 2025** : les DPE réalisés avant le 1er juillet 2021 ne sont plus valables. Il faut les refaire.
+- **1er janvier 2026** : nouvelle règle de calcul pour les logements chauffés à l'électricité (8).
+- **1er janvier 2027** : nouvelle règle de calcul, là encore pour les logements chauffés à l'électricité (9).
 
-Vous pensez que votre DPE de 2019 est encore bon parce que « le DPE dure 10 ans » ? Plus maintenant. Et les diagnostics électricité et gaz, eux, ne valent que 3 ans pour une vente.
+Vous pensez que votre DPE de 2019 est encore bon parce que « le DPE dure 10 ans » ? Plus maintenant. Et si votre logement est chauffé à l'électricité, un DPE refait avec les nouvelles règles peut le classer autrement que l'ancien : mieux vaut le savoir avant de fixer votre prix. Les diagnostics électricité et gaz, eux, ne valent que 3 ans pour une vente.
 
 **Ce que ça vous coûte**
 - Un nouveau DPE peut classer votre bien plus bas que l'ancien, et l'acheteur s'en servira pour négocier
@@ -270,3 +275,5 @@ Conseillère en immobilier · Chablais, Léman
 5. ANIL, « Logement décent : la performance énergétique ». anil.org
 6. M. Seiler, P. Madhavan, M. Liechty, « Toward an Understanding of Real Estate Homebuyer Internet Search Behavior: An Application of Ocular Tracking Technology », Journal of Real Estate Research, 2012.
 7. PAP.fr, taux de republication des annonces après un compromis annulé (9,4 % en novembre 2022) et sondage auprès de 10 828 acheteurs, rapportés par L'Écho du Mardi, 7 décembre 2022.
+8. Ministère de l'Économie, « Un nouveau DPE au 1er janvier 2026 pour favoriser le chauffage électrique » (arrêté du 13 août 2025 : le coefficient de l'électricité passe de 2,3 à 1,9). economie.gouv.fr
+9. Que Choisir, « DPE : le mode de calcul va encore changer », août 2026 (le coefficient de l'électricité passe de 1,9 à 1,7 au 1er janvier 2027). quechoisir.org

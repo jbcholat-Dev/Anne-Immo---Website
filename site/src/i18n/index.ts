@@ -39,6 +39,8 @@ export const routes = {
   diagnostic: { fr: '/diagnostic', en: '/diagnostic' },
   questions: { fr: '/diagnostic/questions', en: '/diagnostic/questions' },
   resultats: { fr: '/diagnostic/resultats', en: '/diagnostic/resultats' },
+  partenaires: { fr: '/partenaires', en: '/partenaires' },
+  actualites: { fr: '/actualites', en: '/actualites' },
   contact: { fr: '/contact', en: '/contact' },
   guide: { fr: '/guide', en: '/guide' },
   mentions: { fr: '/mentions-legales', en: '/mentions-legales' },

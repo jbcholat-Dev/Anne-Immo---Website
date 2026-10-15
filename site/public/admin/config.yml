@@ -94,6 +94,70 @@ collections:
         hint: "« Publiée » seulement quand les clients ont donné leur accord. L'aperçu montre toutes les fiches, quel que soit le statut. Le témoignage affiché est l'avis Immodvisor relié à cette vente (rubrique Avis, champ « Vente concernée »)."
       - { name: body, label: Récit, widget: markdown, hint: "À la première personne. Des intertitres courts (« Le résultat ») aident la lecture." }
 
+  - name: partenaires
+    label: Partenaires
+    label_singular: Partenaire
+    description: >
+      Une fiche par professionnel avec qui Anne travaille (onglet « Partenaires »).
+      L'onglet apparaît sur le site public dès la première fiche « Publiée ».
+    folder: contenu-anne/partenaires
+    extension: md
+    format: frontmatter
+    create: true
+    delete: true
+    publish: false
+    slug: "{{nom}}"
+    identifier_field: nom
+    summary: "{{nom}} · {{activite}} · {{statut}}"
+    sortable_fields: [ordre, nom, statut]
+    fields:
+      - { name: nom, label: Nom, widget: string }
+      - { name: activite, label: Activité, widget: string, hint: "Ex. « Diagnostiqueur immobilier », « Notaire »." }
+      - { name: commune, label: Commune, widget: string, required: false }
+      - { name: site, label: Site internet, widget: string, required: false, hint: "L'adresse complète, qui commence par https://" }
+      - { name: logo, label: Logo ou photo, widget: image, required: false, hint: "Facultatif. Format carré de préférence ; réduit automatiquement à l'envoi." }
+      - { name: ordre, label: Ordre, widget: number, value_type: int, required: false, hint: "Facultatif : 1 passe en premier. Sans ordre, rangement par nom." }
+      - name: statut
+        label: Statut
+        widget: select
+        default: brouillon
+        options:
+          - { label: "Brouillon (visible seulement sur l'aperçu)", value: brouillon }
+          - { label: "À relire", value: a-relire }
+          - { label: "Publiée (visible sur le site public)", value: publie }
+      - { name: body, label: Texte, widget: markdown, required: false, hint: "Quelques lignes : ce que ce partenaire apporte à vos clients." }
+
+  - name: actualites
+    label: Actualités
+    label_singular: Article
+    description: >
+      Un article par fiche (onglet « Actualités »), du plus récent au plus ancien.
+      L'onglet apparaît sur le site public dès le premier article « Publié ».
+    folder: contenu-anne/actualites
+    extension: md
+    format: frontmatter
+    create: true
+    delete: true
+    publish: false
+    slug: "{{year}}-{{month}}-{{day}}-{{titre}}"
+    identifier_field: titre
+    summary: "{{date}} · {{titre}} · {{statut}}"
+    sortable_fields: [date, titre, statut]
+    fields:
+      - { name: titre, label: Titre, widget: string }
+      - { name: date, label: Date, widget: datetime, time_format: false, format: "YYYY-MM-DD", date_format: "DD/MM/YYYY" }
+      - { name: resume, label: Résumé, widget: text, required: false, hint: "Une ou deux phrases, affichées dans la liste des actualités et sous le titre dans Google." }
+      - { name: photo, label: Photo, widget: image, required: false, hint: "Facultative, au format paysage de préférence ; réduite automatiquement à l'envoi." }
+      - name: statut
+        label: Statut
+        widget: select
+        default: brouillon
+        options:
+          - { label: "Brouillon (visible seulement sur l'aperçu)", value: brouillon }
+          - { label: "À relire", value: a-relire }
+          - { label: "Publié (visible sur le site public)", value: publie }
+      - { name: body, label: Texte, widget: markdown }
+
   - name: pages
     label: Pages
     label_singular: Page

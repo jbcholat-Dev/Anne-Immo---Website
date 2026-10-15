@@ -1,0 +1,60 @@
+---
+// Actualités d'Anne (ticket n° 153, story 8.21, D-46) : un article par fiche de contenu-anne/actualites/, du plus récent au plus ancien.
+// Sans article publié, la page n'est pas indexée et l'onglet n'apparaît pas sur le site public (lib/contenu.ts, rubriquesVisibles).
+import Page from '../../layouts/Page.astro';
+import Picture from '../../components/Picture.astro';
+import { actualites, clePhoto } from '../../lib/contenu';
+import { r } from '../../i18n';
+const liste = (await actualites()).map((a) => ({ a, photo: clePhoto(a.data.photo) }));
+const jour = (d: Date) => d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+<Page titre="Actualités — Anne VIAL-TISSOT" description="Les nouvelles d'Anne et du marché immobilier dans le Chablais et le bassin lémanique." courante="actualites" noindex={liste.length === 0}>
+  <div class="index-tete">
+    <h1>Actualités</h1>
+    <p>Les nouvelles du marché et de mon activité dans le Chablais et le bassin lémanique.</p>
+  </div>
+  {liste.length === 0 ? (
+    <div class="index-vide">
+      <h2>Bientôt</h2>
+      <p>Anne publiera ici ses premières actualités. En attendant, ses ventes sont racontées dans les réalisations.</p>
+      <a href={r('realisation')} class="btn btn-primaire btn-m">Voir les réalisations</a>
+    </div>
+  ) : (
+    <div class="index-grille">
+      {liste.map(({ a, photo }) => (
+        <article>
+          {photo && <a href={`${r('actualites')}/${a.id}`} class="index-photo" aria-hidden="true" tabindex="-1"><Picture id={photo} alt="" sizes="(max-width: 899px) 100vw, 33vw" /></a>}
+          <p class="actu-date"><time datetime={a.data.date.toISOString().slice(0, 10)}>{jour(a.data.date)}</time></p>
+          <h2>{a.data.titre}</h2>
+          {a.data.resume && <p>{a.data.resume}</p>}
+          <a href={`${r('actualites')}/${a.id}`} class="lien">Lire l'article</a>
+        </article>
+      ))}
+    </div>
+  )}
+</Page>
+<style>
+  .index-tete { padding: 96px var(--marge) 40px; }
+  .index-tete h1 { font-size: 72px; margin-bottom: 16px; }
+  .index-tete p { font-size: 18px; line-height: 1.6; max-width: 56ch; }
+  .index-grille { padding: 0 var(--marge) 120px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px 32px; }
+  article { display: flex; flex-direction: column; gap: 12px; }
+  .index-photo { display: block; height: 260px; border-radius: 12px; overflow: hidden; background: var(--avt-galet); }
+  .index-photo :global(picture), .index-photo :global(img) { width: 100%; height: 100%; }
+  .index-photo :global(img) { object-fit: cover; }
+  .actu-date { font-size: 13px; color: var(--avt-text-muted); }
+  article h2 { font-size: 28px; }
+  article p { font-size: 16px; line-height: 1.55; }
+  .index-vide { padding: 0 var(--marge) 120px; max-width: 48ch; }
+  .index-vide h2 { font-size: 44px; margin-bottom: 14px; }
+  .index-vide p { font-size: 15px; line-height: 1.6; margin-bottom: 24px; }
+  @media (max-width: 899px) {
+    .index-tete { padding: 48px var(--marge-m) 28px; }
+    .index-tete h1 { font-size: 48px; margin-bottom: 12px; }
+    .index-tete p { font-size: 16px; }
+    .index-grille { padding: 0 var(--marge-m) 56px; grid-template-columns: 1fr; gap: 36px; }
+    .index-photo { height: 220px; }
+    .index-vide { padding: 0 var(--marge-m) 56px; }
+    .index-vide h2 { font-size: 34px; }
+  }
+</style>

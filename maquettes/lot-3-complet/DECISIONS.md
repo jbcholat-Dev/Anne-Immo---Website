@@ -122,6 +122,7 @@ La nav passe de 4 entrées + bouton à **5 entrées (À propos ▾ · Réalisati
 | # | Décision | Statut | À propager |
 |---|---|---|---|
 | D-45 | **La ligne signature souligne le nom de famille, comme dans le logo.** Sous le grand nom de l'accueil et sous « Anne Vial‑Tissot » d'À propos, le trait terracotta commence sous « VIAL‑TISSOT » et en prend toute la largeur, au lieu de partir sous « Anne ». Le trait garde la même épaisseur quelle que soit sa longueur. Ce qu'on perd : rien ; la vague du trait est un peu plus étirée sur l'accueil. | ✅ | `site/src/components/accueil/Hero.astro` · `site/src/pages/a-propos.astro` · `site/src/components/Sprite.astro` · story 8.20. |
+| D-46 | **Deux onglets de plus : « Partenaires » et « Actualités », entre Acheter et Contact** (demande d'Anne, ticket n° 153). Anne les remplit dans l'espace d'édition. Sur l'aperçu, ils se voient toujours ; sur le site public, chacun n'apparaît (barre et pied de page) qu'à la première fiche publiée : jamais d'onglet vers une page vide. Entre 900 et 1 179 px, les icônes des réseaux quittent la barre pour laisser la place aux libellés (elles restent dans le pied de page et le menu du téléphone). Ce qu'on perd : les réseaux en haut à gauche sur les petits écrans d'ordinateur. | 🔄 | `site/src/components/Nav.astro` · `site/src/components/Footer.astro` · `site/src/pages/partenaires.astro` · `site/src/pages/actualites/` · story 8.21. |
 
 ## Pages — état de validation
 
