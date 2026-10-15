@@ -11,6 +11,7 @@
 | Cloudflare Zero Trust, équipe `dry-truth-5a0d` | protège l'aperçu par un code envoyé par e-mail | même compte | 0 € (plan Free, 50 utilisateurs) |
 | Google Drive, dossier partagé « Contenu site Anne » (à la racine du Drive de JB) | boîte de dépôt d'Anne, rangée exactement comme `contenu-anne/` : `stories/<bien>/` (texte, `photos/` HD, `autorisations/`), avis, guide, légal, portrait, vidéos ; Claude le lit par le connecteur Google Drive et range dans `contenu-anne/` par PR | JB (propriétaire), Anne (modification) | 0 € (espace gratuit de 15 Go) |
 | Espace d'édition `annevialtissot.fr/admin` (Sveltia CMS) | Anne et JB y modifient ventes, pages, textes des pages (accueil, Vendre, Acheter, Contact, story 7.20), avis et coordonnées ; chaque enregistrement crée une demande de fusion, fusionnée seule quand l'auteur passe la fiche en « En relecture » ou « Prêt » et que la construction est au vert (§ 2 bis, story 9.7 ; story 7.13). Configuration : `site/public/admin/config.yml` | se connecte avec un compte GitHub **collaborateur du dépôt** (JB : son compte ; Anne : son propre compte, invitée) | 0 € |
+| Cloudflare Worker `anne-espace` (story 13.3) | l'espace de travail privé d'Anne, `espace.annevialtissot.fr`, sur la même base que le site ; construit depuis le dossier `espace/` (§ 4 sexies) | JB, même compte Cloudflare | 0 € de plus (compris dans le plan Workers Paid du site) |
 | Cloudflare Worker `sveltia-cms-auth` | le petit programme qui fait « Se connecter avec GitHub » pour l'espace d'édition ; il garde l'identifiant et le secret de l'autorisation GitHub (secrets Cloudflare, jamais dans le dépôt) | JB, même compte Cloudflare | 0 € |
 | GitHub, autorisation OAuth « Site Anne — édition » | permet la connexion GitHub depuis l'espace d'édition ; adresse de retour = adresse du Worker + `/callback` | JB (GitHub → Settings → Developer settings → OAuth Apps) | 0 € |
 | Infomaniak | noms de domaine `annevialtissot.fr` et `.com` | JB (son adresse e-mail) ; **propriétaire légal des deux domaines : Anne** (décision du 2026-10-05, amende AD-9), JB contact administrateur. Sans option Domain Plus. Expiration 2027-10-05. | 17,52 € TTC la 1re année, ≈ 21 €/an ensuite |
@@ -149,6 +150,23 @@ Rien n'est à effacer chez Resend : le site n'y garde aucun contact. Chaque expo
 
 **Conservation** : les demandes sans activité depuis 3 ans sont supprimées automatiquement par la tâche planifiée ; durée écrite dans la politique de confidentialité et dans `site/src/server/purge.ts`, une seule source.
 
+## 4 sexies. Espace de travail d'Anne (story 13.3, AD-19)
+
+**Quoi** : une seconde application, le Worker `anne-espace`, construite depuis le dossier `espace/` du même dépôt. Elle lit et écrit la base des leads du site (`anne-leads` pour `main`, `anne-leads-apercu` pour toute autre branche, choix fait par `espace/scripts/base.mjs`). Elle reprend aujourd'hui la gestion des demandes (§ 4 quinquies, mêmes boutons) ; le pipeline d'Anne s'y ajoutera (stories 13.4 et suivantes). Une relance d'e-mail faite dans l'espace part par la tâche planifiée du site, dans les 15 minutes.
+
+**Protection** : la même que `/gestion`. Cloudflare Access demande le code ; le serveur vérifie le jeton contre `ACCESS_EQUIPE` et `ACCESS_AUD` de `espace/wrangler.jsonc`. `ACCESS_AUD` vide = tout répond 403, feuilles de style comprises. Une adresse qu'Access ne couvrirait pas par erreur reste donc fermée.
+
+**Mise en place, une fois** (≈ 20 min, par JB, après la fusion de la PR de la story 13.3) :
+1. Cloudflare → Workers & Pages → Create → Import a repository → `Anne-Immo---Website`. Nom du projet : `anne-espace` (doit être exactement celui de `espace/wrangler.jsonc`). Dossier racine (*Root directory*) : `espace`. Construction : `npm ci && npm run build`. Mise en ligne : `npx wrangler deploy`. Branches autres que `main` : `npx wrangler versions upload`. La première construction lie la base `anne-leads` au nouveau Worker : si elle échoue sur la base, copier le journal dans le fil.
+2. Projet `anne-espace` → Settings → Domains & Routes → Add → Custom domain → `espace.annevialtissot.fr`. Cloudflare crée l'enregistrement DNS.
+3. Zero Trust → Access → Applications → Add an application → Self-hosted. Nom : `Espace d'Anne`. Adresses : `espace.annevialtissot.fr`, `anne-espace.jbcholat.workers.dev` et `*-anne-espace.jbcholat.workers.dev`. Règle : `Anne et JB`. Enregistrer, puis copier l'« Application Audience (AUD) Tag » dans le fil : Claude le pose dans `ACCESS_AUD` par une PR (sans lui, l'espace reste fermé).
+4. Facultatif : projet `anne-espace` → Settings → Variables and Secrets → secret `LIEN_SECRET`, même texte que celui du site (sans lui, la fiche d'un diagnostic n'affiche pas le lien du rapport PDF).
+5. Vérifier en fenêtre privée : `https://espace.annevialtissot.fr` demande le code, puis montre les demandes ; sans code, `curl -I https://espace.annevialtissot.fr/gestion` répond 403.
+
+**Phase 2** (après l'essai d'Anne) : le site renvoie `/gestion` vers l'espace ; l'application Access `Gestion` du site et son AUD pourront alors être retirés.
+
+**Plus tard** : clé Leedflow (story 13.10) en secret `LEEDFLOW_API_KEY` de ce Worker seulement, posée par JB.
+
 ## 5. Pièges irréversibles
 
 - Ne jamais mettre `PUBLIC_INDEXATION=oui` en variable de construction : elle vaudrait pour toutes les branches et Google pourrait mémoriser une version incomplète. Le lancement passe par `LANCEMENT=oui`, que seule `main` écoute (§ 4).
@@ -182,3 +200,4 @@ Rien n'est à effacer chez Resend : le site n'y garde aucun contact. Chaque expo
 - 2026-10-10 : décision des campagnes promotionnelles temporaires (epic 14, après le lancement) : une page par offre, créée par Anne dans l'espace d'édition et datée ; chaque offre est un tirage au sort parmi les inscrits (choix de JB), donc un règlement écrit à publier avec l'offre. Rien ne change encore dans les comptes ni la mise en ligne.
 - 2026-10-11 : **site ouvert au public sur https://annevialtissot.fr** (stories 12.4 et 12.5), tout par l'API Cloudflare avec un jeton limité de JB. Domaine personnalisé du Worker, redirections 301 de `www` et du `.com` (règles de redirection des zones, enregistrements `AAAA 100::` proxifiés), Turnstile étendu à `www`, application Access `Gestion` (AUD `916beab7…`, PR n° 124), `LANCEMENT=oui` sur le déclencheur de `main`. **Piège** : l'application Access de destination « Worker » protège aussi les domaines personnalisés du Worker ; elle est désormais limitée aux adresses `anne-vial-tissot-site.jbcholat.workers.dev` et `*-anne-vial-tissot-site.jbcholat.workers.dev`. Aperçu permanent : branche `apercu` (story 12.7, § 2). Retour arrière : § 4.
 - 2026-10-15 : Leedflow a répondu (API en lecture seule, sans webhook). Pour la story 13.10, Anne générera une clé dans Leedflow (Paramètres › API) et JB la posera en secret du Worker de l'espace ; Claude ne la voit jamais. Rien ne change encore dans les comptes.
+- 2026-10-15 : application de l'espace d'Anne (story 13.3, phase 1) : nouveau dossier `espace/`, futur Worker `anne-espace` sur `espace.annevialtissot.fr`, même base que le site. Mise en place par JB décrite au § 4 sexies ; le `/gestion` du site reste en service jusqu'à la phase 2.

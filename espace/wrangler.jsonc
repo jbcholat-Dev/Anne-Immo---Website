@@ -1,0 +1,34 @@
+{
+  // Configuration Cloudflare de l'espace de travail d'Anne (story 13.3, AD-19) : un Worker à part du site,
+  // réservé à Anne et à JB par Cloudflare Access, qui lit et écrit la même base des leads que le site.
+  // Aucun secret ici, seulement des identifiants publics. Secret facultatif : LIEN_SECRET (le même que celui du site,
+  // pour afficher le lien du rapport du diagnostic) ; plus tard la clé Leedflow (story 13.10). Voir RUNBOOK.md § 4 sexies.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "anne-espace",
+  "main": "./worker.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  // Toutes les adresses passent par worker.ts, feuilles de style comprises : rien n'est servi sans le contrôle Access.
+  "assets": { "binding": "ASSETS", "run_worker_first": true },
+  // Même base que le site (AD-19). Les constructions de main passent sur la base de production `anne-leads` (scripts/base.mjs) ;
+  // toutes les autres restent sur la base d'aperçu. Le schéma ne change que par site/migrations/ (AD-10), appliquées par le site.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "anne-leads-apercu",
+      "database_id": "06a92884-c6f1-4d02-afbe-976d11543385",
+      "migrations_dir": "../site/migrations"
+    }
+  ],
+  "observability": { "enabled": true },
+  "vars": {
+    // « apercu » hors de main ; « production » pour les constructions de main (scripts/base.mjs).
+    "ENVIRONNEMENT": "apercu",
+    // Adresse du site dans les liens que l'espace affiche (rapport du diagnostic).
+    "URL_SITE": "https://apercu-anne-vial-tissot-site.jbcholat.workers.dev",
+    // Équipe Cloudflare Access qui signe les jetons, et identifiant (AUD) de l'application Access « Espace d'Anne ».
+    // Valeurs publiques. Tant que l'AUD est vide, l'espace refuse tout le monde (403).
+    "ACCESS_EQUIPE": "https://dry-truth-5a0d.cloudflareaccess.com",
+    "ACCESS_AUD": ""
+  }
+}

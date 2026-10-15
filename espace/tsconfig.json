@@ -1,0 +1,7 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": { "paths": { "@site/*": ["../site/src/*"] } },
+  "include": [".astro/types.d.ts", "**/*"],
+  // Le code serveur (Worker) a ses propres types : vérifié à part, par tsconfig.worker.json (npm run check).
+  "exclude": ["dist", "worker.ts", "src/pages/api", "src/server", "worker-configuration.d.ts"]
+}

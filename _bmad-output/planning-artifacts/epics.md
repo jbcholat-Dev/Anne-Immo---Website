@@ -2181,6 +2181,8 @@ afin qu'une mise en ligne de l'un ne touche jamais l'autre (AD-19).
 **Alors** elle apparaît aussitôt dans l'espace, sans copie (base D1 partagée vérifiée en premier)
 **Et** `/gestion` (liste, fiche, relance, droits RGPD) est déplacé dans l'espace et ses essais (`e2e-gestion`) passent ; le site n'a plus de page privée
 
+*Découpage du 2026-10-15 :* phase 1, l'espace reprend `/gestion` à l'identique pendant que celui du site reste ouvert ; phase 2, une fois l'espace en ligne et essayé par Anne, le site renvoie `/gestion` vers l'espace et n'a plus de page privée.
+
 ### Story 13.4: Contacts et pipeline
 
 En tant qu'Anne,
