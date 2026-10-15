@@ -2402,6 +2402,16 @@ afin de comprendre ce que l'exclusivité avec Anne m'apporte.
 **Alors** une courte vidéo animée (moins d'une minute, sans son, dans la charte) montre les étapes de la vente puis des maquettes de l'espace vendeur (avancement, visites, marché, point de la semaine), avec la mention « maquette, exemple fictif »
 **Et** le bloc ne s'affiche sur le site public qu'une fois les textes validés par Anne et la décision de JB prise, le portail n'existant pas encore.
 
+### Story 15.3: Vidéos de l'espace client sur le site public
+
+En tant que JB,
+je veux que les vidéos des espaces vendeur et acheteur (stories 15.2 et 16.2) soient visibles sur annevialtissot.fr,
+afin que les visiteurs voient dès maintenant ce qu'ils suivront avec Anne.
+
+**Critères d'acceptation :**
+**Étant donné** les pages Vendre et Acheter du site public
+**Quand** un visiteur les ouvre
+**Alors** il voit le bloc et sa vidéo, avec la mention « Maquette · exemple fictif » et la note « L'espace est en préparation ».
 
 ## Epic 16: Espace des acheteurs
 

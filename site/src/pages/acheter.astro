@@ -4,7 +4,6 @@ import Page from '../layouts/Page.astro';
 import { avisParId, storyDeAvis, storyVisible, roleLibelle, dateLibelle, paragraphes, phraseDeAvis, instantane } from '../lib/contenu';
 import AvisCarte from '../components/AvisCarte.astro';
 import EspaceVideo from '../components/EspaceVideo.astro';
-import { sitePublic } from '../config/site';
 import { acheter } from '../config/site';
 import { r } from '../i18n';
 import { textes, court } from '../lib/textes';
@@ -12,8 +11,6 @@ const inst = await instantane();
 const avis = await Promise.all(acheter.avis.map(async (id) => { const a = await avisParId(id); const slug = storyDeAvis(a); const story = await storyVisible(slug); return { a, slug, story }; }));
 // Textes modifiables par Anne : contenu-anne/textes/acheter.yml (story 7.20).
 const x = await textes('acheter');
-// Vidéo « l'espace acheteur » (story 16.2) : l'espace acheteurs (epic 16) n'existe pas encore, le bloc ne s'affiche que sur l'aperçu.
-const espaceVisible = !sitePublic;
 ---
 <Page titre={`${x.titre} — Anne VIAL-TISSOT`} description={x.description} courante="acheter">
   <div class="ac-tete">
@@ -36,7 +33,8 @@ const espaceVisible = !sitePublic;
       ))}
     </div>
   </section>
-  {espaceVisible && <div class="ac-espace"><EspaceVideo film="acheteur" textes={x.espace} description="Maquette animée de l'espace acheteur : la recherche, la sélection de biens, les visites d'Anne, le point de la semaine" /></div>}
+  {/* Vidéo « l'espace acheteur » (story 16.2), sur le site public depuis le 2026-10-15 (story 15.3, décision de JB). */}
+  <div class="ac-espace"><EspaceVideo film="acheteur" textes={x.espace} description="Maquette animée de l'espace acheteur : la recherche, la sélection de biens, les visites d'Anne, le point de la semaine" /></div>
   <section class="ac-avis" aria-labelledby="ac-avis-titre">
     <h2 id="ac-avis-titre">{x.avis.titre}</h2>
     <p class="ac-avis-intro"><span class="seulement-desktop">{x.avis.intro}</span><span class="seulement-mobile">{court(x.avis.intro_court, x.avis.intro)}</span></p>
