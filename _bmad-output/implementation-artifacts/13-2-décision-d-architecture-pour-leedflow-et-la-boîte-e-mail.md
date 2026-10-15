@@ -27,7 +27,7 @@ Décider comment l'espace de travail d'Anne (CAP-12) est hébergé et comment ch
 - Réponse du support à Anne (relayée par JB) : API REST documentée, lecture seule, clé générée par l'utilisateur ; pas de webhook ; OAuth réservé aux assistants IA (MCP) ; tout l'historique récupérable ; gratuit, sans limite hors anti-abus.
 - Vérifié le 2026-10-15 sur la description publique de l'API (`https://api.leedflow.com/api/external/v1/openapi.json`) : lecture des contacts, appels (`transcription` = résumé en Markdown, `transcription_srt` = transcription complète, `recording_url`), SMS, messages vocaux et tâches ; filtre par date de création (`created_after`, en millisecondes), pages de 100 au plus ; authentification `Bearer` par clé. Sans clé, l'API répond 401 (essai fait).
 - Décision écrite dans AD-20, entrée 4 : relève toutes les 10 minutes, clé en secret du Worker de l'espace, résumé gardé sans transcription complète ni enregistrement, numéro inconnu proposé jamais créé, tâches Leedflow = propositions. Story 13.10 débloquée et réécrite dans `epics.md`. Question ouverte de la spec barrée.
-- Appris dans la documentation Leedflow : quand une agence l'a branché sur Modelo, Leedflow synchronise les contacts dans les deux sens et recopie le résumé dans Modelo. À confirmer pour Anne (non bloquant, allégerait 13.9).
+- Appris dans la documentation Leedflow : quand une agence l'a branché sur Modelo, Leedflow synchronise les contacts dans les deux sens et recopie le résumé dans Modelo. Confirmé par JB le 2026-10-15 : branchement en cours pour Anne ; story 13.9 allégée en conséquence.
 
 ## Ce qui reste
 - Validation des étapes par Anne (action A19) avant 13.4.

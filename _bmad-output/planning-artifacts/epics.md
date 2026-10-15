@@ -2252,6 +2252,7 @@ afin de ne plus rien saisir dans Modelo avant (AD-14 amendée).
 **Quand** l'étape change
 **Alors** le contact porte « À recopier dans Modelo » avec la fiche prête à copier, qu'Anne marque faite
 **Et** les demandes du site ne créent plus de recopie Modelo d'office
+**Et** si le contact existe déjà dans Modelo (créé par la synchronisation Leedflow ↔ Modelo d'Anne, confirmée par JB le 2026-10-15), la fiche se limite à ce qui manque (mandat, bien) au lieu d'une recopie complète
 
 ### Story 13.10: Résumés d'appels Leedflow
 
