@@ -1,0 +1,65 @@
+---
+// Partenaires d'Anne (ticket n° 153, story 8.21, D-46) : une carte par fiche de contenu-anne/partenaires/, écrite dans l'espace d'édition.
+// Sans fiche publiée, la page n'est pas indexée et l'onglet n'apparaît pas sur le site public (lib/contenu.ts, rubriquesVisibles).
+import Page from '../layouts/Page.astro';
+import Picture from '../components/Picture.astro';
+import { render } from 'astro:content';
+import { partenaires, clePhoto } from '../lib/contenu';
+import { r } from '../i18n';
+const liste = await Promise.all((await partenaires()).map(async (p) => ({ p, logo: clePhoto(p.data.logo), Texte: (await render(p)).Content })));
+---
+<Page titre="Partenaires — Anne VIAL-TISSOT" description="Les professionnels avec qui Anne travaille dans le Chablais et le bassin lémanique." courante="partenaires" noindex={liste.length === 0}>
+  <div class="index-tete">
+    <h1>Partenaires</h1>
+    <p>Les professionnels avec qui je travaille, et que je recommande à mes clients.</p>
+  </div>
+  {liste.length === 0 ? (
+    <div class="index-vide">
+      <h2>Bientôt</h2>
+      <p>Anne présentera ici les professionnels avec qui elle travaille. En attendant, elle vous répond directement.</p>
+      <a href={r('contact')} class="btn btn-primaire btn-m">Contacter Anne</a>
+    </div>
+  ) : (
+    <div class="partenaires">
+      {liste.map(({ p, logo, Texte }) => (
+        <article class="partenaire">
+          {logo && <div class="partenaire-logo"><Picture id={logo} alt={p.data.nom} sizes="160px" /></div>}
+          <div>
+            <h2>{p.data.nom}</h2>
+            <p class="partenaire-activite">{p.data.activite}{p.data.commune && ` · ${p.data.commune}`}</p>
+            <div class="partenaire-texte"><Texte /></div>
+            {p.data.site && <a href={p.data.site} class="lien" rel="noopener" target="_blank">Voir le site</a>}
+          </div>
+        </article>
+      ))}
+    </div>
+  )}
+</Page>
+<style>
+  .index-tete { padding: 96px var(--marge) 40px; }
+  .index-tete h1 { font-size: 72px; margin-bottom: 16px; }
+  .index-tete p { font-size: 18px; line-height: 1.6; max-width: 56ch; }
+  .partenaires { padding: 0 var(--marge) 120px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px 40px; }
+  .partenaire { display: grid; grid-template-columns: auto 1fr; gap: 24px; align-items: start; }
+  .partenaire-logo { width: 120px; height: 120px; border-radius: 12px; overflow: hidden; background: var(--avt-galet); }
+  .partenaire-logo :global(picture), .partenaire-logo :global(img) { width: 100%; height: 100%; }
+  .partenaire-logo :global(img) { object-fit: cover; }
+  .partenaire h2 { font-size: 30px; margin-bottom: 6px; }
+  .partenaire-activite { font-size: 14px; color: var(--avt-text-muted); margin-bottom: 12px; }
+  .partenaire-texte { font-size: 16px; line-height: 1.6; margin-bottom: 12px; }
+  .partenaire-texte :global(p) { margin: 0 0 10px; }
+  .index-vide { padding: 0 var(--marge) 120px; max-width: 48ch; }
+  .index-vide h2 { font-size: 44px; margin-bottom: 14px; }
+  .index-vide p { font-size: 15px; line-height: 1.6; margin-bottom: 24px; }
+  @media (max-width: 899px) {
+    .index-tete { padding: 48px var(--marge-m) 28px; }
+    .index-tete h1 { font-size: 48px; margin-bottom: 12px; }
+    .index-tete p { font-size: 16px; }
+    .partenaires { padding: 0 var(--marge-m) 56px; grid-template-columns: 1fr; gap: 36px; }
+    .partenaire { grid-template-columns: 1fr; gap: 14px; }
+    .partenaire-logo { width: 96px; height: 96px; }
+    .partenaire h2 { font-size: 26px; }
+    .index-vide { padding: 0 var(--marge-m) 56px; }
+    .index-vide h2 { font-size: 34px; }
+  }
+</style>

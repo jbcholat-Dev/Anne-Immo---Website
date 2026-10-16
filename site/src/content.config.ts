@@ -117,4 +117,30 @@ const textesContact = defineCollection({ loader: fichierTextes('contact'), schem
   rendez_vous: z.object({ titre: texte, texte, bouton: texte }),
 }) });
 
-export const collections = { stories, avis, instantane, pages, textesAccueil, textesVendre, textesAcheter, textesContact };
+// Partenaires et Actualités (ticket n° 153 d'Anne, story 8.21) : une fiche par partenaire ou par article, écrite par Anne dans
+// l'espace d'édition (contenu-anne/partenaires/, contenu-anne/actualites/).
+const statutFiche = z.enum(['brouillon', 'a-relire', 'publie']).default('brouillon');
+const partenaires = defineCollection({
+  loader: glob({ pattern: '*.md', base: `${CONTENU}/partenaires` }),
+  schema: z.object({
+    nom: z.string(),
+    activite: z.string(),
+    commune: vide,
+    site: vide,
+    logo: vide,
+    ordre: z.number().optional(),
+    statut: statutFiche,
+  }),
+});
+const actualites = defineCollection({
+  loader: glob({ pattern: '*.md', base: `${CONTENU}/actualites` }),
+  schema: z.object({
+    titre: z.string(),
+    date: z.coerce.date(),
+    resume: vide,
+    photo: vide,
+    statut: statutFiche,
+  }),
+});
+
+export const collections = { stories, avis, instantane, pages, partenaires, actualites, textesAccueil, textesVendre, textesAcheter, textesContact };

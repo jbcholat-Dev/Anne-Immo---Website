@@ -1,0 +1,44 @@
+---
+// Un article des Actualités (ticket n° 153, story 8.21) : titre, date, photo facultative, texte écrit par Anne dans l'espace d'édition.
+import Page from '../../layouts/Page.astro';
+import Picture from '../../components/Picture.astro';
+import { render } from 'astro:content';
+import { actualites, clePhoto, type Actualite } from '../../lib/contenu';
+import { r } from '../../i18n';
+export async function getStaticPaths() {
+  return (await actualites()).map((a) => ({ params: { slug: a.id }, props: { a } }));
+}
+const { a } = Astro.props as { a: Actualite };
+const { Content } = await render(a);
+const photo = clePhoto(a.data.photo);
+const jour = a.data.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+<Page titre={`${a.data.titre} — Anne VIAL-TISSOT`} description={a.data.resume ?? a.data.titre} courante="actualites">
+  <article class="actu">
+    <a href={r('actualites')} class="lien actu-retour">Toutes les actualités</a>
+    <p class="actu-date"><time datetime={a.data.date.toISOString().slice(0, 10)}>{jour}</time></p>
+    <h1>{a.data.titre}</h1>
+    {photo && <div class="actu-photo"><Picture id={photo} alt="" sizes="(max-width: 899px) 100vw, 760px" loading="eager" /></div>}
+    <div class="recit"><Content /></div>
+  </article>
+</Page>
+<style>
+  .actu { padding: 96px var(--marge) 120px; max-width: calc(760px + 2 * var(--marge)); }
+  .actu-retour { display: inline-block; margin-bottom: 28px; font-size: 14px; }
+  .actu-date { font-size: 13px; color: var(--avt-text-muted); margin-bottom: 10px; }
+  .actu h1 { font-size: 56px; line-height: 1.1; margin-bottom: 32px; }
+  .actu-photo { border-radius: 12px; overflow: hidden; margin-bottom: 36px; }
+  .actu-photo :global(picture), .actu-photo :global(img) { display: block; width: 100%; height: auto; }
+  .recit { font-size: 17px; line-height: 1.7; }
+  .recit :global(h2) { font-size: 26px; margin: 32px 0 12px; }
+  .recit :global(h3) { font-size: 22px; margin: 24px 0 8px; }
+  .recit :global(p) { margin: 0 0 16px; }
+  .recit :global(ul), .recit :global(ol) { padding-left: 20px; margin: 0 0 16px; display: flex; flex-direction: column; gap: 6px; }
+  .recit :global(strong) { font-weight: 500; }
+  .recit :global(em) { font-style: italic; }
+  @media (max-width: 899px) {
+    .actu { padding: 48px var(--marge-m) 56px; }
+    .actu h1 { font-size: 38px; margin-bottom: 24px; }
+    .recit { font-size: 16px; line-height: 1.65; }
+  }
+</style>

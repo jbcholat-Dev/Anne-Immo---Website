@@ -6,6 +6,8 @@ import path from 'node:path';
 
 export type Story = CollectionEntry<'stories'>;
 export type Avis = CollectionEntry<'avis'>;
+export type Partenaire = CollectionEntry<'partenaires'>;
+export type Actualite = CollectionEntry<'actualites'>;
 
 /**
  * Photos d'une story, dans l'ordre de l'en-tête de fr.md : `photo_principale` puis `photos`.
@@ -195,4 +197,32 @@ export async function aPropos(): Promise<APropos | null> {
   }
   const reseau = pr && nettoyer(pr.html) ? { titre: pr.titre, html: nettoyer(pr.html) } : undefined;
   return { sousTitre: page.data.sous_titre?.trim() || undefined, qui, methode: { titre: titre || 'Ma méthode', sous, intro: nettoyer(tete.html), rangs, concretement }, cible, reseau };
+}
+
+/**
+ * Partenaires et Actualités (ticket n° 153, story 8.21). Même règle que les stories : l'aperçu montre toutes les fiches,
+ * le site public seulement les « publie ». Partenaires dans l'ordre choisi par Anne puis par nom ; articles du plus récent au plus ancien.
+ */
+const visible = (statut: string) => import.meta.env.PUBLIC_INDEXATION !== 'oui' || statut === 'publie';
+export async function partenaires(): Promise<Partenaire[]> {
+  const all = (await getCollection('partenaires')).filter((p) => visible(p.data.statut));
+  return all.sort((a, b) => (a.data.ordre ?? 999) - (b.data.ordre ?? 999) || a.data.nom.localeCompare(b.data.nom, 'fr'));
+}
+export async function actualites(): Promise<Actualite[]> {
+  const all = (await getCollection('actualites')).filter((a) => visible(a.data.statut));
+  return all.sort((a, b) => b.data.date.getTime() - a.data.date.getTime() || a.id.localeCompare(b.id));
+}
+/**
+ * Onglets Partenaires et Actualités (décision D-46) : toujours sur l'aperçu, pour qu'Anne les voie et les remplisse ;
+ * sur le site public, seulement quand la rubrique a au moins une fiche publiée (jamais d'onglet vers une page vide).
+ */
+export async function rubriquesVisibles(): Promise<{ partenaires: boolean; actualites: boolean }> {
+  const apercu = import.meta.env.PUBLIC_INDEXATION !== 'oui';
+  return { partenaires: apercu || (await partenaires()).length > 0, actualites: apercu || (await actualites()).length > 0 };
+}
+/** Photo d'une fiche choisie dans l'espace d'édition (« photos/x.webp », rangée dans contenu-anne/photos/) : clé de l'image dérivée, ou null. */
+export function clePhoto(valeur: string | null | undefined): string | null {
+  if (!valeur) return null;
+  const cle = `photos/${path.basename(valeur).replace(/\.[^.]+$/, '')}`;
+  return images[cle] ? cle : null;
 }
