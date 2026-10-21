@@ -41,12 +41,17 @@ export async function exporter(env: EnvSite, email: string, compte: string) {
     const { results: historique } = await env.DB.prepare(
       'SELECT a, type, source, texte, donnees FROM contact_evenement WHERE contact_id = ?1 ORDER BY a, id',
     ).bind(c.id).all<Record<string, unknown>>();
+    const { results: taches } = await env.DB.prepare('SELECT a, texte, echeance, statut FROM leedflow_tache WHERE contact_id = ?1 ORDER BY a').bind(c.id).all<Record<string, unknown>>();
     const lisible: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(c)) {
       if (v === null || k === 'is_test') continue;
       lisible[k] = k === 'qualification' && typeof v === 'string' ? JSON.parse(v) : v;
     }
-    fiches.push({ ...lisible, historique: historique.map((h) => ({ ...h, donnees: typeof h.donnees === 'string' ? JSON.parse(h.donnees) : undefined })) });
+    fiches.push({
+      ...lisible,
+      historique: historique.map((h) => ({ ...h, donnees: typeof h.donnees === 'string' ? JSON.parse(h.donnees) : undefined })),
+      ...(taches.length ? { taches_proposees_par_leedflow: taches } : {}),
+    });
   }
   const { results: prescripteurs } = await env.DB.prepare('SELECT * FROM prescripteur WHERE email = ?1').bind(adresse).all<Record<string, unknown>>();
   const maintenant = new Date().toISOString();
@@ -70,6 +75,9 @@ export async function effacer(env: EnvSite, email: string, compte: string): Prom
     env.DB.prepare(`DELETE FROM lead_delivery WHERE lead_id IN (SELECT id FROM lead WHERE lower(email) = ?1 OR contact_id ${DE_CES_CONTACTS})`).bind(adresse, ids),
     env.DB.prepare(`DELETE FROM lead WHERE lower(email) = ?1 OR contact_id ${DE_CES_CONTACTS}`).bind(adresse, ids),
     env.DB.prepare(`DELETE FROM contact_evenement WHERE contact_id ${DE_CES_CONTACTS.replace('?2', '?1')}`).bind(ids),
+    // Tâches et liens Leedflow de ces contacts (story 13.10, migration 0008).
+    env.DB.prepare(`DELETE FROM leedflow_tache WHERE contact_id ${DE_CES_CONTACTS.replace('?2', '?1')}`).bind(ids),
+    env.DB.prepare(`DELETE FROM leedflow_lien WHERE contact_id ${DE_CES_CONTACTS.replace('?2', '?1')}`).bind(ids),
     env.DB.prepare(`DELETE FROM contact WHERE id ${DE_CES_CONTACTS.replace('?2', '?1')}`).bind(ids),
     env.DB.prepare('DELETE FROM prescripteur WHERE email = ?1').bind(adresse),
   ]);

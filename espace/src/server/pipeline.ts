@@ -432,7 +432,7 @@ export async function journee(env: EnvSite): Promise<{ nouveaux: ContactDuJour[]
   const du = `(CASE WHEN length(c.prochaine_action_le) = 10 THEN c.prochaine_action_le <= ?1 ELSE c.prochaine_action_le < ?2 END)`;
   const champs = `c.id, c.prenom, c.nom, c.telephone, c.email, c.commune, c.parcours, c.etape, c.prochaine_action, c.prochaine_action_le, c.canal,
     c.origine_detail, c.last_activity_at, c.is_test, c.created_at, c.reveil_le, p.secteur AS passage_secteur, p.fait_le AS passage_le, r.nom AS prescripteur_nom,
-    (SELECT e.texte FROM contact_evenement e WHERE e.contact_id = c.id AND e.type IN ('demande', 'note', 'qualification') ORDER BY e.a DESC, e.id DESC LIMIT 1) AS dernier_texte`;
+    (SELECT e.texte FROM contact_evenement e WHERE e.contact_id = c.id AND e.type IN ('demande', 'note', 'qualification', 'appel') ORDER BY e.a DESC, e.id DESC LIMIT 1) AS dernier_texte`;
   const joints = 'FROM contact c LEFT JOIN passage_boitage p ON p.id = c.passage_id LEFT JOIN prescripteur r ON r.id = c.prescripteur_id';
   const [nouveaux, rappels, prescripteurs, secteurs] = await env.DB.batch([
     env.DB.prepare(`SELECT ${champs} ${joints} WHERE c.etape = 'a_qualifier' AND ${du} ORDER BY c.created_at ASC LIMIT 100`).bind(auj, fin),
@@ -497,9 +497,11 @@ export async function bilan(env: EnvSite, periode: Periode) {
     env.DB.prepare(`SELECT c.canal, count(*) AS contacts, sum(c.qualifie_le IS NOT NULL) AS qualifies,
         sum(${aAtteint(ETAPES_RDV)}) AS rdv, sum(${aAtteint(ETAPES_MANDAT)}) AS mandats
       FROM contact c WHERE c.created_at >= ?1 GROUP BY c.canal`).bind(debut),
-    // Délai de rappel : de l'arrivée du contact à la première tentative notée par Anne (qualification, même « pas joint », ou appel).
+    // Délai de rappel : de l'arrivée du contact à la première tentative d'Anne (qualification, même « pas joint », ou appel
+    // qu'elle a passé, relevé par Leedflow ; un appel ou un SMS reçu ne compte pas).
     env.DB.prepare(`SELECT avg((julianday(premier) - julianday(created_at)) * 24) AS heures, count(*) AS n FROM (
-        SELECT c.created_at, (SELECT min(e.a) FROM contact_evenement e WHERE e.contact_id = c.id AND e.type IN ('qualification', 'appel')) AS premier
+        SELECT c.created_at, (SELECT min(e.a) FROM contact_evenement e WHERE e.contact_id = c.id
+          AND (e.type = 'qualification' OR (e.type = 'appel' AND json_extract(e.donnees, '$.sens') = 'sortant' AND json_extract(e.donnees, '$.genre') = 'appel'))) AS premier
         FROM contact c WHERE c.created_at >= ?1) WHERE premier IS NOT NULL`).bind(debut),
     env.DB.prepare(`SELECT p.secteur, p.fait_le AS dernier, p.mots, (SELECT count(*) FROM contact c WHERE c.passage_id = p.id) AS contacts
       FROM passage_boitage p WHERE p.id = (SELECT p2.id FROM passage_boitage p2 WHERE p2.secteur = p.secteur ORDER BY p2.fait_le DESC, p2.created_at DESC LIMIT 1)

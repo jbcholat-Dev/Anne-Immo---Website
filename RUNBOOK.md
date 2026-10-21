@@ -167,7 +167,7 @@ Rien n'est à effacer chez Resend : le site n'y garde aucun contact. Chaque expo
 
 **Phase 2** (après l'essai d'Anne) : le site renvoie `/gestion` vers l'espace ; l'application Access `Gestion` du site et son AUD pourront alors être retirés.
 
-**Plus tard** : clé Leedflow (story 13.10) en secret `LEEDFLOW_API_KEY` de ce Worker seulement, posée par JB.
+**Clé Leedflow** (story 13.10) : secret `LEEDFLOW_API_KEY` de ce Worker seulement (projet `anne-espace` → Settings → Variables and Secrets → type *Secret*), la clé qu'Anne génère dans Leedflow (Paramètres › API). **Posée par JB le 2026-10-21.** Pour la changer : Anne en génère une nouvelle, JB remplace la valeur du secret, puis Anne révoque l'ancienne. Le bas de la page « Aujourd'hui » dit si la dernière relève (toutes les 10 minutes) a réussi ; « HTTP 401 » = clé refusée ou révoquée.
 
 ## 5. Pièges irréversibles
 
@@ -202,4 +202,5 @@ Rien n'est à effacer chez Resend : le site n'y garde aucun contact. Chaque expo
 - 2026-10-10 : décision des campagnes promotionnelles temporaires (epic 14, après le lancement) : une page par offre, créée par Anne dans l'espace d'édition et datée ; chaque offre est un tirage au sort parmi les inscrits (choix de JB), donc un règlement écrit à publier avec l'offre. Rien ne change encore dans les comptes ni la mise en ligne.
 - 2026-10-11 : **site ouvert au public sur https://annevialtissot.fr** (stories 12.4 et 12.5), tout par l'API Cloudflare avec un jeton limité de JB. Domaine personnalisé du Worker, redirections 301 de `www` et du `.com` (règles de redirection des zones, enregistrements `AAAA 100::` proxifiés), Turnstile étendu à `www`, application Access `Gestion` (AUD `916beab7…`, PR n° 124), `LANCEMENT=oui` sur le déclencheur de `main`. **Piège** : l'application Access de destination « Worker » protège aussi les domaines personnalisés du Worker ; elle est désormais limitée aux adresses `anne-vial-tissot-site.jbcholat.workers.dev` et `*-anne-vial-tissot-site.jbcholat.workers.dev`. Aperçu permanent : branche `apercu` (story 12.7, § 2). Retour arrière : § 4.
 - 2026-10-15 : Leedflow a répondu (API en lecture seule, sans webhook). Pour la story 13.10, Anne générera une clé dans Leedflow (Paramètres › API) et JB la posera en secret du Worker de l'espace ; Claude ne la voit jamais. Rien ne change encore dans les comptes.
+- 2026-10-21 : clé Leedflow posée par JB sur le Worker `anne-espace` (story 13.10, § 4 sexies) ; relève des appels toutes les 10 minutes.
 - 2026-10-15 : application de l'espace d'Anne (story 13.3, phase 1) : nouveau dossier `espace/`, futur Worker `anne-espace` sur `espace.annevialtissot.fr`, même base que le site. Mise en place par JB décrite au § 4 sexies ; le `/gestion` du site reste en service jusqu'à la phase 2.

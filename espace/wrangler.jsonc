@@ -2,7 +2,7 @@
   // Configuration Cloudflare de l'espace de travail d'Anne (story 13.3, AD-19) : un Worker à part du site,
   // réservé à Anne et à JB par Cloudflare Access, qui lit et écrit la même base des leads que le site.
   // Aucun secret ici, seulement des identifiants publics. Secret facultatif : LIEN_SECRET (le même que celui du site,
-  // pour afficher le lien du rapport du diagnostic) ; plus tard la clé Leedflow (story 13.10). Voir RUNBOOK.md § 4 sexies.
+  // pour afficher le lien du rapport du diagnostic) ; LEEDFLOW_API_KEY, la clé Leedflow d'Anne (story 13.10). Voir RUNBOOK.md § 4 sexies.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "anne-espace",
   "main": "./worker.ts",
@@ -21,6 +21,8 @@
     }
   ],
   "observability": { "enabled": true },
+  // Relève Leedflow toutes les 10 minutes (story 13.10, AD-20 entrée 4). Sans la clé, chaque passage ne fait rien.
+  "triggers": { "crons": ["*/10 * * * *"] },
   "vars": {
     // « apercu » hors de main ; « production » pour les constructions de main (scripts/base.mjs).
     "ENVIRONNEMENT": "apercu",
