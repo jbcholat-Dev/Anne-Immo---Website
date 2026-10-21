@@ -2,11 +2,13 @@
 // Fiche d'un contact (story 13.7, première version) : origine, étape, prochaine action, coordonnées, demandes du site
 // et historique ; bouton Qualifier et réponses de la qualification (story 13.6). Story 13.10 : appels relevés par
 // Leedflow dans l'historique avec leur résumé, et tâches proposées par Leedflow, à accepter ou ignorer.
+// Story 13.17 : l'action marketing qui a amené le contact, à choisir ou corriger.
 import Espace from '../../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { CANAUX_ORIGINE, LIBELLES_ETAPES } from '@site/server/contacts';
 import { quand, SOURCES } from '@site/server/gestion-donnees';
 import { envEspace, pourSite as env } from '../../server/env';
+import { actionsAuChoix } from '../../server/actions';
 import { resumeHtml, tachesDuContact } from '../../server/leedflow';
 import { echeance, libelleOrigine, lireContact, QUESTIONS, type Reponses } from '../../server/pipeline';
 
@@ -17,7 +19,7 @@ const id = Astro.url.searchParams.get('id') ?? '';
 const fiche = /^[0-9A-HJKMNP-TV-Z]{26}$/.test(id) ? await lireContact(env, id) : null;
 if (!fiche) return new Response('Contact inconnu', { status: 404 });
 const { contact: c, historique, demandes, passage, prescripteur } = fiche;
-const taches = await tachesDuContact(envEspace, c.id).catch(() => []);
+const [taches, actions] = await Promise.all([tachesDuContact(envEspace, c.id).catch(() => []), actionsAuChoix(env, c.canal)]);
 // Un échange relevé par Leedflow : un titre (« Appel reçu · 4 min »), puis le résumé en Markdown.
 const titreEtResume = (texte: string | null) => { const [titre, ...reste] = (texte ?? '').split('\n'); return { titre, resume: reste.join('\n').trim() }; };
 const m = Astro.url.searchParams.get('m') ?? '';
@@ -25,6 +27,7 @@ const message = m === 'ajoute' ? 'Contact enregistré, à qualifier aujourd\'hui
   : m === 'qualifie' ? 'Qualification enregistrée.'
   : m === 'tache-acceptee' ? 'Prochaine action mise à jour.'
   : m === 'tache-ignoree' ? 'Proposition ignorée.'
+  : m === 'action' ? 'Action marketing enregistrée.'
   : m === 'existant' ? 'Ce contact existait déjà (même téléphone ou même e-mail) : sa fiche est complétée, rien n\'a été créé en double.' : '';
 let reponses: Reponses = {};
 try { reponses = c.qualification ? JSON.parse(c.qualification) : {}; } catch {}
@@ -79,6 +82,19 @@ const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.emai
       </dl>
     </section>
   )}
+
+  <form method="post" action="/api/actions/rattacher" class="e-carte" data-action-contact>
+    <h2>Action marketing</h2>
+    <input type="hidden" name="contact" value={c.id} />
+    <label class="e-champ">Ce qui l'a amené
+      <select name="action">
+        <option value="">Aucune</option>
+        {actions.map((a) => <option value={a.id} selected={c.action_id === a.id}>{a.nom} · {CANAUX_ORIGINE[a.canal]}</option>)}
+      </select>
+    </label>
+    {actions.length === 0 && <p class="e-muet" style="margin:0">Aucune action notée. <a href="/actions">Noter une action</a>.</p>}
+    {actions.length > 0 && <div><button class="e-bouton second" type="submit">Enregistrer</button></div>}
+  </form>
 
   <section class="e-carte">
     <h2>Coordonnées</h2>

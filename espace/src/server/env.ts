@@ -12,7 +12,13 @@ export interface EnvEspace extends Env {
   LEEDFLOW_API_KEY?: string;
   /** Adresse de l'API Leedflow, seulement pour l'essai de bout en bout (imitation locale). Absente : l'adresse réelle. */
   LEEDFLOW_URL?: string;
+  /** Identifiant client du jeton de service Cloudflare Access de Claude (story 13.17), posé par JB en secret de ce Worker.
+   * Absent : l'accès /api/claude/… est fermé. */
+  ACCESS_CLAUDE_ID?: string;
 }
+
+/** Le « compte » transmis aux pages pour une requête du programme de Claude (jamais une adresse e-mail). */
+export const COMPTE_CLAUDE = 'claude';
 
 export const envEspace = envCloudflare as EnvEspace;
 /** Vue de l'espace pour le code partagé du site. */

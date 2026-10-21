@@ -1,11 +1,12 @@
 ---
 // Gabarit des pages de travail de l'espace d'Anne (maquette v2, story 13.12) : pensé d'abord pour le téléphone,
 // menu en bas sur téléphone avec le bouton « Ajouter » au centre, menu en haut sur ordinateur. Charte du site.
-// Sur téléphone, les prescripteurs, les acheteurs et les demandes du site (droits RGPD) s'ouvrent depuis la page Contacts.
+// Sur téléphone, les prescripteurs, les acheteurs et les demandes du site (droits RGPD) s'ouvrent depuis la page Contacts,
+// les actions marketing (story 13.17) depuis le Bilan.
 // Les pages reprises de /gestion gardent le gabarit Gestion du site jusqu'à la phase 2 de la story 13.3.
 import '@site/styles/global.css';
 import { ENTETE_COMPTE } from '@site/server/acces';
-interface Props { titre: string; actif?: 'aujourdhui' | 'contacts' | 'bilan' | 'prescripteurs' | 'acheteurs' | 'pipeline' | 'ajouter' | 'demandes' }
+interface Props { titre: string; actif?: 'aujourdhui' | 'contacts' | 'bilan' | 'prescripteurs' | 'acheteurs' | 'pipeline' | 'ajouter' | 'demandes' | 'actions' }
 const { titre, actif } = Astro.props;
 const compte = Astro.request.headers.get(ENTETE_COMPTE) ?? '';
 const liens = [
@@ -13,6 +14,7 @@ const liens = [
   { cle: 'contacts', href: '/contacts', texte: 'Contacts' },
   { cle: 'pipeline', href: '/pipeline', texte: 'Pipeline' },
   { cle: 'bilan', href: '/bilan', texte: 'Bilan' },
+  { cle: 'actions', href: '/actions', texte: 'Actions' },
   { cle: 'prescripteurs', href: '/prescripteurs', texte: 'Prescripteurs' },
   { cle: 'acheteurs', href: '/acheteurs', texte: 'Acheteurs' },
   { cle: 'demandes', href: '/gestion', texte: 'Demandes du site' },
@@ -42,7 +44,7 @@ const liens = [
       <a href="/" aria-current={actif === 'aujourdhui' ? 'page' : undefined}>Aujourd'hui</a>
       <a href="/contacts" aria-current={actif === 'contacts' ? 'page' : undefined}>Contacts</a>
       <a href="/ajouter" class="e-plus" aria-label="Ajouter"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg></a>
-      <a href="/bilan" aria-current={actif === 'bilan' ? 'page' : undefined}>Bilan</a>
+      <a href="/bilan" aria-current={actif === 'bilan' || actif === 'actions' ? 'page' : undefined}>Bilan</a>
     </nav>
   </body>
 </html>

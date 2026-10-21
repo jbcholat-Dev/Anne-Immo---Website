@@ -2,7 +2,7 @@
   // Configuration Cloudflare de l'espace de travail d'Anne (story 13.3, AD-19) : un Worker à part du site,
   // réservé à Anne et à JB par Cloudflare Access, qui lit et écrit la même base des leads que le site.
   // Aucun secret ici, seulement des identifiants publics. Secret facultatif : LIEN_SECRET (le même que celui du site,
-  // pour afficher le lien du rapport du diagnostic) ; LEEDFLOW_API_KEY, la clé Leedflow d'Anne (story 13.10). Voir RUNBOOK.md § 4 sexies.
+  // pour afficher le lien du rapport du diagnostic) ; LEEDFLOW_API_KEY, la clé Leedflow d'Anne (story 13.10) ; ACCESS_CLAUDE_ID, l'identifiant du jeton de service de Claude (story 13.17). Voir RUNBOOK.md § 4 sexies.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "anne-espace",
   "main": "./worker.ts",

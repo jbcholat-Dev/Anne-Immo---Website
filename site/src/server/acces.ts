@@ -20,8 +20,9 @@ async function clesPubliques(equipe: string, forcer = false): Promise<Cle[]> {
   return keys;
 }
 
-/** Adresse e-mail de la personne connectée par Access, ou null si le jeton manque, est faux, périmé ou d'une autre application. */
-export async function compteAcces(env: EnvSite, request: Request): Promise<string | null> {
+/** Qui présente un jeton Access valable : une personne (son e-mail) ou un programme muni d'un jeton de service
+ * (`service` = son identifiant client, story 13.17). null si le jeton manque, est faux, périmé ou d'une autre application. */
+export async function identiteAcces(env: EnvSite, request: Request): Promise<{ email: string | null; service: string | null } | null> {
   const equipe = String(env.ACCESS_EQUIPE ?? '').replace(/\/+$/, '');
   const auds = String(env.ACCESS_AUD ?? '').split(',').map((a) => a.trim()).filter(Boolean);
   const jeton = request.headers.get('cf-access-jwt-assertion') ?? '';
@@ -37,15 +38,23 @@ export async function compteAcces(env: EnvSite, request: Request): Promise<strin
     const publique = await crypto.subtle.importKey('jwk', { kty: cle.kty, n: cle.n, e: cle.e }, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify']);
     const valide = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publique, base64url(signature), new TextEncoder().encode(`${entete}.${charge}`));
     if (!valide) return null;
-    const c = json(charge) as { aud?: string | string[]; exp?: number; nbf?: number; iss?: string; email?: string };
+    const c = json(charge) as { aud?: string | string[]; exp?: number; nbf?: number; iss?: string; email?: string; common_name?: string };
     const maintenant = Date.now() / 1000;
     const audJeton = Array.isArray(c.aud) ? c.aud : [c.aud];
     if (!c.exp || c.exp < maintenant || (c.nbf && c.nbf > maintenant + 60)) return null;
-    if (c.iss !== equipe || !audJeton.some((a) => a && auds.includes(a)) || !c.email) return null;
-    return c.email.toLowerCase();
+    if (c.iss !== equipe || !audJeton.some((a) => a && auds.includes(a))) return null;
+    // Une personne porte un e-mail ; un jeton de service porte seulement son identifiant client (common_name).
+    if (c.email) return { email: c.email.toLowerCase(), service: null };
+    return c.common_name ? { email: null, service: c.common_name } : null;
   } catch {
     return null;
   }
+}
+
+/** Adresse e-mail de la personne connectée par Access, ou null (jeton absent, faux, périmé, d'une autre application,
+ * ou jeton de service : un programme n'est jamais une personne). */
+export async function compteAcces(env: EnvSite, request: Request): Promise<string | null> {
+  return (await identiteAcces(env, request))?.email ?? null;
 }
 
 /** En-tête interne qui transmet aux pages l'adresse vérifiée (remplacé par worker.ts, jamais lu depuis le visiteur). */

@@ -3,12 +3,15 @@
 // toute autre chose (@site/server/acces.ts, le même contrôle que le /gestion du site). Sans jeton valable,
 // rien n'est servi (403), pas même une feuille de style. L'adresse vérifiée est transmise aux pages par un en-tête
 // interne, que le visiteur ne peut pas poser lui-même : il est toujours remplacé ici.
+// Accès de Claude (story 13.17) : un jeton de service Cloudflare Access (programme, sans e-mail) n'ouvre que les adresses
+// /api/claude/…, et seulement si son identifiant client est celui posé en secret ACCESS_CLAUDE_ID. À l'inverse, ces
+// adresses refusent une personne connectée : elles ne servent qu'au programme. Toute autre page reste réservée à Anne et JB.
 // Tâche planifiée (toutes les 10 minutes, wrangler.jsonc) : la relève Leedflow (story 13.10, src/server/leedflow.ts).
 // Les e-mails relancés depuis l'espace partent toujours par celle du site (toutes les 15 minutes).
 import { handle } from '@astrojs/cloudflare/handler';
-import { compteAcces, ENTETE_COMPTE } from '@site/server/acces';
+import { ENTETE_COMPTE, identiteAcces } from '@site/server/acces';
 import { journal } from '@site/server/journal';
-import { pourSite, type EnvEspace } from './src/server/env';
+import { COMPTE_CLAUDE, pourSite, type EnvEspace } from './src/server/env';
 import { relever } from './src/server/leedflow';
 
 // En-têtes de sécurité, les mêmes que ceux du site, plus : jamais en cache, jamais indexé.
@@ -30,7 +33,11 @@ function securiser(reponse: Response): Response {
 
 export default {
   async fetch(request, env, ctx) {
-    const compte = await compteAcces(pourSite, request);
+    const qui = await identiteAcces(pourSite, request);
+    const pourClaude = new URL(request.url).pathname.startsWith('/api/claude/');
+    const compte = pourClaude
+      ? (qui?.service && env.ACCESS_CLAUDE_ID && qui.service === env.ACCESS_CLAUDE_ID ? COMPTE_CLAUDE : null)
+      : qui?.email ?? null;
     if (!compte) {
       journal('espace_refus', { chemin: new URL(request.url).pathname });
       return securiser(new Response('Accès refusé : cet espace est réservé à Anne et à Jean-Baptiste, connectés par Cloudflare Access.', {
