@@ -403,3 +403,68 @@ export async function qualifier(env: EnvSite, id: string, reponses: Reponses, pa
   await env.DB.batch(lot);
   return true;
 }
+
+// ——— Aujourd'hui (story 13.5, maquette v2 écran 1) ———
+
+/** Un secteur est à refaire quand son dernier passage date d'au moins six semaines (réglage à revoir avec Anne). */
+export const BOITAGE_A_REFAIRE_JOURS = 42;
+
+export interface ContactDuJour extends ResumeContact { created_at: string; reveil_le: string | null; passage_secteur: string | null; passage_le: string | null; prescripteur_nom: string | null; dernier_texte: string | null }
+export interface RelancePrescripteur { id: string; nom: string; role: string | null; prochaine_relance_le: string; relance_raison: string | null; dernier_contact_le: string | null }
+export interface SecteurARefaire { secteur: string; dernier: string; mots: number | null; contacts: number; jours: number }
+
+/** Fin de la journée de Paris, en ISO UTC : tout ce qui est prévu avant est dû aujourd'hui. */
+function finDeJournee(): string {
+  return parisVersUtc(`${plusTard(1)}T00:00`) ?? new Date().toISOString();
+}
+
+export async function journee(env: EnvSite): Promise<{ nouveaux: ContactDuJour[]; rappels: ContactDuJour[]; prescripteurs: RelancePrescripteur[]; secteurs: SecteurARefaire[] }> {
+  const auj = aujourdhui();
+  const fin = finDeJournee();
+  // Une date seule (AAAA-MM-JJ) est due si elle est aujourd'hui ou avant ; une date et heure si elle tombe avant la fin de la journée.
+  const du = `(CASE WHEN length(c.prochaine_action_le) = 10 THEN c.prochaine_action_le <= ?1 ELSE c.prochaine_action_le < ?2 END)`;
+  const champs = `c.id, c.prenom, c.nom, c.telephone, c.email, c.commune, c.parcours, c.etape, c.prochaine_action, c.prochaine_action_le, c.canal,
+    c.origine_detail, c.last_activity_at, c.is_test, c.created_at, c.reveil_le, p.secteur AS passage_secteur, p.fait_le AS passage_le, r.nom AS prescripteur_nom,
+    (SELECT e.texte FROM contact_evenement e WHERE e.contact_id = c.id AND e.type IN ('demande', 'note', 'qualification') ORDER BY e.a DESC, e.id DESC LIMIT 1) AS dernier_texte`;
+  const joints = 'FROM contact c LEFT JOIN passage_boitage p ON p.id = c.passage_id LEFT JOIN prescripteur r ON r.id = c.prescripteur_id';
+  const [nouveaux, rappels, prescripteurs, secteurs] = await env.DB.batch([
+    env.DB.prepare(`SELECT ${champs} ${joints} WHERE c.etape = 'a_qualifier' AND ${du} ORDER BY c.created_at ASC LIMIT 100`).bind(auj, fin),
+    env.DB.prepare(`SELECT ${champs} ${joints}
+      WHERE c.etape NOT IN ('a_qualifier', 'perdu', 'vendu', 'acte_signe')
+        AND (${du} OR (c.etape = 'en_sommeil' AND c.reveil_le <= ?1))
+      ORDER BY coalesce(c.prochaine_action_le, c.reveil_le) ASC LIMIT 100`).bind(auj, fin),
+    env.DB.prepare(`SELECT id, nom, role, prochaine_relance_le, relance_raison, dernier_contact_le FROM prescripteur
+      WHERE prochaine_relance_le IS NOT NULL AND prochaine_relance_le <= ?1 ORDER BY prochaine_relance_le LIMIT 50`).bind(auj),
+    env.DB.prepare(`SELECT secteur, max(fait_le) AS dernier,
+        (SELECT p2.mots FROM passage_boitage p2 WHERE p2.secteur = p.secteur ORDER BY p2.fait_le DESC, p2.created_at DESC LIMIT 1) AS mots,
+        (SELECT count(*) FROM contact c JOIN passage_boitage p3 ON p3.id = c.passage_id WHERE p3.secteur = p.secteur
+           AND p3.fait_le = (SELECT max(fait_le) FROM passage_boitage p4 WHERE p4.secteur = p.secteur)) AS contacts
+      FROM passage_boitage p GROUP BY secteur HAVING max(fait_le) <= date(?1, ?2) ORDER BY dernier ASC LIMIT 10`).bind(auj, `-${BOITAGE_A_REFAIRE_JOURS} days`),
+  ]);
+  const jours = (d: string) => Math.round((Date.parse(`${auj}T12:00:00Z`) - Date.parse(`${d}T12:00:00Z`)) / 86_400_000);
+  return {
+    nouveaux: nouveaux.results as ContactDuJour[],
+    rappels: rappels.results as ContactDuJour[],
+    prescripteurs: prescripteurs.results as RelancePrescripteur[],
+    secteurs: (secteurs.results as Omit<SecteurARefaire, 'jours'>[]).map((s) => ({ ...s, jours: jours(s.dernier) })),
+  };
+}
+
+/** Temps écoulé depuis une date, comme on le dit : « il y a 2 h », « hier, 18 h », « il y a 3 jours ». */
+export function depuis(iso: string, maintenant = Date.now()): string {
+  const min = Math.max(0, Math.round((maintenant - Date.parse(iso)) / 60_000));
+  if (min < 60) return `il y a ${min} min`;
+  if (min < 12 * 60) return `il y a ${Math.round(min / 60)} h`;
+  const jour = (t: number) => new Intl.DateTimeFormat('fr-CA', { timeZone: 'Europe/Paris' }).format(new Date(t));
+  const heure = new Date(iso).toLocaleTimeString('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit' }).replace(/\s/g, ' ');
+  if (jour(Date.parse(iso)) === jour(maintenant)) return `aujourd'hui, ${heure}`;
+  if (jour(Date.parse(iso)) === jour(maintenant - 86_400_000)) return `hier, ${heure}`;
+  const j = Math.round(min / 1440);
+  return j < 14 ? `il y a ${j} jours` : `il y a ${Math.round(j / 7)} semaines`;
+}
+
+/** En retard : la prochaine action tombait avant aujourd'hui. */
+export function enRetard(d: string | null): boolean {
+  if (!d) return false;
+  return d.length === 10 ? d < aujourdhui() : (parisVersUtc(`${aujourdhui()}T00:00`) ?? '') > d;
+}

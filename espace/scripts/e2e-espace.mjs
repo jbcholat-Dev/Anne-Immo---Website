@@ -10,6 +10,7 @@
 // rattachées par la tâche planifiée, contacts compris dans l'export et l'effacement.
 // Story 13.7 : passage de boîtage, saisie à la main (origine exigée, numéro connu = fiche complétée, prescripteur créé),
 // fiche et liste des contacts, import .csv et .xlsx (aperçu, doublons, personnes connues complétées, consentement).
+// Story 13.5 : page « Aujourd'hui » (nouveaux d'abord, rappels dus et en retard, réveils, boîtage à refaire, prescripteurs).
 // Story 13.6 : qualifier (suite obligatoire, date, réveil ou motif exigés, étape et prochaine action fixées, heure de Paris).
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
@@ -120,9 +121,10 @@ try {
 
   // 2. Base partagée : la demande du site est dans l'espace, sans délai.
   let r = await appeler(`${E}/`, { headers: avecJeton(), redirect: 'manual' });
-  constat(r.status === 302 && r.headers.get('location') === '/gestion', 'accueil : renvoie vers la liste des demandes');
-  r = await appeler(`${E}/gestion`, { headers: avecJeton() });
   let html = await r.text();
+  constat(r.status === 200 && html.includes('Bonjour Anne') && html.includes(`data-contact="${contact}"`), 'accueil « Aujourd\'hui » : la demande du site est à rappeler');
+  r = await appeler(`${E}/gestion`, { headers: avecJeton() });
+  html = await r.text();
   constat(r.status === 200 && html.includes(`data-lead="${lead}"`) && html.includes('anne@example.com'), 'liste de l\'espace : la demande faite sur le site, le compte connecté affiché');
   constat(/no-store/.test(r.headers.get('cache-control') ?? '') && /noindex/.test(r.headers.get('x-robots-tag') ?? ''), 'liste ni gardée en cache ni indexée');
   const css = html.match(/href="(\/_astro\/[^"]+\.css)"/)?.[1];
@@ -300,13 +302,41 @@ try {
   constat(q3.etape === 'a_qualifier' && q3.prochaine_action_le === demain && /pas joint/.test(q3.prochaine_action) && q3.qualifie_le === null,
     'pas joint : reste à qualifier, rappel demain');
 
+  // 5 quater. Aujourd'hui (story 13.5).
+  const didier = sql(`SELECT id FROM contact WHERE telephone = '+33601${NUM}'`)[0].id;
+  const vieux = `VIEUX${NUM}`, retard = `RETARD${NUM}`, reveil = `REVEIL${NUM}`, avenir = `AVENIR${NUM}`;
+  const hier = (() => { const d = new Date(`${auj}T12:00:00Z`); d.setUTCDate(d.getUTCDate() - 1); return d.toISOString().slice(0, 10); })();
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, nom, etape, prochaine_action, prochaine_action_le, canal, is_test) VALUES
+    ('${vieux}', '2026-01-02T08:00:00Z', '2026-01-02T08:00:00Z', 'Ancien${NUM}', 'a_qualifier', 'Rappeler pour qualifier', '2026-01-02T08:00:00Z', 'site', 1),
+    ('${retard}', '2026-02-01T08:00:00Z', '2026-02-01T08:00:00Z', 'Retard${NUM}', 'estimation', 'Envoyer l''estimation', '${hier}', 'rencontre', 1),
+    ('${avenir}', '2026-02-01T08:00:00Z', '2026-02-01T08:00:00Z', 'Avenir${NUM}', 'second_rdv', 'Second rendez-vous', '2099-01-01', 'rencontre', 1)`);
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, nom, etape, prochaine_action, prochaine_action_le, reveil_le, canal, is_test) VALUES
+    ('${reveil}', '2026-03-01T08:00:00Z', '2026-03-01T08:00:00Z', 'Reveil${NUM}', 'en_sommeil', 'Réveiller : rappeler', '${auj}', '${auj}', 'autre', 1)`);
+  sql(`INSERT INTO passage_boitage (id, created_at, secteur, fait_le, mots) VALUES ('PASS${NUM}', '2026-01-01T00:00:00Z', 'Margencel-${NUM}', '2026-01-10', 150)`);
+  sql(`UPDATE prescripteur SET prochaine_relance_le = '${auj}', relance_raison = 'Lui montrer la vente d''Anthy' WHERE nom = 'Maître Durand ${ESSAI}'`);
+  r = await appeler(`${E}/`, { headers: avecJeton() });
+  html = await r.text();
+  const zone = (attr) => html.split(attr)[1]?.split('</section>')[0] ?? '';
+  const nouveauxZone = zone('data-nouveaux'), rappelsZone = zone('data-rappels'), prospection = zone('data-prospection');
+  constat(nouveauxZone.includes(`data-contact="${vieux}"`) && nouveauxZone.includes(`data-contact="${didier}"`) && nouveauxZone.indexOf(vieux) < nouveauxZone.indexOf(didier)
+    && nouveauxZone.includes(`/contacts/qualifier?id=${didier}`) && nouveauxZone.includes('href="tel:'),
+    'aujourd\'hui : nouveaux contacts à qualifier en tête, le plus ancien d\'abord, avec Appeler et Qualifier');
+  constat(!html.includes(`data-contact="${carla}"`), 'aujourd\'hui : un contact pas joint à rappeler demain n\'y est pas encore');
+  constat(rappelsZone.includes(`data-contact="${retard}"`) && rappelsZone.split(`data-contact="${retard}"`)[1].split('</article>')[0].includes('data-retard')
+    && rappelsZone.includes(`data-contact="${reveil}"`) && !html.includes(`data-contact="${avenir}"`) && !html.includes(`data-contact="${reco.id}"`),
+    'aujourd\'hui : rappels dus (en retard signalé) et contact en sommeil à réveiller ; rien de ce qui est prévu plus tard');
+  constat(prospection.includes(`Repasser à Margencel-${NUM}`) && !prospection.includes(`Repasser à ${SECTEUR}`) && prospection.includes(`Relancer Maître Durand ${ESSAI}`) && prospection.includes('vente d&#39;Anthy'),
+    'aujourd\'hui : secteur de boîtage à refaire (6 semaines et plus), pas le passage du jour ; prescripteur à relancer avec sa raison');
+  r = await appeler(`${E}/gestion`, { headers: avecJeton() });
+  constat((await r.text()).includes('data-retour'), 'demandes : lien de retour vers l\'espace');
+
   // 6. Capture de la liste (ordinateur et téléphone).
   const { chromium } = await import('../../site/node_modules/playwright/index.mjs');
   const nav = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   for (const [nom, viewport] of [['ordinateur', { width: 1280, height: 900 }], ['telephone', { width: 390, height: 844 }]]) {
     const ctx = await nav.newContext({ viewport, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
     const onglet = await ctx.newPage();
-    for (const [nomPage, chemin] of [['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['importer', '/importer']]) {
+    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['importer', '/importer']]) {
       await onglet.goto(`${E}${chemin}`);
       if (nomPage === 'ajouter') {
         await onglet.click('[data-canaux] label:has(input[value=boitage]) span');
