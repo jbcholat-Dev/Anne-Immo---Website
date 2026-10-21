@@ -14,6 +14,7 @@ Il lit et écrit **la même base des leads** que le site : une demande faite sur
 - **Qualifier (story 13.6, 2026-10-21)** : `/contacts/qualifier` : cinq réponses d'une touche et une suite obligatoire (rendez-vous daté, en sommeil avec réveil, perdu avec motif, pas joint avec rappel) ; étape, prochaine action et historique mis à jour par `qualifier` (`src/server/pipeline.ts`).
 - **Aujourd'hui (story 13.5, 2026-10-21)** : `/` est la page d'ouverture : nouveaux contacts à qualifier (le plus ancien d'abord), rappels dus et en retard, réveils, prescripteurs à relancer, secteurs de boîtage à refaire (`journee`, `src/server/pipeline.ts`).
 - **Bilan (story 13.13, 2026-10-21)** : `/bilan` : par canal, contacts, qualifiés, rendez-vous et mandats sur 7 jours, 4 semaines ou 3 mois, délai moyen de rappel, boîtage par secteur, motifs de perte ; recalculé depuis la base (`bilan`, `src/server/pipeline.ts`).
+- **Prescripteurs (story 13.14, 2026-10-21)** : `/prescripteurs` et leur fiche : recommandés sur 12 mois, mandats issus, dernier contact, prochaine relance et sa raison, échange noté en un geste ; les relances dues remontent sur « Aujourd'hui ». Lecture des formulaires : `src/server/formulaires.ts`.
 - **Phase 2 (à venir)** : quand l'espace sera en ligne et essayé par Anne, le site renverra `/gestion` vers l'espace et ce code passera dans `espace/src/server`.
 
 ## Lancer

@@ -12,6 +12,7 @@
 // fiche et liste des contacts, import .csv et .xlsx (aperçu, doublons, personnes connues complétées, consentement).
 // Story 13.5 : page « Aujourd'hui » (nouveaux d'abord, rappels dus et en retard, réveils, boîtage à refaire, prescripteurs).
 // Story 13.13 : bilan par canal recalculé depuis la base, boîtage par secteur, motifs de perte, délai de rappel.
+// Story 13.14 : prescripteurs (recommandés, mandats, relance due sur Aujourd'hui, échange noté, ajout).
 // Story 13.6 : qualifier (suite obligatoire, date, réveil ou motif exigés, étape et prochaine action fixées, heure de Paris).
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
@@ -355,13 +356,39 @@ try {
   r = await appeler(`${E}/bilan?p=trimestre`, { headers: avecJeton() });
   constat(r.status === 200 && (await r.text()).includes('3 derniers mois'), 'bilan : période de 3 mois');
 
+  // 5 sexies. Prescripteurs (story 13.14).
+  const durand = sql(`SELECT id FROM prescripteur WHERE nom = 'Maître Durand ${ESSAI}'`)[0].id;
+  r = await appeler(`${E}/prescripteurs`, { headers: avecJeton() });
+  html = await r.text();
+  const ligneDurand = html.split(`data-prescripteur="${durand}"`)[1]?.split('</tr>')[0] ?? '';
+  const nombres = [...ligneDurand.matchAll(/class="n"[^>]*>(\d+)</g)].map((m) => Number(m[1]));
+  constat(r.status === 200 && nombres[0] === 2 && nombres[1] === 0 && ligneDurand.includes('Cette semaine') && ligneDurand.includes('vente d&#39;Anthy'),
+    'prescripteurs : 2 recommandés sur 12 mois, 0 mandat, relance due « cette semaine » avec sa raison');
+  sql(`UPDATE contact SET etape = 'mandat_exclusif' WHERE id = '${zoe}'`);
+  r = await appeler(`${E}/prescripteurs`, { headers: avecJeton() });
+  const apres = (await r.text()).split(`data-prescripteur="${durand}"`)[1]?.split('</tr>')[0] ?? '';
+  constat([...apres.matchAll(/class="n"[^>]*>(\d+)</g)].map((m) => Number(m[1]))[1] === 1, 'prescripteurs : un contact recommandé passé en mandat compte 1 mandat');
+  r = await page(`/prescripteurs/fiche?id=${durand}`, { quoi: 'echange', relance_choix: '3m', relance_raison: 'Vœux et nouvelles du quartier', note: 'Café à Thonon' });
+  const pd = sql(`SELECT dernier_contact_le, prochaine_relance_le, relance_raison, notes FROM prescripteur WHERE id = '${durand}'`)[0];
+  constat(r.headers.get('location') === `/prescripteurs/fiche?id=${durand}&m=echange` && pd.dernier_contact_le === auj && pd.prochaine_relance_le === dans3mois
+    && pd.relance_raison === 'Vœux et nouvelles du quartier' && pd.notes.includes('Café à Thonon'), 'échange noté : dernier contact aujourd\'hui, relance dans 3 mois avec sa raison, note gardée');
+  r = await appeler(`${E}/`, { headers: avecJeton() });
+  constat(!(await r.text()).includes(`Relancer Maître Durand ${ESSAI}`), 'aujourd\'hui : le prescripteur relancé n\'y est plus');
+  r = await page('/prescripteurs', { nom: `Avocate ${ESSAI}`, role: 'Droit de la famille, Thonon', telephone: '04 50 00 00 00', prochaine_relance_le: auj, relance_raison: 'Premier rendez-vous de présentation' });
+  const avocate = sql(`SELECT id, telephone FROM prescripteur WHERE nom = 'Avocate ${ESSAI}'`)[0];
+  constat(r.headers.get('location') === `/prescripteurs/fiche?id=${avocate?.id}&m=ajoute` && avocate.telephone === '+33450000000', 'nouveau prescripteur ajouté depuis la liste');
+  r = await page('/prescripteurs', { nom: '' });
+  constat(r.status === 200 && (await r.text()).includes('data-erreur'), 'prescripteur sans nom : refusé');
+  r = await appeler(`${E}/prescripteurs/fiche?id=${durand}`, { headers: avecJeton() });
+  constat((await r.text()).includes(`/contacts/fiche?id=${zoe}`), 'fiche du prescripteur : ses contacts recommandés');
+
   // 6. Capture de la liste (ordinateur et téléphone).
   const { chromium } = await import('../../site/node_modules/playwright/index.mjs');
   const nav = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   for (const [nom, viewport] of [['ordinateur', { width: 1280, height: 900 }], ['telephone', { width: 390, height: 844 }]]) {
     const ctx = await nav.newContext({ viewport, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
     const onglet = await ctx.newPage();
-    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['bilan', '/bilan'], ['importer', '/importer']]) {
+    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['bilan', '/bilan'], ['prescripteurs', '/prescripteurs'], ['prescripteur', `/prescripteurs/fiche?id=${durand}`], ['importer', '/importer']]) {
       await onglet.goto(`${E}${chemin}`);
       if (nomPage === 'ajouter') {
         await onglet.click('[data-canaux] label:has(input[value=boitage]) span');

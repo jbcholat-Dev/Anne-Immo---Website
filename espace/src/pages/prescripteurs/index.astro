@@ -1,0 +1,76 @@
+---
+// Prescripteurs (story 13.14, maquette v2 écran 5) : ceux qui envoient des vendeurs à Anne (notaires, conseillers,
+// anciens clients). Pour chacun : recommandés sur 12 mois, mandats qui en sont issus, dernier contact, prochaine relance
+// datée avec sa raison. Une relance due apparaît aussi sur « Aujourd'hui ».
+import Espace from '../../layouts/Espace.astro';
+import { ENTETE_COMPTE } from '@site/server/acces';
+import { pourSite as env } from '../../server/env';
+import { lirePrescripteur } from '../../server/formulaires';
+import { aujourdhui, echeance, enregistrerPrescripteur, plusTard, suiviPrescripteurs } from '../../server/pipeline';
+
+export const prerender = false;
+if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
+
+let erreur = '';
+let saisi: Record<string, string> = {};
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  saisi = Object.fromEntries([...f.entries()].map(([k, v]) => [k, typeof v === 'string' ? v : '']));
+  const champs = lirePrescripteur(f);
+  if (typeof champs === 'string') erreur = champs;
+  else {
+    const id = await enregistrerPrescripteur(env, null, champs);
+    return Astro.redirect(`/prescripteurs/fiche?id=${id}&m=ajoute`, 303);
+  }
+}
+const liste = await suiviPrescripteurs(env);
+const auj = aujourdhui(), semaine = plusTard(7);
+const relance = (d: string | null) => !d ? { texte: 'À prendre', classe: '' } : d < auj ? { texte: 'En retard', classe: 'fort' } : d <= semaine ? { texte: 'Cette semaine', classe: 'fort' } : { texte: echeance(d), classe: '' };
+---
+<Espace titre="Prescripteurs" actif="prescripteurs">
+  <div>
+    <div class="e-muet">Ceux qui m'envoient des vendeurs</div>
+    <h1>Prescripteurs</h1>
+  </div>
+  {erreur && <p class="e-message" role="alert" data-erreur>{erreur}</p>}
+
+  {liste.length === 0 ? <p class="e-muet">Aucun prescripteur pour l'instant. Ajoutez le premier ci-dessous, ou depuis un contact recommandé.</p> : (
+    <div class="e-carte" style="padding:8px">
+      <div class="e-table-zone">
+        <table class="e-table" data-prescripteurs>
+          <thead><tr><th>Qui</th><th class="n">Recommandés (12 mois)</th><th class="n">Mandats</th><th>Dernier contact</th><th>Prochaine relance</th></tr></thead>
+          <tbody>
+            {liste.map((p) => { const r = relance(p.prochaine_relance_le); return (
+              <tr data-prescripteur={p.id}>
+                <td><a href={`/prescripteurs/fiche?id=${p.id}`} style="font-weight:500">{p.nom}</a>{(p.role || p.commune) && <div class="e-muet">{[p.role, p.commune].filter(Boolean).join(', ')}</div>}</td>
+                <td class="n">{p.recommandes}</td>
+                <td class="n">{p.mandats}</td>
+                <td>{p.dernier_contact_le ? echeance(p.dernier_contact_le) : <span class="e-muet">Jamais</span>}</td>
+                <td><span class={`p-relance ${r.classe}`} data-relance>{r.texte}</span>{p.relance_raison && <div class="e-muet">{p.relance_raison}</div>}</td>
+              </tr>
+            ); })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )}
+
+  <form method="post" class="e-carte" data-nouveau-prescripteur>
+    <h2>Un nouveau prescripteur</h2>
+    <div class="e-champs">
+      <label class="e-champ">Nom<input name="nom" value={saisi.nom} placeholder="Maître Durand" required autocomplete="off" /></label>
+      <label class="e-champ">Rôle<input name="role" value={saisi.role} placeholder="Notaire, conseiller en patrimoine, ancienne cliente…" autocomplete="off" /></label>
+      <label class="e-champ">Commune<input name="commune" value={saisi.commune} autocomplete="off" /></label>
+      <label class="e-champ">Téléphone<input name="telephone" type="tel" value={saisi.telephone} autocomplete="off" /></label>
+      <label class="e-champ">E-mail<input name="email" type="email" value={saisi.email} autocomplete="off" /></label>
+      <label class="e-champ">Première relance<input name="prochaine_relance_le" type="date" min={auj} value={saisi.prochaine_relance_le ?? auj} /></label>
+      <label class="e-champ large">Raison de la relance<input name="relance_raison" value={saisi.relance_raison ?? 'Premier rendez-vous de présentation'} autocomplete="off" /></label>
+    </div>
+    <div><button class="e-bouton" type="submit">Ajouter le prescripteur</button></div>
+  </form>
+</Espace>
+
+<style>
+  .n { text-align: right; font-variant-numeric: tabular-nums; }
+  .p-relance.fort { color: var(--avt-terra); font-weight: 500; }
+</style>

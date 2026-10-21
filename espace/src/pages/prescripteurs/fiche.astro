@@ -1,0 +1,90 @@
+---
+// Fiche d'un prescripteur (story 13.14) : noter un échange (dernier contact = aujourd'hui, prochaine relance et sa
+// raison), modifier ses coordonnées, retrouver les contacts qu'il a recommandés et leur étape.
+import Espace from '../../layouts/Espace.astro';
+import { ENTETE_COMPTE } from '@site/server/acces';
+import { LIBELLES_ETAPES } from '@site/server/contacts';
+import { pourSite as env } from '../../server/env';
+import { champ, date, lirePrescripteur, ULID } from '../../server/formulaires';
+import { aujourdhui, echeance, enregistrerPrescripteur, fichePrescripteur, noterEchangePrescripteur, plusTard } from '../../server/pipeline';
+
+export const prerender = false;
+if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
+const id = Astro.url.searchParams.get('id') ?? '';
+if (!ULID.test(id)) return new Response('Prescripteur inconnu', { status: 404 });
+
+let erreur = '';
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  if (champ(f, 'quoi') === 'echange') {
+    const choix = champ(f, 'relance_choix');
+    const le = choix === '1m' ? plusTard(0, 1) : choix === '3m' ? plusTard(0, 3) : choix === '6m' ? plusTard(0, 6) : date(champ(f, 'relance_le'));
+    if (!le || le <= aujourdhui()) erreur = 'Choisissez quand le relancer (une date à venir).';
+    else if (await noterEchangePrescripteur(env, id, le, champ(f, 'relance_raison') || null, champ(f, 'note', 1000) || null)) return Astro.redirect(`/prescripteurs/fiche?id=${id}&m=echange`, 303);
+  } else {
+    const champs = lirePrescripteur(f);
+    if (typeof champs === 'string') erreur = champs;
+    else { await enregistrerPrescripteur(env, id, champs); return Astro.redirect(`/prescripteurs/fiche?id=${id}&m=modifie`, 303); }
+  }
+}
+const fiche = await fichePrescripteur(env, id);
+if (!fiche) return new Response('Prescripteur inconnu', { status: 404 });
+const { p, contacts } = fiche;
+const m = Astro.url.searchParams.get('m') ?? '';
+const message = { ajoute: 'Prescripteur ajouté.', echange: 'Échange noté, prochaine relance enregistrée.', modifie: 'Fiche modifiée.' }[m] ?? '';
+---
+<Espace titre={p.nom} actif="prescripteurs">
+  <div>
+    <div class="e-muet"><a href="/prescripteurs">Prescripteurs</a></div>
+    <h1>{p.nom}</h1>
+    {(p.role || p.commune) && <div class="e-muet">{[p.role, p.commune].filter(Boolean).join(', ')}</div>}
+  </div>
+  {message && <p class="e-message" role="status" data-message>{message}</p>}
+  {erreur && <p class="e-message" role="alert" data-erreur>{erreur}</p>}
+
+  <section class="e-carte" data-suivi>
+    <p style="margin:0">{p.recommandes} recommandé(s) sur 12 mois · {p.mandats} mandat(s) · dernier contact : {p.dernier_contact_le ? echeance(p.dernier_contact_le) : 'jamais'}</p>
+    <p style="margin:0" data-prochaine-relance>Prochaine relance : {p.prochaine_relance_le ? echeance(p.prochaine_relance_le) : 'à prendre'}{p.relance_raison ? ` · ${p.relance_raison}` : ''}</p>
+    {p.telephone && <div><a class="e-bouton second" href={`tel:${p.telephone}`}>Appeler</a></div>}
+  </section>
+
+  <form method="post" class="e-carte" data-echange>
+    <input type="hidden" name="quoi" value="echange" />
+    <h2>Je l'ai vu ou appelé aujourd'hui</h2>
+    <fieldset class="e-pastilles">
+      <legend>Le relancer</legend>
+      {[['1m', 'Dans 1 mois'], ['3m', 'Dans 3 mois'], ['6m', 'Dans 6 mois'], ['autre', 'Autre date']].map(([v, t]) => <label><input type="radio" name="relance_choix" value={v} checked={v === '3m'} /><span>{t}</span></label>)}
+    </fieldset>
+    <div class="e-champs">
+      <label class="e-champ">Autre date<input type="date" name="relance_le" min={plusTard(1)} /></label>
+      <label class="e-champ">Raison de la prochaine relance<input name="relance_raison" placeholder="Lui montrer la vente d'Anthy, vœux…" autocomplete="off" /></label>
+      <label class="e-champ large">Note (facultatif)<input name="note" autocomplete="off" /></label>
+    </div>
+    <div><button class="e-bouton" type="submit">Noter l'échange</button></div>
+  </form>
+
+  <section class="e-carte" data-recommandes>
+    <h2>Contacts recommandés</h2>
+    {contacts.length === 0 ? <p class="e-muet">Aucun pour l'instant.</p> : (
+      <ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px">
+        {contacts.map((c) => <li><a href={`/contacts/fiche?id=${c.id}`}>{[c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.email}</a> · {LIBELLES_ETAPES[c.etape]}</li>)}
+      </ul>
+    )}
+  </section>
+
+  <form method="post" class="e-carte" data-modifier>
+    <input type="hidden" name="quoi" value="fiche" />
+    <h2>Coordonnées</h2>
+    <div class="e-champs">
+      <label class="e-champ">Nom<input name="nom" value={p.nom} required autocomplete="off" /></label>
+      <label class="e-champ">Rôle<input name="role" value={p.role} autocomplete="off" /></label>
+      <label class="e-champ">Commune<input name="commune" value={p.commune} autocomplete="off" /></label>
+      <label class="e-champ">Téléphone<input name="telephone" type="tel" value={p.telephone} autocomplete="off" /></label>
+      <label class="e-champ">E-mail<input name="email" type="email" value={p.email} autocomplete="off" /></label>
+      <label class="e-champ">Prochaine relance<input name="prochaine_relance_le" type="date" value={p.prochaine_relance_le} /></label>
+      <label class="e-champ large">Raison<input name="relance_raison" value={p.relance_raison} autocomplete="off" /></label>
+      <label class="e-champ large">Notes<textarea name="notes" rows="3">{p.notes}</textarea></label>
+    </div>
+    <div><button class="e-bouton second" type="submit">Enregistrer</button></div>
+  </form>
+</Espace>

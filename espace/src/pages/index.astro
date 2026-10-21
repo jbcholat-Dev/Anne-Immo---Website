@@ -64,7 +64,7 @@ const rien = nouveaux.length + rappels.length + prescripteurs.length + secteurs.
       <h2>Trouver des vendeurs cette semaine</h2>
       {prescripteurs.map((p) => (
         <div class="e-pousse" data-prescripteur={p.id}>
-          <strong>Relancer {p.nom}{p.role ? `, ${p.role}` : ''}</strong>
+          <strong><a href={`/prescripteurs/fiche?id=${p.id}`}>Relancer {p.nom}{p.role ? `, ${p.role}` : ''}</a></strong>
           <div>{p.relance_raison ?? 'Relance prévue'}{p.dernier_contact_le ? ` · dernier contact le ${echeance(p.dernier_contact_le)}` : ''}</div>
         </div>
       ))}

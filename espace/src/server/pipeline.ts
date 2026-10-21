@@ -539,3 +539,59 @@ export function duree(heures: number): string {
   if (heures < 48) return `${Math.round(heures)} h`;
   return `${Math.round(heures / 24)} j`;
 }
+
+// ——— Prescripteurs (story 13.14, maquette v2 écran 5) ———
+
+export interface PrescripteurSuivi {
+  id: string; nom: string; role: string | null; commune: string | null; telephone: string | null; email: string | null; notes: string | null;
+  dernier_contact_le: string | null; prochaine_relance_le: string | null; relance_raison: string | null; recommandes: number; mandats: number;
+}
+
+const champsPrescripteur = `p.id, p.nom, p.role, p.commune, p.telephone, p.email, p.notes, p.dernier_contact_le, p.prochaine_relance_le, p.relance_raison,
+  (SELECT count(*) FROM contact c WHERE c.prescripteur_id = p.id AND c.created_at >= ?1) AS recommandes,
+  (SELECT count(*) FROM contact c WHERE c.prescripteur_id = p.id AND ${aAtteint(ETAPES_MANDAT)}) AS mandats`;
+const ilYa12Mois = () => new Date(Date.now() - 365 * 86_400_000).toISOString();
+
+/** Les prescripteurs : relance due ou en retard d'abord, puis les autres par date de relance, ceux sans relance à la fin. */
+export async function suiviPrescripteurs(env: EnvSite): Promise<PrescripteurSuivi[]> {
+  const { results } = await env.DB.prepare(
+    `SELECT ${champsPrescripteur} FROM prescripteur p ORDER BY p.prochaine_relance_le IS NULL, p.prochaine_relance_le, p.nom COLLATE NOCASE LIMIT 300`,
+  ).bind(ilYa12Mois()).all<PrescripteurSuivi>();
+  return results;
+}
+
+export async function fichePrescripteur(env: EnvSite, id: string): Promise<{ p: PrescripteurSuivi; contacts: ResumeContact[] } | null> {
+  const p = await env.DB.prepare(`SELECT ${champsPrescripteur} FROM prescripteur p WHERE p.id = ?2`).bind(ilYa12Mois(), id).first<PrescripteurSuivi>();
+  if (!p) return null;
+  const { results } = await env.DB.prepare(
+    `SELECT id, prenom, nom, telephone, email, commune, parcours, etape, prochaine_action, prochaine_action_le, canal, origine_detail, last_activity_at, is_test
+     FROM contact WHERE prescripteur_id = ?1 ORDER BY created_at DESC LIMIT 100`,
+  ).bind(id).all<ResumeContact>();
+  return { p, contacts: results };
+}
+
+export interface ChampsPrescripteur { nom: string; role: string | null; commune: string | null; telephone: string | null; email: string | null; notes: string | null; prochaine_relance_le: string | null; relance_raison: string | null }
+
+/** Crée un prescripteur, ou met à jour sa fiche (id donné). */
+export async function enregistrerPrescripteur(env: EnvSite, id: string | null, f: ChampsPrescripteur): Promise<string> {
+  const maintenant = new Date().toISOString();
+  if (id) {
+    await env.DB.prepare(`UPDATE prescripteur SET last_activity_at = ?2, nom = ?3, role = ?4, commune = ?5, telephone = ?6, email = ?7, notes = ?8,
+        prochaine_relance_le = ?9, relance_raison = ?10 WHERE id = ?1`)
+      .bind(id, maintenant, f.nom, f.role, f.commune, f.telephone, f.email, f.notes, f.prochaine_relance_le, f.relance_raison).run();
+    return id;
+  }
+  const nouveau = ulid();
+  await env.DB.prepare(`INSERT INTO prescripteur (id, created_at, last_activity_at, nom, role, commune, telephone, email, notes, prochaine_relance_le, relance_raison)
+      VALUES (?1, ?2, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)`)
+    .bind(nouveau, maintenant, f.nom, f.role, f.commune, f.telephone, f.email, f.notes, f.prochaine_relance_le, f.relance_raison).run();
+  return nouveau;
+}
+
+/** « Je l'ai vu ou appelé aujourd'hui » : dernier contact à aujourd'hui, et la prochaine relance avec sa raison. */
+export async function noterEchangePrescripteur(env: EnvSite, id: string, relance_le: string, raison: string | null, note: string | null): Promise<boolean> {
+  const r = await env.DB.prepare(`UPDATE prescripteur SET last_activity_at = ?2, dernier_contact_le = ?3, prochaine_relance_le = ?4, relance_raison = ?5,
+      notes = CASE WHEN ?6 IS NULL THEN notes ELSE trim(coalesce(notes, '') || char(10) || ?3 || ' : ' || ?6) END WHERE id = ?1`)
+    .bind(id, new Date().toISOString(), aujourdhui(), relance_le, raison, note).run();
+  return r.meta.changes > 0;
+}
