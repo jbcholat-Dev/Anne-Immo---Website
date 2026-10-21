@@ -1,7 +1,7 @@
 ---
 story: 13.14
 epic: 13 — Espace de travail d'Anne
-statut: review
+statut: done
 date: 2026-10-21
 maj: 2026-10-21
 ---
@@ -43,5 +43,5 @@ Suivre ceux qui envoient des vendeurs à Anne (notaires, conseillers en patrimoi
   - pas de débordement des deux pages sur téléphone ni sur ordinateur.
 
 ## Ce qui reste
-- JB : fusionner la PR #163.
+- ~~JB : fusionner la PR #163~~ fusionnée le 2026-10-21.
 - Anne : saisir ses prescripteurs actuels.

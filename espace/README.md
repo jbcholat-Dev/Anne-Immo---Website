@@ -16,6 +16,7 @@ Il lit et écrit **la même base des leads** que le site : une demande faite sur
 - **Bilan (story 13.13, 2026-10-21)** : `/bilan` : par canal, contacts, qualifiés, rendez-vous et mandats sur 7 jours, 4 semaines ou 3 mois, délai moyen de rappel, boîtage par secteur, motifs de perte ; recalculé depuis la base (`bilan`, `src/server/pipeline.ts`).
 - **Prescripteurs (story 13.14, 2026-10-21)** : `/prescripteurs` et leur fiche : recommandés sur 12 mois, mandats issus, dernier contact, prochaine relance et sa raison, échange noté en un geste ; les relances dues remontent sur « Aujourd'hui ». Lecture des formulaires : `src/server/formulaires.ts`.
 - **Acheteurs actifs (story 13.15, 2026-10-21)** : `/acheteurs` : acheteurs qualifiés avec budget, secteur et financement (demandés à la qualification), « aussi vendeur », communes cherchées et vendeurs en sommeil de la commune ; carte « j'ai un acheteur » sur « Aujourd'hui » dès deux acheteurs pour une commune.
+- **Pipeline (story 13.16, 2026-10-21)** : `/pipeline` : vendeurs ou acheteurs en colonnes par étape ; déplacer une carte (glisser-déposer ou bouton) exige la prochaine action datée, la date de réveil ou le motif (`changerEtape`, `src/server/pipeline.ts`).
 - **Phase 2 (à venir)** : quand l'espace sera en ligne et essayé par Anne, le site renverra `/gestion` vers l'espace et ce code passera dans `espace/src/server`.
 
 ## Lancer

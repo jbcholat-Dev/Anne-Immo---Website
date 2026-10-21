@@ -1,0 +1,145 @@
+---
+// Vue pipeline (story 13.16, CAP-12) : les vendeurs, ou les acheteurs, en colonnes par étape. Déplacer une carte
+// (glisser-déposer sur ordinateur, bouton « Déplacer » partout) demande la nouvelle étape et la prochaine action
+// exigée par AD-20 : une action datée pour une étape active, une date de réveil pour En sommeil, un motif pour Perdu.
+// Le changement est noté dans l'historique. Les contacts sans parcours sont rangés avec les vendeurs.
+import Espace from '../layouts/Espace.astro';
+import { ENTETE_COMPTE } from '@site/server/acces';
+import { ETAPES_ACHETEUR, ETAPES_VENDEUR, LIBELLES_ETAPES, type Etape } from '@site/server/contacts';
+import { pourSite as env } from '../server/env';
+import { champ, date, ULID } from '../server/formulaires';
+import { aujourdhui, changerEtape, contactsDuPipeline, echeance, enRetard, ETAPES_FINALES, MOTIFS_PERTE, parisVersUtc, plusTard } from '../server/pipeline';
+
+export const prerender = false;
+const compte = Astro.request.headers.get(ENTETE_COMPTE);
+if (!compte) return new Response('Accès refusé', { status: 403 });
+const parcours = Astro.url.searchParams.get('parcours') === 'acheteur' ? 'acheteur' : 'vendeur';
+const etapes: Etape[] = [...(parcours === 'acheteur' ? ETAPES_ACHETEUR : ETAPES_VENDEUR), 'en_sommeil', 'perdu'];
+
+let erreur = '';
+let erreurPour = '';
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const id = champ(f, 'id');
+  const etape = champ(f, 'etape') as Etape;
+  erreurPour = id;
+  if (!ULID.test(id) || !etapes.includes(etape)) erreur = 'Choisissez une étape.';
+  else if (etape === 'perdu') {
+    const motif = champ(f, 'motif') === 'Autre' ? champ(f, 'motif_autre') : champ(f, 'motif');
+    if (!motif) erreur = 'Indiquez pourquoi il est perdu.';
+    else await changerEtape(env, id, { etape, action: null, le: null, reveil: null, motif }, compte);
+  } else if (etape === 'en_sommeil') {
+    const reveil = date(champ(f, 'reveil_le'));
+    if (!reveil || reveil <= aujourdhui()) erreur = 'Indiquez quand le réveiller (une date à venir).';
+    else await changerEtape(env, id, { etape, action: 'Réveiller : rappeler', le: null, reveil, motif: null }, compte);
+  } else if (ETAPES_FINALES.includes(etape)) {
+    await changerEtape(env, id, { etape, action: null, le: null, reveil: null, motif: null }, compte);
+  } else {
+    const action = champ(f, 'action');
+    const jour = date(champ(f, 'le'));
+    const heure = /^\d{2}:\d{2}$/.test(champ(f, 'heure')) ? champ(f, 'heure') : '';
+    const le = jour && heure ? parisVersUtc(`${jour}T${heure}`) : jour;
+    if (!action || !le) erreur = 'Une étape active demande une prochaine action et sa date.';
+    else await changerEtape(env, id, { etape, action, le, reveil: null, motif: null }, compte);
+  }
+  if (!erreur) return Astro.redirect(`/pipeline?parcours=${parcours}&m=deplace#c-${id}`, 303);
+}
+
+const contacts = await contactsDuPipeline(env, parcours);
+const colonnes = etapes.map((e) => ({ etape: e, contacts: contacts.filter((c) => c.etape === e) }));
+const nom = (c: { prenom: string | null; nom: string | null; telephone: string | null; email: string | null }) => [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.email || '—';
+const message = Astro.url.searchParams.get('m') === 'deplace' ? 'Étape changée, noté dans l\'historique.' : '';
+---
+<Espace titre="Pipeline" actif="pipeline">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap">
+    <div><div class="e-muet">Tous mes contacts par étape</div><h1>Pipeline</h1></div>
+    <nav class="pl-parcours" aria-label="Parcours">
+      <a href="/pipeline?parcours=vendeur" aria-current={parcours === 'vendeur' ? 'page' : undefined}>Vendeurs</a>
+      <a href="/pipeline?parcours=acheteur" aria-current={parcours === 'acheteur' ? 'page' : undefined}>Acheteurs</a>
+    </nav>
+  </div>
+  {message && <p class="e-message" role="status" data-message>{message}</p>}
+  {erreur && <p class="e-message" role="alert" data-erreur>{erreur}</p>}
+
+  <div class="pl-colonnes" data-pipeline>
+    {colonnes.map((col) => (
+      <section class="pl-colonne" data-colonne={col.etape} aria-label={LIBELLES_ETAPES[col.etape]}>
+        <h2>{LIBELLES_ETAPES[col.etape]} <span class="e-muet">{col.contacts.length}</span></h2>
+        {col.contacts.map((c) => (
+          <article class="pl-carte" id={`c-${c.id}`} data-contact={c.id} draggable="true">
+            <a href={`/contacts/fiche?id=${c.id}`} class="pl-nom">{nom(c)}</a>
+            {c.commune && <div class="e-muet">{c.commune}</div>}
+            {c.prochaine_action && <div class={enRetard(c.prochaine_action_le) ? 'pl-action retard' : 'pl-action'}>{c.prochaine_action}{c.prochaine_action_le ? ` · ${echeance(c.prochaine_action_le)}` : ''}</div>}
+            <details open={erreurPour === c.id}>
+              <summary>Déplacer</summary>
+              <form method="post" class="pl-form">
+                <input type="hidden" name="id" value={c.id} />
+                <label class="e-champ">Nouvelle étape
+                  <select name="etape" data-etape>
+                    {etapes.map((e) => <option value={e} selected={e === c.etape}>{LIBELLES_ETAPES[e]}</option>)}
+                  </select>
+                </label>
+                <div data-pour="actif">
+                  <label class="e-champ">Prochaine action<input name="action" placeholder="Estimation à envoyer" autocomplete="off" /></label>
+                  <div class="pl-date"><label class="e-champ">Date<input type="date" name="le" min={aujourdhui()} value={plusTard(1)} /></label><label class="e-champ">Heure<input type="time" name="heure" step="900" /></label></div>
+                </div>
+                <label class="e-champ" data-pour="en_sommeil">Réveiller le<input type="date" name="reveil_le" min={plusTard(1)} /></label>
+                <div data-pour="perdu">
+                  <label class="e-champ">Motif<select name="motif"><option value="">Choisir…</option>{MOTIFS_PERTE.map((mo) => <option>{mo}</option>)}</select></label>
+                  <label class="e-champ">Si autre<input name="motif_autre" autocomplete="off" /></label>
+                </div>
+                <button class="e-bouton" type="submit">Enregistrer</button>
+              </form>
+            </details>
+          </article>
+        ))}
+      </section>
+    ))}
+  </div>
+  <p class="e-muet">Sur ordinateur, glissez une carte vers une colonne : la fiche de déplacement s'ouvre avec la bonne étape. Les perdus des 90 derniers jours restent visibles.</p>
+</Espace>
+
+<style>
+  .pl-parcours { display: flex; gap: 8px; }
+  .pl-parcours a { min-height: 40px; display: inline-flex; align-items: center; padding: 6px 16px; border-radius: 999px; border: 1.5px solid var(--avt-galet); background: #fff; color: var(--avt-brun); }
+  .pl-parcours a[aria-current=page] { background: var(--avt-klein); border-color: var(--avt-klein); color: #fff; }
+  .pl-colonnes { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x proximity; }
+  .pl-colonne { flex: 0 0 260px; scroll-snap-align: start; background: var(--avt-galet); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 120px; }
+  .pl-colonne.survol { outline: 2.5px dashed var(--avt-klein); }
+  .pl-colonne h2 { font-size: 17px; font-family: var(--avt-font-text); font-weight: 500; }
+  .pl-carte { background: #fff; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+  .pl-nom { font-weight: 500; color: var(--avt-brun); overflow-wrap: anywhere; }
+  .pl-action { font-size: 13px; }
+  .pl-action.retard { color: var(--avt-terra); font-weight: 500; }
+  .pl-carte summary { cursor: pointer; color: var(--avt-klein); font-size: 13px; min-height: 32px; display: flex; align-items: center; }
+  .pl-form { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+  .pl-form .e-bouton { min-height: 40px; font-size: 14px; }
+  .pl-date { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .pl-date input { padding: 6px 8px; }
+</style>
+
+<script>
+  // Montre les champs que l'étape choisie exige ; glisser une carte vers une colonne ouvre son formulaire avec cette étape.
+  const finales = ['vendu', 'acte_signe'];
+  const maj = (form: HTMLFormElement) => {
+    const e = form.querySelector<HTMLSelectElement>('[data-etape]')?.value ?? '';
+    const pour = e === 'perdu' || e === 'en_sommeil' ? e : finales.includes(e) ? 'final' : 'actif';
+    form.querySelectorAll<HTMLElement>('[data-pour]').forEach((el) => { el.hidden = el.dataset.pour !== pour; });
+  };
+  document.querySelectorAll<HTMLFormElement>('.pl-form').forEach((f) => { maj(f); f.addEventListener('change', () => maj(f)); });
+  let tire: HTMLElement | null = null;
+  document.querySelectorAll<HTMLElement>('.pl-carte').forEach((c) => c.addEventListener('dragstart', () => { tire = c; }));
+  document.querySelectorAll<HTMLElement>('.pl-colonne').forEach((col) => {
+    col.addEventListener('dragover', (ev) => { ev.preventDefault(); col.classList.add('survol'); });
+    col.addEventListener('dragleave', () => col.classList.remove('survol'));
+    col.addEventListener('drop', (ev) => {
+      ev.preventDefault(); col.classList.remove('survol');
+      if (!tire) return;
+      col.appendChild(tire);
+      const details = tire.querySelector('details'); const form = tire.querySelector<HTMLFormElement>('form');
+      const select = tire.querySelector<HTMLSelectElement>('[data-etape]');
+      if (details && form && select) { select.value = col.dataset.colonne ?? select.value; details.open = true; maj(form); form.querySelector<HTMLInputElement>('input:not([type=hidden]):not([hidden])')?.focus(); }
+      tire = null;
+    });
+  });
+</script>

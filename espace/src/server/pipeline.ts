@@ -637,3 +637,36 @@ export async function vendeursEnSommeil(env: EnvSite, communes: string[]): Promi
   ).bind(JSON.stringify(communes)).all<ResumeContact>();
   return results;
 }
+
+// ——— Vue pipeline (story 13.16) ———
+
+export const ETAPES_FINALES: Etape[] = ['vendu', 'acte_signe'];
+
+/** Les contacts d'un parcours, pour les colonnes du pipeline. Les contacts sans parcours vont avec les vendeurs. Perdus : 90 derniers jours. */
+export async function contactsDuPipeline(env: EnvSite, parcours: 'vendeur' | 'acheteur'): Promise<ResumeContact[]> {
+  const depuis90 = new Date(Date.now() - 90 * 86_400_000).toISOString();
+  const { results } = await env.DB.prepare(
+    `SELECT id, prenom, nom, telephone, email, commune, parcours, etape, prochaine_action, prochaine_action_le, canal, origine_detail, last_activity_at, is_test
+     FROM contact WHERE (parcours = ?1 OR (?1 = 'vendeur' AND parcours IS NULL))
+       AND (etape <> 'perdu' OR last_activity_at >= ?2)
+     ORDER BY coalesce(prochaine_action_le, '9999') ASC LIMIT 500`,
+  ).bind(parcours, depuis90).all<ResumeContact>();
+  return results;
+}
+
+export type Changement = { etape: Etape; action: string | null; le: string | null; reveil: string | null; motif: string | null };
+
+/** Change l'étape d'un contact, avec la prochaine action exigée par la règle d'AD-20, et note le changement. */
+export async function changerEtape(env: EnvSite, id: string, ch: Changement, par: string): Promise<boolean> {
+  const c = await env.DB.prepare('SELECT etape FROM contact WHERE id = ?1').bind(id).first<{ etape: Etape }>();
+  if (!c) return false;
+  const maintenant = new Date().toISOString();
+  const suite = ch.etape === 'perdu' ? `motif : ${ch.motif}` : ch.etape === 'en_sommeil' ? `réveil le ${echeance(ch.reveil)}` : ch.le ? `${ch.action} · ${echeance(ch.le)}` : '';
+  await env.DB.batch([
+    env.DB.prepare(`UPDATE contact SET last_activity_at = ?2, etape = ?3, prochaine_action = ?4, prochaine_action_le = ?5, reveil_le = ?6, motif_perte = ?7 WHERE id = ?1`)
+      .bind(id, maintenant, ch.etape, ch.action, ch.le ?? (ch.etape === 'en_sommeil' ? ch.reveil : null), ch.reveil, ch.motif),
+    env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees, par) VALUES (?1, ?2, 'etape', 'anne', ?3, ?4, ?5)`)
+      .bind(id, maintenant, `${LIBELLES_ETAPES[c.etape]} → ${LIBELLES_ETAPES[ch.etape]}${suite ? ` (${suite})` : ''}`, JSON.stringify({ de: c.etape, vers: ch.etape }), par),
+  ]);
+  return true;
+}
