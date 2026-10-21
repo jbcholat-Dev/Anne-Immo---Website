@@ -61,7 +61,19 @@ Que le résumé de chaque appel d'Anne se range seul sur la fiche du bon contact
   - clé refusée signalée, puis erreur disparue ;
   - pas de débordement sur téléphone ni sur ordinateur (captures `espace/.verif/espace-*-leedflow-*.png`).
 
+## Retour de JB du 2026-10-21 : le contenu Leedflow des numéros inconnus
+JB : la relève marche, mais pour un numéro inconnu il ne voyait ni le nom du contact Leedflow, ni le résumé complet, ni les tâches. Il veut une page légère : le détail s'ouvre en touchant le numéro.
+- **Nom** : quand un élément porte un contact Leedflow, la relève lit sa fiche (30 fiches par passage au plus) et garde prénom, nom et e-mail avec le numéro inconnu (`nommerInconnus`, `donnees` de `leedflow_inconnu`).
+- **Carte d'« Aujourd'hui »** : le nom Leedflow (ou le numéro), le nombre d'échanges et de tâches, et une seule ligne du dernier résumé. Le nom mène à la nouvelle page `/inconnu?tel=…`.
+- **Page `/inconnu`** : nom, numéro, e-mail, boutons Appeler / Créer le contact / Écarter, tâches détectées, tous les échanges avec leur résumé complet mis en forme.
+- **Tâches d'un numéro inconnu** : gardées avec lui (`tache:id` dans `leedflow_inconnu`), puis transformées en tâches proposées dès que le contact est créé. Une tâche qui n'est plus « à faire » disparaît.
+- **Création du contact** : prénom, nom et e-mail lus dans Leedflow préremplis.
+- **Migration 0009** : remet à zéro le curseur des tâches, pour relire celles des numéros inconnus déjà relevées (la relève les ignorait jusque-là).
+
+Vérifié le 2026-10-21 : `espace` `npm run build` et `npm run check` (0 erreur), `site` `npm run base:local` (0009 appliquée) ; `node scripts/e2e-espace.mjs` : **tous les constats bons (134)**, dont les 5 nouveaux (noms lus, tâche d'inconnu gardée, carte d'une ligne avec le nom, page `/inconnu` avec résumé mis en forme et tâche, préremplissage puis tâche proposée à la création). Captures `espace/.verif/espace-inconnu-*.png` et `espace-aujourdhui-*.png` relues : pas de débordement, une ligne par carte.
+
 ## Ce qui reste
 - ~~JB : fusionner la PR~~ PR #165 fusionnée le 2026-10-21.
 - Après la fusion : regarder le bas d'« Aujourd'hui » (« appels relevés il y a … min ») et une fiche d'un contact connu qui a appelé récemment.
+- JB : fusionner la PR du retour (noms, page `/inconnu`, tâches des inconnus).
 - Anne : dire si les numéros inconnus et les tâches proposées lui sont utiles, et si elle veut le préremplissage de la qualification.
