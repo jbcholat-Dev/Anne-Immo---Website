@@ -1,7 +1,7 @@
 ---
 story: 13.16
 epic: 13 — Espace de travail d'Anne
-statut: review
+statut: done
 date: 2026-10-21
 maj: 2026-10-21
 ---
@@ -36,5 +36,5 @@ Voir ses vendeurs et ses acheteurs par étape pour piloter l'ensemble, et faire 
   - pas de débordement sur téléphone ni sur ordinateur.
 
 ## Ce qui reste
-- JB : fusionner la PR.
+- ~~JB : fusionner la PR~~ PR #164 fusionnée le 2026-10-21.
 - Story 13.9 : recopie dans Modelo à la signature d'un mandat.
