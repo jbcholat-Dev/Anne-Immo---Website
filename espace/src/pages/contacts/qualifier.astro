@@ -3,12 +3,14 @@
 // touche, puis une issue obligatoire. Rendez-vous exige sa date et son heure, En sommeil une date de réveil, Perdu un
 // motif ; « Pas joint » garde le contact à qualifier avec un nouveau rappel. L'étape et la prochaine action sont fixées
 // et l'appel noté dans l'historique. Le formulaire est traité par cette même page, pour garder les réponses en cas d'erreur.
+// Story 13.10 : le résumé du dernier appel relevé par Leedflow est affiché en tête, pour répondre aux questions en le lisant.
 import Espace from '../../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { pourSite as env } from '../../server/env';
 import {
-  aujourdhui, FINANCEMENTS, libelleOrigine, lireContact, MOTIFS_PERTE, parisVersUtc, plusTard, qualifier, QUESTIONS, RECHERCHE_ACHETEUR, type Issue, type Reponses,
+  aujourdhui, echeance, FINANCEMENTS, libelleOrigine, lireContact, MOTIFS_PERTE, parisVersUtc, plusTard, qualifier, QUESTIONS, RECHERCHE_ACHETEUR, type Issue, type Reponses,
 } from '../../server/pipeline';
+import { resumeHtml } from '../../server/leedflow';
 
 export const prerender = false;
 const compte = Astro.request.headers.get(ENTETE_COMPTE);
@@ -16,7 +18,10 @@ if (!compte) return new Response('Accès refusé', { status: 403 });
 const id = Astro.url.searchParams.get('id') ?? '';
 const fiche = /^[0-9A-HJKMNP-TV-Z]{26}$/.test(id) ? await lireContact(env, id) : null;
 if (!fiche) return new Response('Contact inconnu', { status: 404 });
-const { contact: c, passage, prescripteur } = fiche;
+const { contact: c, passage, prescripteur, historique } = fiche;
+// Le dernier appel ou message vocal relevé par Leedflow qui porte un résumé (titre sur la première ligne, résumé ensuite).
+const dernierAppel = historique.find((e) => e.source === 'leedflow' && !(e.texte ?? '').startsWith('SMS') && (e.texte ?? '').includes('\n'));
+const [titreAppel, ...resteAppel] = (dernierAppel?.texte ?? '').split('\n');
 
 let reponses: Reponses = {};
 try { reponses = c.qualification ? JSON.parse(c.qualification) : {}; } catch {}
@@ -76,6 +81,12 @@ const issues = [
     {c.telephone && <a class="e-bouton second" href={`tel:${c.telephone}`} aria-label={`Appeler ${nom}`}>Appeler</a>}
   </div>
   {erreur && <p class="e-message" role="alert" data-erreur>{erreur}</p>}
+  {dernierAppel && (
+    <details class="e-carte" open data-dernier-appel>
+      <summary style="cursor:pointer;font-weight:500">Résumé Leedflow · {titreAppel} · {echeance(dernierAppel.a)}</summary>
+      <div class="e-resume" set:html={resumeHtml(resteAppel.join('\n'))} />
+    </details>
+  )}
 
   <form method="post" class="e-carte" data-qualifier>
     {!c.parcours && (
@@ -146,6 +157,7 @@ const issues = [
   .e-issues span { width: 100%; justify-content: center; min-height: 48px; border-radius: 12px; font-weight: 500; }
   .e-issues input[value=rdv]:checked + span { background: var(--avt-terra); border-color: var(--avt-terra); }
   .e-issues input[value=perdu]:checked + span { background: var(--avt-text-muted); border-color: var(--avt-text-muted); }
+  .e-resume p { margin: 4px 0; } .e-resume ul { margin: 4px 0; padding-left: 20px; } .e-resume { overflow-wrap: anywhere; }
 </style>
 
 <script>

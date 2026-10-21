@@ -16,12 +16,16 @@
 // Story 13.15 : acheteurs actifs (critères, « aussi vendeur », vendeurs en sommeil du secteur, lettre sur Aujourd'hui).
 // Story 13.16 : vue pipeline (colonnes par étape, déplacement avec prochaine action, réveil ou motif exigés).
 // Story 13.6 : qualifier (suite obligatoire, date, réveil ou motif exigés, étape et prochaine action fixées, heure de Paris).
+// Story 13.10 : relève Leedflow sur une imitation locale de son API (clé exigée, pages lues de la plus ancienne à la plus
+// récente, historique repris pour un numéro connu, résumé complété après coup sans doublon, numéro inconnu proposé puis
+// rattaché à la création du contact ou écarté, tâches proposées puis acceptées ou ignorées, clé refusée signalée).
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
 // Lancer depuis espace/ : `node scripts/e2e-espace.mjs`.
 import { spawn } from 'node:child_process';
 import { generateKeyPairSync } from 'node:crypto';
 import fs from 'node:fs';
+import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -41,10 +45,28 @@ const PORT = 8789;
 const E = `http://localhost:${PORT}`;
 const reglages = path.join(os.tmpdir(), `essai-${ESSAI}-espace.vars`);
 const equipe = JSON.parse(Buffer.from(jetonAcces().split('.')[1], 'base64url').toString()).iss;
-fs.writeFileSync(reglages, [`ACCESS_EQUIPE=${equipe}`, 'ACCESS_AUD=essai-aud', 'LIEN_SECRET=essai', `URL_SITE=${S}`].join('\n'));
+// Imitation de l'API Leedflow (story 13.10) : mêmes adresses, même pagination, triée du plus récent au plus ancien.
+const LF = { cle: 'essai-cle-leedflow', refuse: false, requetes: [], appels: [], vocaux: [], sms: [], taches: [], contacts: {} };
+const PORT_LF = 8791;
+const imitationLeedflow = http.createServer((req, res) => {
+  const u = new URL(req.url, 'http://localhost');
+  LF.requetes.push({ chemin: u.pathname, params: Object.fromEntries(u.searchParams), auth: req.headers.authorization });
+  const json = (code, corps) => { res.writeHead(code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(corps)); };
+  if (LF.refuse || req.headers.authorization !== `Bearer ${LF.cle}`) return json(401, { success: false, statusCode: 401 });
+  const fiche = /^\/contacts\/(.+)$/.exec(u.pathname);
+  if (fiche) return LF.contacts[fiche[1]] ? json(200, { success: true, data: LF.contacts[fiche[1]] }) : json(404, { success: false });
+  const liste = { '/calls': LF.appels, '/voicemails': LF.vocaux, '/sms': LF.sms, '/tasks': LF.taches }[u.pathname];
+  if (!liste) return json(404, { success: false });
+  const apres = Number(u.searchParams.get('created_after') ?? 0), parPage = Number(u.searchParams.get('per_page') ?? 20), n = Number(u.searchParams.get('page') ?? 1);
+  const tri = liste.filter((e) => e.created >= apres).sort((a, b) => b.created - a.created);
+  json(200, { success: true, statusCode: 200, data: tri.slice((n - 1) * parPage, n * parPage), pagination: { page: n, per_page: parPage, total: tri.length, total_pages: Math.max(1, Math.ceil(tri.length / parPage)) } });
+});
+await new Promise((ok) => imitationLeedflow.listen(PORT_LF, ok));
+fs.writeFileSync(reglages, [`ACCESS_EQUIPE=${equipe}`, 'ACCESS_AUD=essai-aud', 'LIEN_SECRET=essai', `URL_SITE=${S}`,
+  `LEEDFLOW_API_KEY=${LF.cle}`, `LEEDFLOW_URL=http://localhost:${PORT_LF}`].join('\n'));
 const journal = path.join(os.tmpdir(), `e2e-${ESSAI}-espace.log`);
 const sansProxy = Object.fromEntries(Object.entries(process.env).filter(([k]) => !/^(https?|all|no)_proxy$/i.test(k)));
-const espace = spawn('npx', ['wrangler', 'dev', '--port', String(PORT), '--env-file', reglages, '--persist-to', path.join(SITE, '.wrangler', 'state')],
+const espace = spawn('npx', ['wrangler', 'dev', '--port', String(PORT), '--env-file', reglages, '--test-scheduled', '--persist-to', path.join(SITE, '.wrangler', 'state')],
   { cwd: ICI, detached: true, stdio: ['ignore', fs.openSync(journal, 'w'), fs.openSync(journal, 'a')], env: sansProxy });
 for (let i = 0; i < 60; i++) {
   try { if ((await fetch(`${E}/gestion`)).status === 403) break; } catch {}
@@ -428,13 +450,118 @@ try {
   r = await page(`/pipeline?parcours=vendeur`, { id: reco.id, etape: 'en_sommeil', reveil_le: '2020-01-01' });
   constat(r.status === 200 && sql(`SELECT etape FROM contact WHERE id = '${reco.id}'`)[0].etape === 'premier_rdv', 'en sommeil avec une date passée : refusé');
 
+  // 5 nonies. Relève Leedflow (story 13.10), sur l'imitation locale de son API.
+  sql('DELETE FROM leedflow_releve'); // repartir de zéro : la base locale garde le curseur d'un essai à l'autre
+  const maintenant = Date.now(), MIN = 60_000, JOUR = 86_400_000;
+  const KLF = `01KFDW${NUM}${'0'.repeat(14)}`;
+  const TELK = `+33688${NUM}`;
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, etape, prochaine_action, prochaine_action_le, canal)
+       VALUES ('${KLF}', '2026-09-01T08:00:00Z', '2026-09-01T08:00:00Z', 'Luc', 'Leedflow${ESSAI}', '${TELK}', 'a_qualifier', 'Rappeler pour qualifier', '${auj}', 'autre')`);
+  const INCONNU = `+33677${NUM}`, PERSO = `+33655${NUM}`, ANCIEN = `+33666${NUM}`;
+  LF.appels.push(
+    { id: `a1-${NUM}`, created: maintenant - 60 * MIN, customer: `06 88 ${NUM.slice(0, 2)} ${NUM.slice(2, 4)} ${NUM.slice(4)}`, direction: 'inbound', duration: 240, missed: false,
+      transcription: '## Résumé\n- Veut vendre sa maison à **Sciez**\n- <b>Rappeler</b> jeudi', transcription_srt: 'TRANSCRIPTION COMPLÈTE', recording_url: 'https://exemple.invalid/a1.mp3', id_contact: `lfc1-${NUM}` },
+    { id: `a2-${NUM}`, created: maintenant - 120 * MIN, customer: TELK, direction: 'outbound', duration: 0, missed: true, transcription: null, id_contact: `lfc1-${NUM}` },
+    { id: `a3-${NUM}`, created: maintenant - 30 * MIN, customer: INCONNU, direction: 'inbound', duration: 90, missed: false, transcription: 'Demande d’estimation pour un appartement à Thonon' },
+    { id: `a4-${NUM}`, created: maintenant - 60 * JOUR, customer: ANCIEN, direction: 'inbound', duration: 60, missed: false, transcription: 'Vieil appel' },
+    { id: `a5-${NUM}`, created: maintenant - 20 * MIN, customer: PERSO, direction: 'inbound', duration: 300, missed: false, transcription: 'Appel personnel' },
+    // De quoi remplir une deuxième page : l'appel le plus ancien, d'un numéro connu, s'y trouve (reprise de l'historique).
+    ...Array.from({ length: 110 }, (_, i) => ({ id: `f${i}-${NUM}`, created: maintenant - 40 * JOUR - i * MIN, customer: `+33644${String(i).padStart(6, '0')}`, direction: 'inbound', duration: 10, missed: false, transcription: null })),
+    { id: `a6-${NUM}`, created: maintenant - 100 * JOUR, customer: TELK, direction: 'inbound', duration: 120, missed: false, transcription: 'Ancien échange : pense à vendre dans un an' },
+  );
+  LF.vocaux.push({ id: `v1-${NUM}`, created: maintenant - 30 * MIN, customer: TELK, duration: 30, transcription: 'Message : rappeler pour la visite' });
+  LF.sms.push({ id: `s1-${NUM}`, created: maintenant - 20 * MIN, customer: TELK, role: 'user', message: 'Bonjour, dispo demain ?' });
+  LF.taches.push(
+    { id: `t1-${NUM}`, created: maintenant - 58 * MIN, status: 'todo', task: 'Envoyer l’estimation', timestamp: Date.UTC(2027, 0, 20, 11), id_contact: `lfc1-${NUM}` },
+    { id: `t2-${NUM}`, created: maintenant - 50 * MIN, status: 'todo', task: 'Préparer la visite', timestamp: null, id_contact: `lfc9-${NUM}` },
+    { id: `t3-${NUM}`, created: maintenant - 40 * MIN, status: 'done', task: 'Déjà fait', timestamp: null, id_contact: `lfc1-${NUM}` },
+  );
+  LF.contacts[`lfc9-${NUM}`] = { id: `lfc9-${NUM}`, phone: `0033688${NUM}` }; // contact Leedflow vu seulement par sa fiche
+  const releve = async () => {
+    const t0 = new Date().toISOString();
+    await appeler(`${E}/cdn-cgi/handler/scheduled`);
+    for (let i = 0; i < 80; i++) {
+      const r = sql(`SELECT count(*) AS n, sum(erreur IS NOT NULL) AS e FROM leedflow_releve WHERE passe_le >= '${t0}'`)[0];
+      if (r.n >= 4 || r.e > 0) break;
+      await pause(250);
+    }
+    await pause(800);
+  };
+  await releve();
+  const evLF = () => sql(`SELECT source_id, texte FROM contact_evenement WHERE contact_id = '${KLF}' AND source = 'leedflow' ORDER BY a`);
+  let ev = evLF();
+  constat(ev.length === 5 && ['appel:a1', 'appel:a2', 'appel:a6', 'vocal:v1', 'sms:s1'].every((k) => ev.some((e) => e.source_id === `${k}-${NUM}`)),
+    `leedflow : appels, message vocal et SMS du numéro connu rangés dans son historique (${ev.length}/5), numéro écrit « 06 … » reconnu`);
+  constat(ev.some((e) => e.source_id === `appel:a6-${NUM}` && e.texte.includes('Ancien échange')), 'leedflow : l\'historique ancien d\'un numéro connu est repris (deuxième page lue)');
+  constat(LF.requetes.length > 0 && LF.requetes.every((q) => q.auth === `Bearer ${LF.cle}`) && LF.requetes.some((q) => q.chemin === '/calls' && q.params.page === '2'),
+    'leedflow : chaque requête porte la clé, la deuxième page des appels est demandée');
+  const a1 = ev.find((e) => e.source_id === `appel:a1-${NUM}`);
+  constat(!!a1 && a1.texte.startsWith('Appel reçu · 4 min') && a1.texte.includes('**Sciez**') && !ev.some((e) => e.texte.includes('TRANSCRIPTION COMPLÈTE') || e.texte.includes('a1.mp3')),
+    'leedflow : le résumé, le sens et la durée gardés ; ni transcription complète ni enregistrement');
+  const inconnus = sql(`SELECT telephone FROM leedflow_inconnu WHERE telephone IN ('${INCONNU}', '${PERSO}', '${ANCIEN}')`).map((r) => r.telephone);
+  constat(inconnus.includes(INCONNU) && inconnus.includes(PERSO) && !inconnus.includes(ANCIEN) && sql(`SELECT count(*) AS n FROM contact WHERE telephone = '${INCONNU}'`)[0].n === 0,
+    'leedflow : numéro inconnu récent proposé, jamais créé d\'office ; un inconnu de plus de 30 jours ignoré');
+  const taches = sql(`SELECT id, statut, echeance FROM leedflow_tache WHERE contact_id = '${KLF}'`);
+  constat(taches.length === 2 && taches.some((t) => t.id === `t1-${NUM}` && t.echeance === '2027-01-20') && taches.some((t) => t.id === `t2-${NUM}`) && taches.every((t) => t.statut === 'proposee'),
+    'leedflow : tâches à faire proposées (dont une rangée par la fiche du contact Leedflow), tâche faite écartée');
+  r = await appeler(`${E}/`, { headers: avecJeton() });
+  html = await r.text();
+  const zoneLF = html.split('data-leedflow')[1]?.split('</section>')[0] ?? '';
+  constat(zoneLF.includes(`data-tache="t1-${NUM}"`) && zoneLF.includes(`data-inconnu="${INCONNU}"`) && zoneLF.includes('Créer le contact') && /data-etat-leedflow[^>]*>Leedflow : appels relevés/.test(html),
+    'aujourd\'hui : tâche proposée, numéro inconnu à créer ou écarter, état de la relève');
+  r = await appeler(`${E}/contacts/fiche?id=${KLF}`, { headers: avecJeton() });
+  html = await r.text();
+  constat(html.includes('<strong>Sciez</strong>') && html.includes('&lt;b&gt;Rappeler') && html.includes(`data-tache="t1-${NUM}"`) && html.includes('Appel passé, sans réponse'),
+    'fiche : résumés Leedflow mis en forme (texte échappé), tâches proposées');
+  r = await appeler(`${E}/contacts/qualifier?id=${KLF}`, { headers: avecJeton() });
+  constat((await r.text()).split('data-dernier-appel')[1]?.includes('Message : rappeler pour la visite'), 'qualifier : le dernier résumé Leedflow affiché en tête');
+  // Le résumé d'un appel arrive après coup : complété au passage suivant, sans doublon.
+  LF.appels.find((a) => a.id === `a2-${NUM}`).transcription = 'Pas de réponse, rappeler demain matin';
+  LF.requetes.length = 0;
+  await releve();
+  ev = evLF();
+  constat(ev.length === 5 && ev.find((e) => e.source_id === `appel:a2-${NUM}`)?.texte.includes('rappeler demain matin')
+    && LF.requetes.filter((q) => q.chemin === '/calls').every((q) => Number(q.params.created_after) > maintenant - 26 * 3_600_000),
+    'leedflow : résumé arrivé après coup complété, aucun doublon, la relève reprend au curseur (24 h de recouvrement)');
+  // Tâches : acceptée (devient la prochaine action), ignorée.
+  r = await page('/api/leedflow/tache', { id: `t1-${NUM}`, choix: 'accepter' });
+  const kl = sql(`SELECT prochaine_action, prochaine_action_le, etape FROM contact WHERE id = '${KLF}'`)[0];
+  constat(r.headers.get('location') === '/?m=tache-acceptee' && kl.prochaine_action === 'Envoyer l’estimation' && kl.prochaine_action_le === '2027-01-20' && kl.etape === 'a_qualifier'
+    && sql(`SELECT statut FROM leedflow_tache WHERE id = 't1-${NUM}'`)[0].statut === 'acceptee'
+    && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${KLF}' AND type = 'note' AND texte LIKE '%acceptée%' AND par = 'anne@example.com'`)[0].n === 1,
+    'tâche acceptée : prochaine action et date fixées, étape inchangée, noté avec le compte');
+  r = await page('/api/leedflow/tache', { id: `t2-${NUM}`, choix: 'ignorer', retour: 'fiche' });
+  constat(r.headers.get('location') === `/contacts/fiche?id=${KLF}&m=tache-ignoree` && sql(`SELECT statut FROM leedflow_tache WHERE id = 't2-${NUM}'`)[0].statut === 'ignoree',
+    'tâche ignorée depuis la fiche');
+  // Numéro écarté : plus proposé, même au passage suivant.
+  r = await page('/api/leedflow/ecarter', { telephone: PERSO });
+  await releve();
+  constat(r.headers.get('location') === '/?m=ecarte' && sql(`SELECT count(*) AS n FROM leedflow_ecarte WHERE telephone = '${PERSO}'`)[0].n === 1
+    && sql(`SELECT count(*) AS n FROM leedflow_inconnu WHERE telephone = '${PERSO}'`)[0].n === 0, 'numéro écarté : plus proposé, même après une nouvelle relève');
+  // Créer le contact depuis un numéro inconnu : numéro prérempli, appel rattaché aussitôt.
+  r = await appeler(`${E}/ajouter?telephone=${encodeURIComponent(INCONNU)}`, { headers: avecJeton() });
+  constat((await r.text()).includes(`value="${INCONNU}"`), 'créer le contact : le numéro est prérempli');
+  r = await page('/ajouter', { quoi: 'contact', telephone: INCONNU, prenom: 'Ines', nom: `Inconnue${ESSAI}`, canal: 'autre', origine_detail: 'Appel reçu', parcours: 'vendeur' });
+  const ines = sql(`SELECT id FROM contact WHERE telephone = '${INCONNU}'`)[0]?.id;
+  constat(!!ines && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${ines}' AND source_id = 'appel:a3-${NUM}'`)[0].n === 1
+    && sql(`SELECT count(*) AS n FROM leedflow_inconnu WHERE telephone = '${INCONNU}'`)[0].n === 0, 'contact créé depuis un numéro inconnu : son appel passe dans l\'historique');
+  // Clé refusée (révoquée) : la relève le note et « Aujourd'hui » le dit.
+  LF.refuse = true;
+  await releve();
+  r = await appeler(`${E}/`, { headers: avecJeton() });
+  constat(sql(`SELECT count(*) AS n FROM leedflow_releve WHERE erreur = 'HTTP 401'`)[0].n >= 1 && /data-etat-leedflow[^>]*>Leedflow : la dernière relève a échoué \(HTTP 401\)/.test(await r.text()),
+    'clé refusée : erreur notée et signalée sur « Aujourd\'hui »');
+  LF.refuse = false;
+  await releve();
+  constat(sql(`SELECT count(*) AS n FROM leedflow_releve WHERE erreur IS NOT NULL`)[0].n === 0, 'clé de nouveau acceptée : l\'erreur disparaît');
+
   // 6. Capture de la liste (ordinateur et téléphone).
   const { chromium } = await import('../../site/node_modules/playwright/index.mjs');
   const nav = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   for (const [nom, viewport] of [['ordinateur', { width: 1280, height: 900 }], ['telephone', { width: 390, height: 844 }]]) {
     const ctx = await nav.newContext({ viewport, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
     const onglet = await ctx.newPage();
-    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['bilan', '/bilan'], ['prescripteurs', '/prescripteurs'], ['prescripteur', `/prescripteurs/fiche?id=${durand}`], ['acheteurs', `/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`], ['qualifier-acheteur', `/contacts/qualifier?id=${ach1}`], ['pipeline', '/pipeline'], ['importer', '/importer']]) {
+    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['bilan', '/bilan'], ['prescripteurs', '/prescripteurs'], ['prescripteur', `/prescripteurs/fiche?id=${durand}`], ['acheteurs', `/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`], ['qualifier-acheteur', `/contacts/qualifier?id=${ach1}`], ['pipeline', '/pipeline'], ['importer', '/importer'], ['fiche-leedflow', `/contacts/fiche?id=${KLF}`], ['qualifier-leedflow', `/contacts/qualifier?id=${KLF}`]]) {
       await onglet.goto(`${E}${chemin}`);
       if (nomPage === 'ajouter') {
         await onglet.click('[data-canaux] label:has(input[value=boitage]) span');
@@ -452,6 +579,7 @@ try {
   echecs++;
 } finally {
   try { process.kill(-espace.pid); } catch {}
+  imitationLeedflow.close();
   site.arreter();
   fs.rmSync(reglages, { force: true });
 }

@@ -3,12 +3,13 @@
 // toute autre chose (@site/server/acces.ts, le même contrôle que le /gestion du site). Sans jeton valable,
 // rien n'est servi (403), pas même une feuille de style. L'adresse vérifiée est transmise aux pages par un en-tête
 // interne, que le visiteur ne peut pas poser lui-même : il est toujours remplacé ici.
-// Pas de tâche planifiée pour l'instant : les e-mails relancés depuis l'espace partent par celle du site (toutes les 15 minutes).
-// La relève Leedflow (story 13.10) s'ajoutera ici.
+// Tâche planifiée (toutes les 10 minutes, wrangler.jsonc) : la relève Leedflow (story 13.10, src/server/leedflow.ts).
+// Les e-mails relancés depuis l'espace partent toujours par celle du site (toutes les 15 minutes).
 import { handle } from '@astrojs/cloudflare/handler';
 import { compteAcces, ENTETE_COMPTE } from '@site/server/acces';
 import { journal } from '@site/server/journal';
 import { pourSite, type EnvEspace } from './src/server/env';
+import { relever } from './src/server/leedflow';
 
 // En-têtes de sécurité, les mêmes que ceux du site, plus : jamais en cache, jamais indexé.
 const SECURITE: Record<string, string> = {
@@ -39,5 +40,8 @@ export default {
     const entetes = new Headers(request.headers);
     entetes.set(ENTETE_COMPTE, compte);
     return securiser(await handle(new Request(request, { headers: entetes }), env, ctx));
+  },
+  async scheduled(_controleur, env, ctx) {
+    ctx.waitUntil(relever(env).catch((e) => journal('leedflow_echec', { detail: String(e).slice(0, 200) })));
   },
 } satisfies ExportedHandler<EnvEspace>;

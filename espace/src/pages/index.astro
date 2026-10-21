@@ -2,17 +2,28 @@
 // Aujourd'hui (story 13.5, maquette v2 écran 1) : la page d'ouverture de l'espace. En tête, les nouveaux contacts pas
 // encore qualifiés, le plus ancien d'abord, avec le temps écoulé ; puis les rappels dus et en retard (et les contacts
 // en sommeil à réveiller) ; puis les prescripteurs à relancer, les lettres « j'ai un acheteur » et les secteurs de boîtage à refaire. Depuis chaque carte,
-// Anne appelle en un geste et ouvre la qualification.
+// Anne appelle en un geste et ouvre la qualification. Story 13.10 : sous les nouveaux contacts, ce que Leedflow a vu
+// (tâches proposées comme prochaine action, numéros inconnus à créer ou écarter), et l'état de la relève en bas de page.
 import Espace from '../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { LIBELLES_ETAPES } from '@site/server/contacts';
-import { pourSite as env } from '../server/env';
+import { envEspace, pourSite as env } from '../server/env';
+import { etatReleve, extrait, INCONNUS_JOURS, propositions } from '../server/leedflow';
 import { acheteursActifs, BOITAGE_A_REFAIRE_JOURS, depuis, echeance, enRetard, journee, libelleOrigine, type ContactDuJour } from '../server/pipeline';
 
 export const prerender = false;
 if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
 
-const [{ nouveaux, rappels, prescripteurs, secteurs }, acheteurs] = await Promise.all([journee(env), acheteursActifs(env)]);
+const [{ nouveaux, rappels, prescripteurs, secteurs }, acheteurs, leedflow, releve] = await Promise.all([journee(env), acheteursActifs(env), 
+  // Tant que la migration 0008 n'est pas appliquée (quelques minutes lors d'une mise en ligne), la page s'affiche sans Leedflow.
+  propositions(envEspace).catch(() => ({ inconnus: [], taches: [] })),
+  etatReleve(envEspace).catch(() => ({ branche: !!envEspace.LEEDFLOW_API_KEY, passe_le: null, erreur: null })),
+]);
+const m = Astro.url.searchParams.get('m') ?? '';
+const message = m === 'ecarte' ? 'Numéro écarté : il ne sera plus proposé.' : m === 'tache-acceptee' ? 'Prochaine action mise à jour.' : m === 'tache-ignoree' ? 'Proposition ignorée.' : '';
+const etatLeedflow = !releve.branche ? 'Leedflow n\'est pas encore branché : la clé d\'accès reste à poser (RUNBOOK § 4 sexies).'
+  : releve.erreur ? `Leedflow : la dernière relève a échoué (${releve.erreur}). Si cela dure, la clé a peut-être été révoquée.`
+  : releve.passe_le ? `Leedflow : appels relevés ${depuis(releve.passe_le)}.` : 'Leedflow : première relève dans les 10 minutes.';
 // « J'ai un acheteur » (story 13.15) : les communes cherchées par au moins deux acheteurs actifs.
 const parCommune = new Map<string, number>();
 for (const a of acheteurs) for (const c of a.communes) parCommune.set(c, (parCommune.get(c) ?? 0) + 1);
@@ -22,13 +33,14 @@ const nom = (c: ContactDuJour) => [c.prenom, c.nom].filter(Boolean).join(' ') ||
 const origine = (c: ContactDuJour) => libelleOrigine(c,
   c.passage_secteur ? { id: '', secteur: c.passage_secteur, fait_le: c.passage_le ?? '', mots: null, contacts: 0 } : null,
   c.prescripteur_nom ? { id: '', nom: c.prescripteur_nom, role: null, commune: null } : null);
-const rien = nouveaux.length + rappels.length + prescripteurs.length + secteurs.length + lettres.length === 0;
+const rien = nouveaux.length + leedflow.taches.length + leedflow.inconnus.length + rappels.length + prescripteurs.length + secteurs.length + lettres.length === 0;
 ---
 <Espace titre="Aujourd'hui" actif="aujourdhui">
   <div>
     <div class="e-muet" style="text-transform:capitalize">{date}</div>
     <h1>Bonjour Anne</h1>
   </div>
+  {message && <p class="e-message" role="status" data-message>{message}</p>}
 
   <section class="e-jour" aria-label="À rappeler maintenant" data-nouveaux>
     <div class="e-jour-tete"><h2>À rappeler maintenant</h2>{nouveaux.length > 0 && <span class="e-alerte">{nouveaux.length} à qualifier</span>}</div>
@@ -36,7 +48,7 @@ const rien = nouveaux.length + rappels.length + prescripteurs.length + secteurs.
       <article class={i === 0 ? 'e-carte e-carte-forte' : 'e-carte'} data-contact={c.id}>
         <div class="e-ligne"><a href={`/contacts/fiche?id=${c.id}`} class="e-nom">{nom(c)}{c.commune ? ` · ${c.commune}` : ''}</a><span class={i === 0 ? 'e-quand fort' : 'e-quand'}>{depuis(c.created_at)}</span></div>
         <div class="e-tags"><span class="e-tag">{origine(c)}</span>{c.parcours && <span class="e-tag neutre">{c.parcours === 'vendeur' ? 'Vendeur' : 'Acheteur'}</span>}{c.prochaine_action !== 'Rappeler pour qualifier' && c.prochaine_action && <span class="e-tag neutre">{c.prochaine_action}</span>}</div>
-        {c.dernier_texte && <p class="e-muet e-extrait">{c.dernier_texte}</p>}
+        {c.dernier_texte && <p class="e-muet e-extrait">{extrait(c.dernier_texte)}</p>}
         <div class="e-gestes">
           {c.telephone ? <a class="e-bouton second" href={`tel:${c.telephone}`}>Appeler</a> : c.email ? <a class="e-bouton second" href={`mailto:${c.email}`}>Écrire</a> : null}
           <a class="e-bouton" href={`/contacts/qualifier?id=${c.id}`}>Qualifier</a>
@@ -44,6 +56,35 @@ const rien = nouveaux.length + rappels.length + prescripteurs.length + secteurs.
       </article>
     ))}
   </section>
+
+  {(leedflow.taches.length > 0 || leedflow.inconnus.length > 0) && (
+    <section class="e-jour" aria-label="Vu par Leedflow" data-leedflow>
+      <h2>Vu par Leedflow</h2>
+      {leedflow.taches.map((t) => (
+        <article class="e-carte" data-tache={t.id}>
+          <div class="e-ligne"><a href={`/contacts/fiche?id=${t.contact_id}`} class="e-nom">{[t.prenom, t.nom].filter(Boolean).join(' ') || t.telephone || 'Contact'}</a><span class="e-quand">{depuis(t.a)}</span></div>
+          <p class="e-raison">Prochaine action proposée : {t.texte}{t.echeance ? ` · ${echeance(t.echeance)}` : ''}</p>
+          <form method="post" action="/api/leedflow/tache" class="e-gestes">
+            <input type="hidden" name="id" value={t.id} />
+            <button class="e-bouton" name="choix" value="accepter">Accepter</button>
+            <button class="e-bouton second" name="choix" value="ignorer">Ignorer</button>
+          </form>
+        </article>
+      ))}
+      {leedflow.inconnus.map((i) => (
+        <article class="e-carte" data-inconnu={i.telephone}>
+          <div class="e-ligne"><span class="e-nom">{i.telephone}</span><span class="e-quand">{depuis(i.dernier)}</span></div>
+          <div class="e-muet">Numéro inconnu de l'espace{i.n > 1 ? ` · ${i.n} échanges` : ''}</div>
+          {i.texte && <p class="e-muet e-extrait">{extrait(i.texte)}</p>}
+          <div class="e-gestes">
+            <a class="e-bouton" href={`/ajouter?telephone=${encodeURIComponent(i.telephone)}`}>Créer le contact</a>
+            <form method="post" action="/api/leedflow/ecarter" style="flex:1;display:flex"><input type="hidden" name="telephone" value={i.telephone} /><button class="e-bouton second" style="flex:1">Écarter</button></form>
+          </div>
+        </article>
+      ))}
+      {leedflow.inconnus.length > 0 && <p class="e-muet">Écarter un numéro (appel personnel) le retire pour de bon. Les numéros inconnus sont proposés {INCONNUS_JOURS} jours.</p>}
+    </section>
+  )}
 
   {rappels.length > 0 && (
     <section class="e-jour" aria-label="Rappels prévus" data-rappels>
@@ -53,7 +94,7 @@ const rien = nouveaux.length + rappels.length + prescripteurs.length + secteurs.
           <div class="e-ligne"><a href={`/contacts/fiche?id=${c.id}`} class="e-nom">{nom(c)}{c.commune ? ` · ${c.commune}` : ''}</a>
             {enRetard(c.prochaine_action_le) ? <span class="e-quand fort" data-retard>En retard · {echeance(c.prochaine_action_le)}</span> : <span class="e-quand">{echeance(c.prochaine_action_le)}</span>}</div>
           <div class="e-muet">{c.etape === 'en_sommeil' ? 'En sommeil : à réveiller' : LIBELLES_ETAPES[c.etape]} · {c.prochaine_action}</div>
-          {c.dernier_texte && <p class="e-raison">{c.dernier_texte}</p>}
+          {c.dernier_texte && <p class="e-raison e-extrait">{extrait(c.dernier_texte)}</p>}
           <div class="e-gestes">
             {c.telephone && <a class="e-bouton second" href={`tel:${c.telephone}`}>Appeler</a>}
             <a class="e-bouton second" href={`/contacts/qualifier?id=${c.id}`}>Noter la suite</a>
@@ -89,6 +130,7 @@ const rien = nouveaux.length + rappels.length + prescripteurs.length + secteurs.
 
   {rien && <p class="e-muet">Rien d'autre de prévu aujourd'hui. <a href="/ajouter">Ajouter un contact ou un passage de boîtage</a>.</p>}
   <p class="e-muet">Un secteur de boîtage revient ici {BOITAGE_A_REFAIRE_JOURS / 7} semaines après son dernier passage.</p>
+  <p class="e-muet" data-etat-leedflow>{etatLeedflow}</p>
 </Espace>
 
 <style>
@@ -104,6 +146,7 @@ const rien = nouveaux.length + rappels.length + prescripteurs.length + secteurs.
   .e-extrait { margin: 0; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .e-raison { margin: 0; font-size: 14px; color: var(--avt-klein); overflow-wrap: anywhere; }
   .e-gestes { display: flex; gap: 8px; }
+  .e-gestes button { cursor: pointer; }
   .e-gestes .e-bouton { flex: 1; min-height: 44px; padding: 8px 12px; font-size: 15px; }
   .e-pousse { background: var(--avt-brume); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
   .e-pousse strong { font-weight: 500; font-size: 15px; }

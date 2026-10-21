@@ -8,6 +8,10 @@ import type { EnvSite } from '@site/server/env';
 export interface EnvEspace extends Env {
   /** Le même secret que celui du site : sert seulement à afficher le lien du rapport du diagnostic. Facultatif. */
   LIEN_SECRET?: string;
+  /** Clé d'API Leedflow d'Anne (story 13.10), posée par JB en secret de ce Worker. Sans elle, la relève ne fait rien. */
+  LEEDFLOW_API_KEY?: string;
+  /** Adresse de l'API Leedflow, seulement pour l'essai de bout en bout (imitation locale). Absente : l'adresse réelle. */
+  LEEDFLOW_URL?: string;
 }
 
 export const envEspace = envCloudflare as EnvEspace;

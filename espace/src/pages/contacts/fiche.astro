@@ -1,11 +1,13 @@
 ---
 // Fiche d'un contact (story 13.7, première version) : origine, étape, prochaine action, coordonnées, demandes du site
-// et historique ; bouton Qualifier et réponses de la qualification (story 13.6).
+// et historique ; bouton Qualifier et réponses de la qualification (story 13.6). Story 13.10 : appels relevés par
+// Leedflow dans l'historique avec leur résumé, et tâches proposées par Leedflow, à accepter ou ignorer.
 import Espace from '../../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { CANAUX_ORIGINE, LIBELLES_ETAPES } from '@site/server/contacts';
 import { quand, SOURCES } from '@site/server/gestion-donnees';
-import { pourSite as env } from '../../server/env';
+import { envEspace, pourSite as env } from '../../server/env';
+import { resumeHtml, tachesDuContact } from '../../server/leedflow';
 import { echeance, libelleOrigine, lireContact, QUESTIONS, type Reponses } from '../../server/pipeline';
 
 export const prerender = false;
@@ -15,9 +17,14 @@ const id = Astro.url.searchParams.get('id') ?? '';
 const fiche = /^[0-9A-HJKMNP-TV-Z]{26}$/.test(id) ? await lireContact(env, id) : null;
 if (!fiche) return new Response('Contact inconnu', { status: 404 });
 const { contact: c, historique, demandes, passage, prescripteur } = fiche;
+const taches = await tachesDuContact(envEspace, c.id).catch(() => []);
+// Un échange relevé par Leedflow : un titre (« Appel reçu · 4 min »), puis le résumé en Markdown.
+const titreEtResume = (texte: string | null) => { const [titre, ...reste] = (texte ?? '').split('\n'); return { titre, resume: reste.join('\n').trim() }; };
 const m = Astro.url.searchParams.get('m') ?? '';
 const message = m === 'ajoute' ? 'Contact enregistré, à qualifier aujourd\'hui.'
   : m === 'qualifie' ? 'Qualification enregistrée.'
+  : m === 'tache-acceptee' ? 'Prochaine action mise à jour.'
+  : m === 'tache-ignoree' ? 'Proposition ignorée.'
   : m === 'existant' ? 'Ce contact existait déjà (même téléphone ou même e-mail) : sa fiche est complétée, rien n\'a été créé en double.' : '';
 let reponses: Reponses = {};
 try { reponses = c.qualification ? JSON.parse(c.qualification) : {}; } catch {}
@@ -44,6 +51,23 @@ const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.emai
       <a class={c.etape === 'a_qualifier' ? 'e-bouton' : 'e-bouton second'} href={`/contacts/qualifier?id=${c.id}`} data-qualifier-lien>{c.qualifie_le ? 'Requalifier' : 'Qualifier'}</a>
     </div>
   </section>
+
+  {taches.length > 0 && (
+    <section class="e-carte" data-taches>
+      <h2>Proposé par Leedflow</h2>
+      {taches.map((t) => (
+        <form method="post" action="/api/leedflow/tache" style="display:flex;flex-direction:column;gap:8px" data-tache={t.id}>
+          <p style="margin:0">{t.texte}{t.echeance ? ` · ${echeance(t.echeance)}` : ''}</p>
+          <input type="hidden" name="id" value={t.id} />
+          <input type="hidden" name="retour" value="fiche" />
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="e-bouton" name="choix" value="accepter">En faire la prochaine action</button>
+            <button class="e-bouton second" name="choix" value="ignorer">Ignorer</button>
+          </div>
+        </form>
+      ))}
+    </section>
+  )}
 
   {c.qualifie_le && (
     <section class="e-carte" data-reponses>
@@ -80,9 +104,17 @@ const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.emai
     <h2>Historique</h2>
     <ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px" data-historique>
       {historique.map((e) => (
-        <li><div class="e-muet">{quand(e.a)}{e.par ? ` · ${e.par}` : ''}</div><div style="white-space:pre-wrap">{e.texte}</div></li>
+        <li data-source={e.source}><div class="e-muet">{quand(e.a)}{e.par ? ` · ${e.par}` : e.source === 'leedflow' ? ' · Leedflow' : ''}</div>
+          {e.source === 'leedflow' ? (() => { const { titre, resume } = titreEtResume(e.texte); return <><div style="font-weight:500">{titre}</div>{resume && <div class="e-resume" set:html={resumeHtml(resume)} />}</>; })()
+            : <div style="white-space:pre-wrap">{e.texte}</div>}</li>
       ))}
     </ol>
   </section>
   <p class="e-muet">Export et effacement des données de cette personne : depuis <a href={c.email ? `/gestion?q=${encodeURIComponent(c.email)}` : '/gestion'}>les demandes</a>, par son adresse e-mail.</p>
 </Espace>
+
+<style>
+  .e-resume :global(p) { margin: 4px 0; }
+  .e-resume :global(ul) { margin: 4px 0; padding-left: 20px; }
+  .e-resume { overflow-wrap: anywhere; }
+</style>

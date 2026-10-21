@@ -2,10 +2,13 @@
 // Ajouter (story 13.7, maquette v2 écran 3) : un contact en moins d'une minute, avec son origine précise, et un
 // passage de boîtage en moins de 30 secondes. Un téléphone ou un e-mail déjà connu ouvre la fiche existante, complétée,
 // jamais recréée (AD-20). Le formulaire est traité par cette même page, pour garder la saisie en cas d'erreur.
+// Story 13.10 : « Créer le contact » depuis un numéro inconnu vu par Leedflow arrive ici avec le numéro prérempli ;
+// une fois le contact enregistré, ses appels relevés passent aussitôt dans son historique.
 import Espace from '../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { CANAUX_ORIGINE } from '@site/server/contacts';
-import { pourSite as env } from '../server/env';
+import { envEspace, pourSite as env } from '../server/env';
+import { rattacherInconnus } from '../server/leedflow';
 import {
   aujourdhui, creerPrescripteur, estCanal, lirePassage, lirePrescripteur, listerPassages, listerPrescripteurs, noterPassage, personne, saisirContact,
   type Origine,
@@ -17,7 +20,7 @@ if (!compte) return new Response('Accès refusé', { status: 403 });
 
 const ULID = /^[0-9A-HJKMNP-TV-Z]{26}$/;
 let erreur = '';
-let saisi: Record<string, string> = {};
+let saisi: Record<string, string> = { telephone: (Astro.url.searchParams.get('telephone') ?? '').slice(0, 40) };
 let message = Astro.url.searchParams.get('m') === 'passage' ? 'Passage de boîtage noté.' : '';
 
 if (Astro.request.method === 'POST') {
@@ -53,6 +56,7 @@ if (Astro.request.method === 'POST') {
     }
     if (!erreur && p) {
       const r = await saisirContact(env, p, o, (saisi.note ?? '').trim().slice(0, 2000), compte);
+      if (p.telephone) await rattacherInconnus(envEspace).catch(() => {});
       return Astro.redirect(`/contacts/fiche?id=${r.id}&m=${r.existant ? 'existant' : 'ajoute'}`, 303);
     }
   }
