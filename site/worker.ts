@@ -12,10 +12,11 @@
 // /gestion et /api/gestion/* : espace de gestion des demandes d'Anne (story 10.7). Le jeton de Cloudflare Access y est vérifié
 // ici, avant tout le reste (src/server/acces.ts) ; sans jeton valable, rien n'est servi (403).
 // `scheduled` : tâche planifiée, toutes les 15 minutes (wrangler.jsonc) : réessaie les e-mails en échec (story 10.3),
-// envoie les e-mails de la séquence arrivés à échéance (story 10.5) et purge les demandes de plus de 3 ans (story 10.7) ;
-// le test quotidien s'y ajoutera (10.8).
+// envoie les e-mails de la séquence arrivés à échéance (story 10.5), purge les demandes de plus de 3 ans (story 10.7) et
+// rattache à leur contact les demandes qui ne le sont pas encore (story 13.4) ; le test quotidien s'y ajoutera (10.8).
 import { handle } from '@astrojs/cloudflare/handler';
 import { compteAcces, ENTETE_COMPTE } from './src/server/acces';
+import { rattacherOrphelins } from './src/server/contacts';
 import { rejouer } from './src/server/delivery';
 import type { EnvSite } from './src/server/env';
 import { journal } from './src/server/journal';
@@ -53,7 +54,7 @@ export default {
     return securiser(await repondre(request, env, ctx));
   },
   async scheduled(_controller, env, ctx) {
-    ctx.waitUntil(Promise.all([rejouer(env), purger(env)]));
+    ctx.waitUntil(Promise.all([rejouer(env), purger(env), rattacherOrphelins(env)]));
   },
 } satisfies ExportedHandler<EnvSite>;
 

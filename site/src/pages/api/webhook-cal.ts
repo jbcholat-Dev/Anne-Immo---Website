@@ -5,6 +5,7 @@
 // Cal.com prévient lui-même Anne et le prospect.
 import type { APIRoute } from 'astro';
 import { reservation, signatureValide } from '../../server/adapters/booking';
+import { rattacherLead } from '../../server/contacts';
 import { diffuser } from '../../server/delivery';
 import { enProduction, envSite } from '../../server/env';
 import { empreinte, journal } from '../../server/journal';
@@ -48,7 +49,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return reponse(503, { ok: false, error: { code: 'BASE_INDISPONIBLE' } }); // Cal.com réessaie un webhook en échec
   }
   journal('lead_ecrit', { source: 'rdv', lead: ecriture.leadId, nouveau: ecriture.nouveau, test: isTest, email: await empreinte(r.lead.email) });
-  const envoi = diffuser(env, ecriture.leadId).catch((e) => journal('diffusion_interrompue', { lead: ecriture.leadId, erreur: String(e).slice(0, 200) }));
+  // Ensuite, sans faire attendre le visiteur : les e-mails, et le rattachement de la demande à son contact (story 13.4).
+  const envoi = Promise.all([
+    diffuser(env, ecriture.leadId).catch((e) => journal('diffusion_interrompue', { lead: ecriture.leadId, erreur: String(e).slice(0, 200) })),
+    rattacherLead(env, ecriture.leadId).catch((e) => journal('rattachement_echec', { lead: ecriture.leadId, erreur: String(e).slice(0, 200) })),
+  ]);
   const cf = (locals as { cfContext?: ExecutionContext }).cfContext;
   if (cf) cf.waitUntil(envoi);
   else await envoi;

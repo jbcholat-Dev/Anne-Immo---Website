@@ -5,6 +5,9 @@
 // une demande faite sur le site apparaît tout de suite dans l'espace (base partagée) ; relance d'un envoi en échec
 // programmée par l'espace puis envoyée par la tâche planifiée du site ; marque Modelo, export et effacement faits dans
 // l'espace et lus par le site ; pages ni gardées en cache ni indexées. Captures dans espace/.verif/.
+// Story 13.4 : chaque demande est rattachée à un seul contact (même e-mail = même contact), historique noté, règle des
+// prochaines actions tenue par la base, contact en sommeil réveillé par une nouvelle demande, demandes orphelines
+// rattachées par la tâche planifiée, contacts compris dans l'export et l'effacement.
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
 // Lancer depuis espace/ : `node scripts/e2e-espace.mjs`.
@@ -62,6 +65,41 @@ try {
   etat.enPanne = false;
   constat(!!lead && sql(`SELECT count(*) AS n FROM lead_delivery WHERE lead_id = '${lead}' AND status = 'failed'`)[0].n >= 1, 'demande faite sur le site, avec un envoi en échec');
 
+  // 0 bis. Contacts (story 13.4) : la demande est rattachée à un contact à qualifier, avec l'événement dans l'historique.
+  const contactDe = (l) => sql(`SELECT contact_id FROM lead WHERE id = '${l}'`)[0]?.contact_id;
+  for (let i = 0; i < 24 && !contactDe(lead); i++) await pause(250);
+  const contact = contactDe(lead);
+  const fiche = contact ? sql(`SELECT * FROM contact WHERE id = '${contact}'`)[0] : null;
+  constat(!!fiche && fiche.etape === 'a_qualifier' && fiche.canal === 'site' && fiche.origine_detail === 'guide' && fiche.parcours === 'vendeur'
+    && fiche.email === EMAIL && !!fiche.prochaine_action_le, 'demande rattachée à un nouveau contact « à qualifier », origine site · guide, à rappeler');
+  constat(sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${contact}' AND type = 'demande' AND source_id = '${lead}'`)[0].n === 1,
+    'historique du contact : la demande notée une fois');
+  // Une deuxième demande avec la même adresse (casse différente) va sur le même contact.
+  const s2 = sid();
+  await poster('guide', { submission_id: s2, prenom: 'Paul', nom: 'Espace', email: EMAIL.toUpperCase() });
+  const lead2 = leadDe(s2);
+  for (let i = 0; i < 24 && !contactDe(lead2); i++) await pause(250);
+  constat(contactDe(lead2) === contact && sql(`SELECT count(*) AS n FROM contact WHERE email = '${EMAIL}'`)[0].n === 1
+    && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${contact}' AND type = 'demande'`)[0].n === 2,
+    'deuxième demande, même adresse : même contact, deux demandes dans l\'historique');
+  // La base refuse un contact actif sans prochaine action datée, un sommeil sans réveil, une perte sans motif.
+  const refuse = (requete) => { try { sql(requete); return false; } catch { return true; } };
+  constat(refuse(`INSERT INTO contact (id, created_at, last_activity_at, nom, etape, canal) VALUES ('X1', '2026-01-01', '2026-01-01', 'Essai', 'premier_rdv', 'autre')`)
+    && refuse(`UPDATE contact SET etape = 'en_sommeil', reveil_le = NULL WHERE id = '${contact}'`)
+    && refuse(`UPDATE contact SET etape = 'perdu', motif_perte = NULL WHERE id = '${contact}'`),
+    'règle tenue par la base : pas de contact actif sans prochaine action, de sommeil sans réveil, de perte sans motif');
+  // Un contact en sommeil qui refait une demande revient à qualifier.
+  sql(`UPDATE contact SET etape = 'en_sommeil', reveil_le = '2027-03-01' WHERE id = '${contact}'`);
+  const s3 = sid();
+  await poster('guide', { submission_id: s3, prenom: 'Paul', nom: 'Espace', email: EMAIL });
+  for (let i = 0; i < 24 && !contactDe(leadDe(s3)); i++) await pause(250);
+  const reveille = sql(`SELECT etape, reveil_le FROM contact WHERE id = '${contact}'`)[0];
+  constat(reveille.etape === 'a_qualifier' && reveille.reveil_le === null, 'contact en sommeil : une nouvelle demande le remet « à qualifier »');
+  // Une demande sans contact (antérieure à 13.4) : la tâche planifiée la rattache (vérifié après son passage, étape 3).
+  const ORPHELIN = `orphelin+${ESSAI}@example.com`;
+  sql(`INSERT INTO lead (id, submission_id, created_at, last_activity_at, lang, source, email, privacy_accepted_at, is_test, prenom, nom, telephone, projet)
+       VALUES ('ORPH${ESSAI}', 'orph-${ESSAI}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'fr', 'contact', '${ORPHELIN}', '2026-10-01T08:00:00Z', 1, 'Olga', 'Orphelin', '+33600000${String(ESSAI).slice(-3).padStart(3, '0')}', 'achat')`);
+
   // 1. Accès : sans jeton Access valable, rien n'est servi, pas même une feuille de style.
   const { privateKey: autreCle } = generateKeyPairSync('rsa', { modulusLength: 2048 });
   const refus = [
@@ -102,6 +140,8 @@ try {
   for (let i = 0; i < 24 && sql(`SELECT status FROM lead_delivery WHERE lead_id = '${lead}' AND channel = '${enEchec}'`)[0].status !== 'delivered'; i++) await pause(250);
   constat(sql(`SELECT status FROM lead_delivery WHERE lead_id = '${lead}' AND channel = '${enEchec}'`)[0].status === 'delivered' && recus.some((e) => e.idempotence === `${lead}:${enEchec}`),
     'tâche planifiée du site : l\'e-mail relancé est parti, envoi marqué fait');
+  const orphelin = sql(`SELECT l.contact_id, c.parcours, c.canal FROM lead l LEFT JOIN contact c ON c.id = l.contact_id WHERE l.id = 'ORPH${ESSAI}'`)[0];
+  constat(!!orphelin?.contact_id && orphelin.parcours === 'acheteur' && orphelin.canal === 'site', 'tâche planifiée : la demande sans contact est rattachée (acheteur, origine site)');
   r = await appeler(`${E}/gestion/lead?id=${lead}&m=rejoue`, { headers: avecJeton() });
   constat((await r.text()).includes('La relance est programmée'), 'fiche : message de relance programmée');
 
@@ -112,11 +152,14 @@ try {
   // 5. Droits RGPD depuis l'espace : export, puis effacement.
   r = await appeler(`${E}/api/gestion/export?email=${encodeURIComponent(EMAIL)}`, { headers: avecJeton() });
   const exp = r.status === 200 ? await r.json() : {};
-  constat(exp.email === EMAIL && exp.demandes?.length === 1, 'export : la demande de l\'adresse, en fichier JSON');
+  constat(exp.email === EMAIL && exp.demandes?.length === 3, 'export : les trois demandes de l\'adresse, en fichier JSON');
+  constat(exp.contacts?.length === 1 && exp.contacts[0].historique?.length >= 3, 'export : le contact de l\'espace et son historique');
   r = await formulaire('effacer', { email: EMAIL, confirmation: 'autre@example.com' });
-  constat(sql(`SELECT count(*) AS n FROM lead WHERE lower(email) = '${EMAIL}'`)[0].n === 1, 'effacement refusé sans confirmation exacte');
+  constat(sql(`SELECT count(*) AS n FROM lead WHERE lower(email) = '${EMAIL}'`)[0].n === 3, 'effacement refusé sans confirmation exacte');
   r = await formulaire('effacer', { email: EMAIL, confirmation: EMAIL });
-  constat(r.headers.get('location') === '/gestion?m=efface-1' && sql(`SELECT count(*) AS n FROM lead WHERE lower(email) = '${EMAIL}'`)[0].n === 0, 'effacement fait depuis l\'espace : plus rien dans la base du site');
+  constat(r.headers.get('location') === '/gestion?m=efface-3' && sql(`SELECT count(*) AS n FROM lead WHERE lower(email) = '${EMAIL}'`)[0].n === 0, 'effacement fait depuis l\'espace : plus rien dans la base du site');
+  constat(sql(`SELECT count(*) AS n FROM contact WHERE id = '${contact}'`)[0].n === 0 && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${contact}'`)[0].n === 0,
+    'effacement : le contact et son historique sont partis aussi');
 
   // 6. Capture de la liste (ordinateur et téléphone).
   const { chromium } = await import('../../site/node_modules/playwright/index.mjs');
