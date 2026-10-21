@@ -1,15 +1,17 @@
 ---
 // Gabarit des pages de travail de l'espace d'Anne (maquette v2, story 13.12) : pensé d'abord pour le téléphone,
 // menu en bas sur téléphone avec le bouton « Ajouter » au centre, menu en haut sur ordinateur. Charte du site.
+// Sur téléphone, les demandes du site (droits RGPD) s'ouvrent depuis la page Contacts.
 // Les pages reprises de /gestion gardent le gabarit Gestion du site jusqu'à la phase 2 de la story 13.3.
 import '@site/styles/global.css';
 import { ENTETE_COMPTE } from '@site/server/acces';
-interface Props { titre: string; actif?: 'aujourdhui' | 'contacts' | 'ajouter' | 'demandes' }
+interface Props { titre: string; actif?: 'aujourdhui' | 'contacts' | 'bilan' | 'ajouter' | 'demandes' }
 const { titre, actif } = Astro.props;
 const compte = Astro.request.headers.get(ENTETE_COMPTE) ?? '';
 const liens = [
   { cle: 'aujourdhui', href: '/', texte: "Aujourd'hui" },
   { cle: 'contacts', href: '/contacts', texte: 'Contacts' },
+  { cle: 'bilan', href: '/bilan', texte: 'Bilan' },
   { cle: 'demandes', href: '/gestion', texte: 'Demandes du site' },
 ] as const;
 ---
@@ -37,7 +39,7 @@ const liens = [
       <a href="/" aria-current={actif === 'aujourdhui' ? 'page' : undefined}>Aujourd'hui</a>
       <a href="/contacts" aria-current={actif === 'contacts' ? 'page' : undefined}>Contacts</a>
       <a href="/ajouter" class="e-plus" aria-label="Ajouter"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg></a>
-      <a href="/gestion" aria-current={actif === 'demandes' ? 'page' : undefined}>Demandes</a>
+      <a href="/bilan" aria-current={actif === 'bilan' ? 'page' : undefined}>Bilan</a>
     </nav>
   </body>
 </html>

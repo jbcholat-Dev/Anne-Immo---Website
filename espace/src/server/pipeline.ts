@@ -468,3 +468,74 @@ export function enRetard(d: string | null): boolean {
   if (!d) return false;
   return d.length === 10 ? d < aujourdhui() : (parisVersUtc(`${aujourdhui()}T00:00`) ?? '') > d;
 }
+
+// ——— Bilan du lundi par canal (story 13.13, maquette v2 écran 4) ———
+
+export const PERIODES = { semaine: { jours: 7, libelle: '7 derniers jours' }, mois: { jours: 28, libelle: '4 dernières semaines' }, trimestre: { jours: 91, libelle: '3 derniers mois' } } as const;
+export type Periode = keyof typeof PERIODES;
+
+const ETAPES_RDV = ['premier_rdv', 'estimation', 'second_rdv', 'mandat_exclusif', 'en_vente', 'vendu', 'besoin_defini', 'mandat_recherche', 'visites', 'offre_acceptee', 'acte_signe'];
+const ETAPES_MANDAT = ['mandat_exclusif', 'en_vente', 'vendu', 'mandat_recherche', 'visites', 'offre_acceptee', 'acte_signe'];
+const liste = (v: string[]) => v.map((e) => `'${e}'`).join(', ');
+/** Un contact a eu un rendez-vous (ou un mandat) s'il y est passé un jour, même s'il en est sorti depuis. */
+const aAtteint = (etapes: string[]) => `(c.etape IN (${liste(etapes)}) OR EXISTS (SELECT 1 FROM contact_evenement e WHERE e.contact_id = c.id AND e.type = 'etape' AND json_extract(e.donnees, '$.vers') IN (${liste(etapes)})))`;
+
+export interface LigneCanal { canal: Canal; contacts: number; qualifies: number; rdv: number; mandats: number }
+export interface SecteurBilan { secteur: string; dernier: string; mots: number | null; contacts: number; jours: number; suite: string }
+
+export async function bilan(env: EnvSite, periode: Periode) {
+  const debut = new Date(Date.now() - PERIODES[periode].jours * 86_400_000).toISOString();
+  const auj = aujourdhui();
+  const [canaux, delai, secteurs, perdus] = await env.DB.batch([
+    env.DB.prepare(`SELECT c.canal, count(*) AS contacts, sum(c.qualifie_le IS NOT NULL) AS qualifies,
+        sum(${aAtteint(ETAPES_RDV)}) AS rdv, sum(${aAtteint(ETAPES_MANDAT)}) AS mandats
+      FROM contact c WHERE c.created_at >= ?1 GROUP BY c.canal`).bind(debut),
+    // Délai de rappel : de l'arrivée du contact à la première tentative notée par Anne (qualification, même « pas joint », ou appel).
+    env.DB.prepare(`SELECT avg((julianday(premier) - julianday(created_at)) * 24) AS heures, count(*) AS n FROM (
+        SELECT c.created_at, (SELECT min(e.a) FROM contact_evenement e WHERE e.contact_id = c.id AND e.type IN ('qualification', 'appel')) AS premier
+        FROM contact c WHERE c.created_at >= ?1) WHERE premier IS NOT NULL`).bind(debut),
+    env.DB.prepare(`SELECT p.secteur, p.fait_le AS dernier, p.mots, (SELECT count(*) FROM contact c WHERE c.passage_id = p.id) AS contacts
+      FROM passage_boitage p WHERE p.id = (SELECT p2.id FROM passage_boitage p2 WHERE p2.secteur = p.secteur ORDER BY p2.fait_le DESC, p2.created_at DESC LIMIT 1)
+      ORDER BY p.fait_le DESC LIMIT 30`),
+    env.DB.prepare(`SELECT c.motif_perte AS motif, count(*) AS n FROM contact c WHERE c.etape = 'perdu'
+        AND EXISTS (SELECT 1 FROM contact_evenement e WHERE e.contact_id = c.id AND e.type = 'etape' AND json_extract(e.donnees, '$.vers') = 'perdu' AND e.a >= ?1)
+      GROUP BY c.motif_perte ORDER BY n DESC`).bind(debut),
+  ]);
+  const parCanal = new Map((canaux.results as LigneCanal[]).map((l) => [l.canal, l]));
+  const lignes: LigneCanal[] = (Object.keys(CANAUX_ORIGINE) as Canal[]).map((canal) => parCanal.get(canal) ?? { canal, contacts: 0, qualifies: 0, rdv: 0, mandats: 0 })
+    .sort((a, b) => b.rdv - a.rdv || b.contacts - a.contacts);
+  const total = lignes.reduce((t, l) => ({ contacts: t.contacts + l.contacts, qualifies: t.qualifies + l.qualifies, rdv: t.rdv + l.rdv, mandats: t.mandats + l.mandats }), { contacts: 0, qualifies: 0, rdv: 0, mandats: 0 });
+  const jours = (d: string) => Math.round((Date.parse(`${auj}T12:00:00Z`) - Date.parse(`${d}T12:00:00Z`)) / 86_400_000);
+  const parSecteur: SecteurBilan[] = (secteurs.results as Omit<SecteurBilan, 'jours' | 'suite'>[]).map((s) => {
+    const j = jours(s.dernier);
+    const suite = j >= BOITAGE_A_REFAIRE_JOURS ? 'Repasser cette semaine'
+      : s.contacts === 0 && j >= 21 ? 'Changer de secteur ?'
+      : `Repasser vers le ${echeance(plusTard(BOITAGE_A_REFAIRE_JOURS - j))}`;
+    return { ...s, jours: j, suite };
+  });
+  const d = delai.results[0] as { heures: number | null; n: number } | undefined;
+  return { lignes, total, delaiHeures: d?.heures ?? null, delaiN: d?.n ?? 0, secteurs: parSecteur, perdus: perdus.results as { motif: string; n: number }[], debut };
+}
+
+/** Quelques phrases tirées des chiffres, sans rien inventer : le canal qui donne des rendez-vous, les secteurs à refaire, les pertes. */
+export function constats(b: Awaited<ReturnType<typeof bilan>>): string[] {
+  const phrases: string[] = [];
+  const meilleur = b.lignes.find((l) => l.rdv > 0);
+  if (meilleur) phrases.push(`${CANAUX_ORIGINE[meilleur.canal]} donne le plus de rendez-vous : ${meilleur.rdv} pour ${meilleur.contacts} contact(s).`);
+  const sansSuite = b.lignes.filter((l) => l.contacts >= 3 && l.rdv === 0);
+  for (const l of sansSuite) phrases.push(`${CANAUX_ORIGINE[l.canal]} : ${l.contacts} contacts, aucun rendez-vous pour l'instant.`);
+  const nonQualifies = b.total.contacts - b.total.qualifies;
+  if (nonQualifies > 0) phrases.push(`${nonQualifies} contact(s) de la période ne sont pas encore qualifiés.`);
+  const aRefaire = b.secteurs.filter((s) => s.jours >= BOITAGE_A_REFAIRE_JOURS);
+  if (aRefaire.length) phrases.push(`${aRefaire.map((s) => s.secteur).join(', ')} : pas de boîtage depuis ${Math.round(aRefaire[0].jours / 7)} semaines ou plus.`);
+  const ailleurs = b.perdus.find((p) => p.motif === 'Exclusif ailleurs');
+  if (ailleurs) phrases.push(`${ailleurs.n} perdu(s) car déjà en exclusif ailleurs : arrivés trop tard, à rapprocher du délai de rappel.`);
+  return phrases;
+}
+
+/** « 3 h », « 45 min », « 2 j » */
+export function duree(heures: number): string {
+  if (heures < 1) return `${Math.max(1, Math.round(heures * 60))} min`;
+  if (heures < 48) return `${Math.round(heures)} h`;
+  return `${Math.round(heures / 24)} j`;
+}

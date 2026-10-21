@@ -11,6 +11,7 @@
 // Story 13.7 : passage de boîtage, saisie à la main (origine exigée, numéro connu = fiche complétée, prescripteur créé),
 // fiche et liste des contacts, import .csv et .xlsx (aperçu, doublons, personnes connues complétées, consentement).
 // Story 13.5 : page « Aujourd'hui » (nouveaux d'abord, rappels dus et en retard, réveils, boîtage à refaire, prescripteurs).
+// Story 13.13 : bilan par canal recalculé depuis la base, boîtage par secteur, motifs de perte, délai de rappel.
 // Story 13.6 : qualifier (suite obligatoire, date, réveil ou motif exigés, étape et prochaine action fixées, heure de Paris).
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
@@ -330,13 +331,37 @@ try {
   r = await appeler(`${E}/gestion`, { headers: avecJeton() });
   constat((await r.text()).includes('data-retour'), 'demandes : lien de retour vers l\'espace');
 
+  // 5 quinquies. Bilan du lundi par canal (story 13.13) : les chiffres suivent la base, sans saisie.
+  const ligneCanal = async (canal) => {
+    const h = await (await appeler(`${E}/bilan?p=semaine`, { headers: avecJeton() })).text();
+    const l = h.split(`data-canal="${canal}"`)[1]?.split('</tr>')[0] ?? '';
+    return { html: h, chiffres: [...l.matchAll(/class="n"[^>]*>(\d+)</g)].map((m) => Number(m[1])) };
+  };
+  const avantReco = await ligneCanal('recommandation');
+  r = await page('/ajouter', { quoi: 'contact', prenom: 'Zoé', nom: `Bilan${NUM}`, email: `zoe+${ESSAI}@example.com`, canal: 'recommandation', parcours: 'vendeur', prescripteur_nom: `Maître Durand ${ESSAI}` });
+  const zoe = sql(`SELECT id FROM contact WHERE email = 'zoe+${ESSAI}@example.com'`)[0].id;
+  await qualif(zoe, { ...Q, issue: 'rdv', rdv_le: '2027-02-01T09:30' });
+  const apresReco = await ligneCanal('recommandation');
+  const [c0, q0, rdv0] = avantReco.chiffres, [c1, q1b, rdv1] = apresReco.chiffres;
+  constat(c1 === c0 + 1 && q1b === q0 + 1 && rdv1 === rdv0 + 1, `bilan : un contact recommandé qualifié en rendez-vous ajoute 1 contact, 1 qualifié, 1 rendez-vous à « Recommandation » (${c0}/${q0}/${rdv0} → ${c1}/${q1b}/${rdv1})`);
+  html = apresReco.html;
+  const boitage = html.split('data-boitage')[1]?.split('</section>')[0] ?? '';
+  constat(boitage.includes(`data-secteur="${SECTEUR}"`) && boitage.split(`data-secteur="${SECTEUR}"`)[1].split('</tr>')[0].includes('Repasser vers le')
+    && boitage.split(`data-secteur="Margencel-${NUM}"`)[1]?.split('</tr>')[0].includes('Repasser cette semaine'),
+    'bilan : boîtage par secteur, avec la suite (repasser vers une date, ou cette semaine)');
+  constat((html.split('data-perdus')[1] ?? '').includes('Hors secteur'), 'bilan : les motifs de perte de la période');
+  constat(/Délai moyen de rappel<\/div><div class="b-chiffre"[^>]*>\d+ (min|h|j)</.test(html), 'bilan : délai moyen de rappel calculé');
+  constat(html.includes('data-constats') && html.includes('donne le plus de rendez-vous'), 'bilan : « ce que la période dit », tiré des chiffres');
+  r = await appeler(`${E}/bilan?p=trimestre`, { headers: avecJeton() });
+  constat(r.status === 200 && (await r.text()).includes('3 derniers mois'), 'bilan : période de 3 mois');
+
   // 6. Capture de la liste (ordinateur et téléphone).
   const { chromium } = await import('../../site/node_modules/playwright/index.mjs');
   const nav = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   for (const [nom, viewport] of [['ordinateur', { width: 1280, height: 900 }], ['telephone', { width: 390, height: 844 }]]) {
     const ctx = await nav.newContext({ viewport, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
     const onglet = await ctx.newPage();
-    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['importer', '/importer']]) {
+    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['bilan', '/bilan'], ['importer', '/importer']]) {
       await onglet.goto(`${E}${chemin}`);
       if (nomPage === 'ajouter') {
         await onglet.click('[data-canaux] label:has(input[value=boitage]) span');
