@@ -1,0 +1,91 @@
+---
+// Gabarit des pages de travail de l'espace d'Anne (maquette v2, story 13.12) : pensé d'abord pour le téléphone,
+// menu en bas sur téléphone avec le bouton « Ajouter » au centre, menu en haut sur ordinateur. Charte du site.
+// Les pages reprises de /gestion gardent le gabarit Gestion du site jusqu'à la phase 2 de la story 13.3.
+import '@site/styles/global.css';
+import { ENTETE_COMPTE } from '@site/server/acces';
+interface Props { titre: string; actif?: 'contacts' | 'ajouter' | 'demandes' }
+const { titre, actif } = Astro.props;
+const compte = Astro.request.headers.get(ENTETE_COMPTE) ?? '';
+const liens = [
+  { cle: 'contacts', href: '/contacts', texte: 'Contacts' },
+  { cle: 'demandes', href: '/gestion', texte: 'Demandes du site' },
+] as const;
+---
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{titre} · L'espace d'Anne</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  </head>
+  <body class="e-corps">
+    <header class="e-tete">
+      <a href="/contacts" class="e-marque">L'espace d'Anne</a>
+      <nav class="e-menu-haut" aria-label="Menu">
+        {liens.map((l) => <a href={l.href} aria-current={actif === l.cle ? 'page' : undefined}>{l.texte}</a>)}
+        <a href="/ajouter" class="e-ajouter-haut" aria-current={actif === 'ajouter' ? 'page' : undefined}>Ajouter</a>
+      </nav>
+      <span class="e-compte">{compte}</span>
+    </header>
+    <main class="e-page"><slot /></main>
+    <nav class="e-menu-bas" aria-label="Menu">
+      <a href="/contacts" aria-current={actif === 'contacts' ? 'page' : undefined}>Contacts</a>
+      <a href="/ajouter" class="e-plus" aria-label="Ajouter"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg></a>
+      <a href="/gestion" aria-current={actif === 'demandes' ? 'page' : undefined}>Demandes</a>
+    </nav>
+  </body>
+</html>
+<style is:global>
+  [hidden] { display: none !important; }
+  .e-corps { min-height: 100vh; padding-bottom: 76px; }
+  .e-tete { display: flex; align-items: center; gap: 24px; padding: 14px 20px; border-bottom: 1px solid var(--avt-galet); background: #fff; flex-wrap: wrap; }
+  .e-marque { font-family: var(--avt-font-display); font-size: 22px; color: var(--avt-brun); }
+  .e-menu-haut { display: none; gap: 20px; align-items: center; }
+  .e-menu-haut a { color: var(--avt-brun); padding: 6px 0; }
+  .e-menu-haut a[aria-current=page] { font-weight: 500; border-bottom: 2px solid var(--avt-terra); }
+  .e-menu-haut .e-ajouter-haut { padding: 8px 18px; border-radius: 999px; background: var(--avt-terra); color: #fff; }
+  .e-menu-haut .e-ajouter-haut[aria-current=page] { border-bottom: 0; }
+  .e-compte { margin-left: auto; font-size: 13px; color: var(--avt-text-muted); overflow-wrap: anywhere; }
+  .e-page { max-width: 1000px; margin: 0 auto; padding: 24px 16px 40px; display: flex; flex-direction: column; gap: 22px; }
+  .e-page h1 { font-size: 30px; line-height: 1.2; }
+  .e-page h2 { font-size: 22px; }
+  .e-menu-bas { position: fixed; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-around; align-items: center; background: #fff; border-top: 1px solid var(--avt-galet); padding: 6px 8px 10px; z-index: 10; }
+  .e-menu-bas a { min-width: 72px; min-height: 44px; display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--avt-text-muted); }
+  .e-menu-bas a[aria-current=page] { color: var(--avt-brun); font-weight: 500; border-bottom: 2px solid var(--avt-terra); }
+  .e-menu-bas .e-plus { min-width: 48px; width: 48px; height: 48px; border-radius: 50%; background: var(--avt-terra); color: #fff; }
+  @media (min-width: 900px) {
+    .e-corps { padding-bottom: 0; }
+    .e-menu-haut { display: flex; }
+    .e-menu-bas { display: none; }
+    .e-page { padding: 32px 32px 64px; }
+  }
+  .e-message { padding: 12px 16px; border-radius: 10px; background: var(--avt-brume); }
+  .e-muet { color: var(--avt-text-muted); font-size: 14px; }
+  .e-carte { background: #fff; border: 1px solid var(--avt-galet); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .e-champs { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  @media (min-width: 640px) { .e-champs { grid-template-columns: 1fr 1fr; } }
+  .e-champ { display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+  .e-champ input, .e-champ select, .e-champ textarea { min-height: 44px; padding: 8px 12px; border: 1.5px solid var(--avt-galet); border-radius: 8px; background: #fff; font: inherit; font-size: 16px; color: var(--avt-brun); width: 100%; box-sizing: border-box; }
+  .e-champ textarea { min-height: 72px; }
+  .e-champ.large { grid-column: 1 / -1; }
+  .e-pastilles { display: flex; flex-wrap: wrap; gap: 8px; border: 0; padding: 0; margin: 0; }
+  .e-pastilles legend { font-size: 14px; margin-bottom: 8px; padding: 0; }
+  .e-pastilles label { position: relative; }
+  .e-pastilles input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; } /* le clic sur la pastille coche l'option par son étiquette */
+  .e-pastilles span { display: inline-flex; align-items: center; min-height: 40px; padding: 6px 14px; border-radius: 999px; border: 1.5px solid var(--avt-galet); background: #fff; font-size: 15px; cursor: pointer; }
+  .e-pastilles input:checked + span { background: var(--avt-klein); border-color: var(--avt-klein); color: #fff; }
+  .e-pastilles input:focus-visible + span { outline: 2.5px solid var(--avt-klein); outline-offset: 2px; }
+  .e-bouton { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 10px 22px; border-radius: 999px; border: 0; background: var(--avt-terra); color: #fff; font: inherit; font-weight: 500; font-size: 16px; cursor: pointer; text-align: center; }
+  .e-bouton.second { background: transparent; border: 1.5px solid var(--avt-brun); color: var(--avt-brun); font-weight: 400; }
+  .e-tag { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--avt-brume); color: var(--avt-klein); white-space: nowrap; }
+  .e-tag.neutre { background: var(--avt-galet); color: var(--avt-brun); }
+  .e-tag.alerte { background: var(--avt-terra); color: #fff; }
+  .e-table-zone { overflow-x: auto; }
+  .e-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .e-table th { text-align: left; font-weight: 500; color: var(--avt-text-muted); padding: 8px 10px; border-bottom: 1px solid var(--avt-galet); white-space: nowrap; }
+  .e-table td { padding: 10px; border-bottom: 1px solid var(--avt-galet); vertical-align: top; }
+</style>

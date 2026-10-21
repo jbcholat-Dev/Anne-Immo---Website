@@ -1,0 +1,45 @@
+---
+// Contacts (story 13.7) : tous les contacts, les plus récemment actifs d'abord, avec une recherche par nom, téléphone,
+// e-mail ou commune. La vue par étapes viendra avec la story 13.16.
+import Espace from '../../layouts/Espace.astro';
+import { ENTETE_COMPTE } from '@site/server/acces';
+import { CANAUX_ORIGINE, LIBELLES_ETAPES } from '@site/server/contacts';
+import { pourSite as env } from '../../server/env';
+import { echeance, listerContacts } from '../../server/pipeline';
+
+export const prerender = false;
+if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
+
+const q = (Astro.url.searchParams.get('q') ?? '').trim().slice(0, 100);
+const contacts = await listerContacts(env, q);
+const m = Astro.url.searchParams.get('m') ?? '';
+const importe = /^import-(\d+)-(\d+)$/.exec(m);
+const nomDe = (c: { prenom: string | null; nom: string | null; telephone: string | null; email: string | null }) =>
+  [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.email || '—';
+---
+<Espace titre="Contacts" actif="contacts">
+  <h1>Contacts</h1>
+  {importe && <p class="e-message" role="status" data-message>Import fait : {importe[1]} nouveau(x) contact(s), {importe[2]} déjà connu(s) complété(s).</p>}
+  <form method="get" action="/contacts" style="display:flex;gap:10px;flex-wrap:wrap">
+    <label class="e-champ" style="flex:1 1 240px"><span class="e-muet">Rechercher</span><input type="search" name="q" value={q} placeholder="Nom, téléphone, e-mail, commune" /></label>
+    <div style="display:flex;align-items:flex-end;gap:10px"><button class="e-bouton second" type="submit">Rechercher</button>{q && <a href="/contacts">Tout afficher</a>}</div>
+  </form>
+  <p class="e-muet">{q ? `${contacts.length} résultat(s)` : `${contacts.length} contact(s), les plus récents d'abord`}</p>
+  {contacts.length === 0 ? <p class="e-muet">Aucun contact. <a href="/ajouter">En ajouter un</a>.</p> : (
+    <div class="e-table-zone">
+      <table class="e-table" data-contacts>
+        <thead><tr><th>Qui</th><th>Origine</th><th>Étape</th><th>Prochaine action</th></tr></thead>
+        <tbody>
+          {contacts.map((c) => (
+            <tr data-contact={c.id}>
+              <td><a href={`/contacts/fiche?id=${c.id}`}>{nomDe(c)}</a>{c.commune && <div class="e-muet">{c.commune}</div>}{c.is_test ? <span class="e-tag neutre">test</span> : ''}</td>
+              <td><span class="e-tag">{CANAUX_ORIGINE[c.canal]}{c.origine_detail ? ` · ${c.origine_detail}` : ''}</span></td>
+              <td>{LIBELLES_ETAPES[c.etape]}{c.parcours && <div class="e-muet">{c.parcours === 'vendeur' ? 'Vendeur' : 'Acheteur'}</div>}</td>
+              <td>{c.prochaine_action ?? '—'}{c.prochaine_action_le && <div class="e-muet">{echeance(c.prochaine_action_le)}</div>}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</Espace>
