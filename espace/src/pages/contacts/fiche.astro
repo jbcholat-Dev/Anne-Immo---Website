@@ -1,12 +1,12 @@
 ---
 // Fiche d'un contact (story 13.7, première version) : origine, étape, prochaine action, coordonnées, demandes du site
-// et historique. La qualification en deux minutes et le changement d'étape arrivent avec la story 13.6.
+// et historique ; bouton Qualifier et réponses de la qualification (story 13.6).
 import Espace from '../../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { CANAUX_ORIGINE, LIBELLES_ETAPES } from '@site/server/contacts';
 import { quand, SOURCES } from '@site/server/gestion-donnees';
 import { pourSite as env } from '../../server/env';
-import { echeance, libelleOrigine, lireContact } from '../../server/pipeline';
+import { echeance, libelleOrigine, lireContact, QUESTIONS, type Reponses } from '../../server/pipeline';
 
 export const prerender = false;
 if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
@@ -17,7 +17,10 @@ if (!fiche) return new Response('Contact inconnu', { status: 404 });
 const { contact: c, historique, demandes, passage, prescripteur } = fiche;
 const m = Astro.url.searchParams.get('m') ?? '';
 const message = m === 'ajoute' ? 'Contact enregistré, à qualifier aujourd\'hui.'
+  : m === 'qualifie' ? 'Qualification enregistrée.'
   : m === 'existant' ? 'Ce contact existait déjà (même téléphone ou même e-mail) : sa fiche est complétée, rien n\'a été créé en double.' : '';
+let reponses: Reponses = {};
+try { reponses = c.qualification ? JSON.parse(c.qualification) : {}; } catch {}
 const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.email || 'Contact sans nom';
 ---
 <Espace titre={nom} actif="contacts">
@@ -36,8 +39,21 @@ const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.emai
   <section class="e-carte">
     <h2>Prochaine action</h2>
     <p data-prochaine>{c.etape === 'en_sommeil' ? `En sommeil, à réveiller le ${echeance(c.reveil_le)}` : c.etape === 'perdu' ? `Perdu : ${c.motif_perte}` : `${c.prochaine_action ?? '—'} · ${echeance(c.prochaine_action_le)}`}</p>
-    {c.telephone && <div><a class="e-bouton second" href={`tel:${c.telephone}`}>Appeler</a></div>}
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      {c.telephone && <a class="e-bouton second" href={`tel:${c.telephone}`}>Appeler</a>}
+      <a class={c.etape === 'a_qualifier' ? 'e-bouton' : 'e-bouton second'} href={`/contacts/qualifier?id=${c.id}`} data-qualifier-lien>{c.qualifie_le ? 'Requalifier' : 'Qualifier'}</a>
+    </div>
   </section>
+
+  {c.qualifie_le && (
+    <section class="e-carte" data-reponses>
+      <h2>Qualification</h2>
+      <p class="e-muet">Faite le {quand(c.qualifie_le)}</p>
+      <dl style="display:grid;grid-template-columns:max-content 1fr;gap:6px 18px;margin:0">
+        {QUESTIONS.map((q) => <><dt class="e-muet">{q.titre}</dt><dd style="margin:0">{reponses[q.id] ?? '—'}</dd></>)}
+      </dl>
+    </section>
+  )}
 
   <section class="e-carte">
     <h2>Coordonnées</h2>

@@ -4,7 +4,7 @@
 // e-mail = même contact, qui est complété, jamais recréé. Chaque création est notée dans l'historique avec le compte
 // qui a agi. La règle des prochaines actions est tenue par la base (CHECK de la migration 0007).
 import type { EnvSite } from '@site/server/env';
-import { ACTION_QUALIFIER, CANAUX_ORIGINE, type Canal, type Etape } from '@site/server/contacts';
+import { ACTION_QUALIFIER, CANAUX_ORIGINE, LIBELLES_ETAPES, type Canal, type Etape } from '@site/server/contacts';
 import { e164, emailValide } from '@site/server/schema';
 import { ulid } from '@site/server/ulid';
 
@@ -80,7 +80,7 @@ function inserer(env: EnvSite, id: string, p: Personne, o: Origine, maintenant: 
     o.canal, o.origine_detail, o.passage_id, o.prescripteur_id, o.rappel_individuel_seul ? 1 : 0, is_test);
 }
 
-function evenement(env: EnvSite, contactId: string, a: string, type: 'creation' | 'note', source: 'anne' | 'import', texteEv: string, par: string, donnees?: unknown) {
+function evenement(env: EnvSite, contactId: string, a: string, type: 'creation' | 'note' | 'qualification', source: 'anne' | 'import', texteEv: string, par: string, donnees?: unknown) {
   return env.DB.prepare('INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees, par) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)')
     .bind(contactId, a, type, source, texteEv, donnees === undefined ? null : JSON.stringify(donnees), par);
 }
@@ -313,4 +313,93 @@ export function echeance(d: string | null): string {
   if (!d) return '';
   if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return new Date(`${d}T12:00:00Z`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
   return new Date(d).toLocaleString('fr-FR', { timeZone: 'Europe/Paris', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+// ——— Qualifier en deux minutes (story 13.6, maquette v2 écran 2) ———
+
+/** Les cinq questions de la qualification, une touche chacune. Les réponses sont gardées en JSON sur le contact. */
+export const QUESTIONS = [
+  { id: 'delai', titre: 'Projet et délai', options: ['Ce mois-ci', 'Dans 3 mois', 'Dans 6 mois', 'Plus tard', 'Ne sait pas'] },
+  { id: 'agence', titre: 'Déjà avec une agence ?', options: ['Non', 'Oui, sans exclusivité', 'Oui, en exclusif', 'Vend seul'] },
+  { id: 'bien', titre: 'Le bien', options: ['Maison', 'Appartement', 'Terrain', 'Bord du lac', 'Hauteurs'] },
+  { id: 'motif', titre: 'Pourquoi ce projet ?', options: ['Succession', 'Séparation', 'Achète plus grand', 'Retraite, départ', 'Autre'] },
+  { id: 'vend_avant', titre: 'Acheteur : un bien à vendre d’abord ?', options: ['Oui', 'Non', 'Sans objet'] },
+] as const;
+export type Reponses = Partial<Record<(typeof QUESTIONS)[number]['id'], string>>;
+
+export const MOTIFS_PERTE = ['Exclusif ailleurs', 'Pas de projet', 'Hors secteur', 'Veut vendre seul', 'Injoignable', 'Autre'] as const;
+
+export type Issue =
+  | { type: 'rdv'; le: string }            // date et heure ISO en UTC
+  | { type: 'sommeil'; reveil: string }    // AAAA-MM-JJ
+  | { type: 'perdu'; motif: string }
+  | { type: 'rappel'; le: string };        // pas joint : rappeler ce jour-là (AAAA-MM-JJ)
+
+/** Convertit une date et heure saisie à l'heure de Paris (« 2026-10-23T10:00 ») en ISO UTC. */
+export function parisVersUtc(local: string): string | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(local);
+  if (!m) return null;
+  const naif = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]);
+  // Décalage de Paris à cet instant (une ou deux heures), lu par Intl ; recalculé une fois autour du changement d'heure.
+  const decalage = (t: number) => {
+    const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+      .formatToParts(new Date(t)).map((x) => [x.type, x.value]));
+    return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute) - t;
+  };
+  let t = naif - decalage(naif);
+  t = naif - decalage(t);
+  return new Date(t).toISOString();
+}
+
+/** Ajoute des jours ou des mois à aujourd'hui (heure de Paris), au format AAAA-MM-JJ. */
+export function plusTard(jours: number, mois = 0): string {
+  const d = new Date(`${aujourdhui()}T12:00:00Z`);
+  d.setUTCMonth(d.getUTCMonth() + mois);
+  d.setUTCDate(d.getUTCDate() + jours);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Enregistre la qualification et son issue : l'étape et la prochaine action sont fixées, l'historique noté. */
+export async function qualifier(env: EnvSite, id: string, reponses: Reponses, parcours: 'vendeur' | 'acheteur' | null, issue: Issue, par: string): Promise<boolean> {
+  const c = await env.DB.prepare('SELECT etape, parcours FROM contact WHERE id = ?1').bind(id).first<{ etape: Etape; parcours: string | null }>();
+  if (!c) return false;
+  const p = parcours ?? (c.parcours as 'vendeur' | 'acheteur' | null);
+  const maintenant = new Date().toISOString();
+  let etape: Etape, action: string | null = null, le: string | null = null, reveil: string | null = null, motif: string | null = null, resume: string;
+  switch (issue.type) {
+    case 'rdv':
+      etape = p === 'acheteur' ? 'besoin_defini' : 'premier_rdv';
+      action = p === 'acheteur' ? 'Rendez-vous : définir la recherche' : 'Premier rendez-vous';
+      le = issue.le;
+      resume = `${action} le ${echeance(le)}`;
+      break;
+    case 'sommeil':
+      etape = 'en_sommeil'; action = 'Réveiller : rappeler'; le = issue.reveil; reveil = issue.reveil;
+      resume = `En sommeil, à réveiller le ${echeance(reveil)}`;
+      break;
+    case 'perdu':
+      etape = 'perdu'; motif = issue.motif;
+      resume = `Perdu : ${motif}`;
+      break;
+    case 'rappel':
+      etape = c.etape === 'en_sommeil' || c.etape === 'perdu' ? 'a_qualifier' : c.etape;
+      action = 'Rappeler pour qualifier (pas joint)'; le = issue.le;
+      resume = `Pas joint, à rappeler le ${echeance(le)}`;
+      break;
+  }
+  const texteReponses = QUESTIONS.filter((q) => reponses[q.id]).map((q) => `${q.titre} ${reponses[q.id]}`).join(' · ');
+  const lot = [
+    env.DB.prepare(
+      `UPDATE contact SET last_activity_at = ?2, parcours = COALESCE(?3, parcours), etape = ?4, prochaine_action = ?5, prochaine_action_le = ?6,
+         reveil_le = ?7, motif_perte = ?8, qualification = ?9, qualifie_le = CASE WHEN ?10 THEN ?2 ELSE qualifie_le END
+       WHERE id = ?1`,
+    ).bind(id, maintenant, parcours, etape, action, le, reveil, motif, JSON.stringify(reponses), issue.type === 'rappel' ? 0 : 1),
+    evenement(env, id, maintenant, 'qualification', 'anne', texteReponses ? `${resume}\n${texteReponses}` : resume, par, { reponses, issue }),
+  ];
+  if (etape !== c.etape) {
+    lot.push(env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees, par) VALUES (?1, ?2, 'etape', 'anne', ?3, ?4, ?5)`)
+      .bind(id, maintenant, `${LIBELLES_ETAPES[c.etape]} → ${LIBELLES_ETAPES[etape]}`, JSON.stringify({ de: c.etape, vers: etape }), par));
+  }
+  await env.DB.batch(lot);
+  return true;
 }

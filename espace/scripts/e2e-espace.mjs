@@ -10,6 +10,7 @@
 // rattachées par la tâche planifiée, contacts compris dans l'export et l'effacement.
 // Story 13.7 : passage de boîtage, saisie à la main (origine exigée, numéro connu = fiche complétée, prescripteur créé),
 // fiche et liste des contacts, import .csv et .xlsx (aperçu, doublons, personnes connues complétées, consentement).
+// Story 13.6 : qualifier (suite obligatoire, date, réveil ou motif exigés, étape et prochaine action fixées, heure de Paris).
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
 // Lancer depuis espace/ : `node scripts/e2e-espace.mjs`.
@@ -260,13 +261,52 @@ try {
   apercu = await importerFichier('vide.csv', 'Colonne A;Colonne B\nx;y\n', 'text/csv', { canal: 'evenement' });
   constat(apercu.includes('Aucune colonne reconnue'), 'import : un fichier sans titres reconnus est refusé avec une explication');
 
+  // 5 ter. Qualifier en deux minutes (story 13.6).
+  r = await appeler(`${E}/contacts/qualifier?id=${saisie.id}`, { headers: avecJeton() });
+  html = await r.text();
+  constat(r.status === 200 && (html.match(/name="q_/g) ?? []).length >= 20 && html.includes('Et maintenant'), 'qualifier : les cinq questions et les suites');
+  const qualif = (id, champs) => page(`/contacts/qualifier?id=${id}`, champs);
+  const Q = { q_delai: 'Dans 6 mois', q_agence: 'Non', q_bien: 'Maison', q_motif: 'Succession', q_vend_avant: 'Sans objet' };
+  r = await qualif(saisie.id, Q);
+  constat(r.status === 200 && (await r.text()).includes('data-erreur') && sql(`SELECT qualifie_le FROM contact WHERE id = '${saisie.id}'`)[0].qualifie_le === null,
+    'qualifier sans suite : refusé, rien enregistré');
+  r = await qualif(saisie.id, { ...Q, issue: 'perdu' });
+  constat(r.status === 200 && (await r.text()).includes('le bilan du lundi compte les motifs'), 'perdu sans motif : refusé');
+  r = await qualif(saisie.id, { ...Q, issue: 'rdv' });
+  constat(r.status === 200 && (await r.text()).includes('date et l&#39;heure du rendez-vous'), 'rendez-vous sans date : refusé');
+  r = await qualif(saisie.id, { ...Q, issue: 'sommeil', reveil_choix: '3m' });
+  const dans3mois = (() => { const d = new Date(`${auj}T12:00:00Z`); d.setUTCMonth(d.getUTCMonth() + 3); return d.toISOString().slice(0, 10); })();
+  let q1 = sql(`SELECT etape, reveil_le, qualification, qualifie_le FROM contact WHERE id = '${saisie.id}'`)[0];
+  constat(r.headers.get('location') === `/contacts/fiche?id=${saisie.id}&m=qualifie` && q1.etape === 'en_sommeil' && q1.reveil_le === dans3mois
+    && JSON.parse(q1.qualification).motif === 'Succession' && !!q1.qualifie_le, 'en sommeil dans 3 mois : étape, date de réveil et cinq réponses enregistrées');
+  constat(sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${saisie.id}' AND type IN ('qualification', 'etape') AND par = 'anne@example.com'`)[0].n === 2,
+    'historique : la qualification et le changement d\'étape, avec le compte');
+  r = await appeler(`${E}/contacts/fiche?id=${saisie.id}&m=qualifie`, { headers: avecJeton() });
+  html = await r.text();
+  constat(html.includes('data-reponses') && html.includes('Succession') && html.includes('En sommeil, à réveiller'), 'fiche : les réponses et la date de réveil');
+  r = await qualif(saisie.id, { ...Q, issue: 'perdu', motif: 'Hors secteur' });
+  q1 = sql(`SELECT etape, motif_perte, prochaine_action_le FROM contact WHERE id = '${saisie.id}'`)[0];
+  constat(q1.etape === 'perdu' && q1.motif_perte === 'Hors secteur' && q1.prochaine_action_le === null, 'perdu : motif enregistré, plus de rappel');
+  r = await qualif(reco.id, { ...Q, issue: 'rdv', rdv_le: '2027-01-15T10:00' });
+  constat(r.status === 200 && (await r.text()).includes('vendre ou acheter'), 'rendez-vous d\'un contact sans parcours : il faut dire vendre ou acheter');
+  r = await qualif(reco.id, { ...Q, parcours: 'vendeur', issue: 'rdv', rdv_le: '2027-01-15T10:00' });
+  const q2 = sql(`SELECT etape, parcours, prochaine_action, prochaine_action_le FROM contact WHERE id = '${reco.id}'`)[0];
+  constat(q2.etape === 'premier_rdv' && q2.parcours === 'vendeur' && q2.prochaine_action === 'Premier rendez-vous' && q2.prochaine_action_le === '2027-01-15T09:00:00.000Z',
+    'rendez-vous le 15 janvier à 10 h (Paris) : « Premier rendez-vous », heure rangée en UTC (9 h)');
+  const carla = sql(`SELECT id FROM contact WHERE email = 'carla+${ESSAI}@example.com'`)[0].id;
+  r = await qualif(carla, { issue: 'rappel', rappel_choix: '1j' });
+  const demain = (() => { const d = new Date(`${auj}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10); })();
+  const q3 = sql(`SELECT etape, prochaine_action, prochaine_action_le, qualifie_le FROM contact WHERE id = '${carla}'`)[0];
+  constat(q3.etape === 'a_qualifier' && q3.prochaine_action_le === demain && /pas joint/.test(q3.prochaine_action) && q3.qualifie_le === null,
+    'pas joint : reste à qualifier, rappel demain');
+
   // 6. Capture de la liste (ordinateur et téléphone).
   const { chromium } = await import('../../site/node_modules/playwright/index.mjs');
   const nav = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   for (const [nom, viewport] of [['ordinateur', { width: 1280, height: 900 }], ['telephone', { width: 390, height: 844 }]]) {
     const ctx = await nav.newContext({ viewport, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
     const onglet = await ctx.newPage();
-    for (const [nomPage, chemin] of [['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['importer', '/importer']]) {
+    for (const [nomPage, chemin] of [['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['importer', '/importer']]) {
       await onglet.goto(`${E}${chemin}`);
       if (nomPage === 'ajouter') {
         await onglet.click('[data-canaux] label:has(input[value=boitage]) span');
