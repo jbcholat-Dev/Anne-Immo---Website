@@ -1,7 +1,7 @@
 ---
 story: 13.10
 epic: 13 — Espace de travail d'Anne
-statut: review
+statut: done
 date: 2026-10-21
 maj: 2026-10-21
 ---
@@ -62,6 +62,6 @@ Que le résumé de chaque appel d'Anne se range seul sur la fiche du bon contact
   - pas de débordement sur téléphone ni sur ordinateur (captures `espace/.verif/espace-*-leedflow-*.png`).
 
 ## Ce qui reste
-- JB : fusionner la PR.
+- ~~JB : fusionner la PR~~ PR #165 fusionnée le 2026-10-21.
 - Après la fusion : regarder le bas d'« Aujourd'hui » (« appels relevés il y a … min ») et une fiche d'un contact connu qui a appelé récemment.
 - Anne : dire si les numéros inconnus et les tâches proposées lui sont utiles, et si elle veut le préremplissage de la qualification.
