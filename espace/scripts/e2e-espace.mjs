@@ -18,7 +18,7 @@
 // Story 13.6 : qualifier (suite obligatoire, date, réveil ou motif exigés, étape et prochaine action fixées, heure de Paris).
 // Story 13.10 : relève Leedflow sur une imitation locale de son API (clé exigée, pages lues de la plus ancienne à la plus
 // récente, historique repris pour un numéro connu, résumé complété après coup sans doublon, numéro inconnu proposé puis
-// rattaché à la création du contact ou écarté, tâches proposées puis acceptées ou ignorées, clé refusée signalée).
+// rattaché à la création du contact, page « À trier » avec ses filtres et ses catégories (13.19), tâches proposées puis acceptées ou ignorées, clé refusée signalée).
 // Story 13.17 : actions marketing (ajout, erreurs, rattachement d'office par la base, choix à la qualification et sur la
 // fiche, coût des passages, coûts du bilan) et accès de Claude par jeton de service (actions et totaux seulement,
 // rien d'autre ouvert, une personne refusée sur /api/claude/…, aucun contact dans les réponses).
@@ -466,6 +466,7 @@ try {
   sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, etape, prochaine_action, prochaine_action_le, canal)
        VALUES ('${KLF}', '2026-09-01T08:00:00Z', '2026-09-01T08:00:00Z', 'Luc', 'Leedflow${ESSAI}', '${TELK}', 'a_qualifier', 'Rappeler pour qualifier', '${auj}', 'autre')`);
   const INCONNU = `+33677${NUM}`, PERSO = `+33655${NUM}`, ANCIEN = `+33666${NUM}`, CAPTURE = `+33633${NUM}`;
+  const PRO = `+33622${NUM}`, MANQUE = `+33611${NUM}`, DEMARCHE = `+33699${NUM}`; // story 13.19
   LF.appels.push(
     { id: `a1-${NUM}`, created: maintenant - 60 * MIN, customer: `06 88 ${NUM.slice(0, 2)} ${NUM.slice(2, 4)} ${NUM.slice(4)}`, direction: 'inbound', duration: 240, missed: false,
       transcription: '## Résumé\n- Veut vendre sa maison à **Sciez**\n- <b>Rappeler</b> jeudi', transcription_srt: 'TRANSCRIPTION COMPLÈTE', recording_url: 'https://exemple.invalid/a1.mp3', id_contact: `lfc1-${NUM}` },
@@ -475,6 +476,9 @@ try {
     { id: `a7-${NUM}`, created: maintenant - 10 * MIN, customer: CAPTURE, direction: 'inbound', duration: 420, missed: false,
       transcription: '## Synthèse\n- Maison à Annemasse, étage loué\n- **Coupures** d\'eau signalées\n## Prochaines étapes\n- Rappeler après le passage du plombier' },
     { id: `a5-${NUM}`, created: maintenant - 20 * MIN, customer: PERSO, direction: 'inbound', duration: 300, missed: false, transcription: 'Appel personnel' },
+    { id: `a8-${NUM}`, created: maintenant - 25 * MIN, customer: PRO, direction: 'inbound', duration: 200, missed: false, transcription: 'Étude notariale : signature à caler' },
+    { id: `a9-${NUM}`, created: maintenant - 26 * MIN, customer: MANQUE, direction: 'inbound', duration: 0, missed: true, transcription: null },
+    { id: `a10-${NUM}`, created: maintenant - 27 * MIN, customer: DEMARCHE, direction: 'inbound', duration: 45, missed: false, transcription: 'Offre de panneaux solaires' },
     // De quoi remplir une deuxième page : l'appel le plus ancien, d'un numéro connu, s'y trouve (reprise de l'historique).
     ...Array.from({ length: 110 }, (_, i) => ({ id: `f${i}-${NUM}`, created: maintenant - 40 * JOUR - i * MIN, customer: `+33644${String(i).padStart(6, '0')}`, direction: 'inbound', duration: 10, missed: false, transcription: null })),
     { id: `a6-${NUM}`, created: maintenant - 100 * JOUR, customer: TELK, direction: 'inbound', duration: 120, missed: false, transcription: 'Ancien échange : pense à vendre dans un an' },
@@ -519,14 +523,24 @@ try {
   r = await appeler(`${E}/`, { headers: avecJeton() });
   html = await r.text();
   const zoneLF = html.split('data-leedflow')[1]?.split('</section>')[0] ?? '';
-  constat(zoneLF.includes(`data-tache="t1-${NUM}"`) && zoneLF.includes(`data-inconnu="${INCONNU}"`) && zoneLF.includes('Créer le contact') && /data-etat-leedflow[^>]*>Leedflow : appels relevés/.test(html),
-    'aujourd\'hui : tâche proposée, numéro inconnu à créer ou écarter, état de la relève');
+  constat(zoneLF.includes(`data-tache="t1-${NUM}"`) && zoneLF.includes('href="/a-trier"') && /\d+ numéro\(s\) à trier/.test(zoneLF) && !zoneLF.includes('data-inconnu') && !zoneLF.includes(INCONNU)
+    && /data-etat-leedflow[^>]*>Leedflow : appels relevés/.test(html),
+    'aujourd\'hui : tâche proposée, les numéros inconnus réduits à une ligne vers « À trier », état de la relève');
   constat(sql(`SELECT count(*) AS n FROM leedflow_inconnu WHERE telephone = '${INCONNU}' AND json_extract(donnees, '$.nom_leedflow') = 'Martin${NUM}'`)[0].n === 2
     && sql(`SELECT count(*) AS n FROM leedflow_inconnu WHERE source_id = 'tache:t4-${NUM}'`)[0].n === 1,
     'leedflow : numéro inconnu nommé depuis la fiche Leedflow, sa tâche gardée avec lui');
-  const carte = zoneLF.split(`data-inconnu="${INCONNU}"`)[1]?.split('</article>')[0] ?? '';
-  constat(carte.includes(`Ines Martin${NUM}`) && carte.includes('1 tâche(s)') && carte.includes('prenom=Ines') && !carte.includes('<strong>450'),
-    'aujourd\'hui : la carte du numéro inconnu montre le nom Leedflow et une seule ligne, pas le résumé complet');
+  r = await appeler(`${E}/a-trier`, { headers: avecJeton() });
+  html = await r.text();
+  const carte = html.split(`data-numero="${INCONNU}"`)[1]?.split('</article>')[0] ?? '';
+  constat(r.status === 200 && carte.includes(`Ines Martin${NUM}`) && carte.includes('1 tâche(s)') && carte.includes('prenom=Ines') && !carte.includes('<strong>450')
+    && html.includes(`data-numero="${INCONNU}" data-categorie="a_trier"`),
+    'à trier : la carte du numéro montre le nom Leedflow, la catégorie « à trier » et une seule ligne, pas le résumé complet');
+  constat(!html.includes(`data-numero="${MANQUE}"`) && html.includes('data-manques') && html.includes(`data-numero="${PRO}"`),
+    'à trier : un appel manqué sans message est masqué par défaut, avec le lien pour l\'afficher');
+  r = await appeler(`${E}/a-trier?manques=1`, { headers: avecJeton() });
+  html = await r.text();
+  constat(html.includes(`data-numero="${MANQUE}"`) && html.split(`data-numero="${MANQUE}"`)[1].split('</article>')[0].includes('Appel(s) manqué(s)'),
+    'à trier : « afficher » montre les appels manqués sans message, signalés comme tels');
   r = await appeler(`${E}/inconnu?tel=${encodeURIComponent(INCONNU)}`, { headers: avecJeton() });
   html = await r.text();
   constat(r.status === 200 && html.includes(`Ines Martin${NUM}`) && html.includes('<strong>450 k€</strong>') && html.includes('Envoyer une estimation à Thonon') && html.includes('data-creer'),
@@ -555,11 +569,42 @@ try {
   r = await page('/api/leedflow/tache', { id: `t2-${NUM}`, choix: 'ignorer', retour: 'fiche' });
   constat(r.headers.get('location') === `/contacts/fiche?id=${KLF}&m=tache-ignoree` && sql(`SELECT statut FROM leedflow_tache WHERE id = 't2-${NUM}'`)[0].statut === 'ignoree',
     'tâche ignorée depuis la fiche');
-  // Numéro écarté : plus proposé, même au passage suivant.
-  r = await page('/api/leedflow/ecarter', { telephone: PERSO });
+  // Story 13.19 : classer les numéros. Privé et Démarchage : plus proposés, échanges effacés, même au passage suivant ;
+  // Pro : échanges gardés, peut devenir un prescripteur ; reclassement et remise à trier.
+  r = await page('/api/leedflow/classer', { telephone: PERSO, categorie: 'prive', retour: '/a-trier' });
+  const r2 = await page('/api/leedflow/classer', { telephone: PRO, categorie: 'pro', retour: `/inconnu?tel=${encodeURIComponent(PRO)}` });
+  const r3 = await page('/api/leedflow/classer', { telephone: DEMARCHE, categorie: 'demarchage', retour: 'https://exemple.invalid/' });
   await releve();
-  constat(r.headers.get('location') === '/?m=ecarte' && sql(`SELECT count(*) AS n FROM leedflow_ecarte WHERE telephone = '${PERSO}'`)[0].n === 1
-    && sql(`SELECT count(*) AS n FROM leedflow_inconnu WHERE telephone = '${PERSO}'`)[0].n === 0, 'numéro écarté : plus proposé, même après une nouvelle relève');
+  const classe = (t) => sql(`SELECT categorie FROM leedflow_ecarte WHERE telephone = '${t}'`)[0]?.categorie ?? null;
+  const gardes = (t) => sql(`SELECT count(*) AS n FROM leedflow_inconnu WHERE telephone = '${t}'`)[0].n;
+  constat(r.headers.get('location') === '/a-trier?m=prive' && classe(PERSO) === 'prive' && gardes(PERSO) === 0
+    && r3.headers.get('location') === '/a-trier?m=demarchage' && classe(DEMARCHE) === 'demarchage' && gardes(DEMARCHE) === 0,
+    'numéro classé Privé ou Démarchage : plus proposé, échanges effacés même après une nouvelle relève, retour jamais vers une autre adresse');
+  constat(r2.headers.get('location') === `/inconnu?tel=${encodeURIComponent(PRO)}&m=pro` && classe(PRO) === 'pro' && gardes(PRO) === 1,
+    'numéro classé Pro : ses échanges restent gardés après une nouvelle relève, sans doublon');
+  r = await page('/api/leedflow/classer', { telephone: PRO, categorie: 'inconnue' });
+  constat(r.status === 400 && classe(PRO) === 'pro', 'catégorie inconnue : refusée');
+  r = await appeler(`${E}/a-trier`, { headers: avecJeton() });
+  html = await r.text();
+  constat(![PERSO, PRO, DEMARCHE].some((t) => html.includes(`data-numero="${t}"`)) && /data-filtre="pro"[^>]*>Pros <span[^>]*>\d+/.test(html),
+    'à trier : les numéros classés n\'y sont plus, chaque filtre affiche son compte');
+  r = await appeler(`${E}/a-trier?f=pro`, { headers: avecJeton() });
+  html = await r.text();
+  const cartePro = html.split(`data-numero="${PRO}"`)[1]?.split('</article>')[0] ?? '';
+  constat(cartePro.includes('Étude notariale') && cartePro.includes('data-prescripteur') && cartePro.includes(`telephone=${encodeURIComponent(PRO)}`) && cartePro.includes('Remettre à trier') && !html.includes(`data-numero="${PERSO}"`),
+    'filtre Pros : le numéro, son dernier échange, « en faire un prescripteur » et « remettre à trier »');
+  r = await appeler(`${E}/a-trier?f=demarchage`, { headers: avecJeton() });
+  html = await r.text();
+  constat(html.split(`data-numero="${DEMARCHE}"`)[1]?.split('</article>')[0].includes('Échanges effacés'), 'filtre Démarchage : le numéro classé, ses échanges effacés');
+  r = await appeler(`${E}/prescripteurs?nom=Etude${ESSAI}&telephone=${encodeURIComponent(PRO)}`, { headers: avecJeton() });
+  html = await r.text();
+  constat(html.includes(`value="Etude${ESSAI}"`) && html.includes(`value="${PRO}"`), 'en faire un prescripteur : nom et téléphone préremplis');
+  r = await appeler(`${E}/inconnu?tel=${encodeURIComponent(PRO)}`, { headers: avecJeton() });
+  html = await r.text();
+  constat(/data-categorie="pro"[^>]*>Catégorie : <strong[^>]*>Pro</.test(html) && html.includes('data-classer') && html.includes('value="a_trier"') && html.includes('Étude notariale'),
+    'page du numéro : sa catégorie et les gestes pour le reclasser');
+  r = await page('/api/leedflow/classer', { telephone: DEMARCHE, categorie: 'a_trier', retour: '/a-trier?f=demarchage' });
+  constat(r.headers.get('location') === '/a-trier?f=demarchage&m=a_trier' && classe(DEMARCHE) === null, 'numéro remis à trier : sa catégorie retirée');
   // Créer le contact depuis un numéro inconnu : numéro prérempli, appel rattaché aussitôt.
   r = await appeler(`${E}/ajouter?telephone=${encodeURIComponent(INCONNU)}&prenom=Ines&nom=Martin${NUM}`, { headers: avecJeton() });
   html = await r.text();
@@ -667,7 +712,7 @@ try {
   for (const [nom, viewport] of [['ordinateur', { width: 1280, height: 900 }], ['telephone', { width: 390, height: 844 }]]) {
     const ctx = await nav.newContext({ viewport, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
     const onglet = await ctx.newPage();
-    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['bilan', '/bilan'], ['prescripteurs', '/prescripteurs'], ['prescripteur', `/prescripteurs/fiche?id=${durand}`], ['acheteurs', `/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`], ['qualifier-acheteur', `/contacts/qualifier?id=${ach1}`], ['pipeline', '/pipeline'], ['importer', '/importer'], ['fiche-leedflow', `/contacts/fiche?id=${KLF}`], ['qualifier-leedflow', `/contacts/qualifier?id=${KLF}`], ['inconnu', `/inconnu?tel=${encodeURIComponent(CAPTURE)}`], ['actions', '/actions'], ['action', `/actions?id=${salon.id}`]]) {
+    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['bilan', '/bilan'], ['prescripteurs', '/prescripteurs'], ['prescripteur', `/prescripteurs/fiche?id=${durand}`], ['acheteurs', `/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`], ['qualifier-acheteur', `/contacts/qualifier?id=${ach1}`], ['pipeline', '/pipeline'], ['importer', '/importer'], ['fiche-leedflow', `/contacts/fiche?id=${KLF}`], ['qualifier-leedflow', `/contacts/qualifier?id=${KLF}`], ['inconnu', `/inconnu?tel=${encodeURIComponent(CAPTURE)}`], ['a-trier', '/a-trier'], ['actions', '/actions'], ['action', `/actions?id=${salon.id}`]]) {
       await onglet.goto(`${E}${chemin}`);
       if (nomPage === 'ajouter') {
         await onglet.click('[data-canaux] label:has(input[value=boitage]) span');

@@ -3,12 +3,13 @@
 // encore qualifiés, le plus ancien d'abord, avec le temps écoulé ; puis les rappels dus et en retard (et les contacts
 // en sommeil à réveiller) ; puis les prescripteurs à relancer, les lettres « j'ai un acheteur » et les secteurs de boîtage à refaire. Depuis chaque carte,
 // Anne appelle en un geste et ouvre la qualification. Story 13.10 : sous les nouveaux contacts, ce que Leedflow a vu
-// (tâches proposées comme prochaine action, numéros inconnus à créer ou écarter), et l'état de la relève en bas de page.
+// (tâches proposées comme prochaine action) ; story 13.19 : les numéros inconnus
+// ne sont plus qu'une ligne vers « Numéros à trier », et l'état de la relève en bas de page.
 import Espace from '../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { LIBELLES_ETAPES } from '@site/server/contacts';
 import { envEspace, pourSite as env } from '../server/env';
-import { etatReleve, extrait, INCONNUS_JOURS, lienCreer, propositions } from '../server/leedflow';
+import { etatReleve, extrait, propositions } from '../server/leedflow';
 import { acheteursActifs, BOITAGE_A_REFAIRE_JOURS, depuis, echeance, enRetard, journee, libelleOrigine, type ContactDuJour } from '../server/pipeline';
 
 export const prerender = false;
@@ -16,11 +17,11 @@ if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refus
 
 const [{ nouveaux, rappels, prescripteurs, secteurs }, acheteurs, leedflow, releve] = await Promise.all([journee(env), acheteursActifs(env), 
   // Tant que la migration 0008 n'est pas appliquée (quelques minutes lors d'une mise en ligne), la page s'affiche sans Leedflow.
-  propositions(envEspace).catch(() => ({ inconnus: [], taches: [] })),
+  propositions(envEspace).catch(() => ({ taches: [], aTrier: { total: 0, silencieux: 0 } })),
   etatReleve(envEspace).catch(() => ({ branche: !!envEspace.LEEDFLOW_API_KEY, passe_le: null, erreur: null })),
 ]);
 const m = Astro.url.searchParams.get('m') ?? '';
-const message = m === 'ecarte' ? 'Numéro écarté : il ne sera plus proposé.' : m === 'tache-acceptee' ? 'Prochaine action mise à jour.' : m === 'tache-ignoree' ? 'Proposition ignorée.' : '';
+const message = m === 'tache-acceptee' ? 'Prochaine action mise à jour.' : m === 'tache-ignoree' ? 'Proposition ignorée.' : '';
 const etatLeedflow = !releve.branche ? 'Leedflow n\'est pas encore branché : la clé d\'accès reste à poser (RUNBOOK § 4 sexies).'
   : releve.erreur ? `Leedflow : la dernière relève a échoué (${releve.erreur}). Si cela dure, la clé a peut-être été révoquée.`
   : releve.passe_le ? `Leedflow : appels relevés ${depuis(releve.passe_le)}.` : 'Leedflow : première relève dans les 10 minutes.';
@@ -33,7 +34,7 @@ const nom = (c: ContactDuJour) => [c.prenom, c.nom].filter(Boolean).join(' ') ||
 const origine = (c: ContactDuJour) => libelleOrigine(c,
   c.passage_secteur ? { id: '', secteur: c.passage_secteur, fait_le: c.passage_le ?? '', mots: null, contacts: 0 } : null,
   c.prescripteur_nom ? { id: '', nom: c.prescripteur_nom, role: null, commune: null } : null);
-const rien = nouveaux.length + leedflow.taches.length + leedflow.inconnus.length + rappels.length + prescripteurs.length + secteurs.length + lettres.length === 0;
+const rien = nouveaux.length + leedflow.taches.length + leedflow.aTrier.total + rappels.length + prescripteurs.length + secteurs.length + lettres.length === 0;
 ---
 <Espace titre="Aujourd'hui" actif="aujourdhui">
   <div>
@@ -57,7 +58,7 @@ const rien = nouveaux.length + leedflow.taches.length + leedflow.inconnus.length
     ))}
   </section>
 
-  {(leedflow.taches.length > 0 || leedflow.inconnus.length > 0) && (
+  {(leedflow.taches.length > 0 || leedflow.aTrier.total > 0) && (
     <section class="e-jour" aria-label="Vu par Leedflow" data-leedflow>
       <h2>Vu par Leedflow</h2>
       {leedflow.taches.map((t) => (
@@ -71,22 +72,12 @@ const rien = nouveaux.length + leedflow.taches.length + leedflow.inconnus.length
           </form>
         </article>
       ))}
-      {leedflow.inconnus.map((i) => {
-        const nomLF = [i.prenom, i.nom].filter(Boolean).join(' ');
-        const dernier = i.echanges[0] ?? i.taches[0];
-        return (
-          <article class="e-carte" data-inconnu={i.telephone}>
-            <div class="e-ligne"><a class="e-nom" href={`/inconnu?tel=${encodeURIComponent(i.telephone)}`}>{nomLF || i.telephone}</a><span class="e-quand">{depuis(i.dernier)}</span></div>
-            <div class="e-muet">{nomLF ? `${i.telephone} · ` : ''}Inconnu de l'espace{i.echanges.length > 1 ? ` · ${i.echanges.length} échanges` : ''}{i.taches.length ? ` · ${i.taches.length} tâche(s)` : ''}</div>
-            {dernier && <p class="e-muet e-une-ligne">{dernier.titre}{dernier.resume ? ` · ${extrait(dernier.resume)}` : ''}</p>}
-            <div class="e-gestes">
-              <a class="e-bouton" href={lienCreer(i)}>Créer le contact</a>
-              <form method="post" action="/api/leedflow/ecarter" style="flex:1;display:flex"><input type="hidden" name="telephone" value={i.telephone} /><button class="e-bouton second" style="flex:1">Écarter</button></form>
-            </div>
-          </article>
-        );
-      })}
-      {leedflow.inconnus.length > 0 && <p class="e-muet">Touchez un numéro pour lire ses résumés et ses tâches. Écarter un numéro (appel personnel) le retire pour de bon. Les numéros inconnus sont proposés {INCONNUS_JOURS} jours.</p>}
+      {leedflow.aTrier.total > 0 && (
+        <a class="e-carte e-a-trier" href="/a-trier" data-a-trier>
+          <span class="e-nom">{leedflow.aTrier.total} numéro(s) à trier</span>
+          <span class="e-muet">{leedflow.aTrier.total - leedflow.aTrier.silencieux > 0 ? `${leedflow.aTrier.total - leedflow.aTrier.silencieux} avec un message ou un résumé` : 'Seulement des appels manqués sans message'}{leedflow.aTrier.silencieux > 0 && leedflow.aTrier.total > leedflow.aTrier.silencieux ? `, ${leedflow.aTrier.silencieux} appel(s) manqué(s) sans message` : ''} · Prospect, privé, pro ou démarchage</span>
+        </a>
+      )}
     </section>
   )}
 
@@ -150,6 +141,7 @@ const rien = nouveaux.length + leedflow.taches.length + leedflow.inconnus.length
   .e-extrait { margin: 0; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .e-une-ligne { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .e-raison { margin: 0; font-size: 14px; color: var(--avt-klein); overflow-wrap: anywhere; }
+  .e-a-trier { gap: 4px; text-decoration: none; }
   .e-gestes { display: flex; gap: 8px; }
   .e-gestes button { cursor: pointer; }
   .e-gestes .e-bouton { flex: 1; min-height: 44px; padding: 8px 12px; font-size: 15px; }

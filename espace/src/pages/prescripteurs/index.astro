@@ -22,6 +22,9 @@ if (Astro.request.method === 'POST') {
     const id = await enregistrerPrescripteur(env, null, champs);
     return Astro.redirect(`/prescripteurs/fiche?id=${id}&m=ajoute`, 303);
   }
+} else {
+  // Depuis un numéro classé Pro sur « À trier » (story 13.19) : nom et téléphone préremplis.
+  for (const k of ['nom', 'telephone']) { const v = Astro.url.searchParams.get(k); if (v) saisi[k] = v.slice(0, 120); }
 }
 const liste = await suiviPrescripteurs(env);
 const auj = aujourdhui(), semaine = plusTard(7);
@@ -55,7 +58,7 @@ const relance = (d: string | null) => !d ? { texte: 'À prendre', classe: '' } :
     </div>
   )}
 
-  <form method="post" class="e-carte" data-nouveau-prescripteur>
+  <form method="post" class="e-carte" id="ajouter" data-nouveau-prescripteur>
     <h2>Un nouveau prescripteur</h2>
     <div class="e-champs">
       <label class="e-champ">Nom<input name="nom" value={saisi.nom} placeholder="Maître Durand" required autocomplete="off" /></label>

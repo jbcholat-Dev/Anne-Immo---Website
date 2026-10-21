@@ -1,0 +1,116 @@
+---
+// Numéros à trier (story 13.19, retour de JB du 2026-10-21) : les numéros vus par Leedflow qui ne sont pas des contacts
+// de l'espace, sortis de « Aujourd'hui » pour ne plus l'encombrer. Anne range chacun : Prospect (crée le contact), Privé,
+// Pro (peut devenir un prescripteur) ou Démarchage, et peut toujours le reclasser ou le remettre à trier. Filtres par
+// catégorie ; les appels manqués sans message ni tâche sont masqués par défaut (?manques=1 les montre).
+import Espace from '../layouts/Espace.astro';
+import { ENTETE_COMPTE } from '@site/server/acces';
+import { envEspace } from '../server/env';
+import { CATEGORIES, comptesLeedflow, extrait, FILTRES, INCONNUS_JOURS, lienCreer, numerosLeedflow, type Categorie, type Filtre, type NumeroInconnu } from '../server/leedflow';
+import { depuis } from '../server/pipeline';
+
+export const prerender = false;
+if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
+
+const f = Astro.url.searchParams.get('f') ?? '';
+const filtre: Filtre = f in FILTRES ? (f as Filtre) : 'a_trier';
+const manques = Astro.url.searchParams.get('manques') === '1';
+const tous = await numerosLeedflow(envEspace, filtre);
+const silencieux = tous.filter((n) => n.silencieux).length;
+const numeros = manques ? tous : tous.filter((n) => !n.silencieux);
+const comptes = await comptesLeedflow(envEspace, filtre === 'a_trier' ? tous.length : (await numerosLeedflow(envEspace, 'a_trier')).length);
+
+const adresse = (q: { f?: Filtre; manques?: boolean }) => {
+  const p = new URLSearchParams();
+  const ff = q.f ?? filtre, mm = q.manques ?? manques;
+  if (ff !== 'a_trier') p.set('f', ff);
+  if (mm) p.set('manques', '1');
+  const s = p.toString();
+  return `/a-trier${s ? `?${s}` : ''}`;
+};
+const retour = adresse({});
+const m = Astro.url.searchParams.get('m') ?? '';
+const message = {
+  prive: 'Numéro classé Privé : il ne sera plus proposé, et ce que l\'espace gardait de ses échanges est effacé.',
+  demarchage: 'Numéro classé Démarchage : il ne sera plus proposé, et ses échanges sont effacés.',
+  pro: 'Numéro classé Pro : ses échanges restent visibles sous « Pros ».',
+  a_trier: 'Numéro remis à trier. S\'il avait été classé Privé ou Démarchage, il revient à son prochain appel.',
+}[m] ?? '';
+const nomLF = (n: NumeroInconnu) => [n.prenom, n.nom].filter(Boolean).join(' ');
+const vide: Record<Filtre, string> = {
+  a_trier: 'Rien à trier. Les nouveaux numéros vus par Leedflow arrivent ici.',
+  pro: 'Aucun numéro classé Pro.',
+  prive: 'Aucun numéro classé Privé.',
+  demarchage: 'Aucun numéro classé Démarchage.',
+  tous: 'Aucun numéro vu par Leedflow pour l\'instant.',
+};
+const autres = (c: Categorie | null) => (Object.keys(CATEGORIES) as Categorie[]).filter((k) => k !== c);
+---
+<Espace titre="Numéros à trier" actif="aujourdhui">
+  <div>
+    <div class="e-muet"><a href="/">Aujourd'hui</a></div>
+    <h1>Numéros à trier</h1>
+    <div class="e-muet">Les numéros qui ont appelé ou écrit, vus par Leedflow, et qui ne sont pas encore des contacts.</div>
+  </div>
+  {message && <p class="e-message" role="status" data-message>{message}</p>}
+
+  <nav class="t-filtres" aria-label="Filtrer les numéros" data-filtres>
+    {(Object.keys(FILTRES) as Filtre[]).map((k) => (
+      <a href={adresse({ f: k })} aria-current={k === filtre ? 'page' : undefined} data-filtre={k}>{FILTRES[k]} <span class="t-compte">{comptes[k]}</span></a>
+    ))}
+  </nav>
+  {(filtre === 'a_trier' || filtre === 'tous') && (silencieux > 0 || manques) && (
+    <p class="e-muet" style="margin:0" data-manques>
+      {manques ? <>Appels manqués sans message affichés. <a href={adresse({ manques: false })}>Les masquer</a></>
+        : <>{silencieux} appel(s) manqué(s) sans message ni tâche masqué(s). <a href={adresse({ manques: true })}>Les afficher</a></>}
+    </p>
+  )}
+
+  {numeros.length === 0 ? <p class="e-muet" data-vide>{vide[filtre]}</p> : (
+    <section class="t-liste" aria-label={FILTRES[filtre]}>
+      {numeros.map((n) => {
+        const nom = nomLF(n);
+        const dernier = n.echanges[0] ?? n.taches[0];
+        return (
+          <article class="e-carte" data-numero={n.telephone} data-categorie={n.categorie ?? 'a_trier'}>
+            <div class="e-ligne"><a class="e-nom" href={`/inconnu?tel=${encodeURIComponent(n.telephone)}`}>{nom || n.telephone}</a><span class="e-quand">{depuis(n.dernier)}</span></div>
+            <div class="e-tags">
+              <span class={n.categorie ? 'e-tag' : 'e-tag alerte'}>{n.categorie ? CATEGORIES[n.categorie] : 'À trier'}</span>
+              {nom && <span class="e-tag neutre">{n.telephone}</span>}
+              {n.echanges.length > 0 && <span class="e-tag neutre">{n.echanges.length} échange(s)</span>}
+              {n.taches.length > 0 && <span class="e-tag neutre">{n.taches.length} tâche(s)</span>}
+              {n.silencieux && <span class="e-tag neutre">Appel(s) manqué(s)</span>}
+            </div>
+            {dernier && <p class="e-muet t-extrait">{dernier.titre}{dernier.resume ? ` · ${extrait(dernier.resume)}` : ''}</p>}
+            {!dernier && n.categorie && n.categorie !== 'pro' && <p class="e-muet t-extrait">Échanges effacés au classement.</p>}
+            <form method="post" action="/api/leedflow/classer" class="t-gestes">
+              <input type="hidden" name="telephone" value={n.telephone} />
+              <input type="hidden" name="retour" value={retour} />
+              <a class="e-bouton" href={lienCreer(n)} data-prospect>Prospect</a>
+              {n.categorie === 'pro' && <a class="e-bouton second" href={`/prescripteurs?${new URLSearchParams({ ...(nom ? { nom } : {}), telephone: n.telephone })}#ajouter`} data-prescripteur>En faire un prescripteur</a>}
+              {autres(n.categorie).map((c) => <button class="e-bouton second" name="categorie" value={c}>{CATEGORIES[c]}</button>)}
+              {n.categorie && <button class="e-bouton second" name="categorie" value="a_trier">Remettre à trier</button>}
+            </form>
+          </article>
+        );
+      })}
+    </section>
+  )}
+  <p class="e-muet">Prospect ouvre la création du contact, préremplie. Privé et Démarchage retirent le numéro pour de bon et effacent ses échanges ; Pro les garde, et le numéro peut devenir un prescripteur. Un numéro non trié disparaît après {INCONNUS_JOURS} jours sans nouvel échange.</p>
+</Espace>
+
+<style>
+  .t-filtres { display: flex; flex-wrap: wrap; gap: 8px; }
+  .t-filtres a { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 6px 14px; border-radius: 999px; border: 1.5px solid var(--avt-galet); background: #fff; font-size: 15px; color: var(--avt-brun); text-decoration: none; }
+  .t-filtres a[aria-current=page] { background: var(--avt-klein); border-color: var(--avt-klein); color: #fff; }
+  .t-compte { font-size: 13px; opacity: .8; font-variant-numeric: tabular-nums; }
+  .e-ligne { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+  .e-nom { font-weight: 500; font-size: 16px; color: var(--avt-brun); overflow-wrap: anywhere; }
+  .e-quand { font-size: 13px; color: var(--avt-text-muted); white-space: nowrap; }
+  .e-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .t-liste { display: flex; flex-direction: column; gap: 12px; }
+  .t-extrait { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .t-gestes { display: flex; flex-wrap: wrap; gap: 8px; }
+  .t-gestes > * { flex: 1 1 120px; min-height: 44px; padding: 8px 12px; font-size: 15px; }
+  .t-gestes button { cursor: pointer; }
+</style>

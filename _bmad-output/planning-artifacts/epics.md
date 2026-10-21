@@ -2351,6 +2351,17 @@ afin de juger si mes publications rapportent.
 **Quand** Anne ouvre le bilan
 **Alors** abonnés et vues de la période sont affichés à côté des contacts du canal « réseaux » et de leur coût. Demande de JB du 2026-10-21
 
+### Story 13.19: Trier les numéros inconnus
+
+En tant qu'Anne,
+je veux ranger les numéros vus par Leedflow qui ne sont pas des contacts (prospect, privé, pro, démarchage) et les filtrer,
+afin qu'« Aujourd'hui » ne montre que ce qui compte.
+
+**Critères d'acceptation :**
+**Étant donné** des numéros inconnus relevés par Leedflow
+**Quand** Anne ouvre « Aujourd'hui »
+**Alors** une seule ligne indique combien sont à trier et mène à « Numéros à trier », où elle filtre par catégorie, masque les appels manqués sans message et classe ou reclasse chaque numéro. Demande de JB du 2026-10-21
+
 ### Story 13.12: Parcours d'Anne pour trouver et qualifier des contacts
 
 En tant que JB,
