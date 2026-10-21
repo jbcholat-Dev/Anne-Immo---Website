@@ -15,6 +15,7 @@ Avant de construire les écrans de l'espace (13.4 à 13.7), repasser par les par
   - parcours 3 « entretenir » : sommeil daté, prétexte d'appel, liste d'acheteurs actifs ;
   - conséquences proposées : fiche de qualification de 2 minutes, origine précise et bilan du lundi par canal, suivi des prescripteurs, liste d'acheteurs actifs ; ne pas faire de score automatique ni d'envoi depuis l'espace ;
   - guide d'entretien de 45 minutes avec Anne (13 questions).
+- 2026-10-21 : JB valide le parcours et demande une nouvelle maquette pour valider le concept. Maquette v2 « Espace d'Anne v2 : trouver et qualifier » : https://claude.ai/artifact/RKkZ5qPnxdkwaDz4drrZLs. Six écrans : Aujourd'hui (téléphone, nouveaux contacts à rappeler en tête avec le temps écoulé, rappels avec raison d'appeler, prospection de la semaine), Qualifier en 2 minutes (téléphone, cliquable : cinq questions préremplies par Leedflow, issue rendez-vous / sommeil daté / perdu avec motif), Ajouter un contact ou un passage de boîtage (origine précise obligatoire), Bilan du lundi (par canal : contacts, qualifiés, rendez-vous, mandats ; boîtage par secteur ; motifs de perte), Prescripteurs, Acheteurs actifs (« j'ai un acheteur »). Chiffres et noms fictifs. L'ancienne maquette (https://claude.ai/artifact/8NqsmX6NrTpaTwbdXqxUy6) reste en référence pour le pipeline et la fiche.
 - Sources : SPEC CAP-12, mémoire de stratégie commerciale (études du 5 au 11 octobre), réponses de JB du 2026-10-09. Tout ce qu'Anne n'a pas dit est marqué comme hypothèse.
 
 ## Ce qui est vérifié
@@ -26,7 +27,7 @@ Avant de construire les écrans de l'espace (13.4 à 13.7), repasser par les par
 
 1. JB relit le document et corrige.
 2. JB mène l'entretien avec Anne (guide dans le document) et transmet les notes.
-3. Claude met à jour les parcours, puis la maquette (https://claude.ai/artifact/8NqsmX6NrTpaTwbdXqxUy6) et les stories 13.4 à 13.7 ; nouvelles stories probables : bilan par canal, prescripteurs.
+3. Claude met à jour les parcours, la maquette v2 et les stories 13.4 à 13.7 ; nouvelles stories probables : bilan par canal, prescripteurs.
 4. JB et Anne valident la maquette revue.
 
 Recommandation (non encore décidée par JB) : pas de construction des écrans 13.4 à 13.7 avant l'entretien ; 13.8 (portails) et 13.10 (Leedflow) peuvent avancer, utiles quel que soit le résultat.
