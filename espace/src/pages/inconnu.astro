@@ -1,0 +1,58 @@
+---
+// Un numéro inconnu vu par Leedflow (story 13.10, retour de JB du 2026-10-21) : ouvert depuis sa carte sur « Aujourd'hui »,
+// pour ne pas charger la page principale. Le nom et l'e-mail lus sur la fiche Leedflow, chaque échange avec son résumé
+// complet, les tâches détectées, puis Créer le contact (prérempli) ou Écarter le numéro.
+import Espace from '../layouts/Espace.astro';
+import { ENTETE_COMPTE } from '@site/server/acces';
+import { envEspace } from '../server/env';
+import { lienCreer, numeroInconnu, resumeHtml } from '../server/leedflow';
+import { echeance } from '../server/pipeline';
+import { quand } from '@site/server/gestion-donnees';
+
+export const prerender = false;
+if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
+const n = await numeroInconnu(envEspace, Astro.url.searchParams.get('tel') ?? '');
+if (!n) return Astro.redirect('/', 303); // déjà créé, écarté ou effacé
+const nomLF = [n.prenom, n.nom].filter(Boolean).join(' ');
+---
+<Espace titre={nomLF || n.telephone} actif="aujourdhui">
+  <div>
+    <div class="e-muet"><a href="/">Aujourd'hui</a></div>
+    <h1 style="overflow-wrap:anywhere">{nomLF || n.telephone}</h1>
+    <div class="e-muet">{nomLF ? `${n.telephone} · ` : ''}{n.email ? `${n.email} · ` : ''}inconnu de l'espace{nomLF ? ', nom lu dans Leedflow' : ''}</div>
+  </div>
+
+  <div class="e-gestes-page">
+    <a class="e-bouton second" href={`tel:${n.telephone}`}>Appeler</a>
+    <a class="e-bouton" href={lienCreer(n)} data-creer>Créer le contact</a>
+    <form method="post" action="/api/leedflow/ecarter"><input type="hidden" name="telephone" value={n.telephone} /><button class="e-bouton second">Écarter</button></form>
+  </div>
+
+  {n.taches.length > 0 && (
+    <section class="e-carte" data-taches>
+      <h2>Tâches détectées par Leedflow</h2>
+      <ul style="margin:0;padding-left:20px">{n.taches.map((t) => <li>{t.titre}{t.echeance ? ` · ${echeance(t.echeance)}` : ''}</li>)}</ul>
+      <p class="e-muet" style="margin:0">Elles seront proposées comme prochaine action dès que le contact sera créé.</p>
+    </section>
+  )}
+
+  <section class="e-carte" data-echanges>
+    <h2>Échanges</h2>
+    <ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:14px">
+      {n.echanges.map((e) => (
+        <li><div class="e-muet">{quand(e.a)}</div><div style="font-weight:500">{e.titre}</div>{e.resume && <div class="e-resume" set:html={resumeHtml(e.resume)} />}</li>
+      ))}
+    </ol>
+  </section>
+  <p class="e-muet">La transcription complète et l'enregistrement restent dans Leedflow.</p>
+</Espace>
+
+<style>
+  .e-gestes-page { display: flex; gap: 8px; flex-wrap: wrap; }
+  .e-gestes-page > * { flex: 1 1 140px; }
+  .e-gestes-page form { display: flex; }
+  .e-gestes-page button { flex: 1; cursor: pointer; }
+  .e-resume { overflow-wrap: anywhere; }
+  .e-resume :global(p) { margin: 4px 0; }
+  .e-resume :global(ul) { margin: 4px 0; padding-left: 20px; }
+</style>

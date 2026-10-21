@@ -457,13 +457,15 @@ try {
   const TELK = `+33688${NUM}`;
   sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, etape, prochaine_action, prochaine_action_le, canal)
        VALUES ('${KLF}', '2026-09-01T08:00:00Z', '2026-09-01T08:00:00Z', 'Luc', 'Leedflow${ESSAI}', '${TELK}', 'a_qualifier', 'Rappeler pour qualifier', '${auj}', 'autre')`);
-  const INCONNU = `+33677${NUM}`, PERSO = `+33655${NUM}`, ANCIEN = `+33666${NUM}`;
+  const INCONNU = `+33677${NUM}`, PERSO = `+33655${NUM}`, ANCIEN = `+33666${NUM}`, CAPTURE = `+33633${NUM}`;
   LF.appels.push(
     { id: `a1-${NUM}`, created: maintenant - 60 * MIN, customer: `06 88 ${NUM.slice(0, 2)} ${NUM.slice(2, 4)} ${NUM.slice(4)}`, direction: 'inbound', duration: 240, missed: false,
       transcription: '## Résumé\n- Veut vendre sa maison à **Sciez**\n- <b>Rappeler</b> jeudi', transcription_srt: 'TRANSCRIPTION COMPLÈTE', recording_url: 'https://exemple.invalid/a1.mp3', id_contact: `lfc1-${NUM}` },
     { id: `a2-${NUM}`, created: maintenant - 120 * MIN, customer: TELK, direction: 'outbound', duration: 0, missed: true, transcription: null, id_contact: `lfc1-${NUM}` },
-    { id: `a3-${NUM}`, created: maintenant - 30 * MIN, customer: INCONNU, direction: 'inbound', duration: 90, missed: false, transcription: 'Demande d’estimation pour un appartement à Thonon' },
+    { id: `a3-${NUM}`, created: maintenant - 30 * MIN, customer: INCONNU, direction: 'inbound', duration: 90, missed: false, transcription: 'Demande d’estimation pour un appartement à Thonon\n- Budget **450 k€**', id_contact: `lfc3-${NUM}` },
     { id: `a4-${NUM}`, created: maintenant - 60 * JOUR, customer: ANCIEN, direction: 'inbound', duration: 60, missed: false, transcription: 'Vieil appel' },
+    { id: `a7-${NUM}`, created: maintenant - 10 * MIN, customer: CAPTURE, direction: 'inbound', duration: 420, missed: false,
+      transcription: '## Synthèse\n- Maison à Annemasse, étage loué\n- **Coupures** d\'eau signalées\n## Prochaines étapes\n- Rappeler après le passage du plombier' },
     { id: `a5-${NUM}`, created: maintenant - 20 * MIN, customer: PERSO, direction: 'inbound', duration: 300, missed: false, transcription: 'Appel personnel' },
     // De quoi remplir une deuxième page : l'appel le plus ancien, d'un numéro connu, s'y trouve (reprise de l'historique).
     ...Array.from({ length: 110 }, (_, i) => ({ id: `f${i}-${NUM}`, created: maintenant - 40 * JOUR - i * MIN, customer: `+33644${String(i).padStart(6, '0')}`, direction: 'inbound', duration: 10, missed: false, transcription: null })),
@@ -475,7 +477,9 @@ try {
     { id: `t1-${NUM}`, created: maintenant - 58 * MIN, status: 'todo', task: 'Envoyer l’estimation', timestamp: Date.UTC(2027, 0, 20, 11), id_contact: `lfc1-${NUM}` },
     { id: `t2-${NUM}`, created: maintenant - 50 * MIN, status: 'todo', task: 'Préparer la visite', timestamp: null, id_contact: `lfc9-${NUM}` },
     { id: `t3-${NUM}`, created: maintenant - 40 * MIN, status: 'done', task: 'Déjà fait', timestamp: null, id_contact: `lfc1-${NUM}` },
+    { id: `t4-${NUM}`, created: maintenant - 29 * MIN, status: 'todo', task: 'Envoyer une estimation à Thonon', timestamp: null, id_contact: `lfc3-${NUM}` },
   );
+  LF.contacts[`lfc3-${NUM}`] = { id: `lfc3-${NUM}`, firstname: 'Ines', lastname: `Martin${NUM}`, email: `ines+${NUM}@example.com`, phone: INCONNU };
   LF.contacts[`lfc9-${NUM}`] = { id: `lfc9-${NUM}`, phone: `0033688${NUM}` }; // contact Leedflow vu seulement par sa fiche
   const releve = async () => {
     const t0 = new Date().toISOString();
@@ -509,6 +513,16 @@ try {
   const zoneLF = html.split('data-leedflow')[1]?.split('</section>')[0] ?? '';
   constat(zoneLF.includes(`data-tache="t1-${NUM}"`) && zoneLF.includes(`data-inconnu="${INCONNU}"`) && zoneLF.includes('Créer le contact') && /data-etat-leedflow[^>]*>Leedflow : appels relevés/.test(html),
     'aujourd\'hui : tâche proposée, numéro inconnu à créer ou écarter, état de la relève');
+  constat(sql(`SELECT count(*) AS n FROM leedflow_inconnu WHERE telephone = '${INCONNU}' AND json_extract(donnees, '$.nom_leedflow') = 'Martin${NUM}'`)[0].n === 2
+    && sql(`SELECT count(*) AS n FROM leedflow_inconnu WHERE source_id = 'tache:t4-${NUM}'`)[0].n === 1,
+    'leedflow : numéro inconnu nommé depuis la fiche Leedflow, sa tâche gardée avec lui');
+  const carte = zoneLF.split(`data-inconnu="${INCONNU}"`)[1]?.split('</article>')[0] ?? '';
+  constat(carte.includes(`Ines Martin${NUM}`) && carte.includes('1 tâche(s)') && carte.includes('prenom=Ines') && !carte.includes('<strong>450'),
+    'aujourd\'hui : la carte du numéro inconnu montre le nom Leedflow et une seule ligne, pas le résumé complet');
+  r = await appeler(`${E}/inconnu?tel=${encodeURIComponent(INCONNU)}`, { headers: avecJeton() });
+  html = await r.text();
+  constat(r.status === 200 && html.includes(`Ines Martin${NUM}`) && html.includes('<strong>450 k€</strong>') && html.includes('Envoyer une estimation à Thonon') && html.includes('data-creer'),
+    'page du numéro inconnu : nom, résumé complet mis en forme, tâche détectée, créer le contact');
   r = await appeler(`${E}/contacts/fiche?id=${KLF}`, { headers: avecJeton() });
   html = await r.text();
   constat(html.includes('<strong>Sciez</strong>') && html.includes('&lt;b&gt;Rappeler') && html.includes(`data-tache="t1-${NUM}"`) && html.includes('Appel passé, sans réponse'),
@@ -539,12 +553,15 @@ try {
   constat(r.headers.get('location') === '/?m=ecarte' && sql(`SELECT count(*) AS n FROM leedflow_ecarte WHERE telephone = '${PERSO}'`)[0].n === 1
     && sql(`SELECT count(*) AS n FROM leedflow_inconnu WHERE telephone = '${PERSO}'`)[0].n === 0, 'numéro écarté : plus proposé, même après une nouvelle relève');
   // Créer le contact depuis un numéro inconnu : numéro prérempli, appel rattaché aussitôt.
-  r = await appeler(`${E}/ajouter?telephone=${encodeURIComponent(INCONNU)}`, { headers: avecJeton() });
-  constat((await r.text()).includes(`value="${INCONNU}"`), 'créer le contact : le numéro est prérempli');
+  r = await appeler(`${E}/ajouter?telephone=${encodeURIComponent(INCONNU)}&prenom=Ines&nom=Martin${NUM}`, { headers: avecJeton() });
+  html = await r.text();
+  constat(html.includes(`value="${INCONNU}"`) && html.includes(`value="Martin${NUM}"`), 'créer le contact : numéro et nom préremplis');
   r = await page('/ajouter', { quoi: 'contact', telephone: INCONNU, prenom: 'Ines', nom: `Inconnue${ESSAI}`, canal: 'autre', origine_detail: 'Appel reçu', parcours: 'vendeur' });
   const ines = sql(`SELECT id FROM contact WHERE telephone = '${INCONNU}'`)[0]?.id;
   constat(!!ines && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${ines}' AND source_id = 'appel:a3-${NUM}'`)[0].n === 1
-    && sql(`SELECT count(*) AS n FROM leedflow_inconnu WHERE telephone = '${INCONNU}'`)[0].n === 0, 'contact créé depuis un numéro inconnu : son appel passe dans l\'historique');
+    && sql(`SELECT count(*) AS n FROM leedflow_inconnu WHERE telephone = '${INCONNU}'`)[0].n === 0
+    && sql(`SELECT count(*) AS n FROM leedflow_tache WHERE id = 't4-${NUM}' AND contact_id = '${ines}' AND statut = 'proposee'`)[0].n === 1,
+    'contact créé depuis un numéro inconnu : son appel passe dans l\'historique, sa tâche devient une proposition');
   // Clé refusée (révoquée) : la relève le note et « Aujourd'hui » le dit.
   LF.refuse = true;
   await releve();
@@ -561,7 +578,7 @@ try {
   for (const [nom, viewport] of [['ordinateur', { width: 1280, height: 900 }], ['telephone', { width: 390, height: 844 }]]) {
     const ctx = await nav.newContext({ viewport, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
     const onglet = await ctx.newPage();
-    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['bilan', '/bilan'], ['prescripteurs', '/prescripteurs'], ['prescripteur', `/prescripteurs/fiche?id=${durand}`], ['acheteurs', `/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`], ['qualifier-acheteur', `/contacts/qualifier?id=${ach1}`], ['pipeline', '/pipeline'], ['importer', '/importer'], ['fiche-leedflow', `/contacts/fiche?id=${KLF}`], ['qualifier-leedflow', `/contacts/qualifier?id=${KLF}`]]) {
+    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['bilan', '/bilan'], ['prescripteurs', '/prescripteurs'], ['prescripteur', `/prescripteurs/fiche?id=${durand}`], ['acheteurs', `/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`], ['qualifier-acheteur', `/contacts/qualifier?id=${ach1}`], ['pipeline', '/pipeline'], ['importer', '/importer'], ['fiche-leedflow', `/contacts/fiche?id=${KLF}`], ['qualifier-leedflow', `/contacts/qualifier?id=${KLF}`], ['inconnu', `/inconnu?tel=${encodeURIComponent(CAPTURE)}`]]) {
       await onglet.goto(`${E}${chemin}`);
       if (nomPage === 'ajouter') {
         await onglet.click('[data-canaux] label:has(input[value=boitage]) span');

@@ -9,6 +9,8 @@
 //   ligne reçoit aussi des appels personnels. Seuls les 30 derniers jours sont proposés.
 // - Tâche détectée par Leedflow : proposée comme prochaine action, qu'Anne accepte ou ignore. Rien ne change d'étape.
 // Premier passage : tout l'historique est repris, pour les numéros déjà connus seulement, par paquets de pages.
+// Retour de JB du 2026-10-21 : pour un numéro inconnu, Anne voit aussi le nom du contact dans Leedflow (lu sur sa fiche),
+// le résumé complet de chaque échange et les tâches détectées ; elles deviennent des propositions à la création du contact.
 import type { EnvEspace } from './env';
 import { journal } from '@site/server/journal';
 import { e164 } from '@site/server/schema';
@@ -22,8 +24,8 @@ const PAR_PAGE = 100;
 const RECOUVREMENT_MS = 24 * 3_600_000;
 /** Pages lues au plus par passage, tous genres confondus : la reprise d'un long historique se fait en plusieurs passages. */
 const PAGES_PAR_PASSAGE = 30;
-/** Fiches de contacts Leedflow lues au plus par passage, pour ranger les tâches. */
-const FICHES_PAR_PASSAGE = 10;
+/** Fiches de contacts Leedflow lues au plus par passage : numéro d'une tâche, nom d'un numéro inconnu. */
+const FICHES_PAR_PASSAGE = 30;
 export const INCONNUS_JOURS = 30;
 const TACHES_JOURS = 30;
 const JOUR_MS = 86_400_000;
@@ -102,6 +104,26 @@ async function demander(env: EnvEspace, chemin: string, params: Record<string, s
   return r.json();
 }
 
+/** La fiche d'un contact Leedflow (nom, e-mail, numéro), ou null si elle ne se lit pas. */
+async function ficheLeedflow(env: EnvEspace, id: string): Promise<{ prenom: string; nom: string; email: string; telephone: string | null } | null> {
+  const j = (await demander(env, `/contacts/${encodeURIComponent(id)}`).catch(() => null)) as Record<string, any> | null;
+  const f = j?.data && typeof j.data === 'object' && !Array.isArray(j.data) ? j.data : j;
+  if (!f || typeof f !== 'object') return null;
+  const t = (v: unknown, max = 80) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+  return { prenom: t(f.firstname), nom: t(f.lastname), email: t(f.email, 254).toLowerCase(), telephone: numero(f.phone) };
+}
+
+/** Écrit (ou complète) un élément d'un numéro inconnu, sans perdre le nom déjà lu sur la fiche Leedflow. */
+function inconnu(env: EnvEspace, sourceId: string, tel: string, a: string, texte: string, donnees: Record<string, unknown>) {
+  return env.DB.prepare(
+    `INSERT INTO leedflow_inconnu (source_id, telephone, a, texte, donnees) VALUES (?1, ?2, ?3, ?4, ?5)
+     ON CONFLICT (source_id) DO UPDATE SET texte = excluded.texte, donnees = json_patch(excluded.donnees, json_object(
+       'prenom_leedflow', json_extract(leedflow_inconnu.donnees, '$.prenom_leedflow'),
+       'nom_leedflow', json_extract(leedflow_inconnu.donnees, '$.nom_leedflow'),
+       'email_leedflow', json_extract(leedflow_inconnu.donnees, '$.email_leedflow')))`,
+  ).bind(sourceId, tel, a, texte, JSON.stringify(donnees));
+}
+
 async function page(env: EnvEspace, genre: Genre, apres: number, n: number) {
   const j = await demander(env, CHEMINS[genre], { created_after: String(apres), per_page: String(PAR_PAGE), page: String(n) });
   return { elements: elements(j), pages: nombreDePages(j) };
@@ -147,44 +169,62 @@ async function rangerEchanges(env: EnvEspace, genre: Exclude<Genre, 'tache'>, el
       if (e.id_contact) lot.push(env.DB.prepare('INSERT OR IGNORE INTO leedflow_lien (leedflow_contact, contact_id) VALUES (?1, ?2)').bind(e.id_contact, contact));
     } else if (!ecarte.has(tel) && e.created >= limiteInconnus) {
       inconnus++;
-      lot.push(env.DB.prepare(
-        `INSERT INTO leedflow_inconnu (source_id, telephone, a, texte, donnees) VALUES (?1, ?2, ?3, ?4, ?5)
-         ON CONFLICT (source_id) DO UPDATE SET texte = excluded.texte, donnees = excluded.donnees`,
-      ).bind(sourceId, tel, a, texte, JSON.stringify(donnees)));
+      lot.push(inconnu(env, sourceId, tel, a, texte, donnees));
     }
   }
   await lotParPaquets(env, lot);
   return { notes, inconnus };
 }
 
-/** Range une page de tâches Leedflow : proposées sur le contact qui a ce contact Leedflow, s'il est connu. */
+/** Range une page de tâches Leedflow : proposées sur le contact qui a ce contact Leedflow, s'il est connu ; sinon gardées
+ * avec le numéro inconnu (montrées sur « Aujourd'hui », proposées dès que le contact est créé). */
 async function rangerTaches(env: EnvEspace, els: Element[], fiches: { reste: number }): Promise<number> {
   const limite = Date.now() - TACHES_JOURS * JOUR_MS;
   const ids = [...new Set(els.map((e) => e.id_contact).filter((x): x is string => !!x))];
   const { results } = await env.DB.prepare('SELECT leedflow_contact, contact_id FROM leedflow_lien WHERE leedflow_contact IN (SELECT value FROM json_each(?1))')
     .bind(JSON.stringify(ids)).all<{ leedflow_contact: string; contact_id: string }>();
   const liens = new Map(results.map((r) => [r.leedflow_contact, r.contact_id]));
+  // Numéros déjà vus pour ces contacts Leedflow, dans les appels de numéros inconnus.
+  const { results: vus } = await env.DB.prepare(
+    `SELECT json_extract(donnees, '$.leedflow_contact') AS lc, telephone FROM leedflow_inconnu
+     WHERE json_extract(donnees, '$.leedflow_contact') IN (SELECT value FROM json_each(?1))`,
+  ).bind(JSON.stringify(ids)).all<{ lc: string; telephone: string }>();
+  const numeros = new Map(vus.map((r) => [r.lc, r.telephone]));
   const lot: D1PreparedStatement[] = [];
   let proposees = 0;
   for (const e of els) {
     const aFaire = (e.status ?? '').toLowerCase() === 'todo';
-    if (!aFaire) { lot.push(env.DB.prepare(`DELETE FROM leedflow_tache WHERE id = ?1 AND statut = 'proposee'`).bind(e.id)); continue; }
+    if (!aFaire) {
+      lot.push(env.DB.prepare(`DELETE FROM leedflow_tache WHERE id = ?1 AND statut = 'proposee'`).bind(e.id),
+        env.DB.prepare('DELETE FROM leedflow_inconnu WHERE source_id = ?1').bind(`tache:${e.id}`));
+      continue;
+    }
     if (!e.task?.trim() || !e.id_contact || e.created < limite) continue;
     let contact = liens.get(e.id_contact);
     // Contact Leedflow pas encore vu dans un appel : sa fiche donne son numéro (quelques fiches par passage).
-    if (!contact && fiches.reste > 0) {
+    let tel = numeros.get(e.id_contact) ?? null;
+    if (!contact && !tel && fiches.reste > 0) {
       fiches.reste--;
-      const j = (await demander(env, `/contacts/${encodeURIComponent(e.id_contact)}`).catch(() => null)) as Record<string, any> | null;
-      const tel = numero(j?.data?.phone ?? j?.phone);
-      contact = tel ? (await contactsParTelephone(env, [tel])).get(tel) : undefined;
+      tel = (await ficheLeedflow(env, e.id_contact))?.telephone ?? null;
+      if (tel) numeros.set(e.id_contact, tel);
+    }
+    if (!contact && tel) {
+      contact = (await contactsParTelephone(env, [tel])).get(tel);
       if (contact) {
         liens.set(e.id_contact, contact);
         lot.push(env.DB.prepare('INSERT OR IGNORE INTO leedflow_lien (leedflow_contact, contact_id) VALUES (?1, ?2)').bind(e.id_contact, contact));
       }
     }
-    if (!contact) continue;
-    proposees++;
     const quand = typeof e.timestamp === 'number' ? new Intl.DateTimeFormat('fr-CA', { timeZone: 'Europe/Paris' }).format(new Date(e.timestamp)) : null;
+    if (!contact) {
+      // Numéro inconnu de l'espace : la tâche est gardée avec lui (sauf numéro écarté).
+      if (tel && !(await env.DB.prepare('SELECT 1 FROM leedflow_ecarte WHERE telephone = ?1').bind(tel).first())) {
+        lot.push(inconnu(env, `tache:${e.id}`, tel, new Date(e.created).toISOString(), `Tâche détectée : ${e.task.trim().slice(0, 200)}`,
+          { genre: 'tache', tache: e.task.trim().slice(0, 200), echeance: quand, leedflow_contact: e.id_contact }));
+      }
+      continue;
+    }
+    proposees++;
     lot.push(env.DB.prepare(
       `INSERT INTO leedflow_tache (id, contact_id, a, texte, echeance) VALUES (?1, ?2, ?3, ?4, ?5)
        ON CONFLICT (id) DO UPDATE SET texte = excluded.texte, echeance = excluded.echeance WHERE leedflow_tache.statut = 'proposee'`,
@@ -200,7 +240,14 @@ export async function rattacherInconnus(env: EnvEspace): Promise<void> {
     env.DB.prepare(
       `INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, donnees)
        SELECT c.id, i.a, 'appel', 'leedflow', i.source_id, i.texte, i.donnees FROM leedflow_inconnu i JOIN contact c ON c.telephone = i.telephone
-       WHERE true ON CONFLICT (source, source_id) WHERE source_id IS NOT NULL DO NOTHING`,
+       WHERE i.source_id NOT LIKE 'tache:%' ON CONFLICT (source, source_id) WHERE source_id IS NOT NULL DO NOTHING`,
+    ),
+    // Les tâches gardées avec le numéro deviennent des propositions sur le contact.
+    env.DB.prepare(
+      `INSERT INTO leedflow_tache (id, contact_id, a, texte, echeance)
+       SELECT substr(i.source_id, 7), c.id, i.a, json_extract(i.donnees, '$.tache'), json_extract(i.donnees, '$.echeance')
+       FROM leedflow_inconnu i JOIN contact c ON c.telephone = i.telephone
+       WHERE i.source_id LIKE 'tache:%' AND json_extract(i.donnees, '$.tache') IS NOT NULL ON CONFLICT (id) DO NOTHING`,
     ),
     env.DB.prepare(
       `INSERT OR IGNORE INTO leedflow_lien (leedflow_contact, contact_id)
@@ -219,7 +266,7 @@ export async function relever(env: EnvEspace): Promise<void> {
   const curseurs = new Map(results.map((r) => [r.genre, r.curseur]));
   let budget = PAGES_PAR_PASSAGE;
   const fiches = { reste: FICHES_PAR_PASSAGE };
-  const bilan = { notes: 0, inconnus: 0, taches: 0, pages: 0 };
+  const bilan = { notes: 0, inconnus: 0, taches: 0, pages: 0, noms: 0 };
   for (const genre of GENRES) {
     const curseur = curseurs.get(genre) ?? 0;
     let nouveau = curseur, erreur: string | null = null;
@@ -262,8 +309,31 @@ export async function relever(env: EnvEspace): Promise<void> {
     ).bind(genre, nouveau, new Date().toISOString(), erreur).run();
     if (erreur?.startsWith('HTTP 401') || erreur?.startsWith('HTTP 403')) break;
   }
+  bilan.noms = await nommerInconnus(env, fiches);
   await rattacherInconnus(env);
   journal('leedflow_releve', bilan);
+}
+
+/** Le nom et l'e-mail d'un numéro inconnu, lus sur la fiche de son contact Leedflow (quelques fiches par passage). */
+async function nommerInconnus(env: EnvEspace, fiches: { reste: number }): Promise<number> {
+  if (fiches.reste <= 0) return 0;
+  const { results } = await env.DB.prepare(
+    `SELECT DISTINCT json_extract(donnees, '$.leedflow_contact') AS lc FROM leedflow_inconnu
+     WHERE json_extract(donnees, '$.leedflow_contact') IS NOT NULL AND json_extract(donnees, '$.nom_leedflow') IS NULL LIMIT ?1`,
+  ).bind(fiches.reste).all<{ lc: string }>();
+  let n = 0;
+  for (const { lc } of results) {
+    fiches.reste--;
+    const f = await ficheLeedflow(env, lc);
+    if (!f) continue; // fiche illisible : on réessaiera au prochain passage
+    // Une fiche sans nom est notée '' pour ne pas la relire à chaque passage.
+    await env.DB.prepare(
+      `UPDATE leedflow_inconnu SET donnees = json_set(donnees, '$.prenom_leedflow', ?2, '$.nom_leedflow', ?3, '$.email_leedflow', ?4)
+       WHERE json_extract(donnees, '$.leedflow_contact') = ?1`,
+    ).bind(lc, f.prenom, f.nom, f.email).run();
+    n++;
+  }
+  return n;
 }
 
 // ——— Ce que l'espace affiche et ce qu'Anne décide ———
@@ -275,7 +345,8 @@ export async function etatReleve(env: EnvEspace): Promise<EtatReleve> {
   return { branche: !!env.LEEDFLOW_API_KEY, passe_le: r?.passe_le ?? null, erreur: r?.erreur ?? null };
 }
 
-export interface NumeroInconnu { telephone: string; n: number; dernier: string; texte: string | null }
+export interface EchangeInconnu { a: string; titre: string; resume: string; tache: boolean; echeance: string | null }
+export interface NumeroInconnu { telephone: string; prenom: string; nom: string; email: string; dernier: string; echanges: EchangeInconnu[]; taches: EchangeInconnu[] }
 export interface TacheProposee { id: string; texte: string; echeance: string | null; a: string; contact_id: string; prenom: string | null; nom: string | null; telephone: string | null }
 
 const champsTache = 't.id, t.texte, t.echeance, t.a, c.id AS contact_id, c.prenom, c.nom, c.telephone';
@@ -283,13 +354,52 @@ const tachesOuvertes = `FROM leedflow_tache t JOIN contact c ON c.id = t.contact
 
 /** Pour « Aujourd'hui » : les numéros inconnus qui ont appelé ou écrit, et les tâches proposées par Leedflow. */
 export async function propositions(env: EnvEspace): Promise<{ inconnus: NumeroInconnu[]; taches: TacheProposee[] }> {
-  const [inconnus, taches] = await env.DB.batch([
-    env.DB.prepare(`SELECT telephone, count(*) AS n, max(a) AS dernier,
-        (SELECT j.texte FROM leedflow_inconnu j WHERE j.telephone = i.telephone ORDER BY j.a DESC LIMIT 1) AS texte
-      FROM leedflow_inconnu i WHERE telephone NOT IN (SELECT telephone FROM leedflow_ecarte) GROUP BY telephone ORDER BY dernier DESC LIMIT 20`),
+  const [lignes, taches] = await env.DB.batch([
+    env.DB.prepare(`SELECT source_id, telephone, a, texte, donnees FROM leedflow_inconnu
+      WHERE telephone NOT IN (SELECT telephone FROM leedflow_ecarte) ORDER BY a DESC LIMIT 400`),
     env.DB.prepare(`SELECT ${champsTache} ${tachesOuvertes} ORDER BY t.a DESC LIMIT 20`),
   ]);
-  return { inconnus: inconnus.results as NumeroInconnu[], taches: taches.results as TacheProposee[] };
+  // Regroupés par numéro, le plus récent d'abord : nom lu sur la fiche Leedflow, échanges avec leur résumé, tâches.
+  const parNumero = new Map<string, NumeroInconnu>();
+  for (const l of lignes.results as { source_id: string; telephone: string; a: string; texte: string | null; donnees: string | null }[]) {
+    let d: Record<string, any> = {};
+    try { d = l.donnees ? JSON.parse(l.donnees) : {}; } catch {}
+    let n = parNumero.get(l.telephone);
+    if (!n) { n = { telephone: l.telephone, prenom: '', nom: '', email: '', dernier: l.a, echanges: [], taches: [] }; parNumero.set(l.telephone, n); }
+    n.prenom ||= d.prenom_leedflow ?? ''; n.nom ||= d.nom_leedflow ?? ''; n.email ||= d.email_leedflow ?? '';
+    const tache = l.source_id.startsWith('tache:');
+    const [titre, ...reste] = (l.texte ?? '').split('\n');
+    (tache ? n.taches : n.echanges).push({ a: l.a, titre: tache ? (d.tache ?? titre) : titre, resume: reste.join('\n').trim(), tache, echeance: d.echeance ?? null });
+  }
+  return { inconnus: [...parNumero.values()].slice(0, 20), taches: taches.results as TacheProposee[] };
+}
+
+/** Un numéro inconnu en détail (page /inconnu) : nom lu dans Leedflow, chaque échange avec son résumé complet, tâches. */
+export async function numeroInconnu(env: EnvEspace, telephone: string): Promise<NumeroInconnu | null> {
+  const tel = numero(telephone);
+  if (!tel) return null;
+  const { results } = await env.DB.prepare('SELECT source_id, a, texte, donnees FROM leedflow_inconnu WHERE telephone = ?1 ORDER BY a DESC LIMIT 200')
+    .bind(tel).all<{ source_id: string; a: string; texte: string | null; donnees: string | null }>();
+  if (!results.length) return null;
+  const n: NumeroInconnu = { telephone: tel, prenom: '', nom: '', email: '', dernier: results[0].a, echanges: [], taches: [] };
+  for (const l of results) {
+    let d: Record<string, any> = {};
+    try { d = l.donnees ? JSON.parse(l.donnees) : {}; } catch {}
+    n.prenom ||= d.prenom_leedflow ?? ''; n.nom ||= d.nom_leedflow ?? ''; n.email ||= d.email_leedflow ?? '';
+    const tache = l.source_id.startsWith('tache:');
+    const [titre, ...reste] = (l.texte ?? '').split('\n');
+    (tache ? n.taches : n.echanges).push({ a: l.a, titre: tache ? (d.tache ?? titre) : titre, resume: reste.join('\n').trim(), tache, echeance: d.echeance ?? null });
+  }
+  return n;
+}
+
+/** L'adresse de « Ajouter » préremplie avec ce que Leedflow sait d'un numéro inconnu. */
+export function lienCreer(n: Pick<NumeroInconnu, 'telephone' | 'prenom' | 'nom' | 'email'>): string {
+  const q = new URLSearchParams({ telephone: n.telephone });
+  if (n.prenom) q.set('prenom', n.prenom);
+  if (n.nom) q.set('nom', n.nom);
+  if (n.email) q.set('email', n.email);
+  return `/ajouter?${q}`;
 }
 
 export async function tachesDuContact(env: EnvEspace, contactId: string): Promise<TacheProposee[]> {

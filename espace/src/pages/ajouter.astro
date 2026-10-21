@@ -20,7 +20,9 @@ if (!compte) return new Response('Accès refusé', { status: 403 });
 
 const ULID = /^[0-9A-HJKMNP-TV-Z]{26}$/;
 let erreur = '';
-let saisi: Record<string, string> = { telephone: (Astro.url.searchParams.get('telephone') ?? '').slice(0, 40) };
+// Préremplissage depuis un numéro inconnu vu par Leedflow (story 13.10) : numéro, et nom et e-mail lus sur sa fiche Leedflow.
+const pre = (k: string, max = 80) => (Astro.url.searchParams.get(k) ?? '').slice(0, max);
+let saisi: Record<string, string> = { telephone: pre('telephone', 40), prenom: pre('prenom'), nom: pre('nom'), email: pre('email', 254) };
 let message = Astro.url.searchParams.get('m') === 'passage' ? 'Passage de boîtage noté.' : '';
 
 if (Astro.request.method === 'POST') {

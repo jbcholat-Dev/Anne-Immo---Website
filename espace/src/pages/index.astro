@@ -8,7 +8,7 @@ import Espace from '../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { LIBELLES_ETAPES } from '@site/server/contacts';
 import { envEspace, pourSite as env } from '../server/env';
-import { etatReleve, extrait, INCONNUS_JOURS, propositions } from '../server/leedflow';
+import { etatReleve, extrait, INCONNUS_JOURS, lienCreer, propositions } from '../server/leedflow';
 import { acheteursActifs, BOITAGE_A_REFAIRE_JOURS, depuis, echeance, enRetard, journee, libelleOrigine, type ContactDuJour } from '../server/pipeline';
 
 export const prerender = false;
@@ -71,18 +71,22 @@ const rien = nouveaux.length + leedflow.taches.length + leedflow.inconnus.length
           </form>
         </article>
       ))}
-      {leedflow.inconnus.map((i) => (
-        <article class="e-carte" data-inconnu={i.telephone}>
-          <div class="e-ligne"><span class="e-nom">{i.telephone}</span><span class="e-quand">{depuis(i.dernier)}</span></div>
-          <div class="e-muet">Numéro inconnu de l'espace{i.n > 1 ? ` · ${i.n} échanges` : ''}</div>
-          {i.texte && <p class="e-muet e-extrait">{extrait(i.texte)}</p>}
-          <div class="e-gestes">
-            <a class="e-bouton" href={`/ajouter?telephone=${encodeURIComponent(i.telephone)}`}>Créer le contact</a>
-            <form method="post" action="/api/leedflow/ecarter" style="flex:1;display:flex"><input type="hidden" name="telephone" value={i.telephone} /><button class="e-bouton second" style="flex:1">Écarter</button></form>
-          </div>
-        </article>
-      ))}
-      {leedflow.inconnus.length > 0 && <p class="e-muet">Écarter un numéro (appel personnel) le retire pour de bon. Les numéros inconnus sont proposés {INCONNUS_JOURS} jours.</p>}
+      {leedflow.inconnus.map((i) => {
+        const nomLF = [i.prenom, i.nom].filter(Boolean).join(' ');
+        const dernier = i.echanges[0] ?? i.taches[0];
+        return (
+          <article class="e-carte" data-inconnu={i.telephone}>
+            <div class="e-ligne"><a class="e-nom" href={`/inconnu?tel=${encodeURIComponent(i.telephone)}`}>{nomLF || i.telephone}</a><span class="e-quand">{depuis(i.dernier)}</span></div>
+            <div class="e-muet">{nomLF ? `${i.telephone} · ` : ''}Inconnu de l'espace{i.echanges.length > 1 ? ` · ${i.echanges.length} échanges` : ''}{i.taches.length ? ` · ${i.taches.length} tâche(s)` : ''}</div>
+            {dernier && <p class="e-muet e-une-ligne">{dernier.titre}{dernier.resume ? ` · ${extrait(dernier.resume)}` : ''}</p>}
+            <div class="e-gestes">
+              <a class="e-bouton" href={lienCreer(i)}>Créer le contact</a>
+              <form method="post" action="/api/leedflow/ecarter" style="flex:1;display:flex"><input type="hidden" name="telephone" value={i.telephone} /><button class="e-bouton second" style="flex:1">Écarter</button></form>
+            </div>
+          </article>
+        );
+      })}
+      {leedflow.inconnus.length > 0 && <p class="e-muet">Touchez un numéro pour lire ses résumés et ses tâches. Écarter un numéro (appel personnel) le retire pour de bon. Les numéros inconnus sont proposés {INCONNUS_JOURS} jours.</p>}
     </section>
   )}
 
@@ -144,6 +148,7 @@ const rien = nouveaux.length + leedflow.taches.length + leedflow.inconnus.length
   .e-quand.fort { color: var(--avt-terra); font-weight: 500; }
   .e-tags { display: flex; flex-wrap: wrap; gap: 6px; }
   .e-extrait { margin: 0; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .e-une-ligne { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .e-raison { margin: 0; font-size: 14px; color: var(--avt-klein); overflow-wrap: anywhere; }
   .e-gestes { display: flex; gap: 8px; }
   .e-gestes button { cursor: pointer; }
