@@ -19,7 +19,7 @@ const adresse = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(q) ? q.toLowerCase() : '';
 const droits = await droitsExerces(envSite, 10);
 const message = m.startsWith('efface-') ? `C'est fait : ${m.slice(7)} demande(s) effacée(s), avec leurs envois.` : m === 'confirmation' ? "Effacement non fait : l'adresse de confirmation ne correspond pas." : '';
 ---
-<Gestion titre="Demandes">
+<Gestion titre="Demandes" retour="/">
   <h1>Demandes</h1>
   {message && <p class="g-message" role="status" data-message>{message}</p>}
   <form class="g-recherche" method="get" action="/gestion">

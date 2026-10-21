@@ -1,0 +1,167 @@
+---
+// Qualifier en deux minutes (story 13.6, maquette v2 écran 2) : pendant ou juste après l'appel, cinq réponses d'une
+// touche, puis une issue obligatoire. Rendez-vous exige sa date et son heure, En sommeil une date de réveil, Perdu un
+// motif ; « Pas joint » garde le contact à qualifier avec un nouveau rappel. L'étape et la prochaine action sont fixées
+// et l'appel noté dans l'historique. Le formulaire est traité par cette même page, pour garder les réponses en cas d'erreur.
+import Espace from '../../layouts/Espace.astro';
+import { ENTETE_COMPTE } from '@site/server/acces';
+import { pourSite as env } from '../../server/env';
+import {
+  aujourdhui, FINANCEMENTS, libelleOrigine, lireContact, MOTIFS_PERTE, parisVersUtc, plusTard, qualifier, QUESTIONS, RECHERCHE_ACHETEUR, type Issue, type Reponses,
+} from '../../server/pipeline';
+
+export const prerender = false;
+const compte = Astro.request.headers.get(ENTETE_COMPTE);
+if (!compte) return new Response('Accès refusé', { status: 403 });
+const id = Astro.url.searchParams.get('id') ?? '';
+const fiche = /^[0-9A-HJKMNP-TV-Z]{26}$/.test(id) ? await lireContact(env, id) : null;
+if (!fiche) return new Response('Contact inconnu', { status: 404 });
+const { contact: c, passage, prescripteur } = fiche;
+
+let reponses: Reponses = {};
+try { reponses = c.qualification ? JSON.parse(c.qualification) : {}; } catch {}
+let saisi: Record<string, string> = {};
+let erreur = '';
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  saisi = Object.fromEntries([...f.entries()].map(([k, v]) => [k, typeof v === 'string' ? v.trim().slice(0, 200) : '']));
+  reponses = {};
+  for (const q of QUESTIONS) if ((q.options as readonly string[]).includes(saisi[`q_${q.id}`])) reponses[q.id] = saisi[`q_${q.id}`];
+  const parcours = saisi.parcours === 'vendeur' || saisi.parcours === 'acheteur' ? saisi.parcours : null;
+  // Ce que cherche un acheteur (story 13.15), gardé seulement pour un acheteur.
+  if ((parcours ?? c.parcours) === 'acheteur') {
+    for (const q of RECHERCHE_ACHETEUR) if (saisi[`a_${q.id}`]) reponses[q.id] = saisi[`a_${q.id}`].slice(0, 120);
+    if ((FINANCEMENTS as readonly string[]).includes(saisi.a_financement ?? '')) reponses.financement = saisi.a_financement;
+  }
+  let issue: Issue | null = null;
+  const choixDate = (choix: string, autre: string) =>
+    choix === '1m' ? plusTard(0, 1) : choix === '3m' ? plusTard(0, 3) : choix === '6m' ? plusTard(0, 6) : choix === '1j' ? plusTard(1) : choix === '2j' ? plusTard(2) : choix === '7j' ? plusTard(7) : DATE.test(autre) ? autre : '';
+  if (saisi.issue === 'rdv') {
+    const le = parisVersUtc(saisi.rdv_le ?? '');
+    if (!le) erreur = 'Indiquez la date et l\'heure du rendez-vous.';
+    else if (!parcours && !c.parcours) erreur = 'Dites s\'il ou elle veut vendre ou acheter : le rendez-vous n\'est pas le même.';
+    else issue = { type: 'rdv', le };
+  } else if (saisi.issue === 'sommeil') {
+    const reveil = choixDate(saisi.reveil_choix ?? '', saisi.reveil_le ?? '');
+    if (!reveil || reveil <= aujourdhui()) erreur = 'Indiquez quand le réveiller (une date à venir).';
+    else issue = { type: 'sommeil', reveil };
+  } else if (saisi.issue === 'perdu') {
+    const motif = saisi.motif === 'Autre' ? (saisi.motif_autre || '') : (MOTIFS_PERTE as readonly string[]).includes(saisi.motif ?? '') ? saisi.motif : '';
+    if (!motif) erreur = 'Indiquez pourquoi il est perdu : le bilan du lundi compte les motifs.';
+    else issue = { type: 'perdu', motif: saisi.motif === 'Autre' ? `Autre : ${motif}` : motif };
+  } else if (saisi.issue === 'rappel') {
+    const le = choixDate(saisi.rappel_choix ?? '', saisi.rappel_le ?? '');
+    if (!le || le < aujourdhui()) erreur = 'Indiquez quand le rappeler.';
+    else issue = { type: 'rappel', le };
+  } else erreur = 'Choisissez la suite : rendez-vous, en sommeil, perdu, ou pas joint.';
+  if (issue && !erreur) {
+    await qualifier(env, c.id, reponses, parcours, issue, compte);
+    return Astro.redirect(`/contacts/fiche?id=${c.id}&m=qualifie`, 303);
+  }
+}
+const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.email || 'Contact sans nom';
+const issues = [
+  { v: 'rdv', t: 'Rendez-vous' }, { v: 'sommeil', t: 'En sommeil' }, { v: 'perdu', t: 'Perdu' }, { v: 'rappel', t: 'Pas joint' },
+];
+---
+<Espace titre={`Qualifier ${nom}`} actif="contacts">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div style="flex:1;min-width:0">
+      <div class="e-muet"><a href={`/contacts/fiche?id=${c.id}`}>Fiche</a></div>
+      <h1 style="overflow-wrap:anywhere">{nom}{c.commune ? ` · ${c.commune}` : ''}</h1>
+      <div class="e-muet">{libelleOrigine(c, passage, prescripteur)}</div>
+    </div>
+    {c.telephone && <a class="e-bouton second" href={`tel:${c.telephone}`} aria-label={`Appeler ${nom}`}>Appeler</a>}
+  </div>
+  {erreur && <p class="e-message" role="alert" data-erreur>{erreur}</p>}
+
+  <form method="post" class="e-carte" data-qualifier>
+    {!c.parcours && (
+      <fieldset class="e-pastilles">
+        <legend>Il ou elle veut</legend>
+        <label><input type="radio" name="parcours" value="vendeur" checked={saisi.parcours === 'vendeur'} /><span>Vendre</span></label>
+        <label><input type="radio" name="parcours" value="acheteur" checked={saisi.parcours === 'acheteur'} /><span>Acheter</span></label>
+      </fieldset>
+    )}
+    {QUESTIONS.map((q, i) => (
+      <fieldset class="e-pastilles">
+        <legend>{i + 1}. {q.titre}</legend>
+        {q.options.map((o) => <label><input type="radio" name={`q_${q.id}`} value={o} checked={reponses[q.id] === o} /><span>{o}</span></label>)}
+      </fieldset>
+    ))}
+
+    <fieldset class="e-cadre-acheteur" data-acheteur hidden={c.parcours === 'vendeur'}>
+      <legend>Ce qu'il ou elle cherche (acheteur)</legend>
+      <div class="e-champs">
+        {RECHERCHE_ACHETEUR.map((q) => <label class="e-champ">{q.titre}<input name={`a_${q.id}`} value={saisi[`a_${q.id}`] ?? reponses[q.id]} placeholder={q.id === 'budget' ? '750 k€ à 850 k€' : 'Anthy, Sciez'} autocomplete="off" /></label>)}
+      </div>
+      <fieldset class="e-pastilles" style="margin-top:12px">
+        <legend>Financement</legend>
+        {FINANCEMENTS.map((fi) => <label><input type="radio" name="a_financement" value={fi} checked={(saisi.a_financement ?? reponses.financement) === fi} /><span>{fi}</span></label>)}
+      </fieldset>
+    </fieldset>
+
+    <h2>Et maintenant ?</h2>
+    <fieldset class="e-pastilles e-issues" data-issues>
+      <legend class="e-muet">Une suite est obligatoire</legend>
+      {issues.map((x) => <label><input type="radio" name="issue" value={x.v} required checked={saisi.issue === x.v} /><span>{x.t}</span></label>)}
+    </fieldset>
+
+    <div data-suite="rdv" class="e-champs">
+      <label class="e-champ">Date et heure du rendez-vous<input type="datetime-local" name="rdv_le" min={`${aujourdhui()}T00:00`} value={saisi.rdv_le} step="900" /></label>
+    </div>
+    <div data-suite="sommeil">
+      <fieldset class="e-pastilles">
+        <legend>Le réveiller quand ?</legend>
+        {[['1m', 'Dans 1 mois'], ['3m', 'Dans 3 mois'], ['6m', 'Dans 6 mois'], ['autre', 'Autre date']].map(([v, t]) => <label><input type="radio" name="reveil_choix" value={v} checked={saisi.reveil_choix === v} /><span>{t}</span></label>)}
+      </fieldset>
+      <label class="e-champ" style="margin-top:10px">Autre date<input type="date" name="reveil_le" min={plusTard(1)} value={saisi.reveil_le} /></label>
+    </div>
+    <div data-suite="perdu">
+      <fieldset class="e-pastilles">
+        <legend>Pourquoi ?</legend>
+        {MOTIFS_PERTE.map((mo) => <label><input type="radio" name="motif" value={mo} checked={saisi.motif === mo} /><span>{mo}</span></label>)}
+      </fieldset>
+      <label class="e-champ" style="margin-top:10px">Si autre, lequel ?<input name="motif_autre" value={saisi.motif_autre} autocomplete="off" /></label>
+    </div>
+    <div data-suite="rappel">
+      <fieldset class="e-pastilles">
+        <legend>Le rappeler quand ?</legend>
+        {[['1j', 'Demain'], ['2j', 'Dans 2 jours'], ['7j', 'Dans une semaine'], ['autre', 'Autre date']].map(([v, t]) => <label><input type="radio" name="rappel_choix" value={v} checked={saisi.rappel_choix === v} /><span>{t}</span></label>)}
+      </fieldset>
+      <label class="e-champ" style="margin-top:10px">Autre date<input type="date" name="rappel_le" min={aujourdhui()} value={saisi.rappel_le} /></label>
+    </div>
+
+    <p class="e-muet" data-resume aria-live="polite"></p>
+    <div><button class="e-bouton" type="submit">Enregistrer</button></div>
+  </form>
+</Espace>
+
+<style is:global>
+  .e-cadre-acheteur { border: 1px solid var(--avt-galet); border-radius: 12px; padding: 14px; margin: 0; }
+  .e-cadre-acheteur > legend { font-size: 15px; font-weight: 500; padding: 0 6px; }
+  .e-issues label { flex: 1 1 40%; }
+  .e-issues span { width: 100%; justify-content: center; min-height: 48px; border-radius: 12px; font-weight: 500; }
+  .e-issues input[value=rdv]:checked + span { background: var(--avt-terra); border-color: var(--avt-terra); }
+  .e-issues input[value=perdu]:checked + span { background: var(--avt-text-muted); border-color: var(--avt-text-muted); }
+</style>
+
+<script>
+  // Montre la suite de l'issue choisie et compte les réponses ; sans JavaScript, tout reste visible.
+  const form = document.querySelector<HTMLFormElement>('[data-qualifier]');
+  const maj = () => {
+    if (!form) return;
+    const issue = form.querySelector<HTMLInputElement>('input[name=issue]:checked')?.value ?? '';
+    form.querySelectorAll<HTMLElement>('[data-suite]').forEach((el) => { el.hidden = el.dataset.suite !== issue; });
+    const choixParcours = form.querySelector<HTMLInputElement>('input[name=parcours]:checked')?.value;
+    const acheteur = form.querySelector<HTMLElement>('[data-acheteur]');
+    if (acheteur && choixParcours) acheteur.hidden = choixParcours !== 'acheteur';
+    const n = form.querySelectorAll('input[name^=q_]:checked').length;
+    const resume = form.querySelector('[data-resume]');
+    if (resume) resume.textContent = `${n} réponse(s) sur 5${issue ? '' : ' · choisissez une suite'}`;
+  };
+  form?.addEventListener('change', maj);
+  maj();
+</script>

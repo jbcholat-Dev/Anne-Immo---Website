@@ -3,8 +3,9 @@
 // Pas de nav du site ni de bouton « Un retour ? » : c'est un outil de travail pour Anne.
 import '../styles/global.css';
 import { ENTETE_COMPTE } from '../server/acces';
-interface Props { titre: string }
-const { titre } = Astro.props;
+// `retour` : l'espace d'Anne (story 13.5) y met un lien vers sa page « Aujourd'hui ».
+interface Props { titre: string; retour?: string }
+const { titre, retour } = Astro.props;
 const compte = Astro.request.headers.get(ENTETE_COMPTE) ?? '';
 ---
 <!doctype html>
@@ -24,6 +25,7 @@ const compte = Astro.request.headers.get(ENTETE_COMPTE) ?? '';
   <body>
     <header class="g-tete">
       <a href="/gestion" class="g-marque">Gestion des demandes</a>
+      {retour && <a href={retour} data-retour>← Retour à l'espace</a>}
       <span class="g-compte">{compte}</span>
     </header>
     <main class="g-page"><slot /></main>

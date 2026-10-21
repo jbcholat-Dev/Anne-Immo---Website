@@ -1,0 +1,105 @@
+---
+// Importer une liste (story 13.7) : la feuille de présence d'un événement, un ancien fichier. Deux temps : un aperçu
+// qui dit combien de personnes sont nouvelles et combien sont déjà connues, puis l'enregistrement. Les connues sont
+// complétées, jamais recréées (AD-20). Sans la case « les participants ont accepté d'être recontactés », les contacts
+// créés sont marqués « rappel individuel seulement » (AD-20 : pas d'e-mail groupé sans consentement).
+import Espace from '../layouts/Espace.astro';
+import { ENTETE_COMPTE } from '@site/server/acces';
+import { CANAUX_ORIGINE } from '@site/server/contacts';
+import { pourSite as env } from '../server/env';
+import { estCanal, IMPORT_MAX, importer, preparerImport, type Ligne, type Origine } from '../server/pipeline';
+import { lireTableur, TAILLE_MAX } from '../server/tableur';
+
+export const prerender = false;
+const compte = Astro.request.headers.get(ENTETE_COMPTE);
+if (!compte) return new Response('Accès refusé', { status: 403 });
+
+let erreur = '';
+let apercu: { lignes: Ligne[]; ignorees: number; colonnesVues: string[] } | null = null;
+let champs = { canal: 'evenement', origine_detail: '', parcours: '', consentement: '' };
+
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const lire = (k: string) => { const v = f.get(k); return typeof v === 'string' ? v.trim().slice(0, 200) : ''; };
+  champs = { canal: lire('canal'), origine_detail: lire('origine_detail'), parcours: lire('parcours'), consentement: lire('consentement') };
+  const o: Origine = {
+    canal: estCanal(champs.canal) && champs.canal !== 'boitage' && champs.canal !== 'recommandation' ? champs.canal : 'autre',
+    origine_detail: champs.origine_detail || null, passage_id: null, prescripteur_id: null,
+    parcours: champs.parcours === 'vendeur' || champs.parcours === 'acheteur' ? champs.parcours : null,
+    rappel_individuel_seul: champs.consentement !== 'oui',
+  };
+  if (lire('quoi') === 'enregistrer') {
+    let lignes: Ligne[] = [];
+    try { lignes = JSON.parse(String(f.get('lignes') ?? '[]')); } catch { erreur = 'Aperçu illisible : recommencez l\'import.'; }
+    if (!erreur && Array.isArray(lignes)) {
+      const r = await importer(env, lignes, o, compte);
+      return Astro.redirect(`/contacts?m=import-${r.nouveaux}-${r.completes}`, 303);
+    }
+  } else {
+    const fichier = f.get('fichier');
+    if (!(fichier instanceof File) || fichier.size === 0) erreur = 'Choisissez un fichier .xlsx ou .csv.';
+    else if (fichier.size > TAILLE_MAX) erreur = 'Fichier trop lourd (2 Mo au plus).';
+    else if (!/\.(xlsx|csv|txt)$/i.test(fichier.name)) erreur = 'Seuls les fichiers .xlsx et .csv sont lus. Dans Excel ou Numbers : Enregistrer sous, format .xlsx ou .csv.';
+    else {
+      try {
+        apercu = await preparerImport(env, await lireTableur(fichier.name, new Uint8Array(await fichier.arrayBuffer())));
+        if (!apercu.colonnesVues.some((c) => c === 'telephone' || c === 'email' || c === 'nom')) {
+          erreur = 'Aucune colonne reconnue : la première ligne doit porter les titres (Prénom, Nom, Téléphone, E-mail, Commune).';
+          apercu = null;
+        } else if (apercu.lignes.length === 0) { erreur = 'Aucune personne lisible dans ce fichier.'; apercu = null; }
+      } catch { erreur = 'Ce fichier n\'a pas pu être lu. Enregistrez-le au format .xlsx ou .csv et réessayez.'; }
+    }
+  }
+}
+const nouveaux = apercu?.lignes.filter((l) => !l.connu).length ?? 0;
+const canaux = Object.entries(CANAUX_ORIGINE).filter(([v]) => v !== 'boitage' && v !== 'recommandation');
+---
+<Espace titre="Importer une liste" actif="ajouter">
+  <div>
+    <div class="e-muet"><a href="/ajouter">Ajouter</a></div>
+    <h1>Importer une liste</h1>
+  </div>
+  {erreur && <p class="e-message" role="alert" data-erreur>{erreur}</p>}
+
+  {apercu ? (
+    <form method="post" class="e-carte" data-apercu>
+      <input type="hidden" name="quoi" value="enregistrer" />
+      <input type="hidden" name="lignes" value={JSON.stringify(apercu.lignes.map(({ connu, ...p }) => p))} />
+      {Object.entries(champs).map(([k, v]) => <input type="hidden" name={k} value={v} />)}
+      <h2 data-compte>{apercu.lignes.length} personne(s) : {nouveaux} nouvelle(s), {apercu.lignes.length - nouveaux} déjà connue(s)</h2>
+      <p class="e-muet">Les personnes déjà connues seront complétées (ce qui manque sur leur fiche), jamais créées en double.{apercu.ignorees ? ` ${apercu.ignorees} ligne(s) ignorée(s) : en double dans le fichier, sans téléphone, e-mail ni nom, ou au-delà de ${IMPORT_MAX}.` : ''}</p>
+      {champs.consentement !== 'oui' && <p class="e-message">Les nouveaux contacts seront marqués « rappel individuel seulement » : pas d'e-mail groupé.</p>}
+      <div class="e-table-zone">
+        <table class="e-table">
+          <thead><tr><th>Qui</th><th>Téléphone</th><th>E-mail</th><th>Commune</th><th></th></tr></thead>
+          <tbody>
+            {apercu.lignes.map((l) => (
+              <tr><td>{[l.prenom, l.nom].filter(Boolean).join(' ') || '—'}</td><td>{l.telephone ?? '—'}</td><td>{l.email ?? '—'}</td><td>{l.commune ?? '—'}</td>
+                <td>{l.connu ? <span class="e-tag neutre">déjà connu</span> : <span class="e-tag">nouveau</span>}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="e-bouton" type="submit">Enregistrer {apercu.lignes.length} personne(s)</button><a class="e-bouton second" href="/importer">Annuler</a></div>
+    </form>
+  ) : (
+    <form method="post" enctype="multipart/form-data" class="e-carte" data-importer>
+      <input type="hidden" name="quoi" value="apercu" />
+      <label class="e-champ">Fichier (.xlsx ou .csv, première ligne = titres des colonnes)<input type="file" name="fichier" accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required /></label>
+      <fieldset class="e-pastilles">
+        <legend>D'où viennent ces personnes ?</legend>
+        {canaux.map(([v, t]) => <label><input type="radio" name="canal" value={v} checked={champs.canal === v} /><span>{t}</span></label>)}
+      </fieldset>
+      <label class="e-champ">Lequel ? (nom de l'événement, du fichier…)<input name="origine_detail" value={champs.origine_detail} placeholder="Forum des associations de Sciez, sept. 2026" /></label>
+      <fieldset class="e-pastilles">
+        <legend>Ils veulent plutôt</legend>
+        <label><input type="radio" name="parcours" value="vendeur" checked={champs.parcours === 'vendeur'} /><span>Vendre</span></label>
+        <label><input type="radio" name="parcours" value="acheteur" checked={champs.parcours === 'acheteur'} /><span>Acheter</span></label>
+        <label><input type="radio" name="parcours" value="" checked={!champs.parcours} /><span>Je ne sais pas</span></label>
+      </fieldset>
+      <label style="display:flex;gap:10px;align-items:flex-start;font-size:15px"><input type="checkbox" name="consentement" value="oui" checked={champs.consentement === 'oui'} style="width:22px;height:22px;flex:none" /> Les participants ont accepté d'être recontactés (case cochée sur le bulletin, par exemple)</label>
+      <div><button class="e-bouton" type="submit">Voir l'aperçu</button></div>
+      <p class="e-muet">Rien n'est enregistré avant l'aperçu. Les colonnes reconnues : Prénom, Nom, Téléphone (ou Portable), E-mail, Commune (ou Ville). {IMPORT_MAX} personnes au plus par fichier.</p>
+    </form>
+  )}
+</Espace>

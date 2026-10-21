@@ -1,0 +1,88 @@
+---
+// Fiche d'un contact (story 13.7, première version) : origine, étape, prochaine action, coordonnées, demandes du site
+// et historique ; bouton Qualifier et réponses de la qualification (story 13.6).
+import Espace from '../../layouts/Espace.astro';
+import { ENTETE_COMPTE } from '@site/server/acces';
+import { CANAUX_ORIGINE, LIBELLES_ETAPES } from '@site/server/contacts';
+import { quand, SOURCES } from '@site/server/gestion-donnees';
+import { pourSite as env } from '../../server/env';
+import { echeance, libelleOrigine, lireContact, QUESTIONS, type Reponses } from '../../server/pipeline';
+
+export const prerender = false;
+if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
+
+const id = Astro.url.searchParams.get('id') ?? '';
+const fiche = /^[0-9A-HJKMNP-TV-Z]{26}$/.test(id) ? await lireContact(env, id) : null;
+if (!fiche) return new Response('Contact inconnu', { status: 404 });
+const { contact: c, historique, demandes, passage, prescripteur } = fiche;
+const m = Astro.url.searchParams.get('m') ?? '';
+const message = m === 'ajoute' ? 'Contact enregistré, à qualifier aujourd\'hui.'
+  : m === 'qualifie' ? 'Qualification enregistrée.'
+  : m === 'existant' ? 'Ce contact existait déjà (même téléphone ou même e-mail) : sa fiche est complétée, rien n\'a été créé en double.' : '';
+let reponses: Reponses = {};
+try { reponses = c.qualification ? JSON.parse(c.qualification) : {}; } catch {}
+const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.email || 'Contact sans nom';
+---
+<Espace titre={nom} actif="contacts">
+  <div>
+    <div class="e-muet"><a href="/contacts">Contacts</a></div>
+    <h1>{nom}</h1>
+  </div>
+  {message && <p class="e-message" role="status" data-message>{message}</p>}
+  <div style="display:flex;flex-wrap:wrap;gap:8px">
+    <span class="e-tag" data-origine>{libelleOrigine(c, passage, prescripteur)}</span>
+    <span class="e-tag neutre" data-etape>{LIBELLES_ETAPES[c.etape]}</span>
+    {c.parcours && <span class="e-tag neutre">{c.parcours === 'vendeur' ? 'Vendeur' : 'Acheteur'}</span>}
+    {c.rappel_individuel_seul ? <span class="e-tag alerte" data-rappel-seul>Rappel individuel seulement</span> : ''}
+  </div>
+
+  <section class="e-carte">
+    <h2>Prochaine action</h2>
+    <p data-prochaine>{c.etape === 'en_sommeil' ? `En sommeil, à réveiller le ${echeance(c.reveil_le)}` : c.etape === 'perdu' ? `Perdu : ${c.motif_perte}` : `${c.prochaine_action ?? '—'} · ${echeance(c.prochaine_action_le)}`}</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      {c.telephone && <a class="e-bouton second" href={`tel:${c.telephone}`}>Appeler</a>}
+      <a class={c.etape === 'a_qualifier' ? 'e-bouton' : 'e-bouton second'} href={`/contacts/qualifier?id=${c.id}`} data-qualifier-lien>{c.qualifie_le ? 'Requalifier' : 'Qualifier'}</a>
+    </div>
+  </section>
+
+  {c.qualifie_le && (
+    <section class="e-carte" data-reponses>
+      <h2>Qualification</h2>
+      <p class="e-muet">Faite le {quand(c.qualifie_le)}</p>
+      <dl style="display:grid;grid-template-columns:max-content 1fr;gap:6px 18px;margin:0">
+        {QUESTIONS.map((q) => <><dt class="e-muet">{q.titre}</dt><dd style="margin:0">{reponses[q.id] ?? '—'}</dd></>)}
+        {c.parcours === 'acheteur' && <><dt class="e-muet">Budget</dt><dd style="margin:0">{reponses.budget ?? '—'}</dd><dt class="e-muet">Secteur</dt><dd style="margin:0">{reponses.secteur ?? '—'}</dd><dt class="e-muet">Financement</dt><dd style="margin:0">{reponses.financement ?? '—'}</dd></>}
+      </dl>
+    </section>
+  )}
+
+  <section class="e-carte">
+    <h2>Coordonnées</h2>
+    <dl style="display:grid;grid-template-columns:max-content 1fr;gap:6px 18px;margin:0">
+      <dt class="e-muet">Téléphone</dt><dd style="margin:0">{c.telephone ?? '—'}</dd>
+      <dt class="e-muet">E-mail</dt><dd style="margin:0;overflow-wrap:anywhere">{c.email ?? '—'}</dd>
+      <dt class="e-muet">Commune</dt><dd style="margin:0">{c.commune ?? '—'}</dd>
+      <dt class="e-muet">Origine</dt><dd style="margin:0">{CANAUX_ORIGINE[c.canal]}{c.origine_detail ? ` · ${c.origine_detail}` : ''}</dd>
+      <dt class="e-muet">Entré le</dt><dd style="margin:0">{quand(c.created_at)}</dd>
+    </dl>
+  </section>
+
+  {demandes.length > 0 && (
+    <section class="e-carte">
+      <h2>Demandes faites sur le site</h2>
+      <ul style="margin:0;padding-left:20px">
+        {demandes.map((d) => <li><a href={`/gestion/lead?id=${d.id}`}>{SOURCES[d.source] ?? d.source}, {quand(d.created_at)}</a></li>)}
+      </ul>
+    </section>
+  )}
+
+  <section class="e-carte">
+    <h2>Historique</h2>
+    <ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px" data-historique>
+      {historique.map((e) => (
+        <li><div class="e-muet">{quand(e.a)}{e.par ? ` · ${e.par}` : ''}</div><div style="white-space:pre-wrap">{e.texte}</div></li>
+      ))}
+    </ol>
+  </section>
+  <p class="e-muet">Export et effacement des données de cette personne : depuis <a href={c.email ? `/gestion?q=${encodeURIComponent(c.email)}` : '/gestion'}>les demandes</a>, par son adresse e-mail.</p>
+</Espace>

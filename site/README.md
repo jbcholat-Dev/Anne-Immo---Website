@@ -157,6 +157,13 @@ Sur `/contact`, le bouton « Voir les créneaux d'Anne » charge l'agenda de Cal
 - **Migration** `0006-droits-rgpd.sql` : table `droit_exerce`, index sur `last_activity_at`.
 - **Partage avec l'espace d'Anne** (story 13.3, 2026-10-15) : les lectures et écritures de la gestion sont dans `src/server/gestion-donnees.ts`, sans aucun envoi d'e-mail, pour que l'application `espace/` les réutilise ; `src/server/gestion.ts` n'ajoute que l'envoi immédiat d'une relance. Le `/gestion` du site reste en service jusqu'à la phase 2 de la story 13.3 (voir `espace/README.md`).
 
+## Contacts de l'espace d'Anne (story 13.4)
+
+- **Ce que ça change** : une personne qui fait plusieurs demandes (guide, puis diagnostic, puis rendez-vous) n'est qu'**un seul contact** dans l'espace d'Anne, avec son origine, son étape, sa prochaine action datée et l'historique de ses demandes (AD-20, CAP-12 v7). Rien ne change pour le visiteur.
+- **Migration** `0007-contacts.sql` : tables `contact`, `contact_evenement`, `passage_boitage`, `prescripteur` ; colonne `lead.contact_id`. La règle d'AD-20 est un `CHECK` de la base : pas de contact actif sans prochaine action datée, pas de sommeil sans date de réveil, pas de perte sans motif.
+- **Rattachement** (`src/server/contacts.ts`) : appelé en arrière-plan après l'écriture de chaque demande (`capture.ts`, `webhook-cal.ts`), à côté de la diffusion ; même téléphone E.164 ou même e-mail = même contact, sinon un contact « À qualifier », canal `site`. C'est la seule écriture du site dans ces tables ; l'espace écrit le reste. La tâche planifiée (`worker.ts`) rattache les demandes restées sans contact, 50 par passage.
+- **Droits RGPD et purge** : `rights.ts` exporte et efface aussi les contacts de l'adresse et leur historique ; `purge.ts` supprime aussi contacts et prescripteurs sans activité depuis 3 ans.
+
 ## Guide et séquence (story 10.5)
 
 - **Ce que voit le prospect** : sur `/guide`, après l'envoi, « Le lien de téléchargement est dans votre boîte, valable 7 jours » et un bouton « Ouvrir le guide maintenant ». Sur les résultats du diagnostic, le bouton du guide envoie le guide sans quitter la page (« Le guide est parti »), et le bouton de la séquence affiche « Séquence de N e-mails confirmée. Le premier arrive dans X jours. » (N et X lus dans les textes d'Anne, pas en dur).

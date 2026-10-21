@@ -1,5 +1,7 @@
 // Droits RGPD (story 10.7, AD-18) : accès (export lisible) et effacement, pour une adresse e-mail.
-// Toutes les demandes faites avec cette adresse sont concernées, quel que soit le formulaire.
+// Toutes les demandes faites avec cette adresse sont concernées, quel que soit le formulaire. Depuis la story 13.4 (AD-20),
+// aussi le contact de l'espace d'Anne qui porte cette adresse ou ces demandes, avec son historique et ses autres demandes
+// (même personne, reconnue par son téléphone), et le prescripteur qui porterait cette adresse.
 // Chaque exercice de droit est noté dans la table droit_exerce (date, type, empreinte de l'adresse, compte qui a agi).
 // Rien n'est à effacer chez Resend : le site n'y crée aucun contact ni audience (AD-8), il n'envoie que des e-mails.
 // La suppression de la réservation Cal.com et la réponse à la personne suivent la procédure du RUNBOOK (§ 4 quinquies).
@@ -7,6 +9,8 @@ import type { EnvSite } from './env';
 import { empreinte, journal } from './journal';
 
 const PARSER = ['answers', 'scores', 'utm'];
+/** Les contacts de l'espace d'Anne liés à une adresse : celui qui la porte, et ceux des demandes faites avec elle. */
+const CONTACTS_DE_L_ADRESSE = 'email = ?1 OR id IN (SELECT contact_id FROM lead WHERE lower(email) = ?1 AND contact_id IS NOT NULL)';
 const TECHNIQUES = ['token', 'token_browser', 'token_expires_at', 'submission_id'];
 
 async function noter(env: EnvSite, type: 'acces' | 'effacement', email: string, leads: number, compte: string) {
@@ -30,18 +34,44 @@ export async function exporter(env: EnvSite, email: string, compte: string) {
     }
     demandes.push({ ...lisible, envois });
   }
+  const { results: contacts } = await env.DB.prepare(`SELECT * FROM contact WHERE ${CONTACTS_DE_L_ADRESSE} ORDER BY created_at`)
+    .bind(adresse).all<Record<string, unknown>>();
+  const fiches = [];
+  for (const c of contacts) {
+    const { results: historique } = await env.DB.prepare(
+      'SELECT a, type, source, texte, donnees FROM contact_evenement WHERE contact_id = ?1 ORDER BY a, id',
+    ).bind(c.id).all<Record<string, unknown>>();
+    const lisible: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(c)) {
+      if (v === null || k === 'is_test') continue;
+      lisible[k] = k === 'qualification' && typeof v === 'string' ? JSON.parse(v) : v;
+    }
+    fiches.push({ ...lisible, historique: historique.map((h) => ({ ...h, donnees: typeof h.donnees === 'string' ? JSON.parse(h.donnees) : undefined })) });
+  }
+  const { results: prescripteurs } = await env.DB.prepare('SELECT * FROM prescripteur WHERE email = ?1').bind(adresse).all<Record<string, unknown>>();
   const maintenant = new Date().toISOString();
   if (leads.length) await env.DB.prepare('UPDATE lead SET last_activity_at = ?2 WHERE lower(email) = ?1').bind(adresse, maintenant).run();
   await noter(env, 'acces', adresse, leads.length, compte);
-  return { responsable: 'Anne VIAL-TISSOT, www.annevialtissot.fr', exporte_le: maintenant, email: adresse, demandes };
+  return {
+    responsable: 'Anne VIAL-TISSOT, www.annevialtissot.fr', exporte_le: maintenant, email: adresse, demandes,
+    ...(fiches.length ? { contacts: fiches } : {}),
+    ...(prescripteurs.length ? { prescripteur: prescripteurs.map((p) => Object.fromEntries(Object.entries(p).filter(([k, v]) => v !== null && k !== 'is_test'))) } : {}),
+  };
 }
 
 /** Efface toutes les demandes d'une adresse et leurs envois (droit à l'effacement). Renvoie le nombre de demandes effacées. */
 export async function effacer(env: EnvSite, email: string, compte: string): Promise<number> {
   const adresse = email.trim().toLowerCase();
+  // Les contacts concernés sont relevés d'abord : ils sont retrouvés par les demandes, qu'on efface ensuite.
+  const { results: contacts } = await env.DB.prepare(`SELECT id FROM contact WHERE ${CONTACTS_DE_L_ADRESSE}`).bind(adresse).all<{ id: string }>();
+  const ids = JSON.stringify(contacts.map((c) => c.id));
+  const DE_CES_CONTACTS = 'IN (SELECT value FROM json_each(?2))';
   const [, leads] = await env.DB.batch([
-    env.DB.prepare('DELETE FROM lead_delivery WHERE lead_id IN (SELECT id FROM lead WHERE lower(email) = ?1)').bind(adresse),
-    env.DB.prepare('DELETE FROM lead WHERE lower(email) = ?1').bind(adresse),
+    env.DB.prepare(`DELETE FROM lead_delivery WHERE lead_id IN (SELECT id FROM lead WHERE lower(email) = ?1 OR contact_id ${DE_CES_CONTACTS})`).bind(adresse, ids),
+    env.DB.prepare(`DELETE FROM lead WHERE lower(email) = ?1 OR contact_id ${DE_CES_CONTACTS}`).bind(adresse, ids),
+    env.DB.prepare(`DELETE FROM contact_evenement WHERE contact_id ${DE_CES_CONTACTS.replace('?2', '?1')}`).bind(ids),
+    env.DB.prepare(`DELETE FROM contact WHERE id ${DE_CES_CONTACTS.replace('?2', '?1')}`).bind(ids),
+    env.DB.prepare('DELETE FROM prescripteur WHERE email = ?1').bind(adresse),
   ]);
   const n = leads.meta.changes ?? 0;
   await noter(env, 'effacement', adresse, n, compte);

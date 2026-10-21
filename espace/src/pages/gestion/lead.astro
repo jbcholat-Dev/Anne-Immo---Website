@@ -69,7 +69,7 @@ const champs = Object.entries(l).filter(([k, v]) => !MASQUES.includes(k) && !(di
 const recopie = fiche?.envois.some((e) => e.channel === 'modelo' && e.status === 'delivered');
 const nom = [l.prenom, l.nom].filter(Boolean).join(' ') || String(l.email ?? '');
 ---
-<Gestion titre={fiche ? nom : 'Demande introuvable'}>
+<Gestion titre={fiche ? nom : 'Demande introuvable'} retour="/">
   <p><a href="/gestion">← Toutes les demandes</a></p>
   {!fiche ? <h1>Demande introuvable</h1> : (
     <>

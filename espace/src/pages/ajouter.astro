@@ -1,0 +1,143 @@
+---
+// Ajouter (story 13.7, maquette v2 écran 3) : un contact en moins d'une minute, avec son origine précise, et un
+// passage de boîtage en moins de 30 secondes. Un téléphone ou un e-mail déjà connu ouvre la fiche existante, complétée,
+// jamais recréée (AD-20). Le formulaire est traité par cette même page, pour garder la saisie en cas d'erreur.
+import Espace from '../layouts/Espace.astro';
+import { ENTETE_COMPTE } from '@site/server/acces';
+import { CANAUX_ORIGINE } from '@site/server/contacts';
+import { pourSite as env } from '../server/env';
+import {
+  aujourdhui, creerPrescripteur, estCanal, lirePassage, lirePrescripteur, listerPassages, listerPrescripteurs, noterPassage, personne, saisirContact,
+  type Origine,
+} from '../server/pipeline';
+
+export const prerender = false;
+const compte = Astro.request.headers.get(ENTETE_COMPTE);
+if (!compte) return new Response('Accès refusé', { status: 403 });
+
+const ULID = /^[0-9A-HJKMNP-TV-Z]{26}$/;
+let erreur = '';
+let saisi: Record<string, string> = {};
+let message = Astro.url.searchParams.get('m') === 'passage' ? 'Passage de boîtage noté.' : '';
+
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  saisi = Object.fromEntries([...f.entries()].map(([k, v]) => [k, typeof v === 'string' ? v : '']));
+  if (saisi.quoi === 'passage') {
+    const secteur = (saisi.secteur ?? '').trim().slice(0, 80);
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(saisi.fait_le ?? '') ? saisi.fait_le : '';
+    const mots = /^\d{1,6}$/.test(saisi.mots ?? '') ? Number(saisi.mots) : null;
+    if (!secteur) erreur = 'Indiquez le secteur du passage.';
+    else if (!date || date > aujourdhui()) erreur = 'Indiquez la date du passage (pas dans le futur).';
+    else {
+      await noterPassage(env, secteur, date, mots);
+      return Astro.redirect('/ajouter?m=passage#passage', 303);
+    }
+  } else {
+    const p = personne(saisi);
+    const canal = saisi.canal ?? '';
+    const parcours = saisi.parcours === 'vendeur' || saisi.parcours === 'acheteur' ? saisi.parcours : null;
+    const o: Origine = { canal: estCanal(canal) ? canal : 'autre', origine_detail: (saisi.origine_detail ?? '').trim().slice(0, 200) || null, passage_id: null, prescripteur_id: null, parcours };
+    if (!p) erreur = 'Il faut au moins un téléphone, un e-mail ou un nom.';
+    else if ((saisi.telephone ?? '').trim() && !p.telephone) erreur = 'Le téléphone ne semble pas valable : dix chiffres, ou +41… pour la Suisse.';
+    else if ((saisi.email ?? '').trim() && !p.email) erreur = "L'adresse e-mail ne semble pas valable.";
+    else if (!estCanal(canal)) erreur = "Choisissez d'où vient ce contact.";
+    else if (canal === 'boitage') {
+      if (!ULID.test(saisi.passage_id ?? '') || !(await lirePassage(env, saisi.passage_id))) erreur = 'Choisissez le passage de boîtage qui a amené ce contact (notez-le plus bas s\'il manque).';
+      else o.passage_id = saisi.passage_id;
+    } else if (canal === 'recommandation') {
+      const nouveau = (saisi.prescripteur_nom ?? '').trim().slice(0, 120);
+      if (ULID.test(saisi.prescripteur_id ?? '') && (await lirePrescripteur(env, saisi.prescripteur_id))) o.prescripteur_id = saisi.prescripteur_id;
+      else if (nouveau) o.prescripteur_id = await creerPrescripteur(env, nouveau, (saisi.prescripteur_role ?? '').trim().slice(0, 120) || null);
+      else erreur = 'Dites qui l\'a recommandé.';
+    }
+    if (!erreur && p) {
+      const r = await saisirContact(env, p, o, (saisi.note ?? '').trim().slice(0, 2000), compte);
+      return Astro.redirect(`/contacts/fiche?id=${r.id}&m=${r.existant ? 'existant' : 'ajoute'}`, 303);
+    }
+  }
+}
+
+const [passages, prescripteurs] = await Promise.all([listerPassages(env, 20), listerPrescripteurs(env)]);
+const secteurs = [...new Set(passages.map((p) => p.secteur))];
+const canalChoisi = saisi.canal ?? '';
+const date = (d: string) => new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${d}T00:00:00Z`));
+---
+<Espace titre="Ajouter" actif="ajouter">
+  <h1>Ajouter</h1>
+  {message && <p class="e-message" role="status" data-message>{message}</p>}
+  {erreur && <p class="e-message" role="alert" data-erreur>{erreur}</p>}
+
+  <form method="post" class="e-carte" data-ajouter>
+    <input type="hidden" name="quoi" value="contact" />
+    <h2>Un contact</h2>
+    <div class="e-champs">
+      <label class="e-champ">Prénom<input name="prenom" value={saisi.prenom} autocomplete="off" /></label>
+      <label class="e-champ">Nom<input name="nom" value={saisi.nom} autocomplete="off" /></label>
+      <label class="e-champ">Téléphone<input name="telephone" type="tel" inputmode="tel" value={saisi.telephone} autocomplete="off" /></label>
+      <label class="e-champ">E-mail<input name="email" type="email" value={saisi.email} autocomplete="off" /></label>
+      <label class="e-champ">Commune<input name="commune" value={saisi.commune} autocomplete="off" /></label>
+    </div>
+    <fieldset class="e-pastilles">
+      <legend>Il ou elle veut</legend>
+      <label><input type="radio" name="parcours" value="vendeur" checked={saisi.parcours === 'vendeur'} /><span>Vendre</span></label>
+      <label><input type="radio" name="parcours" value="acheteur" checked={saisi.parcours === 'acheteur'} /><span>Acheter</span></label>
+      <label><input type="radio" name="parcours" value="" checked={!saisi.parcours} /><span>Je ne sais pas encore</span></label>
+    </fieldset>
+    <fieldset class="e-pastilles" data-canaux>
+      <legend>D'où vient ce contact ? (obligatoire)</legend>
+      {Object.entries(CANAUX_ORIGINE).map(([v, t]) => <label><input type="radio" name="canal" value={v} required checked={canalChoisi === v} /><span>{t}</span></label>)}
+    </fieldset>
+    <div class="e-champs">
+      <label class="e-champ large" data-si="boitage">Quel passage de boîtage ?
+        <select name="passage_id">
+          <option value="">Choisir…</option>
+          {passages.map((p) => <option value={p.id} selected={saisi.passage_id === p.id}>{p.secteur}, {date(p.fait_le)}{p.mots ? ` · ${p.mots} mots` : ''}</option>)}
+        </select>
+        {passages.length === 0 && <span class="e-muet">Aucun passage noté : notez-le d'abord plus bas.</span>}
+      </label>
+      <label class="e-champ" data-si="recommandation">Recommandé par
+        <select name="prescripteur_id">
+          <option value="">Choisir, ou saisir un nouveau ci-dessous</option>
+          {prescripteurs.map((p) => <option value={p.id} selected={saisi.prescripteur_id === p.id}>{p.nom}{p.role ? ` (${p.role})` : ''}</option>)}
+        </select>
+      </label>
+      <label class="e-champ" data-si="recommandation">Ou un nouveau prescripteur<input name="prescripteur_nom" value={saisi.prescripteur_nom} placeholder="Maître Durand" autocomplete="off" /></label>
+      <label class="e-champ" data-si="recommandation">Son rôle<input name="prescripteur_role" value={saisi.prescripteur_role} placeholder="Notaire, Thonon" autocomplete="off" /></label>
+      <label class="e-champ large" data-si="evenement portail reseaux rencontre autre site">Précision (facultatif)<input name="origine_detail" value={saisi.origine_detail} placeholder="Nom de l'événement, annonce, réseau…" autocomplete="off" /></label>
+      <label class="e-champ large">Note (facultatif)<textarea name="note" rows="2">{saisi.note}</textarea></label>
+    </div>
+    <p class="e-muet">Le contact arrive « à qualifier », avec un rappel prévu aujourd'hui.</p>
+    <div><button class="e-bouton" type="submit">Enregistrer le contact</button></div>
+  </form>
+
+  <form method="post" class="e-carte" id="passage" data-passage>
+    <input type="hidden" name="quoi" value="passage" />
+    <h2>Un passage de boîtage</h2>
+    <div class="e-champs">
+      <label class="e-champ">Secteur<input name="secteur" list="secteurs" value={saisi.quoi === 'passage' ? saisi.secteur : ''} placeholder="Sciez-Chavannex" autocomplete="off" /></label>
+      <datalist id="secteurs">{secteurs.map((s) => <option value={s} />)}</datalist>
+      <label class="e-champ">Date<input name="fait_le" type="date" max={aujourdhui()} value={saisi.quoi === 'passage' ? saisi.fait_le : aujourdhui()} /></label>
+      <label class="e-champ">Mots déposés (facultatif)<input name="mots" type="number" min="0" inputmode="numeric" value={saisi.quoi === 'passage' ? saisi.mots : ''} /></label>
+    </div>
+    <div><button class="e-bouton second" type="submit">Noter le passage</button></div>
+    {passages.length > 0 && (
+      <ul class="e-muet" data-passages>
+        {passages.slice(0, 5).map((p) => <li>{p.secteur}, {date(p.fait_le)}{p.mots ? ` · ${p.mots} mots` : ''} · {p.contacts} contact(s)</li>)}
+      </ul>
+    )}
+  </form>
+
+  <p><a href="/importer">Importer une liste (événement, tableur)</a></p>
+</Espace>
+
+<script>
+  // Montre seulement les champs que le canal choisi appelle ; sans JavaScript, tout reste visible.
+  const form = document.querySelector<HTMLFormElement>('[data-ajouter]');
+  const maj = () => {
+    const canal = form?.querySelector<HTMLInputElement>('input[name=canal]:checked')?.value ?? '';
+    form?.querySelectorAll<HTMLElement>('[data-si]').forEach((el) => { el.hidden = !(el.dataset.si ?? '').split(' ').includes(canal); });
+  };
+  form?.addEventListener('change', maj);
+  maj();
+</script>

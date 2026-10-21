@@ -1,0 +1,95 @@
+---
+// Bilan du lundi (story 13.13, maquette v2 écran 4) : ce que chaque canal a rapporté sur la période, pour savoir où
+// mettre ses heures. Tout est recalculé depuis la base à chaque ouverture, sans saisie : contacts arrivés, qualifiés,
+// rendez-vous et mandats par canal, délai moyen de rappel, boîtage par secteur, motifs de perte.
+import Espace from '../layouts/Espace.astro';
+import { ENTETE_COMPTE } from '@site/server/acces';
+import { CANAUX_ORIGINE } from '@site/server/contacts';
+import { pourSite as env } from '../server/env';
+import { bilan, constats, duree, echeance, PERIODES, type Periode } from '../server/pipeline';
+
+export const prerender = false;
+if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
+
+const demandee = Astro.url.searchParams.get('p') ?? 'semaine';
+const periode: Periode = demandee in PERIODES ? (demandee as Periode) : 'semaine';
+const b = await bilan(env, periode);
+const phrases = constats(b);
+const tuiles = [
+  ['Nouveaux contacts', String(b.total.contacts)],
+  ['Qualifiés', String(b.total.qualifies)],
+  ['Rendez-vous', String(b.total.rdv)],
+  ['Mandats', String(b.total.mandats)],
+  ['Délai moyen de rappel', b.delaiHeures === null ? '—' : duree(b.delaiHeures)],
+];
+---
+<Espace titre="Bilan" actif="bilan">
+  <div>
+    <div class="e-muet">{PERIODES[periode].libelle}, contacts arrivés depuis le {echeance(b.debut.slice(0, 10))}</div>
+    <h1>Où mettre mes heures ?</h1>
+  </div>
+  <nav class="b-periodes" aria-label="Période">
+    {Object.entries(PERIODES).map(([cle, p]) => <a href={`/bilan?p=${cle}`} aria-current={cle === periode ? 'page' : undefined}>{cle === 'semaine' ? 'Semaine' : cle === 'mois' ? '4 semaines' : '3 mois'}</a>)}
+  </nav>
+
+  <div class="b-tuiles" data-tuiles>
+    {tuiles.map(([t, v]) => <div class="b-tuile"><div class="e-muet">{t}</div><div class="b-chiffre">{v}</div></div>)}
+  </div>
+
+  <section class="e-carte" data-canaux>
+    <h2>Par canal</h2>
+    <div class="e-table-zone">
+      <table class="e-table b-table">
+        <thead><tr><th>Canal</th><th class="n">Contacts</th><th class="n">Qualifiés</th><th class="n">Rendez-vous</th><th class="n">Mandats</th></tr></thead>
+        <tbody>
+          {b.lignes.map((l) => (
+            <tr data-canal={l.canal} class={l.contacts === 0 ? 'b-vide' : ''}><td>{CANAUX_ORIGINE[l.canal]}</td><td class="n">{l.contacts}</td><td class="n">{l.qualifies}</td><td class="n">{l.rdv}</td><td class="n">{l.mandats}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    {b.delaiN > 0 && <p class="e-muet">Délai de rappel calculé sur {b.delaiN} contact(s) : de leur arrivée au premier appel noté.</p>}
+  </section>
+
+  {phrases.length > 0 && (
+    <section class="b-dit" data-constats>
+      <h2>Ce que la période dit</h2>
+      <ul>{phrases.map((p) => <li>{p}</li>)}</ul>
+    </section>
+  )}
+
+  <section class="e-carte" data-boitage>
+    <h2>Boîtage par secteur</h2>
+    {b.secteurs.length === 0 ? <p class="e-muet">Aucun passage noté. <a href="/ajouter#passage">Noter un passage</a>.</p> : (
+      <div class="e-table-zone">
+        <table class="e-table b-table">
+          <thead><tr><th>Secteur</th><th>Dernier passage</th><th class="n">Mots</th><th class="n">Contacts</th><th>Suite</th></tr></thead>
+          <tbody>{b.secteurs.map((s) => <tr data-secteur={s.secteur}><td>{s.secteur}</td><td>{echeance(s.dernier)}</td><td class="n">{s.mots ?? '—'}</td><td class="n">{s.contacts}</td><td>{s.suite}</td></tr>)}</tbody>
+        </table>
+      </div>
+    )}
+  </section>
+
+  <section class="e-carte" data-perdus>
+    <h2>Perdus, et pourquoi</h2>
+    {b.perdus.length === 0 ? <p class="e-muet">Aucun contact perdu sur la période.</p> : (
+      <ul class="b-perdus">{b.perdus.map((p) => <li><span>{p.motif}</span><strong>{p.n}</strong></li>)}</ul>
+    )}
+  </section>
+</Espace>
+
+<style>
+  .b-periodes { display: flex; gap: 8px; flex-wrap: wrap; }
+  .b-periodes a { min-height: 40px; display: inline-flex; align-items: center; padding: 6px 16px; border-radius: 999px; border: 1.5px solid var(--avt-galet); background: #fff; color: var(--avt-brun); }
+  .b-periodes a[aria-current=page] { background: var(--avt-klein); border-color: var(--avt-klein); color: #fff; }
+  .b-tuiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  @media (min-width: 900px) { .b-tuiles { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+  .b-tuile { background: #fff; border: 1px solid var(--avt-galet); border-radius: 12px; padding: 14px 16px; }
+  .b-chiffre { font-family: var(--avt-font-display); font-size: 32px; line-height: 1.2; }
+  .b-table .n { text-align: right; font-variant-numeric: tabular-nums; }
+  .b-vide { color: var(--avt-text-muted); }
+  .b-dit { background: var(--avt-brume); border-radius: 12px; padding: 16px 18px; }
+  .b-dit ul { margin: 10px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+  .b-perdus { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .b-perdus li { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--avt-galet); padding: 6px 0; }
+</style>

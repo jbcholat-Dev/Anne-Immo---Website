@@ -170,18 +170,18 @@ development_status:
   13-1-spécification-de-l-espace-de-travail: done
   13-2-décision-d-architecture-pour-leedflow-et-la-boîte-e-mail: done
   13-3-application-séparée-sur-la-base-partagée: in-progress
-  13-4-contacts-origine-précise-et-étapes: backlog
-  13-5-page-aujourd-hui: backlog
-  13-6-qualifier-en-deux-minutes-et-fiche-contact: backlog
-  13-7-saisie-à-la-main-passage-de-boîtage-et-import: backlog
+  13-4-contacts-origine-précise-et-étapes: review
+  13-5-page-aujourd-hui: review
+  13-6-qualifier-en-deux-minutes-et-fiche-contact: review
+  13-7-saisie-à-la-main-passage-de-boîtage-et-import: review
   13-8-demandes-des-portails-d-annonces: backlog
   13-9-recopie-dans-modelo-à-la-signature: backlog
   13-10-résumés-d-appels-leedflow: backlog
   13-11-e-mails-des-clients-différée: backlog
   13-12-parcours-d-anne-trouver-et-qualifier-des-contacts: done
-  13-13-bilan-du-lundi-par-canal: backlog
-  13-14-prescripteurs: backlog
-  13-15-acheteurs-actifs: backlog
+  13-13-bilan-du-lundi-par-canal: review
+  13-14-prescripteurs: review
+  13-15-acheteurs-actifs: review
   13-16-vue-pipeline: backlog
   epic-13-retrospective: optional
 

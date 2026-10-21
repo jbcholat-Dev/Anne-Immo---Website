@@ -149,10 +149,15 @@ try {
   const ilYa = (ans, jours) => { const d = new Date(); d.setUTCFullYear(d.getUTCFullYear() - ans); d.setUTCDate(d.getUTCDate() + jours); return d.toISOString(); };
   sql(`UPDATE lead SET last_activity_at = '${ilYa(3, -1)}', created_at = '${ilYa(3, -1)}' WHERE id = '${vieux}'`);
   sql(`UPDATE lead SET last_activity_at = '${ilYa(3, 1)}', created_at = '${ilYa(3, -10)}' WHERE id = '${recent}'`);
+  // Story 13.4 : le contact de l'espace suit la même règle (sa dernière activité, pas celle de ses demandes).
+  await pause(500);
+  sql(`UPDATE contact SET last_activity_at = '${ilYa(3, -1)}' WHERE email = 'vieux+${ESSAI}@example.com'`);
+  sql(`UPDATE contact SET last_activity_at = '${ilYa(3, 1)}' WHERE email = 'recent+${ESSAI}@example.com'`);
   await appeler(`${U}/cdn-cgi/handler/scheduled`);
   await pause(1000);
   constat(sql(`SELECT count(*) AS n FROM lead WHERE id = '${vieux}'`)[0].n === 0 && sql(`SELECT count(*) AS n FROM lead_delivery WHERE lead_id = '${vieux}'`)[0].n === 0, 'purge : demande sans activité depuis plus de 3 ans supprimée, avec ses envois');
   constat(sql(`SELECT count(*) AS n FROM lead WHERE id = '${recent}'`)[0].n === 1, 'purge : demande ancienne mais active depuis moins de 3 ans gardée');
+  constat(sql(`SELECT count(*) AS n FROM contact WHERE email = 'vieux+${ESSAI}@example.com'`)[0].n === 0 && sql(`SELECT count(*) AS n FROM contact WHERE email = 'recent+${ESSAI}@example.com'`)[0].n === 1, 'purge : contact sans activité depuis plus de 3 ans supprimé, contact récent gardé');
 
   // 9. Navigateur : la liste, la fiche, le cadre des droits, sur ordinateur et téléphone.
   const navigateur = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
