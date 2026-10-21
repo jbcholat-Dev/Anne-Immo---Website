@@ -119,11 +119,11 @@ export async function saisirContact(env: EnvSite, p: Personne, o: Origine, note:
   return { id, existant: false };
 }
 
-/** Passage de boîtage : un secteur, une date, un nombre de mots déposés. */
-export async function noterPassage(env: EnvSite, secteur: string, fait_le: string, mots: number | null): Promise<string> {
+/** Passage de boîtage : un secteur, une date, un nombre de mots déposés, et ce qu'ils ont coûté (centimes, story 13.17). */
+export async function noterPassage(env: EnvSite, secteur: string, fait_le: string, mots: number | null, cout_centimes: number | null = null): Promise<string> {
   const id = ulid();
-  await env.DB.prepare('INSERT INTO passage_boitage (id, created_at, secteur, fait_le, mots) VALUES (?1, ?2, ?3, ?4, ?5)')
-    .bind(id, new Date().toISOString(), secteur, fait_le, mots).run();
+  await env.DB.prepare('INSERT INTO passage_boitage (id, created_at, secteur, fait_le, mots, cout_centimes) VALUES (?1, ?2, ?3, ?4, ?5, ?6)')
+    .bind(id, new Date().toISOString(), secteur, fait_le, mots, cout_centimes).run();
   return id;
 }
 
@@ -286,6 +286,7 @@ export interface EvenementContact { a: string; type: string; source: string; tex
 export interface Contact extends ResumeContact {
   passage_id: string | null; prescripteur_id: string | null; bien_ref: string | null; qualification: string | null;
   qualifie_le: string | null; reveil_le: string | null; motif_perte: string | null; rappel_individuel_seul: number; created_at: string;
+  action_id: string | null;
 }
 
 export interface FicheContact {

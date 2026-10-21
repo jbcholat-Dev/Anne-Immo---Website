@@ -169,6 +169,13 @@ Rien n'est à effacer chez Resend : le site n'y garde aucun contact. Chaque expo
 
 **Clé Leedflow** (story 13.10) : secret `LEEDFLOW_API_KEY` de ce Worker seulement (projet `anne-espace` → Settings → Variables and Secrets → type *Secret*), la clé qu'Anne génère dans Leedflow (Paramètres › API). **Posée par JB le 2026-10-21.** Pour la changer : Anne en génère une nouvelle, JB remplace la valeur du secret, puis Anne révoque l'ancienne. Le bas de la page « Aujourd'hui » dit si la dernière relève (toutes les 10 minutes) a réussi ; « HTTP 401 » = clé refusée ou révoquée.
 
+**Accès de Claude** (story 13.17) : Claude crée et modifie les actions marketing décidées dans le projet et lit les totaux du bilan, par l'adresse `/api/claude/…` de l'espace. Il ne lit jamais un contact. L'accès passe par un *jeton de service* Cloudflare Access, un badge réservé à un programme. Le Worker n'accepte ce badge que sur `/api/claude/…` et seulement s'il porte l'identifiant posé en secret `ACCESS_CLAUDE_ID`. Une personne connectée est refusée sur ces adresses. Mise en place, une fois (≈ 10 min, par JB) :
+1. Zero Trust → Access → Service credentials → Service Tokens → Create Service Token. Nom : `Claude espace`, durée : sans expiration (ou 1 an, à renouveler). Copier le *Client ID* et le *Client Secret* : le secret n'est montré qu'une fois.
+2. Access → Applications → `espace` → Policies → Add a policy. Action : *Service Auth*. Include : *Service Token* = `Claude espace`. Enregistrer (la règle « Anne et JB » reste telle quelle).
+3. Projet `anne-espace` → Settings → Variables and Secrets → secret `ACCESS_CLAUDE_ID` = le *Client ID*.
+4. claude.ai → environnement cloud « Anne Immo » : réglages `ESPACE_CLAUDE_ID` (le *Client ID*) et `ESPACE_CLAUDE_SECRET` (le *Client Secret*) ; ajouter `espace.annevialtissot.fr` à la liste des adresses autorisées. Ces valeurs ne vont jamais dans le dépôt. Elles sont visibles seulement dans les sessions démarrées après.
+5. Vérification par Claude : `node espace/scripts/claude-espace.mjs actions` répond la liste. Pour couper l'accès : supprimer le jeton de service (étape 1) ; l'espace refuse alors tout appel de Claude.
+
 ## 5. Pièges irréversibles
 
 - Ne jamais mettre `PUBLIC_INDEXATION=oui` en variable de construction : elle vaudrait pour toutes les branches et Google pourrait mémoriser une version incomplète. Le lancement passe par `LANCEMENT=oui`, que seule `main` écoute (§ 4).

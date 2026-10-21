@@ -13,6 +13,7 @@ import {
   aujourdhui, creerPrescripteur, estCanal, lirePassage, lirePrescripteur, listerPassages, listerPrescripteurs, noterPassage, personne, saisirContact,
   type Origine,
 } from '../server/pipeline';
+import { lireEuros } from '../server/actions';
 
 export const prerender = false;
 const compte = Astro.request.headers.get(ENTETE_COMPTE);
@@ -32,10 +33,12 @@ if (Astro.request.method === 'POST') {
     const secteur = (saisi.secteur ?? '').trim().slice(0, 80);
     const date = /^\d{4}-\d{2}-\d{2}$/.test(saisi.fait_le ?? '') ? saisi.fait_le : '';
     const mots = /^\d{1,6}$/.test(saisi.mots ?? '') ? Number(saisi.mots) : null;
+    const cout = lireEuros(saisi.cout ?? '');
     if (!secteur) erreur = 'Indiquez le secteur du passage.';
+    else if (cout === undefined) erreur = 'Le coût ne semble pas valable (en euros, par exemple 45 ou 39,90).';
     else if (!date || date > aujourdhui()) erreur = 'Indiquez la date du passage (pas dans le futur).';
     else {
-      await noterPassage(env, secteur, date, mots);
+      await noterPassage(env, secteur, date, mots, cout ?? null);
       return Astro.redirect('/ajouter?m=passage#passage', 303);
     }
   } else {
@@ -125,6 +128,7 @@ const date = (d: string) => new Intl.DateTimeFormat('fr-FR', { day: 'numeric', m
       <datalist id="secteurs">{secteurs.map((s) => <option value={s} />)}</datalist>
       <label class="e-champ">Date<input name="fait_le" type="date" max={aujourdhui()} value={saisi.quoi === 'passage' ? saisi.fait_le : aujourdhui()} /></label>
       <label class="e-champ">Mots déposés (facultatif)<input name="mots" type="number" min="0" inputmode="numeric" value={saisi.quoi === 'passage' ? saisi.mots : ''} /></label>
+      <label class="e-champ">Coût des mots (€, facultatif)<input name="cout" inputmode="decimal" value={saisi.quoi === 'passage' ? saisi.cout : ''} placeholder="45" autocomplete="off" /></label>
     </div>
     <div><button class="e-bouton second" type="submit">Noter le passage</button></div>
     {passages.length > 0 && (

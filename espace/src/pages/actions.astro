@@ -1,0 +1,122 @@
+---
+// Journal des actions marketing (story 13.17) : chaque dépense de prospection (flyers, publicité, salon…) avec son
+// canal, ses dates et son coût, et ce qu'elle a rapporté : contacts rattachés, rendez-vous, mandats, coût par contact.
+// /actions liste et ajoute ; /actions?id=… modifie ou supprime. Les contacts sont rattachés d'office par la base quand
+// une seule action de leur canal est en cours à leur arrivée, sinon à la qualification ou sur leur fiche.
+import Espace from '../layouts/Espace.astro';
+import { ENTETE_COMPTE } from '@site/server/acces';
+import { CANAUX_ORIGINE } from '@site/server/contacts';
+import { actionDuFormulaire, coutRetenu, enregistrerAction, euros, lireAction, listerActions, parUnite, supprimerAction } from '../server/actions';
+import { pourSite as env } from '../server/env';
+import { champ, ULID } from '../server/formulaires';
+import { aujourdhui, echeance } from '../server/pipeline';
+
+export const prerender = false;
+const compte = Astro.request.headers.get(ENTETE_COMPTE);
+if (!compte) return new Response('Accès refusé', { status: 403 });
+
+const id = Astro.url.searchParams.get('id') ?? '';
+const enCours = ULID.test(id) ? await lireAction(env, id) : null;
+if (id && !enCours) return new Response('Action inconnue', { status: 404 });
+
+let erreur = '';
+let saisi: Record<string, string> = {};
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  if (champ(f, 'quoi') === 'supprimer' && enCours) {
+    await supprimerAction(env, enCours.id);
+    return Astro.redirect('/actions?m=supprimee', 303);
+  }
+  saisi = Object.fromEntries([...f.entries()].map(([k, v]) => [k, typeof v === 'string' ? v.trim().slice(0, 1000) : '']));
+  const a = actionDuFormulaire(f);
+  if (typeof a === 'string') erreur = a;
+  else {
+    const enregistree = await enregistrerAction(env, enCours?.id ?? null, a, enCours?.auteur ?? 'anne', compte);
+    if (enregistree) return Astro.redirect(`/actions?m=${enCours ? 'modifiee' : 'ajoutee'}`, 303);
+    erreur = "Cette action n'existe plus.";
+  }
+}
+
+const actions = enCours ? [] : await listerActions(env);
+const m = Astro.url.searchParams.get('m') ?? '';
+const message = { ajoutee: 'Action notée.', modifiee: 'Action modifiée.', supprimee: 'Action supprimée ; ses contacts restent, sans action.' }[m] ?? '';
+const enEuros = (c: number | null | undefined) => (c === null || c === undefined ? '' : String(c / 100).replace('.', ','));
+const valeur = (k: string, defaut: string | null | undefined) => saisi[k] ?? defaut ?? '';
+const total = actions.reduce((t, a) => t + (coutRetenu(a) ?? 0), 0);
+const dates = (a: { debut: string; fin: string | null }) => (a.fin ? `du ${echeance(a.debut)} au ${echeance(a.fin)}` : `depuis le ${echeance(a.debut)}`);
+---
+<Espace titre={enCours ? enCours.nom : 'Actions marketing'} actif="actions">
+  <div>
+    <div class="e-muet">{enCours ? <a href="/actions">Actions marketing</a> : <a href="/bilan">Bilan</a>}</div>
+    <h1>{enCours ? enCours.nom : 'Ce que je dépense, et ce que ça rapporte'}</h1>
+    {enCours && <div class="e-muet">{CANAUX_ORIGINE[enCours.canal]} · {dates(enCours)}{enCours.auteur === 'claude' ? ' · créée par Claude' : ''}</div>}
+  </div>
+  {message && <p class="e-message" role="status" data-message>{message}</p>}
+  {erreur && <p class="e-message" role="alert" data-erreur>{erreur}</p>}
+
+  {enCours && (
+    <section class="e-carte" data-resultat>
+      <p style="margin:0">{enCours.contacts} contact(s) · {enCours.rdv} rendez-vous · {enCours.mandats} mandat(s)</p>
+      <p style="margin:0">Coût {enCours.cout_centimes === null && enCours.budget_centimes !== null ? 'prévu' : ''} : {euros(coutRetenu(enCours))} · par contact : {parUnite(coutRetenu(enCours), enCours.contacts)} · par rendez-vous : {parUnite(coutRetenu(enCours), enCours.rdv)}</p>
+    </section>
+  )}
+
+  {!enCours && (
+    <section class="e-carte" data-actions>
+      <h2>Mes actions</h2>
+      {actions.length === 0 ? <p class="e-muet">Aucune action notée pour l'instant. Notez la première ci-dessous.</p> : (
+        <>
+          <p class="e-muet" style="margin:0">{actions.length} action(s), {euros(total)} au total (coût réel, sinon budget prévu).</p>
+          <ul class="a-liste">
+            {actions.map((a) => (
+              <li data-action={a.id}>
+                <div class="a-tete">
+                  <a href={`/actions?id=${a.id}`} class="a-nom">{a.nom}</a>
+                  <strong>{euros(coutRetenu(a))}{a.cout_centimes === null && a.budget_centimes !== null ? ' prévus' : ''}</strong>
+                </div>
+                <div class="e-muet">{CANAUX_ORIGINE[a.canal]} · {dates(a)}{a.auteur === 'claude' ? ' · créée par Claude' : ''}</div>
+                <div>{a.contacts} contact(s) · {a.rdv} rendez-vous · {a.mandats} mandat(s) · <span data-par-contact>{parUnite(coutRetenu(a), a.contacts)} par contact</span></div>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </section>
+  )}
+
+  <form method="post" class="e-carte" data-action-form>
+    <h2>{enCours ? 'Modifier' : 'Noter une action'}</h2>
+    <div class="e-champs">
+      <label class="e-champ large">Nom<input name="nom" value={valeur('nom', enCours?.nom)} required maxlength="120" placeholder="Flyers Margencel, publicité Facebook de mars…" autocomplete="off" /></label>
+      <label class="e-champ">Canal
+        <select name="canal" required>
+          {Object.entries(CANAUX_ORIGINE).map(([k, t]) => <option value={k} selected={valeur('canal', enCours?.canal) === k}>{t}</option>)}
+        </select>
+      </label>
+      <label class="e-champ">Début<input type="date" name="debut" required value={valeur('debut', enCours?.debut ?? aujourdhui())} /></label>
+      <label class="e-champ">Fin (facultatif)<input type="date" name="fin" value={valeur('fin', enCours?.fin)} /></label>
+      <label class="e-champ">Budget prévu (€)<input name="budget" inputmode="decimal" value={valeur('budget', enEuros(enCours?.budget_centimes))} placeholder="150" autocomplete="off" /></label>
+      <label class="e-champ">Coût réel (€)<input name="cout" inputmode="decimal" value={valeur('cout', enEuros(enCours?.cout_centimes))} placeholder="à remplir une fois payé" autocomplete="off" /></label>
+      <label class="e-champ large">Note<textarea name="note" rows="2">{valeur('note', enCours?.note)}</textarea></label>
+    </div>
+    <p class="e-muet" style="margin:0">Un contact qui arrive pendant l'action, sur le même canal, y est rattaché tout seul s'il n'y a qu'une action de ce canal en cours. Sinon, vous la choisissez en le qualifiant.</p>
+    <div><button class="e-bouton" type="submit">{enCours ? 'Enregistrer' : "Noter l'action"}</button></div>
+  </form>
+
+  {enCours && (
+    <form method="post" class="e-carte" data-supprimer>
+      <input type="hidden" name="quoi" value="supprimer" />
+      <p style="margin:0">Supprimer cette action ? Ses contacts restent, simplement sans action.</p>
+      <div><button class="e-bouton second" type="submit">Supprimer l'action</button></div>
+    </form>
+  )}
+</Espace>
+
+<style>
+  .a-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .a-liste li { display: flex; flex-direction: column; gap: 2px; padding: 12px 0; border-bottom: 1px solid var(--avt-galet); }
+  .a-liste li:last-child { border-bottom: 0; }
+  .a-tete { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+  .a-nom { font-weight: 500; overflow-wrap: anywhere; min-height: 24px; }
+  .a-tete strong { white-space: nowrap; font-variant-numeric: tabular-nums; }
+</style>

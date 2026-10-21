@@ -2,9 +2,12 @@
 // Bilan du lundi (story 13.13, maquette v2 écran 4) : ce que chaque canal a rapporté sur la période, pour savoir où
 // mettre ses heures. Tout est recalculé depuis la base à chaque ouverture, sans saisie : contacts arrivés, qualifiés,
 // rendez-vous et mandats par canal, délai moyen de rappel, boîtage par secteur, motifs de perte.
+// Story 13.17 : ce que chaque canal a coûté sur la période (actions marketing commencées et passages de boîtage faits
+// depuis le début de la période), rapporté aux contacts, rendez-vous et mandats arrivés sur la même période.
 import Espace from '../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { CANAUX_ORIGINE } from '@site/server/contacts';
+import { coutsParCanal, euros, parUnite } from '../server/actions';
 import { pourSite as env } from '../server/env';
 import { bilan, constats, duree, echeance, PERIODES, type Periode } from '../server/pipeline';
 
@@ -15,12 +18,16 @@ const demandee = Astro.url.searchParams.get('p') ?? 'semaine';
 const periode: Periode = demandee in PERIODES ? (demandee as Periode) : 'semaine';
 const b = await bilan(env, periode);
 const phrases = constats(b);
+const couts = await coutsParCanal(env, b.debut);
+const depense = [...couts.values()].reduce((t, c) => t + c, 0);
+const lignesCout = b.lignes.filter((l) => couts.has(l.canal)).map((l) => ({ ...l, cout: couts.get(l.canal) ?? 0 })).sort((a, z) => z.cout - a.cout);
 const tuiles = [
   ['Nouveaux contacts', String(b.total.contacts)],
   ['Qualifiés', String(b.total.qualifies)],
   ['Rendez-vous', String(b.total.rdv)],
   ['Mandats', String(b.total.mandats)],
   ['Délai moyen de rappel', b.delaiHeures === null ? '—' : duree(b.delaiHeures)],
+  ['Dépensé', depense ? euros(depense) : '—'],
 ];
 ---
 <Espace titre="Bilan" actif="bilan">
@@ -49,6 +56,19 @@ const tuiles = [
       </table>
     </div>
     {b.delaiN > 0 && <p class="e-muet">Délai de rappel calculé sur {b.delaiN} contact(s) : de leur arrivée au premier appel noté.</p>}
+  </section>
+
+  <section class="e-carte" data-couts>
+    <div class="b-tete"><h2>Ce que ça coûte</h2><a class="e-bouton second" href="/actions">Actions marketing</a></div>
+    {lignesCout.length === 0 ? <p class="e-muet">Aucune dépense notée sur la période. Notez vos actions (flyers, publicité, salon…) avec leur coût pour voir ce que vous coûte un contact.</p> : (
+      <div class="e-table-zone">
+        <table class="e-table b-table">
+          <thead><tr><th>Canal</th><th class="n">Dépensé</th><th class="n">Par contact</th><th class="n">Par rendez-vous</th><th class="n">Par mandat</th></tr></thead>
+          <tbody>{lignesCout.map((l) => <tr data-cout={l.canal}><td>{CANAUX_ORIGINE[l.canal]}</td><td class="n">{euros(l.cout)}</td><td class="n">{parUnite(l.cout, l.contacts)}</td><td class="n">{parUnite(l.cout, l.rdv)}</td><td class="n">{parUnite(l.cout, l.mandats)}</td></tr>)}</tbody>
+        </table>
+      </div>
+    )}
+    <p class="e-muet" style="margin:0">Dépenses des actions commencées et des passages de boîtage faits pendant la période (coût réel, sinon budget prévu), rapportées aux contacts arrivés pendant la même période. Le détail action par action est sur la page Actions.</p>
   </section>
 
   {phrases.length > 0 && (
@@ -83,9 +103,10 @@ const tuiles = [
   .b-periodes a { min-height: 40px; display: inline-flex; align-items: center; padding: 6px 16px; border-radius: 999px; border: 1.5px solid var(--avt-galet); background: #fff; color: var(--avt-brun); }
   .b-periodes a[aria-current=page] { background: var(--avt-klein); border-color: var(--avt-klein); color: #fff; }
   .b-tuiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  @media (min-width: 900px) { .b-tuiles { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+  @media (min-width: 900px) { .b-tuiles { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
   .b-tuile { background: #fff; border: 1px solid var(--avt-galet); border-radius: 12px; padding: 14px 16px; }
   .b-chiffre { font-family: var(--avt-font-display); font-size: 32px; line-height: 1.2; }
+  .b-tete { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
   .b-table .n { text-align: right; font-variant-numeric: tabular-nums; }
   .b-vide { color: var(--avt-text-muted); }
   .b-dit { background: var(--avt-brume); border-radius: 12px; padding: 16px 18px; }

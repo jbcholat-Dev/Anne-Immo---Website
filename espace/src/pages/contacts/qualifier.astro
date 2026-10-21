@@ -4,9 +4,13 @@
 // motif ; « Pas joint » garde le contact à qualifier avec un nouveau rappel. L'étape et la prochaine action sont fixées
 // et l'appel noté dans l'historique. Le formulaire est traité par cette même page, pour garder les réponses en cas d'erreur.
 // Story 13.10 : le résumé du dernier appel relevé par Leedflow est affiché en tête, pour répondre aux questions en le lisant.
+// Story 13.17 : l'action marketing qui a amené le contact, préchoisie quand la base l'a rattaché d'office.
 import Espace from '../../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
+import { CANAUX_ORIGINE } from '@site/server/contacts';
+import { actionsAuChoix, rattacherAction } from '../../server/actions';
 import { pourSite as env } from '../../server/env';
+import { ULID } from '../../server/formulaires';
 import {
   aujourdhui, echeance, FINANCEMENTS, libelleOrigine, lireContact, MOTIFS_PERTE, parisVersUtc, plusTard, qualifier, QUESTIONS, RECHERCHE_ACHETEUR, type Issue, type Reponses,
 } from '../../server/pipeline';
@@ -19,6 +23,7 @@ const id = Astro.url.searchParams.get('id') ?? '';
 const fiche = /^[0-9A-HJKMNP-TV-Z]{26}$/.test(id) ? await lireContact(env, id) : null;
 if (!fiche) return new Response('Contact inconnu', { status: 404 });
 const { contact: c, passage, prescripteur, historique } = fiche;
+const actions = await actionsAuChoix(env, c.canal);
 // Le dernier appel ou message vocal relevé par Leedflow qui porte un résumé (titre sur la première ligne, résumé ensuite).
 const dernierAppel = historique.find((e) => e.source === 'leedflow' && !(e.texte ?? '').startsWith('SMS') && (e.texte ?? '').includes('\n'));
 const [titreAppel, ...resteAppel] = (dernierAppel?.texte ?? '').split('\n');
@@ -63,6 +68,9 @@ if (Astro.request.method === 'POST') {
   } else erreur = 'Choisissez la suite : rendez-vous, en sommeil, perdu, ou pas joint.';
   if (issue && !erreur) {
     await qualifier(env, c.id, reponses, parcours, issue, compte);
+    // L'action marketing qui l'a amené (story 13.17), si Anne l'a choisie ou changée.
+    const action = ULID.test(saisi.action ?? '') ? saisi.action : null;
+    if ('action' in saisi && saisi.action !== (c.action_id ?? '')) await rattacherAction(env, c.id, action, compte);
     return Astro.redirect(`/contacts/fiche?id=${c.id}&m=qualifie`, 303);
   }
 }
@@ -113,6 +121,15 @@ const issues = [
         {FINANCEMENTS.map((fi) => <label><input type="radio" name="a_financement" value={fi} checked={(saisi.a_financement ?? reponses.financement) === fi} /><span>{fi}</span></label>)}
       </fieldset>
     </fieldset>
+
+    {actions.length > 0 && (
+      <label class="e-champ" data-action-qualifier>Action marketing qui l'a amené
+        <select name="action">
+          <option value="">Aucune, ou je ne sais pas</option>
+          {actions.map((a) => <option value={a.id} selected={(saisi.action ?? c.action_id) === a.id}>{a.nom} · {CANAUX_ORIGINE[a.canal]}</option>)}
+        </select>
+      </label>
+    )}
 
     <h2>Et maintenant ?</h2>
     <fieldset class="e-pastilles e-issues" data-issues>

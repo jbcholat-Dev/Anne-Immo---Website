@@ -19,6 +19,9 @@
 // Story 13.10 : relève Leedflow sur une imitation locale de son API (clé exigée, pages lues de la plus ancienne à la plus
 // récente, historique repris pour un numéro connu, résumé complété après coup sans doublon, numéro inconnu proposé puis
 // rattaché à la création du contact ou écarté, tâches proposées puis acceptées ou ignorées, clé refusée signalée).
+// Story 13.17 : actions marketing (ajout, erreurs, rattachement d'office par la base, choix à la qualification et sur la
+// fiche, coût des passages, coûts du bilan) et accès de Claude par jeton de service (actions et totaux seulement,
+// rien d'autre ouvert, une personne refusée sur /api/claude/…, aucun contact dans les réponses).
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
 // Lancer depuis espace/ : `node scripts/e2e-espace.mjs`.
@@ -63,7 +66,7 @@ const imitationLeedflow = http.createServer((req, res) => {
 });
 await new Promise((ok) => imitationLeedflow.listen(PORT_LF, ok));
 fs.writeFileSync(reglages, [`ACCESS_EQUIPE=${equipe}`, 'ACCESS_AUD=essai-aud', 'LIEN_SECRET=essai', `URL_SITE=${S}`,
-  `LEEDFLOW_API_KEY=${LF.cle}`, `LEEDFLOW_URL=http://localhost:${PORT_LF}`].join('\n'));
+  `LEEDFLOW_API_KEY=${LF.cle}`, `LEEDFLOW_URL=http://localhost:${PORT_LF}`, 'ACCESS_CLAUDE_ID=essai-claude.access'].join('\n'));
 const journal = path.join(os.tmpdir(), `e2e-${ESSAI}-espace.log`);
 const sansProxy = Object.fromEntries(Object.entries(process.env).filter(([k]) => !/^(https?|all|no)_proxy$/i.test(k)));
 const espace = spawn('npx', ['wrangler', 'dev', '--port', String(PORT), '--env-file', reglages, '--test-scheduled', '--persist-to', path.join(SITE, '.wrangler', 'state')],
@@ -83,6 +86,11 @@ let ip = 0;
 const poster = (route, corps) =>
   appeler(`${S}/api/${route}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'cf-connecting-ip': `203.0.113.${++ip}` }, body: JSON.stringify({ lang: 'fr', turnstile: 'jeton', privacy: 'on', ...corps }) });
 const leadDe = (s) => sql(`SELECT id FROM lead WHERE submission_id = '${s}'`)[0]?.id;
+
+// Les actions d'essais précédents (base locale gardée d'un essai à l'autre) : retirées, pour que le rattachement d'office
+// de la story 13.17 ne voie que celles de cet essai.
+sql(`UPDATE contact SET action_id = NULL WHERE action_id IN (SELECT id FROM action_marketing WHERE nom LIKE 'Essai %')`);
+sql(`DELETE FROM action_marketing WHERE nom LIKE 'Essai %'`);
 
 try {
   // 0. Une demande faite sur le site pendant une panne de l'envoi d'e-mails.
@@ -562,6 +570,87 @@ try {
     && sql(`SELECT count(*) AS n FROM leedflow_inconnu WHERE telephone = '${INCONNU}'`)[0].n === 0
     && sql(`SELECT count(*) AS n FROM leedflow_tache WHERE id = 't4-${NUM}' AND contact_id = '${ines}' AND statut = 'proposee'`)[0].n === 1,
     'contact créé depuis un numéro inconnu : son appel passe dans l\'historique, sa tâche devient une proposition');
+  // 5 septies. Actions marketing (story 13.17).
+  r = await page('/actions', { nom: '', canal: 'rencontre', debut: auj });
+  constat(r.status === 200 && (await r.text()).includes('data-erreur'), 'action sans nom : refusée, la saisie reste affichée');
+  r = await page('/actions', { nom: `Essai Flyers ${ESSAI}`, canal: 'rencontre', debut: auj, budget: 'beaucoup' });
+  constat(r.status === 200 && (await r.text()).includes('Le budget ne semble pas valable'), 'action au budget illisible : refusée');
+  r = await page('/actions', { nom: `Essai Flyers ${ESSAI}`, canal: 'rencontre', debut: auj, fin: auj, budget: '120', cout: '' });
+  const flyers = sql(`SELECT * FROM action_marketing WHERE nom = 'Essai Flyers ${ESSAI}'`)[0];
+  constat(r.headers.get('location') === '/actions?m=ajoutee' && flyers?.budget_centimes === 12000 && flyers.cout_centimes === null && flyers.auteur === 'anne' && flyers.par === 'anne@example.com',
+    'action notée : canal, dates, budget en centimes, auteur Anne');
+  r = await page('/ajouter', { quoi: 'contact', prenom: 'Rita', nom: `Rencontre${ESSAI}`, email: `rita+${ESSAI}@example.com`, canal: 'rencontre' });
+  const rita = sql(`SELECT id, action_id FROM contact WHERE email = 'rita+${ESSAI}@example.com'`)[0];
+  constat(rita?.action_id === flyers.id, 'contact arrivé pendant la seule action de son canal : rattaché d\'office par la base');
+  r = await page('/actions', { nom: `Essai Salon ${ESSAI}`, canal: 'rencontre', debut: auj, fin: auj, cout: '300,50' });
+  const salon = sql(`SELECT * FROM action_marketing WHERE nom = 'Essai Salon ${ESSAI}'`)[0];
+  constat(salon?.cout_centimes === 30050, 'coût réel saisi « 300,50 » : 30 050 centimes');
+  r = await page('/ajouter', { quoi: 'contact', prenom: 'Sam', nom: `Salon${ESSAI}`, email: `sam+${ESSAI}@example.com`, canal: 'rencontre' });
+  const sam = sql(`SELECT id, action_id FROM contact WHERE email = 'sam+${ESSAI}@example.com'`)[0];
+  constat(sam?.action_id === null, 'deux actions du canal en cours : pas de rattachement d\'office, Anne choisira');
+  r = await appeler(`${E}/contacts/qualifier?id=${sam.id}`, { headers: avecJeton() });
+  html = await r.text();
+  constat(html.includes('data-action-qualifier') && html.includes(`Essai Salon ${ESSAI}`), 'qualifier : l\'action marketing se choisit dans la liste');
+  r = await qualif(sam.id, { issue: 'rappel', rappel_choix: '1j', action: salon.id });
+  constat(sql(`SELECT action_id FROM contact WHERE id = '${sam.id}'`)[0].action_id === salon.id
+    && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${sam.id}' AND texte = 'Action marketing : Essai Salon ${ESSAI}'`)[0].n === 1,
+    'qualification : action choisie, rattachée et notée dans l\'historique');
+  r = await appeler(`${E}/api/actions/rattacher`, { method: 'POST', redirect: 'manual', headers: avecJeton(JETON, { 'Content-Type': 'application/x-www-form-urlencoded', Origin: E }), body: new URLSearchParams({ contact: rita.id, action: '' }).toString() });
+  constat(r.headers.get('location') === `/contacts/fiche?id=${rita.id}&m=action` && sql(`SELECT action_id FROM contact WHERE id = '${rita.id}'`)[0].action_id === null, 'fiche : « Aucune » retire l\'action');
+  r = await appeler(`${E}/api/actions/rattacher`, { method: 'POST', redirect: 'manual', headers: avecJeton(JETON, { 'Content-Type': 'application/x-www-form-urlencoded', Origin: E }), body: new URLSearchParams({ contact: rita.id, action: flyers.id }).toString() });
+  constat(sql(`SELECT action_id FROM contact WHERE id = '${rita.id}'`)[0].action_id === flyers.id, 'fiche : action remise');
+  r = await appeler(`${E}/contacts/fiche?id=${rita.id}`, { headers: avecJeton() });
+  html = await r.text();
+  constat(/data-action-contact[\s\S]*<option value="[^"]+" selected[^>]*>Essai Flyers/.test(html), 'fiche : l\'action du contact est préchoisie');
+  r = await page('/ajouter', { quoi: 'passage', secteur: `Essai-${ESSAI}`, fait_le: auj, cout: '45' });
+  constat(sql(`SELECT cout_centimes FROM passage_boitage WHERE secteur = 'Essai-${ESSAI}'`)[0]?.cout_centimes === 4500, 'passage de boîtage avec son coût');
+  r = await appeler(`${E}/bilan?p=semaine`, { headers: avecJeton() });
+  html = (await r.text()).replace(/\u00a0/g, ' '); // les montants gardent une espace insécable avant « € »
+  const ligneRencontre = html.split('data-cout="rencontre"')[1]?.split('</tr>')[0] ?? '';
+  constat(ligneRencontre.includes('420,50 €') && html.includes('data-cout="boitage"') && html.includes('Dépensé'),
+    'bilan : coût par canal (rencontre 120 € prévus + 300,50 € = 420,50 €), boîtage compté, tuile « Dépensé »');
+  r = await appeler(`${E}/actions`, { headers: avecJeton() });
+  html = (await r.text()).replace(/\u00a0/g, ' ');
+  const carteFlyers = html.split(`data-action="${flyers.id}"`)[1]?.split('</li>')[0] ?? '';
+  constat(carteFlyers.includes('1 contact(s)') && carteFlyers.includes('120 € par contact') && carteFlyers.includes('prévus'), 'page Actions : contacts rattachés et coût par contact (budget prévu)');
+  r = await page(`/actions?id=${salon.id}`, { nom: `Essai Salon ${ESSAI}`, canal: 'rencontre', debut: auj, fin: auj, cout: '280' });
+  constat(r.headers.get('location') === '/actions?m=modifiee' && sql(`SELECT cout_centimes FROM action_marketing WHERE id = '${salon.id}'`)[0].cout_centimes === 28000, 'action modifiée (coût réel)');
+
+  // Accès de Claude : un jeton de service (sans e-mail) n'ouvre que /api/claude/…, et seulement le sien.
+  const JETON_CLAUDE = jetonAcces({ email: undefined, common_name: 'essai-claude.access' });
+  const claude = (chemin, options = {}, jeton = JETON_CLAUDE) => appeler(`${E}${chemin}`, { ...options, redirect: 'manual', headers: { 'cf-access-jwt-assertion': jeton, 'Content-Type': 'application/json' } });
+  r = await claude('/api/claude/actions');
+  const listeClaude = await r.json();
+  const vueFlyers = listeClaude.actions?.find((a) => a.id === flyers.id);
+  constat(r.status === 200 && vueFlyers?.contacts === 1 && !JSON.stringify(listeClaude).includes('@example.com') && !JSON.stringify(listeClaude).includes('+33'),
+    'Claude : liste des actions avec leurs totaux, sans aucune coordonnée');
+  r = await claude('/api/claude/actions', { method: 'POST', body: JSON.stringify({ nom: `Essai Pub Facebook ${ESSAI}`, canal: 'reseaux', debut: auj, budget_centimes: 15000, note: 'Campagne décidée dans le projet' }) });
+  const creee = await r.json();
+  const pub = sql(`SELECT * FROM action_marketing WHERE id = '${creee.id}'`)[0];
+  constat(r.status === 201 && pub?.auteur === 'claude' && pub.budget_centimes === 15000 && pub.par === 'claude', 'Claude : action créée, marquée « créée par Claude »');
+  r = await claude('/api/claude/actions', { method: 'POST', body: JSON.stringify({ id: creee.id, nom: `Essai Pub Facebook ${ESSAI}`, canal: 'reseaux', debut: auj, budget_centimes: 15000, cout_centimes: 13240 }) });
+  constat(r.status === 200 && sql(`SELECT cout_centimes, auteur FROM action_marketing WHERE id = '${creee.id}'`)[0].cout_centimes === 13240, 'Claude : coût réel corrigé');
+  r = await claude('/api/claude/actions', { method: 'POST', body: JSON.stringify({ nom: 'Essai sans canal', debut: auj }) });
+  constat(r.status === 400 && sql(`SELECT count(*) AS n FROM action_marketing WHERE nom = 'Essai sans canal'`)[0].n === 0, 'Claude : action incomplète refusée');
+  r = await claude('/api/claude/actions', { method: 'POST', body: JSON.stringify({ id: '01ARZ3NDEKTSV4RRFFQ69G5FAV', nom: 'Essai fantôme', canal: 'reseaux', debut: auj }) });
+  constat(r.status === 404, 'Claude : modifier une action qui n\'existe pas, refusé');
+  r = await claude('/api/claude/bilan?p=semaine');
+  const bilanClaude = await r.json();
+  constat(r.status === 200 && bilanClaude.canaux?.find((l) => l.canal === 'rencontre')?.cout_centimes >= 40000 && !JSON.stringify(bilanClaude).includes('@'),
+    'Claude : bilan par canal avec les coûts, sans aucune coordonnée');
+  r = await appeler(`${E}/actions`, { headers: avecJeton() });
+  constat((await r.text()).includes('créée par Claude'), 'page Actions : l\'action de Claude porte « créée par Claude »');
+  const refusClaude = [
+    ['jeton de Claude sur la page Aujourd\'hui', await claude('/')],
+    ['jeton de Claude sur une fiche', await claude(`/contacts/fiche?id=${rita.id}`)],
+    ['jeton de Claude sur l\'export RGPD', await claude('/api/gestion/export?email=x')],
+    ['Anne (connectée) sur l\'adresse de Claude', await claude('/api/claude/actions', {}, JETON)],
+    ['autre jeton de service', await claude('/api/claude/actions', {}, jetonAcces({ email: undefined, common_name: 'pirate.access' }))],
+    ['jeton de service d\'une autre application', await claude('/api/claude/actions', {}, jetonAcces({ email: undefined, common_name: 'essai-claude.access', aud: ['autre-aud'] }))],
+    ['en-tête interne forgé', await appeler(`${E}/api/claude/actions`, { headers: { 'x-gestion-compte': 'claude' } })],
+  ];
+  for (const [quoi, rep] of refusClaude) constat(rep.status === 403, `refusé (403) : ${quoi}`);
+
   // Clé refusée (révoquée) : la relève le note et « Aujourd'hui » le dit.
   LF.refuse = true;
   await releve();
@@ -578,7 +667,7 @@ try {
   for (const [nom, viewport] of [['ordinateur', { width: 1280, height: 900 }], ['telephone', { width: 390, height: 844 }]]) {
     const ctx = await nav.newContext({ viewport, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
     const onglet = await ctx.newPage();
-    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['bilan', '/bilan'], ['prescripteurs', '/prescripteurs'], ['prescripteur', `/prescripteurs/fiche?id=${durand}`], ['acheteurs', `/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`], ['qualifier-acheteur', `/contacts/qualifier?id=${ach1}`], ['pipeline', '/pipeline'], ['importer', '/importer'], ['fiche-leedflow', `/contacts/fiche?id=${KLF}`], ['qualifier-leedflow', `/contacts/qualifier?id=${KLF}`], ['inconnu', `/inconnu?tel=${encodeURIComponent(CAPTURE)}`]]) {
+    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['bilan', '/bilan'], ['prescripteurs', '/prescripteurs'], ['prescripteur', `/prescripteurs/fiche?id=${durand}`], ['acheteurs', `/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`], ['qualifier-acheteur', `/contacts/qualifier?id=${ach1}`], ['pipeline', '/pipeline'], ['importer', '/importer'], ['fiche-leedflow', `/contacts/fiche?id=${KLF}`], ['qualifier-leedflow', `/contacts/qualifier?id=${KLF}`], ['inconnu', `/inconnu?tel=${encodeURIComponent(CAPTURE)}`], ['actions', '/actions'], ['action', `/actions?id=${salon.id}`]]) {
       await onglet.goto(`${E}${chemin}`);
       if (nomPage === 'ajouter') {
         await onglet.click('[data-canaux] label:has(input[value=boitage]) span');
