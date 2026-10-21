@@ -5,12 +5,13 @@
 // Les pages reprises de /gestion gardent le gabarit Gestion du site jusqu'à la phase 2 de la story 13.3.
 import '@site/styles/global.css';
 import { ENTETE_COMPTE } from '@site/server/acces';
-interface Props { titre: string; actif?: 'aujourdhui' | 'contacts' | 'bilan' | 'prescripteurs' | 'acheteurs' | 'ajouter' | 'demandes' }
+interface Props { titre: string; actif?: 'aujourdhui' | 'contacts' | 'bilan' | 'prescripteurs' | 'acheteurs' | 'pipeline' | 'ajouter' | 'demandes' }
 const { titre, actif } = Astro.props;
 const compte = Astro.request.headers.get(ENTETE_COMPTE) ?? '';
 const liens = [
   { cle: 'aujourdhui', href: '/', texte: "Aujourd'hui" },
   { cle: 'contacts', href: '/contacts', texte: 'Contacts' },
+  { cle: 'pipeline', href: '/pipeline', texte: 'Pipeline' },
   { cle: 'bilan', href: '/bilan', texte: 'Bilan' },
   { cle: 'prescripteurs', href: '/prescripteurs', texte: 'Prescripteurs' },
   { cle: 'acheteurs', href: '/acheteurs', texte: 'Acheteurs' },

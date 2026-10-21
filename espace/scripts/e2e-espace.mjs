@@ -14,6 +14,7 @@
 // Story 13.13 : bilan par canal recalculé depuis la base, boîtage par secteur, motifs de perte, délai de rappel.
 // Story 13.14 : prescripteurs (recommandés, mandats, relance due sur Aujourd'hui, échange noté, ajout).
 // Story 13.15 : acheteurs actifs (critères, « aussi vendeur », vendeurs en sommeil du secteur, lettre sur Aujourd'hui).
+// Story 13.16 : vue pipeline (colonnes par étape, déplacement avec prochaine action, réveil ou motif exigés).
 // Story 13.6 : qualifier (suite obligatoire, date, réveil ou motif exigés, étape et prochaine action fixées, heure de Paris).
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
@@ -409,13 +410,31 @@ try {
   r = await appeler(`${E}/`, { headers: avecJeton() });
   constat((await r.text()).includes(`data-lettre="${ANTHY.toLowerCase()}"`), 'aujourd\'hui : lettre « j\'ai un acheteur » proposée pour la commune');
 
+  // 5 octies. Vue pipeline (story 13.16).
+  r = await appeler(`${E}/pipeline?parcours=acheteur`, { headers: avecJeton() });
+  html = await r.text();
+  constat(r.status === 200 && (html.split('data-colonne="besoin_defini"')[1]?.split('</section>')[0] ?? '').includes(`data-contact="${ach1}"`),
+    'pipeline acheteurs : l\'acheteur qualifié est dans la colonne « Besoin défini »');
+  r = await page(`/pipeline?parcours=acheteur`, { id: ach1, etape: 'visites', action: '' });
+  constat(r.status === 200 && (await r.text()).includes('data-erreur') && sql(`SELECT etape FROM contact WHERE id = '${ach1}'`)[0].etape === 'besoin_defini',
+    'déplacer vers une étape active sans prochaine action : refusé');
+  r = await page(`/pipeline?parcours=acheteur`, { id: ach1, etape: 'visites', action: 'Visite à Anthy', le: '2027-02-10', heure: '14:30' });
+  const pv = sql(`SELECT etape, prochaine_action, prochaine_action_le FROM contact WHERE id = '${ach1}'`)[0];
+  constat(r.headers.get('location') === `/pipeline?parcours=acheteur&m=deplace#c-${ach1}` && pv.etape === 'visites' && pv.prochaine_action === 'Visite à Anthy' && pv.prochaine_action_le === '2027-02-10T13:30:00.000Z'
+    && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${ach1}' AND type = 'etape' AND texte LIKE '%→ Visites%'`)[0].n === 1,
+    'déplacé vers « Visites » avec action datée (14 h 30 à Paris), changement noté');
+  r = await page(`/pipeline?parcours=acheteur`, { id: ach2, etape: 'perdu', motif: 'Pas de projet' });
+  constat(sql(`SELECT etape, motif_perte FROM contact WHERE id = '${ach2}'`)[0].motif_perte === 'Pas de projet', 'déplacé vers « Perdu » avec son motif');
+  r = await page(`/pipeline?parcours=vendeur`, { id: reco.id, etape: 'en_sommeil', reveil_le: '2020-01-01' });
+  constat(r.status === 200 && sql(`SELECT etape FROM contact WHERE id = '${reco.id}'`)[0].etape === 'premier_rdv', 'en sommeil avec une date passée : refusé');
+
   // 6. Capture de la liste (ordinateur et téléphone).
   const { chromium } = await import('../../site/node_modules/playwright/index.mjs');
   const nav = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   for (const [nom, viewport] of [['ordinateur', { width: 1280, height: 900 }], ['telephone', { width: 390, height: 844 }]]) {
     const ctx = await nav.newContext({ viewport, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
     const onglet = await ctx.newPage();
-    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['bilan', '/bilan'], ['prescripteurs', '/prescripteurs'], ['prescripteur', `/prescripteurs/fiche?id=${durand}`], ['acheteurs', `/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`], ['qualifier-acheteur', `/contacts/qualifier?id=${ach1}`], ['importer', '/importer']]) {
+    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['bilan', '/bilan'], ['prescripteurs', '/prescripteurs'], ['prescripteur', `/prescripteurs/fiche?id=${durand}`], ['acheteurs', `/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`], ['qualifier-acheteur', `/contacts/qualifier?id=${ach1}`], ['pipeline', '/pipeline'], ['importer', '/importer']]) {
       await onglet.goto(`${E}${chemin}`);
       if (nomPage === 'ajouter') {
         await onglet.click('[data-canaux] label:has(input[value=boitage]) span');
