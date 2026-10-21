@@ -1,11 +1,11 @@
 ---
 // Gabarit des pages de travail de l'espace d'Anne (maquette v2, story 13.12) : pensé d'abord pour le téléphone,
 // menu en bas sur téléphone avec le bouton « Ajouter » au centre, menu en haut sur ordinateur. Charte du site.
-// Sur téléphone, les prescripteurs et les demandes du site (droits RGPD) s'ouvrent depuis la page Contacts.
+// Sur téléphone, les prescripteurs, les acheteurs et les demandes du site (droits RGPD) s'ouvrent depuis la page Contacts.
 // Les pages reprises de /gestion gardent le gabarit Gestion du site jusqu'à la phase 2 de la story 13.3.
 import '@site/styles/global.css';
 import { ENTETE_COMPTE } from '@site/server/acces';
-interface Props { titre: string; actif?: 'aujourdhui' | 'contacts' | 'bilan' | 'prescripteurs' | 'ajouter' | 'demandes' }
+interface Props { titre: string; actif?: 'aujourdhui' | 'contacts' | 'bilan' | 'prescripteurs' | 'acheteurs' | 'ajouter' | 'demandes' }
 const { titre, actif } = Astro.props;
 const compte = Astro.request.headers.get(ENTETE_COMPTE) ?? '';
 const liens = [
@@ -13,6 +13,7 @@ const liens = [
   { cle: 'contacts', href: '/contacts', texte: 'Contacts' },
   { cle: 'bilan', href: '/bilan', texte: 'Bilan' },
   { cle: 'prescripteurs', href: '/prescripteurs', texte: 'Prescripteurs' },
+  { cle: 'acheteurs', href: '/acheteurs', texte: 'Acheteurs' },
   { cle: 'demandes', href: '/gestion', texte: 'Demandes du site' },
 ] as const;
 ---

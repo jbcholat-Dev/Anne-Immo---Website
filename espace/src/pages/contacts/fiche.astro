@@ -51,6 +51,7 @@ const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.emai
       <p class="e-muet">Faite le {quand(c.qualifie_le)}</p>
       <dl style="display:grid;grid-template-columns:max-content 1fr;gap:6px 18px;margin:0">
         {QUESTIONS.map((q) => <><dt class="e-muet">{q.titre}</dt><dd style="margin:0">{reponses[q.id] ?? '—'}</dd></>)}
+        {c.parcours === 'acheteur' && <><dt class="e-muet">Budget</dt><dd style="margin:0">{reponses.budget ?? '—'}</dd><dt class="e-muet">Secteur</dt><dd style="margin:0">{reponses.secteur ?? '—'}</dd><dt class="e-muet">Financement</dt><dd style="margin:0">{reponses.financement ?? '—'}</dd></>}
       </dl>
     </section>
   )}

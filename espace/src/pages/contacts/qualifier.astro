@@ -7,7 +7,7 @@ import Espace from '../../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { pourSite as env } from '../../server/env';
 import {
-  aujourdhui, libelleOrigine, lireContact, MOTIFS_PERTE, parisVersUtc, plusTard, qualifier, QUESTIONS, type Issue, type Reponses,
+  aujourdhui, FINANCEMENTS, libelleOrigine, lireContact, MOTIFS_PERTE, parisVersUtc, plusTard, qualifier, QUESTIONS, RECHERCHE_ACHETEUR, type Issue, type Reponses,
 } from '../../server/pipeline';
 
 export const prerender = false;
@@ -30,6 +30,11 @@ if (Astro.request.method === 'POST') {
   reponses = {};
   for (const q of QUESTIONS) if ((q.options as readonly string[]).includes(saisi[`q_${q.id}`])) reponses[q.id] = saisi[`q_${q.id}`];
   const parcours = saisi.parcours === 'vendeur' || saisi.parcours === 'acheteur' ? saisi.parcours : null;
+  // Ce que cherche un acheteur (story 13.15), gardé seulement pour un acheteur.
+  if ((parcours ?? c.parcours) === 'acheteur') {
+    for (const q of RECHERCHE_ACHETEUR) if (saisi[`a_${q.id}`]) reponses[q.id] = saisi[`a_${q.id}`].slice(0, 120);
+    if ((FINANCEMENTS as readonly string[]).includes(saisi.a_financement ?? '')) reponses.financement = saisi.a_financement;
+  }
   let issue: Issue | null = null;
   const choixDate = (choix: string, autre: string) =>
     choix === '1m' ? plusTard(0, 1) : choix === '3m' ? plusTard(0, 3) : choix === '6m' ? plusTard(0, 6) : choix === '1j' ? plusTard(1) : choix === '2j' ? plusTard(2) : choix === '7j' ? plusTard(7) : DATE.test(autre) ? autre : '';
@@ -87,6 +92,17 @@ const issues = [
       </fieldset>
     ))}
 
+    <fieldset class="e-cadre-acheteur" data-acheteur hidden={c.parcours === 'vendeur'}>
+      <legend>Ce qu'il ou elle cherche (acheteur)</legend>
+      <div class="e-champs">
+        {RECHERCHE_ACHETEUR.map((q) => <label class="e-champ">{q.titre}<input name={`a_${q.id}`} value={saisi[`a_${q.id}`] ?? reponses[q.id]} placeholder={q.id === 'budget' ? '750 k€ à 850 k€' : 'Anthy, Sciez'} autocomplete="off" /></label>)}
+      </div>
+      <fieldset class="e-pastilles" style="margin-top:12px">
+        <legend>Financement</legend>
+        {FINANCEMENTS.map((fi) => <label><input type="radio" name="a_financement" value={fi} checked={(saisi.a_financement ?? reponses.financement) === fi} /><span>{fi}</span></label>)}
+      </fieldset>
+    </fieldset>
+
     <h2>Et maintenant ?</h2>
     <fieldset class="e-pastilles e-issues" data-issues>
       <legend class="e-muet">Une suite est obligatoire</legend>
@@ -124,6 +140,8 @@ const issues = [
 </Espace>
 
 <style is:global>
+  .e-cadre-acheteur { border: 1px solid var(--avt-galet); border-radius: 12px; padding: 14px; margin: 0; }
+  .e-cadre-acheteur > legend { font-size: 15px; font-weight: 500; padding: 0 6px; }
   .e-issues label { flex: 1 1 40%; }
   .e-issues span { width: 100%; justify-content: center; min-height: 48px; border-radius: 12px; font-weight: 500; }
   .e-issues input[value=rdv]:checked + span { background: var(--avt-terra); border-color: var(--avt-terra); }
@@ -137,6 +155,9 @@ const issues = [
     if (!form) return;
     const issue = form.querySelector<HTMLInputElement>('input[name=issue]:checked')?.value ?? '';
     form.querySelectorAll<HTMLElement>('[data-suite]').forEach((el) => { el.hidden = el.dataset.suite !== issue; });
+    const choixParcours = form.querySelector<HTMLInputElement>('input[name=parcours]:checked')?.value;
+    const acheteur = form.querySelector<HTMLElement>('[data-acheteur]');
+    if (acheteur && choixParcours) acheteur.hidden = choixParcours !== 'acheteur';
     const n = form.querySelectorAll('input[name^=q_]:checked').length;
     const resume = form.querySelector('[data-resume]');
     if (resume) resume.textContent = `${n} réponse(s) sur 5${issue ? '' : ' · choisissez une suite'}`;

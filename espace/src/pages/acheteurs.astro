@@ -1,0 +1,79 @@
+---
+// Acheteurs actifs (story 13.15, maquette v2 écran 6) : les acheteurs qualifiés qui cherchent en ce moment, avec ce
+// qu'ils cherchent, leur budget, leur secteur et leur financement ; ceux qui doivent d'abord vendre sont signalés
+// « aussi vendeur ». Par secteur, Anne retrouve les vendeurs en sommeil des mêmes communes, à rappeler avec
+// « j'ai un acheteur ». L'offre « mandat de recherche » reste à décider à part.
+import Espace from '../layouts/Espace.astro';
+import { ENTETE_COMPTE } from '@site/server/acces';
+import { pourSite as env } from '../server/env';
+import { acheteursActifs, communesDe, depuis, vendeursEnSommeil, echeance } from '../server/pipeline';
+
+export const prerender = false;
+if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
+
+const acheteurs = await acheteursActifs(env);
+// Les communes cherchées, avec le nombre d'acheteurs pour chacune.
+const parCommune = new Map<string, number>();
+for (const a of acheteurs) for (const c of a.communes) parCommune.set(c, (parCommune.get(c) ?? 0) + 1);
+const secteurs = [...parCommune.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
+const choisi = (Astro.url.searchParams.get('secteur') ?? '').trim().slice(0, 120);
+const sommeil = choisi ? await vendeursEnSommeil(env, communesDe(choisi)) : [];
+const nom = (c: { prenom: string | null; nom: string | null; telephone: string | null; email: string | null }) => [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.email || '—';
+const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+---
+<Espace titre="Acheteurs actifs" actif="acheteurs">
+  <div>
+    <div class="e-muet">Ils cherchent en ce moment</div>
+    <h1>Acheteurs actifs</h1>
+  </div>
+
+  {acheteurs.length === 0 ? <p class="e-muet">Aucun acheteur qualifié pour l'instant. Un acheteur apparaît ici dès qu'il est qualifié, avec son budget et son secteur.</p> : (
+    <div class="e-carte" style="padding:8px">
+      <div class="e-table-zone">
+        <table class="e-table" data-acheteurs style="min-width:620px">
+          <thead><tr><th>Qui</th><th>Cherche</th><th>Budget</th><th>Secteur</th><th>Financement</th></tr></thead>
+          <tbody>
+            {acheteurs.map((a) => (
+              <tr data-acheteur={a.id}>
+                <td><a href={`/contacts/fiche?id=${a.id}`} style="font-weight:500">{nom(a)}</a>
+                  <div class="e-muet">{a.commune ? `${a.commune} · ` : ''}depuis {depuis(a.created_at).replace(/^il y a /, '')}</div>
+                  {a.aussiVendeur && <span class="e-tag alerte" data-aussi-vendeur>Aussi vendeur</span>}</td>
+                <td>{a.reponses.bien ?? '—'}</td>
+                <td>{a.reponses.budget ?? '—'}</td>
+                <td>{a.reponses.secteur ?? '—'}</td>
+                <td><span class={a.reponses.financement === 'Vérifié' ? 'e-tag' : 'e-tag neutre'}>{a.reponses.financement ?? 'Non renseigné'}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )}
+
+  {secteurs.length > 0 && (
+    <section class="a-acheteur" data-secteurs>
+      <h2>J'ai un acheteur</h2>
+      <p>Une raison d'écrire aux propriétaires d'un secteur et de rappeler les vendeurs en sommeil.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        {secteurs.map(([c, n]) => <a class="e-bouton second" href={`/acheteurs?secteur=${encodeURIComponent(c)}#sommeil`} data-secteur={c}>{majuscule(c)} : {n} acheteur(s)</a>)}
+      </div>
+    </section>
+  )}
+
+  {choisi && (
+    <section class="e-carte" id="sommeil" data-sommeil>
+      <h2>Vendeurs en sommeil à {majuscule(choisi)}</h2>
+      {sommeil.length === 0 ? <p class="e-muet">Aucun vendeur en sommeil dans cette commune.</p> : (
+        <ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px">
+          {sommeil.map((v) => <li data-vendeur={v.id}><a href={`/contacts/fiche?id=${v.id}`}>{nom(v)}</a> · à réveiller le {echeance(v.prochaine_action_le)}{v.telephone && <> · <a href={`tel:${v.telephone}`}>Appeler</a></>}</li>)}
+        </ul>
+      )}
+    </section>
+  )}
+  <p class="e-muet">L'offre « mandat de recherche » n'est pas encore décidée : cette page sert pour l'instant à trouver des vendeurs grâce aux acheteurs.</p>
+</Espace>
+
+<style>
+  .a-acheteur { background: var(--avt-brume); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+  .a-acheteur p { margin: 0; }
+</style>

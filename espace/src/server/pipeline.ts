@@ -325,7 +325,13 @@ export const QUESTIONS = [
   { id: 'motif', titre: 'Pourquoi ce projet ?', options: ['Succession', 'Séparation', 'Achète plus grand', 'Retraite, départ', 'Autre'] },
   { id: 'vend_avant', titre: 'Acheteur : un bien à vendre d’abord ?', options: ['Oui', 'Non', 'Sans objet'] },
 ] as const;
-export type Reponses = Partial<Record<(typeof QUESTIONS)[number]['id'], string>>;
+/** Ce que cherche un acheteur (story 13.15) : gardé avec les réponses, pour la liste des acheteurs actifs. */
+export const RECHERCHE_ACHETEUR = [
+  { id: 'budget', titre: 'Budget' },
+  { id: 'secteur', titre: 'Secteur recherché (communes)' },
+] as const;
+export const FINANCEMENTS = ['Vérifié', 'À vérifier', 'Après sa vente'] as const;
+export type Reponses = Partial<Record<(typeof QUESTIONS)[number]['id'] | 'budget' | 'secteur' | 'financement', string>>;
 
 export const MOTIFS_PERTE = ['Exclusif ailleurs', 'Pas de projet', 'Hors secteur', 'Veut vendre seul', 'Injoignable', 'Autre'] as const;
 
@@ -387,7 +393,8 @@ export async function qualifier(env: EnvSite, id: string, reponses: Reponses, pa
       resume = `Pas joint, à rappeler le ${echeance(le)}`;
       break;
   }
-  const texteReponses = QUESTIONS.filter((q) => reponses[q.id]).map((q) => `${q.titre} ${reponses[q.id]}`).join(' · ');
+  const texteReponses = [...QUESTIONS, ...RECHERCHE_ACHETEUR, { id: 'financement', titre: 'Financement' } as const]
+    .filter((q) => reponses[q.id]).map((q) => `${q.titre} ${reponses[q.id]}`).join(' · ');
   const lot = [
     env.DB.prepare(
       `UPDATE contact SET last_activity_at = ?2, parcours = COALESCE(?3, parcours), etape = ?4, prochaine_action = ?5, prochaine_action_le = ?6,
@@ -594,4 +601,39 @@ export async function noterEchangePrescripteur(env: EnvSite, id: string, relance
       notes = CASE WHEN ?6 IS NULL THEN notes ELSE trim(coalesce(notes, '') || char(10) || ?3 || ' : ' || ?6) END WHERE id = ?1`)
     .bind(id, new Date().toISOString(), aujourdhui(), relance_le, raison, note).run();
   return r.meta.changes > 0;
+}
+
+// ——— Acheteurs actifs (story 13.15, maquette v2 écran 6) ———
+
+export interface Acheteur extends ResumeContact { created_at: string; qualification: string | null }
+
+/** Les acheteurs qualifiés qui cherchent en ce moment (ni perdus, ni en sommeil, ni passés à l'acte). */
+export async function acheteursActifs(env: EnvSite): Promise<(Acheteur & { reponses: Reponses; aussiVendeur: boolean; communes: string[] })[]> {
+  const { results } = await env.DB.prepare(
+    `SELECT id, prenom, nom, telephone, email, commune, parcours, etape, prochaine_action, prochaine_action_le, canal, origine_detail, last_activity_at, is_test,
+       created_at, qualification
+     FROM contact WHERE parcours = 'acheteur' AND qualifie_le IS NOT NULL AND etape NOT IN ('perdu', 'en_sommeil', 'acte_signe')
+     ORDER BY last_activity_at DESC LIMIT 200`,
+  ).all<Acheteur>();
+  return results.map((a) => {
+    let reponses: Reponses = {};
+    try { reponses = a.qualification ? JSON.parse(a.qualification) : {}; } catch {}
+    return { ...a, reponses, aussiVendeur: reponses.vend_avant === 'Oui' || reponses.financement === 'Après sa vente', communes: communesDe(reponses.secteur ?? '') };
+  });
+}
+
+/** « Anthy, Sciez et Margencel » → ['anthy', 'sciez', 'margencel'] */
+export function communesDe(secteur: string): string[] {
+  return secteur.split(/,|;|\bet\b|\//).map((c) => c.trim().toLowerCase()).filter((c) => c.length >= 2);
+}
+
+/** Les vendeurs en sommeil de ces communes : ceux à rappeler avec « j'ai un acheteur ». */
+export async function vendeursEnSommeil(env: EnvSite, communes: string[]): Promise<ResumeContact[]> {
+  if (!communes.length) return [];
+  const { results } = await env.DB.prepare(
+    `SELECT id, prenom, nom, telephone, email, commune, parcours, etape, prochaine_action, prochaine_action_le, canal, origine_detail, last_activity_at, is_test
+     FROM contact WHERE etape = 'en_sommeil' AND coalesce(parcours, 'vendeur') = 'vendeur' AND lower(commune) IN (SELECT value FROM json_each(?1))
+     ORDER BY reveil_le LIMIT 100`,
+  ).bind(JSON.stringify(communes)).all<ResumeContact>();
+  return results;
 }

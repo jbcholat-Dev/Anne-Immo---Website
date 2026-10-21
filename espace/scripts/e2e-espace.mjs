@@ -13,6 +13,7 @@
 // Story 13.5 : page « Aujourd'hui » (nouveaux d'abord, rappels dus et en retard, réveils, boîtage à refaire, prescripteurs).
 // Story 13.13 : bilan par canal recalculé depuis la base, boîtage par secteur, motifs de perte, délai de rappel.
 // Story 13.14 : prescripteurs (recommandés, mandats, relance due sur Aujourd'hui, échange noté, ajout).
+// Story 13.15 : acheteurs actifs (critères, « aussi vendeur », vendeurs en sommeil du secteur, lettre sur Aujourd'hui).
 // Story 13.6 : qualifier (suite obligatoire, date, réveil ou motif exigés, étape et prochaine action fixées, heure de Paris).
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
@@ -382,13 +383,39 @@ try {
   r = await appeler(`${E}/prescripteurs/fiche?id=${durand}`, { headers: avecJeton() });
   constat((await r.text()).includes(`/contacts/fiche?id=${zoe}`), 'fiche du prescripteur : ses contacts recommandés');
 
+  // 5 septies. Acheteurs actifs (story 13.15).
+  const ANTHY = `Anthy-${NUM}`;
+  const ajouterAcheteur = async (prenom, mail) => {
+    await page('/ajouter', { quoi: 'contact', prenom, nom: `Acheteur${NUM}`, email: mail, canal: 'portail', parcours: 'acheteur', commune: 'Genève' });
+    return sql(`SELECT id FROM contact WHERE email = '${mail}'`)[0].id;
+  };
+  const ach1 = await ajouterAcheteur('Hugo', `hugo+${ESSAI}@example.com`), ach2 = await ajouterAcheteur('Inès', `ines+${ESSAI}@example.com`);
+  r = await appeler(`${E}/contacts/qualifier?id=${ach1}`, { headers: avecJeton() });
+  constat((await r.text()).includes('name="a_budget"'), 'qualifier un acheteur : budget, secteur et financement demandés');
+  await qualif(ach1, { q_bien: 'Maison', q_vend_avant: 'Oui', a_budget: '700 k€', a_secteur: `${ANTHY}, Sciez`, a_financement: 'Après sa vente', issue: 'rdv', rdv_le: '2027-02-02T10:00' });
+  await qualif(ach2, { q_bien: 'Maison', q_vend_avant: 'Non', a_budget: '900 k€ à 1,1 M€', a_secteur: ANTHY, a_financement: 'Vérifié', issue: 'rdv', rdv_le: '2027-02-03T10:00' });
+  constat(sql(`SELECT etape FROM contact WHERE id = '${ach1}'`)[0].etape === 'besoin_defini' && JSON.parse(sql(`SELECT qualification FROM contact WHERE id = '${ach1}'`)[0].qualification).budget === '700 k€',
+    'acheteur qualifié en rendez-vous : étape « Besoin défini », budget gardé');
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, nom, commune, parcours, etape, prochaine_action, prochaine_action_le, reveil_le, canal, is_test) VALUES
+    ('DORT${NUM}', '2026-05-01T08:00:00Z', '2026-05-01T08:00:00Z', 'Dormeur${NUM}', '${ANTHY}', 'vendeur', 'en_sommeil', 'Réveiller : rappeler', '2027-03-01', '2027-03-01', 'boitage', 1)`);
+  r = await appeler(`${E}/acheteurs`, { headers: avecJeton() });
+  html = await r.text();
+  const l1 = html.split(`data-acheteur="${ach1}"`)[1]?.split('</tr>')[0] ?? '', l2 = html.split(`data-acheteur="${ach2}"`)[1]?.split('</tr>')[0] ?? '';
+  constat(l1.includes('data-aussi-vendeur') && l1.includes('700 k€') && !l2.includes('data-aussi-vendeur') && l2.includes('Vérifié'),
+    'acheteurs actifs : critères affichés, celui qui doit d\'abord vendre signalé « aussi vendeur »');
+  constat(html.includes(`data-secteur="${ANTHY.toLowerCase()}"`) && html.includes('2 acheteur(s)'), 'acheteurs : la commune cherchée par 2 acheteurs');
+  r = await appeler(`${E}/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`, { headers: avecJeton() });
+  constat((await r.text()).includes(`data-vendeur="DORT${NUM}"`), 'depuis la commune : les vendeurs en sommeil du même secteur');
+  r = await appeler(`${E}/`, { headers: avecJeton() });
+  constat((await r.text()).includes(`data-lettre="${ANTHY.toLowerCase()}"`), 'aujourd\'hui : lettre « j\'ai un acheteur » proposée pour la commune');
+
   // 6. Capture de la liste (ordinateur et téléphone).
   const { chromium } = await import('../../site/node_modules/playwright/index.mjs');
   const nav = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   for (const [nom, viewport] of [['ordinateur', { width: 1280, height: 900 }], ['telephone', { width: 390, height: 844 }]]) {
     const ctx = await nav.newContext({ viewport, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
     const onglet = await ctx.newPage();
-    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['bilan', '/bilan'], ['prescripteurs', '/prescripteurs'], ['prescripteur', `/prescripteurs/fiche?id=${durand}`], ['importer', '/importer']]) {
+    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['bilan', '/bilan'], ['prescripteurs', '/prescripteurs'], ['prescripteur', `/prescripteurs/fiche?id=${durand}`], ['acheteurs', `/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`], ['qualifier-acheteur', `/contacts/qualifier?id=${ach1}`], ['importer', '/importer']]) {
       await onglet.goto(`${E}${chemin}`);
       if (nomPage === 'ajouter') {
         await onglet.click('[data-canaux] label:has(input[value=boitage]) span');
