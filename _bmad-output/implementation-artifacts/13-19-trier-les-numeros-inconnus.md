@@ -1,7 +1,7 @@
 ---
 story: 13.19
 epic: 13 — Espace de travail d'Anne
-statut: review
+statut: done
 date: 2026-10-21
 maj: 2026-10-21
 ---
@@ -38,5 +38,5 @@ Retour de JB du 2026-10-21 (capture d'« Aujourd'hui » couverte de cartes de nu
   - captures `espace/.verif/espace-a-trier-*.png`, `espace-aujourdhui-*.png`, `espace-inconnu-*.png` relues, aucun débordement signalé.
 
 ## Ce qui reste
-- JB : fusionner la PR.
+- Fusionnée dans main le 2026-10-21 (PR #170, accord de JB).
 - Anne : trier ses numéros, dire si d'autres catégories lui manquent.
