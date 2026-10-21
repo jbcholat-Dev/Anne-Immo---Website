@@ -162,7 +162,7 @@ Le site est trouvé par les vendeurs et acheteurs du Chablais qui cherchent sur 
 Le site est en ligne sur annevialtissot.fr, trouvable, légal, avec des formulaires qui fonctionnent. **AD-9, AD-10, AD-16 ; NFR3.** **État :** à faire.
 
 - **Epic 13 : Espace de travail d'Anne**
-Anne démarre chaque journée devant ses contacts et sait qui appeler, qui relancer et comment faire avancer chacun ; Modelo ne sert plus qu'à formaliser un mandat. **CAP-12 ; AD-14 (amendée), AD-18, AD-19, AD-20.** **État :** en cours ; spec (13.1) et architecture (13.2) écrites, construction découpée en stories 13.3 à 13.11.
+Anne démarre chaque journée devant ses contacts et sait qui appeler, qui relancer et comment faire avancer chacun ; Modelo ne sert plus qu'à formaliser un mandat. **CAP-12 ; AD-14 (amendée), AD-18, AD-19, AD-20.** **État :** en cours ; spec (13.1, amendée en v7 le 2026-10-21) et architecture (13.2) écrites ; parcours et maquette v2 validés (13.12) ; construction en stories 13.3 à 13.16, dans l'ordre 13.4, 13.7, 13.6, 13.5, 13.13, 13.14, 13.15, 13.16, avec 13.8 et 13.10 en parallèle.
 
 - **Epic 15 : Portail des vendeurs sous mandat**
 Un vendeur qui a signé un mandat avec Anne suit sa vente sur un espace privé : étape, visites et retours, prochaines actions, informations de marché. **Capacité à écrire (spec v7 ou suivante) ; s'appuie sur CAP-12, AD-19, AD-20.** **État :** à définir ; cadrage (15.1) : réponses de JB du 2026-10-11 notées, capacité à écrire.
@@ -2142,7 +2142,7 @@ afin de les ajuster sans passer par JB ou Claude.
 ## Epic 13: Espace de travail d'Anne
 
 Anne démarre chaque journée devant ses contacts et sait qui appeler, qui relancer et comment faire avancer chacun, quel que soit le canal d'arrivée du contact (téléphone, événement, site). L'espace part de `/gestion` (story 10.7) et devient son outil principal ; Modelo n'est utilisé qu'à la signature d'un mandat.
-**Capacités couvertes :** CAP-12 (spec v6, 2026-10-09). **Décisions :** AD-14 (amendée par CAP-12 : recopie Modelo au mandat seulement), AD-18 (droits RGPD depuis l'espace), AD-4 et AD-6 (un contact n'est jamais créé deux fois), une décision d'architecture à écrire pour Leedflow et la boîte Gmail.
+**Capacités couvertes :** CAP-12 (spec v6, 2026-10-09, amendée en v7 le 2026-10-21). **Décisions :** AD-14 (amendée par CAP-12 : recopie Modelo au mandat seulement), AD-18 (droits RGPD depuis l'espace), AD-4 et AD-6 (un contact n'est jamais créé deux fois), une décision d'architecture à écrire pour Leedflow et la boîte Gmail.
 
 ### Story 13.1: Spécification de l'espace de travail
 
@@ -2183,52 +2183,53 @@ afin qu'une mise en ligne de l'un ne touche jamais l'autre (AD-19).
 
 *Découpage du 2026-10-15 :* phase 1, l'espace reprend `/gestion` à l'identique pendant que celui du site reste ouvert ; phase 2, une fois l'espace en ligne et essayé par Anne, le site renvoie `/gestion` vers l'espace et n'a plus de page privée.
 
-### Story 13.4: Contacts et pipeline
+### Story 13.4: Contacts, origine précise et étapes
 
 En tant qu'Anne,
-je veux qu'une personne soit un seul contact, avec un parcours, une étape, une prochaine action datée et un historique,
-afin de savoir où en est chacun (CAP-12, AD-20).
+je veux qu'une personne soit un seul contact, avec son origine précise, un parcours, une étape, une prochaine action datée et un historique,
+afin de savoir où en est chacun et d'où il vient (CAP-12 v7, AD-20).
 
 **Critères d'acceptation :**
-**Étant donné** les tables `contact` et `contact_evenement`
+**Étant donné** les tables `contact`, `contact_evenement`, `passage_boitage` et `prescripteur`
 **Quand** une même personne fait deux demandes (même téléphone ou même e-mail)
-**Alors** elles se rangent sur un seul contact, les demandes existantes comprises
+**Alors** elles se rangent sur un seul contact, les demandes existantes comprises, avec le canal d'origine déduit de la source de la demande
 **Et** un contact actif ne peut pas être enregistré sans prochaine action datée ; En sommeil exige une date de réveil ; Perdu exige un motif
+**Et** les réponses de qualification (cinq questions) sont gardées sur le contact
 
 ### Story 13.5: Page « Aujourd'hui »
 
 En tant qu'Anne,
-je veux ouvrir ma journée sur les nouveaux contacts, les actions du jour et en retard, et mes rendez-vous,
-afin de savoir qui appeler et comment le faire avancer.
+je veux ouvrir ma journée sur les nouveaux contacts à rappeler, mes rappels du jour avec une raison d'appeler, et ma prospection de la semaine,
+afin de rappeler vite et de savoir qui appeler (maquette v2, écran 1).
 
 **Critères d'acceptation :**
 **Étant donné** des contacts nouveaux, dus, en retard et en sommeil à réveiller
 **Quand** Anne ouvre l'espace, sur téléphone ou ordinateur
-**Alors** la page les montre dans cet ordre, retards en tête, comme la maquette
-**Et** depuis une ligne elle appelle, note le résultat et fixe la prochaine action sans quitter la page
+**Alors** les nouveaux contacts pas encore qualifiés sont en tête, le plus ancien d'abord, avec le temps écoulé ; puis les rappels dus et en retard ; puis les passages de boîtage à refaire et les prescripteurs à relancer
+**Et** depuis chaque ligne elle appelle en un geste et ouvre la qualification
 
-### Story 13.6: Vue pipeline et fiche contact
-
-En tant qu'Anne,
-je veux voir mes vendeurs et mes acheteurs par étape, et tout l'historique d'un contact,
-afin de piloter l'ensemble et de préparer chaque appel.
-
-**Critères d'acceptation :**
-**Étant donné** des contacts à plusieurs étapes des deux parcours
-**Quand** Anne déplace une carte vers une autre colonne
-**Alors** l'étape change, une prochaine action est demandée et l'événement est noté
-**Et** la fiche montre étape, prochaine action, coordonnées, bien concerné et historique, avec l'export et l'effacement de 10.7
-
-### Story 13.7: Saisie à la main et import d'une liste
+### Story 13.6: Qualifier en deux minutes et fiche contact
 
 En tant qu'Anne,
-je veux créer un contact en moins d'une minute et importer la liste d'un événement,
-afin que les contacts du téléphone et des jeux concours soient suivis comme les autres.
+je veux qualifier un nouveau contact en cinq réponses et une issue, et retrouver tout son historique,
+afin de décider en un appel s'il vaut un rendez-vous (maquette v2, écran 2).
 
 **Critères d'acceptation :**
-**Étant donné** un formulaire de saisie et un import de tableur (.xlsx ou .csv)
-**Quand** la liste contient des personnes déjà connues
-**Alors** elles sont complétées, jamais recréées, et l'aperçu dit combien sont nouvelles
+**Étant donné** un contact nouveau
+**Quand** Anne répond aux cinq questions (une touche chacune) et choisit rendez-vous, en sommeil ou perdu
+**Alors** la date du rendez-vous, la date de réveil ou le motif sont exigés, l'étape et la prochaine action sont fixées et l'événement est noté
+**Et** la fiche montre origine, étape, prochaine action, coordonnées, réponses et historique, avec l'export et l'effacement de 10.7
+
+### Story 13.7: Saisie à la main, passage de boîtage et import d'une liste
+
+En tant qu'Anne,
+je veux créer un contact en moins d'une minute avec son origine, noter un passage de boîtage en moins de 30 secondes et importer la liste d'un événement,
+afin que chaque contact soit suivi et rattaché à ce qui l'a amené (maquette v2, écran 3).
+
+**Critères d'acceptation :**
+**Étant donné** un formulaire de saisie (canal obligatoire ; passage ou prescripteur quand le canal l'appelle) et un import de tableur (.xlsx ou .csv)
+**Quand** le numéro ou l'e-mail est déjà connu, ou la liste contient des personnes déjà connues
+**Alors** la fiche existante est ouverte ou complétée, jamais recréée, et l'aperçu d'import dit combien sont nouvelles
 **Et** sans la case « les participants ont accepté d'être recontactés », les contacts importés sont marqués « rappel individuel seulement »
 
 ### Story 13.8: Demandes des portails d'annonces
@@ -2280,6 +2281,53 @@ afin d'avoir toute la relation au même endroit.
 **Étant donné** un choix d'accès à Gmail fait par JB (lecture serveur avec validation Google, ou relève par Claude)
 **Quand** un e-mail est échangé avec l'adresse d'un contact
 **Alors** il apparaît dans son historique. **Différée** : l'espace est complet sans (AD-20)
+
+### Story 13.13: Bilan du lundi par canal
+
+En tant qu'Anne,
+je veux voir chaque semaine ce que chaque canal m'a rapporté,
+afin de savoir où mettre mes heures (CAP-12 v7, maquette v2 écran 4).
+
+**Critères d'acceptation :**
+**Étant donné** des contacts d'origines diverses sur la période choisie (semaine, 4 semaines, 3 mois)
+**Quand** Anne ouvre le bilan
+**Alors** il donne par canal les contacts, les qualifiés, les rendez-vous et les mandats, le délai moyen de rappel, le boîtage par secteur (dernier passage, mots, appels reçus) et les motifs de perte
+**Et** les chiffres se recalculent depuis la base, sans saisie
+
+### Story 13.14: Prescripteurs
+
+En tant qu'Anne,
+je veux suivre ceux qui m'envoient des vendeurs et savoir quand les relancer,
+afin de faire grandir mon meilleur canal (maquette v2 écran 5).
+
+**Critères d'acceptation :**
+**Étant donné** des prescripteurs liés aux contacts qu'ils ont recommandés
+**Quand** Anne ouvre la liste
+**Alors** chacun montre ses recommandés sur 12 mois, les mandats qui en sont issus, le dernier contact et une prochaine relance datée avec sa raison
+**Et** une relance due apparaît sur la page « Aujourd'hui »
+
+### Story 13.15: Acheteurs actifs
+
+En tant qu'Anne,
+je veux la liste des acheteurs qualifiés qui cherchent en ce moment,
+afin de dire « j'ai un acheteur » aux propriétaires du même secteur (maquette v2 écran 6).
+
+**Critères d'acceptation :**
+**Étant donné** des contacts acheteurs qualifiés (budget, secteur, type de bien, financement vérifié ou non)
+**Quand** Anne ouvre la liste
+**Alors** elle les voit avec ces critères, ceux qui doivent d'abord vendre étant signalés « aussi vendeur »
+**Et** depuis un secteur, elle retrouve les vendeurs en sommeil du même secteur. L'offre « mandat de recherche » reste à décider à part
+
+### Story 13.16: Vue pipeline
+
+En tant qu'Anne,
+je veux voir mes vendeurs et mes acheteurs par étape,
+afin de piloter l'ensemble (CAP-12).
+
+**Critères d'acceptation :**
+**Étant donné** des contacts à plusieurs étapes des deux parcours
+**Quand** Anne déplace une carte vers une autre colonne
+**Alors** l'étape change, une prochaine action est demandée et l'événement est noté
 
 ### Story 13.12: Parcours d'Anne pour trouver et qualifier des contacts
 
