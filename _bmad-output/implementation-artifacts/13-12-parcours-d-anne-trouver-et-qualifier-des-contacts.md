@@ -1,6 +1,6 @@
 # Story 13.12 : Parcours d'Anne pour trouver et qualifier des contacts
 
-Epic 13 (espace de travail d'Anne, CAP-12). Statut : en cours.
+Epic 13 (espace de travail d'Anne, CAP-12). Statut : fait (2026-10-21).
 
 ## Objectif
 
@@ -24,6 +24,10 @@ Avant de construire les écrans de l'espace (13.4 à 13.7), repasser par les par
 - Aucun code changé.
 
 ## Ce qui reste
+
+2026-10-21 : JB valide la maquette v2 (« C'est parfait, let's go ») et lance la construction sans attendre l'entretien avec Anne. Spec v7 (CAP-12 amendée), stories 13.4 à 13.7 réécrites, stories 13.13 à 13.16 ajoutées. L'entretien avec Anne reste utile : ses retours ajusteront les stories suivantes (action J43).
+
+Liste d'origine :
 
 1. JB relit le document et corrige.
 2. JB mène l'entretien avec Anne (guide dans le document) et transmet les notes.

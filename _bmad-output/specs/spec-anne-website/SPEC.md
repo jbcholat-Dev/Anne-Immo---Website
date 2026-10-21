@@ -1,7 +1,7 @@
 ---
 id: SPEC-anne-website
-version: 6
-date: 2026-10-09
+version: 7
+date: 2026-10-21
 companions:
   - ../../planning-artifacts/architecture/architecture-anne-website-2026-08-29/ARCHITECTURE-SPINE.md
   - contexte-existant.md
@@ -19,6 +19,7 @@ sources:
   - ../../../../CLAUDE.md § journal 2026-09-07 — décisions d'architecture vague 1 (JB)
   - ../../../maquettes/lot-3-complet/DECISIONS.md — journal des décisions de la séance maquette lot 3, Anne + JB (2026-09-13)
   - Fil « Espace de travail d'Anne », réponses de JB sur la façon de travailler d'Anne (2026-10-09) — CAP-12
+  - Story 13.12, parcours d'Anne pour trouver et qualifier des contacts et maquette v2 validés par JB (2026-10-21) — CAP-12 amendée
 ---
 
 # Site web Anne Vial-Tissot — vitrine de crédibilité et génération de leads
@@ -85,12 +86,15 @@ Ces seuils sont posés par déduction du modèle économique (5-6 ventes/an), pa
   - **success:** Un formulaire dédié recueille prénom, nom, téléphone (obligatoire, format international), email, commune du bien, type de bien et un consentement explicite. Le lead est écrit côté site avant toute diffusion, avec la même garantie d'idempotence que les autres sources (contrainte « Stockage de référence des leads », AD-4, AD-6) ; il porte la source `estimation`, distincte de la source `contact`, pour que l'origine reste lisible dans le suivi. Une confirmation est envoyée au prospect et une notification à Anne. Les obligations RGPD sont identiques à celles des autres formulaires.
 
 - **CAP-12 — Espace de travail d'Anne**
-  - **intent:** Anne démarre chaque journée devant ses contacts et sait qui appeler, qui relancer et quoi faire pour faire avancer chacun, quel que soit le canal par lequel le contact est arrivé (téléphone, événement, site). C'est son outil principal de suivi ; Modelo n'est utilisé qu'au moment de formaliser un mandat (2026-10-09).
+  - **intent:** Anne démarre chaque journée devant ses contacts et sait qui appeler, qui relancer et quoi faire pour faire avancer chacun, quel que soit le canal par lequel le contact est arrivé (téléphone, événement, site). C'est son outil principal de suivi ; Modelo n'est utilisé qu'au moment de formaliser un mandat (2026-10-09). **Depuis la v7 (2026-10-21)**, l'espace sert d'abord son défi n° 1 : trouver des vendeurs et qualifier vite chaque nouveau contact ; il mesure ce que rapporte chaque canal.
   - **success:**
     - **Tout contact y entre.** Les demandes du site y arrivent seules (CAP-5, CAP-6, CAP-8, CAP-9, CAP-11), ainsi que les demandes faites sur ses annonces (Leboncoin et autres portails, que Modelo lui notifie par e-mail), rattachées au bien concerné. Anne crée un contact à la main depuis son téléphone en moins d'une minute (prénom, nom, téléphone ou e-mail, origine : téléphone, boîtage, événement, recommandation, site…). Elle importe une liste issue d'un événement (fichier tableur) ; un contact déjà connu, reconnu par son téléphone au format international ou son e-mail (casse ignorée), n'est jamais créé deux fois.
     - **Chaque contact a un parcours, une étape, une prochaine action datée et un historique** (notes, changements d'étape, envois, rendez-vous, puis appels et e-mails). Parcours **vendeur**, étapes par défaut : À qualifier (premier appel : vend-il, a-t-il déjà un agent, depuis quand est-il en vente) → Premier rendez-vous (visite du bien) → Estimation en préparation → Second rendez-vous (stratégie et estimation présentées) → Mandat exclusif signé → En vente (points réguliers avec les vendeurs) → Vendu. Parcours **acheteur**, étapes par défaut : À qualifier → Besoin défini → Mandat de recherche signé → Visites → Offre acceptée → Acte signé. À toute étape, un contact peut passer **En sommeil** (avec une date de réveil) ou **Perdu** (avec un motif).
     - **Aucun contact actif sans prochaine action datée.** L'espace la demande à chaque changement d'étape ; seuls Vendu, Acte signé et Perdu en sont dispensés. Un contact en sommeil revient dans la journée à sa date de réveil.
     - **Une page « Aujourd'hui » ouvre l'espace** : nouveaux contacts pas encore traités, actions prévues aujourd'hui ou en retard (les retards en tête), rendez-vous du jour. Depuis chaque ligne, Anne appelle ou écrit en un geste, note le résultat et fixe la prochaine action sans quitter la page.
+    - **Qualifier en deux minutes (v7).** Depuis un nouveau contact, sur téléphone, Anne répond à cinq questions en un geste chacune (projet et délai, déjà avec une agence, le bien, pourquoi vendre, pour un acheteur : un bien à vendre d'abord), préremplies par le résumé Leedflow quand il existe, puis choisit une seule issue : premier rendez-vous daté, en sommeil avec une date de réveil, ou perdu avec un motif. La page « Aujourd'hui » met en tête les nouveaux contacts pas encore qualifiés, le plus ancien d'abord, avec le temps écoulé depuis leur arrivée.
+    - **Origine précise et bilan par canal (v7).** Chaque contact porte un canal (boîtage, recommandation, événement, site, portail, réseaux sociaux, rencontre, autre) et, quand il y a lieu, son détail : le passage de boîtage (secteur, date, nombre de mots, noté en moins de 30 secondes) ou le prescripteur qui l'a recommandé. Un bilan hebdomadaire donne, par canal, les contacts, les qualifiés, les rendez-vous et les mandats, le boîtage par secteur et les motifs de perte.
+    - **Prescripteurs et acheteurs actifs (v7).** Les prescripteurs (notaires, conseillers, anciens clients) ont leur liste, avec les contacts recommandés, les mandats qui en sont issus et une prochaine relance datée. Les acheteurs qualifiés (budget, secteur, type de bien, financement vérifié ou non) forment une liste qui sert de prétexte d'appel auprès des vendeurs du même secteur ; l'offre « mandat de recherche » reste à décider à part.
     - **Une vue pipeline par parcours** : une colonne par étape avec son nombre de contacts ; déplacer une carte change l'étape et le trace dans l'historique.
     - **Modelo à la signature seulement.** Au passage à « Mandat exclusif signé » ou « Mandat de recherche signé », le contact est marqué « à recopier dans Modelo » avec une fiche prête à copier ; avant cette étape, aucune recopie n'est demandée (amende AD-14).
     - **Téléphone et ordinateur à égalité** (Anne travaille à 50/50) ; même protection d'accès que la gestion des demandes (AD-18) ; en français.
