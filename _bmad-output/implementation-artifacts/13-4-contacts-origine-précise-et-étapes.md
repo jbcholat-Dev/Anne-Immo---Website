@@ -1,7 +1,7 @@
 ---
 story: 13.4
 epic: 13 — Espace de travail d'Anne
-statut: review
+statut: done
 date: 2026-10-21
 maj: 2026-10-21
 ---
@@ -30,6 +30,6 @@ Qu'une personne soit **un seul contact** dans la base, quel que soit le nombre d
 - Essais de bout en bout du site, tous les constats bons : `e2e-gestion` (avec un nouveau constat : purge d'un contact de plus de 3 ans, contact récent gardé), `e2e-guide`, `e2e-rendez-vous`, `e2e-diagnostic`.
 
 ## Ce qui reste
-- JB : fusionner la PR de code. **La fusion modifie la base de production** : ajout de tables et d'une colonne, rien de supprimé ni de modifié dans les demandes existantes.
+- ~~JB : fusionner la PR de code~~ PR #163 fusionnée le 2026-10-21 (ajout de tables à la base de production).
 - Après la fusion : constater dans la base que les demandes existantes ont toutes un contact.
 - Suite de l'epic, dans l'ordre : 13.7, 13.6, 13.5, 13.13, 13.14, 13.15, 13.16.

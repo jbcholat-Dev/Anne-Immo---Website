@@ -1,7 +1,7 @@
 ---
 story: 13.13
 epic: 13 — Espace de travail d'Anne
-statut: review
+statut: done
 date: 2026-10-21
 maj: 2026-10-21
 ---
@@ -46,5 +46,5 @@ Voir chaque semaine ce que chaque canal a rapporté, pour savoir où mettre ses 
   - pas de débordement sur téléphone ni sur ordinateur (captures `espace/.verif/espace-bilan-*.png`).
 
 ## Ce qui reste
-- JB : fusionner la PR #163.
+- ~~JB : fusionner la PR #163~~ fusionnée le 2026-10-21.
 - Anne : regarder son premier bilan un lundi et dire s'il l'aide à choisir entre boîtage, prescripteurs et événements.

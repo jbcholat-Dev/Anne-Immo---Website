@@ -1,7 +1,7 @@
 ---
 story: 13.7
 epic: 13 — Espace de travail d'Anne
-statut: review
+statut: done
 date: 2026-10-21
 maj: 2026-10-21
 ---
@@ -28,6 +28,6 @@ Que chaque contact qu'Anne rencontre hors du site (boîtage, recommandation, év
 - `node scripts/e2e-espace.mjs` : **tous les constats bons**, dont 26 nouveaux pour cette story : passage noté ; boîtage sans passage refusé ; contact créé rattaché au passage, rappel aujourd'hui, historique avec le compte ; numéro connu saisi au format international → fiche existante complétée, origine gardée, aucun doublon ; prescripteur créé et rattaché ; fiche et recherche par « 06 … » ; import .csv (aperçu 2 nouvelles / 1 connue / 1 doublon écarté, rien enregistré avant confirmation, 2 créés en « rappel individuel seulement », 0 rendu au numéro, personne connue complétée) ; import .xlsx fabriqué dans l'essai (textes partagés, numéro rangé comme un nombre, consentement coché) ; fichier sans titres refusé ; toucher « Boîtage » montre le choix du passage et cache le prescripteur, sur téléphone et ordinateur ; aucune des cinq pages ne déborde (captures `espace/.verif/espace-*-{ordinateur,telephone}.png`).
 
 ## Ce qui reste
-- JB : fusionner la PR (la même que 13.4).
+- ~~JB : fusionner la PR~~ PR #163 fusionnée le 2026-10-21.
 - Anne : essayer la saisie d'un contact et d'un passage depuis son téléphone.
 - Suite : 13.6 Qualifier en deux minutes.

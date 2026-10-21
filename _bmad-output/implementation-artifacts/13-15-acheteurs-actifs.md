@@ -1,7 +1,7 @@
 ---
 story: 13.15
 epic: 13 — Espace de travail d'Anne
-statut: review
+statut: done
 date: 2026-10-21
 maj: 2026-10-21
 ---
@@ -34,5 +34,5 @@ Avoir sous la main les acheteurs qualifiés qui cherchent en ce moment, pour dir
   - pas de débordement sur téléphone ni sur ordinateur.
 
 ## Ce qui reste
-- JB : fusionner la PR #163.
+- ~~JB : fusionner la PR #163~~ fusionnée le 2026-10-21.
 - Anne et JB : décider de l'offre « mandat de recherche » et du modèle de lettre « j'ai un acheteur ».

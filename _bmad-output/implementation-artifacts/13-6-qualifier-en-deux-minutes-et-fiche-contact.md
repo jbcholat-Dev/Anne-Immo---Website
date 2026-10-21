@@ -1,7 +1,7 @@
 ---
 story: 13.6
 epic: 13 — Espace de travail d'Anne
-statut: review
+statut: done
 date: 2026-10-21
 maj: 2026-10-21
 ---
@@ -47,6 +47,6 @@ Décider en un appel si un nouveau contact vaut un rendez-vous : cinq réponses 
   - la page ne déborde ni sur téléphone ni sur ordinateur (captures `espace/.verif/espace-qualifier-*.png`).
 
 ## Ce qui reste
-- JB : fusionner la PR (la même que 13.4 et 13.7).
+- ~~JB : fusionner la PR~~ PR #163 fusionnée le 2026-10-21.
 - Anne : qualifier un vrai contact au téléphone et dire si les cinq questions sont les bonnes (guide d'entretien de la story 13.12).
 - Préremplissage par le résumé Leedflow : story 13.10.

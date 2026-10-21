@@ -1,7 +1,7 @@
 ---
 story: 13.5
 epic: 13 — Espace de travail d'Anne
-statut: review
+statut: done
 date: 2026-10-21
 maj: 2026-10-21
 ---
@@ -38,5 +38,5 @@ Qu'Anne ouvre sa journée sur qui rappeler, dans l'ordre : d'abord les nouveaux 
   - pas de débordement sur téléphone ni sur ordinateur (captures `espace/.verif/espace-aujourdhui-*.png`).
 
 ## Ce qui reste
-- JB : fusionner la PR (la même que 13.4, 13.6 et 13.7).
+- ~~JB : fusionner la PR~~ PR #163 fusionnée le 2026-10-21.
 - Anne : ouvrir l'espace sur son téléphone le matin et dire si l'ordre lui convient.
