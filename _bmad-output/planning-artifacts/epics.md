@@ -2329,6 +2329,28 @@ afin de piloter l'ensemble (CAP-12).
 **Quand** Anne déplace une carte vers une autre colonne
 **Alors** l'étape change, une prochaine action est demandée et l'événement est noté
 
+### Story 13.17: Journal des actions marketing et coût par contact
+
+En tant qu'Anne,
+je veux noter mes actions marketing avec leur canal et leur coût, et voir ce que chacune a rapporté,
+afin de savoir combien me coûte un contact, un rendez-vous et un mandat, canal par canal.
+
+**Critères d'acceptation :**
+**Étant donné** des actions saisies par Anne ou créées par Claude par l'accès privé `/api/claude/…` (jeton de service Cloudflare Access, sans lecture des contacts)
+**Quand** un contact arrive sur un canal où une seule action est en cours, ou qu'Anne choisit l'action à la qualification
+**Alors** le contact est rattaché à l'action et le bilan du lundi montre le coût par canal, par contact, par rendez-vous et par mandat. Demande de JB du 2026-10-21
+
+### Story 13.18: Visibilité des réseaux sociaux dans le bilan
+
+En tant qu'Anne,
+je veux voir l'audience de mes réseaux à côté des contacts qu'ils m'amènent,
+afin de juger si mes publications rapportent.
+
+**Critères d'acceptation :**
+**Étant donné** le relevé Instagram du lundi envoyé à l'espace par l'accès de la story 13.17
+**Quand** Anne ouvre le bilan
+**Alors** abonnés et vues de la période sont affichés à côté des contacts du canal « réseaux » et de leur coût. Demande de JB du 2026-10-21
+
 ### Story 13.12: Parcours d'Anne pour trouver et qualifier des contacts
 
 En tant que JB,
