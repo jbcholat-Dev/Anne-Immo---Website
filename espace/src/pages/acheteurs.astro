@@ -7,7 +7,7 @@ import Espace from '../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { telLisible } from '@site/server/recherche';
 import { pourSite as env } from '../server/env';
-import { acheteursActifs, communesDe, depuis, vendeursEnSommeil, echeance } from '../server/pipeline';
+import { acheteursActifs, communesDe, depuis, rechercheCourte, vendeursEnSommeil, echeance } from '../server/pipeline';
 
 export const prerender = false;
 if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
@@ -39,7 +39,7 @@ const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
                 <td><a href={`/contacts/fiche?id=${a.id}`} style="font-weight:500">{nom(a)}</a>
                   <div class="e-muet">{a.commune ? `${a.commune} · ` : ''}depuis {depuis(a.created_at).replace(/^il y a /, '')}</div>
                   {a.aussiVendeur && <span class="e-tag alerte" data-aussi-vendeur>Aussi vendeur</span>}</td>
-                <td>{a.reponses.bien ?? '—'}</td>
+                <td>{rechercheCourte(a.reponses) || '—'}</td>
                 <td>{a.reponses.budget ?? '—'}</td>
                 <td>{a.reponses.secteur ?? '—'}</td>
                 <td><span class={a.reponses.financement === 'Vérifié' ? 'e-tag' : 'e-tag neutre'}>{a.reponses.financement ?? 'Non renseigné'}</span></td>

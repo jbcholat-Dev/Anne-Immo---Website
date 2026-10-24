@@ -15,7 +15,7 @@ import { actionsAuChoix, rattacherAction } from '../../server/actions';
 import { pourSite as env } from '../../server/env';
 import { ULID } from '../../server/formulaires';
 import {
-  aujourdhui, corrigerQualification, echeance, FINANCEMENTS, libelleOrigine, lireContact, MOTIFS_PERTE, parisVersUtc, plusTard, qualifier, QUESTIONS, RECHERCHE_ACHETEUR, type Issue, type Reponses,
+  aujourdhui, corrigerQualification, echeance, FINANCEMENTS, libelleOrigine, lireContact, MOTIFS_PERTE, parisVersUtc, plusTard, qualifier, QUESTIONS, RECHERCHE_ACHETEUR, CRITERES_ACHETEUR, CRITERES_TAPES, type Issue, type Reponses,
 } from '../../server/pipeline';
 import { resumeHtml } from '../../server/leedflow';
 
@@ -41,12 +41,18 @@ const DATE = /^\d{4}-\d{2}-\d{2}$/;
 if (Astro.request.method === 'POST') {
   const f = await Astro.request.formData();
   saisi = Object.fromEntries([...f.entries()].map(([k, v]) => [k, typeof v === 'string' ? v.trim().slice(0, 200) : '']));
+  // Critères à plusieurs choix (story 13.30) : chaque case cochée arrive sous le même nom, gardées dans l'ordre de la liste.
+  for (const cr of CRITERES_ACHETEUR) {
+    const coches = f.getAll(`a_${cr.id}`).map(String);
+    saisi[`a_${cr.id}`] = (cr.options as readonly string[]).filter((o) => coches.includes(o)).join(', ');
+  }
   reponses = {};
   for (const q of QUESTIONS) if ((q.options as readonly string[]).includes(saisi[`q_${q.id}`])) reponses[q.id] = saisi[`q_${q.id}`];
   const parcours = saisi.parcours === 'vendeur' || saisi.parcours === 'acheteur' ? saisi.parcours : null;
   // Ce que cherche un acheteur (story 13.15), gardé seulement pour un acheteur.
   if ((parcours ?? c.parcours) === 'acheteur') {
-    for (const q of RECHERCHE_ACHETEUR) if (saisi[`a_${q.id}`]) reponses[q.id] = saisi[`a_${q.id}`].slice(0, 120);
+    for (const q of [...RECHERCHE_ACHETEUR, ...CRITERES_ACHETEUR, ...CRITERES_TAPES]) if (saisi[`a_${q.id}`]) reponses[q.id] = saisi[`a_${q.id}`].slice(0, q.id === 'autres' ? 200 : 120);
+    if (reponses.surface) reponses.surface = reponses.surface.replace(/\s*m(²|2)\s*$/i, '');
     if ((FINANCEMENTS as readonly string[]).includes(saisi.a_financement ?? '')) reponses.financement = saisi.a_financement;
   }
   if (enCours) {
@@ -123,8 +129,20 @@ const issues = [
 
     <fieldset class="e-cadre-acheteur" data-acheteur hidden={c.parcours === 'vendeur'}>
       <legend>Ce qu'il ou elle cherche (acheteur)</legend>
+      <p class="e-muet" style="margin:0 0 10px">Plusieurs choix possibles sur chaque ligne.</p>
+      {CRITERES_ACHETEUR.map((cr) => {
+        const choisis = (saisi[`a_${cr.id}`] ?? reponses[cr.id] ?? '').split(', ');
+        return (
+          <fieldset class="e-pastilles" style="margin-bottom:12px" data-critere={cr.id}>
+            <legend>{cr.titre}</legend>
+            {cr.options.map((o) => <label><input type="checkbox" name={`a_${cr.id}`} value={o} checked={choisis.includes(o)} /><span>{o}</span></label>)}
+          </fieldset>
+        );
+      })}
       <div class="e-champs">
+        <label class="e-champ">Surface minimale (m²)<input name="a_surface" inputmode="numeric" value={saisi.a_surface ?? reponses.surface} placeholder="120" autocomplete="off" /></label>
         {RECHERCHE_ACHETEUR.map((q) => <label class="e-champ">{q.titre}<input name={`a_${q.id}`} value={saisi[`a_${q.id}`] ?? reponses[q.id]} placeholder={q.id === 'budget' ? '750 k€ à 850 k€' : 'Anthy, Sciez'} autocomplete="off" /></label>)}
+        <label class="e-champ large">Autres critères<input name="a_autres" value={saisi.a_autres ?? reponses.autres} placeholder="Vue lac, plain-pied, proche école…" autocomplete="off" /></label>
       </div>
       <fieldset class="e-pastilles" style="margin-top:12px">
         <legend>Financement</legend>

@@ -15,6 +15,7 @@
 // Story 13.14 : prescripteurs (recommandés, mandats, relance due sur Aujourd'hui, échange noté, ajout).
 // Story 13.15 : acheteurs actifs (critères, « aussi vendeur », vendeurs en sommeil du secteur, lettre sur Aujourd'hui).
 // Story 13.16 : vue pipeline (colonnes par étape, déplacement avec prochaine action, réveil ou motif exigés).
+// Story 13.30 : critères de recherche d'un acheteur (type, pièces, surface, extérieur, stationnement, autres), seuls les renseignés affichés.
 // Story 13.24 : contacts en cartes sur téléphone avec filtres, pipeline une étape à la fois, recherche par début de numéro et par mots.
 // Story 13.25 : synthèse du contact (lue sur la fiche Leedflow, gardée à côté de celle d'Anne, version plus récente signalée, saisie à la main).
 // Story 13.23 : fiche modifiable (coordonnées, doublon refusé avec lien), note libre, export et effacement d'un contact sans e-mail.
@@ -625,16 +626,28 @@ try {
   const ach1 = await ajouterAcheteur('Hugo', `hugo+${ESSAI}@example.com`), ach2 = await ajouterAcheteur('Inès', `ines+${ESSAI}@example.com`);
   r = await appeler(`${E}/contacts/qualifier?id=${ach1}`, { headers: avecJeton() });
   constat((await r.text()).includes('name="a_budget"'), 'qualifier un acheteur : budget, secteur et financement demandés');
-  await qualif(ach1, { q_bien: 'Maison', q_vend_avant: 'Oui', a_budget: '700 k€', a_secteur: `${ANTHY}, Sciez`, a_financement: 'Après sa vente', issue: 'rdv', rdv_le: '2027-02-02T10:00' });
+  await qualif(ach1, [['q_bien', 'Maison'], ['q_vend_avant', 'Oui'], ['a_types', 'Maison'], ['a_pieces', 'T5 et plus'], ['a_pieces', 'T4'], ['a_pieces', 'Château'], ['a_surface', '120 m²'],
+    ['a_exterieur', 'Jardin'], ['a_autres', 'Vue lac, plain-pied'], ['a_budget', '700 k€'], ['a_secteur', `${ANTHY}, Sciez`], ['a_financement', 'Après sa vente'], ['issue', 'rdv'], ['rdv_le', '2027-02-02T10:00']]);
   await qualif(ach2, { q_bien: 'Maison', q_vend_avant: 'Non', a_budget: '900 k€ à 1,1 M€', a_secteur: ANTHY, a_financement: 'Vérifié', issue: 'rdv', rdv_le: '2027-02-03T10:00' });
   constat(sql(`SELECT etape FROM contact WHERE id = '${ach1}'`)[0].etape === 'besoin_defini' && JSON.parse(sql(`SELECT qualification FROM contact WHERE id = '${ach1}'`)[0].qualification).budget === '700 k€',
     'acheteur qualifié en rendez-vous : étape « Besoin défini », budget gardé');
+  // Critères de recherche (story 13.30) : plusieurs choix par critère, gardés dans l'ordre de la liste, choix inconnu ignoré.
+  const crit1 = JSON.parse(sql(`SELECT qualification FROM contact WHERE id = '${ach1}'`)[0].qualification);
+  constat(crit1.types === 'Maison' && crit1.pieces === 'T4, T5 et plus' && crit1.surface === '120' && crit1.exterieur === 'Jardin' && crit1.autres === 'Vue lac, plain-pied' && !crit1.stationnement,
+    'critères acheteur : type, pièces (plusieurs, dans l\'ordre, « Château » ignoré), surface sans « m² », extérieur, autres critères');
+  html = await (await appeler(`${E}/contacts/qualifier?id=${ach1}`, { headers: avecJeton() })).text();
+  constat(/value="T4"\s+checked/.test(html) && /value="T5 et plus"\s+checked/.test(html) && !/value="T3"\s+checked/.test(html) && html.includes('value="120"'),
+    'corriger la qualification : les critères cochés et la surface sont repris');
+  html = await (await appeler(`${E}/contacts/fiche?id=${ach1}`, { headers: avecJeton() })).text();
+  const rech1 = html.split('data-recherche')[1]?.split('</section>')[0] ?? '';
+  constat(rech1.includes('T4, T5 et plus') && rech1.includes('120 m²') && rech1.includes('Vue lac') && rech1.includes('700 k€') && !rech1.includes('Stationnement'),
+    'fiche acheteur : « Ce qu\'il ou elle cherche » ne montre que les critères renseignés');
   sql(`INSERT INTO contact (id, created_at, last_activity_at, nom, commune, parcours, etape, prochaine_action, prochaine_action_le, reveil_le, canal, is_test) VALUES
     ('DORT${NUM}', '2026-05-01T08:00:00Z', '2026-05-01T08:00:00Z', 'Dormeur${NUM}', '${ANTHY}', 'vendeur', 'en_sommeil', 'Réveiller : rappeler', '2027-03-01', '2027-03-01', 'boitage', 1)`);
   r = await appeler(`${E}/acheteurs`, { headers: avecJeton() });
   html = await r.text();
   const l1 = html.split(`data-acheteur="${ach1}"`)[1]?.split('</tr>')[0] ?? '', l2 = html.split(`data-acheteur="${ach2}"`)[1]?.split('</tr>')[0] ?? '';
-  constat(l1.includes('data-aussi-vendeur') && l1.includes('700 k€') && !l2.includes('data-aussi-vendeur') && l2.includes('Vérifié'),
+  constat(l1.includes('data-aussi-vendeur') && l1.includes('700 k€') && l1.includes('Maison · T4, T5 et plus · 120 m² et plus · Jardin') && !l2.includes('data-aussi-vendeur') && l2.includes('Vérifié'),
     'acheteurs actifs : critères affichés, celui qui doit d\'abord vendre signalé « aussi vendeur »');
   constat(html.includes(`data-secteur="${ANTHY.toLowerCase()}"`) && html.includes('2 acheteur(s)'), 'acheteurs : la commune cherchée par 2 acheteurs');
   r = await appeler(`${E}/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`, { headers: avecJeton() });
