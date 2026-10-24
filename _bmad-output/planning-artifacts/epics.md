@@ -2475,16 +2475,27 @@ afin de m'y repérer tout de suite et de nettoyer les contacts de test.
 **Quand** Anne ouvre le menu, le pipeline ou la fiche d'un contact
 **Alors** l'onglet s'appelle « Prospection », les étapes s'appellent « R1 » et « R2 », et « Supprimer ce contact » demande de taper SUPPRIMER. Tickets #177, #178, #185
 
-### Story 13.30: Fiche contact repensée
+### Story 13.30: Critères de recherche d'un acheteur
 
 En tant qu'Anne,
-je veux voir en tête de fiche la maturité du contact, ses visites, son dernier contact et sa prochaine action, un historique résumé et des critères de recherche complets,
+je veux noter ce que cherche un acheteur (type de bien, pièces, surface, extérieur, stationnement, budget, secteur) et ne voir sur sa fiche que ce qui est rempli,
+afin de lui proposer les bons biens sans relire tout l'historique.
+
+**Critères d'acceptation :**
+**Étant donné** un contact acheteur
+**Quand** Anne le qualifie ou corrige sa qualification
+**Alors** elle coche plusieurs choix par critère, tape la surface et d'autres critères, la fiche montre seulement les critères renseignés et la liste des acheteurs actifs les résume en une ligne. Ticket #176, précision de JB du 2026-10-24 (pas de capture Modelo)
+
+### Story 13.31: En-tête et historique résumé de la fiche contact
+
+En tant qu'Anne,
+je veux voir en tête de fiche la maturité du contact, ses visites, son dernier contact et sa prochaine action, et un historique résumé,
 afin de comprendre un contact d'un coup d'œil.
 
 **Critères d'acceptation :**
 **Étant donné** la fiche d'un contact
 **Quand** Anne l'ouvre
-**Alors** l'en-tête montre maturité, visites, dernier contact et prochaine action ; l'historique ne montre que date et objet, détail au toucher ; les critères acheteur suivent le formulaire de Modelo et seuls les champs renseignés s'affichent. Tickets #176, #182
+**Alors** l'en-tête montre maturité, visites, dernier contact et prochaine action, et l'historique ne montre que la date et l'objet, le détail s'ouvrant au toucher. Ticket #182
 
 ## Epic 14: Campagnes promotionnelles temporaires
 

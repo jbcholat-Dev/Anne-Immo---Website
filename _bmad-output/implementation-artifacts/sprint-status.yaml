@@ -197,7 +197,8 @@ development_status:
   13-27-écrire-et-envoyer-une-campagne: ready-for-dev
   13-28-bilan-d-une-campagne: ready-for-dev
   13-29-retours-anne-libelles-et-suppression: done   # 2026-10-24, PR n° 188 fusionnée, tickets #177, #178, #185 fermés
-  13-30-fiche-contact-repensee: ready-for-dev   # 2026-10-24, tickets #176 et #182 ; attend la liste des critères Modelo
+  13-30-fiche-contact-repensee: review   # 2026-10-24, critères de recherche acheteur (ticket #176), construite et vérifiée (246 vérifications)
+  13-31-en-tete-et-historique-de-la-fiche: ready-for-dev   # 2026-10-24, ticket #182
   epic-13-retrospective: optional
 
   epic-14: in-progress
