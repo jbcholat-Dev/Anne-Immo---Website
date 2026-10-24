@@ -196,7 +196,7 @@ development_status:
   13-24-listes-et-recherche-pensees-telephone: done   # 2026-10-24, PR n° 188 fusionnée (JB)
   13-25-synthese-du-contact: done   # 2026-10-24, PR n° 187 fusionnée (JB)
   13-26-accord-e-mail-sur-la-fiche-contact: done   # 2026-10-24, PR n° 196 fusionnée (accord de JB) ; campagnes e-mail (AD-21)
-  13-27-écrire-et-envoyer-une-campagne: review   # 2026-10-24, construite ; PR à fusionner par JB, sous-domaine d'envoi à poser par JB (RUNBOOK § 4 sexies)
+  13-27-écrire-et-envoyer-une-campagne: done   # 2026-10-24, PR n° 199 fusionnée (JB) ; envoi réel dès que JB a créé nouvelles.annevialtissot.fr (RUNBOOK § 4 sexies)
   13-28-bilan-d-une-campagne: ready-for-dev
   13-29-retours-anne-libelles-et-suppression: done   # 2026-10-24, PR n° 188 fusionnée, tickets #177, #178, #185 fermés
   13-30-fiche-contact-repensee: done   # 2026-10-24, PR n° 192 fusionnée (JB), ticket #176 fermé

@@ -1,7 +1,7 @@
 ---
 story: 13.27
 epic: 13 — Espace de travail d'Anne
-statut: review
+statut: done
 date: 2026-10-24
 maj: 2026-10-24
 ---
@@ -51,6 +51,6 @@ Anne envoie elle-même une campagne e-mail à une partie de ses contacts, depuis
 - Non essayé ici : la règle « rien ne part en production sans expéditeur » (l'essai local tourne en mode aperçu) ; lue dans le code (`expediteur`, `lancer`, `envoyerCampagnes`).
 
 ## Ce qui reste
-- PR à fusionner par JB (elle change l'espace et le site).
+- PR n° 199 fusionnée par JB le 2026-10-24.
 - Action de JB : sous-domaine d'envoi dans Resend + lignes DNS dans Cloudflare + secrets de l'espace (≈ 15 min, RUNBOOK § 4 sexies) ; puis Claude pose `EXPEDITEUR_CAMPAGNES` par une PR et envoie un essai.
 - Vérifier l'offre Resend avant une première campagne de plus de 100 destinataires (offre gratuite : 100 e-mails par jour, 3 000 par mois, partagés avec le site).
