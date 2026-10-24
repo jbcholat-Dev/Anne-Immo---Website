@@ -1,0 +1,128 @@
+<title>Campagnes e-mail d'Anne</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gilda+Display&family=Jost:wght@400;500&display=swap">
+<style>
+/* Page de décision sobre : une colonne de lecture, tableaux en encarts, couleurs de la charte d'Anne. */
+:root{
+  --bg:#F7F2EA; --fg:#26201A; --muted:#5C5248; --lac:#002FA7; --rive:#A34E30; --carte:#E9E0D2; --brume:#E7EDF9;
+  --ok:#2E6B3F; --non:#9A2E22; --filet:#D9CFBD;
+  --display:'Gilda Display',Georgia,serif; --texte:'Jost',system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1C1814; --fg:#F1EADF; --muted:#C9BEAE; --lac:#8FA8F0; --rive:#E08A66; --carte:#2A241E; --brume:#1F2638;
+  --ok:#7FC392; --non:#F08A7C; --filet:#3D352C; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1C1814; --fg:#F1EADF; --muted:#C9BEAE; --lac:#8FA8F0; --rive:#E08A66; --carte:#2A241E; --brume:#1F2638;
+  --ok:#7FC392; --non:#F08A7C; --filet:#3D352C; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--texte);font-size:17px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:760px;margin:0 auto;padding-block:40px 64px;display:flex;flex-direction:column;gap:40px}
+h1,h2{font-family:var(--display);font-weight:400;text-wrap:balance;margin:0}
+h1{font-size:2.3rem;line-height:1.15;color:var(--lac)}
+h2{font-size:1.55rem;color:var(--lac);margin-bottom:12px}
+p{margin:0 0 10px} section>p:last-child{margin-bottom:0}
+.sur{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--rive);font-weight:500;margin-bottom:8px}
+.reco{background:var(--brume);border-radius:12px;padding:22px 24px}
+.reco strong{color:var(--lac)}
+.tab{overflow-x:auto;border:1px solid var(--filet);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:15px;min-width:560px}
+th,td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--filet)}
+th{font-weight:500;background:var(--carte)} tr:last-child td{border-bottom:0}
+.oui{color:var(--ok);font-weight:500}.non{color:var(--non);font-weight:500}
+ol.etapes{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.stories{display:grid;gap:12px}
+.story{border:1px solid var(--filet);border-radius:12px;padding:14px 18px}
+.story b{font-family:var(--display);font-weight:400;font-size:1.15rem;color:var(--fg)}
+.story .n{color:var(--rive);font-weight:500;font-size:14px;margin-right:6px}
+.story p{margin:6px 0 0;color:var(--muted);font-size:15.5px}
+.note{color:var(--muted);font-size:14.5px}
+a{color:var(--lac)}
+</style>
+
+<main>
+<header>
+  <div class="sur">Espace de travail d'Anne · cadrage du 24 octobre 2026</div>
+  <h1>Envoyer des campagnes e-mail depuis l'espace</h1>
+</header>
+
+<section class="reco">
+  <div class="sur">Recommandation</div>
+  <p><strong>Construire les campagnes dans l'espace d'Anne, et les envoyer par Resend.</strong> Resend est le service qui envoie déjà tous les e-mails du site depuis anne@annevialtissot.fr.</p>
+  <p>Pourquoi : les contacts sont déjà dans l'espace. Leur accord pour recevoir des e-mails y est en partie noté. Le lien de désinscription existe déjà pour la séquence du guide. Il n'y a donc ni liste à exporter, ni deuxième outil à tenir à jour.</p>
+  <p>Ce qu'on perd : pas d'éditeur de mise en page libre (un gabarit à la charte, avec un titre, un texte, une photo et un bouton). Pas de taux d'ouverture non plus, par choix : le site ne suit pas les lecteurs. On mesure à la place qui revient sur le site et qui prend rendez-vous.</p>
+  <p>Coût : trois petites stories, après celles en cours sur l'espace. Rien à acheter tant que les envois restent sous 100 par jour.</p>
+</section>
+
+<section>
+  <h2>Qui peut recevoir une campagne</h2>
+  <p>C'est la vraie question. La CNIL, l'autorité française des données personnelles, exige l'accord préalable d'un particulier avant de lui envoyer de la prospection. Une exception : un ancien client peut recevoir des offres proches de ce qu'il a déjà acheté, s'il peut refuser.</p>
+  <p>L'espace appliquera ces règles tout seul. Anne choisit une liste ; l'espace retire ceux qui n'ont pas donné leur accord et dit pourquoi.</p>
+  <div class="tab"><table>
+    <thead><tr><th>D'où vient le contact</th><th>Reçoit la campagne ?</th><th>Ce qui est noté aujourd'hui</th></tr></thead>
+    <tbody>
+      <tr><td>Inscrit sur le site, case « recevoir les conseils » cochée</td><td class="oui">Oui</td><td>Date d'accord déjà enregistrée sur la demande</td></tr>
+      <tr><td>Importé d'un salon ou jeu concours, case « accepte d'être recontacté » cochée</td><td class="oui">Oui</td><td>Déjà noté à l'import</td></tr>
+      <tr><td>Ancien client (vendu, acte signé)</td><td class="oui">Oui</td><td>Exception « client » : sujets immobiliers seulement, désinscription possible</td></tr>
+      <tr><td>Prescripteur professionnel (notaire, conseiller…)</td><td class="oui">Oui</td><td>Règle des professionnels : message lié à leur métier</td></tr>
+      <tr><td>Saisi à la main, appel Leedflow, demande Leboncoin</td><td class="non">Non, sauf accord</td><td>Rien. Anne coche « d'accord pour recevoir mes e-mails » quand la personne le dit ; la date est gardée</td></tr>
+      <tr><td>Importé sans la case d'accord</td><td class="non">Non</td><td>Déjà marqué « rappel individuel seulement »</td></tr>
+      <tr><td>Désinscrit</td><td class="non">Jamais</td><td>Date de désinscription, valable pour toutes les campagnes</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Chaque e-mail porte le nom d'Anne, son adresse professionnelle et un lien de désinscription en un clic, aussi proposé directement par Gmail ou Outlook.</p>
+</section>
+
+<section>
+  <h2>Arriver dans la boîte de réception, pas dans les indésirables</h2>
+  <p><strong>Une adresse d'envoi séparée.</strong> Les campagnes partent d'un sous-domaine, par exemple nouvelles.annevialtissot.fr. Si des gens signalent une campagne comme indésirable, les e-mails importants du site (guide, rapport du diagnostic, confirmations) ne sont pas touchés. Les réponses vont toujours dans la Gmail d'Anne.</p>
+  <p><strong>Un envoi étalé.</strong> L'espace envoie par paquets, par exemple 50 par heure. Les messageries se méfient d'une nouvelle adresse qui envoie 500 e-mails d'un coup.</p>
+  <p><strong>Le quota de Resend.</strong> L'offre gratuite permet 100 e-mails par jour et 3 000 par mois, partagés avec le site. Une campagne de 300 contacts part donc sur 3 à 4 jours. Au-delà, l'offre payante de Resend lève ce plafond (prix à vérifier sur <a href="https://resend.com/pricing">resend.com/pricing</a>).</p>
+</section>
+
+<section>
+  <h2>Les autres chemins, et pourquoi pas eux</h2>
+  <div class="tab"><table>
+    <thead><tr><th></th><th>Espace + Resend (recommandé)</th><th>Campagnes de Resend</th><th>Brevo</th></tr></thead>
+    <tbody>
+      <tr><td>Liste des contacts</td><td>Celle de l'espace, à jour</td><td>Copie chez Resend, à synchroniser</td><td>Export à refaire avant chaque envoi</td></tr>
+      <tr><td>Accord et désinscription</td><td>Tenus par l'espace, sur la fiche</td><td>Tenus par Resend ; à recopier dans l'espace</td><td>Tenus par Brevo ; à recopier à la main</td></tr>
+      <tr><td>Mise en page</td><td>Gabarit à la charte</td><td>Éditeur simple</td><td>Éditeur glisser-déposer riche</td></tr>
+      <tr><td>Données personnelles</td><td>Restent dans la base d'Anne</td><td>Liste stockée chez Resend (le site n'y garde rien aujourd'hui)</td><td>Un fournisseur de plus à déclarer</td></tr>
+      <tr><td>Prix</td><td>0 € sous 100 e-mails/jour</td><td>0 € jusqu'à 1 000 contacts, puis 40 $/mois</td><td>0 € à 300 e-mails/jour, logo Brevo ; 7 €/mois sinon</td></tr>
+      <tr><td>Disponible</td><td>Après 3 stories</td><td>Après 2 stories</td><td>Tout de suite</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Modelo est exclu, à ta demande. Brevo (outil français d'envoi d'e-mails) reste la solution de secours si Anne veut envoyer une campagne avant que l'espace soit prêt : exporter seulement les contacts d'accord, une fois. Sources des prix : page de tarifs de Resend lue le 24/10/2026 ; <a href="https://www.lafabriquedunet.fr/email-marketing/articles/tarifs-brevo/">tarifs Brevo relevés en juillet 2026</a>, à revérifier.</p>
+</section>
+
+<section>
+  <h2>Ce que fera Anne</h2>
+  <ol class="etapes">
+    <li>Elle ouvre « Campagnes » et écrit son message : un objet, un texte, une photo, un bouton (vers le diagnostic, par exemple).</li>
+    <li>Elle choisit à qui : vendeurs ou acheteurs, étape, commune, origine.</li>
+    <li>L'espace affiche : « 212 recevront, 48 écartés (pas d'accord), 6 désinscrits ».</li>
+    <li>Elle s'envoie un essai, le relit sur son téléphone, puis envoie.</li>
+    <li>Chaque fiche contact garde « Campagne d'octobre reçue le 28/10 ».</li>
+    <li>Le bilan du lundi montre : envoyés, refusés par la messagerie, désinscrits, et les contacts revenus sur le site par ce message.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Stories proposées (epic 13, l'espace d'Anne)</h2>
+  <div class="stories">
+    <div class="story"><b><span class="n">13.26</span>Accord e-mail sur la fiche contact</b><p>Une case « d'accord pour recevoir mes e-mails », avec sa date et sa source. Reprise de l'existant : cases du site, imports, anciens clients. Désinscription valable partout.</p></div>
+    <div class="story"><b><span class="n">13.27</span>Écrire et envoyer une campagne</b><p>Gabarit à la charte, choix de la liste, contacts écartés expliqués, essai à soi, envoi étalé depuis le sous-domaine, lien de désinscription, trace sur chaque fiche.</p></div>
+    <div class="story"><b><span class="n">13.28</span>Bilan d'une campagne</b><p>Chaque campagne devient une action marketing : envoyés, échecs, désinscrits, visites et rendez-vous venus du message.</p></div>
+  </div>
+  <p class="note">Numéros provisoires : le fil de l'espace construit en ce moment 13.22 à 13.25 sur les mêmes fichiers. Ces stories passent après, une PR chacune, que tu fusionnes.</p>
+</section>
+
+<section>
+  <h2>À faire de ton côté</h2>
+  <ol class="etapes">
+    <li>Dire oui à la recommandation, ou choisir Brevo (1 min).</li>
+    <li>Plus tard, au début de 13.27 : ajouter le sous-domaine d'envoi dans Resend et ses lignes dans Cloudflare, en suivant la notice que j'écrirai (15 min).</li>
+    <li>Avec Anne : dire si elle a déjà une liste d'anciens clients ou de contacts à importer pour la première campagne (5 min).</li>
+  </ol>
+</section>
+</main>
