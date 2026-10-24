@@ -15,6 +15,7 @@
 // Story 13.14 : prescripteurs (recommandés, mandats, relance due sur Aujourd'hui, échange noté, ajout).
 // Story 13.15 : acheteurs actifs (critères, « aussi vendeur », vendeurs en sommeil du secteur, lettre sur Aujourd'hui).
 // Story 13.16 : vue pipeline (colonnes par étape, déplacement avec prochaine action, réveil ou motif exigés).
+// Story 13.23 : fiche modifiable (coordonnées, doublon refusé avec lien), note libre, export et effacement d'un contact sans e-mail.
 // Story 13.22 : noter la suite d'un contact en cours (fait, pas joint, note ; étape gardée sauf choix ; requalifier sans changer l'étape).
 // Story 13.6 : qualifier (suite obligatoire, date, réveil ou motif exigés, étape et prochaine action fixées, heure de Paris).
 // Story 13.10 : relève Leedflow sur une imitation locale de son API (clé exigée, pages lues de la plus ancienne à la plus
@@ -429,6 +430,50 @@ try {
     && JSON.parse(sql(`SELECT qualification FROM contact WHERE id = '${SUITE}'`)[0].qualification).delai === 'Dans 3 mois',
     'réponses corrigées : l\'étape et la prochaine action n\'ont pas bougé');
 
+  // 5 quater ter. Fiche modifiable, note, export et effacement (story 13.23).
+  const surFiche = (id, champs) => page(`/contacts/fiche?id=${id}`, champs);
+  r = await appeler(`${E}/contacts/fiche?id=${SUITE}`, { headers: avecJeton() });
+  html = await r.text();
+  constat(/<details[^>]*data-modifier/.test(html) && !/<details[^>]*open[^>]*data-modifier/.test(html) && html.includes('data-note') && html.includes(`/api/contacts/export?id=${SUITE}`) && !html.includes('/gestion?q='),
+    'fiche : modification repliée, note, export et effacement sur la fiche (plus de renvoi vers les demandes)');
+  const COORD = { quoi: 'coordonnees', prenom: 'Silvie', nom: `Suite${NUM}`, telephone: `06 46 ${NUM.slice(0, 2)} ${NUM.slice(2, 4)} ${NUM.slice(4, 6)}`, email: '', commune: 'Thonon', parcours: 'vendeur', canal: 'rencontre', origine_detail: '' };
+  r = await surFiche(SUITE, COORD);
+  let co = sql(`SELECT prenom, telephone, commune FROM contact WHERE id = '${SUITE}'`)[0];
+  const evCoord = sql(`SELECT texte FROM contact_evenement WHERE contact_id = '${SUITE}' AND json_extract(donnees, '$.modifies') IS NOT NULL ORDER BY id DESC LIMIT 1`)[0]?.texte ?? '';
+  constat(r.headers.get('location') === `/contacts/fiche?id=${SUITE}&m=modifie` && co.prenom === 'Silvie' && co.telephone === `+33646${NUM}` && co.commune === 'Thonon'
+    && evCoord.startsWith('Coordonnées modifiées') && evCoord.includes('téléphone') && !evCoord.includes('+33645'),
+    'coordonnées corrigées (prénom, numéro rangé en +33, commune), historique sans l\'ancienne valeur');
+  r = await surFiche(SUITE, { ...COORD, telephone: `+33601${NUM}` });
+  html = await r.text();
+  constat(r.status === 200 && html.includes(`data-conflit`) && html.includes(`/contacts/fiche?id=${didier}`) && sql(`SELECT telephone FROM contact WHERE id = '${SUITE}'`)[0].telephone === `+33646${NUM}`,
+    'numéro déjà porté par un autre contact : refusé, lien vers sa fiche, rien changé');
+  r = await surFiche(SUITE, { ...COORD, canal: 'boitage' });
+  constat(r.status === 200 && (await r.text()).includes('passage de boîtage'), 'origine « Boîtage » sans passage : refusée');
+  const NOTE = `01KFNT${NUM}${'0'.repeat(14)}`;
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, nom, etape, prochaine_action, prochaine_action_le, canal, is_test) VALUES
+    ('${NOTE}', '2026-02-01T08:00:00Z', '2026-02-01T08:00:00Z', 'Noté${NUM}', 'estimation', 'Envoyer l''estimation', '${hier}', 'rencontre', 1)`);
+  r = await surFiche(NOTE, { quoi: 'note', note: `Note libre ${NUM} : rappeler après les vacances` });
+  constat(r.headers.get('location') === `/contacts/fiche?id=${NOTE}&m=note`, 'note libre ajoutée depuis la fiche');
+  html = await (await appeler(`${E}/`, { headers: avecJeton() })).text();
+  constat((html.split(`data-contact="${NOTE}"`)[1]?.split('</article>')[0] ?? '').includes(`Note libre ${NUM}`), 'aujourd\'hui : la note libre est le dernier texte du rappel');
+  r = await page('/ajouter', { quoi: 'contact', nom: `Boitage${NUM}`, telephone: `06 47 ${NUM.slice(0, 2)} ${NUM.slice(2, 4)} ${NUM.slice(4, 6)}`, canal: 'rencontre', note: 'Rencontré au marché' });
+  const sansMail = sql(`SELECT id FROM contact WHERE telephone = '+33647${NUM}'`)[0].id;
+  const droits = (type) => sql(`SELECT count(*) AS n FROM droit_exerce WHERE type = '${type}'`)[0].n;
+  const accesAvant = droits('acces'), effAvant = droits('effacement');
+  r = await appeler(`${E}/api/contacts/export?id=${sansMail}`, { headers: avecJeton() });
+  const expContact = await r.json();
+  constat(r.status === 200 && expContact.contact?.telephone === `+33647${NUM}` && expContact.contact.historique?.some((h) => h.texte === 'Rencontré au marché') && droits('acces') === accesAvant + 1,
+    'export d\'un contact sans e-mail : fiche et historique, droit noté au journal');
+  r = await surFiche(sansMail, { quoi: 'effacer', confirmation: 'oui' });
+  constat(r.status === 200 && (await r.text()).includes('Tapez EFFACER') && sql(`SELECT count(*) AS n FROM contact WHERE id = '${sansMail}'`)[0].n === 1, 'effacement sans confirmation : refusé');
+  sql(`INSERT INTO leedflow_ecarte (telephone, a, categorie) VALUES ('+33647${NUM}', '2026-10-01T00:00:00Z', 'pro')`);
+  r = await surFiche(sansMail, { quoi: 'effacer', confirmation: 'effacer' });
+  constat(r.headers.get('location') === '/contacts?m=efface' && sql(`SELECT count(*) AS n FROM contact WHERE id = '${sansMail}'`)[0].n === 0
+    && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${sansMail}'`)[0].n === 0 && sql(`SELECT count(*) AS n FROM leedflow_ecarte WHERE telephone = '+33647${NUM}'`)[0].n === 0
+    && droits('effacement') === effAvant + 1, 'effacement d\'un contact sans e-mail : fiche, historique et numéro classé effacés, droit noté au journal');
+  r = await appeler(`${E}/gestion`, { headers: avecJeton() });
+  constat(r.status === 200, 'les demandes du site se lisent toujours après un effacement');
+
   // 5 quinquies. Bilan du lundi par canal (story 13.13) : les chiffres suivent la base, sans saisie.
   const ligneCanal = async (canal) => {
     const h = await (await appeler(`${E}/bilan?p=semaine`, { headers: avecJeton() })).text();
@@ -799,6 +844,15 @@ try {
       if (nomPage === 'ajouter') {
         await onglet.click('[data-canaux] label:has(input[value=boitage]) span');
         constat(await onglet.isVisible('[data-si=boitage]') && !(await onglet.isVisible('[data-si=recommandation]')), `ajouter sur ${nom} : toucher « Boîtage » montre le choix du passage, cache le prescripteur`);
+      }
+      if (nomPage === 'fiche') {
+        constat(!(await onglet.isVisible('[data-coordonnees] input[name=prenom]')), `fiche sur ${nom} : la modification est repliée`);
+        await onglet.click('[data-modifier] summary');
+        await onglet.selectOption('[data-canal]', 'boitage');
+        constat(await onglet.isVisible('[data-coordonnees] input[name=prenom]') && await onglet.isVisible('[data-si-canal=boitage]') && !(await onglet.isVisible('[data-si-canal=recommandation]')),
+          `fiche sur ${nom} : « Modifier » ouvre les coordonnées, l'origine Boîtage montre le choix du passage`);
+        await onglet.screenshot({ path: path.join(OUT, `espace-fiche-modifier-${nom}.png`), fullPage: true });
+        await onglet.goto(`${E}${chemin}`);
       }
       if (nomPage === 'suite') {
         await onglet.click('[data-resultat] label:has(input[value=pas_joint]) span');

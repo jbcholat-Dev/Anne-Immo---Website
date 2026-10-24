@@ -2384,6 +2384,28 @@ afin de faire avancer un contact depuis « Aujourd'hui » ou sa fiche sans aller
 **Quand** Anne touche « Noter la suite » et choisit fait, pas joint ou note seule
 **Alors** la prochaine action datée, l'étape si elle la change (mêmes règles que « Déplacer ») et une ligne d'historique sont enregistrées ensemble ; « pas joint » garde l'étape et l'action ; « Requalifier » ne corrige plus que les réponses. Audit 13.21, décision de JB du 2026-10-24
 
+### Story 13.23: Fiche contact modifiable, note, export et effacement
+
+En tant qu'Anne,
+je veux corriger les coordonnées d'un contact, y ajouter une note et répondre à une demande RGPD depuis sa fiche,
+afin de garder des fiches justes, même pour un contact sans adresse e-mail.
+
+**Critères d'acceptation :**
+**Étant donné** la fiche d'un contact
+**Quand** Anne modifie ses coordonnées, ajoute une note, télécharge ou efface ses données
+**Alors** un téléphone ou un e-mail déjà pris est refusé avec le lien vers l'autre fiche, chaque changement est noté dans l'historique sans l'ancienne valeur, et l'export comme l'effacement sont journalisés comme depuis /gestion. Audit 13.21, décision de JB du 2026-10-24
+
+### Story 13.25: Synthèse du contact
+
+En tant qu'Anne,
+je veux retrouver sur la fiche la synthèse que Leedflow écrit de chaque contact, et la corriger,
+afin d'avoir tout le contexte avant de rappeler, sans ouvrir Leedflow.
+
+**Critères d'acceptation :**
+**Étant donné** un contact connu de Leedflow, ou saisi à la main
+**Quand** Anne ouvre sa fiche
+**Alors** la synthèse (qui est ce contact, notre relation, à retenir, situation, échanges récents) s'affiche en tête, mise à jour depuis Leedflow sans écraser ce qu'Anne a modifié, et saisissable à la main sinon. Demande de JB du 2026-10-24
+
 ### Story 13.12: Parcours d'Anne pour trouver et qualifier des contacts
 
 En tant que JB,

@@ -443,7 +443,8 @@ export async function journee(env: EnvSite): Promise<{ nouveaux: ContactDuJour[]
   const du = `(CASE WHEN length(c.prochaine_action_le) = 10 THEN c.prochaine_action_le <= ?1 ELSE c.prochaine_action_le < ?2 END)`;
   const champs = `c.id, c.prenom, c.nom, c.telephone, c.email, c.commune, c.parcours, c.etape, c.prochaine_action, c.prochaine_action_le, c.canal,
     c.origine_detail, c.last_activity_at, c.is_test, c.created_at, c.reveil_le, p.secteur AS passage_secteur, p.fait_le AS passage_le, r.nom AS prescripteur_nom,
-    (SELECT e.texte FROM contact_evenement e WHERE e.contact_id = c.id AND e.type IN ('demande', 'note', 'qualification', 'appel') ORDER BY e.a DESC, e.id DESC LIMIT 1) AS dernier_texte`;
+    (SELECT e.texte FROM contact_evenement e WHERE e.contact_id = c.id AND e.type IN ('demande', 'note', 'qualification', 'appel')
+      AND json_extract(e.donnees, '$.modifies') IS NULL ORDER BY e.a DESC, e.id DESC LIMIT 1) AS dernier_texte`; // une correction de coordonnées n'est pas un « dernier texte » (13.23)
   const joints = 'FROM contact c LEFT JOIN passage_boitage p ON p.id = c.passage_id LEFT JOIN prescripteur r ON r.id = c.prescripteur_id';
   const [nouveaux, rappels, prescripteurs, secteurs] = await env.DB.batch([
     env.DB.prepare(`SELECT ${champs} ${joints} WHERE c.etape = 'a_qualifier' AND ${du} ORDER BY c.created_at ASC LIMIT 100`).bind(auj, fin),
@@ -744,5 +745,60 @@ export async function noterSuite(env: EnvSite, id: string, s: Suite, par: string
   if (s.note) lignes.push(s.note);
   if (lignes.length) lot.push(evenement(env, id, maintenant, 'note', 'anne', lignes.join('\n'), par, { suite: s.resultat }));
   await env.DB.batch(lot);
+  return true;
+}
+
+// ——— Fiche modifiable (story 13.23) ———
+
+export interface Coordonnees extends Personne { parcours: 'vendeur' | 'acheteur' | null; origine: Origine }
+
+const LIBELLES_CHAMPS: Record<string, string> = {
+  prenom: 'prénom', nom: 'nom', telephone: 'téléphone', email: 'e-mail', commune: 'commune', parcours: 'parcours',
+  canal: 'origine', origine_detail: 'précision d’origine', passage_id: 'passage de boîtage', prescripteur_id: 'prescripteur',
+};
+
+/**
+ * Corrige les coordonnées et l'origine d'un contact. Un téléphone ou un e-mail déjà porté par un autre contact est
+ * refusé (jamais de doublon, jamais de fusion silencieuse) : renvoie alors l'identifiant de cet autre contact.
+ * L'historique dit quels champs ont changé, sans les anciennes valeurs.
+ */
+export async function modifierCoordonnees(env: EnvSite, id: string, n: Coordonnees, par: string): Promise<{ ok: true; changes: string[] } | { ok: false; conflit: string } | null> {
+  const c = await env.DB.prepare('SELECT * FROM contact WHERE id = ?1').bind(id).first<Contact>();
+  if (!c) return null;
+  const autre = await env.DB.prepare(
+    `SELECT id FROM contact WHERE id <> ?1 AND ((?2 IS NOT NULL AND telephone = ?2) OR (?3 IS NOT NULL AND email = ?3)) LIMIT 1`,
+  ).bind(id, n.telephone, n.email).first<{ id: string }>();
+  if (autre) return { ok: false, conflit: autre.id };
+  const nouveau: Record<string, string | null> = {
+    prenom: n.prenom, nom: n.nom, telephone: n.telephone, email: n.email, commune: n.commune, parcours: n.parcours,
+    canal: n.origine.canal, origine_detail: n.origine.origine_detail, passage_id: n.origine.passage_id, prescripteur_id: n.origine.prescripteur_id,
+  };
+  const changes = Object.keys(nouveau).filter((k) => (nouveau[k] ?? null) !== ((c as unknown as Record<string, string | null>)[k] ?? null));
+  if (!changes.length) return { ok: true, changes };
+  const maintenant = new Date().toISOString();
+  const texteEv = changes.length === 1 ? `${LIBELLES_CHAMPS[changes[0]].replace(/^./, (l) => l.toUpperCase())} modifié` : `Coordonnées modifiées : ${changes.map((k) => LIBELLES_CHAMPS[k]).join(', ')}`;
+  try {
+    await env.DB.batch([
+      env.DB.prepare(
+        `UPDATE contact SET last_activity_at = ?2, prenom = ?3, nom = ?4, telephone = ?5, email = ?6, commune = ?7, parcours = ?8,
+           canal = ?9, origine_detail = ?10, passage_id = ?11, prescripteur_id = ?12 WHERE id = ?1`,
+      ).bind(id, maintenant, n.prenom, n.nom, n.telephone, n.email, n.commune, n.parcours, n.origine.canal, n.origine.origine_detail, n.origine.passage_id, n.origine.prescripteur_id),
+      evenement(env, id, maintenant, 'note', 'anne', texteEv, par, { modifies: changes }),
+    ]);
+  } catch (e) {
+    // Un autre contact a pris ce téléphone ou cet e-mail entre-temps.
+    const pris = await contactConnu(env, n.telephone, n.email);
+    if (pris && pris.id !== id) return { ok: false, conflit: pris.id };
+    throw e;
+  }
+  return { ok: true, changes };
+}
+
+/** Une note libre, horodatée, rangée dans l'historique ; elle devient le « dernier texte » sur « Aujourd'hui ». */
+export async function ajouterNote(env: EnvSite, id: string, note: string, par: string): Promise<boolean> {
+  const maintenant = new Date().toISOString();
+  const r = await env.DB.prepare('UPDATE contact SET last_activity_at = ?2 WHERE id = ?1').bind(id, maintenant).run();
+  if (!r.meta.changes) return false;
+  await evenement(env, id, maintenant, 'note', 'anne', note, par).run();
   return true;
 }

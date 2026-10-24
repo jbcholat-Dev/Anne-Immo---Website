@@ -1,7 +1,7 @@
 ---
 story: 13.23
 epic: 13 — Espace de travail d'Anne
-statut: ready-for-dev
+statut: review
 date: 2026-10-24
 maj: 2026-10-24
 ---
@@ -22,5 +22,36 @@ Deuxième point bloquant de l'audit 13.21 (décision de JB du 2026-10-24). La fi
 - `e2e-espace.mjs` : correction d'un prénom et d'un numéro ; refus d'un numéro déjà pris avec lien ; note libre visible sur la fiche et sur « Aujourd'hui » ; export d'un contact sans e-mail ; effacement d'un contact sans e-mail (plus rien dans `contact`, `contact_evenement`, droits journalisés) ; le site lit toujours ses demandes.
 - Captures, `npm run build`, `npm run check` dans `espace/`.
 
+## Ce qui est fait (2026-10-24)
+- Fiche (`espace/src/pages/contacts/fiche.astro`), bloc Coordonnées : « Modifier les coordonnées et l'origine », replié par défaut. On peut y corriger :
+  - prénom, nom, téléphone, e-mail, commune ;
+  - le parcours (vendre, acheter, je ne sais pas encore) ;
+  - l'origine et sa précision, avec le passage de boîtage ou le prescripteur, demandés selon l'origine.
+- Le téléphone est rangé en +33 comme à l'ajout.
+- `modifierCoordonnees` (`espace/src/server/pipeline.ts`) refuse un téléphone ou un e-mail déjà porté par un autre contact et donne le lien « Ouvrir sa fiche » ; rien n'est changé. L'historique note les champs changés (« Coordonnées modifiées : prénom, téléphone »), sans les anciennes valeurs. Un nouveau numéro récupère aussitôt les appels déjà relevés par Leedflow (`rattacherInconnus`).
+- Note libre en un geste sous la prochaine action (`ajouterNote`, type `note`, source `anne`). Elle devient le « dernier texte » sur « Aujourd'hui » ; une correction de coordonnées ne le devient pas.
+- « Données de cette personne » sur la fiche :
+  - « Télécharger ses données » (`/api/contacts/export`, `exporterContact`) : contact, historique, tâches Leedflow, demandes du site et leurs envois ;
+  - « Effacer ce contact » (taper EFFACER, `effacerContact`) : contact, historique, demandes liées et envois, tâches et liens Leedflow, numéro relevé ou classé par Leedflow ;
+  - les deux sont notés dans `droit_exerce` comme depuis `/gestion`. L'empreinte est celle de l'e-mail, à défaut du téléphone, à défaut de l'identifiant.
+- `site/src/server/rights.ts` : les deux nouvelles fonctions partagent avec l'export par adresse la mise en forme des demandes et des fiches (`demandeLisible`, `fichesLisibles`).
+- Le renvoi « Export et effacement : depuis les demandes, par son adresse e-mail » a disparu de la fiche.
+- Écart : pas de suppression simple distincte de l'effacement. Effacer un contact est la suppression, et elle est journalisée comme un droit exercé ; un doublon se corrige en effaçant l'un des deux.
+
+## Ce qui est vérifié (2026-10-24)
+- `node scripts/e2e-espace.mjs` : **220 vérifications, toutes bonnes**. Les nouvelles :
+  - modification repliée par défaut, note, export et effacement présents, plus de renvoi vers les demandes ;
+  - prénom, numéro (rangé en +33) et commune corrigés, historique sans l'ancien numéro ;
+  - numéro d'un autre contact refusé, avec le lien vers sa fiche ;
+  - Boîtage sans passage refusé ;
+  - note libre visible sur « Aujourd'hui » ;
+  - export d'un contact sans e-mail, noté au journal ;
+  - effacement sans « EFFACER » refusé ;
+  - effacement d'un contact sans e-mail : fiche, historique et numéro classé effacés, noté au journal ;
+  - `/gestion` toujours lisible ;
+  - dans le navigateur, « Modifier » ouvre le formulaire et l'origine Boîtage montre le choix du passage.
+- `node scripts/e2e-gestion.mjs` (site) : 44 vérifications, toutes bonnes (export et effacement par adresse inchangés).
+- `npm run build` et `npm run check` dans `espace/` et `site/` : 0 erreur. Captures `espace/.verif/espace-fiche-modifier-{ordinateur,telephone}.png`.
+
 ## Ce qui reste
-- À construire (fil « [Site] Espace de travail d'Anne »), après la 13.22. Audit : https://claude.ai/artifact/87DydmbEHytFNxEk6FRkPy.
+- Fusion par JB, puis essai sur l'espace en ligne.

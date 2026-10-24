@@ -19,6 +19,7 @@ const nomDe = (c: { prenom: string | null; nom: string | null; telephone: string
 ---
 <Espace titre="Contacts" actif="contacts">
   <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><h1>Contacts</h1><span style="display:flex;gap:16px;flex-wrap:wrap"><a href="/pipeline">Pipeline</a><a href="/prescripteurs">Prescripteurs</a><a href="/acheteurs">Acheteurs</a><a href="/gestion">Demandes du site</a><a href="/a-trier">Numéros à trier</a></span></div>
+  {m === 'efface' && <p class="e-message" role="status" data-message>Contact effacé définitivement, noté dans le journal des droits.</p>}
   {importe && <p class="e-message" role="status" data-message>Import fait : {importe[1]} nouveau(x) contact(s), {importe[2]} déjà connu(s) complété(s).</p>}
   <form method="get" action="/contacts" style="display:flex;gap:10px;flex-wrap:wrap">
     <label class="e-champ" style="flex:1 1 240px"><span class="e-muet">Rechercher</span><input type="search" name="q" value={q} placeholder="Nom, téléphone, e-mail, commune" /></label>
