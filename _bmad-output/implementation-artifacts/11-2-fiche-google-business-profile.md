@@ -45,9 +45,19 @@ Sources : [règles de représentation](https://support.google.com/business/answe
 - Logo et photo de couverture (le logo de la charte est dans `design-system/`).
 - Accord eXp éventuel.
 
+## Décisions de JB du 2026-10-24
+
+- Nom de la fiche : « Anne VIAL-TISSOT », sans eXp. Raison : Anne n'est pas liée à eXp pour toujours, la fiche doit lui survivre. La description garde la mention « réseau eXp France ».
+- Compte titulaire : le compte Google professionnel d'Anne.
+- Horaires : du lundi au samedi, 9 h à 19 h. Début d'activité : 2023.
+- Logo : le symbole de la charte ; couverture : le logo empilé avec le nom, la vague et le descripteur. Fichiers prêts dans le dossier du projet `google-business/` (logo 1440 × 1440, couverture 2048 × 1152, rendus depuis `design-system/assets/`).
+- Validation : JB propose l'adresse des bureaux de Thonon. Elle reste masquée ; Google peut y envoyer un courrier ou demander une vidéo filmée sur place.
+- Avis Immodvisor : Google interdit d'importer ou de recopier des avis d'un autre site ([règles des contenus Google Maps](https://support.google.com/contributionpolicy/answer/7400114?hl=fr)). On demande plutôt aux anciens clients de déposer aussi un avis Google.
+
 ## Ce qui est fait
 
 - 2026-10-12 : process et liste écrits dans le fil « Fiche Google Business », story ouverte.
+- 2026-10-24 : choix de JB notés, logo et couverture préparés.
 
 ## Ce qui reste
 
