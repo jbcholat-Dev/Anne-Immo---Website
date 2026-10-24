@@ -2503,6 +2503,17 @@ Anne publie elle-même des offres limitées dans le temps (premier exemple : une
 
 **Capacités couvertes :** aucune dans la spec v6 : une capacité nouvelle sera ajoutée (story 14.2). **Décisions :** AD-11 (zéro traceur, les paramètres de campagne voyagent dans l'adresse), AD-6 (une seule table `lead`, une source de plus), AD-7 (contrôles anti-robots), AD-18 (droits RGPD), story 5.4 (origine des campagnes gardée), décision de JB du 2026-10-10 : une offre = un tirage au sort parmi les inscrits.
 
+
+### Story 13.32: Maquette v3 de l'espace
+
+En tant que JB,
+je veux une maquette de l'espace à jour de ce qui est en ligne et de ce qui vient,
+afin d'affiner le design et les fonctions avec Anne avant de les construire.
+
+**Critères d'acceptation :**
+- La maquette montre la fiche contact, noter la suite, les contacts, le pipeline, Qualifier avec les critères d'un acheteur et la ligne « Cherche » des acheteurs.
+- Chaque changement retenu devient une story.
+
 ### Story 14.1: Décision de principe
 
 En tant que JB,

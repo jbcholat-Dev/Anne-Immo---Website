@@ -1,7 +1,7 @@
 ---
 story: 13.30
 epic: 13 — Espace de travail d'Anne
-statut: review
+statut: done
 date: 2026-10-24
 maj: 2026-10-24
 ---
@@ -28,3 +28,6 @@ L'API de Leedflow ne donne aucun critère rangé : seulement la synthèse en tex
 ## Ce qui reste
 - Fusion par JB, puis fermeture du ticket #176.
 - Le reste du ticket #182 (en-tête de fiche, historique résumé) est la story 13.31.
+
+## Clôture
+- 2026-10-24 : PR n° 192 fusionnée sur l'accord de JB (« fusionne »), après fusion de main (262 vérifications, 0 échec). Ticket #176 fermé en citant le commit 59ab825.

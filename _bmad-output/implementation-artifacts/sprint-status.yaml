@@ -198,8 +198,9 @@ development_status:
   13-27-écrire-et-envoyer-une-campagne: ready-for-dev
   13-28-bilan-d-une-campagne: ready-for-dev
   13-29-retours-anne-libelles-et-suppression: done   # 2026-10-24, PR n° 188 fusionnée, tickets #177, #178, #185 fermés
-  13-30-fiche-contact-repensee: review   # 2026-10-24, critères de recherche acheteur (ticket #176), construite et vérifiée (246 vérifications)
+  13-30-fiche-contact-repensee: done   # 2026-10-24, PR n° 192 fusionnée (JB), ticket #176 fermé
   13-31-en-tete-et-historique-de-la-fiche: ready-for-dev   # 2026-10-24, ticket #182
+  13-32-maquette-v3-de-l-espace: review   # 2026-10-24, maquette v3 publiée, en attente des retours de JB et Anne
   epic-13-retrospective: optional
 
   epic-14: in-progress
