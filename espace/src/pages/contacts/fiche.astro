@@ -45,7 +45,7 @@ if (Astro.request.method === 'POST') {
     if (!note) erreur = 'Écrivez la note.';
     else if (await ajouterNote(env, id, note, compte)) return Astro.redirect(`/contacts/fiche?id=${id}&m=note`, 303);
   } else if (quoi === 'effacer') {
-    if (champ(f, 'confirmation').toUpperCase() !== 'EFFACER') erreur = 'Tapez EFFACER pour confirmer : l\'effacement est définitif.';
+    if (!['SUPPRIMER', 'EFFACER'].includes(champ(f, 'confirmation').toUpperCase())) erreur = 'Tapez SUPPRIMER pour confirmer : la suppression est définitive.';
     else if ((await effacerContact(env, id, compte)) !== null) return Astro.redirect('/contacts?m=efface', 303);
   } else if (quoi === 'coordonnees') {
     saisi = Object.fromEntries([...f.entries()].map(([k, v]) => [k, typeof v === 'string' ? v.trim() : '']));
@@ -273,12 +273,12 @@ const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || telLisible(c.telephon
     <p class="e-muet" style="margin:0">Si elle demande ce que vous gardez sur elle, ou qu'on l'oublie (RGPD). Chaque demande est notée dans le journal des droits.</p>
     <div><a class="e-bouton second" href={`/api/contacts/export?id=${c.id}`} data-export>Télécharger ses données</a></div>
     <details open={erreurPour === 'effacer'} data-effacer>
-      <summary class="fi-resume">Effacer ce contact</summary>
+      <summary class="fi-resume">Supprimer ce contact</summary>
       <form method="post" class="fi-form">
         <input type="hidden" name="quoi" value="effacer" />
-        <p style="margin:0">Efface définitivement la fiche, son historique, ses demandes faites sur le site et ce que Leedflow a relevé pour son numéro. Impossible à annuler.</p>
-        <label class="e-champ">Tapez EFFACER pour confirmer<input name="confirmation" autocomplete="off" /></label>
-        <div><button class="e-bouton fi-danger" type="submit">Effacer définitivement</button></div>
+        <p style="margin:0">Supprime définitivement la fiche, son historique, ses demandes faites sur le site et ce que Leedflow a relevé pour son numéro. Impossible à annuler.</p>
+        <label class="e-champ">Tapez SUPPRIMER pour confirmer<input name="confirmation" autocomplete="off" /></label>
+        <div><button class="e-bouton fi-danger" type="submit">Supprimer définitivement</button></div>
       </form>
     </details>
   </section>

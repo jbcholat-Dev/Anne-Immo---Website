@@ -2463,6 +2463,29 @@ afin de la comparer à mes autres actions dans le bilan du lundi.
 **Alors** elle voit envoyés, refusés, désinscrits, demandes et rendez-vous venus du message, sans aucun suivi des ouvertures (AD-11). Décision de JB du 2026-10-24
 
 
+
+### Story 13.29: Retours d'Anne du 24/10, libellés et suppression d'un contact
+
+En tant qu'Anne,
+je veux retrouver mes mots dans l'espace (« Prospection », « R1 », « R2 ») et supprimer un contact depuis sa fiche,
+afin de m'y repérer tout de suite et de nettoyer les contacts de test.
+
+**Critères d'acceptation :**
+**Étant donné** l'espace
+**Quand** Anne ouvre le menu, le pipeline ou la fiche d'un contact
+**Alors** l'onglet s'appelle « Prospection », les étapes s'appellent « R1 » et « R2 », et « Supprimer ce contact » demande de taper SUPPRIMER. Tickets #177, #178, #185
+
+### Story 13.30: Fiche contact repensée
+
+En tant qu'Anne,
+je veux voir en tête de fiche la maturité du contact, ses visites, son dernier contact et sa prochaine action, un historique résumé et des critères de recherche complets,
+afin de comprendre un contact d'un coup d'œil.
+
+**Critères d'acceptation :**
+**Étant donné** la fiche d'un contact
+**Quand** Anne l'ouvre
+**Alors** l'en-tête montre maturité, visites, dernier contact et prochaine action ; l'historique ne montre que date et objet, détail au toucher ; les critères acheteur suivent le formulaire de Modelo et seuls les champs renseignés s'affichent. Tickets #176, #182
+
 ## Epic 14: Campagnes promotionnelles temporaires
 
 Anne publie elle-même des offres limitées dans le temps (premier exemple : une séance photo professionnelle de sa maison à gagner) pour attirer du monde sur le site et récupérer des contacts de vendeurs. Chaque offre a sa page, ouverte et fermée par ses dates, et ses inscrits arrivent dans la même base que les autres demandes. Origine : demande de JB du 2026-10-10 (fil « Campagnes promotionnelles »). **À démarrer après le lancement public (story 12.4)**, sans toucher à la PR n° 80.

@@ -418,8 +418,8 @@ try {
   r = await suite({ resultat: 'fait', etape: 'second_rdv', action: 'Second rendez-vous', quand: '7j', heure: '10:00', note: 'Rendez-vous pris chez eux' });
   st = etatSuite();
   constat(st.etape === 'second_rdv' && st.prochaine_action_le.startsWith(jPlus(7)) && st.prochaine_action_le.length > 10
-    && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${SUITE}' AND type = 'etape' AND texte LIKE 'Estimation en préparation → Second rendez-vous%'`)[0].n === 1,
-    'fait et étape choisie : passe à « Second rendez-vous » à J+7, 10 h, changement d\'étape noté');
+    && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${SUITE}' AND type = 'etape' AND texte LIKE 'Estimation en préparation → R2%'`)[0].n === 1,
+    'fait et étape choisie : passe à « R2 » à J+7, 10 h, changement d\'étape noté');
   r = await appeler(`${E}/contacts/fiche?id=${SUITE}`, { headers: avecJeton() });
   html = await r.text();
   constat(html.includes('data-suite-lien') && html.includes('Requalifier') && html.includes('Rendez-vous pris chez eux'), 'fiche d\'un contact en cours : « Noter la suite » en premier, « Requalifier » en second, la note dans l\'historique');
@@ -467,9 +467,9 @@ try {
   constat(r.status === 200 && expContact.contact?.telephone === `+33647${NUM}` && expContact.contact.historique?.some((h) => h.texte === 'Rencontré au marché') && droits('acces') === accesAvant + 1,
     'export d\'un contact sans e-mail : fiche et historique, droit noté au journal');
   r = await surFiche(sansMail, { quoi: 'effacer', confirmation: 'oui' });
-  constat(r.status === 200 && (await r.text()).includes('Tapez EFFACER') && sql(`SELECT count(*) AS n FROM contact WHERE id = '${sansMail}'`)[0].n === 1, 'effacement sans confirmation : refusé');
+  constat(r.status === 200 && (await r.text()).includes('Tapez SUPPRIMER') && sql(`SELECT count(*) AS n FROM contact WHERE id = '${sansMail}'`)[0].n === 1, 'effacement sans confirmation : refusé');
   sql(`INSERT INTO leedflow_ecarte (telephone, a, categorie) VALUES ('+33647${NUM}', '2026-10-01T00:00:00Z', 'pro')`);
-  r = await surFiche(sansMail, { quoi: 'effacer', confirmation: 'effacer' });
+  r = await surFiche(sansMail, { quoi: 'effacer', confirmation: 'supprimer' });
   constat(r.headers.get('location') === '/contacts?m=efface' && sql(`SELECT count(*) AS n FROM contact WHERE id = '${sansMail}'`)[0].n === 0
     && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${sansMail}'`)[0].n === 0 && sql(`SELECT count(*) AS n FROM leedflow_ecarte WHERE telephone = '+33647${NUM}'`)[0].n === 0
     && droits('effacement') === effAvant + 1, 'effacement d\'un contact sans e-mail : fiche, historique et numéro classé effacés, droit noté au journal');
