@@ -7,6 +7,8 @@
 // Story 13.23 : coordonnées et origine modifiables (repliées par défaut ; un téléphone ou un e-mail déjà porté par un
 // autre contact est refusé avec le lien vers sa fiche), note libre en un geste, export et effacement de la personne
 // depuis sa fiche (même journal des droits que /gestion), y compris pour un contact sans adresse e-mail.
+// Story 13.25 : en tête, la synthèse du contact (reprise de Leedflow par la relève, ou écrite par Anne), modifiable ;
+// une version plus récente de Leedflow est signalée, jamais imposée.
 import Espace from '../../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { CANAUX_ORIGINE, LIBELLES_ETAPES } from '@site/server/contacts';
@@ -17,7 +19,7 @@ import { actionsAuChoix } from '../../server/actions';
 import { champ, ULID } from '../../server/formulaires';
 import { rattacherInconnus, resumeHtml, tachesDuContact } from '../../server/leedflow';
 import {
-  ajouterNote, echeance, estCanal, libelleOrigine, lireContact, lirePassage, lirePrescripteur, listerPassages, listerPrescripteurs, modifierCoordonnees, personne,
+  ajouterNote, echeance, enregistrerSynthese, estCanal, MODELE_SYNTHESE, syntheseAffichee, libelleOrigine, lireContact, lirePassage, lirePrescripteur, listerPassages, listerPrescripteurs, modifierCoordonnees, personne,
   QUESTIONS, type Reponses,
 } from '../../server/pipeline';
 
@@ -34,7 +36,10 @@ if (Astro.request.method === 'POST') {
   const f = await Astro.request.formData();
   const quoi = champ(f, 'quoi');
   erreurPour = quoi;
-  if (quoi === 'note') {
+  if (quoi === 'synthese' || quoi === 'synthese-reprendre') {
+    const texte = quoi === 'synthese' ? champ(f, 'synthese', 8000) : '';
+    if (await enregistrerSynthese(env, id, texte || null, compte)) return Astro.redirect(`/contacts/fiche?id=${id}&m=${quoi}`, 303);
+  } else if (quoi === 'note') {
     const note = champ(f, 'note', 2000);
     if (!note) erreur = 'Écrivez la note.';
     else if (await ajouterNote(env, id, note, compte)) return Astro.redirect(`/contacts/fiche?id=${id}&m=note`, 303);
@@ -73,6 +78,7 @@ const [taches, actions, passages, prescripteurs] = await Promise.all([tachesDuCo
 // La saisie refusée est remise dans le formulaire ; sinon les valeurs du contact.
 const val = (k: keyof typeof c) => (erreurPour === 'coordonnees' && k in saisi ? saisi[k as string] : (c[k] as string | null) ?? '');
 const canalForm = val('canal');
+const synthese = syntheseAffichee(c);
 // Un échange relevé par Leedflow : un titre (« Appel reçu · 4 min »), puis le résumé en Markdown.
 const titreEtResume = (texte: string | null) => { const [titre, ...reste] = (texte ?? '').split('\n'); return { titre, resume: reste.join('\n').trim() }; };
 const m = Astro.url.searchParams.get('m') ?? '';
@@ -81,6 +87,8 @@ const message = m === 'ajoute' ? 'Contact enregistré, à qualifier aujourd\'hui
   : m === 'qualification-corrigee' ? 'Réponses corrigées ; l\'étape et la prochaine action n\'ont pas changé.'
   : m === 'suite' ? 'Suite notée dans l\'historique.'
   : m === 'note' ? 'Note ajoutée à l\'historique.'
+  : m === 'synthese' ? 'Synthèse enregistrée.'
+  : m === 'synthese-reprendre' ? 'La synthèse de Leedflow est reprise.'
   : m === 'modifie' ? 'Coordonnées enregistrées, noté dans l\'historique.'
   : m === 'inchange' ? 'Rien n\'a changé.'
   : m === 'tache-acceptee' ? 'Prochaine action mise à jour.'
@@ -104,6 +112,30 @@ const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.emai
     {c.parcours && <span class="e-tag neutre">{c.parcours === 'vendeur' ? 'Vendeur' : 'Acheteur'}</span>}
     {c.rappel_individuel_seul ? <span class="e-tag alerte" data-rappel-seul>Rappel individuel seulement</span> : ''}
   </div>
+
+  <section class="e-carte fi-synthese" data-synthese>
+    <h2>Synthèse</h2>
+    {synthese ? <>
+      <div class="e-resume" set:html={resumeHtml(synthese.texte)} />
+      <p class="e-muet" style="margin:0" data-synthese-par={synthese.par}>{synthese.par === 'anne' ? 'Modifiée par Anne' : 'Mise à jour par Leedflow'}{synthese.le ? ` le ${quand(synthese.le)}` : ''}</p>
+    </> : <p class="e-muet" style="margin:0">Pas encore de synthèse{c.telephone ? ' : Leedflow l\'écrira après un appel, ou écrivez-la' : ' : écrivez-la'}.</p>}
+    {synthese?.plusRecente && (
+      <form method="post" class="fi-plus-recente" data-plus-recente>
+        <input type="hidden" name="quoi" value="synthese-reprendre" />
+        <span>Leedflow a une version plus récente{c.synthese_leedflow_le ? ` (${quand(c.synthese_leedflow_le)})` : ''}.</span>
+        <button class="e-bouton second" type="submit">La reprendre</button>
+      </form>
+    )}
+    <details data-synthese-modifier>
+      <summary class="fi-resume">{synthese ? 'Modifier la synthèse' : 'Écrire la synthèse'}</summary>
+      <form method="post" class="fi-form">
+        <input type="hidden" name="quoi" value="synthese" />
+        <textarea name="synthese" rows="12" maxlength="8000">{synthese?.texte ?? MODELE_SYNTHESE}</textarea>
+        <p class="e-muet" style="margin:0">Une ligne « ## Titre » fait une rubrique, « - » une puce. Vider le champ reprend la version de Leedflow.</p>
+        <div><button class="e-bouton" type="submit">Enregistrer la synthèse</button></div>
+      </form>
+    </details>
+  </section>
 
   <section class="e-carte">
     <h2>Prochaine action</h2>
@@ -254,6 +286,7 @@ const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.emai
 <style>
   .fi-resume { cursor: pointer; color: var(--avt-klein); min-height: 44px; display: flex; align-items: center; }
   .fi-form { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+  .fi-plus-recente { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: var(--avt-brume); border-radius: 10px; padding: 10px 12px; }
   .fi-danger { background: var(--avt-terra); border-color: var(--avt-terra); }
   textarea { font: inherit; }
   .e-resume :global(p) { margin: 4px 0; }
