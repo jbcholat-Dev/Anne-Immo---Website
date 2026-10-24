@@ -33,8 +33,12 @@ const fiche = !robots && (chemin === routes.accueil.fr || chemin === routes.accu
       areaServed: identite.zone,
       knowsLanguage: ['fr', 'en', 'es', 'pt'],
       memberOf: { '@type': 'Organization', name: 'eXp France', url: 'https://www.expfrance.fr' },
-      sameAs: [...reseaux.map((s) => s.url), identite.immodvisor],
+      sameAs: [...reseaux.map((s) => s.url), identite.immodvisor, ...identite.profils],
     }).replace(/</g, '\\u003c')
+  : null;
+// Nom du site affiché par Google au-dessus du lien (story 11.6) : sans lui, Google montre l'adresse « annevialtissot.fr ».
+const siteWeb = fiche
+  ? JSON.stringify({ '@context': 'https://schema.org', '@type': 'WebSite', name: identite.nom, alternateName: [identite.nomCourt, 'annevialtissot.fr'], url: new URL('/', Astro.site).href })
   : null;
 ---
 <!doctype html>
@@ -48,6 +52,7 @@ const fiche = !robots && (chemin === routes.accueil.fr || chemin === routes.accu
     <link rel="canonical" href={canonical} />
     {alternes.map(([l, h]) => <link rel="alternate" hreflang={l} href={h} />)}
     {fiche && <script type="application/ld+json" set:html={fiche} />}
+    {siteWeb && <script type="application/ld+json" set:html={siteWeb} />}
     <!-- Icône du site (story 12.9) : Google reprend dans ses résultats une icône carrée de 48 px ou multiple ; le .ico sert les robots qui ne lisent que /favicon.ico -->
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -57,6 +62,7 @@ const fiche = !robots && (chemin === routes.accueil.fr || chemin === routes.accu
     <meta property="og:title" content={titre} />
     {description && <meta property="og:description" content={description} />}
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={identite.nom} />
     <meta property="og:url" content={canonical} />
     {ogImage && <meta property="og:image" content={new URL(ogImage, Astro.site)} />}
     <!-- Polices hébergées sur le site (story 8.1, AD-11) : les deux visibles dès l'ouverture sont téléchargées en priorité -->
