@@ -2373,6 +2373,17 @@ afin que JB et Claude le traitent sans que j'aie à l'écrire ailleurs.
 **Quand** elle touche « Un retour ? » et envoie une remarque
 **Alors** un ticket GitHub étiqueté `retour-apercu` est créé à son nom, avec la page (sans ses paramètres), et le formulaire rappelle de ne citer aucun client. Demande de JB du 2026-10-24
 
+### Story 13.22: Noter la suite d'un contact en cours
+
+En tant qu'Anne,
+je veux noter ce qui s'est passé avec un contact déjà qualifié et fixer la prochaine action sans repasser par les cinq questions,
+afin de faire avancer un contact depuis « Aujourd'hui » ou sa fiche sans aller dans le pipeline.
+
+**Critères d'acceptation :**
+**Étant donné** un contact au-delà de « À qualifier »
+**Quand** Anne touche « Noter la suite » et choisit fait, pas joint ou note seule
+**Alors** la prochaine action datée, l'étape si elle la change (mêmes règles que « Déplacer ») et une ligne d'historique sont enregistrées ensemble ; « pas joint » garde l'étape et l'action ; « Requalifier » ne corrige plus que les réponses. Audit 13.21, décision de JB du 2026-10-24
+
 ### Story 13.12: Parcours d'Anne pour trouver et qualifier des contacts
 
 En tant que JB,

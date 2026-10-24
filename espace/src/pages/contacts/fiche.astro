@@ -3,6 +3,7 @@
 // et historique ; bouton Qualifier et réponses de la qualification (story 13.6). Story 13.10 : appels relevés par
 // Leedflow dans l'historique avec leur résumé, et tâches proposées par Leedflow, à accepter ou ignorer.
 // Story 13.17 : l'action marketing qui a amené le contact, à choisir ou corriger.
+// Story 13.22 : un contact en cours a pour geste principal « Noter la suite » ; la qualification passe en second.
 import Espace from '../../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { CANAUX_ORIGINE, LIBELLES_ETAPES } from '@site/server/contacts';
@@ -25,6 +26,8 @@ const titreEtResume = (texte: string | null) => { const [titre, ...reste] = (tex
 const m = Astro.url.searchParams.get('m') ?? '';
 const message = m === 'ajoute' ? 'Contact enregistré, à qualifier aujourd\'hui.'
   : m === 'qualifie' ? 'Qualification enregistrée.'
+  : m === 'qualification-corrigee' ? 'Réponses corrigées ; l\'étape et la prochaine action n\'ont pas changé.'
+  : m === 'suite' ? 'Suite notée dans l\'historique.'
   : m === 'tache-acceptee' ? 'Prochaine action mise à jour.'
   : m === 'tache-ignoree' ? 'Proposition ignorée.'
   : m === 'action' ? 'Action marketing enregistrée.'
@@ -51,7 +54,10 @@ const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.emai
     <p data-prochaine>{c.etape === 'en_sommeil' ? `En sommeil, à réveiller le ${echeance(c.reveil_le)}` : c.etape === 'perdu' ? `Perdu : ${c.motif_perte}` : `${c.prochaine_action ?? '—'} · ${echeance(c.prochaine_action_le)}`}</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       {c.telephone && <a class="e-bouton second" href={`tel:${c.telephone}`}>Appeler</a>}
-      <a class={c.etape === 'a_qualifier' ? 'e-bouton' : 'e-bouton second'} href={`/contacts/qualifier?id=${c.id}`} data-qualifier-lien>{c.qualifie_le ? 'Requalifier' : 'Qualifier'}</a>
+      {c.etape === 'a_qualifier' ? <a class="e-bouton" href={`/contacts/qualifier?id=${c.id}`} data-qualifier-lien>Qualifier</a> : <>
+        <a class="e-bouton" href={`/contacts/suite?id=${c.id}`} data-suite-lien>Noter la suite</a>
+        <a class="e-bouton second" href={`/contacts/qualifier?id=${c.id}`} data-qualifier-lien>{c.qualifie_le ? 'Requalifier' : 'Qualifier'}</a>
+      </>}
     </div>
   </section>
 

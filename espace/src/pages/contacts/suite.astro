@@ -1,0 +1,197 @@
+---
+// Noter la suite d'un contact en cours (story 13.22, audit 13.21) : après un appel ou un rendez-vous, Anne dit ce qui
+// s'est passé (fait, pas joint, ou juste une note), fixe la prochaine action et sa date, et change l'étape si besoin,
+// en un seul enregistrement. La qualification (cinq questions) reste pour les nouveaux contacts ; ici rien ne ramène
+// un contact à « Premier rendez-vous ». Les règles d'étape sont celles de « Déplacer » du pipeline (AD-20) : une étape
+// active demande une action datée, En sommeil une date de réveil, Perdu un motif. Formulaire traité par cette même
+// page, pour garder la saisie en cas d'erreur.
+import Espace from '../../layouts/Espace.astro';
+import { ENTETE_COMPTE } from '@site/server/acces';
+import { ETAPES_ACHETEUR, ETAPES_VENDEUR, LIBELLES_ETAPES, type Etape } from '@site/server/contacts';
+import { pourSite as env } from '../../server/env';
+import {
+  ACTIONS_HABITUELLES, aujourdhui, echeance, ETAPES_FINALES, libelleOrigine, lireContact, MOTIFS_PERTE, noterSuite, parisVersUtc, plusTard,
+  RESULTATS_SUITE, type Changement, type ResultatSuite, type Suite,
+} from '../../server/pipeline';
+
+export const prerender = false;
+const compte = Astro.request.headers.get(ENTETE_COMPTE);
+if (!compte) return new Response('Accès refusé', { status: 403 });
+const id = Astro.url.searchParams.get('id') ?? '';
+const fiche = /^[0-9A-HJKMNP-TV-Z]{26}$/.test(id) ? await lireContact(env, id) : null;
+if (!fiche) return new Response('Contact inconnu', { status: 404 });
+const { contact: c, passage, prescripteur } = fiche;
+// Un nouveau contact se qualifie d'abord : cette page est pour la suite.
+if (c.etape === 'a_qualifier') return Astro.redirect(`/contacts/qualifier?id=${c.id}`, 303);
+const retour = Astro.url.searchParams.get('retour') === 'jour' ? 'jour' : 'fiche';
+const etapes: Etape[] = [...(c.parcours === 'acheteur' ? ETAPES_ACHETEUR : ETAPES_VENDEUR), 'en_sommeil', 'perdu'];
+const actif = (e: Etape) => e !== 'en_sommeil' && e !== 'perdu' && !ETAPES_FINALES.includes(e);
+
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+const choixDate = (choix: string, autre: string) =>
+  choix === '1m' ? plusTard(0, 1) : choix === '3m' ? plusTard(0, 3) : choix === '6m' ? plusTard(0, 6)
+  : choix === '1j' ? plusTard(1) : choix === '2j' ? plusTard(2) : choix === '7j' ? plusTard(7) : DATE.test(autre) ? autre : '';
+let saisi: Record<string, string> = {};
+let erreur = '';
+
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  saisi = Object.fromEntries([...f.entries()].map(([k, v]) => [k, typeof v === 'string' ? v.trim().slice(0, k === 'note' ? 2000 : 200) : '']));
+  const resultat = saisi.resultat in RESULTATS_SUITE ? (saisi.resultat as ResultatSuite) : null;
+  const note = saisi.note || null;
+  const etape = etapes.includes(saisi.etape as Etape) ? (saisi.etape as Etape) : c.etape;
+  // Le jour choisi, avec l'heure si elle est donnée (heure de Paris).
+  const jour = choixDate(saisi.quand ?? '', saisi.le ?? '');
+  const heure = /^\d{2}:\d{2}$/.test(saisi.heure ?? '') ? saisi.heure : '';
+  const le = jour && heure ? parisVersUtc(`${jour}T${heure}`) : jour;
+  let suite: Suite | null = null;
+  if (!resultat) erreur = 'Dites ce qui s\'est passé : fait, pas joint, ou note seule.';
+  else if (resultat === 'note' && !note) erreur = 'Écrivez la note.';
+  else if (resultat === 'pas_joint') {
+    if (!le || jour < aujourdhui()) erreur = 'Indiquez quand le rappeler.';
+    else suite = { resultat, le, note };
+  } else {
+    let ch: Changement | null = null;
+    if (etape === 'perdu') {
+      const motif = saisi.motif === 'Autre' ? (saisi.motif_autre ? `Autre : ${saisi.motif_autre}` : '') : (MOTIFS_PERTE as readonly string[]).includes(saisi.motif ?? '') ? saisi.motif : '';
+      if (!motif) erreur = 'Indiquez pourquoi il est perdu : le bilan du lundi compte les motifs.';
+      else ch = { etape, action: null, le: null, reveil: null, motif };
+    } else if (etape === 'en_sommeil') {
+      const reveil = choixDate(saisi.reveil_choix ?? '', saisi.reveil_le ?? '');
+      if (!reveil || reveil <= aujourdhui()) erreur = 'Indiquez quand le réveiller (une date à venir).';
+      else ch = { etape, action: 'Réveiller : rappeler', le: null, reveil, motif: null };
+    } else if (ETAPES_FINALES.includes(etape)) {
+      ch = { etape, action: null, le: null, reveil: null, motif: null };
+    } else {
+      const action = saisi.action || ACTIONS_HABITUELLES[etape] || c.prochaine_action || '';
+      // « Note seule » sans nouvelle date garde l'action prévue et sa date.
+      const garde = resultat === 'note' && !jour && etape === c.etape && c.prochaine_action_le ? c.prochaine_action_le : null;
+      if (!le && !garde) erreur = 'Indiquez pour quand est la prochaine action.';
+      else if (jour && jour < aujourdhui()) erreur = 'La prochaine action ne peut pas tomber avant aujourd\'hui.';
+      else ch = { etape, action, le: le || garde, reveil: null, motif: null };
+    }
+    if (ch) suite = { resultat, ch, note };
+  }
+  if (suite && !erreur) {
+    await noterSuite(env, c.id, suite, compte);
+    return Astro.redirect(retour === 'jour' ? `/?m=suite#c-${c.id}` : `/contacts/fiche?id=${c.id}&m=suite`, 303);
+  }
+}
+
+const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.email || 'Contact sans nom';
+const etapeChoisie = (saisi.etape as Etape) || c.etape;
+const prevu = c.etape === 'en_sommeil' ? `En sommeil, à réveiller le ${echeance(c.reveil_le)}` : c.etape === 'perdu' ? `Perdu : ${c.motif_perte}`
+  : c.prochaine_action ? `${c.prochaine_action}${c.prochaine_action_le ? ` · ${echeance(c.prochaine_action_le)}` : ''}` : '';
+// Pour le préremplissage côté navigateur : l'action habituelle de chaque étape, et l'action prévue aujourd'hui.
+const habituelles = JSON.stringify({ ...ACTIONS_HABITUELLES, prevue: c.prochaine_action ?? '' });
+---
+<Espace titre={`Suite · ${nom}`} actif="contacts">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div style="flex:1;min-width:0">
+      <div class="e-muet"><a href={retour === 'jour' ? '/' : `/contacts/fiche?id=${c.id}`}>{retour === 'jour' ? 'Aujourd\'hui' : 'Fiche'}</a></div>
+      <h1 style="overflow-wrap:anywhere">{nom}{c.commune ? ` · ${c.commune}` : ''}</h1>
+      <div class="e-muet">{LIBELLES_ETAPES[c.etape]} · {libelleOrigine(c, passage, prescripteur)}</div>
+    </div>
+    {c.telephone && <a class="e-bouton second" href={`tel:${c.telephone}`} aria-label={`Appeler ${nom}`}>Appeler</a>}
+  </div>
+  {erreur && <p class="e-message" role="alert" data-erreur>{erreur}</p>}
+
+  <form method="post" class="e-carte" data-suite-form data-habituelles={habituelles} data-etape-actuelle={c.etape}>
+    {prevu && <p class="su-prevu" data-prevu><span class="e-muet">Prévu :</span> {prevu}</p>}
+    <fieldset class="e-pastilles su-resultat" data-resultat>
+      <legend>Ce qui s'est passé</legend>
+      {Object.entries(RESULTATS_SUITE).map(([v, t]) => <label><input type="radio" name="resultat" value={v} required checked={saisi.resultat === v} /><span>{t}</span></label>)}
+    </fieldset>
+    <label class="e-champ">Note <span class="e-muet">(facultative, sauf « Note seule »)</span>
+      <textarea name="note" rows="2" maxlength="2000" placeholder="Ce qu'il ou elle a dit, ce qui est convenu">{saisi.note}</textarea>
+    </label>
+
+    <details class="su-etapes" open={etapeChoisie !== c.etape} data-pour-resultat="fait note">
+      <summary>Changer l'étape <span class="e-muet">(actuelle : {LIBELLES_ETAPES[c.etape]})</span></summary>
+      <fieldset class="e-pastilles" data-etapes>
+        <legend class="e-muet">Seulement si elle avance, ou pour la mettre en sommeil ou perdue</legend>
+        {etapes.map((e) => <label><input type="radio" name="etape" value={e} checked={etapeChoisie === e} /><span>{LIBELLES_ETAPES[e]}{e === c.etape ? ' (actuelle)' : ''}</span></label>)}
+      </fieldset>
+    </details>
+
+    <label class="e-champ" data-pour="actif" data-pour-resultat="fait note">Prochaine action
+      <input name="action" value={saisi.action ?? c.prochaine_action ?? ''} autocomplete="off" data-action />
+    </label>
+    <div data-pour="actif" data-pour-resultat="fait note pas_joint" data-quand>
+      <fieldset class="e-pastilles">
+        <legend data-legende-quand>Pour quand ?</legend>
+        {[['1j', 'Demain'], ['2j', 'Dans 2 jours'], ['7j', 'Dans une semaine'], ['autre', 'Autre date']].map(([v, t]) => <label><input type="radio" name="quand" value={v} checked={saisi.quand === v} /><span>{t}</span></label>)}
+      </fieldset>
+      <div class="su-date">
+        <label class="e-champ">Autre date<input type="date" name="le" min={aujourdhui()} value={saisi.le} /></label>
+        <label class="e-champ">Heure <span class="e-muet">(facultative)</span><input type="time" name="heure" step="900" value={saisi.heure} /></label>
+      </div>
+      <p class="e-muet su-garde" data-garde hidden>Sans nouvelle date, l'action prévue garde la sienne.</p>
+    </div>
+    <div data-pour="en_sommeil" data-pour-resultat="fait note">
+      <fieldset class="e-pastilles">
+        <legend>Le réveiller quand ?</legend>
+        {[['1m', 'Dans 1 mois'], ['3m', 'Dans 3 mois'], ['6m', 'Dans 6 mois'], ['autre', 'Autre date']].map(([v, t]) => <label><input type="radio" name="reveil_choix" value={v} checked={saisi.reveil_choix === v} /><span>{t}</span></label>)}
+      </fieldset>
+      <label class="e-champ" style="margin-top:10px">Autre date<input type="date" name="reveil_le" min={plusTard(1)} value={saisi.reveil_le} /></label>
+    </div>
+    <div data-pour="perdu" data-pour-resultat="fait note">
+      <fieldset class="e-pastilles">
+        <legend>Pourquoi ?</legend>
+        {MOTIFS_PERTE.map((mo) => <label><input type="radio" name="motif" value={mo} checked={saisi.motif === mo} /><span>{mo}</span></label>)}
+      </fieldset>
+      <label class="e-champ" style="margin-top:10px">Si autre, lequel ?<input name="motif_autre" value={saisi.motif_autre} autocomplete="off" /></label>
+    </div>
+
+    <div class="su-bas">
+      <button class="e-bouton" type="submit">Enregistrer</button>
+      <a href={`/contacts/qualifier?id=${c.id}`} class="e-muet" data-requalifier>{c.qualifie_le ? 'Corriger la qualification' : 'Qualifier (cinq questions)'}</a>
+    </div>
+  </form>
+</Espace>
+
+<style>
+  .su-prevu { margin: 0; }
+  .su-resultat label { flex: 1 1 28%; }
+  .su-resultat span { width: 100%; justify-content: center; min-height: 48px; border-radius: 12px; font-weight: 500; }
+  .su-date { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .su-garde { margin: 6px 0 0; }
+  .su-etapes summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; color: var(--avt-klein); }
+  .su-etapes fieldset { margin-top: 8px; }
+  .su-bas { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  textarea { font: inherit; }
+</style>
+
+<script>
+  // Montre ce que le résultat et l'étape choisis demandent, et préremplit l'action habituelle de l'étape tant
+  // qu'Anne ne l'a pas réécrite. Sans JavaScript, tout reste visible et la page vérifie au retour.
+  const form = document.querySelector<HTMLFormElement>('[data-suite-form]');
+  if (form) {
+    const habituelles = JSON.parse(form.dataset.habituelles ?? '{}') as Record<string, string>;
+    const actuelle = form.dataset.etapeActuelle ?? '';
+    const action = form.querySelector<HTMLInputElement>('[data-action]');
+    const finales = ['vendu', 'acte_signe'];
+    let touchee = false;
+    action?.addEventListener('input', () => { touchee = true; });
+    const maj = (ev?: Event) => {
+      const resultat = form.querySelector<HTMLInputElement>('input[name=resultat]:checked')?.value ?? '';
+      const etape = form.querySelector<HTMLInputElement>('input[name=etape]:checked')?.value ?? actuelle;
+      const pour = etape === 'perdu' || etape === 'en_sommeil' ? etape : finales.includes(etape) ? 'final' : 'actif';
+      form.querySelectorAll<HTMLElement>('[data-pour-resultat]').forEach((el) => {
+        const okResultat = !resultat || (el.dataset.pourResultat ?? '').split(' ').includes(resultat);
+        const okEtape = !el.dataset.pour || resultat === 'pas_joint' || el.dataset.pour === pour;
+        el.hidden = !(okResultat && okEtape);
+      });
+      const legende = form.querySelector('[data-legende-quand]');
+      if (legende) legende.textContent = resultat === 'pas_joint' ? 'Le rappeler quand ?' : 'Pour quand ?';
+      const garde = form.querySelector<HTMLElement>('[data-garde]');
+      if (garde) garde.hidden = !(resultat === 'note' && etape === actuelle);
+      const cible = ev?.target as HTMLInputElement | undefined;
+      if (action && !touchee && (cible?.name === 'resultat' || cible?.name === 'etape')) {
+        action.value = resultat === 'note' && etape === actuelle ? habituelles.prevue : habituelles[etape] ?? habituelles.prevue;
+      }
+    };
+    form.addEventListener('change', maj);
+    maj();
+  }
+</script>

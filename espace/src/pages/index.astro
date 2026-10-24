@@ -4,7 +4,8 @@
 // en sommeil à réveiller) ; puis les prescripteurs à relancer, les lettres « j'ai un acheteur » et les secteurs de boîtage à refaire. Depuis chaque carte,
 // Anne appelle en un geste et ouvre la qualification. Story 13.10 : sous les nouveaux contacts, ce que Leedflow a vu
 // (tâches proposées comme prochaine action) ; story 13.19 : les numéros inconnus
-// ne sont plus qu'une ligne vers « Numéros à trier », et l'état de la relève en bas de page.
+// ne sont plus qu'une ligne vers « Numéros à trier », et l'état de la relève en bas de page. Story 13.22 : « Noter la
+// suite » d'un rappel ouvre le formulaire de suite (fait, pas joint, prochaine action), plus la qualification.
 import Espace from '../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { LIBELLES_ETAPES } from '@site/server/contacts';
@@ -21,7 +22,7 @@ const [{ nouveaux, rappels, prescripteurs, secteurs }, acheteurs, leedflow, rele
   etatReleve(envEspace).catch(() => ({ branche: !!envEspace.LEEDFLOW_API_KEY, passe_le: null, erreur: null })),
 ]);
 const m = Astro.url.searchParams.get('m') ?? '';
-const message = m === 'tache-acceptee' ? 'Prochaine action mise à jour.' : m === 'tache-ignoree' ? 'Proposition ignorée.' : '';
+const message = m === 'suite' ? 'Suite notée.' : m === 'tache-acceptee' ? 'Prochaine action mise à jour.' : m === 'tache-ignoree' ? 'Proposition ignorée.' : '';
 const etatLeedflow = !releve.branche ? 'Leedflow n\'est pas encore branché : la clé d\'accès reste à poser (RUNBOOK § 4 sexies).'
   : releve.erreur ? `Leedflow : la dernière relève a échoué (${releve.erreur}). Si cela dure, la clé a peut-être été révoquée.`
   : releve.passe_le ? `Leedflow : appels relevés ${depuis(releve.passe_le)}.` : 'Leedflow : première relève dans les 10 minutes.';
@@ -85,14 +86,14 @@ const rien = nouveaux.length + leedflow.taches.length + leedflow.aTrier.total + 
     <section class="e-jour" aria-label="Rappels prévus" data-rappels>
       <h2>Rappels prévus</h2>
       {rappels.map((c) => (
-        <article class="e-carte" data-contact={c.id}>
+        <article class="e-carte" id={`c-${c.id}`} data-contact={c.id}>
           <div class="e-ligne"><a href={`/contacts/fiche?id=${c.id}`} class="e-nom">{nom(c)}{c.commune ? ` · ${c.commune}` : ''}</a>
             {enRetard(c.prochaine_action_le) ? <span class="e-quand fort" data-retard>En retard · {echeance(c.prochaine_action_le)}</span> : <span class="e-quand">{echeance(c.prochaine_action_le)}</span>}</div>
           <div class="e-muet">{c.etape === 'en_sommeil' ? 'En sommeil : à réveiller' : LIBELLES_ETAPES[c.etape]} · {c.prochaine_action}</div>
           {c.dernier_texte && <p class="e-raison e-extrait">{extrait(c.dernier_texte)}</p>}
           <div class="e-gestes">
             {c.telephone && <a class="e-bouton second" href={`tel:${c.telephone}`}>Appeler</a>}
-            <a class="e-bouton second" href={`/contacts/qualifier?id=${c.id}`}>Noter la suite</a>
+            <a class="e-bouton" href={`/contacts/suite?id=${c.id}&retour=jour`} data-suite-lien>Noter la suite</a>
           </div>
         </article>
       ))}
