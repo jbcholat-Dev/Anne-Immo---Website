@@ -33,7 +33,7 @@ const fiche = !robots && (chemin === routes.accueil.fr || chemin === routes.accu
       areaServed: identite.zone,
       knowsLanguage: ['fr', 'en', 'es', 'pt'],
       memberOf: { '@type': 'Organization', name: 'eXp France', url: 'https://www.expfrance.fr' },
-      sameAs: [...reseaux.map((s) => s.url), identite.immodvisor],
+      sameAs: [...reseaux.map((s) => s.url), identite.immodvisor, ...identite.profils],
     }).replace(/</g, '\\u003c')
   : null;
 ---
