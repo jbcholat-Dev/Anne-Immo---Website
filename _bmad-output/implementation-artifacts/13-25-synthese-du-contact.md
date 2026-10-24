@@ -1,7 +1,7 @@
 ---
 story: 13.25
 epic: 13 — Espace de travail d'Anne
-statut: ready-for-dev
+statut: review
 date: 2026-10-24
 maj: 2026-10-24
 ---
@@ -33,5 +33,36 @@ Demande de JB du 2026-10-24 (deux captures de la fiche Leedflow d'une acquéreus
   - clé refusée sans casse.
 - Captures téléphone et ordinateur de la fiche ; `npm run build`, `npm run check` dans `espace/`.
 
+## Ce qui est fait (2026-10-24)
+- Migration `site/migrations/0012-synthese-contact.sql`, cinq colonnes sur `contact` :
+  - `synthese_leedflow` et `synthese_leedflow_le` : le texte de Leedflow et la date où il a changé chez Leedflow ;
+  - `synthese_lue_le` : la dernière lecture de la fiche Leedflow ;
+  - `synthese` et `synthese_le` : la version d'Anne et la date où elle l'a enregistrée.
+- Relève (`espace/src/server/leedflow.ts`, `lireSyntheses`), dans la limite des 30 fiches Leedflow par passage, partagée avec les noms des numéros inconnus. L'ordre de lecture :
+  - d'abord les contacts liés jamais lus ;
+  - puis ceux dont le dernier échange date de moins d'une heure : Leedflow réécrit sa synthèse après l'appel, elle est relue à chaque passage pendant cette heure ;
+  - puis le tour quotidien.
+- Le lien vient de `leedflow_lien`, que les appels, SMS et tâches remplissent déjà. `ficheLeedflow` descend l'enveloppe `data` ou `data.data`. Si la migration manque, la relève continue sans synthèse.
+- Fiche (`fiche.astro`), carte « Synthèse » en tête :
+  - Markdown rendu comme les résumés d'appels, signé « Mise à jour par Leedflow le … » ou « Modifiée par Anne le … » ;
+  - « Leedflow a une version plus récente » avec « La reprendre » quand Leedflow a changé la sienne après Anne ;
+  - « Modifier » ou « Écrire la synthèse » (champ prérempli, ou le modèle aux cinq rubriques pour un contact hors Leedflow).
+- `enregistrerSynthese` (`pipeline.ts`) : un champ vidé, ou identique à la version de Leedflow, rend la main à Leedflow. Une ligne d'historique sans le texte.
+- RGPD : comprise dans l'export (colonnes du contact) et effacée avec lui (13.23).
+- Écart : chaleur, typologie, statut et tags de Leedflow ne sont pas dans l'API et ne sont pas repris.
+
+## Ce qui est vérifié (2026-10-24)
+- `node scripts/e2e-espace.mjs` : **229 vérifications, toutes bonnes**. Les nouvelles :
+  - synthèse lue sur la fiche Leedflow imitée (enveloppe `data.data`), avec sa date ;
+  - en tête de la fiche, signée Leedflow ;
+  - version d'Anne gardée à côté ;
+  - nouvelle version de Leedflow signalée sans écraser ;
+  - « La reprendre » ;
+  - relue dans l'heure qui suit un échange ;
+  - contact hors Leedflow : modèle proposé, saisie à la main affichée, export qui la comprend ;
+  - la clé refusée reste signalée sans casse (essai existant).
+- La base locale d'essai a été remise à zéro avant la dernière série : les secteurs de boîtage accumulés par les essais précédents faisaient sortir un secteur du bilan, plafonné à 30.
+- `npm run build` et `npm run check` dans `espace/` : 0 erreur.
+
 ## Ce qui reste
-- À construire (fil « [Site] Espace de travail d'Anne »), après la 13.23 et avant la 13.24 (même page). Numéros 13.26 à 13.28 pris par le fil « Campagnes d'e-mailing depuis l'espace », qui prendra la migration suivante.
+- Fusion par JB (après les 13.22 et 13.23). Une fois en ligne : vérifier sur un vrai contact d'Anne que le texte lu est bien la synthèse affichée dans Leedflow.

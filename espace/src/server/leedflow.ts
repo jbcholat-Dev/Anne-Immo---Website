@@ -11,6 +11,8 @@
 // Premier passage : tout l'historique est repris, pour les numéros déjà connus seulement, par paquets de pages.
 // Retour de JB du 2026-10-21 : pour un numéro inconnu, Anne voit aussi le nom du contact dans Leedflow (lu sur sa fiche),
 // le résumé complet de chaque échange et les tâches détectées ; elles deviennent des propositions à la création du contact.
+// Story 13.25 : la synthèse IA que Leedflow écrit de chaque contact (champ `details` de sa fiche) est recopiée sur le
+// contact lié (`lireSyntheses`), à côté de celle qu'Anne a pu écrire, qui n'est jamais écrasée.
 import type { EnvEspace } from './env';
 import { journal } from '@site/server/journal';
 import { e164 } from '@site/server/schema';
@@ -104,13 +106,20 @@ async function demander(env: EnvEspace, chemin: string, params: Record<string, s
   return r.json();
 }
 
-/** La fiche d'un contact Leedflow (nom, e-mail, numéro), ou null si elle ne se lit pas. */
-async function ficheLeedflow(env: EnvEspace, id: string): Promise<{ prenom: string; nom: string; email: string; telephone: string | null } | null> {
-  const j = (await demander(env, `/contacts/${encodeURIComponent(id)}`).catch(() => null)) as Record<string, any> | null;
-  const f = j?.data && typeof j.data === 'object' && !Array.isArray(j.data) ? j.data : j;
+/**
+ * La fiche d'un contact Leedflow (nom, e-mail, numéro, et depuis la story 13.25 sa synthèse IA, champ `details`, avec
+ * la date de dernière modification de la fiche), ou null si elle ne se lit pas. L'enveloppe peut être `data` ou
+ * `data.data` (essai de JB du 2026-10-24 sur la liste) : on descend jusqu'à l'objet qui porte l'identifiant.
+ */
+async function ficheLeedflow(env: EnvEspace, id: string): Promise<{ prenom: string; nom: string; email: string; telephone: string | null; synthese: string; modifie: number | null } | null> {
+  let f = (await demander(env, `/contacts/${encodeURIComponent(id)}`).catch(() => null)) as Record<string, any> | null;
+  for (let i = 0; i < 3 && f && typeof f === 'object' && !('id' in f) && f.data && typeof f.data === 'object' && !Array.isArray(f.data); i++) f = f.data;
   if (!f || typeof f !== 'object') return null;
   const t = (v: unknown, max = 80) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
-  return { prenom: t(f.firstname), nom: t(f.lastname), email: t(f.email, 254).toLowerCase(), telephone: numero(f.phone) };
+  return {
+    prenom: t(f.firstname), nom: t(f.lastname), email: t(f.email, 254).toLowerCase(), telephone: numero(f.phone),
+    synthese: t(f.details, 8000), modifie: typeof f.updated === 'number' ? f.updated : null,
+  };
 }
 
 /** Écrit (ou complète) un élément d'un numéro inconnu, sans perdre le nom déjà lu sur la fiche Leedflow. */
@@ -267,7 +276,7 @@ export async function relever(env: EnvEspace): Promise<void> {
   const curseurs = new Map(results.map((r) => [r.genre, r.curseur]));
   let budget = PAGES_PAR_PASSAGE;
   const fiches = { reste: FICHES_PAR_PASSAGE };
-  const bilan = { notes: 0, inconnus: 0, taches: 0, pages: 0, noms: 0 };
+  const bilan = { notes: 0, inconnus: 0, taches: 0, pages: 0, noms: 0, syntheses: 0 };
   for (const genre of GENRES) {
     const curseur = curseurs.get(genre) ?? 0;
     let nouveau = curseur, erreur: string | null = null;
@@ -312,6 +321,8 @@ export async function relever(env: EnvEspace): Promise<void> {
   }
   bilan.noms = await nommerInconnus(env, fiches);
   await rattacherInconnus(env);
+  // Tant que la migration 0012 n'est pas appliquée (quelques minutes lors d'une mise en ligne), la relève continue sans synthèse.
+  bilan.syntheses = await lireSyntheses(env, fiches).catch((e) => { journal('leedflow_erreur', { genre: 'synthese', detail: String(e).slice(0, 200) }); return 0; });
   journal('leedflow_releve', bilan);
 }
 
@@ -332,6 +343,40 @@ async function nommerInconnus(env: EnvEspace, fiches: { reste: number }): Promis
       `UPDATE leedflow_inconnu SET donnees = json_set(donnees, '$.prenom_leedflow', ?2, '$.nom_leedflow', ?3, '$.email_leedflow', ?4)
        WHERE json_extract(donnees, '$.leedflow_contact') = ?1`,
     ).bind(lc, f.prenom, f.nom, f.email).run();
+    n++;
+  }
+  return n;
+}
+
+/** Relire une synthèse au plus une fois par jour, et à chaque passage pendant l'heure qui suit un nouvel échange. */
+const SYNTHESE_RELUE_H = 24;
+
+/**
+ * La synthèse IA des contacts liés à Leedflow (story 13.25), lue sur leur fiche Leedflow : d'abord ceux qui ne l'ont
+ * jamais été, puis ceux qui viennent d'avoir un échange (Leedflow réécrit sa synthèse après l'appel), puis le tour
+ * quotidien. Dans la limite des fiches lisibles par passage. La version d'Anne n'est jamais touchée ici.
+ */
+async function lireSyntheses(env: EnvEspace, fiches: { reste: number }): Promise<number> {
+  if (fiches.reste <= 0) return 0;
+  const maintenant = new Date().toISOString();
+  const veille = new Date(Date.now() - SYNTHESE_RELUE_H * 3_600_000).toISOString();
+  const { results } = await env.DB.prepare(
+    `SELECT c.id, min(l.leedflow_contact) AS lc FROM contact c JOIN leedflow_lien l ON l.contact_id = c.id
+     WHERE c.synthese_lue_le IS NULL OR c.synthese_lue_le < ?1
+        OR c.synthese_lue_le < strftime('%Y-%m-%dT%H:%M:%fZ', (SELECT max(e.a) FROM contact_evenement e WHERE e.contact_id = c.id AND e.source = 'leedflow'), '+1 hour')
+     GROUP BY c.id ORDER BY c.synthese_lue_le IS NOT NULL, c.synthese_lue_le LIMIT ?2`,
+  ).bind(veille, fiches.reste).all<{ id: string; lc: string }>();
+  let n = 0;
+  for (const { id, lc } of results) {
+    fiches.reste--;
+    const f = await ficheLeedflow(env, lc);
+    if (!f) continue; // fiche illisible : on réessaiera au prochain passage
+    const le = f.modifie ? new Date(f.modifie).toISOString() : maintenant;
+    await env.DB.prepare(
+      `UPDATE contact SET synthese_lue_le = ?2,
+         synthese_leedflow_le = CASE WHEN synthese_leedflow IS NOT ?3 THEN ?4 ELSE synthese_leedflow_le END,
+         synthese_leedflow = ?3 WHERE id = ?1`,
+    ).bind(id, maintenant, f.synthese || null, le).run();
     n++;
   }
   return n;

@@ -15,6 +15,7 @@
 // Story 13.14 : prescripteurs (recommandés, mandats, relance due sur Aujourd'hui, échange noté, ajout).
 // Story 13.15 : acheteurs actifs (critères, « aussi vendeur », vendeurs en sommeil du secteur, lettre sur Aujourd'hui).
 // Story 13.16 : vue pipeline (colonnes par étape, déplacement avec prochaine action, réveil ou motif exigés).
+// Story 13.25 : synthèse du contact (lue sur la fiche Leedflow, gardée à côté de celle d'Anne, version plus récente signalée, saisie à la main).
 // Story 13.23 : fiche modifiable (coordonnées, doublon refusé avec lien), note libre, export et effacement d'un contact sans e-mail.
 // Story 13.22 : noter la suite d'un contact en cours (fait, pas joint, note ; étape gardée sauf choix ; requalifier sans changer l'étape).
 // Story 13.6 : qualifier (suite obligatoire, date, réveil ou motif exigés, étape et prochaine action fixées, heure de Paris).
@@ -473,6 +474,13 @@ try {
     && droits('effacement') === effAvant + 1, 'effacement d\'un contact sans e-mail : fiche, historique et numéro classé effacés, droit noté au journal');
   r = await appeler(`${E}/gestion`, { headers: avecJeton() });
   constat(r.status === 200, 'les demandes du site se lisent toujours après un effacement');
+  html = await (await appeler(`${E}/contacts/fiche?id=${SUITE}`, { headers: avecJeton() })).text();
+  constat(html.includes('Écrire la synthèse') && html.includes('## Qui est ce contact'), 'synthèse d\'un contact hors Leedflow : à écrire, avec les rubriques proposées');
+  r = await surFiche(SUITE, { quoi: 'synthese', synthese: `## Qui est ce contact\nVendeuse à Thonon ${NUM}` });
+  html = await (await appeler(`${E}/contacts/fiche?id=${SUITE}`, { headers: avecJeton() })).text();
+  constat(html.includes('data-synthese-par="anne"') && html.includes(`Vendeuse à Thonon ${NUM}`), 'synthèse écrite à la main, affichée en tête de la fiche');
+  r = await appeler(`${E}/api/contacts/export?id=${SUITE}`, { headers: avecJeton() });
+  constat((await r.json()).contact?.synthese?.includes(`Vendeuse à Thonon ${NUM}`), 'export : la synthèse est comprise');
 
   // 5 quinquies. Bilan du lundi par canal (story 13.13) : les chiffres suivent la base, sans saisie.
   const ligneCanal = async (canal) => {
@@ -603,6 +611,9 @@ try {
   );
   LF.contacts[`lfc3-${NUM}`] = { id: `lfc3-${NUM}`, firstname: 'Ines', lastname: `Martin${NUM}`, email: `ines+${NUM}@example.com`, phone: INCONNU };
   LF.contacts[`lfc9-${NUM}`] = { id: `lfc9-${NUM}`, phone: `0033688${NUM}` }; // contact Leedflow vu seulement par sa fiche
+  // Story 13.25 : la synthèse IA de Leedflow est dans `details` ; enveloppe `data.data`, comme la liste lue par JB.
+  const SYNTH1 = `## Qui est ce contact\nVendeur d'une maison à Sciez ${NUM}.\n## Notre relation\n- Prospect chaud`;
+  LF.contacts[`lfc1-${NUM}`] = { data: { id: `lfc1-${NUM}`, firstname: 'Luc', lastname: `Leedflow${NUM}`, phone: TELK, details: SYNTH1, updated: maintenant - 60 * MIN } };
   const releve = async () => {
     const t0 = new Date().toISOString();
     await appeler(`${E}/cdn-cgi/handler/scheduled`);
@@ -659,6 +670,30 @@ try {
   html = await r.text();
   constat(html.includes('<strong>Sciez</strong>') && html.includes('&lt;b&gt;Rappeler') && html.includes(`data-tache="t1-${NUM}"`) && html.includes('Appel passé, sans réponse'),
     'fiche : résumés Leedflow mis en forme (texte échappé), tâches proposées');
+  // Synthèse du contact (story 13.25).
+  const synth = () => sql(`SELECT synthese, synthese_leedflow, synthese_leedflow_le, synthese_lue_le FROM contact WHERE id = '${KLF}'`)[0];
+  constat(synth().synthese_leedflow === SYNTH1 && synth().synthese_leedflow_le === new Date(maintenant - 60 * MIN).toISOString(),
+    'synthèse : lue sur la fiche Leedflow (enveloppe data.data), avec la date de Leedflow');
+  constat(html.includes('data-synthese-par="leedflow"') && (html.split('data-synthese')[1] ?? '').includes(`maison à Sciez ${NUM}`) && html.indexOf('data-synthese') < html.indexOf('Prochaine action</h2>'),
+    'fiche : la synthèse Leedflow en tête, mise en forme, signée « Mise à jour par Leedflow »');
+  r = await page(`/contacts/fiche?id=${KLF}`, { quoi: 'synthese', synthese: `${SYNTH1}\n## À retenir\n- Préfère les SMS ${NUM}` });
+  constat(r.headers.get('location') === `/contacts/fiche?id=${KLF}&m=synthese` && synth().synthese.includes(`Préfère les SMS ${NUM}`) && synth().synthese_leedflow === SYNTH1,
+    'synthèse modifiée par Anne : sa version gardée à côté de celle de Leedflow');
+  LF.contacts[`lfc1-${NUM}`].data.details = `${SYNTH1}\n## Situation actuelle\nEstimation demandée ${NUM}`;
+  LF.contacts[`lfc1-${NUM}`].data.updated = Date.now() + 60_000;
+  sql(`UPDATE contact SET synthese_lue_le = '2000-01-01T00:00:00Z' WHERE id = '${KLF}'`); // le tour quotidien est dû
+  await releve();
+  html = await (await appeler(`${E}/contacts/fiche?id=${KLF}`, { headers: avecJeton() })).text();
+  constat(synth().synthese_leedflow.includes(`Estimation demandée ${NUM}`) && synth().synthese.includes(`Préfère les SMS ${NUM}`) && html.includes('data-plus-recente') && html.includes('data-synthese-par="anne"'),
+    'nouvelle version de Leedflow : la version d\'Anne n\'est pas écrasée, « Leedflow a une version plus récente » proposé');
+  r = await page(`/contacts/fiche?id=${KLF}`, { quoi: 'synthese-reprendre' });
+  html = await (await appeler(`${E}/contacts/fiche?id=${KLF}`, { headers: avecJeton() })).text();
+  constat(synth().synthese === null && html.includes('data-synthese-par="leedflow"') && html.includes(`Estimation demandée ${NUM}`) && !html.includes('data-plus-recente'),
+    '« La reprendre » : la synthèse de Leedflow reprend la main');
+  const luAvant = synth().synthese_lue_le;
+  await releve();
+  // Le dernier échange de ce contact date de moins d'une heure : Leedflow réécrit sa synthèse après un appel, elle est relue.
+  constat(synth().synthese_lue_le > luAvant, 'synthèse : relue à chaque passage dans l\'heure qui suit un échange');
   r = await appeler(`${E}/contacts/qualifier?id=${KLF}`, { headers: avecJeton() });
   constat((await r.text()).split('data-dernier-appel')[1]?.includes('Message : rappeler pour la visite'), 'qualifier : le dernier résumé Leedflow affiché en tête');
   // Le résumé d'un appel arrive après coup : complété au passage suivant, sans doublon.

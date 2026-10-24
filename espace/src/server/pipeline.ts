@@ -287,6 +287,7 @@ export interface Contact extends ResumeContact {
   passage_id: string | null; prescripteur_id: string | null; bien_ref: string | null; qualification: string | null;
   qualifie_le: string | null; reveil_le: string | null; motif_perte: string | null; rappel_individuel_seul: number; created_at: string;
   action_id: string | null;
+  synthese_leedflow: string | null; synthese_leedflow_le: string | null; synthese: string | null; synthese_le: string | null;
 }
 
 export interface FicheContact {
@@ -800,5 +801,39 @@ export async function ajouterNote(env: EnvSite, id: string, note: string, par: s
   const r = await env.DB.prepare('UPDATE contact SET last_activity_at = ?2 WHERE id = ?1').bind(id, maintenant).run();
   if (!r.meta.changes) return false;
   await evenement(env, id, maintenant, 'note', 'anne', note, par).run();
+  return true;
+}
+
+// ——— Synthèse du contact (story 13.25) ———
+
+/** Les rubriques de la synthèse, comme dans Leedflow : le modèle proposé pour un contact sans synthèse. */
+export const MODELE_SYNTHESE = ['Qui est ce contact', 'Notre relation', 'À retenir', 'Situation actuelle', 'Échanges récents']
+  .map((t) => `## ${t}\n`).join('\n');
+
+/**
+ * La synthèse à afficher : celle d'Anne si elle l'a écrite, sinon celle de Leedflow. `plusRecente` : Leedflow a changé
+ * la sienne depuis qu'Anne a enregistré la sienne (la fiche propose de la reprendre).
+ */
+export function syntheseAffichee(c: Pick<Contact, 'synthese' | 'synthese_le' | 'synthese_leedflow' | 'synthese_leedflow_le'>) {
+  if (c.synthese) return { texte: c.synthese, par: 'anne' as const, le: c.synthese_le, plusRecente: !!c.synthese_leedflow && (c.synthese_leedflow_le ?? '') > (c.synthese_le ?? '') };
+  if (c.synthese_leedflow) return { texte: c.synthese_leedflow, par: 'leedflow' as const, le: c.synthese_leedflow_le, plusRecente: false };
+  return null;
+}
+
+/**
+ * Enregistre la synthèse d'Anne. Vide, ou identique à celle de Leedflow : la sienne est retirée et celle de Leedflow
+ * reprend la main (c'est aussi « La reprendre »). Notée dans l'historique, sans le texte.
+ */
+export async function enregistrerSynthese(env: EnvSite, id: string, texte: string | null, par: string): Promise<boolean> {
+  const c = await env.DB.prepare('SELECT synthese, synthese_leedflow FROM contact WHERE id = ?1').bind(id).first<{ synthese: string | null; synthese_leedflow: string | null }>();
+  if (!c) return false;
+  const propre = texte?.replace(/\r\n/g, '\n').trim() || null;
+  const sienne = propre && propre !== c.synthese_leedflow?.trim() && propre !== MODELE_SYNTHESE.trim() ? propre : null;
+  if (sienne === c.synthese) return true;
+  const maintenant = new Date().toISOString();
+  await env.DB.batch([
+    env.DB.prepare('UPDATE contact SET synthese = ?2, synthese_le = ?3, last_activity_at = ?4 WHERE id = ?1').bind(id, sienne, sienne ? maintenant : null, maintenant),
+    evenement(env, id, maintenant, 'note', 'anne', sienne ? 'Synthèse modifiée' : c.synthese_leedflow ? 'Synthèse de Leedflow reprise' : 'Synthèse effacée', par, { modifies: ['synthese'] }),
+  ]);
   return true;
 }
