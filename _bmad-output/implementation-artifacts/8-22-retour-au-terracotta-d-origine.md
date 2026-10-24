@@ -1,7 +1,7 @@
 ---
 story: 8.22
 epic: 8 — Structure et visuel
-statut: review
+statut: done
 date: 2026-10-24
 ---
 
@@ -27,4 +27,4 @@ Le 2026-10-10 au soir (story 8.12, commit cc845b8, fusionné par la PR n° 96 le
 - Captures avant (site en ligne, `--avt-terra` = #a34e30) et après (local, #C4623E) : `/mnt/project-files/captures/terracotta/`.
 
 ## Ce qui reste
-Fusion par JB. Question ouverte : les boutons restent en #A34E30 comme avant le 10/10 ; les passer en #C4623E les rendrait moins lisibles (3,6:1).
+Rien. Fusionnée sur l'accord de JB le 2026-10-24 (PR #180, commit de fusion f25cacd). Question ouverte, sans urgence : les boutons restent en #A34E30 comme avant le 10/10 ; les passer en #C4623E les rendrait moins lisibles (3,6:1).
