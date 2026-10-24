@@ -15,6 +15,7 @@
 | Cloudflare Worker `sveltia-cms-auth` | le petit programme qui fait « Se connecter avec GitHub » pour l'espace d'édition ; il garde l'identifiant et le secret de l'autorisation GitHub (secrets Cloudflare, jamais dans le dépôt) | JB, même compte Cloudflare | 0 € |
 | GitHub, autorisation OAuth « Site Anne — édition » | permet la connexion GitHub depuis l'espace d'édition ; adresse de retour = adresse du Worker + `/callback` | JB (GitHub → Settings → Developer settings → OAuth Apps) | 0 € |
 | Infomaniak | noms de domaine `annevialtissot.fr` et `.com` | JB (son adresse e-mail) ; **propriétaire légal des deux domaines : Anne** (décision du 2026-10-05, amende AD-9), JB contact administrateur. Sans option Domain Plus. Expiration 2027-10-05. | 17,52 € TTC la 1re année, ≈ 21 €/an ensuite |
+| Google Business Profile, fiche « Anne VIAL-TISSOT » (story 11.2) | la fiche gratuite d'Anne dans Google et Google Maps (zone desservie, adresse masquée) ; on la modifie en cherchant « Anne VIAL-TISSOT » sur Google, connecté au compte propriétaire | créée et validée par JB le 2026-10-24 ; propriétaire visé : compte Google pro d'Anne, JB gestionnaire (AD-9), à vérifier par JB | 0 € |
 
 Mots de passe : jamais dans ce dépôt, jamais manipulés par Claude. Coffre partagé à deux : à ouvrir (action J03).
 
@@ -218,3 +219,4 @@ Rien n'est à effacer chez Resend : le site n'y garde aucun contact. Chaque expo
 - 2026-10-24 : bouton « Un retour ? » dans l'espace (story 13.20) : § 4 bis et § 4 sexies, clé GitHub propre au Worker `anne-espace`, posée par JB le jour même (à renouveler avant le 2026-10-24 + 1 an), essai réussi (ticket n° 174).
 - 2026-10-21 : clé Leedflow posée par JB sur le Worker `anne-espace` (story 13.10, § 4 sexies) ; relève des appels toutes les 10 minutes.
 - 2026-10-15 : application de l'espace d'Anne (story 13.3, phase 1) : nouveau dossier `espace/`, futur Worker `anne-espace` sur `espace.annevialtissot.fr`, même base que le site. Mise en place par JB décrite au § 4 sexies ; le `/gestion` du site reste en service jusqu'à la phase 2.
+- 2026-10-24 : fiche Google Business Profile d'Anne créée et validée (story 11.2), ajoutée à la carte des comptes (§ 1). Validation par l'adresse de Sciez, masquée ; reste à confirmer qu'Anne en est propriétaire.

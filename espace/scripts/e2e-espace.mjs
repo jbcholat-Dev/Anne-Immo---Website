@@ -19,6 +19,8 @@
 // Story 13.24 : contacts en cartes sur téléphone avec filtres, pipeline une étape à la fois, recherche par début de numéro et par mots.
 // Story 13.25 : synthèse du contact (lue sur la fiche Leedflow, gardée à côté de celle d'Anne, version plus récente signalée, saisie à la main).
 // Story 13.23 : fiche modifiable (coordonnées, doublon refusé avec lien), note libre, export et effacement d'un contact sans e-mail.
+// Story 13.26 : accord e-mail (import avec case, case du site, accord noté puis retiré par Anne, refus, désinscription
+// de la séquence, nouvelle inscription après un refus, ancien client), reprise de la migration 0013, carte de la fiche.
 // Story 13.22 : noter la suite d'un contact en cours (fait, pas joint, note ; étape gardée sauf choix ; requalifier sans changer l'étape).
 // Story 13.6 : qualifier (suite obligatoire, date, réveil ou motif exigés, étape et prochaine action fixées, heure de Paris).
 // Story 13.10 : relève Leedflow sur une imitation locale de son API (clé exigée, pages lues de la plus ancienne à la plus
@@ -484,6 +486,60 @@ try {
   r = await appeler(`${E}/api/contacts/export?id=${SUITE}`, { headers: avecJeton() });
   constat((await r.json()).contact?.synthese?.includes(`Vendeuse à Thonon ${NUM}`), 'export : la synthèse est comprise');
 
+  // 5 quater ter bis. Accord pour les e-mails groupés (story 13.26).
+  const accordDe = (id) => sql(`SELECT email_accord_le, email_accord_source, email_desinscrit_le FROM contact WHERE id = '${id}'`)[0];
+  const carteAccord = async (id) => { const h = await (await appeler(`${E}/contacts/fiche?id=${id}`, { headers: avecJeton() })).text(); return { statut: /data-accord-email="([a-z_]+)"/.exec(h)?.[1], html: h.split('data-accord-email')[1]?.split('</section>')[0] ?? '' }; };
+  const emmaId = sql(`SELECT id FROM contact WHERE nom = 'Xlsx${ESSAI} & fils'`)[0].id;
+  const carlaAcc = accordDe(carla);
+  constat(accordDe(emmaId).email_accord_source === 'import' && carlaAcc.email_accord_le === null && (await carteAccord(emmaId)).statut === 'sans_email',
+    'accord e-mail : import avec la case cochée noté « import », import sans la case sans accord ; un contact sans adresse le dit');
+  let ca = await carteAccord(carla);
+  constat(ca.statut === 'sans_accord' && ca.html.includes('data-accord-form'), 'fiche : contact sans accord, case « D\'accord pour recevoir mes e-mails » proposée');
+  r = await surFiche(carla, { quoi: 'accord', accord: 'oui' });
+  ca = await carteAccord(carla);
+  constat(r.headers.get('location') === `/contacts/fiche?id=${carla}&m=accord` && accordDe(carla).email_accord_source === 'anne' && ca.statut === 'accord' && ca.html.includes('donné à vous')
+    && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${carla}' AND texte LIKE 'Accord pour recevoir%donné à Anne'`)[0].n === 1,
+    'accord noté par Anne : daté, affiché, tracé dans l\'historique');
+  r = await surFiche(carla, { quoi: 'accord', accord: 'non' });
+  constat(r.headers.get('location') === `/contacts/fiche?id=${carla}&m=accord-retire` && accordDe(carla).email_accord_le === null && (await carteAccord(carla)).statut === 'sans_accord',
+    'accord retiré par Anne : plus de campagnes');
+  await surFiche(carla, { quoi: 'accord', accord: 'oui' });
+  r = await surFiche(carla, { quoi: 'refus' });
+  ca = await carteAccord(carla);
+  constat(r.headers.get('location') === `/contacts/fiche?id=${carla}&m=refus` && accordDe(carla).email_desinscrit_le && ca.statut === 'desinscrit' && !ca.html.includes('data-accord-form'),
+    'refus noté : désinscrit, la case n\'est plus proposée');
+  r = await surFiche(carla, { quoi: 'accord', accord: 'oui' });
+  constat(r.status === 200 && (await r.text()).includes('désinscrite') && (await carteAccord(carla)).statut === 'desinscrit',
+    'après un refus, Anne ne peut pas remettre l\'accord elle-même');
+  // Accord donné sur le site : une demande avec la case cochée, rattachée au contact.
+  const SITEACC = `01KFAC${NUM}${'0'.repeat(14)}`;
+  const leadAcc = (id, opt, unsub = null) => sql(`INSERT INTO lead (id, submission_id, created_at, last_activity_at, lang, source, email, privacy_accepted_at, newsletter_opt_in_at, newsletter_unsubscribed_at, is_test, contact_id)
+    VALUES ('${id}', 'acc-${id}', '${opt}', '${opt}', 'fr', 'guide', 'acc${NUM}@example.com', '${opt}', '${opt}', ${unsub ? `'${unsub}'` : 'NULL'}, 1, '${SITEACC}')`);
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, nom, email, etape, prochaine_action, prochaine_action_le, canal, is_test) VALUES
+    ('${SITEACC}', '2026-03-01T08:00:00Z', '2026-03-01T08:00:00Z', 'Site${NUM}', 'acc${NUM}@example.com', 'a_qualifier', 'Qualifier', '${auj}', 'site', 1)`);
+  leadAcc(`01KFAL${NUM}${'0'.repeat(14)}`, '2026-03-01T08:00:00Z');
+  ca = await carteAccord(SITEACC);
+  r = await surFiche(SITEACC, { quoi: 'accord', accord: 'non' });
+  constat(ca.statut === 'accord' && ca.html.includes('sur le site le') && !ca.html.includes('data-accord-retirer') && r.status === 200 && (await carteAccord(SITEACC)).statut === 'accord',
+    'accord donné sur le site : lu sur la demande, affiché avec sa date, Anne ne peut pas le retirer (seulement noter un refus)');
+  sql(`UPDATE lead SET newsletter_unsubscribed_at = '2026-04-01T08:00:00Z' WHERE contact_id = '${SITEACC}'`);
+  constat((await carteAccord(SITEACC)).statut === 'desinscrit', 'désinscription de la séquence du site : vaut pour les campagnes');
+  leadAcc(`01KFAM${NUM}${'0'.repeat(14)}`, '2026-05-01T08:00:00Z');
+  constat((await carteAccord(SITEACC)).statut === 'accord', 'nouvelle case cochée sur le site après la désinscription : l\'accord revient');
+  const CLIENT = `01KFCC${NUM}${'0'.repeat(14)}`;
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, nom, email, etape, canal, is_test) VALUES
+    ('${CLIENT}', '2026-01-01T08:00:00Z', '2026-01-01T08:00:00Z', 'Client${NUM}', 'client${NUM}@example.com', 'vendu', 'recommandation', 1)`);
+  ca = await carteAccord(CLIENT);
+  constat(ca.statut === 'client' && ca.html.includes('ancien client') && ca.html.includes('data-refus'), 'ancien client (vendu) : reçoit les campagnes tant qu\'il ne les refuse pas');
+  // Reprise de la migration 0013 sur un contact importé avant elle (case cochée, accord pas encore noté).
+  sql(`UPDATE contact SET email_accord_le = NULL, email_accord_source = NULL WHERE id = '${emmaId}'`);
+  const reprise = fs.readFileSync(path.join(SITE, 'migrations', '0013-accord-email.sql'), 'utf8').split('-- Reprise')[1].split('\n').slice(1).filter((l) => !l.startsWith('--')).join(' ');
+  sql(reprise);
+  constat(accordDe(emmaId).email_accord_source === 'import' && accordDe(carla).email_accord_source === 'anne' && sql(`SELECT count(*) AS n FROM contact WHERE nom = 'Forum${ESSAI}' AND id <> '${carla}' AND email_accord_le IS NOT NULL`)[0].n === 0,
+    'migration 0013 : l\'accord des contacts importés avec la case est repris, pas celui des imports sans la case');
+  r = await appeler(`${E}/api/contacts/export?id=${carla}`, { headers: avecJeton() });
+  constat((await r.json()).contact?.email_desinscrit_le, 'export : le refus des e-mails est compris');
+
   // 5 quater quater. Listes et recherche pensées téléphone (story 13.24).
   const cherche = async (q, f = '') => (await appeler(`${E}/contacts?${new URLSearchParams({ q, ...(f ? { f } : {}) })}`, { headers: avecJeton() })).text();
   const trouve = (h, id) => h.includes(`data-carte="${id}"`);
@@ -915,7 +971,7 @@ try {
   for (const [nom, viewport] of [['ordinateur', { width: 1280, height: 900 }], ['telephone', { width: 390, height: 844 }]]) {
     const ctx = await nav.newContext({ viewport, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
     const onglet = await ctx.newPage();
-    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['suite', `/contacts/suite?id=${SUITE}`], ['bilan', '/bilan'], ['prescripteurs', '/prescripteurs'], ['prescripteur', `/prescripteurs/fiche?id=${durand}`], ['acheteurs', `/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`], ['qualifier-acheteur', `/contacts/qualifier?id=${ach1}`], ['pipeline', '/pipeline'], ['importer', '/importer'], ['fiche-leedflow', `/contacts/fiche?id=${KLF}`], ['qualifier-leedflow', `/contacts/qualifier?id=${KLF}`], ['inconnu', `/inconnu?tel=${encodeURIComponent(CAPTURE)}`], ['a-trier', '/a-trier'], ['actions', '/actions'], ['action', `/actions?id=${salon.id}`]]) {
+    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['suite', `/contacts/suite?id=${SUITE}`], ['bilan', '/bilan'], ['prescripteurs', '/prescripteurs'], ['prescripteur', `/prescripteurs/fiche?id=${durand}`], ['acheteurs', `/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`], ['qualifier-acheteur', `/contacts/qualifier?id=${ach1}`], ['pipeline', '/pipeline'], ['importer', '/importer'], ['fiche-leedflow', `/contacts/fiche?id=${KLF}`], ['fiche-accord-site', `/contacts/fiche?id=${SITEACC}`], ['fiche-sans-accord', `/contacts/fiche?id=${saisie.id}`], ['qualifier-leedflow', `/contacts/qualifier?id=${KLF}`], ['inconnu', `/inconnu?tel=${encodeURIComponent(CAPTURE)}`], ['a-trier', '/a-trier'], ['actions', '/actions'], ['action', `/actions?id=${salon.id}`]]) {
       await onglet.goto(`${E}${chemin}`);
       if (nomPage === 'ajouter') {
         await onglet.click('[data-canaux] label:has(input[value=boitage]) span');

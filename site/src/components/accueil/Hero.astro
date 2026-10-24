@@ -33,7 +33,7 @@ const videoDispo = fs.existsSync(path.resolve(process.cwd(), 'public/video/ouver
     <div class="hero-voile"></div>
   </div>
   <div class="hero-contenu">
-    <h1 id="hero-titre" data-reveal="titre">Anne <span class="hero-nom">VIAL‑TISSOT<Signature largeur={260} hauteur={10} class="hero-signature" /></span></h1>
+    <h1 id="hero-titre" data-reveal="titre">Anne <span class="hero-nom">VIAL-TISSOT<Signature largeur={260} hauteur={10} class="hero-signature" /></span></h1>
     <p class="hero-ligne" data-reveal="petit">{d.accueil.hero_ligne}</p>
     <div class="hero-boutons" data-reveal="petit">
       <a href={r('diagnostic', lang)} class="btn btn-primaire"><span class="seulement-desktop">{d.accueil.hero_cta}</span><span class="seulement-mobile">{d.accueil.hero_cta_m}</span></a>
@@ -51,7 +51,8 @@ const videoDispo = fs.existsSync(path.resolve(process.cwd(), 'public/video/ouver
   .hero-voile { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(38, 32, 26, .34) 0%, rgba(38, 32, 26, .22) 34%, rgba(38, 32, 26, .58) 72%, rgba(38, 32, 26, .88) 100%); pointer-events: none; }
   .hero-contenu { position: absolute; left: var(--marge); right: var(--marge); bottom: 84px; max-width: 760px; }
   .hero h1 { font-size: 96px; letter-spacing: .02em; line-height: 1; color: var(--avt-ecru); white-space: nowrap; }
-  .hero-nom { position: relative; display: inline-block; }
+  /* Tiret ordinaire (et non U+2011) pour que Google lise le nom tel qu'on le tape ; nowrap empêche la coupure au tiret. */
+  .hero-nom { position: relative; display: inline-block; white-space: nowrap; }
   .hero-nom :global(.hero-signature) { position: absolute; left: 0; top: calc(100% + 14px); width: 100% !important; height: 12px !important; }
   .hero-ligne { font-size: 19px; line-height: 1.5; margin-top: 44px; color: var(--avt-ecru); max-width: 44ch; }
   .hero-boutons { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
