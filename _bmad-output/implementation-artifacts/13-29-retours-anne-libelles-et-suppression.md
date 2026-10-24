@@ -1,7 +1,7 @@
 ---
 story: 13.29
 epic: 13 — Espace de travail d'Anne
-statut: review
+statut: done
 date: 2026-10-24
 maj: 2026-10-24
 ---
@@ -24,4 +24,4 @@ Trois tickets ouverts par Anne le 2026-10-24 depuis le bouton « Un retour ? » 
 - `npm run build` et `npm run check` dans `site/` et `espace/` : 0 erreur.
 
 ## Ce qui reste
-- Fusion par JB avec la PR de la 13.24, puis fermeture des tickets #177, #178 et #185 en citant le commit.
+- Rien : PR n° 188 fusionnée par JB le 2026-10-24, tickets #177, #178 et #185 fermés en citant le commit e646d94.
