@@ -6,9 +6,9 @@
   --avt-ecru: #F7F2EA;        /* fond dominant (~65 %) — le « blanc » de la marque */
   --avt-brun: #26201A;        /* texte, nom, « noir » de la marque */
   --avt-klein: #002FA7;       /* le lac : symbole, sous-titres, titres-clés, liens */
-  /* Charte v3 mise à jour (octobre 2026, D-40) : un seul terracotta, le « terracotta profond ». Les deux noms restent pour ne pas toucher chaque usage. */
-  --avt-terra: #A34E30;       /* la rive : ligne signature, CTA, accents, petits libellés */
-  --avt-terra-deep: #A34E30;  /* même valeur que --avt-terra depuis D-40 */
+  /* Terracotta d'origine rétabli le 2026-10-24 (D-46, annule D-40) : #C4623E pour la rive, #A34E30 seulement là où il faut lire (boutons, petits libellés). */
+  --avt-terra: #C4623E;       /* la rive : ligne signature, accents, logo */
+  --avt-terra-deep: #A34E30;  /* boutons, hover, petits libellés terracotta sur clair (contraste) */
   --avt-galet: #E9E0D2;       /* fonds secondaires, cartes, filets */
   --avt-brume: #E7EDF9;       /* encarts chiffres, fonds bleutés pâles */
 
@@ -26,7 +26,7 @@
      - terracotta JAMAIS en texte courant (accents, gros titres, boutons) ;
      - texte sur brun/Klein = écru, pas de blanc pur ;
      - 1 couleur maîtresse par support ; jamais de dégradé Klein→terracotta ;
-     - boutons = pilule (radius 999px) ; fond terracotta profond #A34E30 (≈ 5:1 sur écru), texte écru, hover brun encre — D-25 tranché par la charte mise à jour (D-40) ;
+     - boutons = pilule (radius 999px) ; fond terracotta profond #A34E30 (≈ 5:1 sur écru) pour la lisibilité, texte écru, hover brun encre ; le terracotta #C4623E (3,6:1) reste pour la ligne signature, le logo et les accents (D-46) ;
      - profils de score (résultats) : Klein / terra-deep / brun (D-23) ;
      - logo négatif sans cercle écru ; en en-tête, symbole seul (D-21) ;
      - séparateur signature = ligne d'horizon ondulée terracotta fine. */

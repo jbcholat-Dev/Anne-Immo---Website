@@ -10,10 +10,10 @@
     </defs>
     <g clip-path="url(#sym)">
       <rect x="24" y="26" width="108" height="108" fill="#002FA7"/>
-      <path d="M 24 79 C 44 73, 60 84, 78 78 C 96 72, 114 81, 132 76 L 132 134 L 24 134 Z" fill="#A34E30"/>
+      <path d="M 24 79 C 44 73, 60 84, 78 78 C 96 72, 114 81, 132 76 L 132 134 L 24 134 Z" fill="#C4623E"/>
     </g>
     <text class="nm" x="158" y="90">Anne VIAL-TISSOT</text>
-    <path d="M 280 109 C 350 103, 490 111, 576 106" fill="none" stroke="#A34E30" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M 280 109 C 350 103, 490 111, 576 106" fill="none" stroke="#C4623E" stroke-width="4.5" stroke-linecap="round"/>
   </svg>
   <line x1="186.85" y1="199.35" x2="464.25" y2="199.35" stroke="#000000" stroke-width="1" vector-effect="non-scaling-stroke"/>
   <g transform="translate(186.85 268.7)" fill="#000000">
