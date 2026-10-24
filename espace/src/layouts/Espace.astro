@@ -4,8 +4,10 @@
 // Sur téléphone, les prescripteurs, les acheteurs et les demandes du site (droits RGPD) s'ouvrent depuis la page Contacts,
 // les actions marketing (story 13.17) depuis le Bilan.
 // Les pages reprises de /gestion gardent le gabarit Gestion du site jusqu'à la phase 2 de la story 13.3.
+// Bouton « Un retour ? » (story 13.20) : le même que celui de l'aperçu du site ; chaque remarque devient un ticket GitHub.
 import '@site/styles/global.css';
 import { ENTETE_COMPTE } from '@site/server/acces';
+import RetourApercu from '@site/components/RetourApercu.astro';
 interface Props { titre: string; actif?: 'aujourdhui' | 'contacts' | 'bilan' | 'prescripteurs' | 'acheteurs' | 'pipeline' | 'ajouter' | 'demandes' | 'actions' }
 const { titre, actif } = Astro.props;
 const compte = Astro.request.headers.get(ENTETE_COMPTE) ?? '';
@@ -46,6 +48,7 @@ const liens = [
       <a href="/ajouter" class="e-plus" aria-label="Ajouter"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg></a>
       <a href="/bilan" aria-current={actif === 'bilan' || actif === 'actions' ? 'page' : undefined}>Bilan</a>
     </nav>
+    <RetourApercu espace />
   </body>
 </html>
 <style is:global>

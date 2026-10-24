@@ -15,6 +15,11 @@ export interface EnvEspace extends Env {
   /** Identifiant client du jeton de service Cloudflare Access de Claude (story 13.17), posé par JB en secret de ce Worker.
    * Absent : l'accès /api/claude/… est fermé. */
   ACCESS_CLAUDE_ID?: string;
+  /** Clé GitHub limitée au dépôt, droit « Issues » seulement (bouton « Un retour ? », story 13.20), posée par JB en secret
+   * de ce Worker. Absente : le bouton répond que l'envoi n'est pas branché. */
+  GITHUB_TOKEN?: string;
+  /** Adresse de l'API GitHub, seulement pour l'essai de bout en bout (imitation locale). */
+  GITHUB_API?: string;
 }
 
 /** Le « compte » transmis aux pages pour une requête du programme de Claude (jamais une adresse e-mail). */

@@ -78,6 +78,7 @@ Décision de JB du 2026-10-10 : il ne valide lui-même que les demandes de fusio
 - Pour la retirer ou la remplacer : même écran (supprimer, ou Edit) ; côté GitHub, révoquer l'ancienne clé.
 - Sans clé, le bouton répond « L'envoi n'est pas encore branché » ; rien n'est perdu côté site, la remarque est à envoyer à JB.
 - Le bouton n'existe pas en production. `/api/retour` vérifie lui-même le jeton Cloudflare Access (story 12.6) : seuls Anne et JB peuvent créer un ticket.
+- **Espace d'Anne (story 13.20)** : le même bouton est sur chaque page de l'espace ; ses tickets portent aussi l'étiquette `retour-apercu`, avec un titre qui commence par « [Retour espace] ». Il a besoin de sa propre clé, secret `GITHUB_TOKEN` du Worker `anne-espace` (§ 4 sexies). Le dépôt est public : la page est envoyée sans ses paramètres et le formulaire rappelle de ne citer aucun client.
 
 ## 4 ter. Si JB quitte le projet : reprendre les domaines
 
@@ -176,6 +177,11 @@ Rien n'est à effacer chez Resend : le site n'y garde aucun contact. Chaque expo
 4. claude.ai → environnement cloud « Anne Immo » : réglages `ESPACE_CLAUDE_ID` (le *Client ID*) et `ESPACE_CLAUDE_SECRET` (le *Client Secret*) ; ajouter `espace.annevialtissot.fr` à la liste des adresses autorisées. Ces valeurs ne vont jamais dans le dépôt. Elles sont visibles seulement dans les sessions démarrées après.
 5. Vérification par Claude : `node espace/scripts/claude-espace.mjs actions` répond la liste. Pour couper l'accès : supprimer le jeton de service (étape 1) ; l'espace refuse alors tout appel de Claude.
 
+**Bouton « Un retour ? »** (story 13.20) : chaque remarque devient un ticket GitHub `retour-apercu` (§ 4 bis). Mise en place, une fois, par JB (≈ 7 min) :
+1. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token ; nom `cloudflare-retours-espace` ; expiration 1 an ; Repository access : Only select repositories → `Anne-Immo---Website` ; Permissions → Repository permissions → Issues : Read and write (rien d'autre). Copier la clé une seule fois.
+2. Projet `anne-espace` → Settings → Variables and Secrets → Add → type *Secret*, nom `GITHUB_TOKEN`, valeur = la clé → Deploy.
+3. Vérifier : dans l'espace, « Un retour ? » → une remarque d'essai → « Retour n° … enregistré ». Sans clé, le bouton répond « L'envoi n'est pas encore branché ». Rotation : avant un an, même chemin, puis révoquer l'ancienne clé côté GitHub.
+
 ## 5. Pièges irréversibles
 
 - Ne jamais mettre `PUBLIC_INDEXATION=oui` en variable de construction : elle vaudrait pour toutes les branches et Google pourrait mémoriser une version incomplète. Le lancement passe par `LANCEMENT=oui`, que seule `main` écoute (§ 4).
@@ -209,5 +215,6 @@ Rien n'est à effacer chez Resend : le site n'y garde aucun contact. Chaque expo
 - 2026-10-10 : décision des campagnes promotionnelles temporaires (epic 14, après le lancement) : une page par offre, créée par Anne dans l'espace d'édition et datée ; chaque offre est un tirage au sort parmi les inscrits (choix de JB), donc un règlement écrit à publier avec l'offre. Rien ne change encore dans les comptes ni la mise en ligne.
 - 2026-10-11 : **site ouvert au public sur https://annevialtissot.fr** (stories 12.4 et 12.5), tout par l'API Cloudflare avec un jeton limité de JB. Domaine personnalisé du Worker, redirections 301 de `www` et du `.com` (règles de redirection des zones, enregistrements `AAAA 100::` proxifiés), Turnstile étendu à `www`, application Access `Gestion` (AUD `916beab7…`, PR n° 124), `LANCEMENT=oui` sur le déclencheur de `main`. **Piège** : l'application Access de destination « Worker » protège aussi les domaines personnalisés du Worker ; elle est désormais limitée aux adresses `anne-vial-tissot-site.jbcholat.workers.dev` et `*-anne-vial-tissot-site.jbcholat.workers.dev`. Aperçu permanent : branche `apercu` (story 12.7, § 2). Retour arrière : § 4.
 - 2026-10-15 : Leedflow a répondu (API en lecture seule, sans webhook). Pour la story 13.10, Anne générera une clé dans Leedflow (Paramètres › API) et JB la posera en secret du Worker de l'espace ; Claude ne la voit jamais. Rien ne change encore dans les comptes.
+- 2026-10-24 : bouton « Un retour ? » dans l'espace (story 13.20) : § 4 bis et § 4 sexies, clé GitHub propre au Worker `anne-espace`, à poser par JB.
 - 2026-10-21 : clé Leedflow posée par JB sur le Worker `anne-espace` (story 13.10, § 4 sexies) ; relève des appels toutes les 10 minutes.
 - 2026-10-15 : application de l'espace d'Anne (story 13.3, phase 1) : nouveau dossier `espace/`, futur Worker `anne-espace` sur `espace.annevialtissot.fr`, même base que le site. Mise en place par JB décrite au § 4 sexies ; le `/gestion` du site reste en service jusqu'à la phase 2.

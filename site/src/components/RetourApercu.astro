@@ -2,8 +2,12 @@
 // Bouton « Un retour ? » de l'aperçu (story 9.6). Rendu seulement quand le site n'est pas indexable (voir Base.astro) :
 // il n'existe pas en production. La remarque part vers /api/retour (worker.ts), qui crée un ticket GitHub
 // étiqueté « retour-apercu » ; JB et Claude le traitent comme une story. Masqué pendant les captures Playwright.
+// Repris par l'espace d'Anne (story 13.20, `espace`) : posé au-dessus du menu du bas sur téléphone, avec un rappel que le
+// ticket est public (pas de nom ni de numéro de client).
+interface Props { espace?: boolean }
+const { espace = false } = Astro.props;
 ---
-<div class="retour" data-retour>
+<div class:list={['retour', { 'retour-espace': espace }]} data-retour>
   <button type="button" class="retour-btn" data-retour-ouvrir aria-haspopup="dialog">Un retour ?</button>
   <dialog class="retour-dialog" data-retour-dialog aria-labelledby="retour-titre">
     <form class="retour-form" data-retour-form novalidate>
@@ -11,6 +15,7 @@
       <p class="retour-page">Page : <span data-retour-page></span></p>
       <label class="retour-label" for="retour-texte">Votre remarque</label>
       <textarea id="retour-texte" name="texte" rows="5" maxlength="2000" required placeholder="Ce qui cloche, ce que vous aimeriez, à quel endroit de la page…"></textarea>
+      {espace && <p class="retour-page" data-retour-public>Le ticket est visible publiquement sur GitHub : ne citez ni le nom ni le numéro d'un client.</p>}
       <div class="retour-actions">
         <button type="button" class="btn btn-secondaire" data-retour-fermer>Fermer</button>
         <button type="submit" class="btn btn-primaire" data-retour-envoyer>Envoyer</button>
@@ -42,6 +47,8 @@
   .retour-etat[data-ton="ok"] { color: var(--avt-klein); }
   .retour-etat[data-ton="erreur"] { color: var(--avt-terra-deep); }
   @media (max-width: 899px) { .retour { right: 12px; bottom: 12px; } .retour-btn { padding: 9px 14px; font-size: 13px; } }
+  /* Espace : le menu du bas (téléphone, jusqu'à 899 px) occupe le bas de l'écran. */
+  @media (max-width: 899px) { .retour.retour-espace { bottom: 84px; } }
 </style>
 
 <script>
