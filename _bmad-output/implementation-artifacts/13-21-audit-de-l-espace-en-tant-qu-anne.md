@@ -34,5 +34,5 @@ Ce qui marche : ajout en moins d'une minute, aucun doublon (téléphone ou e-mai
 - Captures et journal des gestes gardés hors du dépôt (session Claude) ; trois captures dans la page d'audit.
 
 ## Ce qui reste
-- Décision de JB (carte posée le 2026-10-24) : lancer les trois stories proposées, dans l'ordre : 13.22 « Noter la suite d'un contact en cours » (fait / pas joint, prochaine action datée, étape optionnelle, depuis « Aujourd'hui » et la fiche) ; 13.23 « Fiche contact modifiable » (coordonnées, commune, parcours, note libre, export et effacement depuis la fiche) ; 13.24 « Listes et recherche pensées téléphone » (contacts en cartes, pipeline une étape à la fois, recherche par bout de numéro et « prénom nom »).
+- Décision de JB du 2026-10-24 (carte) : « Oui, les trois stories », dans l'ordre. Stories écrites, prêtes à construire : 13.22 « Noter la suite d'un contact en cours » (fait / pas joint, prochaine action datée, étape optionnelle, depuis « Aujourd'hui » et la fiche) ; 13.23 « Fiche contact modifiable » (coordonnées, commune, parcours, note libre, export et effacement depuis la fiche) ; 13.24 « Listes et recherche pensées téléphone » (contacts en cartes, pipeline une étape à la fois, recherche par bout de numéro et « prénom nom »).
 - Les P2 attendent l'entretien avec Anne (action J43) ; l'audit lui sert de base.
