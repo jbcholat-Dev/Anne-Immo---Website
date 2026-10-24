@@ -1,0 +1,269 @@
+---
+// Campagnes e-mail d'Anne (story 13.27, AD-21). /campagnes liste les campagnes et en commence une ; /campagnes?id=… :
+// le brouillon (texte, bouton, à qui), l'aperçu de l'e-mail, qui le recevra et qui est écarté avec la raison, l'essai
+// à soi-même, puis l'envoi, qui fige la liste. Une campagne partie montre où en est l'envoi étalé et ce qui n'est pas parti.
+// La règle « qui peut recevoir » est celle de la fiche contact (src/server/accord.ts), repassée juste avant chaque e-mail.
+import Espace from '../layouts/Espace.astro';
+import { ENTETE_COMPTE } from '@site/server/acces';
+import { CANAUX_ORIGINE, LIBELLES_ETAPES, type Etape } from '@site/server/contacts';
+import { enProduction } from '@site/server/env';
+import { emailValide } from '@site/server/schema';
+import {
+  apercuHtml, compteurs, creerCampagne, envoyerEssai, ETAPES_PAR_DEFAUT, expediteur, enregistrerBrouillon, lancer, lienBouton,
+  lienValable, lireCampagne, lireFiltres, listerCampagnes, nonEnvoyes, selectionner, supprimerBrouillon, type Contenu, type Filtres,
+} from '../server/campagnes';
+import { pourSite as env } from '../server/env';
+import { champ, ULID } from '../server/formulaires';
+import { echeance } from '../server/pipeline';
+
+export const prerender = false;
+const compte = Astro.request.headers.get(ENTETE_COMPTE);
+if (!compte) return new Response('Accès refusé', { status: 403 });
+
+const id = Astro.url.searchParams.get('id') ?? '';
+let campagne = ULID.test(id) ? await lireCampagne(env, id) : null;
+if (id && !campagne) return new Response('Campagne inconnue', { status: 404 });
+
+/** Le brouillon tel que saisi, ou le message d'erreur. */
+function contenuDuFormulaire(f: FormData): Contenu | string {
+  const nom = champ(f, 'nom', 120);
+  if (!nom) return 'Donnez un nom à la campagne (pour vous seulement).';
+  const bouton_libelle = champ(f, 'bouton_libelle', 60) || null;
+  const bouton_lien = champ(f, 'bouton_lien', 500) || null;
+  if (bouton_lien && !lienValable(bouton_lien)) return 'Le lien du bouton doit être une page du site (« /diagnostic ») ou une adresse complète en https.';
+  if (bouton_libelle && !bouton_lien) return 'Indiquez où mène le bouton, ou effacez son texte.';
+  const etapes = f.getAll('etapes').filter((e): e is Etape => typeof e === 'string' && e in LIBELLES_ETAPES);
+  const filtres: Filtres = lireFiltres(JSON.stringify({
+    parcours: champ(f, 'parcours'), etapes, commune: champ(f, 'commune', 80), canal: champ(f, 'canal'),
+  }));
+  return { nom, objet: champ(f, 'objet', 150), texte: champ(f, 'texte', 10000), bouton_libelle: bouton_lien ? bouton_libelle : null, bouton_lien, filtres };
+}
+
+let erreur = '';
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const quoi = champ(f, 'quoi');
+  if (!campagne && quoi === 'creer') {
+    const nom = champ(f, 'nom', 120);
+    if (!nom) erreur = 'Donnez un nom à la campagne (pour vous seulement).';
+    else return Astro.redirect(`/campagnes?id=${await creerCampagne(env, nom, compte)}`, 303);
+  } else if (campagne && quoi === 'supprimer') {
+    if (await supprimerBrouillon(env, campagne.id)) return Astro.redirect('/campagnes?m=supprimee', 303);
+    erreur = 'Cette campagne est déjà partie : elle ne peut plus être supprimée.';
+  } else if (campagne && quoi === 'lancer') {
+    if (champ(f, 'confirme') !== 'oui') erreur = "Cochez la case pour confirmer l'envoi.";
+    else {
+      const r = await lancer(env, campagne.id, compte);
+      if (typeof r === 'string') erreur = r;
+      else return Astro.redirect(`/campagnes?id=${campagne.id}&m=lancee`, 303);
+    }
+  } else if (campagne && (quoi === 'enregistrer' || quoi === 'essai')) {
+    const c = contenuDuFormulaire(f);
+    if (typeof c === 'string') erreur = c;
+    else if (!(await enregistrerBrouillon(env, campagne.id, c, compte))) erreur = 'Cette campagne est déjà partie : elle ne peut plus être modifiée.';
+    else if (quoi === 'enregistrer') return Astro.redirect(`/campagnes?id=${campagne.id}&m=enregistree`, 303);
+    else {
+      const aJour = await lireCampagne(env, campagne.id);
+      if (!aJour?.objet.trim() || !aJour.texte.trim()) erreur = "Écrivez l'objet et le texte avant de vous envoyer un essai.";
+      else if (!emailValide(compte)) erreur = "L'essai part à l'adresse de la personne connectée : il n'y en a pas ici.";
+      else {
+        const r = await envoyerEssai(env, aJour, compte);
+        if (r.ok) return Astro.redirect(`/campagnes?id=${campagne.id}&m=essai`, 303);
+        erreur = `L'essai n'est pas parti (${r.erreur}).`;
+      }
+    }
+  }
+  campagne = campagne ? await lireCampagne(env, campagne.id) : null;
+}
+
+const m = Astro.url.searchParams.get('m') ?? '';
+const message = {
+  enregistree: 'Brouillon enregistré.',
+  essai: enProduction(env) ? `Essai envoyé à ${compte}. Relisez-le sur votre téléphone avant d'envoyer.` : `Essai envoyé (sur l'aperçu, il arrive dans la boîte de test).`,
+  lancee: "C'est parti : l'envoi est étalé, quelques e-mails toutes les 10 minutes. Revenez voir où il en est.",
+  supprimee: 'Brouillon supprimé.',
+}[m] ?? '';
+
+const liste = campagne ? [] : await listerCampagnes(env);
+const brouillon = campagne?.statut === 'brouillon';
+const filtres = campagne ? lireFiltres(campagne.filtres) : null;
+const selection = brouillon && filtres ? await selectionner(env, filtres) : null;
+const etat = campagne && !brouillon ? await compteurs(env, campagne.id) : null;
+const rates = campagne && !brouillon ? await nonEnvoyes(env, campagne.id) : [];
+const sansExpediteur = expediteur(env) === null;
+const apercu = campagne && (campagne.texte.trim() || campagne.bouton_libelle) ? apercuHtml(env, campagne) : '';
+const lien = campagne ? lienBouton(env, campagne) : null;
+const nomPersonne = (p: { prenom: string | null; nom: string | null }) => [p.prenom, p.nom].filter(Boolean).join(' ') || 'Sans nom';
+const STATUTS = { brouillon: 'Brouillon', envoi: 'Envoi en cours', envoyee: 'Envoyée' } as const;
+const quand = (iso: string | null) => (iso ? echeance(iso.slice(0, 10)) : '');
+---
+<Espace titre={campagne ? campagne.nom : 'Campagnes'} actif="campagnes">
+  <div>
+    <div class="e-muet">{campagne ? <a href="/campagnes">Campagnes</a> : <a href="/bilan">Bilan</a>}</div>
+    <h1>{campagne ? campagne.nom : 'Mes campagnes e-mail'}</h1>
+    {campagne && <div class="e-muet" data-statut={campagne.statut}>{STATUTS[campagne.statut]}{campagne.lancee_le ? ` · envoyée à partir du ${quand(campagne.lancee_le)}` : ''}{campagne.finie_le ? `, terminée le ${quand(campagne.finie_le)}` : ''}</div>}
+  </div>
+  {message && <p class="e-message" role="status" data-message>{message}</p>}
+  {erreur && <p class="e-message" role="alert" data-erreur>{erreur}</p>}
+  {sansExpediteur && <p class="e-message" role="status" data-sans-expediteur>L'adresse d'envoi des campagnes n'est pas encore prête : vous pouvez écrire et préparer vos campagnes, l'envoi s'ouvrira dès que Jean-Baptiste l'aura créée.</p>}
+
+  {!campagne && (
+    <>
+      <section class="e-carte" data-campagnes>
+        <h2>Campagnes</h2>
+        {liste.length === 0 ? <p class="e-muet">Aucune campagne pour l'instant. Commencez la première ci-dessous.</p> : (
+          <ul class="k-liste">
+            {liste.map((k) => (
+              <li data-campagne={k.id}>
+                <div class="k-tete"><a href={`/campagnes?id=${k.id}`} class="k-nom">{k.nom}</a><span class="e-muet">{STATUTS[k.statut]}</span></div>
+                <div class="e-muet">{k.objet || 'Sans objet pour l\'instant'}</div>
+                {k.statut !== 'brouillon' && <div>{k.envoye} envoyé(s){k.a_envoyer ? ` · ${k.a_envoyer} en attente` : ''}{k.echec ? ` · ${k.echec} en échec` : ''}{k.annule ? ` · ${k.annule} écarté(s) au dernier moment` : ''}</div>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+      <form method="post" class="e-carte" data-creer>
+        <input type="hidden" name="quoi" value="creer" />
+        <h2>Nouvelle campagne</h2>
+        <label class="e-champ">Nom, pour vous seulement<input name="nom" required maxlength="120" placeholder="Lettre d'octobre, anciens clients…" autocomplete="off" /></label>
+        <div><button class="e-bouton" type="submit">Commencer</button></div>
+      </form>
+      <section class="e-carte">
+        <h2>Qui reçoit mes campagnes ?</h2>
+        <p class="e-muet" style="margin:0">Seulement les contacts qui ont donné leur accord (case du site, salon, ou accord noté sur leur fiche) et vos anciens clients. Les autres sont écartés d'office, et chaque e-mail porte un lien pour ne plus en recevoir.</p>
+      </section>
+    </>
+  )}
+
+  {campagne && brouillon && filtres && selection && (
+    <>
+      <form method="post" class="e-carte" data-brouillon>
+        <h2>Le message</h2>
+        <div class="e-champs">
+          <label class="e-champ large">Nom, pour vous seulement<input name="nom" required maxlength="120" value={campagne.nom} autocomplete="off" /></label>
+          <label class="e-champ large">Objet de l'e-mail<input name="objet" maxlength="150" value={campagne.objet} placeholder="Le marché à Thonon cet automne" autocomplete="off" /></label>
+          <label class="e-champ large">Texte
+            <textarea name="texte" rows="12" placeholder={'Bonjour [Prénom],\n\n…'}>{campagne.texte}</textarea>
+          </label>
+          <p class="e-muet large" style="margin:0">[Prénom] est remplacé par le prénom de chaque personne. Une ligne vide sépare deux paragraphes ; **mot** met en gras ; [texte](https://…) fait un lien. Votre signature et le lien pour ne plus recevoir vos e-mails sont ajoutés d'office.</p>
+          <label class="e-champ">Bouton (facultatif)<input name="bouton_libelle" maxlength="60" value={campagne.bouton_libelle ?? ''} placeholder="Faire mon diagnostic" autocomplete="off" /></label>
+          <label class="e-champ">Le bouton mène à<input name="bouton_lien" maxlength="500" value={campagne.bouton_lien ?? ''} placeholder="/diagnostic" autocomplete="off" /></label>
+        </div>
+        {lien && <p class="e-muet" style="margin:0" data-lien-bouton>Lien envoyé : {lien}</p>}
+
+        <h2>À qui</h2>
+        <div class="e-champs">
+          <label class="e-champ">Parcours
+            <select name="parcours">
+              <option value="" selected={!filtres.parcours}>Vendeurs et acheteurs</option>
+              <option value="vendeur" selected={filtres.parcours === 'vendeur'}>Vendeurs</option>
+              <option value="acheteur" selected={filtres.parcours === 'acheteur'}>Acheteurs</option>
+            </select>
+          </label>
+          <label class="e-champ">Origine
+            <select name="canal">
+              <option value="" selected={!filtres.canal}>Toutes</option>
+              {Object.entries(CANAUX_ORIGINE).map(([k, t]) => <option value={k} selected={filtres.canal === k}>{t}</option>)}
+            </select>
+          </label>
+          <label class="e-champ">Commune (facultatif)<input name="commune" maxlength="80" value={filtres.commune} placeholder="Thonon" autocomplete="off" /></label>
+        </div>
+        <fieldset class="k-etapes">
+          <legend>Étapes</legend>
+          {(Object.keys(LIBELLES_ETAPES) as Etape[]).map((e) => (
+            <label class="k-case"><input type="checkbox" name="etapes" value={e} checked={filtres.etapes.includes(e)} /> {LIBELLES_ETAPES[e]}</label>
+          ))}
+        </fieldset>
+        <p class="e-muet" style="margin:0">Par défaut, toutes les étapes sauf « Perdu » ({ETAPES_PAR_DEFAUT.length} étapes).</p>
+        <div class="k-boutons">
+          <button class="e-bouton" type="submit" name="quoi" value="enregistrer">Enregistrer</button>
+          <button class="e-bouton second" type="submit" name="quoi" value="essai" data-essai>M'envoyer un essai</button>
+        </div>
+      </form>
+
+      <section class="e-carte" data-selection>
+        <h2>Qui la recevra</h2>
+        <p style="margin:0" data-recoivent={selection.recoivent.length}><strong>{selection.recoivent.length} personne(s) la recevront.</strong>{selection.ecartes.length > 0 && <> {selection.ecartes.map((e) => `${e.personnes.length} écartée(s) : ${e.raison.toLowerCase()}`).join(' ; ')}.</>}</p>
+        <p class="e-muet" style="margin:0">Selon le dernier enregistrement des filtres.</p>
+        {selection.recoivent.length > 0 && (
+          <details>
+            <summary>Voir les destinataires</summary>
+            <ul class="k-noms">{selection.recoivent.map((p) => <li><a href={`/contacts/fiche?id=${p.id}`}>{nomPersonne(p)}</a></li>)}</ul>
+          </details>
+        )}
+        {selection.ecartes.map((e) => (
+          <details data-ecartes={e.raison}>
+            <summary>{e.raison} ({e.personnes.length})</summary>
+            <ul class="k-noms">{e.personnes.map((p) => <li><a href={`/contacts/fiche?id=${p.id}`}>{nomPersonne(p)}</a></li>)}</ul>
+          </details>
+        ))}
+      </section>
+
+      {apercu && (
+        <section class="e-carte" data-apercu>
+          <h2>Aperçu</h2>
+          <p class="e-muet" style="margin:0">Objet : {campagne.objet || '(à écrire)'} · avec le prénom « Marie » pour l'exemple.</p>
+          <iframe class="k-apercu" title="Aperçu de l'e-mail" srcdoc={apercu} sandbox=""></iframe>
+        </section>
+      )}
+
+      <form method="post" class="e-carte" data-lancer>
+        <input type="hidden" name="quoi" value="lancer" />
+        <h2>Envoyer</h2>
+        <p style="margin:0">L'envoi est étalé (une cinquantaine par heure, au plus 90 par jour avec les e-mails du site) pour ne pas être pris pour du courrier indésirable. Une fois parti, le message ne peut plus être modifié.</p>
+        <label class="k-case"><input type="checkbox" name="confirme" value="oui" required /> J'ai relu l'essai, j'envoie à {selection.recoivent.length} personne(s)</label>
+        <div><button class="e-bouton" type="submit" disabled={sansExpediteur || selection.recoivent.length === 0}>Envoyer la campagne</button></div>
+      </form>
+
+      <form method="post" class="e-carte" data-supprimer>
+        <input type="hidden" name="quoi" value="supprimer" />
+        <p style="margin:0">Supprimer ce brouillon ?</p>
+        <div><button class="e-bouton second" type="submit">Supprimer le brouillon</button></div>
+      </form>
+    </>
+  )}
+
+  {campagne && !brouillon && etat && (
+    <>
+      <section class="e-carte" data-envoi>
+        <h2>Où en est l'envoi</h2>
+        <p style="margin:0"><span data-envoyes={etat.envoye}>{etat.envoye} envoyé(s)</span>{etat.a_envoyer ? ` · ${etat.a_envoyer} en attente` : ''}{etat.echec ? ` · ${etat.echec} en échec` : ''}{etat.annule ? ` · ${etat.annule} écarté(s) au dernier moment` : ''}.</p>
+        {etat.a_envoyer > 0 && <p class="e-muet" style="margin:0">Quelques e-mails partent toutes les 10 minutes, dans la limite du jour.</p>}
+        {rates.length > 0 && (
+          <details data-rates>
+            <summary>Ce qui n'est pas parti</summary>
+            <ul class="k-noms">{rates.map((r) => <li><a href={`/contacts/fiche?id=${r.contact_id}`}>{r.nom || 'Sans nom'}</a> : {r.statut === 'annule' ? r.erreur : `échec (${r.erreur ?? 'raison inconnue'})`}</li>)}</ul>
+          </details>
+        )}
+      </section>
+      <section class="e-carte">
+        <h2>Le message envoyé</h2>
+        <p class="e-muet" style="margin:0">Objet : {campagne.objet}</p>
+        {apercu && <iframe class="k-apercu" title="L'e-mail envoyé" srcdoc={apercu} sandbox=""></iframe>}
+      </section>
+    </>
+  )}
+</Espace>
+
+<style>
+  .k-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .k-liste li { display: flex; flex-direction: column; gap: 2px; padding: 12px 0; border-bottom: 1px solid var(--avt-galet); }
+  .k-liste li:last-child { border-bottom: 0; }
+  .k-tete { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+  .k-nom { font-weight: 500; overflow-wrap: anywhere; min-height: 24px; }
+  .k-etapes { border: 0; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0 16px; }
+  .k-etapes legend { font-weight: 500; margin-bottom: 4px; }
+  .k-case { display: flex; gap: 10px; align-items: center; min-height: 44px; }
+  .k-case input { width: 22px; height: 22px; flex: none; }
+  .k-boutons { display: flex; flex-wrap: wrap; gap: 12px; }
+  .k-noms { margin: 8px 0 0; padding-left: 20px; columns: 2 220px; }
+  .k-noms li { break-inside: avoid; padding: 2px 0; }
+  .k-noms a { display: inline-block; min-height: 24px; }
+  details summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
+  .k-apercu { width: 100%; height: 640px; border: 1px solid var(--avt-galet); border-radius: 8px; background: #fff; }
+  textarea { font: inherit; }
+  [data-lien-bouton], .k-noms li, [data-selection] p { overflow-wrap: anywhere; }
+  .k-apercu { display: block; max-width: 100%; }
+  .large { grid-column: 1 / -1; }
+</style>

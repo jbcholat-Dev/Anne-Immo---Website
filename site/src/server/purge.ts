@@ -36,6 +36,9 @@ export async function purger(env: EnvSite, maintenant = new Date()): Promise<num
     env.DB.prepare('DELETE FROM leedflow_inconnu WHERE a < ?1').bind(new Date(maintenant.getTime() - 90 * 86_400_000).toISOString()),
     env.DB.prepare('DELETE FROM leedflow_ecarte WHERE a < ?1').bind(limite),
   ]).catch((e) => journal('purge_leedflow_echec', { detail: String(e).slice(0, 200) }));
+  // Destinataires des campagnes (story 13.27, migration 0014) : partent avec leur contact.
+  await env.DB.prepare('DELETE FROM campagne_destinataire WHERE contact_id NOT IN (SELECT id FROM contact)').run()
+    .catch((e) => journal('purge_campagnes_echec', { detail: String(e).slice(0, 200) }));
   const n = leads.meta.changes ?? 0;
   const c = contacts.meta.changes ?? 0;
   const p = prescripteurs.meta.changes ?? 0;

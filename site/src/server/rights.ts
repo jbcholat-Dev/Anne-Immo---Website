@@ -107,6 +107,7 @@ export async function effacerContact(env: EnvSite, id: string, compte: string): 
     env.DB.prepare('DELETE FROM contact_evenement WHERE contact_id = ?1').bind(id),
     env.DB.prepare('DELETE FROM leedflow_tache WHERE contact_id = ?1').bind(id),
     env.DB.prepare('DELETE FROM leedflow_lien WHERE contact_id = ?1').bind(id),
+    env.DB.prepare('DELETE FROM campagne_destinataire WHERE contact_id = ?1').bind(id),
     env.DB.prepare('DELETE FROM leedflow_inconnu WHERE telephone = ?1').bind(c.telephone),
     env.DB.prepare('DELETE FROM leedflow_ecarte WHERE telephone = ?1').bind(c.telephone),
     env.DB.prepare('DELETE FROM contact WHERE id = ?1').bind(id),
@@ -130,6 +131,8 @@ export async function effacer(env: EnvSite, email: string, compte: string): Prom
     // Tâches et liens Leedflow de ces contacts (story 13.10, migration 0008).
     env.DB.prepare(`DELETE FROM leedflow_tache WHERE contact_id ${DE_CES_CONTACTS.replace('?2', '?1')}`).bind(ids),
     env.DB.prepare(`DELETE FROM leedflow_lien WHERE contact_id ${DE_CES_CONTACTS.replace('?2', '?1')}`).bind(ids),
+    // Destinataires des campagnes de l'espace (story 13.27, migration 0014).
+    env.DB.prepare(`DELETE FROM campagne_destinataire WHERE contact_id ${DE_CES_CONTACTS.replace('?2', '?1')}`).bind(ids),
     env.DB.prepare(`DELETE FROM contact WHERE id ${DE_CES_CONTACTS.replace('?2', '?1')}`).bind(ids),
     env.DB.prepare('DELETE FROM prescripteur WHERE email = ?1').bind(adresse),
   ]);

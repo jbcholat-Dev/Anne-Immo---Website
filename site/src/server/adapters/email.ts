@@ -12,6 +12,8 @@ const LOGO_BASE64 = logo.slice(logo.indexOf(',') + 1);
 export const EXPEDITEUR = 'Anne VIAL-TISSOT <anne@annevialtissot.fr>';
 
 export interface Email {
+  /** Expéditeur, s'il n'est pas `EXPEDITEUR` : les campagnes de l'espace partent de leur sous-domaine (story 13.27, AD-21). */
+  de?: string;
   /** Destinataire réel (prospect ou boîte d'Anne), remplacé par la boîte de test si `test`. */
   a: string;
   objet: string;
@@ -33,7 +35,7 @@ export async function envoyerEmail(env: EnvSite, e: Email): Promise<ResultatEnvo
   const a = e.test ? env.BOITE_TEST : e.a;
   if (!a) return { ok: false, erreur: e.test ? 'BOITE_TEST absente' : 'destinataire absent' };
   const corps = {
-    from: EXPEDITEUR,
+    from: e.de ?? EXPEDITEUR,
     to: [a],
     subject: e.test ? `[TEST] ${e.objet}` : e.objet,
     text: e.test ? `(E-mail de test : en production, il serait parti vers ${e.a}.)\n\n${e.texte}` : e.texte,

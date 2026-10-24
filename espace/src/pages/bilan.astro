@@ -59,7 +59,7 @@ const tuiles = [
   </section>
 
   <section class="e-carte" data-couts>
-    <div class="b-tete"><h2>Ce que ça coûte</h2><a class="e-bouton second" href="/actions">Prospection</a></div>
+    <div class="b-tete"><h2>Ce que ça coûte</h2><span class="b-liens"><a class="e-bouton second" href="/actions">Prospection</a><a class="e-bouton second" href="/campagnes">Campagnes</a></span></div>
     {lignesCout.length === 0 ? <p class="e-muet">Aucune dépense notée sur la période. Notez vos actions (flyers, publicité, salon…) avec leur coût pour voir ce que vous coûte un contact.</p> : (
       <div class="e-table-zone">
         <table class="e-table b-table">
@@ -113,4 +113,5 @@ const tuiles = [
   .b-dit ul { margin: 10px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
   .b-perdus { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
   .b-perdus li { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--avt-galet); padding: 6px 0; }
+  .b-liens { display: flex; flex-wrap: wrap; gap: 8px; }
 </style>
