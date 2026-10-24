@@ -19,6 +19,7 @@
 // Story 13.10 : relève Leedflow sur une imitation locale de son API (clé exigée, pages lues de la plus ancienne à la plus
 // récente, historique repris pour un numéro connu, résumé complété après coup sans doublon, numéro inconnu proposé puis
 // rattaché à la création du contact, page « À trier » avec ses filtres et ses catégories (13.19), tâches proposées puis acceptées ou ignorées, clé refusée signalée).
+// Story 13.20 : bouton « Un retour ? » (ticket GitHub créé par une imitation de l'API, page sans paramètres, retour vide ou jeton de Claude refusés).
 // Story 13.17 : actions marketing (ajout, erreurs, rattachement d'office par la base, choix à la qualification et sur la
 // fiche, coût des passages, coûts du bilan) et accès de Claude par jeton de service (actions et totaux seulement,
 // rien d'autre ouvert, une personne refusée sur /api/claude/…, aucun contact dans les réponses).
@@ -51,10 +52,18 @@ const equipe = JSON.parse(Buffer.from(jetonAcces().split('.')[1], 'base64url').t
 // Imitation de l'API Leedflow (story 13.10) : mêmes adresses, même pagination, triée du plus récent au plus ancien.
 const LF = { cle: 'essai-cle-leedflow', refuse: false, requetes: [], appels: [], vocaux: [], sms: [], taches: [], contacts: {} };
 const PORT_LF = 8791;
+const GH = { cle: 'essai-cle-github', tickets: [] };
 const imitationLeedflow = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://localhost');
   LF.requetes.push({ chemin: u.pathname, params: Object.fromEntries(u.searchParams), auth: req.headers.authorization });
   const json = (code, corps) => { res.writeHead(code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(corps)); };
+  // Imitation de l'API GitHub pour le bouton « Un retour ? » (story 13.20) : création d'un ticket.
+  if (u.pathname.startsWith('/github/')) {
+    let corps = '';
+    req.on('data', (c) => { corps += c; });
+    req.on('end', () => { GH.tickets.push({ chemin: u.pathname, auth: req.headers.authorization, ...JSON.parse(corps || '{}') }); json(201, { number: 9000 + GH.tickets.length, html_url: 'https://exemple.invalid/ticket' }); });
+    return;
+  }
   if (LF.refuse || req.headers.authorization !== `Bearer ${LF.cle}`) return json(401, { success: false, statusCode: 401 });
   const fiche = /^\/contacts\/(.+)$/.exec(u.pathname);
   if (fiche) return LF.contacts[fiche[1]] ? json(200, { success: true, data: LF.contacts[fiche[1]] }) : json(404, { success: false });
@@ -66,7 +75,8 @@ const imitationLeedflow = http.createServer((req, res) => {
 });
 await new Promise((ok) => imitationLeedflow.listen(PORT_LF, ok));
 fs.writeFileSync(reglages, [`ACCESS_EQUIPE=${equipe}`, 'ACCESS_AUD=essai-aud', 'LIEN_SECRET=essai', `URL_SITE=${S}`,
-  `LEEDFLOW_API_KEY=${LF.cle}`, `LEEDFLOW_URL=http://localhost:${PORT_LF}`, 'ACCESS_CLAUDE_ID=essai-claude.access'].join('\n'));
+  `LEEDFLOW_API_KEY=${LF.cle}`, `LEEDFLOW_URL=http://localhost:${PORT_LF}`, 'ACCESS_CLAUDE_ID=essai-claude.access',
+  `GITHUB_TOKEN=${GH.cle}`, `GITHUB_API=http://localhost:${PORT_LF}/github`].join('\n'));
 const journal = path.join(os.tmpdir(), `e2e-${ESSAI}-espace.log`);
 const sansProxy = Object.fromEntries(Object.entries(process.env).filter(([k]) => !/^(https?|all|no)_proxy$/i.test(k)));
 const espace = spawn('npx', ['wrangler', 'dev', '--port', String(PORT), '--env-file', reglages, '--test-scheduled', '--persist-to', path.join(SITE, '.wrangler', 'state')],
@@ -696,6 +706,23 @@ try {
   ];
   for (const [quoi, rep] of refusClaude) constat(rep.status === 403, `refusé (403) : ${quoi}`);
 
+  // Bouton « Un retour ? » (story 13.20) : la remarque devient un ticket GitHub étiqueté retour-apercu.
+  const retour = (corps, jeton = JETON) => appeler(`${E}/api/retour`, { method: 'POST', headers: avecJeton(jeton, { 'Content-Type': 'application/json' }), body: JSON.stringify(corps) });
+  r = await retour({ page: '/inconnu?tel=+33612345678', texte: 'Le bouton Pro est mal placé\nDétail sur deux lignes', ecran: '390×844' });
+  const reponseRetour = await r.json();
+  const ticket = GH.tickets.at(-1);
+  constat(r.status === 200 && reponseRetour.ok && reponseRetour.numero === 9001 && ticket?.chemin === '/github/repos/jbcholat-Dev/Anne-Immo---Website/issues'
+    && ticket.auth === `Bearer ${GH.cle}` && ticket.labels?.[0] === 'retour-apercu' && ticket.title === '[Retour espace] /inconnu : Le bouton Pro est mal placé'
+    && ticket.body.includes('**Auteur :** anne@example.com') && ticket.body.includes('/inconnu') && !JSON.stringify(ticket).includes('+33612'),
+    'un retour : ticket GitHub « retour-apercu » créé avec l\'auteur vérifié, la page sans ses paramètres (aucun numéro)');
+  r = await retour({ page: '/', texte: '   ' });
+  constat(r.status === 400 && GH.tickets.length === 1, 'un retour vide : refusé, aucun ticket');
+  r = await appeler(`${E}/api/retour`, { method: 'POST', redirect: 'manual', headers: { 'cf-access-jwt-assertion': JETON_CLAUDE, 'Content-Type': 'application/json' }, body: JSON.stringify({ page: '/', texte: 'x' }) });
+  constat(r.status === 403 && GH.tickets.length === 1, 'un retour avec le jeton de Claude : refusé (403)');
+  r = await appeler(`${E}/`, { headers: avecJeton() });
+  html = await r.text();
+  constat(html.includes('data-retour-ouvrir') && html.includes('data-retour-public'), 'le bouton « Un retour ? » est sur les pages de l\'espace, avec le rappel que le ticket est public');
+
   // Clé refusée (révoquée) : la relève le note et « Aujourd'hui » le dit.
   LF.refuse = true;
   await releve();
@@ -717,6 +744,15 @@ try {
       if (nomPage === 'ajouter') {
         await onglet.click('[data-canaux] label:has(input[value=boitage]) span');
         constat(await onglet.isVisible('[data-si=boitage]') && !(await onglet.isVisible('[data-si=recommandation]')), `ajouter sur ${nom} : toucher « Boîtage » montre le choix du passage, cache le prescripteur`);
+      }
+      if (nomPage === 'aujourdhui') {
+        const bouton = await onglet.locator('[data-retour-ouvrir]').boundingBox();
+        const menu = nom === 'telephone' ? await onglet.locator('.e-menu-bas').boundingBox() : null;
+        constat(!!bouton && (!menu || bouton.y + bouton.height <= menu.y), `un retour sur ${nom} : le bouton est visible et ne cache pas le menu du bas`);
+        await onglet.click('[data-retour-ouvrir]');
+        constat(await onglet.isVisible('[data-retour-dialog] textarea'), `un retour sur ${nom} : le bouton ouvre le formulaire`);
+        if (nom === 'telephone') await onglet.screenshot({ path: path.join(OUT, `espace-retour-${nom}.png`) });
+        await onglet.click('[data-retour-fermer]');
       }
       await onglet.screenshot({ path: path.join(OUT, `espace-${nomPage}-${nom}.png`), fullPage: true });
       const deborde = await onglet.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
