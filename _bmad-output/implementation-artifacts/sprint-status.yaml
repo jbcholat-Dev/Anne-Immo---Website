@@ -191,7 +191,7 @@ development_status:
   13-21-audit-de-l-espace-en-tant-qu-anne: done   # 2026-10-24, audit utilisateur ; JB valide les trois stories 13.22-13.24 le 2026-10-24
   13-22-noter-la-suite-d-un-contact-en-cours: done   # 2026-10-24, PR n° 183 fusionnée (JB)
   13-23-fiche-contact-modifiable: done   # 2026-10-24, PR n° 186 fusionnée (JB)
-  13-24-listes-et-recherche-pensees-telephone: ready-for-dev
+  13-24-listes-et-recherche-pensees-telephone: review   # 2026-10-24, construite et vérifiée (243 vérifications), PR après la n° 187
   13-25-synthese-du-contact: review   # 2026-10-24, demande de JB ; construite et vérifiée (229 vérifications), PR après la 13.23
   13-26-accord-e-mail-sur-la-fiche-contact: ready-for-dev   # 2026-10-24, campagnes e-mail dans l'espace (décision JB, AD-21)
   13-27-écrire-et-envoyer-une-campagne: ready-for-dev

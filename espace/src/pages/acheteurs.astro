@@ -5,6 +5,7 @@
 // « j'ai un acheteur ». L'offre « mandat de recherche » reste à décider à part.
 import Espace from '../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
+import { telLisible } from '@site/server/recherche';
 import { pourSite as env } from '../server/env';
 import { acheteursActifs, communesDe, depuis, vendeursEnSommeil, echeance } from '../server/pipeline';
 
@@ -18,7 +19,7 @@ for (const a of acheteurs) for (const c of a.communes) parCommune.set(c, (parCom
 const secteurs = [...parCommune.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
 const choisi = (Astro.url.searchParams.get('secteur') ?? '').trim().slice(0, 120);
 const sommeil = choisi ? await vendeursEnSommeil(env, communesDe(choisi)) : [];
-const nom = (c: { prenom: string | null; nom: string | null; telephone: string | null; email: string | null }) => [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.email || '—';
+const nom = (c: { prenom: string | null; nom: string | null; telephone: string | null; email: string | null }) => [c.prenom, c.nom].filter(Boolean).join(' ') || telLisible(c.telephone) || c.email || '—';
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 ---
 <Espace titre="Acheteurs actifs" actif="acheteurs">

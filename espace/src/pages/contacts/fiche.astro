@@ -11,6 +11,7 @@
 // une version plus récente de Leedflow est signalée, jamais imposée.
 import Espace from '../../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
+import { telLisible } from '@site/server/recherche';
 import { CANAUX_ORIGINE, LIBELLES_ETAPES } from '@site/server/contacts';
 import { quand, SOURCES } from '@site/server/gestion-donnees';
 import { effacerContact } from '@site/server/rights';
@@ -97,7 +98,7 @@ const message = m === 'ajoute' ? 'Contact enregistré, à qualifier aujourd\'hui
   : m === 'existant' ? 'Ce contact existait déjà (même téléphone ou même e-mail) : sa fiche est complétée, rien n\'a été créé en double.' : '';
 let reponses: Reponses = {};
 try { reponses = c.qualification ? JSON.parse(c.qualification) : {}; } catch {}
-const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.email || 'Contact sans nom';
+const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || telLisible(c.telephone) || c.email || 'Contact sans nom';
 ---
 <Espace titre={nom} actif="contacts">
   <div>
@@ -201,7 +202,7 @@ const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.emai
   <section class="e-carte">
     <h2>Coordonnées</h2>
     <dl style="display:grid;grid-template-columns:max-content 1fr;gap:6px 18px;margin:0">
-      <dt class="e-muet">Téléphone</dt><dd style="margin:0">{c.telephone ?? '—'}</dd>
+      <dt class="e-muet">Téléphone</dt><dd style="margin:0" data-tel>{telLisible(c.telephone) || '—'}</dd>
       <dt class="e-muet">E-mail</dt><dd style="margin:0;overflow-wrap:anywhere">{c.email ?? '—'}</dd>
       <dt class="e-muet">Commune</dt><dd style="margin:0">{c.commune ?? '—'}</dd>
       <dt class="e-muet">Origine</dt><dd style="margin:0">{CANAUX_ORIGINE[c.canal]}{c.origine_detail ? ` · ${c.origine_detail}` : ''}</dd>
@@ -214,7 +215,7 @@ const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.emai
         <div class="e-champs">
           <label class="e-champ">Prénom<input name="prenom" value={val('prenom')} autocomplete="off" /></label>
           <label class="e-champ">Nom<input name="nom" value={val('nom')} autocomplete="off" /></label>
-          <label class="e-champ">Téléphone<input name="telephone" type="tel" value={val('telephone')} autocomplete="off" /></label>
+          <label class="e-champ">Téléphone<input name="telephone" type="tel" value={erreurPour === 'coordonnees' ? val('telephone') : telLisible(c.telephone)} autocomplete="off" /></label>
           <label class="e-champ">E-mail<input name="email" type="email" value={val('email')} autocomplete="off" /></label>
           <label class="e-champ">Commune<input name="commune" value={val('commune')} autocomplete="off" /></label>
           <label class="e-champ">Il ou elle veut

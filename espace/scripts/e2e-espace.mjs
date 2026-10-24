@@ -15,6 +15,7 @@
 // Story 13.14 : prescripteurs (recommandés, mandats, relance due sur Aujourd'hui, échange noté, ajout).
 // Story 13.15 : acheteurs actifs (critères, « aussi vendeur », vendeurs en sommeil du secteur, lettre sur Aujourd'hui).
 // Story 13.16 : vue pipeline (colonnes par étape, déplacement avec prochaine action, réveil ou motif exigés).
+// Story 13.24 : contacts en cartes sur téléphone avec filtres, pipeline une étape à la fois, recherche par début de numéro et par mots.
 // Story 13.25 : synthèse du contact (lue sur la fiche Leedflow, gardée à côté de celle d'Anne, version plus récente signalée, saisie à la main).
 // Story 13.23 : fiche modifiable (coordonnées, doublon refusé avec lien), note libre, export et effacement d'un contact sans e-mail.
 // Story 13.22 : noter la suite d'un contact en cours (fait, pas joint, note ; étape gardée sauf choix ; requalifier sans changer l'étape).
@@ -482,6 +483,33 @@ try {
   r = await appeler(`${E}/api/contacts/export?id=${SUITE}`, { headers: avecJeton() });
   constat((await r.json()).contact?.synthese?.includes(`Vendeuse à Thonon ${NUM}`), 'export : la synthèse est comprise');
 
+  // 5 quater quater. Listes et recherche pensées téléphone (story 13.24).
+  const cherche = async (q, f = '') => (await appeler(`${E}/contacts?${new URLSearchParams({ q, ...(f ? { f } : {}) })}`, { headers: avecJeton() })).text();
+  const trouve = (h, id) => h.includes(`data-carte="${id}"`);
+  constat(trouve(await cherche('0646'), SUITE) && trouve(await cherche(`06 46 ${NUM.slice(0, 2)}`), SUITE) && !trouve(await cherche('0699999'), SUITE),
+    'recherche : un début de numéro tapé en 0 (« 0646 », « 06 46 xx ») trouve le contact rangé en +33');
+  constat(trouve(await cherche(`silvie suite${NUM}`), SUITE) && trouve(await cherche(`suite${NUM} thonon`), SUITE) && !trouve(await cherche(`silvie paris${NUM}`), SUITE),
+    'recherche : plusieurs mots cherchés chacun dans prénom, nom et commune (« prénom nom », « nom commune »)');
+  constat(trouve(await cherche(`carla+${ESSAI}@exa`), carla), 'recherche : un e-mail partiel marche toujours');
+  html = await cherche('', 'retard');
+  constat(trouve(html, NOTE) && (html.split(`data-carte="${NOTE}"`)[1]?.split('</li>')[0] ?? '').includes('data-retard') && !trouve(html, SUITE),
+    'filtre « En retard » : le contact dont l\'action est passée, signalé en rouge ; pas celui prévu plus tard');
+  constat(!trouve(await cherche('', 'a_qualifier'), SUITE) && trouve(await cherche('', 'vendeurs'), SUITE) && trouve(await cherche('', 'a_qualifier'), didier),
+    'filtres « À qualifier » et « Vendeurs »');
+  html = await cherche(`suite${NUM}`);
+  constat((html.split(`data-carte="${SUITE}"`)[1]?.split('</li>')[0] ?? '').includes('Second rendez-vous') && html.includes('data-contacts'),
+    'contacts : une carte par contact avec étape et prochaine action, le tableau gardé pour l\'ordinateur');
+  html = await (await appeler(`${E}/contacts/fiche?id=${SUITE}`, { headers: avecJeton() })).text();
+  constat((html.split('data-tel')[1] ?? '').includes(`06 46 ${NUM.slice(0, 2)} ${NUM.slice(2, 4)} ${NUM.slice(4, 6)}`), 'fiche : numéro affiché « 06 46 … » (gardé en +33 dans la base)');
+  html = await (await appeler(`${E}/gestion?q=${encodeURIComponent('olga orphelin')}`, { headers: avecJeton() })).text();
+  constat(html.includes(`/gestion/lead?id=ORPH${ESSAI}`), 'demandes du site : la recherche « prénom nom » marche aussi');
+  html = await (await appeler(`${E}/pipeline?parcours=vendeur&etape=second_rdv`, { headers: avecJeton() })).text();
+  constat(/data-etape-lien="second_rdv"[^>]*>|aria-current="page"[^>]*data-etape-lien="second_rdv"/.test(html) && /class="pl-colonne[^"]*pl-autre[^"]*"[^>]*data-colonne="estimation"/.test(html)
+    && !/class="pl-colonne[^"]*pl-autre[^"]*"[^>]*data-colonne="second_rdv"/.test(html),
+    'pipeline : pastilles d\'étapes, seule l\'étape choisie est montrée sur téléphone');
+  html = await (await appeler(`${E}/`, { headers: avecJeton() })).text();
+  constat(/data-date[^>]*>[a-zé]/.test(html) && !html.includes('text-transform:capitalize'), 'aujourd\'hui : la date en minuscules (« samedi 24 octobre »)');
+
   // 5 quinquies. Bilan du lundi par canal (story 13.13) : les chiffres suivent la base, sans saisie.
   const ligneCanal = async (canal) => {
     const h = await (await appeler(`${E}/bilan?p=semaine`, { headers: avecJeton() })).text();
@@ -568,7 +596,7 @@ try {
     'déplacer vers une étape active sans prochaine action : refusé');
   r = await page(`/pipeline?parcours=acheteur`, { id: ach1, etape: 'visites', action: 'Visite à Anthy', le: '2027-02-10', heure: '14:30' });
   const pv = sql(`SELECT etape, prochaine_action, prochaine_action_le FROM contact WHERE id = '${ach1}'`)[0];
-  constat(r.headers.get('location') === `/pipeline?parcours=acheteur&m=deplace#c-${ach1}` && pv.etape === 'visites' && pv.prochaine_action === 'Visite à Anthy' && pv.prochaine_action_le === '2027-02-10T13:30:00.000Z'
+  constat(r.headers.get('location') === `/pipeline?parcours=acheteur&etape=visites&m=deplace#c-${ach1}` && pv.etape === 'visites' && pv.prochaine_action === 'Visite à Anthy' && pv.prochaine_action_le === '2027-02-10T13:30:00.000Z'
     && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${ach1}' AND type = 'etape' AND texte LIKE '%→ Visites%'`)[0].n === 1,
     'déplacé vers « Visites » avec action datée (14 h 30 à Paris), changement noté');
   r = await page(`/pipeline?parcours=acheteur`, { id: ach2, etape: 'perdu', motif: 'Pas de projet' });
@@ -888,6 +916,15 @@ try {
           `fiche sur ${nom} : « Modifier » ouvre les coordonnées, l'origine Boîtage montre le choix du passage`);
         await onglet.screenshot({ path: path.join(OUT, `espace-fiche-modifier-${nom}.png`), fullPage: true });
         await onglet.goto(`${E}${chemin}`);
+      }
+      if (nomPage === 'pipeline') {
+        const colonnesVues = await onglet.locator('.pl-colonne:visible').count();
+        constat(nom === 'telephone' ? colonnesVues === 1 && await onglet.isVisible('[data-etapes]') : colonnesVues > 3 && !(await onglet.isVisible('[data-etapes]')),
+          `pipeline sur ${nom} : ${nom === 'telephone' ? 'une étape à la fois, pastilles en haut' : 'colonnes côte à côte'}`);
+      }
+      if (nomPage === 'contacts') {
+        constat(nom === 'telephone' ? await onglet.isVisible('[data-cartes]') && !(await onglet.isVisible('[data-contacts]')) : await onglet.isVisible('[data-contacts]') && !(await onglet.isVisible('[data-cartes]')),
+          `contacts sur ${nom} : ${nom === 'telephone' ? 'des cartes' : 'le tableau'}`);
       }
       if (nomPage === 'suite') {
         await onglet.click('[data-resultat] label:has(input[value=pas_joint]) span');

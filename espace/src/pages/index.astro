@@ -8,6 +8,7 @@
 // suite » d'un rappel ouvre le formulaire de suite (fait, pas joint, prochaine action), plus la qualification.
 import Espace from '../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
+import { telLisible } from '@site/server/recherche';
 import { LIBELLES_ETAPES } from '@site/server/contacts';
 import { envEspace, pourSite as env } from '../server/env';
 import { etatReleve, extrait, propositions } from '../server/leedflow';
@@ -31,7 +32,7 @@ const parCommune = new Map<string, number>();
 for (const a of acheteurs) for (const c of a.communes) parCommune.set(c, (parCommune.get(c) ?? 0) + 1);
 const lettres = [...parCommune.entries()].filter(([, n]) => n >= 2).sort((a, b) => b[1] - a[1]).slice(0, 2);
 const date = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Paris' });
-const nom = (c: ContactDuJour) => [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.email || 'Sans nom';
+const nom = (c: ContactDuJour) => [c.prenom, c.nom].filter(Boolean).join(' ') || telLisible(c.telephone) || c.email || 'Sans nom';
 const origine = (c: ContactDuJour) => libelleOrigine(c,
   c.passage_secteur ? { id: '', secteur: c.passage_secteur, fait_le: c.passage_le ?? '', mots: null, contacts: 0 } : null,
   c.prescripteur_nom ? { id: '', nom: c.prescripteur_nom, role: null, commune: null } : null);
@@ -39,7 +40,7 @@ const rien = nouveaux.length + leedflow.taches.length + leedflow.aTrier.total + 
 ---
 <Espace titre="Aujourd'hui" actif="aujourdhui">
   <div>
-    <div class="e-muet" style="text-transform:capitalize">{date}</div>
+    <div class="e-muet" data-date>{date}</div>
     <h1>Bonjour Anne</h1>
   </div>
   {message && <p class="e-message" role="status" data-message>{message}</p>}
@@ -64,7 +65,7 @@ const rien = nouveaux.length + leedflow.taches.length + leedflow.aTrier.total + 
       <h2>Vu par Leedflow</h2>
       {leedflow.taches.map((t) => (
         <article class="e-carte" data-tache={t.id}>
-          <div class="e-ligne"><a href={`/contacts/fiche?id=${t.contact_id}`} class="e-nom">{[t.prenom, t.nom].filter(Boolean).join(' ') || t.telephone || 'Contact'}</a><span class="e-quand">{depuis(t.a)}</span></div>
+          <div class="e-ligne"><a href={`/contacts/fiche?id=${t.contact_id}`} class="e-nom">{[t.prenom, t.nom].filter(Boolean).join(' ') || telLisible(t.telephone) || 'Contact'}</a><span class="e-quand">{depuis(t.a)}</span></div>
           <p class="e-raison">Prochaine action proposée : {t.texte}{t.echeance ? ` · ${echeance(t.echeance)}` : ''}</p>
           <form method="post" action="/api/leedflow/tache" class="e-gestes">
             <input type="hidden" name="id" value={t.id} />

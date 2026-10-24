@@ -7,6 +7,7 @@
 // page, pour garder la saisie en cas d'erreur.
 import Espace from '../../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
+import { telLisible } from '@site/server/recherche';
 import { ETAPES_ACHETEUR, ETAPES_VENDEUR, LIBELLES_ETAPES, type Etape } from '@site/server/contacts';
 import { pourSite as env } from '../../server/env';
 import {
@@ -78,7 +79,7 @@ if (Astro.request.method === 'POST') {
   }
 }
 
-const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.email || 'Contact sans nom';
+const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || telLisible(c.telephone) || c.email || 'Contact sans nom';
 const etapeChoisie = (saisi.etape as Etape) || c.etape;
 const prevu = c.etape === 'en_sommeil' ? `En sommeil, à réveiller le ${echeance(c.reveil_le)}` : c.etape === 'perdu' ? `Perdu : ${c.motif_perte}`
   : c.prochaine_action ? `${c.prochaine_action}${c.prochaine_action_le ? ` · ${echeance(c.prochaine_action_le)}` : ''}` : '';

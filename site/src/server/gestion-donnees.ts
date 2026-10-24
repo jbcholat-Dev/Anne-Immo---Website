@@ -5,6 +5,7 @@
 // sans clé d'envoi d'e-mails. L'envoi immédiat d'un rejeu reste dans gestion.ts, propre au site.
 import type { EnvSite } from './env';
 import { journal } from './journal';
+import { filtreRecherche } from './recherche';
 
 export interface ResumeLead {
   id: string;
@@ -33,24 +34,21 @@ export interface Envoi {
 /** Canaux qu'Anne peut rejouer : ceux que delivery.ts sait envoyer (pas `modelo`, recopié à la main). */
 export const rejouable = (canal: string) => ['notify_anne', 'confirm_prospect', 'guide'].includes(canal) || canal.startsWith('sequence:');
 
-/** Les demandes, les plus récentes d'abord. `q` : adresse e-mail exacte, ou morceau de nom, d'adresse ou de téléphone. */
+/**
+ * Les demandes, les plus récentes d'abord. `q` : adresse e-mail exacte, ou des mots (chacun cherché dans le prénom,
+ * le nom et l'adresse), ou un morceau de numéro tapé en 0 (« 06 12 34 » cherché comme « +3361234 », story 13.24).
+ */
 export async function listerLeads(env: EnvSite, q = '', limite = 100): Promise<ResumeLead[]> {
   const recherche = q.trim().toLowerCase();
-  const parEmail = recherche.includes('@') && !recherche.includes('%');
-  const filtre = !recherche ? '' : parEmail
-    ? 'WHERE lower(l.email) = ?2'
-    : "WHERE lower(l.email) LIKE ?2 OR lower(coalesce(l.nom, '')) LIKE ?2 OR lower(coalesce(l.prenom, '')) LIKE ?2 OR coalesce(l.telephone, '') LIKE ?3";
-  const valeur = parEmail ? recherche : `%${recherche.replace(/[%_]/g, '')}%`;
-  // Les numéros sont rangés au format international (+33…) : « 06 01 02 03 04 » est cherché comme « +33601020304 ».
-  const chiffres = recherche.replace(/[\s.\-()]/g, '');
-  const telephone = /^0\d{9}$/.test(chiffres) ? `%+33${chiffres.slice(1)}%` : /^\+?\d{4,}$/.test(chiffres) ? `%${chiffres}%` : valeur;
+  const parEmail = recherche.includes('@') && !recherche.includes('%') && !/\s/.test(recherche);
+  const f = parEmail ? { sql: 'lower(l.email) = ?2', valeurs: [recherche] } : filtreRecherche(recherche, ['l.prenom', 'l.nom', 'l.email'], 'l.telephone', 2);
   const requete = env.DB.prepare(
     `SELECT l.id, l.created_at, l.source, l.prenom, l.nom, l.email, l.telephone, l.is_test, l.orientation, l.rdv_start,
        (SELECT count(*) FROM lead_delivery d WHERE d.lead_id = l.id AND d.status = 'failed') AS echecs,
        (SELECT d.status FROM lead_delivery d WHERE d.lead_id = l.id AND d.channel = 'modelo') AS modelo
-     FROM lead l ${filtre} ORDER BY l.created_at DESC LIMIT ?1`,
+     FROM lead l ${f ? `WHERE ${f.sql}` : ''} ORDER BY l.created_at DESC LIMIT ?1`,
   );
-  const { results } = await (!recherche ? requete.bind(limite) : parEmail ? requete.bind(limite, valeur) : requete.bind(limite, valeur, telephone)).all<ResumeLead>();
+  const { results } = await requete.bind(limite, ...(f?.valeurs ?? [])).all<ResumeLead>();
   return results;
 }
 

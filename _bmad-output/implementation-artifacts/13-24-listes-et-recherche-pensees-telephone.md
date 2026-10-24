@@ -1,7 +1,7 @@
 ---
 story: 13.24
 epic: 13 — Espace de travail d'Anne
-statut: ready-for-dev
+statut: review
 date: 2026-10-24
 maj: 2026-10-24
 ---
@@ -21,5 +21,16 @@ Troisième et quatrième points bloquants de l'audit 13.21 (décision de JB du 2
 - `e2e-espace.mjs` : recherches « 0612 », « 06 12 34 », « marie dupont », « dupont thonon », e-mail partiel ; `scripts/ecrans.mjs` ou équivalent : aucun débordement horizontal sur `/contacts` et `/pipeline` à 390 px ; captures téléphone et ordinateur.
 - `npm run build`, `npm run check` dans `espace/`.
 
+## Ce qui est fait (2026-10-24)
+- **Recherche** : nouveau `site/src/server/recherche.ts` (`lireRecherche`, `filtreRecherche`, `telLisible`), partagé par le site et l'espace. Un début de numéro tapé en 0, 00 ou + est cherché au format de la base (+33…) ; sinon chaque mot (jusqu'à 5) doit apparaître dans prénom + nom + commune + e-mail. `listerContacts` (espace) et `listerLeads` (`/gestion`, prénom + nom + e-mail + téléphone) l'utilisent ; une adresse complète reste cherchée à l'identique dans `/gestion`.
+- **Contacts** (`espace/src/pages/contacts/index.astro`) : une carte par contact sous 900 px (nom et commune, origine, étape, prochaine action et date, retard en rouge), tableau au-delà ; filtres d'une touche « Tous, À qualifier, En retard, Vendeurs, Acheteurs, En sommeil » (`FILTRES_CONTACTS`, combinables avec la recherche).
+- **Pipeline** (`espace/src/pages/pipeline.astro`) : pastilles d'étapes avec leur compteur ; sous 900 px seule l'étape choisie (`?etape=`, sinon la première non vide) est montrée, colonnes côte à côte au-delà ; après un déplacement, retour sur l'étape d'arrivée ; la phrase « glissez une carte » seulement sur ordinateur.
+- **Numéros** affichés « 06 12 34 56 78 » sur Aujourd'hui, Contacts, fiche (et champ de modification), qualification, suite, acheteurs, fiche prescripteur ; gardés en +33 dans la base. Date d'ouverture d'« Aujourd'hui » en minuscules.
+
+## Ce qui est vérifié (2026-10-24)
+- `e2e-espace.mjs` sur base locale remise à zéro : **243 vérifications, 0 échec**, dont recherches « 0646… », « 06 46 xx », « prénom nom », « nom commune », e-mail partiel, « olga orphelin » dans `/gestion` ; filtres « En retard », « À qualifier », « Vendeurs » ; cartes et tableau ; pipeline une étape à la fois ; aucun débordement horizontal sur `/contacts` et `/pipeline` à 390 px et sur ordinateur ; captures `espace/.verif/espace-contacts-*.png`, `espace-pipeline-*.png`.
+- `site/scripts/e2e-gestion.mjs` : 44 vérifications, toutes bonnes (recherche de `/gestion` réécrite).
+- `npm run build` et `npm run check` dans `site/` et `espace/` : 0 erreur.
+
 ## Ce qui reste
-- À construire (fil « [Site] Espace de travail d'Anne »), après la 13.23. Audit : https://claude.ai/artifact/87DydmbEHytFNxEk6FRkPy.
+- Fusion de la PR par JB (après la n° 187, story 13.25). Audit : https://claude.ai/artifact/87DydmbEHytFNxEk6FRkPy.

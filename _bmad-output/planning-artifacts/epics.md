@@ -2395,6 +2395,17 @@ afin de garder des fiches justes, même pour un contact sans adresse e-mail.
 **Quand** Anne modifie ses coordonnées, ajoute une note, télécharge ou efface ses données
 **Alors** un téléphone ou un e-mail déjà pris est refusé avec le lien vers l'autre fiche, chaque changement est noté dans l'historique sans l'ancienne valeur, et l'export comme l'effacement sont journalisés comme depuis /gestion. Audit 13.21, décision de JB du 2026-10-24
 
+### Story 13.24: Listes et recherche pensées téléphone
+
+En tant qu'Anne,
+je veux parcourir mes contacts et mon pipeline sur mon téléphone et retrouver quelqu'un en tapant un début de numéro ou son prénom et son nom,
+afin de travailler aussi bien sur téléphone que sur ordinateur.
+
+**Critères d'acceptation :**
+**Étant donné** les pages Contacts et Pipeline sur un écran de téléphone
+**Quand** Anne les ouvre ou fait une recherche
+**Alors** chaque contact est une carte (étape, prochaine action, retard en rouge) avec des filtres d'une touche, le pipeline montre une étape à la fois choisie par des pastilles, « 0612 » trouve un numéro rangé en +33, plusieurs mots sont cherchés chacun de leur côté (aussi dans /gestion), et les numéros s'affichent « 06 12 34 56 78 ». Audit 13.21, décision de JB du 2026-10-24
+
 ### Story 13.25: Synthèse du contact
 
 En tant qu'Anne,
