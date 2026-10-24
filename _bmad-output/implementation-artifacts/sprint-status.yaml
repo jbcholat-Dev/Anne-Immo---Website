@@ -119,7 +119,7 @@ development_status:
   8-18-barre-de-navigation-compacte: done   # annulée le 2026-10-11 au soir (JB) : retour à la barre étendue D-42
   8-19-boutons-de-l-ouverture-en-bas-sur-telephone: done
   8-20-ligne-signature-sous-le-nom-de-famille: done
-  8-22-retour-au-terracotta-d-origine: review   # PR en attente de JB
+  8-22-retour-au-terracotta-d-origine: done
   epic-8-retrospective: optional
 
   epic-9: in-progress
