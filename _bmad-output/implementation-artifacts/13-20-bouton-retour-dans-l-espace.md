@@ -1,7 +1,7 @@
 ---
 story: 13.20
 epic: 13 — Espace de travail d'Anne
-statut: review
+statut: done
 date: 2026-10-24
 maj: 2026-10-24
 ---
@@ -29,6 +29,7 @@ Demande de JB du 2026-10-24 : « réintroduire un bouton dans la page de l'espac
   - bouton et rappel « public » présents sur les pages ;
   - sur téléphone et sur ordinateur : bouton visible, au-dessus du menu du bas, il ouvre le formulaire (capture `espace/.verif/espace-retour-telephone.png` relue).
 
+- **En ligne (2026-10-24)** : PR #172 fusionnée par JB ; clé GitHub `cloudflare-retours-espace` posée par JB sur le Worker `anne-espace` (propriétaire de la clé : `jbcholat-Dev`, à choisir dans « Resource owner »). Retour d'essai de JB depuis son téléphone sur `/a-trier` : ticket n° 174 reçu avec l'étiquette `retour-apercu`, l'auteur et la page, puis fermé.
+
 ## Ce qui reste
-- JB : fusionner la PR.
-- JB : créer la clé GitHub de l'espace et la poser sur le Worker `anne-espace` (RUNBOOK § 4 sexies, ≈ 7 min), puis envoyer un retour d'essai.
+- Rien. Clé à renouveler dans un an (RUNBOOK § 4 sexies).
