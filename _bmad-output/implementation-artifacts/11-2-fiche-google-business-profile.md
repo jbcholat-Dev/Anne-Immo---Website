@@ -58,9 +58,13 @@ Sources : [règles de représentation](https://support.google.com/business/answe
 
 - 2026-10-12 : process et liste écrits dans le fil « Fiche Google Business », story ouverte.
 - 2026-10-24 : choix de JB notés, logo et couverture préparés.
+- 2026-10-24 : fiche créée par JB et validée d'emblée par Google (coche « Vous gérez cette fiche d'établissement »), zones desservies saisies (en cours de validation par Google), réseaux ajoutés sauf Facebook (Google refuse l'adresse `profile.php?id=…` et aucun nom d'utilisateur Facebook n'a pu être choisi). Fiche ajoutée à la carte des comptes du RUNBOOK.
+- Constat de JB : sur la recherche « Anne VIAL-TISSOT », annevialtissot.fr arrive après SeLoger, expluxury.fr et Leboncoin ; transmis au fil « [Site] Référencement Google ».
 
 ## Ce qui reste
 
-- Anne crée et valide la fiche, ajoute JB comme gestionnaire.
-- Claude ajoute la fiche à la carte des comptes du RUNBOOK (sans mot de passe) et le lien de la fiche dans les données structurées du site si utile.
+- JB vérifie quel compte détient la fiche ; si c'est le sien, il ajoute Anne comme propriétaire puis lui transfère la propriété principale.
+- Compléter : description, horaires, date d'ouverture, logo et couverture désignés, photos de ventes.
+- Récupérer le lien « Demander des avis » ; Claude rédige le message aux anciens clients.
+- Ajouter le lien de la fiche dans les données structurées du site si utile.
 - Vérifier que nom, téléphone et site sont identiques à ceux du site.
