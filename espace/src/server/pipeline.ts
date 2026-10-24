@@ -93,6 +93,10 @@ export function libelleOrigine(o: Pick<Origine, 'canal' | 'origine_detail'>, pas
   return o.origine_detail ? `${base} : ${o.origine_detail}` : base;
 }
 
+function accordImport(env: EnvSite, id: string, maintenant: string) {
+  return env.DB.prepare(`UPDATE contact SET email_accord_le = ?2, email_accord_source = 'import' WHERE id = ?1 AND email_accord_le IS NULL`).bind(id, maintenant);
+}
+
 /** Saisie à la main : crée le contact, ou complète celui qui a déjà ce téléphone ou cet e-mail. */
 export async function saisirContact(env: EnvSite, p: Personne, o: Origine, note: string, par: string): Promise<{ id: string; existant: boolean }> {
   const maintenant = new Date().toISOString();
@@ -233,6 +237,8 @@ export async function importer(env: EnvSite, lignes: Personne[], o: Origine, par
       const ecritures = existant
         ? [completer(env, id, p, maintenant), evenement(env, id, maintenant, 'note', 'import', `Présent dans la liste importée : ${libelleOrigine(o)}`, par)]
         : [inserer(env, id, p, o, maintenant, 0), evenement(env, id, maintenant, 'creation', 'import', `Contact importé · ${libelleOrigine(o)}`, par, o)];
+      // Les participants ont accepté d'être recontactés : c'est leur accord pour les e-mails d'Anne (story 13.26).
+      if (!o.rappel_individuel_seul) ecritures.push(accordImport(env, id, maintenant));
       return { p, existant: !!existant, ecritures };
     });
     try {
@@ -243,6 +249,7 @@ export async function importer(env: EnvSite, lignes: Personne[], o: Origine, par
       for (const m of morceau) {
         if (m.existant) { await env.DB.batch(m.ecritures); completes++; continue; }
         const r = await saisirContact(env, m.p, o, '', par);
+        if (!o.rappel_individuel_seul) await accordImport(env, r.id, maintenant).run();
         r.existant ? completes++ : nouveaux++;
       }
     }
@@ -307,6 +314,7 @@ export interface Contact extends ResumeContact {
   qualifie_le: string | null; reveil_le: string | null; motif_perte: string | null; rappel_individuel_seul: number; created_at: string;
   action_id: string | null;
   synthese_leedflow: string | null; synthese_leedflow_le: string | null; synthese: string | null; synthese_le: string | null;
+  email_accord_le: string | null; email_accord_source: 'anne' | 'import' | null; email_desinscrit_le: string | null;
 }
 
 export interface FicheContact {

@@ -9,6 +9,8 @@
 // depuis sa fiche (même journal des droits que /gestion), y compris pour un contact sans adresse e-mail.
 // Story 13.25 : en tête, la synthèse du contact (reprise de Leedflow par la relève, ou écrite par Anne), modifiable ;
 // une version plus récente de Leedflow est signalée, jamais imposée.
+// Story 13.26 : « E-mails groupés » : si la personne peut recevoir les campagnes d'Anne, depuis quand et pourquoi ;
+// Anne note un accord dit de vive voix, le retire, ou note un refus (qui vaut désinscription).
 import Espace from '../../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { telLisible } from '@site/server/recherche';
@@ -17,6 +19,7 @@ import { quand, SOURCES } from '@site/server/gestion-donnees';
 import { effacerContact } from '@site/server/rights';
 import { envEspace, pourSite as env } from '../../server/env';
 import { actionsAuChoix } from '../../server/actions';
+import { lireAccord, noterAccord, noterRefus, type SourceAccord } from '../../server/accord';
 import { champ, ULID } from '../../server/formulaires';
 import { rattacherInconnus, resumeHtml, tachesDuContact } from '../../server/leedflow';
 import {
@@ -40,6 +43,12 @@ if (Astro.request.method === 'POST') {
   if (quoi === 'synthese' || quoi === 'synthese-reprendre') {
     const texte = quoi === 'synthese' ? champ(f, 'synthese', 8000) : '';
     if (await enregistrerSynthese(env, id, texte || null, compte)) return Astro.redirect(`/contacts/fiche?id=${id}&m=${quoi}`, 303);
+  } else if (quoi === 'accord') {
+    const oui = champ(f, 'accord') === 'oui';
+    if (await noterAccord(env, id, oui, compte)) return Astro.redirect(`/contacts/fiche?id=${id}&m=${oui ? 'accord' : 'accord-retire'}`, 303);
+    erreur = oui ? 'Impossible de noter cet accord : la personne s\'est désinscrite, ou n\'a pas d\'adresse e-mail.' : 'Cet accord a été donné sur le site : notez plutôt qu\'elle ne veut plus d\'e-mails.';
+  } else if (quoi === 'refus') {
+    if (await noterRefus(env, id, compte)) return Astro.redirect(`/contacts/fiche?id=${id}&m=refus`, 303);
   } else if (quoi === 'note') {
     const note = champ(f, 'note', 2000);
     if (!note) erreur = 'Écrivez la note.';
@@ -80,6 +89,8 @@ const [taches, actions, passages, prescripteurs] = await Promise.all([tachesDuCo
 const val = (k: keyof typeof c) => (erreurPour === 'coordonnees' && k in saisi ? saisi[k as string] : (c[k] as string | null) ?? '');
 const canalForm = val('canal');
 const synthese = syntheseAffichee(c);
+const accord = await lireAccord(env, c.id);
+const ORIGINE_ACCORD: Record<SourceAccord, string> = { site: 'sur le site', import: 'à l\'import de la liste', anne: 'à vous', client: '' };
 // Un échange relevé par Leedflow : un titre (« Appel reçu · 4 min »), puis le résumé en Markdown.
 const titreEtResume = (texte: string | null) => { const [titre, ...reste] = (texte ?? '').split('\n'); return { titre, resume: reste.join('\n').trim() }; };
 const m = Astro.url.searchParams.get('m') ?? '';
@@ -88,6 +99,9 @@ const message = m === 'ajoute' ? 'Contact enregistré, à qualifier aujourd\'hui
   : m === 'qualification-corrigee' ? 'Réponses corrigées ; l\'étape et la prochaine action n\'ont pas changé.'
   : m === 'suite' ? 'Suite notée dans l\'historique.'
   : m === 'note' ? 'Note ajoutée à l\'historique.'
+  : m === 'accord' ? 'Accord noté : elle recevra vos campagnes.'
+  : m === 'accord-retire' ? 'Accord retiré : elle ne recevra plus vos campagnes.'
+  : m === 'refus' ? 'Noté : elle ne recevra plus d\'e-mails groupés.'
   : m === 'synthese' ? 'Synthèse enregistrée.'
   : m === 'synthese-reprendre' ? 'La synthèse de Leedflow est reprise.'
   : m === 'modifie' ? 'Coordonnées enregistrées, noté dans l\'historique.'
@@ -249,6 +263,41 @@ const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || telLisible(c.telephon
     </details>
   </section>
 
+  {accord && (
+    <section class="e-carte" data-accord-email={accord.statut}>
+      <h2>E-mails groupés</h2>
+      {accord.statut === 'sans_email' && <p style="margin:0">Pas d'adresse e-mail : ajoutez-la dans les coordonnées pour lui envoyer vos campagnes.</p>}
+      {accord.statut === 'accord' && <p style="margin:0"><strong>Reçoit vos campagnes.</strong> Accord donné {ORIGINE_ACCORD[accord.source ?? 'anne']}{accord.le ? ` le ${quand(accord.le)}` : ''}.</p>}
+      {accord.statut === 'client' && <p style="margin:0"><strong>Reçoit vos campagnes</strong> en tant qu'ancien client, tant qu'il ou elle ne les refuse pas.</p>}
+      {accord.statut === 'desinscrit' && <p style="margin:0"><strong>Ne reçoit plus vos campagnes</strong> : désinscrit{accord.le ? ` le ${quand(accord.le)}` : ''}. Seule une nouvelle inscription sur le site peut changer cela.</p>}
+      {accord.statut === 'sans_accord' && <>
+        <p style="margin:0"><strong>Ne reçoit pas vos campagnes</strong> : pas d'accord noté. Notez-le seulement si la personne vous l'a dit.</p>
+        <form method="post" class="fi-form" data-accord-form>
+          <input type="hidden" name="quoi" value="accord" />
+          <label class="fi-case"><input type="checkbox" name="accord" value="oui" required /> D'accord pour recevoir mes e-mails</label>
+          <div><button class="e-bouton second" type="submit">Enregistrer</button></div>
+        </form>
+      </>}
+      {accord.statut === 'accord' && (accord.source === 'anne' || accord.source === 'import') && (
+        <form method="post" data-accord-retirer>
+          <input type="hidden" name="quoi" value="accord" />
+          <input type="hidden" name="accord" value="non" />
+          <button class="e-bouton second" type="submit">Retirer son accord</button>
+        </form>
+      )}
+      {(accord.statut === 'accord' || accord.statut === 'client') && (
+        <details data-refus>
+          <summary class="fi-resume">Elle ou il ne veut plus d'e-mails</summary>
+          <form method="post" class="fi-form">
+            <input type="hidden" name="quoi" value="refus" />
+            <p style="margin:0">Vaut désinscription de toutes vos campagnes. Seule la personne pourra revenir dessus, en s'inscrivant sur le site.</p>
+            <div><button class="e-bouton second" type="submit">Noter son refus</button></div>
+          </form>
+        </details>
+      )}
+    </section>
+  )}
+
   {demandes.length > 0 && (
     <section class="e-carte">
       <h2>Demandes faites sur le site</h2>
@@ -288,6 +337,8 @@ const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || telLisible(c.telephon
   .fi-resume { cursor: pointer; color: var(--avt-klein); min-height: 44px; display: flex; align-items: center; }
   .fi-form { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
   .fi-plus-recente { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: var(--avt-brume); border-radius: 10px; padding: 10px 12px; }
+  .fi-case { display: flex; gap: 10px; align-items: center; min-height: 44px; }
+  .fi-case input { width: 22px; height: 22px; flex: none; }
   .fi-danger { background: var(--avt-terra); border-color: var(--avt-terra); }
   textarea { font: inherit; }
   .e-resume :global(p) { margin: 4px 0; }
