@@ -22,6 +22,8 @@ Epic 11, Visibilité. Ouverte le 2026-10-24 : la fiche Google Business d'Anne es
 - Accueil FR et EN : bloc `WebSite` et `og:site_name` « Anne VIAL-TISSOT » présents ; pages intérieures sans bloc `WebSite`.
 - `npm run check` : 0 erreur. `node scripts/liens.mjs` : 26 pages, 1801 liens, 0 cassé.
 
+- PR n° 194 fusionnée le 2026-10-24 à la demande de JB.
+
 ## Ce qui reste
 
 - Hors du code (JB et Anne) : ajouter le lien annevialtissot.fr sur chaque profil qui passe devant (Facebook, LinkedIn, Instagram, YouTube, linktr.ee, SeLoger/Logic-immo, expluxury.fr, Immodvisor). C'est le levier principal.
