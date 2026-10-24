@@ -404,12 +404,22 @@ export async function qualifier(env: EnvSite, id: string, reponses: Reponses, pa
     ).bind(id, maintenant, parcours, etape, action, le, reveil, motif, JSON.stringify(reponses), issue.type === 'rappel' ? 0 : 1),
     evenement(env, id, maintenant, 'qualification', 'anne', texteReponses ? `${resume}\n${texteReponses}` : resume, par, { reponses, issue }),
   ];
-  if (etape !== c.etape) {
-    lot.push(env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees, par) VALUES (?1, ?2, 'etape', 'anne', ?3, ?4, ?5)`)
-      .bind(id, maintenant, `${LIBELLES_ETAPES[c.etape]} → ${LIBELLES_ETAPES[etape]}`, JSON.stringify({ de: c.etape, vers: etape }), par));
-  }
+  if (etape !== c.etape) lot.push(evenementEtape(env, id, maintenant, c.etape, etape, '', par));
   await env.DB.batch(lot);
   return true;
+}
+
+/** Corrige les réponses d'un contact déjà en cours (story 13.22) : l'étape et la prochaine action ne bougent pas. */
+export async function corrigerQualification(env: EnvSite, id: string, reponses: Reponses, parcours: 'vendeur' | 'acheteur' | null, par: string): Promise<boolean> {
+  const maintenant = new Date().toISOString();
+  const texteReponses = [...QUESTIONS, ...RECHERCHE_ACHETEUR, { id: 'financement', titre: 'Financement' } as const]
+    .filter((q) => reponses[q.id]).map((q) => `${q.titre} ${reponses[q.id]}`).join(' · ');
+  const r = await env.DB.batch([
+    env.DB.prepare(`UPDATE contact SET last_activity_at = ?2, parcours = COALESCE(?3, parcours), qualification = ?4, qualifie_le = ?2 WHERE id = ?1`)
+      .bind(id, maintenant, parcours, JSON.stringify(reponses)),
+    evenement(env, id, maintenant, 'qualification', 'anne', texteReponses ? `Qualification corrigée\n${texteReponses}` : 'Qualification corrigée', par, { reponses }),
+  ]);
+  return (r[0].meta.changes ?? 0) > 0;
 }
 
 // ——— Aujourd'hui (story 13.5, maquette v2 écran 1) ———
@@ -664,12 +674,75 @@ export async function changerEtape(env: EnvSite, id: string, ch: Changement, par
   const c = await env.DB.prepare('SELECT etape FROM contact WHERE id = ?1').bind(id).first<{ etape: Etape }>();
   if (!c) return false;
   const maintenant = new Date().toISOString();
-  const suite = ch.etape === 'perdu' ? `motif : ${ch.motif}` : ch.etape === 'en_sommeil' ? `réveil le ${echeance(ch.reveil)}` : ch.le ? `${ch.action} · ${echeance(ch.le)}` : '';
-  await env.DB.batch([
-    env.DB.prepare(`UPDATE contact SET last_activity_at = ?2, etape = ?3, prochaine_action = ?4, prochaine_action_le = ?5, reveil_le = ?6, motif_perte = ?7 WHERE id = ?1`)
-      .bind(id, maintenant, ch.etape, ch.action, ch.le ?? (ch.etape === 'en_sommeil' ? ch.reveil : null), ch.reveil, ch.motif),
-    env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees, par) VALUES (?1, ?2, 'etape', 'anne', ?3, ?4, ?5)`)
-      .bind(id, maintenant, `${LIBELLES_ETAPES[c.etape]} → ${LIBELLES_ETAPES[ch.etape]}${suite ? ` (${suite})` : ''}`, JSON.stringify({ de: c.etape, vers: ch.etape }), par),
-  ]);
+  await env.DB.batch([majEtape(env, id, maintenant, ch), evenementEtape(env, id, maintenant, c.etape, ch.etape, resumeChangement(ch), par)]);
+  return true;
+}
+
+const resumeChangement = (ch: Changement) =>
+  ch.etape === 'perdu' ? `motif : ${ch.motif}` : ch.etape === 'en_sommeil' ? `réveil le ${echeance(ch.reveil)}` : ch.le ? `${ch.action} · ${echeance(ch.le)}` : '';
+
+/** Écrit l'étape et ce que la règle d'AD-20 exige avec elle. En sommeil, la prochaine action tombe le jour du réveil. */
+function majEtape(env: EnvSite, id: string, maintenant: string, ch: Changement) {
+  return env.DB.prepare(`UPDATE contact SET last_activity_at = ?2, etape = ?3, prochaine_action = ?4, prochaine_action_le = ?5, reveil_le = ?6, motif_perte = ?7 WHERE id = ?1`)
+    .bind(id, maintenant, ch.etape, ch.action, ch.le ?? (ch.etape === 'en_sommeil' ? ch.reveil : null), ch.reveil, ch.motif);
+}
+
+/**
+ * Le changement d'étape noté dans l'historique, avec l'étape quittée et l'étape atteinte en données (le bilan les lit).
+ * Tous les changements d'étape passent ici (pipeline, qualification, suite) : c'est l'endroit où brancher ce qu'un
+ * mandat signé déclenche (story 13.9, Modelo).
+ */
+function evenementEtape(env: EnvSite, id: string, maintenant: string, de: Etape, vers: Etape, suite: string, par: string) {
+  return env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees, par) VALUES (?1, ?2, 'etape', 'anne', ?3, ?4, ?5)`)
+    .bind(id, maintenant, `${LIBELLES_ETAPES[de]} → ${LIBELLES_ETAPES[vers]}${suite ? ` (${suite})` : ''}`, JSON.stringify({ de, vers }), par);
+}
+
+// ——— Noter la suite d'un contact en cours (story 13.22) ———
+
+/** L'action qui suit d'habitude l'arrivée à une étape : préremplie dans « Noter la suite », Anne la corrige d'un mot. */
+export const ACTIONS_HABITUELLES: Partial<Record<Etape, string>> = {
+  a_qualifier: ACTION_QUALIFIER,
+  premier_rdv: 'Premier rendez-vous',
+  estimation: 'Envoyer l’estimation',
+  second_rdv: 'Second rendez-vous : présenter l’estimation',
+  mandat_exclusif: 'Préparer la mise en vente',
+  en_vente: 'Faire le point avec le vendeur',
+  besoin_defini: 'Proposer le mandat de recherche',
+  mandat_recherche: 'Envoyer une sélection de biens',
+  visites: 'Organiser la prochaine visite',
+  offre_acceptee: 'Préparer le compromis',
+};
+
+/** Ce qui s'est passé depuis la dernière fois : l'action prévue est faite, la personne n'a pas répondu, ou juste une note. */
+export const RESULTATS_SUITE = { fait: 'Fait', pas_joint: 'Pas joint', note: 'Note seule' } as const;
+export type ResultatSuite = keyof typeof RESULTATS_SUITE;
+
+/** Une suite : pour « pas joint », seul `le` compte (l'étape et l'action prévue restent) ; sinon `ch` dit la nouvelle étape. */
+export type Suite = { resultat: 'pas_joint'; le: string; note: string | null } | { resultat: 'fait' | 'note'; ch: Changement; note: string | null };
+
+/**
+ * Note la suite d'un contact en cours en un seul enregistrement : étape (si elle change), prochaine action datée,
+ * une ligne d'historique (« Fait : … », « Pas joint, à rappeler le … », la note) et la date de dernière activité.
+ */
+export async function noterSuite(env: EnvSite, id: string, s: Suite, par: string): Promise<boolean> {
+  const c = await env.DB.prepare('SELECT etape, prochaine_action, prochaine_action_le FROM contact WHERE id = ?1').bind(id)
+    .first<{ etape: Etape; prochaine_action: string | null; prochaine_action_le: string | null }>();
+  if (!c) return false;
+  const maintenant = new Date().toISOString();
+  const lignes: string[] = [];
+  const lot = [];
+  if (s.resultat === 'pas_joint') {
+    lignes.push(`Pas joint, à rappeler le ${echeance(s.le)}${c.prochaine_action ? ` (${c.prochaine_action})` : ''}`);
+    lot.push(env.DB.prepare('UPDATE contact SET last_activity_at = ?2, prochaine_action_le = ?3 WHERE id = ?1').bind(id, maintenant, s.le));
+  } else {
+    if (s.resultat === 'fait') lignes.push(`Fait : ${c.prochaine_action ?? 'action prévue'}`);
+    lot.push(majEtape(env, id, maintenant, s.ch));
+    const suite = resumeChangement(s.ch);
+    if (s.ch.etape !== c.etape) lot.push(evenementEtape(env, id, maintenant, c.etape, s.ch.etape, suite, par));
+    else if (s.ch.le && s.ch.etape !== 'en_sommeil' && (s.ch.action !== c.prochaine_action || s.ch.le !== c.prochaine_action_le)) lignes.push(`Prochaine action : ${suite}`);
+  }
+  if (s.note) lignes.push(s.note);
+  if (lignes.length) lot.push(evenement(env, id, maintenant, 'note', 'anne', lignes.join('\n'), par, { suite: s.resultat }));
+  await env.DB.batch(lot);
   return true;
 }

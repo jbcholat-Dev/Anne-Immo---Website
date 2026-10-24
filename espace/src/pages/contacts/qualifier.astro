@@ -5,14 +5,16 @@
 // et l'appel noté dans l'historique. Le formulaire est traité par cette même page, pour garder les réponses en cas d'erreur.
 // Story 13.10 : le résumé du dernier appel relevé par Leedflow est affiché en tête, pour répondre aux questions en le lisant.
 // Story 13.17 : l'action marketing qui a amené le contact, préchoisie quand la base l'a rattaché d'office.
+// Story 13.22 : pour un contact déjà en cours (étape autre que « À qualifier »), la page ne corrige que les réponses ;
+// l'étape et la prochaine action ne bougent pas, la suite se note par « Noter la suite » (/contacts/suite).
 import Espace from '../../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
-import { CANAUX_ORIGINE } from '@site/server/contacts';
+import { CANAUX_ORIGINE, LIBELLES_ETAPES } from '@site/server/contacts';
 import { actionsAuChoix, rattacherAction } from '../../server/actions';
 import { pourSite as env } from '../../server/env';
 import { ULID } from '../../server/formulaires';
 import {
-  aujourdhui, echeance, FINANCEMENTS, libelleOrigine, lireContact, MOTIFS_PERTE, parisVersUtc, plusTard, qualifier, QUESTIONS, RECHERCHE_ACHETEUR, type Issue, type Reponses,
+  aujourdhui, corrigerQualification, echeance, FINANCEMENTS, libelleOrigine, lireContact, MOTIFS_PERTE, parisVersUtc, plusTard, qualifier, QUESTIONS, RECHERCHE_ACHETEUR, type Issue, type Reponses,
 } from '../../server/pipeline';
 import { resumeHtml } from '../../server/leedflow';
 
@@ -27,6 +29,7 @@ const actions = await actionsAuChoix(env, c.canal);
 // Le dernier appel ou message vocal relevé par Leedflow qui porte un résumé (titre sur la première ligne, résumé ensuite).
 const dernierAppel = historique.find((e) => e.source === 'leedflow' && !(e.texte ?? '').startsWith('SMS') && (e.texte ?? '').includes('\n'));
 const [titreAppel, ...resteAppel] = (dernierAppel?.texte ?? '').split('\n');
+const enCours = c.etape !== 'a_qualifier';
 
 let reponses: Reponses = {};
 try { reponses = c.qualification ? JSON.parse(c.qualification) : {}; } catch {}
@@ -44,6 +47,12 @@ if (Astro.request.method === 'POST') {
   if ((parcours ?? c.parcours) === 'acheteur') {
     for (const q of RECHERCHE_ACHETEUR) if (saisi[`a_${q.id}`]) reponses[q.id] = saisi[`a_${q.id}`].slice(0, 120);
     if ((FINANCEMENTS as readonly string[]).includes(saisi.a_financement ?? '')) reponses.financement = saisi.a_financement;
+  }
+  if (enCours) {
+    await corrigerQualification(env, c.id, reponses, parcours, compte);
+    const action = ULID.test(saisi.action ?? '') ? saisi.action : null;
+    if ('action' in saisi && saisi.action !== (c.action_id ?? '')) await rattacherAction(env, c.id, action, compte);
+    return Astro.redirect(`/contacts/fiche?id=${c.id}&m=qualification-corrigee`, 303);
   }
   let issue: Issue | null = null;
   const choixDate = (choix: string, autre: string) =>
@@ -79,7 +88,7 @@ const issues = [
   { v: 'rdv', t: 'Rendez-vous' }, { v: 'sommeil', t: 'En sommeil' }, { v: 'perdu', t: 'Perdu' }, { v: 'rappel', t: 'Pas joint' },
 ];
 ---
-<Espace titre={`Qualifier ${nom}`} actif="contacts">
+<Espace titre={`${enCours ? 'Corriger la qualification' : 'Qualifier'} · ${nom}`} actif="contacts">
   <div style="display:flex;align-items:center;gap:12px">
     <div style="flex:1;min-width:0">
       <div class="e-muet"><a href={`/contacts/fiche?id=${c.id}`}>Fiche</a></div>
@@ -131,6 +140,9 @@ const issues = [
       </label>
     )}
 
+    {enCours ? (
+      <p class="e-muet" data-en-cours>Seules les réponses sont corrigées : l'étape ({LIBELLES_ETAPES[c.etape]}) et la prochaine action ne changent pas. Pour noter ce qui s'est passé et avancer, utilisez <a href={`/contacts/suite?id=${c.id}`}>Noter la suite</a>.</p>
+    ) : <>
     <h2>Et maintenant ?</h2>
     <fieldset class="e-pastilles e-issues" data-issues>
       <legend class="e-muet">Une suite est obligatoire</legend>
@@ -161,6 +173,7 @@ const issues = [
       </fieldset>
       <label class="e-champ" style="margin-top:10px">Autre date<input type="date" name="rappel_le" min={aujourdhui()} value={saisi.rappel_le} /></label>
     </div>
+    </>}
 
     <p class="e-muet" data-resume aria-live="polite"></p>
     <div><button class="e-bouton" type="submit">Enregistrer</button></div>
@@ -189,7 +202,7 @@ const issues = [
     if (acheteur && choixParcours) acheteur.hidden = choixParcours !== 'acheteur';
     const n = form.querySelectorAll('input[name^=q_]:checked').length;
     const resume = form.querySelector('[data-resume]');
-    if (resume) resume.textContent = `${n} réponse(s) sur 5${issue ? '' : ' · choisissez une suite'}`;
+    if (resume) resume.textContent = `${n} réponse(s) sur 5${issue || !form.querySelector('[data-issues]') ? '' : ' · choisissez une suite'}`;
   };
   form?.addEventListener('change', maj);
   maj();

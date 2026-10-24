@@ -15,6 +15,7 @@
 // Story 13.14 : prescripteurs (recommandés, mandats, relance due sur Aujourd'hui, échange noté, ajout).
 // Story 13.15 : acheteurs actifs (critères, « aussi vendeur », vendeurs en sommeil du secteur, lettre sur Aujourd'hui).
 // Story 13.16 : vue pipeline (colonnes par étape, déplacement avec prochaine action, réveil ou motif exigés).
+// Story 13.22 : noter la suite d'un contact en cours (fait, pas joint, note ; étape gardée sauf choix ; requalifier sans changer l'étape).
 // Story 13.6 : qualifier (suite obligatoire, date, réveil ou motif exigés, étape et prochaine action fixées, heure de Paris).
 // Story 13.10 : relève Leedflow sur une imitation locale de son API (clé exigée, pages lues de la plus ancienne à la plus
 // récente, historique repris pour un numéro connu, résumé complété après coup sans doublon, numéro inconnu proposé puis
@@ -330,7 +331,8 @@ try {
   r = await appeler(`${E}/contacts/fiche?id=${saisie.id}&m=qualifie`, { headers: avecJeton() });
   html = await r.text();
   constat(html.includes('data-reponses') && html.includes('Succession') && html.includes('En sommeil, à réveiller'), 'fiche : les réponses et la date de réveil');
-  r = await qualif(saisie.id, { ...Q, issue: 'perdu', motif: 'Hors secteur' });
+  // Un contact déjà qualifié passe à « Perdu » par « Noter la suite » (story 13.22), plus par la qualification.
+  r = await page(`/contacts/suite?id=${saisie.id}`, { resultat: 'note', note: 'Vend avec une autre agence', etape: 'perdu', motif: 'Hors secteur' });
   q1 = sql(`SELECT etape, motif_perte, prochaine_action_le FROM contact WHERE id = '${saisie.id}'`)[0];
   constat(q1.etape === 'perdu' && q1.motif_perte === 'Hors secteur' && q1.prochaine_action_le === null, 'perdu : motif enregistré, plus de rappel');
   r = await qualif(reco.id, { ...Q, issue: 'rdv', rdv_le: '2027-01-15T10:00' });
@@ -373,6 +375,59 @@ try {
     'aujourd\'hui : secteur de boîtage à refaire (6 semaines et plus), pas le passage du jour ; prescripteur à relancer avec sa raison');
   r = await appeler(`${E}/gestion`, { headers: avecJeton() });
   constat((await r.text()).includes('data-retour'), 'demandes : lien de retour vers l\'espace');
+
+  // 5 quater bis. Noter la suite d'un contact en cours (story 13.22).
+  const SUITE = `01KFSV${NUM}${'0'.repeat(14)}`;
+  const jPlus = (n) => { const d = new Date(`${auj}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, parcours, etape, prochaine_action, prochaine_action_le, qualifie_le, canal, is_test) VALUES
+    ('${SUITE}', '2026-02-01T08:00:00Z', '2026-02-01T08:00:00Z', 'Sylvie', 'Suite${NUM}', '+33645${NUM}', 'vendeur', 'estimation', 'Envoyer l''estimation', '${hier}', '2026-02-01T09:00:00Z', 'rencontre', 1)`);
+  const etatSuite = () => sql(`SELECT etape, prochaine_action, prochaine_action_le FROM contact WHERE id = '${SUITE}'`)[0];
+  const derniereNote = () => sql(`SELECT texte FROM contact_evenement WHERE contact_id = '${SUITE}' AND type = 'note' ORDER BY id DESC LIMIT 1`)[0]?.texte ?? '';
+  r = await appeler(`${E}/`, { headers: avecJeton() });
+  html = await r.text();
+  const carteSuite = html.split(`data-contact="${SUITE}"`)[1]?.split('</article>')[0] ?? '';
+  constat(carteSuite.includes(`/contacts/suite?id=${SUITE}`) && !carteSuite.includes('/contacts/qualifier'), 'aujourd\'hui : « Noter la suite » d\'un rappel ouvre le formulaire de suite, pas la qualification');
+  r = await appeler(`${E}/contacts/suite?id=${SUITE}&retour=jour`, { headers: avecJeton() });
+  html = await r.text();
+  constat(r.status === 200 && html.includes('data-suite-form') && (html.split('data-prevu')[1] ?? '').split('</p>')[0].includes('estimation') && html.includes('Estimation en préparation (actuelle)'),
+    'suite : formulaire avec l\'action prévue et l\'étape actuelle');
+  r = await appeler(`${E}/contacts/suite?id=${didier}`, { headers: avecJeton(), redirect: 'manual' });
+  constat(r.status === 303 && r.headers.get('location') === `/contacts/qualifier?id=${didier}`, 'suite d\'un contact à qualifier : renvoie vers la qualification');
+  const suite = (champs) => page(`/contacts/suite?id=${SUITE}&retour=jour`, champs);
+  r = await suite({ etape: 'estimation' });
+  constat(r.status === 200 && (await r.text()).includes('data-erreur') && etatSuite().prochaine_action_le === hier, 'suite sans résultat : refusée, rien enregistré');
+  r = await suite({ resultat: 'fait', etape: 'estimation', action: 'Second rendez-vous', quand: 'autre', le: jPlus(3) });
+  let st = etatSuite();
+  constat(r.headers.get('location') === `/?m=suite#c-${SUITE}` && st.etape === 'estimation' && st.prochaine_action === 'Second rendez-vous' && st.prochaine_action_le === jPlus(3)
+    && derniereNote().startsWith('Fait : Envoyer l\'estimation') && derniereNote().includes('Prochaine action : Second rendez-vous'),
+    'fait, prochaine action « second rendez-vous » à J+3 : l\'étape reste « Estimation en préparation », historique noté');
+  r = await suite({ resultat: 'pas_joint', quand: '1j' });
+  st = etatSuite();
+  constat(st.etape === 'estimation' && st.prochaine_action === 'Second rendez-vous' && st.prochaine_action_le === jPlus(1) && derniereNote().startsWith('Pas joint, à rappeler le'),
+    'pas joint : étape et action gardées (pas de « Rappeler pour qualifier »), rappel demain');
+  r = await suite({ resultat: 'note' });
+  constat(r.status === 200 && (await r.text()).includes('Écrivez la note'), 'juste une note sans texte : refusé');
+  r = await suite({ resultat: 'note', etape: 'estimation', action: 'Second rendez-vous', note: 'Attend le passage du diagnostiqueur' });
+  st = etatSuite();
+  constat(st.prochaine_action_le === jPlus(1) && derniereNote() === 'Attend le passage du diagnostiqueur', 'juste une note sans date : l\'action garde sa date, la note est dans l\'historique');
+  r = await suite({ resultat: 'fait', etape: 'perdu' });
+  constat(r.status === 200 && (await r.text()).includes('compte les motifs') && etatSuite().etape === 'estimation', 'suite vers « Perdu » sans motif : refusé');
+  r = await suite({ resultat: 'fait', etape: 'second_rdv', action: 'Second rendez-vous', quand: '7j', heure: '10:00', note: 'Rendez-vous pris chez eux' });
+  st = etatSuite();
+  constat(st.etape === 'second_rdv' && st.prochaine_action_le.startsWith(jPlus(7)) && st.prochaine_action_le.length > 10
+    && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${SUITE}' AND type = 'etape' AND texte LIKE 'Estimation en préparation → Second rendez-vous%'`)[0].n === 1,
+    'fait et étape choisie : passe à « Second rendez-vous » à J+7, 10 h, changement d\'étape noté');
+  r = await appeler(`${E}/contacts/fiche?id=${SUITE}`, { headers: avecJeton() });
+  html = await r.text();
+  constat(html.includes('data-suite-lien') && html.includes('Requalifier') && html.includes('Rendez-vous pris chez eux'), 'fiche d\'un contact en cours : « Noter la suite » en premier, « Requalifier » en second, la note dans l\'historique');
+  r = await appeler(`${E}/contacts/qualifier?id=${SUITE}`, { headers: avecJeton() });
+  html = await r.text();
+  constat(html.includes('data-en-cours') && !html.includes('Et maintenant'), 'requalifier un contact en cours : seules les réponses, pas de suite qui changerait l\'étape');
+  r = await qualif(SUITE, { q_delai: 'Dans 3 mois', q_bien: 'Maison' });
+  st = etatSuite();
+  constat(r.headers.get('location') === `/contacts/fiche?id=${SUITE}&m=qualification-corrigee` && st.etape === 'second_rdv' && st.prochaine_action_le.startsWith(jPlus(7))
+    && JSON.parse(sql(`SELECT qualification FROM contact WHERE id = '${SUITE}'`)[0].qualification).delai === 'Dans 3 mois',
+    'réponses corrigées : l\'étape et la prochaine action n\'ont pas bougé');
 
   // 5 quinquies. Bilan du lundi par canal (story 13.13) : les chiffres suivent la base, sans saisie.
   const ligneCanal = async (canal) => {
@@ -739,11 +794,18 @@ try {
   for (const [nom, viewport] of [['ordinateur', { width: 1280, height: 900 }], ['telephone', { width: 390, height: 844 }]]) {
     const ctx = await nav.newContext({ viewport, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
     const onglet = await ctx.newPage();
-    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['bilan', '/bilan'], ['prescripteurs', '/prescripteurs'], ['prescripteur', `/prescripteurs/fiche?id=${durand}`], ['acheteurs', `/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`], ['qualifier-acheteur', `/contacts/qualifier?id=${ach1}`], ['pipeline', '/pipeline'], ['importer', '/importer'], ['fiche-leedflow', `/contacts/fiche?id=${KLF}`], ['qualifier-leedflow', `/contacts/qualifier?id=${KLF}`], ['inconnu', `/inconnu?tel=${encodeURIComponent(CAPTURE)}`], ['a-trier', '/a-trier'], ['actions', '/actions'], ['action', `/actions?id=${salon.id}`]]) {
+    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['suite', `/contacts/suite?id=${SUITE}`], ['bilan', '/bilan'], ['prescripteurs', '/prescripteurs'], ['prescripteur', `/prescripteurs/fiche?id=${durand}`], ['acheteurs', `/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`], ['qualifier-acheteur', `/contacts/qualifier?id=${ach1}`], ['pipeline', '/pipeline'], ['importer', '/importer'], ['fiche-leedflow', `/contacts/fiche?id=${KLF}`], ['qualifier-leedflow', `/contacts/qualifier?id=${KLF}`], ['inconnu', `/inconnu?tel=${encodeURIComponent(CAPTURE)}`], ['a-trier', '/a-trier'], ['actions', '/actions'], ['action', `/actions?id=${salon.id}`]]) {
       await onglet.goto(`${E}${chemin}`);
       if (nomPage === 'ajouter') {
         await onglet.click('[data-canaux] label:has(input[value=boitage]) span');
         constat(await onglet.isVisible('[data-si=boitage]') && !(await onglet.isVisible('[data-si=recommandation]')), `ajouter sur ${nom} : toucher « Boîtage » montre le choix du passage, cache le prescripteur`);
+      }
+      if (nomPage === 'suite') {
+        await onglet.click('[data-resultat] label:has(input[value=pas_joint]) span');
+        constat(!(await onglet.isVisible('[data-action]')) && !(await onglet.isVisible('.su-etapes')) && (await onglet.textContent('[data-legende-quand]')) === 'Le rappeler quand ?',
+          `suite sur ${nom} : « Pas joint » ne demande que la date du rappel`);
+        await onglet.click('[data-resultat] label:has(input[value=fait]) span');
+        constat(await onglet.isVisible('[data-action]') && await onglet.isVisible('.su-etapes summary'), `suite sur ${nom} : « Fait » demande la prochaine action, l'étape se change en dépliant`);
       }
       if (nomPage === 'aujourdhui') {
         const bouton = await onglet.locator('[data-retour-ouvrir]').boundingBox();
