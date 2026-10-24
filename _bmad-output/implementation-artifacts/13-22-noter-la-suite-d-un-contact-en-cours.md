@@ -1,7 +1,7 @@
 ---
 story: 13.22
 epic: 13 — Espace de travail d'Anne
-statut: review
+statut: done
 date: 2026-10-24
 maj: 2026-10-24
 ---
@@ -54,4 +54,4 @@ Premier point bloquant de l'audit 13.21 (décision de JB du 2026-10-24 : « Oui,
 - `npm run build` et `npm run check` dans `espace/` : 0 erreur.
 
 ## Ce qui reste
-- Fusion par JB, puis essai sur l'espace en ligne. Audit : https://claude.ai/artifact/87DydmbEHytFNxEk6FRkPy.
+- Fusionnée le 2026-10-24 (PR n° 183, accord de JB), mise en ligne avec `main`. Rien d'autre. Audit : https://claude.ai/artifact/87DydmbEHytFNxEk6FRkPy.

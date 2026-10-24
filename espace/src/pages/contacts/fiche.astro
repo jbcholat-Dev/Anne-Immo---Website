@@ -4,23 +4,75 @@
 // Leedflow dans l'historique avec leur résumé, et tâches proposées par Leedflow, à accepter ou ignorer.
 // Story 13.17 : l'action marketing qui a amené le contact, à choisir ou corriger.
 // Story 13.22 : un contact en cours a pour geste principal « Noter la suite » ; la qualification passe en second.
+// Story 13.23 : coordonnées et origine modifiables (repliées par défaut ; un téléphone ou un e-mail déjà porté par un
+// autre contact est refusé avec le lien vers sa fiche), note libre en un geste, export et effacement de la personne
+// depuis sa fiche (même journal des droits que /gestion), y compris pour un contact sans adresse e-mail.
 import Espace from '../../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { CANAUX_ORIGINE, LIBELLES_ETAPES } from '@site/server/contacts';
 import { quand, SOURCES } from '@site/server/gestion-donnees';
+import { effacerContact } from '@site/server/rights';
 import { envEspace, pourSite as env } from '../../server/env';
 import { actionsAuChoix } from '../../server/actions';
-import { resumeHtml, tachesDuContact } from '../../server/leedflow';
-import { echeance, libelleOrigine, lireContact, QUESTIONS, type Reponses } from '../../server/pipeline';
+import { champ, ULID } from '../../server/formulaires';
+import { rattacherInconnus, resumeHtml, tachesDuContact } from '../../server/leedflow';
+import {
+  ajouterNote, echeance, estCanal, libelleOrigine, lireContact, lirePassage, lirePrescripteur, listerPassages, listerPrescripteurs, modifierCoordonnees, personne,
+  QUESTIONS, type Reponses,
+} from '../../server/pipeline';
 
 export const prerender = false;
-if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
+const compte = Astro.request.headers.get(ENTETE_COMPTE);
+if (!compte) return new Response('Accès refusé', { status: 403 });
 
 const id = Astro.url.searchParams.get('id') ?? '';
-const fiche = /^[0-9A-HJKMNP-TV-Z]{26}$/.test(id) ? await lireContact(env, id) : null;
+if (!ULID.test(id)) return new Response('Contact inconnu', { status: 404 });
+
+let erreur = '', erreurPour = '', conflit = '';
+let saisi: Record<string, string> = {};
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const quoi = champ(f, 'quoi');
+  erreurPour = quoi;
+  if (quoi === 'note') {
+    const note = champ(f, 'note', 2000);
+    if (!note) erreur = 'Écrivez la note.';
+    else if (await ajouterNote(env, id, note, compte)) return Astro.redirect(`/contacts/fiche?id=${id}&m=note`, 303);
+  } else if (quoi === 'effacer') {
+    if (champ(f, 'confirmation').toUpperCase() !== 'EFFACER') erreur = 'Tapez EFFACER pour confirmer : l\'effacement est définitif.';
+    else if ((await effacerContact(env, id, compte)) !== null) return Astro.redirect('/contacts?m=efface', 303);
+  } else if (quoi === 'coordonnees') {
+    saisi = Object.fromEntries([...f.entries()].map(([k, v]) => [k, typeof v === 'string' ? v.trim() : '']));
+    const p = personne(saisi);
+    const canal = saisi.canal ?? '';
+    const parcours = saisi.parcours === 'vendeur' || saisi.parcours === 'acheteur' ? saisi.parcours : null;
+    const passage_id = canal === 'boitage' && ULID.test(saisi.passage_id ?? '') && (await lirePassage(env, saisi.passage_id)) ? saisi.passage_id : null;
+    const prescripteur_id = canal === 'recommandation' && ULID.test(saisi.prescripteur_id ?? '') && (await lirePrescripteur(env, saisi.prescripteur_id)) ? saisi.prescripteur_id : null;
+    if (!p) erreur = 'Il faut au moins un téléphone, un e-mail ou un nom.';
+    else if (saisi.telephone && !p.telephone) erreur = 'Le téléphone ne semble pas valable : dix chiffres, ou +41… pour la Suisse.';
+    else if (saisi.email && !p.email) erreur = "L'adresse e-mail ne semble pas valable.";
+    else if (!estCanal(canal)) erreur = "Choisissez d'où vient ce contact.";
+    else if (canal === 'boitage' && !passage_id) erreur = 'Choisissez le passage de boîtage qui a amené ce contact.';
+    else if (canal === 'recommandation' && !prescripteur_id) erreur = 'Choisissez qui l\'a recommandé (ajoutez-le dans Prescripteurs s\'il manque).';
+    else {
+      const r = await modifierCoordonnees(env, id, { ...p, parcours, origine: { canal, origine_detail: (saisi.origine_detail ?? '').slice(0, 200) || null, passage_id, prescripteur_id, parcours } }, compte);
+      if (r && !r.ok) { conflit = r.conflit; erreur = 'Ce téléphone ou cet e-mail appartient déjà à un autre contact : rien n\'a été changé.'; }
+      else if (r) {
+        // Un nouveau numéro peut avoir déjà des appels relevés par Leedflow : ils passent dans l'historique.
+        if (r.changes.includes('telephone') && p.telephone) await rattacherInconnus(envEspace).catch(() => {});
+        return Astro.redirect(`/contacts/fiche?id=${id}&m=${r.changes.length ? 'modifie' : 'inchange'}`, 303);
+      }
+    }
+  }
+}
+
+const fiche = await lireContact(env, id);
 if (!fiche) return new Response('Contact inconnu', { status: 404 });
 const { contact: c, historique, demandes, passage, prescripteur } = fiche;
-const [taches, actions] = await Promise.all([tachesDuContact(envEspace, c.id).catch(() => []), actionsAuChoix(env, c.canal)]);
+const [taches, actions, passages, prescripteurs] = await Promise.all([tachesDuContact(envEspace, c.id).catch(() => []), actionsAuChoix(env, c.canal), listerPassages(env, 30), listerPrescripteurs(env)]);
+// La saisie refusée est remise dans le formulaire ; sinon les valeurs du contact.
+const val = (k: keyof typeof c) => (erreurPour === 'coordonnees' && k in saisi ? saisi[k as string] : (c[k] as string | null) ?? '');
+const canalForm = val('canal');
 // Un échange relevé par Leedflow : un titre (« Appel reçu · 4 min »), puis le résumé en Markdown.
 const titreEtResume = (texte: string | null) => { const [titre, ...reste] = (texte ?? '').split('\n'); return { titre, resume: reste.join('\n').trim() }; };
 const m = Astro.url.searchParams.get('m') ?? '';
@@ -28,6 +80,9 @@ const message = m === 'ajoute' ? 'Contact enregistré, à qualifier aujourd\'hui
   : m === 'qualifie' ? 'Qualification enregistrée.'
   : m === 'qualification-corrigee' ? 'Réponses corrigées ; l\'étape et la prochaine action n\'ont pas changé.'
   : m === 'suite' ? 'Suite notée dans l\'historique.'
+  : m === 'note' ? 'Note ajoutée à l\'historique.'
+  : m === 'modifie' ? 'Coordonnées enregistrées, noté dans l\'historique.'
+  : m === 'inchange' ? 'Rien n\'a changé.'
   : m === 'tache-acceptee' ? 'Prochaine action mise à jour.'
   : m === 'tache-ignoree' ? 'Proposition ignorée.'
   : m === 'action' ? 'Action marketing enregistrée.'
@@ -42,6 +97,7 @@ const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.emai
     <h1>{nom}</h1>
   </div>
   {message && <p class="e-message" role="status" data-message>{message}</p>}
+  {erreur && <p class="e-message" role="alert" data-erreur>{erreur}{conflit && <> <a href={`/contacts/fiche?id=${conflit}`} data-conflit>Ouvrir sa fiche</a>.</>}</p>}
   <div style="display:flex;flex-wrap:wrap;gap:8px">
     <span class="e-tag" data-origine>{libelleOrigine(c, passage, prescripteur)}</span>
     <span class="e-tag neutre" data-etape>{LIBELLES_ETAPES[c.etape]}</span>
@@ -60,6 +116,14 @@ const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.emai
       </>}
     </div>
   </section>
+
+  <form method="post" class="e-carte" data-note>
+    <input type="hidden" name="quoi" value="note" />
+    <label class="e-champ">Ajouter une note
+      <textarea name="note" rows="2" maxlength="2000" placeholder="Après un appel, une rencontre, une idée"></textarea>
+    </label>
+    <div><button class="e-bouton second" type="submit">Ajouter la note</button></div>
+  </form>
 
   {taches.length > 0 && (
     <section class="e-carte" data-taches>
@@ -111,6 +175,45 @@ const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.emai
       <dt class="e-muet">Origine</dt><dd style="margin:0">{CANAUX_ORIGINE[c.canal]}{c.origine_detail ? ` · ${c.origine_detail}` : ''}</dd>
       <dt class="e-muet">Entré le</dt><dd style="margin:0">{quand(c.created_at)}</dd>
     </dl>
+    <details open={erreurPour === 'coordonnees'} data-modifier>
+      <summary class="fi-resume">Modifier les coordonnées et l'origine</summary>
+      <form method="post" class="fi-form" data-coordonnees>
+        <input type="hidden" name="quoi" value="coordonnees" />
+        <div class="e-champs">
+          <label class="e-champ">Prénom<input name="prenom" value={val('prenom')} autocomplete="off" /></label>
+          <label class="e-champ">Nom<input name="nom" value={val('nom')} autocomplete="off" /></label>
+          <label class="e-champ">Téléphone<input name="telephone" type="tel" value={val('telephone')} autocomplete="off" /></label>
+          <label class="e-champ">E-mail<input name="email" type="email" value={val('email')} autocomplete="off" /></label>
+          <label class="e-champ">Commune<input name="commune" value={val('commune')} autocomplete="off" /></label>
+          <label class="e-champ">Il ou elle veut
+            <select name="parcours">
+              <option value="">Je ne sais pas encore</option>
+              <option value="vendeur" selected={val('parcours') === 'vendeur'}>Vendre</option>
+              <option value="acheteur" selected={val('parcours') === 'acheteur'}>Acheter</option>
+            </select>
+          </label>
+          <label class="e-champ">Origine
+            <select name="canal" data-canal>
+              {Object.entries(CANAUX_ORIGINE).map(([k, l]) => <option value={k} selected={canalForm === k}>{l}</option>)}
+            </select>
+          </label>
+          <label class="e-champ">Précision d'origine<input name="origine_detail" value={val('origine_detail')} placeholder="Salon de l'habitat, annonce…" autocomplete="off" /></label>
+          <label class="e-champ" data-si-canal="boitage">Passage de boîtage
+            <select name="passage_id">
+              <option value="">Choisir…</option>
+              {passages.map((pa) => <option value={pa.id} selected={val('passage_id') === pa.id}>{pa.secteur} · {echeance(pa.fait_le)}</option>)}
+            </select>
+          </label>
+          <label class="e-champ" data-si-canal="recommandation">Recommandé par
+            <select name="prescripteur_id">
+              <option value="">Choisir…</option>
+              {prescripteurs.map((pr) => <option value={pr.id} selected={val('prescripteur_id') === pr.id}>{pr.nom}{pr.role ? `, ${pr.role}` : ''}</option>)}
+            </select>
+          </label>
+        </div>
+        <div><button class="e-bouton" type="submit">Enregistrer</button></div>
+      </form>
+    </details>
   </section>
 
   {demandes.length > 0 && (
@@ -132,11 +235,36 @@ const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.emai
       ))}
     </ol>
   </section>
-  <p class="e-muet">Export et effacement des données de cette personne : depuis <a href={c.email ? `/gestion?q=${encodeURIComponent(c.email)}` : '/gestion'}>les demandes</a>, par son adresse e-mail.</p>
+  <section class="e-carte" data-droits>
+    <h2>Données de cette personne</h2>
+    <p class="e-muet" style="margin:0">Si elle demande ce que vous gardez sur elle, ou qu'on l'oublie (RGPD). Chaque demande est notée dans le journal des droits.</p>
+    <div><a class="e-bouton second" href={`/api/contacts/export?id=${c.id}`} data-export>Télécharger ses données</a></div>
+    <details open={erreurPour === 'effacer'} data-effacer>
+      <summary class="fi-resume">Effacer ce contact</summary>
+      <form method="post" class="fi-form">
+        <input type="hidden" name="quoi" value="effacer" />
+        <p style="margin:0">Efface définitivement la fiche, son historique, ses demandes faites sur le site et ce que Leedflow a relevé pour son numéro. Impossible à annuler.</p>
+        <label class="e-champ">Tapez EFFACER pour confirmer<input name="confirmation" autocomplete="off" /></label>
+        <div><button class="e-bouton fi-danger" type="submit">Effacer définitivement</button></div>
+      </form>
+    </details>
+  </section>
 </Espace>
 
 <style>
+  .fi-resume { cursor: pointer; color: var(--avt-klein); min-height: 44px; display: flex; align-items: center; }
+  .fi-form { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+  .fi-danger { background: var(--avt-terra); border-color: var(--avt-terra); }
+  textarea { font: inherit; }
   .e-resume :global(p) { margin: 4px 0; }
   .e-resume :global(ul) { margin: 4px 0; padding-left: 20px; }
   .e-resume { overflow-wrap: anywhere; }
 </style>
+
+<script>
+  // Montre le choix du passage ou du prescripteur selon l'origine ; sans JavaScript, tout reste visible.
+  const canal = document.querySelector<HTMLSelectElement>('[data-canal]');
+  const maj = () => document.querySelectorAll<HTMLElement>('[data-si-canal]').forEach((el) => { el.hidden = el.dataset.siCanal !== canal?.value; });
+  canal?.addEventListener('change', maj);
+  maj();
+</script>
