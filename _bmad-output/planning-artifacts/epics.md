@@ -2362,6 +2362,17 @@ afin qu'« Aujourd'hui » ne montre que ce qui compte.
 **Quand** Anne ouvre « Aujourd'hui »
 **Alors** une seule ligne indique combien sont à trier et mène à « Numéros à trier », où elle filtre par catégorie, masque les appels manqués sans message et classe ou reclasse chaque numéro. Demande de JB du 2026-10-21
 
+### Story 13.20: Bouton « Un retour ? » dans l'espace
+
+En tant qu'Anne,
+je veux signaler depuis n'importe quelle page de l'espace ce qui cloche ou ce qui me manque,
+afin que JB et Claude le traitent sans que j'aie à l'écrire ailleurs.
+
+**Critères d'acceptation :**
+**Étant donné** Anne connectée à l'espace
+**Quand** elle touche « Un retour ? » et envoie une remarque
+**Alors** un ticket GitHub étiqueté `retour-apercu` est créé à son nom, avec la page (sans ses paramètres), et le formulaire rappelle de ne citer aucun client. Demande de JB du 2026-10-24
+
 ### Story 13.12: Parcours d'Anne pour trouver et qualifier des contacts
 
 En tant que JB,
