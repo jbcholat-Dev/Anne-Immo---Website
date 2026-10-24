@@ -19,6 +19,7 @@ Que chaque page ait, dans les résultats Google, un titre unique et parlant et u
 - Construction en mode production locale : un seul h1 sur toutes les pages relevées par l'audit ; titres des 9 ventes tous différents (46 à 78 caractères) ; résumés à 160 caractères au plus (un ou deux de plus à cause des apostrophes encodées).
 - Captures avant (production) et après (local) d'une vente et du guide, ordinateur 1440 px et téléphone 390 px : pixels identiques.
 - `npm run check` : 0 erreur. `node scripts/liens.mjs` : 0 lien cassé.
+- PR n° 195 fusionnée dans main par Claude à la demande de JB le 2026-10-24 (commit ecfb02f), constructions Cloudflare au vert : en ligne.
 
 ## Ce qui reste
 
