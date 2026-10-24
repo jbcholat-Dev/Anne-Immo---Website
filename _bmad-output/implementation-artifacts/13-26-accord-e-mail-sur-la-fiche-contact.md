@@ -1,7 +1,7 @@
 ---
 story: 13.26
 epic: 13 — Espace de travail d'Anne
-statut: ready-for-dev
+statut: review
 date: 2026-10-24
 maj: 2026-10-24
 ---
@@ -23,5 +23,19 @@ Première des trois stories des campagnes e-mail (décision de JB du 2026-10-24,
 - `e2e-espace.mjs` : reprise de l'existant sur des contacts d'essai de chaque origine ; case cochée puis décochée avec trace ; désinscription par le lien de la séquence visible sur la fiche ; `peutRecevoirCampagne` pour chaque cas du tableau du cadrage.
 - `npm run build`, `npm run check` dans `site/` et `espace/` ; captures de la fiche (téléphone et ordinateur).
 
+## Ce qui est fait (2026-10-24, fil « [Site] Campagnes d'e-mailing depuis l'espace »)
+- Migration `site/migrations/0013-accord-email.sql` : `contact.email_accord_le`, `email_accord_source` (anne, import), `email_desinscrit_le` ; `prescripteur.email_desinscrit_le` ; reprise des contacts importés avec la case cochée.
+- **Écart assumé avec le plan ci-dessus** : l'accord donné sur le site et le désabonnement de la séquence ne sont **pas recopiés** sur le contact. Ils restent sur les demandes (`lead`) et la règle les y lit (`SQL_ACCORD`). Raison : le site n'a pas à écrire dans les tables de l'espace (AD-20), une case cochée plus tard sur le diagnostic serait sinon perdue, et il n'y a rien à resynchroniser. Les anciens clients sont reconnus par leur étape, sans colonne.
+- `espace/src/server/accord.ts` : `etatEmail` (règle pure : sans e-mail, désinscrit, accord, ancien client, sans accord), `peutRecevoirCampagne`, `RAISONS_ECART`, `SQL_ACCORD`, `lireAccord`, `noterAccord`, `noterRefus`. Un refus l'emporte sur tout accord, sauf une case cochée sur le site après lui.
+- Import : une liste importée avec la case « accepte d'être recontacté » note l'accord « import » (nouveaux et complétés).
+- Fiche contact : carte « E-mails groupés » sous les coordonnées (hors de l'en-tête, que la 13.31 refera) ; case « D'accord pour recevoir mes e-mails », « Retirer son accord » (accord noté par Anne ou import seulement), « Elle ou il ne veut plus d'e-mails » (vaut désinscription). Chaque geste est tracé dans l'historique. Export : les nouvelles colonnes y sont (`SELECT *`).
+- Prescripteurs : seule la colonne existe ; le geste viendra avec la 13.27, quand ils pourront recevoir une campagne.
+- Contacts d'essai : ils ne sont pas écartés par la règle (sur l'aperçu tout est d'essai, et tous les envois y vont déjà à la boîte de test).
+
+## Vérification (2026-10-24)
+- `node scripts/e2e-espace.mjs` : **259 vérifications, 0 échec**, dont 14 nouvelles : import avec et sans case, contact sans e-mail, accord noté puis retiré, refus puis accord refusé, accord du site non retirable, désabonnement de la séquence puis nouvelle case cochée, ancien client, reprise de la migration, export.
+- `npm run check` : 0 erreur dans `espace/` et `site/` ; `npm run build` des deux ; `wrangler d1 migrations apply --local` jusqu'à 0013.
+- Captures regardées : `espace/.verif/espace-fiche-sans-accord-telephone.png` et `espace-fiche-accord-site-telephone.png` (et ordinateur).
+
 ## Ce qui reste
-- À construire dans le fil « [Site] Espace de travail d'Anne » ou dans le fil « [Site] Campagnes d'e-mailing depuis l'espace », après 13.22 à 13.25 (mêmes fichiers) ; partir de main une fois la PR de la 13.23 fusionnée, car la fiche contact y change beaucoup. PR de code : JB fusionne.
+- PR de code : JB fusionne. Conflit possible avec la PR n° 192 (13.30) sur `fiche.astro` et `e2e-espace.mjs`, à régler par celle des deux qui fusionne en second.
