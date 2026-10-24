@@ -162,7 +162,7 @@ Le site est trouvé par les vendeurs et acheteurs du Chablais qui cherchent sur 
 Le site est en ligne sur annevialtissot.fr, trouvable, légal, avec des formulaires qui fonctionnent. **AD-9, AD-10, AD-16 ; NFR3.** **État :** à faire.
 
 - **Epic 13 : Espace de travail d'Anne**
-Anne démarre chaque journée devant ses contacts et sait qui appeler, qui relancer et comment faire avancer chacun ; Modelo ne sert plus qu'à formaliser un mandat. **CAP-12 ; AD-14 (amendée), AD-18, AD-19, AD-20.** **État :** en cours ; spec (13.1, amendée en v7 le 2026-10-21) et architecture (13.2) écrites ; parcours et maquette v2 validés (13.12) ; construction en stories 13.3 à 13.16, dans l'ordre 13.4, 13.7, 13.6, 13.5, 13.13, 13.14, 13.15, 13.16, avec 13.8 et 13.10 en parallèle.
+Anne démarre chaque journée devant ses contacts et sait qui appeler, qui relancer et comment faire avancer chacun ; Modelo ne sert plus qu'à formaliser un mandat. **CAP-12 ; AD-14 (amendée), AD-18, AD-19, AD-20.** **État :** en cours ; spec (13.1, amendée en v7 le 2026-10-21) et architecture (13.2) écrites ; parcours et maquette v2 validés (13.12) ; construction en stories 13.3 à 13.16, dans l'ordre 13.4, 13.7, 13.6, 13.5, 13.13, 13.14, 13.15, 13.16, avec 13.8 et 13.10 en parallèle ; campagnes e-mail depuis l'espace (13.26 à 13.28, AD-21, décision de JB du 2026-10-24) après 13.22 à 13.25.
 
 - **Epic 15 : Portail des vendeurs sous mandat**
 Un vendeur qui a signé un mandat avec Anne suit sa vente sur un espace privé : étape, visites et retours, prochaines actions, informations de marché. **Capacité à écrire (spec v7 ou suivante) ; s'appuie sur CAP-12, AD-19, AD-20.** **État :** à définir ; cadrage (15.1) : réponses de JB du 2026-10-11 notées, capacité à écrire.
@@ -2383,6 +2383,40 @@ afin de construire un espace qui l'aide à trouver des mandats, pas seulement à
 **Étant donné** le document de parcours (story 13.12) et l'entretien mené avec Anne
 **Quand** les parcours sont validés par Anne et JB
 **Alors** la maquette et les stories 13.4 à 13.7 sont mises à jour avant leur construction. Demande de JB du 2026-10-16
+
+
+### Story 13.26: Accord e-mail sur la fiche contact
+
+En tant qu'Anne,
+je veux voir et noter sur chaque fiche si la personne accepte mes e-mails,
+afin de n'envoyer mes campagnes qu'à ceux qui peuvent les recevoir (AD-16, AD-21).
+
+**Critères d'acceptation :**
+**Étant donné** les accords déjà donnés sur le site ou à l'import, les anciens clients et les désinscrits
+**Quand** Anne ouvre une fiche ou coche « D'accord pour recevoir mes e-mails »
+**Alors** l'accord, sa date et son origine sont affichés et gardés, et une désinscription vaut pour tous les envois groupés. Décision de JB du 2026-10-24
+
+### Story 13.27: Écrire et envoyer une campagne e-mail
+
+En tant qu'Anne,
+je veux écrire un e-mail à la charte et l'envoyer à une partie de mes contacts depuis l'espace,
+afin de garder le lien avec eux sans exporter de liste vers un autre outil (AD-21).
+
+**Critères d'acceptation :**
+**Étant donné** des contacts filtrés par parcours, étape, commune ou origine
+**Quand** Anne envoie la campagne après un essai
+**Alors** seuls les contacts d'accord la reçoivent, par paquets, depuis le sous-domaine d'envoi, avec un lien de désinscription, et chaque fiche en garde la trace. Décision de JB du 2026-10-24
+
+### Story 13.28: Bilan d'une campagne
+
+En tant qu'Anne,
+je veux savoir ce qu'une campagne m'a rapporté,
+afin de la comparer à mes autres actions dans le bilan du lundi.
+
+**Critères d'acceptation :**
+**Étant donné** une campagne envoyée
+**Quand** Anne ouvre sa page ou le bilan du lundi
+**Alors** elle voit envoyés, refusés, désinscrits, demandes et rendez-vous venus du message, sans aucun suivi des ouvertures (AD-11). Décision de JB du 2026-10-24
 
 
 ## Epic 14: Campagnes promotionnelles temporaires
