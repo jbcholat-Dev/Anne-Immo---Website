@@ -3,6 +3,7 @@
 // raison), modifier ses coordonnées, retrouver les contacts qu'il a recommandés et leur étape.
 import Espace from '../../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
+import { telLisible } from '@site/server/recherche';
 import { LIBELLES_ETAPES } from '@site/server/contacts';
 import { pourSite as env } from '../../server/env';
 import { champ, date, lirePrescripteur, ULID } from '../../server/formulaires';
@@ -67,7 +68,7 @@ const message = { ajoute: 'Prescripteur ajouté.', echange: 'Échange noté, pro
     <h2>Contacts recommandés</h2>
     {contacts.length === 0 ? <p class="e-muet">Aucun pour l'instant.</p> : (
       <ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px">
-        {contacts.map((c) => <li><a href={`/contacts/fiche?id=${c.id}`}>{[c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.email}</a> · {LIBELLES_ETAPES[c.etape]}</li>)}
+        {contacts.map((c) => <li><a href={`/contacts/fiche?id=${c.id}`}>{[c.prenom, c.nom].filter(Boolean).join(' ') || telLisible(c.telephone) || c.email}</a> · {LIBELLES_ETAPES[c.etape]}</li>)}
       </ul>
     )}
   </section>

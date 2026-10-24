@@ -1,33 +1,58 @@
 ---
 // Contacts (story 13.7) : tous les contacts, les plus récemment actifs d'abord, avec une recherche par nom, téléphone,
-// e-mail ou commune. La vue par étapes viendra avec la story 13.16.
+// e-mail ou commune. Story 13.24 (audit 13.21) : sur téléphone, une carte par contact (nom et commune, origine, étape,
+// prochaine action et sa date, en retard en rouge) au lieu du tableau, gardé sur ordinateur ; filtres d'une touche
+// (à qualifier, en retard, vendeurs, acheteurs, en sommeil) ; recherche par début de numéro tapé en 0 et par
+// plusieurs mots (« marie dupont », « dupont thonon ») ; numéros affichés « 06 12 34 56 78 ».
 import Espace from '../../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { CANAUX_ORIGINE, LIBELLES_ETAPES } from '@site/server/contacts';
+import { telLisible } from '@site/server/recherche';
 import { pourSite as env } from '../../server/env';
-import { echeance, listerContacts } from '../../server/pipeline';
+import { echeance, enRetard, FILTRES_CONTACTS, listerContacts, type FiltreContacts } from '../../server/pipeline';
 
 export const prerender = false;
 if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
 
 const q = (Astro.url.searchParams.get('q') ?? '').trim().slice(0, 100);
-const contacts = await listerContacts(env, q);
+const fp = Astro.url.searchParams.get('f') ?? '';
+const filtre = fp in FILTRES_CONTACTS ? (fp as FiltreContacts) : null;
+const contacts = await listerContacts(env, q, 200, filtre);
 const m = Astro.url.searchParams.get('m') ?? '';
 const importe = /^import-(\d+)-(\d+)$/.exec(m);
 const nomDe = (c: { prenom: string | null; nom: string | null; telephone: string | null; email: string | null }) =>
-  [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.email || '—';
+  [c.prenom, c.nom].filter(Boolean).join(' ') || telLisible(c.telephone) || c.email || '—';
+const lien = (f: string | null) => `/contacts?${new URLSearchParams({ ...(q ? { q } : {}), ...(f ? { f } : {}) })}`;
+const actif = (e: string) => !['perdu', 'vendu', 'acte_signe'].includes(e);
+const retard = (c: { etape: string; prochaine_action_le: string | null }) => actif(c.etape) && c.etape !== 'en_sommeil' && enRetard(c.prochaine_action_le);
 ---
 <Espace titre="Contacts" actif="contacts">
   <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><h1>Contacts</h1><span style="display:flex;gap:16px;flex-wrap:wrap"><a href="/pipeline">Pipeline</a><a href="/prescripteurs">Prescripteurs</a><a href="/acheteurs">Acheteurs</a><a href="/gestion">Demandes du site</a><a href="/a-trier">Numéros à trier</a></span></div>
-  {m === 'efface' && <p class="e-message" role="status" data-message>Contact effacé définitivement, noté dans le journal des droits.</p>}
+  {m === 'efface' && <p class="e-message" role="status" data-message>Contact supprimé définitivement, noté dans le journal des droits.</p>}
   {importe && <p class="e-message" role="status" data-message>Import fait : {importe[1]} nouveau(x) contact(s), {importe[2]} déjà connu(s) complété(s).</p>}
   <form method="get" action="/contacts" style="display:flex;gap:10px;flex-wrap:wrap">
-    <label class="e-champ" style="flex:1 1 240px"><span class="e-muet">Rechercher</span><input type="search" name="q" value={q} placeholder="Nom, téléphone, e-mail, commune" /></label>
-    <div style="display:flex;align-items:flex-end;gap:10px"><button class="e-bouton second" type="submit">Rechercher</button>{q && <a href="/contacts">Tout afficher</a>}</div>
+    {filtre && <input type="hidden" name="f" value={filtre} />}
+    <label class="e-champ" style="flex:1 1 240px"><span class="e-muet">Rechercher</span><input type="search" name="q" value={q} placeholder="Nom, commune, e-mail, ou 06 12…" /></label>
+    <div style="display:flex;align-items:flex-end;gap:10px"><button class="e-bouton second" type="submit">Rechercher</button>{q && <a href={lien(filtre)}>Effacer</a>}</div>
   </form>
-  <p class="e-muet">{q ? `${contacts.length} résultat(s)` : `${contacts.length} contact(s), les plus récents d'abord`}</p>
-  {contacts.length === 0 ? <p class="e-muet">Aucun contact. <a href="/ajouter">En ajouter un</a>.</p> : (
-    <div class="e-table-zone">
+  <nav class="ct-filtres" aria-label="Filtres" data-filtres>
+    <a href={lien(null)} aria-current={!filtre ? 'page' : undefined}>Tous</a>
+    {Object.entries(FILTRES_CONTACTS).map(([k, l]) => <a href={lien(k)} aria-current={filtre === k ? 'page' : undefined} data-filtre={k}>{l}</a>)}
+  </nav>
+  <p class="e-muet">{q || filtre ? `${contacts.length} résultat(s)` : `${contacts.length} contact(s), les plus récents d'abord`}</p>
+  {contacts.length === 0 ? <p class="e-muet">Aucun contact{q || filtre ? ' ne correspond' : ''}. <a href="/ajouter">En ajouter un</a>.</p> : <>
+    <ul class="ct-cartes" data-cartes>
+      {contacts.map((c) => (
+        <li class="ct-carte" data-carte={c.id}>
+          <a href={`/contacts/fiche?id=${c.id}`} class="ct-nom">{nomDe(c)}{c.commune && <span class="e-muet"> · {c.commune}</span>}</a>
+          <div class="ct-ligne"><span class="e-tag">{CANAUX_ORIGINE[c.canal]}</span><span class="e-tag neutre">{LIBELLES_ETAPES[c.etape]}</span>{c.is_test ? <span class="e-tag neutre">test</span> : ''}</div>
+          {actif(c.etape) && c.prochaine_action && (
+            <div class={retard(c) ? 'ct-action retard' : 'ct-action'} data-retard={retard(c) ? '' : undefined}>{c.prochaine_action}{c.prochaine_action_le ? ` · ${echeance(c.prochaine_action_le)}` : ''}</div>
+          )}
+        </li>
+      ))}
+    </ul>
+    <div class="e-table-zone ct-tableau">
       <table class="e-table" data-contacts>
         <thead><tr><th>Qui</th><th>Origine</th><th>Étape</th><th>Prochaine action</th></tr></thead>
         <tbody>
@@ -36,11 +61,25 @@ const nomDe = (c: { prenom: string | null; nom: string | null; telephone: string
               <td><a href={`/contacts/fiche?id=${c.id}`}>{nomDe(c)}</a>{c.commune && <div class="e-muet">{c.commune}</div>}{c.is_test ? <span class="e-tag neutre">test</span> : ''}</td>
               <td><span class="e-tag">{CANAUX_ORIGINE[c.canal]}{c.origine_detail ? ` · ${c.origine_detail}` : ''}</span></td>
               <td>{LIBELLES_ETAPES[c.etape]}{c.parcours && <div class="e-muet">{c.parcours === 'vendeur' ? 'Vendeur' : 'Acheteur'}</div>}</td>
-              <td>{c.prochaine_action ?? '—'}{c.prochaine_action_le && <div class="e-muet">{echeance(c.prochaine_action_le)}</div>}</td>
+              <td class={retard(c) ? 'ct-retard' : ''}>{c.prochaine_action ?? '—'}{c.prochaine_action_le && <div class="e-muet">{echeance(c.prochaine_action_le)}</div>}</td>
             </tr>
           ))}
         </tbody>
       </table>
     </div>
-  )}
+  </>}
 </Espace>
+
+<style>
+  .ct-filtres { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+  .ct-filtres a { flex: 0 0 auto; min-height: 40px; display: inline-flex; align-items: center; padding: 6px 14px; border-radius: 999px; border: 1.5px solid var(--avt-galet); background: #fff; color: var(--avt-brun); font-size: 15px; }
+  .ct-filtres a[aria-current=page] { background: var(--avt-klein); border-color: var(--avt-klein); color: #fff; }
+  .ct-cartes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .ct-carte { background: #fff; border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+  .ct-nom { font-weight: 500; font-size: 16px; color: var(--avt-brun); overflow-wrap: anywhere; }
+  .ct-ligne { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ct-action { font-size: 14px; overflow-wrap: anywhere; }
+  .ct-action.retard, .ct-retard { color: var(--avt-terra); font-weight: 500; }
+  .ct-tableau { display: none; }
+  @media (min-width: 900px) { .ct-cartes { display: none; } .ct-tableau { display: block; } }
+</style>

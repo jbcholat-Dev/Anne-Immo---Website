@@ -6,6 +6,7 @@
 import type { EnvSite } from '@site/server/env';
 import { ACTION_QUALIFIER, CANAUX_ORIGINE, LIBELLES_ETAPES, type Canal, type Etape } from '@site/server/contacts';
 import { e164, emailValide } from '@site/server/schema';
+import { filtreRecherche } from '@site/server/recherche';
 import { ulid } from '@site/server/ulid';
 
 export const aujourdhui = () => new Intl.DateTimeFormat('fr-CA', { timeZone: 'Europe/Paris' }).format(new Date());
@@ -268,17 +269,35 @@ export interface ResumeContact {
   is_test: number;
 }
 
-export async function listerContacts(env: EnvSite, q = '', limite = 200): Promise<ResumeContact[]> {
-  const r = q.trim().toLowerCase().replace(/[%_]/g, '');
-  const chiffres = r.replace(/[\s.\-()]/g, '');
-  const tel = /^0\d{9}$/.test(chiffres) ? `%+33${chiffres.slice(1)}%` : /^\+?\d{4,}$/.test(chiffres) ? `%${chiffres}%` : `%${r}%`;
+/** Les filtres d'une touche de la liste des contacts (story 13.24). */
+export const FILTRES_CONTACTS = { a_qualifier: 'À qualifier', retard: 'En retard', vendeurs: 'Vendeurs', acheteurs: 'Acheteurs', sommeil: 'En sommeil' } as const;
+export type FiltreContacts = keyof typeof FILTRES_CONTACTS;
+
+/**
+ * Les contacts, les plus récemment actifs d'abord. Recherche (story 13.24) : un début de numéro tapé en 0, ou des mots
+ * cherchés chacun dans prénom, nom, commune et e-mail (`filtreRecherche`). Filtre facultatif d'une touche.
+ */
+export async function listerContacts(env: EnvSite, q = '', limite = 200, filtre: FiltreContacts | null = null): Promise<ResumeContact[]> {
   const champs = 'id, prenom, nom, telephone, email, commune, parcours, etape, prochaine_action, prochaine_action_le, canal, origine_detail, last_activity_at, is_test';
-  const requete = r
-    ? env.DB.prepare(`SELECT ${champs} FROM contact WHERE lower(coalesce(nom, '')) LIKE ?2 OR lower(coalesce(prenom, '')) LIKE ?2
-        OR coalesce(email, '') LIKE ?2 OR coalesce(telephone, '') LIKE ?3 OR lower(coalesce(commune, '')) LIKE ?2
-        ORDER BY last_activity_at DESC LIMIT ?1`).bind(limite, `%${r}%`, tel)
-    : env.DB.prepare(`SELECT ${champs} FROM contact ORDER BY last_activity_at DESC LIMIT ?1`).bind(limite);
-  return (await requete.all<ResumeContact>()).results;
+  const conditions: string[] = [];
+  const valeurs: (string | number)[] = [limite];
+  const f = filtreRecherche(q, ['prenom', 'nom', 'commune', 'email'], 'telephone', 2);
+  if (f) { conditions.push(`(${f.sql})`); valeurs.push(...f.valeurs); }
+  const n = valeurs.length + 1;
+  if (filtre === 'a_qualifier') conditions.push(`etape = 'a_qualifier'`);
+  else if (filtre === 'vendeurs') conditions.push(`parcours = 'vendeur' AND etape NOT IN ('perdu', 'vendu')`);
+  else if (filtre === 'acheteurs') conditions.push(`parcours = 'acheteur' AND etape NOT IN ('perdu', 'acte_signe')`);
+  else if (filtre === 'sommeil') conditions.push(`etape = 'en_sommeil'`);
+  else if (filtre === 'retard') {
+    // Une date seule est en retard si elle est passée ; une date et heure, si elle tombe avant aujourd'hui (Paris).
+    conditions.push(`etape NOT IN ('perdu', 'vendu', 'acte_signe', 'en_sommeil') AND prochaine_action_le IS NOT NULL
+      AND (CASE WHEN length(prochaine_action_le) = 10 THEN prochaine_action_le < ?${n} ELSE prochaine_action_le < ?${n + 1} END)`);
+    valeurs.push(aujourdhui(), parisVersUtc(`${aujourdhui()}T00:00`) ?? '');
+  }
+  const ordre = filtre === 'retard' ? 'prochaine_action_le ASC' : 'last_activity_at DESC';
+  const { results } = await env.DB.prepare(`SELECT ${champs} FROM contact ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''} ORDER BY ${ordre} LIMIT ?1`)
+    .bind(...valeurs).all<ResumeContact>();
+  return results;
 }
 
 export interface EvenementContact { a: string; type: string; source: string; texte: string | null; par: string | null }

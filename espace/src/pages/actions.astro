@@ -45,9 +45,9 @@ const valeur = (k: string, defaut: string | null | undefined) => saisi[k] ?? def
 const total = actions.reduce((t, a) => t + (coutRetenu(a) ?? 0), 0);
 const dates = (a: { debut: string; fin: string | null }) => (a.fin ? `du ${echeance(a.debut)} au ${echeance(a.fin)}` : `depuis le ${echeance(a.debut)}`);
 ---
-<Espace titre={enCours ? enCours.nom : 'Actions marketing'} actif="actions">
+<Espace titre={enCours ? enCours.nom : 'Prospection'} actif="actions">
   <div>
-    <div class="e-muet">{enCours ? <a href="/actions">Actions marketing</a> : <a href="/bilan">Bilan</a>}</div>
+    <div class="e-muet">{enCours ? <a href="/actions">Prospection</a> : <a href="/bilan">Bilan</a>}</div>
     <h1>{enCours ? enCours.nom : 'Ce que je dépense, et ce que ça rapporte'}</h1>
     {enCours && <div class="e-muet">{CANAUX_ORIGINE[enCours.canal]} · {dates(enCours)}{enCours.auteur === 'claude' ? ' · créée par Claude' : ''}</div>}
   </div>

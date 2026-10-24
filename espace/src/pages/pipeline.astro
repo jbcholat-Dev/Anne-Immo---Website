@@ -3,9 +3,12 @@
 // (glisser-déposer sur ordinateur, bouton « Déplacer » partout) demande la nouvelle étape et la prochaine action
 // exigée par AD-20 : une action datée pour une étape active, une date de réveil pour En sommeil, un motif pour Perdu.
 // Le changement est noté dans l'historique. Les contacts sans parcours sont rangés avec les vendeurs.
+// Story 13.24 (audit 13.21) : sur téléphone, une étape à la fois, choisie par des pastilles en haut avec le nombre de
+// contacts de chacune (`?etape=`) ; les colonnes côte à côte restent sur ordinateur.
 import Espace from '../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { ETAPES_ACHETEUR, ETAPES_VENDEUR, LIBELLES_ETAPES, type Etape } from '@site/server/contacts';
+import { telLisible } from '@site/server/recherche';
 import { pourSite as env } from '../server/env';
 import { champ, date, ULID } from '../server/formulaires';
 import { aujourdhui, changerEtape, contactsDuPipeline, echeance, enRetard, ETAPES_FINALES, MOTIFS_PERTE, parisVersUtc, plusTard } from '../server/pipeline';
@@ -42,12 +45,15 @@ if (Astro.request.method === 'POST') {
     if (!action || !le) erreur = 'Une étape active demande une prochaine action et sa date.';
     else await changerEtape(env, id, { etape, action, le, reveil: null, motif: null }, compte);
   }
-  if (!erreur) return Astro.redirect(`/pipeline?parcours=${parcours}&m=deplace#c-${id}`, 303);
+  if (!erreur) return Astro.redirect(`/pipeline?parcours=${parcours}&etape=${etape}&m=deplace#c-${id}`, 303);
 }
 
 const contacts = await contactsDuPipeline(env, parcours);
 const colonnes = etapes.map((e) => ({ etape: e, contacts: contacts.filter((c) => c.etape === e) }));
-const nom = (c: { prenom: string | null; nom: string | null; telephone: string | null; email: string | null }) => [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.email || '—';
+// L'étape montrée sur téléphone : celle demandée, sinon la première qui a des contacts.
+const demandee = Astro.url.searchParams.get('etape') as Etape | null;
+const choisie = demandee && etapes.includes(demandee) ? demandee : colonnes.find((c) => c.contacts.length)?.etape ?? etapes[0];
+const nom = (c: { prenom: string | null; nom: string | null; telephone: string | null; email: string | null }) => [c.prenom, c.nom].filter(Boolean).join(' ') || telLisible(c.telephone) || c.email || '—';
 const message = Astro.url.searchParams.get('m') === 'deplace' ? 'Étape changée, noté dans l\'historique.' : '';
 ---
 <Espace titre="Pipeline" actif="pipeline">
@@ -61,9 +67,12 @@ const message = Astro.url.searchParams.get('m') === 'deplace' ? 'Étape changée
   {message && <p class="e-message" role="status" data-message>{message}</p>}
   {erreur && <p class="e-message" role="alert" data-erreur>{erreur}</p>}
 
+  <nav class="pl-etapes" aria-label="Étapes" data-etapes>
+    {colonnes.map((col) => <a href={`/pipeline?parcours=${parcours}&etape=${col.etape}`} aria-current={col.etape === choisie ? 'page' : undefined} data-etape-lien={col.etape}>{LIBELLES_ETAPES[col.etape]} <span>{col.contacts.length}</span></a>)}
+  </nav>
   <div class="pl-colonnes" data-pipeline>
     {colonnes.map((col) => (
-      <section class="pl-colonne" data-colonne={col.etape} aria-label={LIBELLES_ETAPES[col.etape]}>
+      <section class:list={['pl-colonne', { 'pl-autre': col.etape !== choisie }]} data-colonne={col.etape} aria-label={LIBELLES_ETAPES[col.etape]}>
         <h2>{LIBELLES_ETAPES[col.etape]} <span class="e-muet">{col.contacts.length}</span></h2>
         {col.contacts.map((c) => (
           <article class="pl-carte" id={`c-${c.id}`} data-contact={c.id} draggable="true">
@@ -96,7 +105,7 @@ const message = Astro.url.searchParams.get('m') === 'deplace' ? 'Étape changée
       </section>
     ))}
   </div>
-  <p class="e-muet">Sur ordinateur, glissez une carte vers une colonne : la fiche de déplacement s'ouvre avec la bonne étape. Les perdus des 90 derniers jours restent visibles.</p>
+  <p class="e-muet"><span class="pl-ordi">Glissez une carte vers une colonne : la fiche de déplacement s'ouvre avec la bonne étape. </span>Les perdus des 90 derniers jours restent visibles.</p>
 </Espace>
 
 <style>
@@ -116,6 +125,17 @@ const message = Astro.url.searchParams.get('m') === 'deplace' ? 'Étape changée
   .pl-form .e-bouton { min-height: 40px; font-size: 14px; }
   .pl-date { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .pl-date input { padding: 6px 8px; }
+  .pl-etapes { display: none; }
+  @media (max-width: 899px) {
+    .pl-etapes { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+    .pl-etapes a { flex: 0 0 auto; min-height: 40px; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; border: 1.5px solid var(--avt-galet); background: #fff; color: var(--avt-brun); font-size: 14px; }
+    .pl-etapes a span { font-weight: 500; }
+    .pl-etapes a[aria-current=page] { background: var(--avt-klein); border-color: var(--avt-klein); color: #fff; }
+    .pl-colonnes { overflow-x: visible; }
+    .pl-colonne { flex: 1 1 100%; }
+    .pl-colonne.pl-autre { display: none; }
+    .pl-ordi { display: none; }
+  }
 </style>
 
 <script>

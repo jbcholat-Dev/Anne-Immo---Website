@@ -9,6 +9,7 @@
 // l'étape et la prochaine action ne bougent pas, la suite se note par « Noter la suite » (/contacts/suite).
 import Espace from '../../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
+import { telLisible } from '@site/server/recherche';
 import { CANAUX_ORIGINE, LIBELLES_ETAPES } from '@site/server/contacts';
 import { actionsAuChoix, rattacherAction } from '../../server/actions';
 import { pourSite as env } from '../../server/env';
@@ -83,7 +84,7 @@ if (Astro.request.method === 'POST') {
     return Astro.redirect(`/contacts/fiche?id=${c.id}&m=qualifie`, 303);
   }
 }
-const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.email || 'Contact sans nom';
+const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || telLisible(c.telephone) || c.email || 'Contact sans nom';
 const issues = [
   { v: 'rdv', t: 'Rendez-vous' }, { v: 'sommeil', t: 'En sommeil' }, { v: 'perdu', t: 'Perdu' }, { v: 'rappel', t: 'Pas joint' },
 ];

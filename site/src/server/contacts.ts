@@ -15,9 +15,9 @@ export type Etape = (typeof ETAPES_VENDEUR)[number] | (typeof ETAPES_ACHETEUR)[n
 
 export const LIBELLES_ETAPES: Record<Etape, string> = {
   a_qualifier: 'À qualifier',
-  premier_rdv: 'Premier rendez-vous',
+  premier_rdv: 'R1',
   estimation: 'Estimation en préparation',
-  second_rdv: 'Second rendez-vous',
+  second_rdv: 'R2',
   mandat_exclusif: 'Mandat exclusif signé',
   en_vente: 'En vente',
   vendu: 'Vendu',
