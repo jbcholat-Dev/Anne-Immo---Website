@@ -187,6 +187,7 @@ development_status:
   13-18-visibilité-des-réseaux-dans-le-bilan: backlog
   13-19-trier-les-numeros-inconnus: done
   13-20-bouton-retour-dans-l-espace: review
+  13-21-audit-de-l-espace-en-tant-qu-anne: done   # 2026-10-24, audit utilisateur, trois stories proposées (décision JB en attente)
   epic-13-retrospective: optional
 
   epic-14: in-progress
