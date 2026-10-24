@@ -1,7 +1,7 @@
 ---
 story: 13.32
 epic: 13 — Espace de travail d'Anne
-statut: in-progress
+statut: review
 date: 2026-10-24
 maj: 2026-10-24
 ---
@@ -16,7 +16,14 @@ Demande de JB (2026-10-24) : « mettre à jour la maquette de l'espace, on va af
 - Écrans ajoutés : fiche contact, noter la suite (cliquable), liste des contacts, pipeline par étape. Écrans mis à jour : Qualifier (critères d'un acheteur), Acheteurs (ligne « Cherche »), navigation ordinateur (Pipeline, Prospection).
 
 ## Ce qui est vérifié
-- Données fictives seulement (noms, numéros).
+- Données fictives seulement (noms entre crochets, numéro et e-mail factices).
+- Les libellés, questions, critères, filtres, étapes et choix de « Noter la suite » sont repris du code en ligne (`espace/src/server/pipeline.ts`, `espace/src/pages/contacts/suite.astro`, `site/src/server/contacts.ts`) ; seul l'en-tête en quatre cases et l'historique replié de la fiche (13.31) sont nouveaux.
+- Pas de vérification par rendu : la maquette se relit dans claude.ai.
+
+## Hypothèses à valider
+- Échelle de maturité en trois crans (Découverte, Réfléchit, Prêt).
+- « Rendez-vous et visites » compte les R1, R2 et visites d'acheteurs.
+- Menu du téléphone : Aujourd'hui, Contacts, Ajouter, Pipeline, Bilan (Prescripteurs, Acheteurs et Prospection restent sur ordinateur).
 
 ## Ce qui reste
 - Retours de JB et d'Anne sur la maquette, puis une story par changement retenu.
