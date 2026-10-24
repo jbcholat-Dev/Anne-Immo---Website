@@ -1,7 +1,7 @@
 ---
 story: 13.26
 epic: 13 — Espace de travail d'Anne
-statut: review
+statut: done
 date: 2026-10-24
 maj: 2026-10-24
 ---
@@ -38,4 +38,4 @@ Première des trois stories des campagnes e-mail (décision de JB du 2026-10-24,
 - Captures regardées : `espace/.verif/espace-fiche-sans-accord-telephone.png` et `espace-fiche-accord-site-telephone.png` (et ordinateur).
 
 ## Ce qui reste
-- PR de code : JB fusionne. Conflit possible avec la PR n° 192 (13.30) sur `fiche.astro` et `e2e-espace.mjs`, à régler par celle des deux qui fusionne en second.
+- PR n° 196 fusionnée le 2026-10-24 (accord de JB). Conflit possible avec la PR n° 192 (13.30) sur `fiche.astro` et `e2e-espace.mjs`, à régler par celle des deux qui fusionne en second.
