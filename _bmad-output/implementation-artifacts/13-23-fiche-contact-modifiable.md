@@ -1,7 +1,7 @@
 ---
 story: 13.23
 epic: 13 — Espace de travail d'Anne
-statut: review
+statut: done
 date: 2026-10-24
 maj: 2026-10-24
 ---
