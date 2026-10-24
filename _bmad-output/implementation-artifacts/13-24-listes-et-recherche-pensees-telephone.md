@@ -1,7 +1,7 @@
 ---
 story: 13.24
 epic: 13 — Espace de travail d'Anne
-statut: review
+statut: done
 date: 2026-10-24
 maj: 2026-10-24
 ---
@@ -33,4 +33,4 @@ Troisième et quatrième points bloquants de l'audit 13.21 (décision de JB du 2
 - `npm run build` et `npm run check` dans `site/` et `espace/` : 0 erreur.
 
 ## Ce qui reste
-- Fusion de la PR par JB (après la n° 187, story 13.25). Audit : https://claude.ai/artifact/87DydmbEHytFNxEk6FRkPy.
+- Rien : PR n° 188 fusionnée par JB le 2026-10-24. Audit : https://claude.ai/artifact/87DydmbEHytFNxEk6FRkPy.
