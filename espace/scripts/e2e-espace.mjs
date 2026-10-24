@@ -21,6 +21,9 @@
 // Story 13.23 : fiche modifiable (coordonnées, doublon refusé avec lien), note libre, export et effacement d'un contact sans e-mail.
 // Story 13.26 : accord e-mail (import avec case, case du site, accord noté puis retiré par Anne, refus, désinscription
 // de la séquence, nouvelle inscription après un refus, ancien client), reprise de la migration 0013, carte de la fiche.
+// Story 13.27 : campagnes (brouillon, filtres, écartés par raison, aperçu, lien refusé, essai, confirmation, liste figée,
+// envoi par paquets, désinscrit écarté au dernier moment, e-mail et en-têtes, une fois par personne, historique, désinscription
+// par la page et en un clic, effacement).
 // Story 13.22 : noter la suite d'un contact en cours (fait, pas joint, note ; étape gardée sauf choix ; requalifier sans changer l'étape).
 // Story 13.6 : qualifier (suite obligatoire, date, réveil ou motif exigés, étape et prochaine action fixées, heure de Paris).
 // Story 13.10 : relève Leedflow sur une imitation locale de son API (clé exigée, pages lues de la plus ancienne à la plus
@@ -83,7 +86,9 @@ const imitationLeedflow = http.createServer((req, res) => {
 await new Promise((ok) => imitationLeedflow.listen(PORT_LF, ok));
 fs.writeFileSync(reglages, [`ACCESS_EQUIPE=${equipe}`, 'ACCESS_AUD=essai-aud', 'LIEN_SECRET=essai', `URL_SITE=${S}`,
   `LEEDFLOW_API_KEY=${LF.cle}`, `LEEDFLOW_URL=http://localhost:${PORT_LF}`, 'ACCESS_CLAUDE_ID=essai-claude.access',
-  `GITHUB_TOKEN=${GH.cle}`, `GITHUB_API=http://localhost:${PORT_LF}/github`].join('\n'));
+  `GITHUB_TOKEN=${GH.cle}`, `GITHUB_API=http://localhost:${PORT_LF}/github`,
+  // Campagnes (story 13.27) : l'imitation de Resend du site, 2 e-mails par passage, pas de plafond du jour (la base d'essai garde les envois des essais précédents).
+  'RESEND_API_KEY=essai', 'BOITE_TEST=boite-test@example.com', 'URL_SERVICES_ESSAI=http://localhost:8790', 'CAMPAGNE_PAR_PASSAGE=2', 'CAMPAGNE_QUOTA_JOUR=100000'].join('\n'));
 const journal = path.join(os.tmpdir(), `e2e-${ESSAI}-espace.log`);
 const sansProxy = Object.fromEntries(Object.entries(process.env).filter(([k]) => !/^(https?|all|no)_proxy$/i.test(k)));
 const espace = spawn('npx', ['wrangler', 'dev', '--port', String(PORT), '--env-file', reglages, '--test-scheduled', '--persist-to', path.join(SITE, '.wrangler', 'state')],
@@ -540,6 +545,113 @@ try {
   r = await appeler(`${E}/api/contacts/export?id=${carla}`, { headers: avecJeton() });
   constat((await r.json()).contact?.email_desinscrit_le, 'export : le refus des e-mails est compris');
 
+  // 5 quater ter ter. Campagnes e-mail (story 13.27) : brouillon, qui reçoit et qui est écarté, essai, envoi étalé, désinscription.
+  sql(`DELETE FROM campagne_destinataire WHERE campagne_id IN (SELECT id FROM campagne WHERE nom LIKE 'Essai campagne%')`);
+  sql(`DELETE FROM campagne WHERE nom LIKE 'Essai campagne%'`);
+  const COMMUNE_K = `Camp${NUM}`;
+  const K = Object.fromEntries(['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((l) => [l, `01KGC${l}${NUM}${'0'.repeat(14)}`]));
+  const contactK = (l, { email = `k${l.toLowerCase()}${NUM}@example.com`, etape = 'a_qualifier', parcours = 'vendeur', accord = null, refus = null, prenom = `P${l}` } = {}) =>
+    `('${K[l]}', '2026-02-01T08:00:00Z', '2026-02-01T08:00:00Z', '${prenom}', 'Camp${NUM}${l}', ${email ? `'${email}'` : 'NULL'}, '${etape}', ${etape === 'vendu' ? 'NULL' : "'Rappeler'"}, ${etape === 'vendu' ? 'NULL' : `'${auj}'`},
+      'rencontre', '${COMMUNE_K}', '${parcours}', 1, ${accord ? `'${accord}', 'anne'` : 'NULL, NULL'}, ${refus ? `'${refus}'` : 'NULL'})`;
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, email, etape, prochaine_action, prochaine_action_le, canal, commune, parcours, is_test, email_accord_le, email_accord_source, email_desinscrit_le) VALUES
+    ${[contactK('A', { accord: '2026-02-02T08:00:00Z', prenom: 'Alice' }), contactK('B', { etape: 'vendu', prenom: 'Bruno' }), contactK('C'),
+      contactK('D', { accord: '2026-02-02T08:00:00Z', refus: '2026-02-03T08:00:00Z' }), contactK('E', { accord: '2026-02-02T08:00:00Z', parcours: 'acheteur' }),
+      contactK('F', { email: null, accord: '2026-02-02T08:00:00Z' })].join(',\n')}`);
+  r = await appeler(`${E}/campagnes`, { headers: avecJeton() });
+  constat(r.status === 200 && (await r.text()).includes('data-creer'), 'campagnes : la page s\'ouvre, on peut en commencer une');
+  r = await page('/campagnes', { quoi: 'creer', nom: `Essai campagne ${NUM}` });
+  const kid = /id=([0-9A-Z]{26})/.exec(r.headers.get('location') ?? '')?.[1];
+  constat(r.status === 303 && !!kid && sql(`SELECT statut FROM campagne WHERE id = '${kid}'`)[0]?.statut === 'brouillon', 'campagne commencée : un brouillon');
+  const contenuK = (autres = []) => [['quoi', 'enregistrer'], ['nom', `Essai campagne ${NUM}`], ['objet', 'Le marché cet automne'],
+    ['texte', 'Bonjour [Prénom],\n\nLes prix **tiennent** à Thonon.'], ['bouton_libelle', 'Faire mon diagnostic'], ['bouton_lien', '/diagnostic'],
+    ['commune', COMMUNE_K], ['parcours', ''], ['canal', ''], ...['a_qualifier', 'vendu', 'besoin_defini'].map((e) => ['etapes', e]), ...autres];
+  const ficheK = async (id = kid) => (await appeler(`${E}/campagnes?id=${id}`, { headers: avecJeton() })).text();
+  r = await page(`/campagnes?id=${kid}`, contenuK());
+  let hk = await ficheK();
+  constat(r.headers.get('location') === `/campagnes?id=${kid}&m=enregistree` && hk.includes('data-recoivent="3"') && (hk.match(/data-ecartes=/g) ?? []).length === 3,
+    'filtres enregistrés : 3 recevront (accord, ancien client, acheteur d\'accord), 3 écartés par raison (sans accord, désinscrit, sans adresse)');
+  constat(hk.includes('data-apercu') && hk.includes('Bonjour Marie') && /utm_campaign=essai-campagne-\d+/.test(hk) && hk.includes('utm_medium=email'),
+    'aperçu de l\'e-mail avec un prénom d\'exemple, bouton vers le site avec les paramètres de la campagne');
+  r = await page(`/campagnes?id=${kid}`, contenuK().map(([k, v]) => [k, k === 'parcours' ? 'vendeur' : v]));
+  constat((await ficheK()).includes('data-recoivent="2"'), 'filtre vendeurs : l\'acheteur n\'est plus compté');
+  r = await page(`/campagnes?id=${kid}`, contenuK().map(([k, v]) => [k, k === 'bouton_lien' ? 'javascript:alert(1)' : v]));
+  constat(r.status === 200 && (await r.text()).includes('data-erreur') && sql(`SELECT bouton_lien FROM campagne WHERE id = '${kid}'`)[0].bouton_lien === '/diagnostic',
+    'lien de bouton refusé s\'il n\'est ni une page du site ni une adresse https');
+  await page(`/campagnes?id=${kid}`, contenuK());
+  const avantEssai = recus.length;
+  r = await page(`/campagnes?id=${kid}`, contenuK().map(([k, v]) => [k, k === 'quoi' ? 'essai' : v]));
+  const essaiK = recus.slice(avantEssai);
+  constat(r.headers.get('location') === `/campagnes?id=${kid}&m=essai` && essaiK.length === 1 && essaiK[0].subject === '[TEST] [ESSAI] Le marché cet automne'
+    && essaiK[0].text.includes('parti vers anne@example.com') && !essaiK[0].headers,
+    'essai : envoyé à la personne connectée (ici la boîte de test), objet marqué [ESSAI], sans lien de désinscription d\'un contact');
+  r = await page(`/campagnes?id=${kid}`, [['quoi', 'lancer']]);
+  constat(r.status === 200 && (await r.text()).includes('data-erreur') && sql(`SELECT statut FROM campagne WHERE id = '${kid}'`)[0].statut === 'brouillon',
+    'envoi sans la case de confirmation : refusé');
+  r = await page(`/campagnes?id=${kid}`, [['quoi', 'lancer'], ['confirme', 'oui']]);
+  const destK = () => Object.fromEntries(sql(`SELECT contact_id, statut FROM campagne_destinataire WHERE campagne_id = '${kid}'`).map((d) => [d.contact_id, d.statut]));
+  constat(r.headers.get('location') === `/campagnes?id=${kid}&m=lancee` && JSON.stringify(Object.keys(destK()).sort()) === JSON.stringify([K.A, K.B, K.E].sort())
+    && sql(`SELECT statut FROM campagne WHERE id = '${kid}'`)[0].statut === 'envoi', 'envoi : liste figée sur les 3 personnes qui peuvent la recevoir');
+  r = await page(`/campagnes?id=${kid}`, contenuK());
+  constat(r.status === 200 && (await r.text()).includes('déjà partie'), 'une campagne partie ne se modifie plus');
+  // Entre l'envoi et le passage de la tâche : une personne se désinscrit d'un autre e-mail. Elle est écartée au dernier moment.
+  sql(`UPDATE contact SET email_desinscrit_le = '${new Date().toISOString()}' WHERE id = '${K.E}'`);
+  const passeK = async () => {
+    const t0 = destK();
+    await appeler(`${E}/cdn-cgi/handler/scheduled`);
+    for (let i = 0; i < 40 && JSON.stringify(destK()) === JSON.stringify(t0); i++) await pause(250);
+    await pause(500);
+  };
+  const avantK = recus.length;
+  await passeK();
+  let dk = destK();
+  constat(Object.values(dk).filter((s) => s === 'envoye').length === 2 && dk[K.E] === 'a_envoyer', 'tâche planifiée : un paquet de 2 au plus par passage (réglage d\'essai)');
+  await passeK();
+  dk = destK();
+  constat(dk[K.E] === 'annule' && sql(`SELECT erreur FROM campagne_destinataire WHERE contact_id = '${K.E}'`)[0].erreur === 'désinscrit'
+    && sql(`SELECT statut FROM campagne WHERE id = '${kid}'`)[0].statut === 'envoyee', 'désinscrit après l\'envoi : écarté au dernier moment, campagne terminée');
+  const mailA = recus.slice(avantK).find((m) => m.idempotence === `campagne:${kid}:${K.A}`);
+  const lienA = /(http\S+\/desabonnement\?c=\S+)/.exec(mailA?.text ?? '')?.[1];
+  constat(!!mailA && mailA.subject === '[TEST] Le marché cet automne' && mailA.html.includes('Bonjour Alice') && mailA.html.includes('>tiennent</strong>')
+    && mailA.text.includes('utm_source=espace') && mailA.reply_to === 'avialtissot@gmail.com' && !!lienA && lienA.includes(`c=${K.A}`)
+    && mailA.headers?.['List-Unsubscribe'] === `<${lienA.replace('/desabonnement?', '/api/desabonnement?')}>` && mailA.headers?.['List-Unsubscribe-Post'] === 'List-Unsubscribe=One-Click',
+    'e-mail de campagne : prénom, mise en forme, paramètres de la campagne, réponses vers Anne, lien et en-têtes de désinscription en un clic');
+  constat(recus.slice(avantK).filter((m) => m.idempotence?.startsWith(`campagne:${kid}:`)).length === 2, 'chaque personne reçoit la campagne une fois');
+  const avantRejeu = recus.length;
+  await appeler(`${E}/cdn-cgi/handler/scheduled`);
+  await pause(1500);
+  constat(!recus.slice(avantRejeu).some((m) => m.idempotence?.startsWith(`campagne:${kid}:`)), 'passage suivant : rien n\'est renvoyé');
+  hk = (await (await appeler(`${E}/contacts/fiche?id=${K.A}`, { headers: avecJeton() })).text());
+  constat(sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${K.A}' AND type = 'email' AND source_id = 'campagne:${kid}:${K.A}'`)[0].n === 1
+    && hk.includes(`Campagne « Essai campagne ${NUM} » envoyée`), 'fiche du contact : la campagne reçue est dans l\'historique');
+  hk = await ficheK();
+  constat(hk.includes('data-envoyes="2"') && hk.includes('data-rates'), 'page de la campagne : 2 envoyés, ce qui n\'est pas parti avec la raison');
+  // Désinscription par le lien de l'e-mail (page du site, bouton), puis en un clic depuis la messagerie.
+  r = await appeler(lienA);
+  const pageDes = await r.text();
+  constat(r.status === 200 && pageDes.includes('e-mails d’information') && !sql(`SELECT email_desinscrit_le FROM contact WHERE id = '${K.A}'`)[0].email_desinscrit_le,
+    'lien de désinscription ouvert : la page demande confirmation, rien n\'est fait à l\'ouverture');
+  r = await appeler(lienA, { method: 'POST', headers: { Origin: S, 'Content-Type': 'application/x-www-form-urlencoded' }, body: '' });
+  constat(r.status === 200 && !!sql(`SELECT email_desinscrit_le FROM contact WHERE id = '${K.A}'`)[0].email_desinscrit_le
+    && (await (await appeler(`${E}/contacts/fiche?id=${K.A}`, { headers: avecJeton() })).text()).includes('data-accord-email="desinscrit"'),
+    'désinscription confirmée sur le site : le contact est désinscrit de toutes les campagnes, la fiche le dit');
+  const lienB = /(http\S+\/desabonnement\?c=\S+)/.exec(recus.find((m) => m.idempotence === `campagne:${kid}:${K.B}`)?.text ?? '')?.[1] ?? '';
+  const unClicB = lienB.replace('/desabonnement?', '/api/desabonnement?');
+  r = await appeler(unClicB.replace(/s=[^&]+/, 's=faux'), { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'List-Unsubscribe=One-Click' });
+  const refuseB = r.status;
+  r = await appeler(unClicB, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'List-Unsubscribe=One-Click' });
+  constat(refuseB === 404 && r.status === 200 && !!sql(`SELECT email_desinscrit_le FROM contact WHERE id = '${K.B}'`)[0].email_desinscrit_le,
+    'désinscription en un clic depuis la messagerie (ancien client compris) ; un lien mal signé est refusé');
+  // Effacement d'un contact : ses lignes de campagne partent avec lui.
+  r = await surFiche(K.A, { quoi: 'effacer', confirmation: 'supprimer' });
+  constat(sql(`SELECT count(*) AS n FROM campagne_destinataire WHERE contact_id = '${K.A}'`)[0].n === 0 && sql(`SELECT count(*) AS n FROM contact WHERE id = '${K.A}'`)[0].n === 0,
+    'effacement RGPD d\'un contact : il disparaît aussi des campagnes');
+  // Un brouillon gardé pour les captures, avec une personne d'accord pour qu'il ne soit pas vide.
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, email, etape, prochaine_action, prochaine_action_le, canal, commune, parcours, is_test, email_accord_le, email_accord_source, email_desinscrit_le) VALUES
+    ${contactK('G', { accord: '2026-02-02T08:00:00Z', prenom: 'Gaëlle' })}`);
+  r = await page('/campagnes', { quoi: 'creer', nom: `Essai campagne brouillon ${NUM}` });
+  const kbrouillon = /id=([0-9A-Z]{26})/.exec(r.headers.get('location') ?? '')?.[1];
+  await page(`/campagnes?id=${kbrouillon}`, contenuK().map(([k, v]) => [k, k === 'nom' ? `Essai campagne brouillon ${NUM}` : v]));
+
   // 5 quater quater. Listes et recherche pensées téléphone (story 13.24).
   const cherche = async (q, f = '') => (await appeler(`${E}/contacts?${new URLSearchParams({ q, ...(f ? { f } : {}) })}`, { headers: avecJeton() })).text();
   const trouve = (h, id) => h.includes(`data-carte="${id}"`);
@@ -971,7 +1083,7 @@ try {
   for (const [nom, viewport] of [['ordinateur', { width: 1280, height: 900 }], ['telephone', { width: 390, height: 844 }]]) {
     const ctx = await nav.newContext({ viewport, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
     const onglet = await ctx.newPage();
-    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['suite', `/contacts/suite?id=${SUITE}`], ['bilan', '/bilan'], ['prescripteurs', '/prescripteurs'], ['prescripteur', `/prescripteurs/fiche?id=${durand}`], ['acheteurs', `/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`], ['qualifier-acheteur', `/contacts/qualifier?id=${ach1}`], ['pipeline', '/pipeline'], ['importer', '/importer'], ['fiche-leedflow', `/contacts/fiche?id=${KLF}`], ['fiche-accord-site', `/contacts/fiche?id=${SITEACC}`], ['fiche-sans-accord', `/contacts/fiche?id=${saisie.id}`], ['qualifier-leedflow', `/contacts/qualifier?id=${KLF}`], ['inconnu', `/inconnu?tel=${encodeURIComponent(CAPTURE)}`], ['a-trier', '/a-trier'], ['actions', '/actions'], ['action', `/actions?id=${salon.id}`]]) {
+    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['suite', `/contacts/suite?id=${SUITE}`], ['bilan', '/bilan'], ['prescripteurs', '/prescripteurs'], ['prescripteur', `/prescripteurs/fiche?id=${durand}`], ['acheteurs', `/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`], ['qualifier-acheteur', `/contacts/qualifier?id=${ach1}`], ['pipeline', '/pipeline'], ['importer', '/importer'], ['fiche-leedflow', `/contacts/fiche?id=${KLF}`], ['fiche-accord-site', `/contacts/fiche?id=${SITEACC}`], ['fiche-sans-accord', `/contacts/fiche?id=${saisie.id}`], ['qualifier-leedflow', `/contacts/qualifier?id=${KLF}`], ['inconnu', `/inconnu?tel=${encodeURIComponent(CAPTURE)}`], ['a-trier', '/a-trier'], ['actions', '/actions'], ['action', `/actions?id=${salon.id}`], ['campagnes', '/campagnes'], ['campagne', `/campagnes?id=${kbrouillon}`], ['campagne-envoyee', `/campagnes?id=${kid}`]]) {
       await onglet.goto(`${E}${chemin}`);
       if (nomPage === 'ajouter') {
         await onglet.click('[data-canaux] label:has(input[value=boitage]) span');
@@ -1014,6 +1126,12 @@ try {
       await onglet.screenshot({ path: path.join(OUT, `espace-${nomPage}-${nom}.png`), fullPage: true });
       const deborde = await onglet.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
       constat(!deborde, `${nomPage} sur ${nom} : pas de débordement horizontal`);
+    }
+    // L'e-mail de campagne tel que reçu (logo joint remis en image intégrée pour la capture).
+    if (mailA) {
+      await onglet.setContent(mailA.html.replace('cid:logo', `data:image/png;base64,${fs.readFileSync(path.join(SITE, 'src', 'server', 'email-logo.png')).toString('base64')}`));
+      await onglet.screenshot({ path: path.join(OUT, `email-campagne-${nom}.png`), fullPage: true });
+      constat(!(await onglet.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)), `e-mail de campagne sur ${nom} : pas de débordement horizontal`);
     }
     await ctx.close();
   }

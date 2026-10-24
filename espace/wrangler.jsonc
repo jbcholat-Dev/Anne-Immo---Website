@@ -2,7 +2,7 @@
   // Configuration Cloudflare de l'espace de travail d'Anne (story 13.3, AD-19) : un Worker à part du site,
   // réservé à Anne et à JB par Cloudflare Access, qui lit et écrit la même base des leads que le site.
   // Aucun secret ici, seulement des identifiants publics. Secret facultatif : LIEN_SECRET (le même que celui du site,
-  // pour afficher le lien du rapport du diagnostic) ; LEEDFLOW_API_KEY, la clé Leedflow d'Anne (story 13.10) ; ACCESS_CLAUDE_ID, l'identifiant du jeton de service de Claude (story 13.17). Voir RUNBOOK.md § 4 sexies.
+  // pour afficher le lien du rapport du diagnostic) ; LEEDFLOW_API_KEY, la clé Leedflow d'Anne (story 13.10) ; ACCESS_CLAUDE_ID, l'identifiant du jeton de service de Claude (story 13.17) ; RESEND_API_KEY et BOITE_TEST pour les campagnes (story 13.27). Voir RUNBOOK.md § 4 sexies.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "anne-espace",
   "main": "./worker.ts",
@@ -21,7 +21,8 @@
     }
   ],
   "observability": { "enabled": true },
-  // Relève Leedflow toutes les 10 minutes (story 13.10, AD-20 entrée 4). Sans la clé, chaque passage ne fait rien.
+  // Toutes les 10 minutes : relève Leedflow (story 13.10, AD-20 entrée 4) et envoi étalé des campagnes (story 13.27).
+  // Sans leur clé, chacune ne fait rien.
   "triggers": { "crons": ["*/10 * * * *"] },
   "vars": {
     // « apercu » hors de main ; « production » pour les constructions de main (scripts/base.mjs).
@@ -32,6 +33,11 @@
     // Valeurs publiques. Sans AUD, l'espace refuse tout le monde (403). Application « espace » (Public DNS,
     // espace.annevialtissot.fr, règle « Anne et JB »), créée par JB le 2026-10-15. Voir RUNBOOK.md § 4 sexies.
     "ACCESS_EQUIPE": "https://dry-truth-5a0d.cloudflareaccess.com",
-    "ACCESS_AUD": "a01520f8a1fa3a113cc347c435471a902a2fadc05cb3c90080671407fd24f5e6"
+    "ACCESS_AUD": "a01520f8a1fa3a113cc347c435471a902a2fadc05cb3c90080671407fd24f5e6",
+    // Campagnes e-mail (story 13.27, AD-21). Expéditeur sur le sous-domaine réservé aux campagnes, une fois vérifié dans
+    // Resend (RUNBOOK § 4 sexies) ; vide, rien ne part en production et l'aperçu garde l'expéditeur du site.
+    "EXPEDITEUR_CAMPAGNES": "",
+    // Les réponses aux campagnes vont dans la Gmail d'Anne, comme pour le site.
+    "BOITE_ANNE": "avialtissot@gmail.com"
   }
 }

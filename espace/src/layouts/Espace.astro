@@ -8,7 +8,7 @@
 import '@site/styles/global.css';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import RetourApercu from '@site/components/RetourApercu.astro';
-interface Props { titre: string; actif?: 'aujourdhui' | 'contacts' | 'bilan' | 'prescripteurs' | 'acheteurs' | 'pipeline' | 'ajouter' | 'demandes' | 'actions' }
+interface Props { titre: string; actif?: 'aujourdhui' | 'contacts' | 'bilan' | 'prescripteurs' | 'acheteurs' | 'pipeline' | 'ajouter' | 'demandes' | 'actions' | 'campagnes' }
 const { titre, actif } = Astro.props;
 const compte = Astro.request.headers.get(ENTETE_COMPTE) ?? '';
 const liens = [
@@ -17,6 +17,7 @@ const liens = [
   { cle: 'pipeline', href: '/pipeline', texte: 'Pipeline' },
   { cle: 'bilan', href: '/bilan', texte: 'Bilan' },
   { cle: 'actions', href: '/actions', texte: 'Prospection' },
+  { cle: 'campagnes', href: '/campagnes', texte: 'Campagnes' },
   { cle: 'prescripteurs', href: '/prescripteurs', texte: 'Prescripteurs' },
   { cle: 'acheteurs', href: '/acheteurs', texte: 'Acheteurs' },
   { cle: 'demandes', href: '/gestion', texte: 'Demandes du site' },
@@ -46,7 +47,7 @@ const liens = [
       <a href="/" aria-current={actif === 'aujourdhui' ? 'page' : undefined}>Aujourd'hui</a>
       <a href="/contacts" aria-current={actif === 'contacts' ? 'page' : undefined}>Contacts</a>
       <a href="/ajouter" class="e-plus" aria-label="Ajouter"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg></a>
-      <a href="/bilan" aria-current={actif === 'bilan' || actif === 'actions' ? 'page' : undefined}>Bilan</a>
+      <a href="/bilan" aria-current={actif === 'bilan' || actif === 'actions' || actif === 'campagnes' ? 'page' : undefined}>Bilan</a>
     </nav>
     <RetourApercu espace />
   </body>

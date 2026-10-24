@@ -20,6 +20,17 @@ export interface EnvEspace extends Env {
   GITHUB_TOKEN?: string;
   /** Adresse de l'API GitHub, seulement pour l'essai de bout en bout (imitation locale). */
   GITHUB_API?: string;
+  /** Clé d'API Resend des campagnes (story 13.27, AD-21), la même que celle du site ou une clé dédiée, posée par JB en secret
+   * de ce Worker. Absente : aucune campagne ne part, l'essai répond que l'envoi n'est pas branché. */
+  RESEND_API_KEY?: string;
+  /** Boîte qui reçoit les campagnes hors production et les envois aux contacts de test (AD-12), comme pour le site. */
+  BOITE_TEST?: string;
+  /** Essais en local seulement : adresse de l'imitation de Resend (site/README.md). */
+  URL_SERVICES_ESSAI?: string;
+  /** Réglages facultatifs de l'envoi étalé (story 13.27) : e-mails par passage (défaut 8, toutes les 10 minutes) et plafond
+   * du jour, site compris (défaut 90, sous les 100 de l'offre gratuite de Resend). */
+  CAMPAGNE_PAR_PASSAGE?: string;
+  CAMPAGNE_QUOTA_JOUR?: string;
 }
 
 /** Le « compte » transmis aux pages pour une requête du programme de Claude (jamais une adresse e-mail). */

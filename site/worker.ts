@@ -2,7 +2,8 @@
 // Les pages prérendues sont servies directement par Cloudflare, sans passer par ce code.
 // /api/* passe ici (run_worker_first dans wrangler.jsonc) :
 // - /api/retour : remarque faite depuis l'aperçu, enregistrée comme ticket GitHub (story 9.6) ;
-// - /api/desabonnement : désinscription en un clic depuis la messagerie (en-tête List-Unsubscribe, story 10.5), servie ici
+// - /api/desabonnement : désinscription en un clic depuis la messagerie (en-tête List-Unsubscribe, story 10.5 ; campagnes
+//   de l'espace avec `c=`, story 13.27), servie ici
 //   car les messageries postent sans en-tête Origin, ce que le contrôle d'origine d'Astro refuserait ;
 // - le reste est confié à Astro (handle), qui sert les routes de src/pages/api/ (ex. /api/sante, /api/webhook-cal),
 //   la page de résultats du diagnostic et la page /desabonnement.
@@ -20,7 +21,7 @@ import { rattacherOrphelins } from './src/server/contacts';
 import { rejouer } from './src/server/delivery';
 import type { EnvSite } from './src/server/env';
 import { journal } from './src/server/journal';
-import { desabonner, verifierDesabonnement } from './src/server/liens';
+import { desabonner, desinscrireContact, verifierDesabonnement, verifierDesinscriptionContact } from './src/server/liens';
 import { purger } from './src/server/purge';
 import { creerTicketRetour } from './src/server/retours';
 
@@ -90,6 +91,14 @@ async function gestion(request: Request, env: EnvSite, ctx: ExecutionContext): P
 /** Désinscription en un clic (RFC 8058) : la messagerie poste `List-Unsubscribe=One-Click` sur l'adresse de l'en-tête. */
 async function desabonnementUnClic(request: Request, env: EnvSite, url: URL): Promise<Response> {
   if (request.method !== 'POST') return json({ ok: false, error: { code: 'methode' } }, 405);
+  // Campagne de l'espace d'Anne (story 13.27) : le lien désigne un contact.
+  if (url.searchParams.has('c')) {
+    const contactId = await verifierDesinscriptionContact(env, url);
+    if (!contactId) return json({ ok: false, error: { code: 'lien' } }, 404);
+    await desinscrireContact(env, contactId);
+    journal('desinscription_campagnes', { contact: contactId, mode: 'un_clic' });
+    return json({ ok: true });
+  }
   const leadId = await verifierDesabonnement(env, url);
   if (!leadId) return json({ ok: false, error: { code: 'lien' } }, 404);
   await desabonner(env, leadId);
