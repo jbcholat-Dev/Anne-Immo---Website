@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-26-2026 15:10
-last_updated: 25-10-2026 17:30
+last_updated: 10-25-2026 17:30
 project: Site Anne Vial-Tissot
 project_key: NOKEY
 tracking_system: file-system
@@ -40,32 +40,32 @@ development_status:
   1-2-navigation-fixe-et-menu-mobile: done
   1-3-pied-de-page-commun: done
   1-4-contenu-d-anne-branché-sur-le-site: done
-  epic-1-retrospective: optional
+  epic-1-retrospective: done
 
   epic-2: done
   2-1-hero-vidéo-poster-et-bande-preuve: done
   2-2-pile-de-six-cartes-collantes: done
   2-3-méthode-avis-entiers-teaser-diagnostic-bloc-anne-fermeture-k: done
-  epic-2-retrospective: optional
+  epic-2-retrospective: done
 
   epic-3: done
   3-1-index-réalisation: done
   3-2-fiche-story: done
-  epic-3-retrospective: optional
+  epic-3-retrospective: done
 
   epic-4: done
   4-1-à-propos-page-longue-à-ancres: done
   4-2-vendre-et-acheter: done
   4-3-contact-et-guide: done
   4-4-mentions-légales-confidentialité-cookies-et-page-404: done
-  epic-4-retrospective: optional
+  epic-4-retrospective: done
 
   epic-5: done
   5-1-landing-du-diagnostic: done
   5-2-parcours-de-17-écrans-avec-reprise-et-abandon: done
   5-3-gate-de-capture-calcul-du-score-page-de-résultats: done
   5-4-origine-des-campagnes-gardée-depuis-la-landing: done
-  epic-5-retrospective: optional
+  epic-5-retrospective: done
 
   epic-6: in-progress
   6-1-accueil-en-et-index-track-record: done
@@ -225,3 +225,33 @@ development_status:
   16-1-session-de-cadrage-de-l-espace-acheteurs: in-progress   # revu le 2026-10-25 : attend JB et Anne : outil actuel des sélections, capacité à écrire ; aucune avancée depuis le 2026-10-11
   16-2-video-espace-acheteur: done
   epic-16-retrospective: optional
+action_items:
+  - id: "epic-1-retro-item-1-ajouter-node-scripts-ecrans-mjs-à-la-déf"
+    epic: 1
+    action: "Ajouter node scripts/ecrans.mjs à la définition de « fait » du CLAUDE.md
+      § 2 pour tout changement visuel (C2)"
+    owner: "Claude, à valider par JB"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-1-a-5-retro-2026-10-25.md"
+  - id: "epic-4-retro-item-2-story-remettre-les-pages-cookies-et-conf"
+    epic: 4
+    action: "Story : remettre les pages Cookies et Confidentialité d accord avec le
+      site (pas de mesure d audience annoncée tant qu elle n existe pas ; origine
+      de campagne gardée avec la demande) (C3)"
+    owner: "Claude, accord de JB"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-1-a-5-retro-2026-10-25.md"
+  - id: "epic-5-retro-item-3-trancher-le-barème-de-la-question-10-du"
+    epic: 5
+    action: "Trancher le barème de la question 10 du diagnostic et confirmer la q02
+      (action A09), puis reporter dans bareme.json (C4)"
+    owner: "Anne, puis Claude"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-1-a-5-retro-2026-10-25.md"
+  - id: "epic-5-retro-item-4-pied-de-page-du-diagnostic-layouts-quiz"
+    epic: 5
+    action: "Pied de page du diagnostic (layouts/Quiz.astro) lu depuis identite et
+      les traductions, à la prochaine story qui touche le diagnostic (C7)"
+    owner: "Claude"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-1-a-5-retro-2026-10-25.md"
