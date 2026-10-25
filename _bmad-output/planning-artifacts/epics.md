@@ -1430,6 +1430,24 @@ afin de ne garder la main que sur les changements qui ont un impact sur le site.
 
 **État :** en relecture (2026-10-10). Décision de JB du 2026-10-10. RUNBOOK § 2 bis.
 
+### Story 9.8: Revue de code avant fusion
+
+En tant que JB,
+je veux que chaque changement du code du site ou de l'espace d'Anne soit relu par une session neuve avant de m'être proposé,
+afin que les bugs et les failles soient attrapés avant la mise en ligne, sur un site public qui recueille des contacts et envoie des e-mails (audit BMAD du 2026-10-25).
+
+**Critères d'acceptation :**
+
+**Étant donné** une PR qui touche `site/src/`, `site/public/`, `site/prive/`, `espace/src/` ou `.github/`
+**Quand** elle est prête à être proposée à JB
+**Alors** le skill `bmad-code-review` a été lancé sur elle dans une session qui n'a pas écrit le code
+**Et** chaque constat est corrigé, ou écarté avec sa raison
+**Et** le résultat est cité dans la story, section « Revue de code »
+**Et** une PR de documents ou de contenu en est dispensée
+**Et** à la clôture d'un epic, une rétrospective `bmad-retrospective` est faite et notée dans le statut de sprint.
+
+**État :** en relecture (2026-10-25). Décision de JB du 2026-10-25. `CLAUDE.md` § 2, RUNBOOK § 2 bis.
+
 ## Epic 10: Capture des leads et backend
 
 Un prospect qui remplit un formulaire ou termine le diagnostic est enregistré côté site, Anne est prévenue, et rien n'est perdu ni exposé (AD-4 « écrire d'abord, diffuser ensuite »). Aujourd'hui tout est simulé dans le navigateur (voir `site/README.md`, section « TODO(backend) ») ; cet epic remplace chaque simulation par le noyau serveur décrit dans le spine, une story à la fois, sans jamais casser le site en ligne.
