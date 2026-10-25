@@ -1,7 +1,7 @@
 ---
 story: 7.9
 epic: 7 — Contenu d'Anne
-statut: in-progress
+statut: done
 date: 2026-10-04
 ---
 
@@ -21,3 +21,6 @@ Que rien ne parte en ligne sans accord écrit.
 ## Ce qui reste
 - Anne : témoignages, accords écrits, année de vente d'Allinges, `story:` et `retenu:` dans les avis, statuts.
 - Claude, avant la mise en ligne publique : filtre `statut === 'publie' && autorisations` dans `stories()` (`site/src/lib/contenu.ts`). Pas posé maintenant : il viderait l'aperçu, qu'Anne et JB regardent plein.
+
+## Revue du suivi (2026-10-25)
+Statut passé à `done` lors de la remise à jour du statut de sprint demandée par JB après l'audit BMAD du 2026-10-25. Remplacée par la story 7.14 : décision de JB du 2026-10-05, les clients des ventes ont donné leur accord et le site ne vérifie plus de case « autorisations ». Les ventes sont passées en `publie` le 2026-10-10 depuis l'espace d'édition (PR n° 83 à 89). L'action A02 du tableau de bord est close.

@@ -28,3 +28,6 @@ Réserver l'adresse définitive du site (`annevialtissot.fr`, plus `annevialtiss
 
 ## Écart assumé
 Compte Infomaniak de JB au lieu d'un compte au nom d'Anne (AD-9 amendé) : Anne reste propriétaire légale des domaines ; la reprise de la gestion est décrite au RUNBOOK § 4 ter.
+
+## Revue du suivi (2026-10-25)
+Reste `in-progress`, à juste titre : aucun enregistrement DS (la signature DNSSEC) n'est publié pour `annevialtissot.fr` ni pour `annevialtissot.com` (requête DS sur le résolveur de Cloudflare, 2026-10-25). Restent à JB : activer DNSSEC dans Cloudflare puis poser l'enregistrement DS chez Infomaniak, et la validation en deux étapes du compte Infomaniak.

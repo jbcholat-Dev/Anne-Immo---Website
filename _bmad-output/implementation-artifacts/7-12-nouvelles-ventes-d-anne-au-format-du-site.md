@@ -1,7 +1,7 @@
 ---
 story: 7.12
 epic: 7 — Contenu d'Anne
-statut: in-progress
+statut: done
 date: 2026-10-05
 autorisations: aucune (toutes les stories restent en « brouillon »)
 ---
@@ -36,3 +36,6 @@ Vérification : `npm run build` 24 pages ; `npm run check` 0 erreur ; `scripts/l
 ## Ce qui reste
 - Photos d'Anthy T3 (002), Anthy T4 (025), Évian (038) et Essert-Romand (036) : les HD font plus de 8 Mo, le connecteur Drive refuse de les transférer (limite 10 Mo, coupure au-delà de 8 Mo). Il faut lancer `scripts/preparer-photos` sur un ordinateur où le Drive est synchronisé (`PHOTOS_HD=".../Contenu site Anne/stories"`). Essert-Romand 036 et Évian 038 ne sont pas dans le dossier `photos/` de leur story sur le Drive. Les photos d'Essert-Romand portent le logo eXp.
 - Anne : relire les 5 récits, confirmer commune, type de bien et délais ; écrire Bernex et Sciez ; témoignages et autorisations (story 7.9).
+
+## Revue du suivi (2026-10-25)
+Statut passé à `done` lors de la remise à jour du statut de sprint demandée par JB après l'audit BMAD du 2026-10-25. Neuf ventes sont dans `contenu-anne/stories/` en `statut: publie` (vérifié ce jour). La dernière, Sciez, est en brouillon et suivie par la story 7.19.

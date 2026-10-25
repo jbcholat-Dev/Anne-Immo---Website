@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-26-2026 15:10
-last_updated: 15-10-2026 22:15
+last_updated: 10-25-2026 17:30
 project: Site Anne Vial-Tissot
 project_key: NOKEY
 tracking_system: file-system
@@ -40,36 +40,36 @@ development_status:
   1-2-navigation-fixe-et-menu-mobile: done
   1-3-pied-de-page-commun: done
   1-4-contenu-d-anne-branché-sur-le-site: done
-  epic-1-retrospective: optional
+  epic-1-retrospective: done
 
   epic-2: done
   2-1-hero-vidéo-poster-et-bande-preuve: done
   2-2-pile-de-six-cartes-collantes: done
   2-3-méthode-avis-entiers-teaser-diagnostic-bloc-anne-fermeture-k: done
-  epic-2-retrospective: optional
+  epic-2-retrospective: done
 
   epic-3: done
   3-1-index-réalisation: done
   3-2-fiche-story: done
-  epic-3-retrospective: optional
+  epic-3-retrospective: done
 
   epic-4: done
   4-1-à-propos-page-longue-à-ancres: done
   4-2-vendre-et-acheter: done
   4-3-contact-et-guide: done
   4-4-mentions-légales-confidentialité-cookies-et-page-404: done
-  epic-4-retrospective: optional
+  epic-4-retrospective: done
 
   epic-5: done
   5-1-landing-du-diagnostic: done
   5-2-parcours-de-17-écrans-avec-reprise-et-abandon: done
   5-3-gate-de-capture-calcul-du-score-page-de-résultats: done
   5-4-origine-des-campagnes-gardée-depuis-la-landing: done
-  epic-5-retrospective: optional
+  epic-5-retrospective: done
 
   epic-6: in-progress
   6-1-accueil-en-et-index-track-record: done
-  6-2-pages-éditoriales-et-légales-en-anglais: in-progress
+  6-2-pages-éditoriales-et-légales-en-anglais: ready-for-dev   # revu le 2026-10-25 : en pause, version anglaise reportée après le lancement ; attend les textes français stabilisés (action A13)
   6-3-diagnostic-en-anglais: backlog
   6-4-stories-et-avis-en-anglais: backlog
   epic-6-retrospective: optional
@@ -80,20 +80,20 @@ development_status:
   7-3-photos-web-des-trois-stories: done
   7-4-vidéo-d-ouverture-du-hero: done
   7-5-portrait-et-photos-en-situation: backlog
-  7-6-coordonnées-légales-et-professionnelles: in-progress
-  7-7-adresses-des-réseaux-sociaux: in-progress
-  7-8-guide-10-erreurs-pdf-à-la-charte: in-progress
-  7-9-autorisations-écrites-et-passage-des-stories-en-publie: in-progress
-  7-10-séquence-d-e-mails-de-la-sortie-b-rédigée: in-progress
-  7-11-boîte-de-dépôt-google-drive-pour-anne: in-progress
-  7-12-nouvelles-ventes-d-anne-au-format-du-site: in-progress
-  7-13-espace-d-edition-d-anne-sveltia-cms: in-progress
+  7-6-coordonnées-légales-et-professionnelles: done   # revu le 2026-10-25 : coordonnées reportées le 2026-10-10 (story 12.5) ; numéro d'attestation facultatif
+  7-7-adresses-des-réseaux-sociaux: done   # revu le 2026-10-25 : trois adresses reportées le 2026-10-10 (story 12.5)
+  7-8-guide-10-erreurs-pdf-à-la-charte: done   # revu le 2026-10-25 : guide publié et PDF refait le 2026-10-10 (story 12.5)
+  7-9-autorisations-écrites-et-passage-des-stories-en-publie: done   # revu le 2026-10-25 : remplacée par la story 7.14 (fin de la règle d'autorisation, décision de JB du 2026-10-05) ; ventes publiées le 2026-10-10
+  7-10-séquence-d-e-mails-de-la-sortie-b-rédigée: done   # revu le 2026-10-25 : six e-mails relus et publiés le 2026-10-10 (story 12.5)
+  7-11-boîte-de-dépôt-google-drive-pour-anne: done   # revu le 2026-10-25 : remplacée par l'espace d'édition (7.13) ; le Drive reste l'archive des photos HD et vidéos
+  7-12-nouvelles-ventes-d-anne-au-format-du-site: done   # revu le 2026-10-25 : 9 ventes publiées ; Sciez suivie par la story 7.19
+  7-13-espace-d-edition-d-anne-sveltia-cms: done   # revu le 2026-10-25 : en service depuis le 2026-10-10 (ventes publiées par l'espace d'édition, PR n° 83 à 89) ; compte d'Anne : actions A16 et J25
   7-14-temoignages-avis-immodvisor-et-fin-de-la-regle-d-autorisation: done
   7-15-nouvelle-video-d-ouverture: done
   7-16-portrait-d-anne-dans-l-espace-d-edition: done
   7-17-page-a-propos-lue-depuis-l-espace-d-edition: done
   7-18-portrait-range-a-cote-de-la-page: done
-  7-19-ventes-de-sciez-et-de-bernex: in-progress
+  7-19-ventes-de-sciez-et-de-bernex: in-progress   # revu le 2026-10-25 : Bernex publiée ; Sciez en brouillon, attend Anne (récit et photos)
   7-20-textes-des-pages-dans-l-espace-d-edition: done
   7-21-texte-provisoire-reseau-exp: done
   7-22-avis-clients-relies-a-leurs-ventes: done
@@ -101,7 +101,7 @@ development_status:
 
   epic-8: in-progress
   8-1-polices-hébergées-sur-le-site: done
-  8-2-adaptation-aux-écrans-page-par-page: in-progress
+  8-2-adaptation-aux-écrans-page-par-page: done   # revu le 2026-10-25 : journal des défauts relayé par les tickets « Un retour ? » et les stories 8.7, 8.9, 8.17 ; comparaison page par page avec la maquette reportée en 8.4
   8-3-vidéo-d-ouverture-intégrée: done
   8-4-retouches-contre-la-maquette-et-points-ouverts-de-design: backlog
   8-5-lien-accueil-dans-la-navigation: done
@@ -128,7 +128,7 @@ development_status:
   9-3-accès-protégé-de-l-aperçu: done
   9-4-runbook-v0: done
   9-5-vérification-de-bout-en-bout-de-l-aperçu: done
-  9-6-boucle-de-retours-sur-l-aperçu: done
+  9-6-boucle-de-retours-sur-l-apercu: done
   9-7-fusion-automatique-des-pr-de-contenu-et-de-suivi: review
   9-8-revue-de-code-avant-fusion: review   # 2026-10-25, décision de JB après l'audit BMAD ; règle dans CLAUDE.md § 2
   epic-9-retrospective: optional
@@ -136,20 +136,20 @@ development_status:
   epic-10: in-progress
   10-1-architecture-vague-2-consolidée: done
   10-2-noyau-serveur-cloudflare-et-base-des-leads: done
-  10-3-formulaires-contact-estimation-et-guide-écrits-en-base-et-no: done
+  10-3-formulaires-contact-estimation-et-guide-écrits-en-base: done
   10-4-gate-du-diagnostic-côté-serveur: done
   10-5-guide-par-lien-signé-et-séquence-d-e-mails-de-la-sortie-b: done
   10-6-rendez-vous-cal-com-intégré: done
   10-7-administration-et-droits-rgpd: done
   10-8-surveillance-mesure-et-test-synthétique: backlog
-  10-9-e-mails-du-site-à-la-charte: in-progress
+  10-9-e-mails-du-site-à-la-charte: review   # revu le 2026-10-25 : allure « lettre sobre » en production depuis le 2026-10-11 ; reste la relecture d'Anne (action A17) et un envoi réel capturé
   10-10-rapport-pdf-personnalisé-du-diagnostic: review
   10-11-réponses-du-diagnostic-lisibles-dans-la-gestion: done
   epic-10-retrospective: optional
 
   epic-11: in-progress
   11-1-session-de-cadrage-de-la-stratégie-de-visibilité: backlog
-  11-2-fiche-google-business-profile-créée-et-cohérente-avec-le-sit: in-progress
+  11-2-fiche-google-business-profile: in-progress   # revu le 2026-10-25 : attend Anne (création et validation de la fiche, action A01)
   11-3-bases-techniques-du-référencement-dans-le-site: done
   11-4-amendement-de-la-spec-et-découpage-des-stories-de-contenu-is: backlog
   11-5-publicité-locale-test-à-petit-budget-après-lancement: backlog
@@ -158,11 +158,11 @@ development_status:
   epic-11-retrospective: optional
 
   epic-12: in-progress
-  12-1-nom-de-domaine-acheté-et-dns-chez-cloudflare: in-progress
+  12-1-nom-de-domaine-acheté-et-dns-chez-cloudflare: in-progress   # revu le 2026-10-25 : DNSSEC toujours inactif (aucun enregistrement DS publié pour .fr ni .com, vérifié ce jour) ; validation en deux étapes Infomaniak à faire par JB
   12-2-mentions-légales-et-politique-de-confidentialité-validées-pa: backlog
   12-3-propriété-et-transfert: backlog
   12-4-bascule-en-production: done
-  12-5-critères-de-lancement-vérifiés: in-progress
+  12-5-critères-de-lancement-vérifiés: done   # revu le 2026-10-25 : site ouvert le 2026-10-11 à 22 h 50 ; webhook Cal.com et essais réels des formulaires passés en action de JB
   12-6-revue-complète-avant-ouverture: done
   12-7-aperçu-permanent-après-le-lancement: done
   12-8-adresse-affichée-avec-www: done
@@ -173,7 +173,7 @@ development_status:
   epic-13: in-progress
   13-1-spécification-de-l-espace-de-travail: done
   13-2-décision-d-architecture-pour-leedflow-et-la-boîte-e-mail: done
-  13-3-application-séparée-sur-la-base-partagée: in-progress
+  13-3-application-séparée-sur-la-base-partagée: done   # revu le 2026-10-25 : espace en ligne depuis le 2026-10-15 et utilisé par Anne (audit 13.21, retours du 24/10) ; reste le retrait de /gestion du site (phase 2), à découper
   13-4-contacts-origine-précise-et-étapes: done
   13-5-page-aujourd-hui: done
   13-6-qualifier-en-deux-minutes-et-fiche-contact: done
@@ -216,12 +216,42 @@ development_status:
   epic-14-retrospective: optional
 
   epic-15: in-progress
-  15-1-session-de-cadrage-du-portail-vendeurs: in-progress
+  15-1-session-de-cadrage-du-portail-vendeurs: in-progress   # revu le 2026-10-25 : attend JB : capacité à écrire dans la spec, aucune avancée depuis le 2026-10-11
   15-2-video-espace-vendeur: done
   15-3-videos-espace-client-au-public: done
   epic-15-retrospective: optional
 
   epic-16: in-progress
-  16-1-session-de-cadrage-de-l-espace-acheteurs: in-progress
+  16-1-session-de-cadrage-de-l-espace-acheteurs: in-progress   # revu le 2026-10-25 : attend JB et Anne : outil actuel des sélections, capacité à écrire ; aucune avancée depuis le 2026-10-11
   16-2-video-espace-acheteur: done
   epic-16-retrospective: optional
+action_items:
+  - id: "epic-1-retro-item-1-ajouter-node-scripts-ecrans-mjs-à-la-déf"
+    epic: 1
+    action: "Ajouter node scripts/ecrans.mjs à la définition de « fait » du CLAUDE.md
+      § 2 pour tout changement visuel (C2)"
+    owner: "Claude, à valider par JB"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-1-a-5-retro-2026-10-25.md"
+  - id: "epic-4-retro-item-2-story-remettre-les-pages-cookies-et-conf"
+    epic: 4
+    action: "Story : remettre les pages Cookies et Confidentialité d accord avec le
+      site (pas de mesure d audience annoncée tant qu elle n existe pas ; origine
+      de campagne gardée avec la demande) (C3)"
+    owner: "Claude, accord de JB"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-1-a-5-retro-2026-10-25.md"
+  - id: "epic-5-retro-item-3-trancher-le-barème-de-la-question-10-du"
+    epic: 5
+    action: "Trancher le barème de la question 10 du diagnostic et confirmer la q02
+      (action A09), puis reporter dans bareme.json (C4)"
+    owner: "Anne, puis Claude"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-1-a-5-retro-2026-10-25.md"
+  - id: "epic-5-retro-item-4-pied-de-page-du-diagnostic-layouts-quiz"
+    epic: 5
+    action: "Pied de page du diagnostic (layouts/Quiz.astro) lu depuis identite et
+      les traductions, à la prochaine story qui touche le diagnostic (C7)"
+    owner: "Claude"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-1-a-5-retro-2026-10-25.md"
