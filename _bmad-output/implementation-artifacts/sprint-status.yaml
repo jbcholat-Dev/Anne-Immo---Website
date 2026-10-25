@@ -130,6 +130,7 @@ development_status:
   9-5-vérification-de-bout-en-bout-de-l-aperçu: done
   9-6-boucle-de-retours-sur-l-aperçu: done
   9-7-fusion-automatique-des-pr-de-contenu-et-de-suivi: review
+  9-8-revue-de-code-avant-fusion: review   # 2026-10-25, décision de JB après l'audit BMAD ; règle dans CLAUDE.md § 2
   epic-9-retrospective: optional
 
   epic-10: in-progress
