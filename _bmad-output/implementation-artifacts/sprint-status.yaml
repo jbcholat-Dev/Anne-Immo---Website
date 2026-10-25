@@ -120,6 +120,7 @@ development_status:
   8-19-boutons-de-l-ouverture-en-bas-sur-telephone: done
   8-20-ligne-signature-sous-le-nom-de-famille: done
   8-22-retour-au-terracotta-d-origine: done
+  8-23-offert-plutôt-que-gratuit: review   # 2026-10-25, décision de JB : « offert », jamais « gratuit »
   epic-8-retrospective: optional
 
   epic-9: in-progress

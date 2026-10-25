@@ -17,4 +17,4 @@ Chaque fichier ici est un modèle. Pour créer un contenu :
 
 **Les champs de l'en-tête** : ne supprime pas une ligne, laisse-la vide si tu n'as pas l'information. `statut` décide de la publication.
 
-**Conseil d'outil** : ouvre le dossier `contenu-anne` dans **Obsidian** (gratuit) — tes fichiers apparaissent comme des notes, l'en-tête devient un petit formulaire « Propriétés », et tu vois le rendu en direct.
+**Conseil d'outil** : ouvre le dossier `contenu-anne` dans **Obsidian** (sans frais) — tes fichiers apparaissent comme des notes, l'en-tête devient un petit formulaire « Propriétés », et tu vois le rendu en direct.

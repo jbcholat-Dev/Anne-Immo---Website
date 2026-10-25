@@ -25,8 +25,8 @@ avis:
   titre: "Ils ont travaillé avec Anne"
 diagnostic:
   titre: "Où en est votre vente ?"
-  texte: "Un score sur 100, un diagnostic par axe, des recommandations concrètes. Trois minutes, gratuit."
-  texte_court: "Un score sur 100, un diagnostic par axe, des recommandations. Trois minutes, gratuit."
+  texte: "Un score sur 100, un diagnostic par axe, des recommandations concrètes. Trois minutes, offert."
+  texte_court: "Un score sur 100, un diagnostic par axe, des recommandations. Trois minutes, offert."
   bouton: "Démarrer le diagnostic"
   score: "Score de maturité"
   axes: "Axes diagnostiqués"
