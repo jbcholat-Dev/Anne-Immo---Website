@@ -1,7 +1,7 @@
 ---
 story: 10.9
 epic: 10 — Capture des leads et backend
-statut: in-progress
+statut: review
 date: 2026-10-09
 ---
 
@@ -43,3 +43,6 @@ Les e-mails que le site envoie aux prospects au nom d'Anne (accusés de récepti
 ## Ce qui reste
 - Relecture par Anne des textes des accusés de réception (action A17).
 - Après fusion : un vrai envoi sur l'aperçu vers une boîte de test, lu dans Gmail sur ordinateur et sur téléphone (Outlook et Apple Mail si un compte est disponible) ; captures citées ici.
+
+## Revue du suivi (2026-10-25)
+Statut passé à `review` lors de la remise à jour du statut de sprint demandée par JB après l'audit BMAD du 2026-10-25. L'allure « lettre sobre » part en production depuis l'ouverture du 2026-10-11. Restent : la relecture des accusés de réception par Anne (action A17) et un envoi réel lu sur ordinateur et téléphone, capture citée ici ; ensuite `done`.

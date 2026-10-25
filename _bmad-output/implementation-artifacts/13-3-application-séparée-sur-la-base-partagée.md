@@ -1,7 +1,7 @@
 ---
 story: 13.3
 epic: 13 — Espace de travail d'Anne
-statut: in-progress
+statut: done
 date: 2026-10-15
 maj: 2026-10-15
 ---
@@ -40,3 +40,6 @@ Donner à l'espace de travail d'Anne sa propre application (Worker `anne-espace`
 - Anne : essayer l'espace (même usage que `/gestion`).
 - Phase 2 : retrait de `/gestion` du site.
 - Hypothèses (2) Email Routing et (3) code de confirmation Gmail : reportées à la story 13.8, seule concernée.
+
+## Revue du suivi (2026-10-25)
+Statut passé à `done` lors de la remise à jour du statut de sprint demandée par JB après l'audit BMAD du 2026-10-25. L'espace est en ligne sur `espace.annevialtissot.fr` depuis le 2026-10-15 et Anne s'en sert (audit en tant qu'Anne, story 13.21 ; retours d'Anne du 24/10, story 13.29). Reste, hors de cette story : la phase 2, retrait de `/gestion` du site, à découper en story.

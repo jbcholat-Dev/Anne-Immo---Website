@@ -1,7 +1,7 @@
 ---
 story: 7.11
 epic: 7 — Contenu d'Anne
-statut: in-progress
+statut: done
 date: 2026-10-05
 ---
 
@@ -32,3 +32,6 @@ Qu'Anne fournisse son contenu sans toucher à GitHub, et que son dossier et le d
 - Anne : dans le Drive, chercher « À SUPPRIMER » et mettre à la corbeille ce qui sort (9 éléments) ; pointer Google Drive pour ordinateur et Obsidian sur « Contenu site Anne ».
 - JB ou Anne : déposer la vidéo source dans `videos/` du Drive (le dossier « Vidéo intro » était vide).
 - Claude : recopier dans le dépôt les 8 stories qui n'existent que sur Drive (story 7.12, à suivre).
+
+## Revue du suivi (2026-10-25)
+Statut passé à `done` lors de la remise à jour du statut de sprint demandée par JB après l'audit BMAD du 2026-10-25. Remplacée par l'espace d'édition (story 7.13, décision de JB du 2026-10-05 après-midi : le Drive était trop laborieux). Le Drive « Contenu site Anne » reste l'archive des photos HD et des vidéos (RUNBOOK § 1). Les stories qui n'existaient que sur Drive sont dans le dépôt (story 7.12). Le rangement du Drive par Anne (action A14) passe en « plus tard ».

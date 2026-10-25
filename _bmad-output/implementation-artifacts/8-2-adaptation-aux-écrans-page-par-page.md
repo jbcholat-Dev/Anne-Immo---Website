@@ -1,7 +1,7 @@
 ---
 story: 8.2
 epic: 8 — Site : finitions
-statut: in-progress
+statut: done
 date: 2026-10-04
 ---
 
@@ -37,3 +37,6 @@ Chaque défaut signalé (bouton « Un retour ? » de l'aperçu, capture envoyée
 - **JB** : la liste des défauts vus sur la v1 (page, taille d'écran, ce qui cloche, capture si possible). Le plus simple : le bouton « Un retour ? » de l'aperçu, un retour par défaut.
 - **JB** : essai des pages principales sur son téléphone, une fois la PR fusionnée et l'aperçu mis à jour.
 - Claude : comparaison page par page avec les artboards 1 440 et 390 de la maquette, puis captures finales (`npm run verif`) jointes ici.
+
+## Revue du suivi (2026-10-25)
+Statut passé à `done` lors de la remise à jour du statut de sprint demandée par JB après l'audit BMAD du 2026-10-25. Le journal des défauts a été relayé par le bouton « Un retour ? » (tickets `retour-apercu`) et par les stories 8.7, 8.9 et 8.17. La comparaison page par page avec la maquette rejoint la story 8.4 (retouches contre la maquette), restée à faire.

@@ -1,7 +1,7 @@
 ---
 story: 7.10
 epic: 7 — Contenu d'Anne
-statut: in-progress
+statut: done
 date: 2026-10-04
 ---
 
@@ -21,3 +21,6 @@ Qu'Anne relise une base déjà rangée au bon format au lieu de partir de Notion
 ## Ce qui reste
 - Anne : relire, décider du nombre et des jours, confirmer les cas réels.
 - Claude : objets `SequenceEmail`, libellés « séquence de 7 e-mails » de `resultats.ts` et `feedbacks.json` au nombre réel (le site annonce aussi « le premier arrive demain matin », à aligner).
+
+## Revue du suivi (2026-10-25)
+Statut passé à `done` lors de la remise à jour du statut de sprint demandée par JB après l'audit BMAD du 2026-10-25. Les six e-mails de la séquence ont été relus et passés en `statut: publie` le 2026-10-10 (validation de JB, 20 h 52, story 12.5) ; le site n'annonce plus « 7 e-mails » (aucune occurrence dans `site/src`).

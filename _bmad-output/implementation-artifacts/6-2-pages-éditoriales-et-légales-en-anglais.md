@@ -1,7 +1,7 @@
 ---
 story: 6.2
 epic: 6 — Version anglaise
-statut: in-progress
+statut: ready-for-dev
 date: 2026-10-04
 ---
 
@@ -21,3 +21,6 @@ Qu'aucun écran mi-traduit ne puisse partir en ligne.
 ## Ce qui reste
 - Anne : stabiliser les textes français, dire qui traduit en premier.
 - Claude : fixer les adresses anglaises dans `routes` (proposition à valider : `/en/about`, `/en/sell`, `/en/buy`, `/en/contact`, `/en/guide`, `/en/legal-notice`, `/en/privacy`, `/en/cookies`), traduire, relier nav et bascule.
+
+## Revue du suivi (2026-10-25)
+Statut passé à `ready-for-dev` lors de la remise à jour du statut de sprint demandée par JB après l'audit BMAD du 2026-10-25. En pause : la version anglaise est reportée après le lancement (ordre des epics). Elle reprend quand Anne a stabilisé les textes français (action A13 du tableau de bord). Les adresses anglaises proposées plus haut restent la base.

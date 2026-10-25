@@ -147,19 +147,19 @@ La clientèle internationale lit le site complet en anglais. **FRs :** FR10. **�
 Anne fournit ce que le site attend, pièce par pièce. **FRs :** FR1, FR2, FR3, FR7, FR8 ; NFR9. **État :** en cours.
 
 - **Epic 8 : Finition visuelle**
-Le site rend comme la maquette sur tous les écrans, avec des polices stables et la vidéo d'ouverture. **FRs :** FR1 ; NFR1, UX-DR15. **État :** à faire.
+Le site rend comme la maquette sur tous les écrans, avec des polices stables et la vidéo d'ouverture. **FRs :** FR1 ; NFR1, UX-DR15. **État :** en cours (au 2026-10-25) ; reste 8.4, retouches contre la maquette.
 
 - **Epic 9 : Mise en ligne d'aperçu**
-Anne et JB voient chaque changement sur une adresse en ligne protégée, depuis leur téléphone. **AD-9, AD-10, AD-11.** **État :** à faire, prochain lot.
+Anne et JB voient chaque changement sur une adresse en ligne protégée, depuis leur téléphone. **AD-9, AD-10, AD-11.** **État :** en cours (au 2026-10-25) ; aperçu en service, restent 9.7 (première fusion automatique à constater) et 9.8 (revue de code avant fusion).
 
 - **Epic 10 : Capture des leads et backend**
-Un prospect qui remplit un formulaire ou termine le diagnostic est enregistré côté site, Anne est prévenue, rien n'est perdu ni exposé. **FRs :** FR5, FR6, FR7, FR8, FR9, FR11 ; NFR3, NFR4 ; AD-4 à AD-8, AD-12, AD-14, AD-16, AD-18. **État :** à faire.
+Un prospect qui remplit un formulaire ou termine le diagnostic est enregistré côté site, Anne est prévenue, rien n'est perdu ni exposé. **FRs :** FR5, FR6, FR7, FR8, FR9, FR11 ; NFR3, NFR4 ; AD-4 à AD-8, AD-12, AD-14, AD-16, AD-18. **État :** en cours (au 2026-10-25) ; formulaires, diagnostic, guide, rendez-vous et droits RGPD en production depuis le 2026-10-11 ; restent 10.8 (surveillance et mesure), 10.9 et 10.10 en relecture.
 
 - **Epic 11 : Référencement et visibilité**
-Le site est trouvé par les vendeurs et acheteurs du Chablais qui cherchent sur Google. **NFR2, AD-13.** **État :** à définir ; la story 11.1 est la session de cadrage.
+Le site est trouvé par les vendeurs et acheteurs du Chablais qui cherchent sur Google. **NFR2, AD-13.** **État :** en cours (au 2026-10-25) ; bases techniques et titres faits (11.3, 11.6, 11.7), fiche Google en attente d'Anne (11.2), cadrage (11.1) à faire.
 
 - **Epic 12 : Lancement public**
-Le site est en ligne sur annevialtissot.fr, trouvable, légal, avec des formulaires qui fonctionnent. **AD-9, AD-10, AD-16 ; NFR3.** **État :** à faire.
+Le site est en ligne sur annevialtissot.fr, trouvable, légal, avec des formulaires qui fonctionnent. **AD-9, AD-10, AD-16 ; NFR3.** **État :** en cours (au 2026-10-25) ; site ouvert au public le 2026-10-11 (12.4, 12.5) ; restent DNSSEC (12.1), validation des pages légales (12.2), propriété et transfert (12.3).
 
 - **Epic 13 : Espace de travail d'Anne**
 Anne démarre chaque journée devant ses contacts et sait qui appeler, qui relancer et comment faire avancer chacun ; Modelo ne sert plus qu'à formaliser un mandat. **CAP-12 ; AD-14 (amendée), AD-18, AD-19, AD-20.** **État :** en cours ; spec (13.1, amendée en v7 le 2026-10-21) et architecture (13.2) écrites ; parcours et maquette v2 validés (13.12) ; construction en stories 13.3 à 13.16, dans l'ordre 13.4, 13.7, 13.6, 13.5, 13.13, 13.14, 13.15, 13.16, avec 13.8 et 13.10 en parallèle ; campagnes e-mail depuis l'espace (13.26 à 13.28, AD-21, décision de JB du 2026-10-24) après 13.22 à 13.25.
