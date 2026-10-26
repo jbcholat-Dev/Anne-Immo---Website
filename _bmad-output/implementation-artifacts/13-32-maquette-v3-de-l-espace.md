@@ -1,9 +1,9 @@
 ---
 story: 13.32
 epic: 13 — Espace de travail d'Anne
-statut: review
+statut: done
 date: 2026-10-24
-maj: 2026-10-24
+maj: 2026-10-26
 ---
 
 # Story 13.32 — Maquette v3 de l'espace d'Anne
@@ -27,3 +27,6 @@ Demande de JB (2026-10-24) : « mettre à jour la maquette de l'espace, on va af
 
 ## Ce qui reste
 - Retours de JB et d'Anne sur la maquette, puis une story par changement retenu.
+
+## Clôture
+- 2026-10-26 : JB demande une recopie à l'identique de l'espace en ligne, sur ordinateur seulement. La v3 est remplacée par la v4 (story 13.33) ; ses écrans restent dans l'historique des versions de la maquette.
