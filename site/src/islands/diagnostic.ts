@@ -3,7 +3,10 @@
 // Le navigateur ne calcule rien : POST /api/diagnostic (réponses par identifiants + coordonnées + journey_id + utm + submission_id),
 // le serveur calcule le score et renvoie l'adresse des résultats, liée à un jeton (AD-5). Les réponses restent sur l'appareil
 // jusqu'au succès ; « Renvoyer » réutilise la même clé submission_id (AD-4).
+// Story 10.12 : chaque écran atteint, l'écran des coordonnées, l'envoi et son issue sont comptés sans donnée personnelle
+// (îlot entonnoir), pour savoir où les visiteurs s'arrêtent.
 import contenu from '../content/diagnostic/questions.json';
+import { compter } from './entonnoir';
 import { telephoneValide, emailValide, envoyer, ulid } from './formulaires';
 
 type Reponses = Record<string, string[]>;
@@ -44,6 +47,7 @@ if (racine) {
   function rendreEcran(i: number) {
     const e = ECRANS[i];
     majProgression(i);
+    compter('ecran', e.id);
     const cat = categories[e.categorie]?.libelle ?? '';
     const retour = i > 0 ? html`<button type="button" class="qz-retour" data-retour>← Retour</button>` : '';
     let corps = '';
@@ -113,6 +117,7 @@ if (racine) {
     if (repere) repere.textContent = '';
     etat.submission_id ??= ulid(); // gardée jusqu'au succès : un renvoi ne crée jamais un second lead
     sauver();
+    compter('coordonnees');
     zone.innerHTML = html`<div class="qz-gate">
       <div class="qz-gate-tete"><div class="chapeau-muet">Votre diagnostic est prêt</div><h1 class="qz-gate-titre">Votre score et vos recommandations</h1>
       <p>Votre score sur 100, le détail par axe et vos recommandations s'affichent une fois vos coordonnées renseignées.</p></div>
@@ -152,11 +157,13 @@ if (racine) {
       erreurs.textContent = n === 1 ? 'Un champ à corriger avant d’afficher le diagnostic.' : `${n} champs à corriger avant d’afficher le diagnostic.`;
       if (n) { form.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus(); return; }
       bouton.setAttribute('aria-busy', 'true'); bouton.disabled = true; bouton.textContent = 'Envoi en cours…';
+      compter('envoi');
       const coord = Object.fromEntries(new FormData(form).entries());
       form.dataset.submission = etat.submission_id;
       const r = await envoyer(form, 'diagnostic', { journey_id: etat.journey_id, utm: etat.utm, reponses: etat.reponses, autre: etat.autre, message: etat.texte.trim(), ...coord });
       bouton.removeAttribute('aria-busy'); bouton.disabled = false; bouton.textContent = 'Voir mon diagnostic';
       if (!r.ok || !r.url) {
+        compter('echec');
         const champs: Record<string, [string, string]> = { prenom: ['g1', 'Indiquez votre prénom.'], nom: ['g2', 'Indiquez votre nom.'], email: ['g3', 'Cette adresse ne semble pas complète.'], telephone: ['g4', 'Ce numéro ne semble pas valable.'] };
         const c = champs[r.error?.champ ?? ''];
         if (c) { erreur(r.error!.champ!, c[0], c[1]); champ(r.error!.champ!).focus(); }
@@ -164,6 +171,7 @@ if (racine) {
         echec.hidden = false; bouton.textContent = 'Renvoyer'; return;
       }
       try { localStorage.removeItem(CLE); } catch { /* ignoré */ }
+      compter('resultat');
       location.href = r.url;
     });
   }
@@ -178,6 +186,7 @@ if (racine) {
     const e = ECRANS[Math.min(sauve.ecran, N - 1)];
     const n = Object.keys(sauve.reponses).length;
     majProgression(sauve.ecran);
+    compter('reprise', e.id);
     zone.innerHTML = html`<div class="qz-reprise"><h1>Vous étiez à la question ${e.numero}</h1>
       <p>${n === 1 ? 'Votre première réponse est gardée' : `Vos ${n} premières réponses sont gardées`} sur cet appareil.</p>
       <button type="button" class="btn btn-primaire" data-reprendre>Reprendre</button>

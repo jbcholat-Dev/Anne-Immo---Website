@@ -4,6 +4,7 @@
 // garde d'un numéro inconnu est effacé au bout de 90 jours, un numéro écarté par Anne au bout de 3 ans.
 // « Activité » = last_activity_at : écriture de la demande, désabonnement de la séquence, action dans l'espace de gestion.
 // La durée est la même constante que celle affichée dans la politique de confidentialité (src/pages/confidentialite.astro).
+import { purgerEntonnoir } from './entonnoir';
 import type { EnvSite } from './env';
 import { journal } from './journal';
 
@@ -39,6 +40,8 @@ export async function purger(env: EnvSite, maintenant = new Date()): Promise<num
   // Destinataires des campagnes (story 13.27, migration 0014) : partent avec leur contact.
   await env.DB.prepare('DELETE FROM campagne_destinataire WHERE contact_id NOT IN (SELECT id FROM contact)').run()
     .catch((e) => journal('purge_campagnes_echec', { detail: String(e).slice(0, 200) }));
+  // Comptages anonymes de l'entonnoir du diagnostic (story 10.12, migration 0015) : 13 mois.
+  await purgerEntonnoir(env, maintenant);
   const n = leads.meta.changes ?? 0;
   const c = contacts.meta.changes ?? 0;
   const p = prescripteurs.meta.changes ?? 0;

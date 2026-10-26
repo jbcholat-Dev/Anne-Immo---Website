@@ -5,7 +5,7 @@
 // valeurs du jeton de service Cloudflare Access de Claude (RUNBOOK § 4 sexies) ; ESPACE_URL facultatif.
 // Exemples :
 //   node scripts/claude-espace.mjs actions
-//   node scripts/claude-espace.mjs bilan mois
+//   node scripts/claude-espace.mjs bilan mois   (avec l'entonnoir du diagnostic par campagne, story 10.12)
 //   node scripts/claude-espace.mjs creer '{"nom":"Pub Facebook novembre","canal":"reseaux","debut":"2026-11-01","budget_centimes":15000}'
 //   node scripts/claude-espace.mjs modifier 01J… '{"nom":"Pub Facebook novembre","canal":"reseaux","debut":"2026-11-01","cout_centimes":13240}'
 const BASE = (process.env.ESPACE_URL ?? 'https://espace.annevialtissot.fr').replace(/\/+$/, '');

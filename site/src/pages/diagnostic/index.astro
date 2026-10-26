@@ -51,6 +51,9 @@ const note = String(inst.note).replace('.', ',');
   <div class="dl-sortie"><a href={r('guide')} class="lien">Pas envie de répondre à 15 questions ? Le guide des 10 erreurs, sans le diagnostic.</a></div>
 </Page>
 <script>
+  // Story 10.12 : l'arrivée sur cette page est comptée sans donnée personnelle, avec sa campagne (îlot entonnoir).
+  import { compter } from '../../islands/entonnoir';
+  compter('arrivee');
   // Une campagne arrive ici avec ses paramètres (utm_source, utm_campaign…) dans l'adresse. On les recopie sur les liens
   // vers le parcours, le guide et le contact, sinon ils se perdent au premier clic et le contact capté n'a plus d'origine.
   // Rien n'est déposé dans le navigateur (AD-11) : les paramètres restent dans l'adresse.

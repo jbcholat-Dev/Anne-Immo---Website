@@ -4,11 +4,13 @@
 // rendez-vous et mandats par canal, délai moyen de rappel, boîtage par secteur, motifs de perte.
 // Story 13.17 : ce que chaque canal a coûté sur la période (actions marketing commencées et passages de boîtage faits
 // depuis le début de la période), rapporté aux contacts, rendez-vous et mandats arrivés sur la même période.
+// Story 10.12 : l'entonnoir du diagnostic, campagne par campagne, puis étape par étape pour la campagne choisie (`d=`).
 import Espace from '../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { CANAUX_ORIGINE } from '@site/server/contacts';
 import { coutsParCanal, euros, parUnite } from '../server/actions';
 import { pourSite as env } from '../server/env';
+import { entonnoir, ETAPES_DETAIL, NUMERO_MILIEU, part, TOUTES } from '../server/entonnoir';
 import { bilan, constats, duree, echeance, PERIODES, type Periode } from '../server/pipeline';
 
 export const prerender = false;
@@ -21,6 +23,12 @@ const phrases = constats(b);
 const couts = await coutsParCanal(env, b.debut);
 const depense = [...couts.values()].reduce((t, c) => t + c, 0);
 const lignesCout = b.lignes.filter((l) => couts.has(l.canal)).map((l) => ({ ...l, cout: couts.get(l.canal) ?? 0 })).sort((a, z) => z.cout - a.cout);
+const diag = await entonnoir(env, b.debut);
+const choisie = diag.campagnes.find((c) => c.cle === Astro.url.searchParams.get('d')) ?? diag.total;
+// Base des pourcentages : le plus grand nombre de passages (d'ordinaire l'arrivée ; un lien direct vers les questions
+// peut donner plus de « Question 1 » que d'arrivées).
+const baseDetail = Math.max(0, ...ETAPES_DETAIL.map((e) => choisie.detail[e.cle] ?? 0));
+const lienCampagne = (cle: string) => `/bilan?p=${periode}&d=${encodeURIComponent(cle)}#diagnostic`;
 const tuiles = [
   ['Nouveaux contacts', String(b.total.contacts)],
   ['Qualifiés', String(b.total.qualifies)],
@@ -71,6 +79,37 @@ const tuiles = [
     <p class="e-muet" style="margin:0">Dépenses des actions commencées et des passages de boîtage faits pendant la période (coût réel, sinon budget prévu), rapportées aux contacts arrivés pendant la même période. Le détail action par action est sur la page Actions.</p>
   </section>
 
+  <section class="e-carte" id="diagnostic" data-entonnoir>
+    <h2>Diagnostic : où les visiteurs s'arrêtent</h2>
+    {diag.campagnes.length === 0 ? <p class="e-muet">Aucun passage sur le diagnostic pendant la période.</p> : (<>
+      <div class="e-table-zone">
+        <table class="e-table b-table">
+          <thead><tr><th>Campagne</th><th class="n">Arrivées</th><th class="n">Commencé</th><th class="n">Question {NUMERO_MILIEU}</th><th class="n">Coordonnées</th><th class="n">Envoyé</th><th class="n">Résultat</th></tr></thead>
+          <tbody>
+            {[...diag.campagnes, ...(diag.campagnes.length > 1 ? [diag.total] : [])].map((c) => (
+              <tr data-campagne={c.cle} class={c.cle === TOUTES ? 'b-total' : ''}><td><a href={lienCampagne(c.cle)} aria-current={c.cle === choisie.cle ? 'true' : undefined}>{c.libelle}</a></td><td class="n">{c.arrivees}</td><td class="n">{c.commences}</td><td class="n">{c.milieu}</td><td class="n">{c.coordonnees}</td><td class="n">{c.envois}</td><td class="n">{c.resultats}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <h3 class="b-sous-titre">Étape par étape : {choisie.libelle}</h3>
+      <div class="e-table-zone">
+        <table class="e-table b-table" data-detail={choisie.cle}>
+          <thead><tr><th>Étape</th><th class="n">Passages</th><th class="n">Part</th><th class="n">Partis avant</th></tr></thead>
+          <tbody>
+            {ETAPES_DETAIL.map((e, i) => {
+              const n = choisie.detail[e.cle] ?? 0;
+              const avant = e.cle === 'echec' || i === 0 ? null : (choisie.detail[ETAPES_DETAIL[e.cle === 'resultat' ? i - 2 : i - 1].cle] ?? 0);
+              const perdus = avant === null ? null : Math.max(0, avant - n);
+              return <tr data-etape={e.cle} class={n === 0 ? 'b-vide' : ''}><td>{e.libelle}</td><td class="n">{n}</td><td class="n">{e.cle === 'echec' ? '' : part(n, baseDetail)}</td><td class="n">{perdus ? perdus : ''}</td></tr>;
+            })}
+          </tbody>
+        </table>
+      </div>
+    </>)}
+    <p class="e-muet" style="margin:0">Passages comptés par le site sans cookie ni donnée personnelle : une personne qui revient plus tard compte deux fois, une reprise après interruption n'est pas recomptée. La campagne est lue dans le lien suivi (utm_source, utm_medium, utm_content).</p>
+  </section>
+
   {phrases.length > 0 && (
     <section class="b-dit" data-constats>
       <h2>Ce que la période dit</h2>
@@ -114,4 +153,7 @@ const tuiles = [
   .b-perdus { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
   .b-perdus li { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--avt-galet); padding: 6px 0; }
   .b-liens { display: flex; flex-wrap: wrap; gap: 8px; }
+  .b-total td { font-weight: 500; border-top: 1.5px solid var(--avt-galet); }
+  [data-entonnoir] a[aria-current] { font-weight: 600; }
+  .b-sous-titre { font-size: 18px; margin: 18px 0 6px; }
 </style>
