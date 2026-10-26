@@ -43,7 +43,7 @@ Vous fixez votre prix selon l'une de ces méthodes : « J'ai acheté 300 000 €
 **Cas réel : un chalet à Essert-Romand.** En vente depuis juin dans deux agences, sans une seule visite. Le prix avait été fixé sans comparaison avec les ventes du secteur. Plutôt qu'une forte baisse d'un coup, j'ai proposé un premier ajustement pour tester le marché, puis un second quatre semaines plus tard. Chaque chiffre était documenté et expliqué. Résultat : quatre visites en quelques semaines, puis deux offres au prix demandé après deux mois de commercialisation. [Lire l'histoire complète sur www.annevialtissot.fr →](https://annevialtissot.fr/realisation/essert-romand-chalet-2026)
 
 1. Identifier une dizaine de biens comparables : même type, même secteur, vendus récemment
-2. Analyser leurs prix de vente réels au m² dans la base DVF (app.dvf.etalab.gouv.fr, publique et gratuite)
+2. Analyser leurs prix de vente réels au m² dans la base DVF (app.dvf.etalab.gouv.fr, publique et en libre accès)
 3. Ajuster selon ce qui distingue votre bien : vue, exposition, état, prestations, extérieurs
 4. Comparer avec les annonces en cours : ce sont vos concurrents directs
 

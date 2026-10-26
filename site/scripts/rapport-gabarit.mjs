@@ -80,7 +80,7 @@ function main() {
     const sortie = feedbacks.sorties[o];
     flux.push({ cle: `suite/${o}`, blocs: [`<h2>${echapper(sortie.titre)}</h2><p>${echapper(sortie.texte)}</p>
       ${s.Conclusion.map((p) => `<p>${enLigne(p)}</p>`).join('')}
-      <div class="cta"><h3>${o === 'A' ? 'Parlons de votre vente' : 'Un regard extérieur sur votre vente'}</h3><p>Rendez-vous stratégique de 30 minutes, gratuit et sans engagement : nous passons en revue vos priorités et je vous dis ce que je ferais à votre place.</p><p><b>www.annevialtissot.fr/contact</b> · ou répondez simplement à l'e-mail qui accompagne ce rapport.</p></div>
+      <div class="cta"><h3>${o === 'A' ? 'Parlons de votre vente' : 'Un regard extérieur sur votre vente'}</h3><p>Rendez-vous stratégique de 30 minutes, offert et sans engagement : nous passons en revue vos priorités et je vous dis ce que je ferais à votre place.</p><p><b>www.annevialtissot.fr/contact</b> · ou répondez simplement à l'e-mail qui accompagne ce rapport.</p></div>
       <div class="signature"><b>Anne VIAL-TISSOT</b>Conseillère en immobilier · Chablais · Léman · réseau eXp France<br>www.annevialtissot.fr</div>`] });
   }
   return flux;

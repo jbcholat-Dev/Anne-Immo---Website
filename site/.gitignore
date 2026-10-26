@@ -2,6 +2,7 @@ node_modules/
 dist/
 .astro/
 .verif/*.tmp
+.verif/*.png
 .dev.vars
 .wrangler/
 # Généré par `npm run types` (wrangler types), recréé avant chaque `npm run check`
