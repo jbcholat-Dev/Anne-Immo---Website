@@ -1,7 +1,7 @@
 ---
 story: 8.23
 epic: 8 — Structure et visuel
-statut: review
+statut: done
 date: 2026-10-25
 ---
 
@@ -39,4 +39,4 @@ Décision de JB du 2026-10-25 (fil « [Com] Campagne Instagram pour le diagnosti
 - Vérifié sans problème par la revue : plus aucun « gratuit » ni « free » côté visiteur ; `accueil.yml` (lu en premier) et `fr.json` (repli) identiques ; empreinte du gabarit du rapport à jour ; accords justes.
 
 ## Ce qui reste
-Fusion par JB.
+Rien. Fusionnée sur l'accord de JB le 2026-10-26 (PR n° 204, commit de fusion 918ed67).
