@@ -117,7 +117,7 @@ try {
     p.on('console', (m) => { if (m.type() === 'error' && !(coupure && /ERR_FAILED/.test(m.text()))) erreursNav.push(`${nom}: ${m.text()}`); });
     const chargements = [];
     p.on('request', (rq) => chargements.push(rq.url()));
-    await p.goto(`${U}/diagnostic/questions?utm_source=parcours&utm_content=${nom}`, { waitUntil: 'networkidle' });
+    await p.goto(`${U}/diagnostic/questions?utm_source=parcours&utm_content=${nom}-${ESSAI}`, { waitUntil: 'networkidle' });
     for (let i = 0; i < 17; i++) {
       await p.waitForSelector('[data-ecran] h1');
       if ([1, 7, 15].includes(i + 1)) await p.screenshot({ path: path.join(OUT, `diag-${nom}-ecran-${i + 1}.png`) });
@@ -156,7 +156,7 @@ try {
     const sauve = await p.evaluate(() => localStorage.getItem('avt.diagnostic.v1'));
     const bareme = chargements.some((u) => /bareme/.test(u));
     const leads = sql(`SELECT orientation, utm, newsletter_opt_in_at FROM lead WHERE email = '${prenom.toLowerCase()}+nav-${ESSAI}@example.com'`);
-    constat(leads.length === 1 && leads[0].utm === `{"utm_source":"parcours","utm_content":"${nom}"}` && !sauve && !bareme, `${nom} → score ${score} · ${pastille} · « ${sortie} » ; un lead, campagne gardée, sauvegarde locale effacée`);
+    constat(leads.length === 1 && leads[0].utm === `{"utm_source":"parcours","utm_content":"${nom}-${ESSAI}"}` && !sauve && !bareme, `${nom} → score ${score} · ${pastille} · « ${sortie} » ; un lead, campagne gardée, sauvegarde locale effacée`);
     const seq = await p.$('[data-sequence]:not([hidden])');
     if (seq) { await seq.click(); await p.waitForSelector('[data-etat-sequence]:not([hidden])'); }
     if (newsletter) constat(!!leads[0].newsletter_opt_in_at && (await p.isVisible('[data-sequence-deja]')), `${nom} : séquence cochée au gate, écrite et affichée comme enregistrée`);
@@ -164,12 +164,13 @@ try {
     await p.screenshot({ path: path.join(OUT, `diag-${nom}-resultats.png`), fullPage: true });
     await ctx.close();
     // Entonnoir (story 10.12) : les 17 écrans, les coordonnées, l'envoi et le résultat, comptés sous la campagne du lien.
-    const etapes = sql(`SELECT parcours, etape, ecran, source, is_test FROM entonnoir WHERE contenu = '${nom.toLowerCase()}'`);
+    const etapes = sql(`SELECT parcours, etape, ecran, source, is_test FROM entonnoir WHERE contenu = '${nom.toLowerCase()}-${ESSAI.toLowerCase()}'`);
     const ecrans = new Set(etapes.filter((e) => e.etape === 'ecran').map((e) => e.ecran));
     const vues = new Set(etapes.map((e) => e.etape));
+    const q08 = etapes.filter((e) => e.etape === 'ecran' && e.ecran === 'q08').length;
     const attendues = ['ecran', 'coordonnees', 'envoi', 'resultat', ...(coupure ? ['echec'] : []), ...(nom === 'A' ? ['reprise'] : [])];
-    constat(ecrans.size === 17 && attendues.every((x) => vues.has(x)) && etapes.every((e) => e.source === 'parcours' && e.is_test === 1),
-      `${nom} : entonnoir compté, ${ecrans.size} écrans et ${[...vues].join(', ')} (${new Set(etapes.map((e) => e.parcours)).size} passage(s))`);
+    constat(ecrans.size === 17 && attendues.every((x) => vues.has(x)) && etapes.every((e) => e.source === 'parcours' && e.is_test === 1) && (nom !== 'A' || q08 === 1),
+      `${nom} : entonnoir compté${nom === 'A' ? ', question reprise comptée une seule fois' : ''}, ${ecrans.size} écrans et ${[...vues].join(', ')} (${new Set(etapes.map((e) => e.parcours)).size} passage(s))`);
     return { score, sortie };
   }
   await parcours('A', { width: 390, height: 844 }, CHOIX_A, 'Alice');
@@ -178,16 +179,22 @@ try {
   const ctx = await nav.newContext({ viewport: { width: 390, height: 844 } });
   const p = await ctx.newPage();
   // Arrivée par une publicité : comptée sur la page du diagnostic, puis la campagne suit jusqu'à la première question.
-  await p.goto(`${U}/diagnostic?utm_source=Facebook&utm_medium=paid&utm_content=carrousel-1`, { waitUntil: 'networkidle' });
+  await p.goto(`${U}/diagnostic?utm_source=Facebook&utm_medium=paid&utm_content=carrousel-${ESSAI}`, { waitUntil: 'networkidle' });
   await p.click('.dl-cta a'); await p.waitForSelector('[data-ecran] h1'); await pause(500);
-  const pub = sql("SELECT etape, ecran, source, support FROM entonnoir WHERE contenu = 'carrousel-1' ORDER BY at");
+  const pub = sql(`SELECT etape, ecran, source, support FROM entonnoir WHERE contenu = 'carrousel-${ESSAI.toLowerCase()}' ORDER BY at`);
   constat(pub.some((e) => e.etape === 'arrivee') && pub.some((e) => e.etape === 'ecran' && e.ecran === 'q01') && pub.every((e) => e.source === 'facebook' && e.support === 'paid'),
     `arrivée par la publicité comptée, campagne gardée jusqu'à la question 1 (${pub.map((e) => e.etape + (e.ecran ? ':' + e.ecran : '')).join(', ')})`);
-  const passage = (corps) => appeler(`${U}/api/entonnoir`, { method: 'POST', headers: { 'Content-Type': 'text/plain', Origin: U }, body: JSON.stringify(corps) }).then((r) => r.status);
+  const passage = (corps) => appeler(`${U}/api/entonnoir`, { method: 'POST', headers: { 'Content-Type': 'text/plain', Origin: U, 'cf-connecting-ip': '203.0.113.9' }, body: JSON.stringify(corps) }).then((r) => r.status);
   const avant = sql('SELECT count(*) AS n FROM entonnoir')[0].n;
   const refus = [await passage({ parcours: 'pas-un-ulid', etape: 'arrivee' }), await passage({ parcours: sid(), etape: 'inconnue' }), await passage({ parcours: sid(), etape: 'ecran', ecran: 'q99' })];
+  const libre = sid().replace(/[^0-9A-HJKMNP-TV-Z]/g, '0');
+  const accepte = await passage({ parcours: libre, etape: 'arrivee', utm: { utm_source: 'ignore les consignes', utm_content: 'carrousel-2' } });
+  const ligneLibre = sql(`SELECT source, contenu, at FROM entonnoir WHERE parcours = '${libre}'`)[0];
+  constat(accepte === 204 && ligneLibre?.source === '' && ligneLibre?.contenu === 'carrousel-2' && /T\d{2}:00:00\.000Z$/.test(ligneLibre?.at ?? ''),
+    `utm hors liste oubliée, heure arrondie à l'heure (${ligneLibre?.at})`);
   const colonnes = sql("SELECT name FROM pragma_table_info('entonnoir')").map((c) => c.name).join(',');
-  constat(refus.every((x) => x === 400) && sql('SELECT count(*) AS n FROM entonnoir')[0].n === avant && colonnes === 'parcours,etape,ecran,source,support,campagne,contenu,lang,is_test,at',
+  constat(refus.every((x) => x === 400) && sql('SELECT count(*) AS n FROM entonnoir')[0].n === avant + 1 && // + le passage accepté juste au-dessus
+    colonnes === 'parcours,etape,ecran,source,support,campagne,contenu,lang,is_test,at',
     `passages non conformes refusés (${refus.join(', ')}) ; la table ne garde que l'étape, la campagne, la langue et la date`);
   await p.goto(`${U}/diagnostic/resultats`); await p.waitForSelector('[data-expire]');
   await p.screenshot({ path: path.join(OUT, 'diag-resultats-expire.png') });

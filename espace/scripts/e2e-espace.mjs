@@ -710,16 +710,16 @@ try {
     [`E2E${ESSAI}A1`, 'ecran', 'q10a'], [`E2E${ESSAI}A1`, 'ecran', 'q10b'], [`E2E${ESSAI}A1`, 'coordonnees', ''],
   ];
   sql(`INSERT INTO entonnoir (parcours, etape, ecran, source, support, contenu, lang, is_test, at) VALUES ${passages.map(([p, e, q]) => `('${p}', '${e}', '${q}', 'facebook', 'paid', 'carrousel-${ESSAI.toLowerCase()}', 'fr', 1, '${new Date().toISOString()}')`).join(', ')}, ('E2E${ESSAI}B1', 'arrivee', '', '', '', '', 'fr', 1, '${new Date().toISOString()}')`);
-  const cleE2e = `facebook|paid|carrousel-${ESSAI.toLowerCase()}`;
+  const cleE2e = `facebook|paid||carrousel-${ESSAI.toLowerCase()}`;
   r = await appeler(`${E}/bilan?p=semaine&d=${encodeURIComponent(cleE2e)}`, { headers: avecJeton() });
   html = await r.text();
   const ligneCampagne = html.split(`data-campagne="${cleE2e}"`)[1]?.split('</tr>')[0] ?? '';
   const nCampagne = [...ligneCampagne.matchAll(/class="n"[^>]*>(\d+)</g)].map((m) => Number(m[1]));
   const detail = html.split(`data-detail="${cleE2e}"`)[1]?.split('</table>')[0] ?? '';
   const q10 = detail.split('data-etape="q10"')[1]?.split('</tr>')[0] ?? '';
-  constat(r.status === 200 && ligneCampagne.includes(`facebook · carrousel-${ESSAI.toLowerCase()}`) && nCampagne.slice(0, 2).join(',') === '3,2' && nCampagne[3] === 1,
+  constat(r.status === 200 && ligneCampagne.includes(`facebook · paid · carrousel-${ESSAI.toLowerCase()}`) && nCampagne.slice(0, 2).join(',') === '3,2' && nCampagne[3] === 1,
     `bilan : entonnoir par campagne, 3 arrivées, 2 commencés, 1 aux coordonnées (${nCampagne.join(',')})`);
-  constat(q10.includes('>1<') && html.includes('Sans lien de campagne') && html.includes(`Étape par étape : facebook · carrousel-${ESSAI.toLowerCase()}`),
+  constat(q10.includes('>1<') && html.includes('Sans lien de campagne') && html.includes(`Étape par étape : facebook · paid · carrousel-${ESSAI.toLowerCase()}`),
     'bilan : étape par étape pour la campagne choisie, questions 10 a et b comptées une fois, visite sans campagne à part');
 
   // 5 sexies. Prescripteurs (story 13.14).
@@ -1056,7 +1056,7 @@ try {
   const bilanClaude = await r.json();
   constat(r.status === 200 && bilanClaude.canaux?.find((l) => l.canal === 'rencontre')?.cout_centimes >= 40000 && !JSON.stringify(bilanClaude).includes('@'),
     'Claude : bilan par canal avec les coûts, sans aucune coordonnée');
-  constat(bilanClaude.diagnostic?.campagnes?.some((c) => c.libelle === `facebook · carrousel-${ESSAI.toLowerCase()}` && c.arrivees === 3 && c.coordonnees === 1),
+  constat(bilanClaude.diagnostic?.campagnes?.some((c) => c.libelle === `facebook · paid · carrousel-${ESSAI.toLowerCase()}` && c.arrivees === 3 && c.coordonnees === 1),
     'Claude : entonnoir du diagnostic par campagne dans le bilan');
   r = await appeler(`${E}/actions`, { headers: avecJeton() });
   constat((await r.text()).includes('créée par Claude'), 'page Actions : l\'action de Claude porte « créée par Claude »');

@@ -6,7 +6,7 @@
 // Story 10.12 : chaque écran atteint, l'écran des coordonnées, l'envoi et son issue sont comptés sans donnée personnelle
 // (îlot entonnoir), pour savoir où les visiteurs s'arrêtent.
 import contenu from '../content/diagnostic/questions.json';
-import { compter } from './entonnoir';
+import { compter, fixerCampagne } from './entonnoir';
 import { telephoneValide, emailValide, envoyer, ulid } from './formulaires';
 
 type Reponses = Record<string, string[]>;
@@ -44,10 +44,12 @@ if (racine) {
     if (repere) repere.textContent = i < N ? `Question ${e.numero} / 15` : '';
   }
 
+  let dejaCompte = ''; // écran déjà compté par le premier passage d'un parcours repris : pas recompté (story 10.12)
   function rendreEcran(i: number) {
     const e = ECRANS[i];
     majProgression(i);
-    compter('ecran', e.id);
+    if (e.id !== dejaCompte) compter('ecran', e.id);
+    dejaCompte = '';
     const cat = categories[e.categorie]?.libelle ?? '';
     const retour = i > 0 ? html`<button type="button" class="qz-retour" data-retour>← Retour</button>` : '';
     let corps = '';
@@ -186,12 +188,11 @@ if (racine) {
     const e = ECRANS[Math.min(sauve.ecran, N - 1)];
     const n = Object.keys(sauve.reponses).length;
     majProgression(sauve.ecran);
-    compter('reprise', e.id);
     zone.innerHTML = html`<div class="qz-reprise"><h1>Vous étiez à la question ${e.numero}</h1>
       <p>${n === 1 ? 'Votre première réponse est gardée' : `Vos ${n} premières réponses sont gardées`} sur cet appareil.</p>
       <button type="button" class="btn btn-primaire" data-reprendre>Reprendre</button>
       <button type="button" class="qz-recommencer lien" style="background:none;border:0" data-recommencer>Recommencer</button></div>`;
-    zone.querySelector('[data-reprendre]')?.addEventListener('click', () => { etat = sauve; aller(sauve.ecran); });
+    zone.querySelector('[data-reprendre]')?.addEventListener('click', () => { etat = sauve; fixerCampagne(sauve.utm); compter('reprise', ECRANS[sauve.ecran]?.id); dejaCompte = ECRANS[sauve.ecran]?.id ?? ''; aller(sauve.ecran); });
     zone.querySelector('[data-recommencer]')?.addEventListener('click', () => { etat = neuf(); aller(0); });
   }
 
