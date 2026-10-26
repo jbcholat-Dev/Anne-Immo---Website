@@ -142,10 +142,11 @@ development_status:
   10-5-guide-par-lien-signé-et-séquence-d-e-mails-de-la-sortie-b: done
   10-6-rendez-vous-cal-com-intégré: done
   10-7-administration-et-droits-rgpd: done
-  10-8-surveillance-mesure-et-test-synthétique: backlog
+  10-8-surveillance-mesure-et-test-synthétique: backlog   # 2026-10-26 : la mesure de l'entonnoir en est sortie (story 10.12) ; restent surveillance et test synthétique
   10-9-e-mails-du-site-à-la-charte: review   # revu le 2026-10-25 : allure « lettre sobre » en production depuis le 2026-10-11 ; reste la relecture d'Anne (action A17) et un envoi réel capturé
   10-10-rapport-pdf-personnalisé-du-diagnostic: review
   10-11-réponses-du-diagnostic-lisibles-dans-la-gestion: done
+  10-12-entonnoir-du-diagnostic-par-campagne: review   # 2026-10-26, accord de JB pour « la mesure seule »
   epic-10-retrospective: optional
 
   epic-11: in-progress

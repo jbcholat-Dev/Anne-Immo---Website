@@ -1701,6 +1701,8 @@ afin qu'aucun lead ne se perde en silence et que la mesure d'audience se fasse s
 **Alors** il réalise une soumission de test réelle (test synthétique : un faux prospect joué par la machine) parcourant gate → D1 → diffusion avec `is_test = 1`, les adaptateurs routant les e-mails vers la boîte de test, jamais vers Anne ni vers la séquence (AD-12)
 **Et** en fin d'exécution le cron supprime son propre lead de test et alerte s'il n'y parvient pas ; après chaque succès il envoie un battement (signal « je suis vivant ») à Better Stack, qui alerte si le battement manque (AD-12).
 
+**Note du 2026-10-26 :** ce critère (comptage de l'entonnoir) est sorti dans la story 10.12, construite seule à la demande de JB ; la 10.8 garde la surveillance et le test synthétique.
+
 **Étant donné** la migration `migrations/0003-funnel-event.sql` et la route du noyau qui reçoit les événements de l'îlot du parcours
 **Quand** un visiteur démarre le diagnostic, atteint un écran, soumet, ou réserve un rendez-vous
 **Alors** une ligne `funnel_event` (`journey_id`, `event`, `screen`, `lang`, `is_test`, `at`) est écrite sous le `journey_id` aléatoire créé en mémoire de l'îlot, jamais déposé dans le navigateur, sans donnée personnelle et sans référence à `lead` (AD-6, AD-11)
@@ -1712,6 +1714,16 @@ afin qu'aucun lead ne se perde en silence et que la mesure d'audience se fasse s
 **Et** le RUNBOOK décrit la routine mensuelle (admin, rapprochement, export mensuel chiffré des leads déposé dans le coffre partagé, dépendances, erreurs) (AD-10, AD-12).
 
 **État :** à faire ; responsable : Claude, prérequis : 10.4 (gate serveur à tester), 10.7 (admin pour les compteurs), compte Better Stack au nom d'Anne avec JB invité, fichiers concernés : `site/worker.ts`, `site/src/server/adapters/monitoring.ts`, `site/src/server/funnel.ts`, `site/src/pages/api/funnel.ts`, `site/migrations/0003-funnel-event.sql`, `site/src/islands/diagnostic.ts`, `site/src/pages/admin/…`, `RUNBOOK.md`, durée estimée : 1 session (une journée).
+
+### Story 10.12: Entonnoir du diagnostic par campagne
+
+En tant que JB,
+je veux savoir à quelle étape du diagnostic les visiteurs s'arrêtent, campagne par campagne,
+afin de décider s'il faut raccourcir le diagnostic ou déplacer la demande de coordonnées.
+
+**Critères d'acceptation :** chaque étape (arrivée sur /diagnostic, chaque écran, coordonnées, envoi, échec, résultat) est comptée sans cookie ni donnée personnelle, avec les paramètres utm du lien, sous un numéro tiré à chaque ouverture de page et gardé en mémoire seulement (AD-11) ; le Bilan de l'espace d'Anne montre l'entonnoir par campagne et étape par étape ; les comptages de test sont exclus en production ; ils sont purgés après 13 mois ; la page Cookies le dit.
+
+**État :** en relecture (2026-10-26), détail dans `implementation-artifacts/10-12-entonnoir-du-diagnostic-par-campagne.md`.
 
 ### Story 10.9: E-mails du site à la charte
 
