@@ -1723,7 +1723,7 @@ afin de décider s'il faut raccourcir le diagnostic ou déplacer la demande de c
 
 **Critères d'acceptation :** chaque étape (arrivée sur /diagnostic, chaque écran, coordonnées, envoi, échec, résultat) est comptée sans cookie ni donnée personnelle, avec les paramètres utm du lien, sous un numéro tiré à chaque ouverture de page et gardé en mémoire seulement (AD-11) ; le Bilan de l'espace d'Anne montre l'entonnoir par campagne et étape par étape ; les comptages de test sont exclus en production ; ils sont purgés après 13 mois ; la page Cookies le dit.
 
-**État :** en relecture (2026-10-26), détail dans `implementation-artifacts/10-12-entonnoir-du-diagnostic-par-campagne.md`.
+**État :** fait (2026-10-26, PR #205), détail dans `implementation-artifacts/10-12-entonnoir-du-diagnostic-par-campagne.md`.
 
 ### Story 10.9: E-mails du site à la charte
 
