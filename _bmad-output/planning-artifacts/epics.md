@@ -2544,6 +2544,17 @@ afin d'affiner le design et les fonctions avec Anne avant de les construire.
 - La maquette montre la fiche contact, noter la suite, les contacts, le pipeline, Qualifier avec les critères d'un acheteur et la ligne « Cherche » des acheteurs.
 - Chaque changement retenu devient une story.
 
+
+### Story 13.33: Recopie de l'espace en ligne dans la maquette, sur ordinateur
+
+En tant que JB,
+je veux dans la maquette une copie exacte de l'espace en ligne, en version ordinateur,
+afin de repartir de l'existant pour la refonte.
+
+**Critères d'acceptation :**
+- Chaque page de l'espace a son écran dans la maquette, à la largeur d'un ordinateur, avec des données fictives.
+- La copie se refait par un script, sans retoucher les écrans à la main.
+
 ### Story 14.1: Décision de principe
 
 En tant que JB,
