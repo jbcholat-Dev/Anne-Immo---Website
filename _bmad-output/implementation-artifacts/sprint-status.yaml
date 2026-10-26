@@ -151,7 +151,7 @@ development_status:
 
   epic-11: in-progress
   11-1-session-de-cadrage-de-la-stratégie-de-visibilité: backlog
-  11-2-fiche-google-business-profile: in-progress   # revu le 2026-10-25 : attend Anne (création et validation de la fiche, action A01)
+  11-2-fiche-google-business-profile: done   # close le 2026-10-26 : fiche validée, complète, propriété transférée à Anne ; demande d'avis reportée (A01b)
   11-3-bases-techniques-du-référencement-dans-le-site: done
   11-4-amendement-de-la-spec-et-découpage-des-stories-de-contenu-is: backlog
   11-5-publicité-locale-test-à-petit-budget-après-lancement: backlog

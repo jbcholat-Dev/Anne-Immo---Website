@@ -59,12 +59,15 @@ Sources : [règles de représentation](https://support.google.com/business/answe
 - 2026-10-12 : process et liste écrits dans le fil « Fiche Google Business », story ouverte.
 - 2026-10-24 : choix de JB notés, logo et couverture préparés.
 - 2026-10-24 : fiche créée par JB et validée d'emblée par Google (coche « Vous gérez cette fiche d'établissement »), zones desservies saisies (en cours de validation par Google), réseaux ajoutés sauf Facebook (Google refuse l'adresse `profile.php?id=…` et aucun nom d'utilisateur Facebook n'a pu être choisi). Fiche ajoutée à la carte des comptes du RUNBOOK.
+- 2026-10-26 : fiche complète (logo, couverture, horaires lun.-sam. 9 h-19 h, 16 communes, « France » retiré des zones, ce qui recentre la carte sur le Chablais). Doublon non validé « Anne Vial-Tissot Immobilier » supprimé par JB (Google n'admet qu'une fiche par personne). Propriété principale transférée à Anne par JB. Nom, téléphone et site identiques à ceux du site.
 - Constat de JB : sur la recherche « Anne VIAL-TISSOT », annevialtissot.fr arrive après SeLoger, expluxury.fr et Leboncoin ; transmis au fil « [Site] Référencement Google ».
 
-## Ce qui reste
+## Statut
 
-- JB vérifie quel compte détient la fiche ; si c'est le sien, il ajoute Anne comme propriétaire puis lui transfère la propriété principale.
-- Compléter : description, horaires, date d'ouverture, logo et couverture désignés, photos de ventes.
-- Récupérer le lien « Demander des avis » ; Claude rédige le message aux anciens clients.
-- Ajouter le lien de la fiche dans les données structurées du site si utile.
-- Vérifier que nom, téléphone et site sont identiques à ceux du site.
+Close le 2026-10-26 (vérification : captures de JB dans le fil, fiche gérée, zones et horaires conformes).
+
+## Suites, hors de cette story
+
+- Demande d'avis Google aux anciens clients : reportée par JB le 2026-10-26 (« on s'occupe de ça un peu plus tard »). Récupérer le lien « Demander des avis » ; Claude rédige le message. Action A01b du tableau de bord.
+- Lien de la fiche dans les données structurées du site : à voir avec le fil « [Site] Référencement Google ».
+- Facebook absent de la fiche (adresse `profile.php` refusée par Google).
