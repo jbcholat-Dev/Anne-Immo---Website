@@ -1,7 +1,7 @@
 ---
 story: 10.12
 epic: 10 — Capture des leads et backend
-statut: review
+statut: done
 date: 2026-10-26
 ---
 
@@ -46,6 +46,9 @@ Cette story reprend la partie « mesure » de la story 10.8 (critère `funnel_ev
 9. Visiteurs derrière une même adresse au-delà de 60 par minute : corrigé (120 par minute ; trois diagnostics dans la même minute dépassaient 60 lors de l'essai).
 Corrections dans le commit qui suit 63de25a.
 
+## Mise en ligne
+- PR #205 fusionnée le 2026-10-26 à 9 h 26 (heure UTC) sur l'accord de JB (« merge »), commit f9bad1e.
+- Constaté sur annevialtissot.fr le 2026-10-26 : `/api/sante` répond `migrations: 15` (table `entonnoir` créée sur la base de production) ; `POST /api/entonnoir` répond (400 à un passage non conforme) ; la page /diagnostic charge le script de comptage (`entonnoir.*.js`, étape `arrivee`).
+
 ## Ce qui reste
-- Revue de code, PR, accord de JB, fusion. La migration 0015 s'applique seule à la construction.
 - Après la mise en ligne : lire l'entonnoir de la publicité au bout d'une semaine et en faire le point à JB.
