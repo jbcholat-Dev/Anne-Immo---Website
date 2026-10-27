@@ -1,6 +1,8 @@
 # Design system « Anne VIAL-TISSOT » — bundle DesignSync
 
-Bundle prêt à pousser vers un projet **Design System** du compte claude.ai/design (étape ② de la méthode Website). Source de vérité : `Identité Visuelle/Charte/Charte v1 — Anne Vial-Tissot.md`.
+Bundle prêt à pousser vers un projet **Design System** du compte claude.ai/design (étape ② de la méthode Website).
+
+**Copie de référence dans Claude (depuis le 2026-10-27)** : l'artefact « Design System » https://claude.ai/artifact/JtgYdfPuoiMoiH2BAPU1EV (titre « Anne VIAL-TISSOT »), recréé depuis ce dossier, section Infographies comprise, au nouveau format intégré à Claude. C'est lui que les fils Claude lisent. L'ancien projet claude.ai/design ferme le 14/12/2026 : la procédure de push ci-dessous ne sert plus que jusque-là. À chaque changement de ce dossier, réviser aussi l'artefact (même noms de couleurs `avt-*` que `tokens/tokens.css`). Écart assumé : ses aperçus Boutons, Cartes et Hero sont refaits d'après `site/src/styles/global.css` (boutons pleins en `#A34E30`, D-47), alors que les cartes `components/*.html` d'ici montrent encore l'ancien bouton `#C4623E`. Source de vérité : `Identité Visuelle/Charte/Charte v1 — Anne Vial-Tissot.md`.
 
 ## Contenu
 
