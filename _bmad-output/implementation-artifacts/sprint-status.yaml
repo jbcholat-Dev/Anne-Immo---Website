@@ -121,7 +121,7 @@ development_status:
   8-20-ligne-signature-sous-le-nom-de-famille: done
   8-22-retour-au-terracotta-d-origine: done
   8-23-offert-plutôt-que-gratuit: done   # 2026-10-26, PR n° 204 fusionnée (JB) ; 2026-10-25, décision de JB : « offert », jamais « gratuit »
-  8-24-section-infographies-du-design-system: review   # 2026-10-27, demande de JB : règle des infographies « schéma » (style Herubel, capsules à bulle) dans design-system/infographies/, D-49
+  8-24-section-infographies-du-design-system: done   # 2026-10-27, PR n° 210 fusionnée sur l'accord de JB : règle des infographies « schéma » (style Herubel, flux et échelle en référence) dans design-system/infographies/, D-49
   epic-8-retrospective: optional
 
   epic-9: in-progress

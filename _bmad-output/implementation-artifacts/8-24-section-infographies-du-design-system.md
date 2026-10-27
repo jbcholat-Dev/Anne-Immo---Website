@@ -1,7 +1,7 @@
 ---
 story: 8.24
 epic: 8 — Structure et visuel
-statut: review
+statut: done
 date: 2026-10-27
 ---
 
@@ -36,7 +36,7 @@ Sources : captures Herubel et note `/mnt/project-files/publication-quotidienne/i
 - Le canevas V2 (flux) avait un fond blanc ; la règle retient l'écru partout (charte : « jamais de blanc pur en fond »).
 
 ## Ce qui reste
-- Accord de JB sur la PR (elle touche `design-system/`, RUNBOOK § 2 bis), puis passer la story en `done`.
-- Envoyer le dossier `design-system/` dans le projet « Anne VIAL-TISSOT — Design System » de claude.ai/design (dernier envoi le 2026-09-22), une fois la PR fusionnée.
-- Faire valider les exemples « couches » et « boucle » avant d'en faire des séries.
+- Fusion : accord de JB le 2026-10-27 à 13 h 23 (« c'est bien mieux… tu peux fusionner la PR toi-même ») ; il apprécie aussi la planche des pièces détachées. PR n° 210.
+- Envoyer le dossier `design-system/` dans le projet « Anne VIAL-TISSOT — Design System » de claude.ai/design (dernier envoi le 2026-09-22) : fait juste après la fusion, résultat dans le fil.
+- Exemples « couches » et « boucle » : JB veut partir sur cette base et itérer ; à décliner en séries avec le fil des publications.
 - Le fil des publications met la section à jour quand le style évolue (prochaine étape : déclinaison aux 16 capsules).
