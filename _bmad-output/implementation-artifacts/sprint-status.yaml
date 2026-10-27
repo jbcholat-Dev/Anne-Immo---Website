@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-26-2026 15:10
-last_updated: 10-25-2026 17:30
+last_updated: 10-27-2026 14:00
 project: Site Anne Vial-Tissot
 project_key: NOKEY
 tracking_system: file-system
@@ -121,6 +121,7 @@ development_status:
   8-20-ligne-signature-sous-le-nom-de-famille: done
   8-22-retour-au-terracotta-d-origine: done
   8-23-offert-plutôt-que-gratuit: done   # 2026-10-26, PR n° 204 fusionnée (JB) ; 2026-10-25, décision de JB : « offert », jamais « gratuit »
+  8-24-section-infographies-du-design-system: review   # 2026-10-27, demande de JB : règle des infographies « schéma » (style Herubel, capsules à bulle) dans design-system/infographies/, D-49
   epic-8-retrospective: optional
 
   epic-9: in-progress

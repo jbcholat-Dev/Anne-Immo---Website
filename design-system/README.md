@@ -14,6 +14,10 @@ Bundle prêt à pousser vers un projet **Design System** du compte claude.ai/des
 | `components/boutons.html` | Bouton pilule primaire/hover, secondaire, lien | Components |
 | `components/cartes-encarts.html` | Carte galet, encart brume, séparateur horizon | Components |
 | `components/hero.html` | Pattern hero du site (titre + signature + CTA + bandeau Klein) | Patterns |
+| `infographies/README.md` | **Règle des infographies et images des réseaux** (style « schéma » inspiré de Pierre Herubel, palette d'Anne, formats, mouvement des capsules, bulle d'Anne, fabrication) — story 8.24, D-49 | — |
+| `infographies/pieces.html` | Pièces des infographies : cartes trois tons, pilules, « Le piège », schéma, conseil d'Anne, bulle | Infographies |
+| `infographies/schema-cercle.html` | Gabarit de référence au format fil 4:5 (schéma « cercle ») | Infographies |
+| `infographies/capsule-bulle.html` | Capsule vidéo 9:16 : fin de la scène schéma, bulle d'Anne, zones à laisser libres | Infographies |
 | `assets/*.svg` | 16 SVG : 6 logos primaires sans sous-titre + 4 `*-descripteur*` + 4 `lockup-exp-*` (copies de `Identité Visuelle/Charte/Logos/`) + 2 logos eXp officiels Black/White | — |
 
 Règle logo (2026-09-22) : **sans sous-titre par défaut** ; la version avec descripteur seulement au-dessus du seuil de lisibilité (charte § 2.3), jamais sur le site.
