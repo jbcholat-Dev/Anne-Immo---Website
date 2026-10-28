@@ -91,13 +91,14 @@ export async function entonnoir(env: EnvSite, debut: string): Promise<{ total: C
   // plutôt qu'un Bilan en erreur.
   const results = await env.DB.prepare(
     // Questions : les variantes a/b comptées ensemble (q10a, q10b → q10) ; étapes de la story 10.14 : la précision gardée
-    // (clic-diagnostic, estimation-agenda…). « estimation » : passages avec agenda touché ou formulaire commencé, comptés une fois.
+    // (clic-diagnostic, estimation-agenda…). « estimation » : passages avec agenda touché, formulaire de vente commencé, rendez-vous réservé ou demande envoyée
+    // (si le premier geste a échappé au comptage), comptés une fois.
     `SELECT source, support, campagne, contenu, etape, CASE WHEN etape = 'ecran' THEN substr(ecran, 1, 3) ELSE ecran END AS q, count(DISTINCT parcours) AS n
      FROM entonnoir WHERE at >= ?1 AND (is_test = 0 OR ?2 = 0)
      GROUP BY source, support, campagne, contenu, etape, q
      UNION ALL
      SELECT source, support, campagne, contenu, 'estimation', '', count(DISTINCT parcours)
-     FROM entonnoir WHERE at >= ?1 AND (is_test = 0 OR ?2 = 0) AND etape = 'estimation' AND ecran IN ('agenda', 'formulaire')
+     FROM entonnoir WHERE at >= ?1 AND (is_test = 0 OR ?2 = 0) AND etape = 'estimation' AND ecran IN ('agenda', 'formulaire', 'reservation', 'demande')
      GROUP BY source, support, campagne, contenu`,
   ).bind(debut, enProduction(env) ? 1 : 0).all<Ligne>().then((r) => r.results).catch((e) => {
     journal('entonnoir_lecture_echec', { detail: String(e).slice(0, 200) });

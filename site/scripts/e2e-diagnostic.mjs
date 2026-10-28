@@ -205,13 +205,13 @@ try {
   const pa = await ctxAb.newPage();
   pa.on('pageerror', (e) => erreursNav.push(`accueil: ${e.message}`));
   const pubAccueil = `utm_source=meta&utm_medium=pub&utm_campaign=diagnostic-2026&utm_content=accueil-${ESSAI}`;
-  await pa.goto(`${U}/?${pubAccueil}`, { waitUntil: 'networkidle' });
+  await pa.goto(`${U}/?${pubAccueil}`, { waitUntil: 'load' }); await pause(500); // la vidéo de l'accueil tourne en boucle : jamais « networkidle »
   const lienDiag = await pa.getAttribute('.hero [data-clic=diagnostic]', 'href');
   const lienEstim = await pa.getAttribute('.hero [data-clic=estimation]', 'href');
   await pa.click('.hero [data-clic=diagnostic]'); await pa.waitForURL(/\/diagnostic/); await pause(500);
   const urlDiag = pa.url();
-  await pa.goto(`${U}/?${pubAccueil}`, { waitUntil: 'networkidle' });
-  await pa.click('.hero [data-clic=estimation]'); await pa.waitForURL(/\/contact/); await pa.waitForLoadState('networkidle');
+  await pa.goto(`${U}/?${pubAccueil}`, { waitUntil: 'load' }); await pause(500); // la vidéo de l'accueil tourne en boucle : jamais « networkidle »
+  await pa.click('.hero [data-clic=estimation]'); await pa.waitForURL(/\/contact/); await pa.waitForLoadState('load');
   const urlContact = pa.url();
   await pa.locator('form[data-formulaire] input[type=text], form[data-formulaire] input[type=email]').first().fill('Essai');
   await pause(500);

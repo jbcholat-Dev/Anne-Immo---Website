@@ -37,14 +37,22 @@ const x = await textes('contact');
     // L'agenda est une page de Cal.com dans un cadre : on ne voit pas ce qui s'y passe, seulement que le visiteur y entre
     // (la page perd le focus au profit du cadre) et, par Cal.com, qu'une réservation est faite.
     import { compter } from '../islands/entonnoir';
+    // Le formulaire sert aussi aux acheteurs et aux simples messages : seul un projet de vente compte comme estimation.
     const formulaire = document.querySelector<HTMLFormElement>('form[data-formulaire]');
-    formulaire?.addEventListener('input', () => compter('estimation', 'formulaire'), { once: true });
-    formulaire?.addEventListener('avt:envoye', () => compter('estimation', 'demande'));
-    const surCadre = () => {
+    const vente = () => !!formulaire && new FormData(formulaire).get('projet') === 'vente';
+    const surSaisie = () => {
+      if (!vente()) return;
+      formulaire?.removeEventListener('input', surSaisie);
+      compter('estimation', 'formulaire');
+    };
+    formulaire?.addEventListener('input', surSaisie);
+    formulaire?.addEventListener('avt:envoye', () => { if (vente()) compter('estimation', 'demande'); });
+    // Certains navigateurs (Safari, Firefox) ne donnent le focus au cadre qu'après l'événement « blur » : on regarde juste après.
+    const surCadre = () => setTimeout(() => {
       if (!(document.activeElement instanceof HTMLIFrameElement && document.activeElement.closest('[data-agenda-cadre]'))) return;
       window.removeEventListener('blur', surCadre);
       compter('estimation', 'agenda');
-    };
+    }, 0);
     window.addEventListener('blur', surCadre);
 
     // Agenda Cal.com (story 10.6) : le script de Cal.com n'est chargé qu'à la demande du visiteur (AD-11). Arriver par un lien

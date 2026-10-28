@@ -56,8 +56,7 @@ const note = String(inst.note).replace('.', ',');
   compter('arrivee');
   // Une campagne arrive ici avec ses paramètres (utm_source, utm_campaign…) dans l'adresse. On les recopie sur les liens
   // vers le parcours, le guide et le contact, sinon ils se perdent au premier clic et le contact capté n'a plus d'origine.
-  const main = document.querySelector('main');
-  if (main) garderCampagne(main, /^\/(?:en\/)?(?:diagnostic\/questions|guide|contact)\/?$/);
+  garderCampagne(document, /^\/(?:en\/)?(?:diagnostic\/questions|guide|contact)\/?$/);
 </script>
 <style>
   .dl-offre { padding: 80px var(--marge) 96px; display: grid; grid-template-columns: 1fr 520px; gap: 96px; align-items: center; }
