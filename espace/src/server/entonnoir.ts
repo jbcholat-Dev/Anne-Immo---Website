@@ -108,7 +108,7 @@ export interface LigneQuestion1 {
   question2: number;
 }
 
-type Brute = { integre: number | null; appareil: string; affichage: string; n: number; touches: number; suivants: number };
+type Brute = { source: string; support: string; campagne: string; contenu: string; integre: number | null; appareil: string; affichage: string; n: number; touches: number; suivants: number };
 
 const NAVIGATEURS: [string, (b: Brute) => boolean][] = [
   ['Application Instagram ou Facebook', (b) => b.integre === 1],
@@ -126,22 +126,28 @@ const AFFICHAGES: [string, (b: Brute) => boolean][] = [
   ['Pas à l\'écran à l\'affichage (préchargée ou en arrière-plan)', (b) => b.affichage === 'cachee'],
 ];
 
-/** Passage de la question 1 à la question 2, ventilé par navigateur, appareil et temps d'affichage, pour une campagne
- * (clé de `entonnoir()`) ou toutes. Les passages d'avant le 28 octobre 2026 n'ont pas ces informations : « non mesuré ». */
-export async function question1(env: EnvSite, debut: string, cle: string): Promise<{ titre: string; lignes: LigneQuestion1[] }[]> {
-  const parts = cle === TOUTES || cle === AUTRES ? null : cle.split('|');
-  const filtre = parts && parts.length === 4 ? ' AND e.source = ?3 AND e.support = ?4 AND e.campagne = ?5 AND e.contenu = ?6' : '';
-  const brutes = await env.DB.prepare(
-    `SELECT e.integre, e.appareil, e.affichage, count(*) AS n,
+/** Passage de la question 1 à la question 2, ventilé par navigateur, appareil et temps d'affichage. Une seule lecture de la
+ * base pour toutes les campagnes : la fonction rendue donne la ventilation d'une clé de `entonnoir()` (« toutes », une campagne,
+ * ou « autres » = celles hors de la liste `campagnes`). Les passages d'avant le 28 octobre 2026 n'ont pas ces informations :
+ * « non mesuré ». */
+export async function question1(env: EnvSite, debut: string, campagnes: Campagne[]): Promise<(cle: string) => { titre: string; lignes: LigneQuestion1[] }[]> {
+  const toutes = await env.DB.prepare(
+    `SELECT e.source, e.support, e.campagne, e.contenu, e.integre, e.appareil, e.affichage, count(*) AS n,
        sum(EXISTS (SELECT 1 FROM entonnoir i WHERE i.parcours = e.parcours AND i.etape = 'interaction' AND i.ecran = '')) AS touches,
        sum(EXISTS (SELECT 1 FROM entonnoir s WHERE s.parcours = e.parcours AND s.etape = 'ecran' AND s.ecran = 'q02')) AS suivants
-     FROM entonnoir e WHERE e.etape = 'ecran' AND e.ecran = 'q01' AND e.at >= ?1 AND (e.is_test = 0 OR ?2 = 0)${filtre}
-     GROUP BY e.integre, e.appareil, e.affichage`,
-  ).bind(debut, enProduction(env) ? 1 : 0, ...(filtre ? parts! : [])).all<Brute>().then((r) => r.results).catch((e) => {
+     FROM entonnoir e WHERE e.etape = 'ecran' AND e.ecran = 'q01' AND e.at >= ?1 AND (e.is_test = 0 OR ?2 = 0)
+     GROUP BY e.source, e.support, e.campagne, e.contenu, e.integre, e.appareil, e.affichage`,
+  ).bind(debut, enProduction(env) ? 1 : 0).all<Brute>().then((r) => r.results).catch((e) => {
     // Avant la migration 0016 (appliquée par la construction du site), les colonnes manquent : ventilation vide.
     journal('entonnoir_question1_echec', { detail: String(e).slice(0, 200) });
     return [] as Brute[];
   });
+  const listees = new Set(campagnes.map((c) => c.cle));
+  const cleDe = (b: Brute) => [b.source, b.support, b.campagne, b.contenu].join('|');
+  return (cle) => ventiler(toutes.filter((b) => cle === TOUTES || (cle === AUTRES ? !listees.has(cleDe(b)) : cleDe(b) === cle)));
+}
+
+function ventiler(brutes: Brute[]): { titre: string; lignes: LigneQuestion1[] }[] {
   const ligne = (libelle: string, garder: (b: Brute) => boolean): LigneQuestion1 => brutes.filter(garder).reduce(
     (l, b) => ({ ...l, question1: l.question1 + b.n, touches: l.touches + b.touches, question2: l.question2 + b.suivants }),
     { libelle, question1: 0, touches: 0, question2: 0 });

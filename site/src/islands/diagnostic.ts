@@ -46,11 +46,13 @@ if (racine) {
 
   let dejaCompte = ''; // écran déjà compté par le premier passage d'un parcours repris : pas recompté (story 10.12)
   let affiche = ''; // écran à l'écran en ce moment : le premier toucher n'est compté que sur la question 1 (story 10.13)
+  let premierRendu = true; // temps d'affichage mesuré seulement si la question 1 est le premier écran montré après le chargement
   function rendreEcran(i: number) {
     const e = ECRANS[i];
     majProgression(i);
     affiche = e.id;
-    if (e.id !== dejaCompte) compter('ecran', e.id, i === 0 ? palierAffichage() : undefined);
+    if (e.id !== dejaCompte) compter('ecran', e.id, i === 0 && premierRendu ? palierAffichage() : undefined);
+    premierRendu = false;
     dejaCompte = '';
     const cat = categories[e.categorie]?.libelle ?? '';
     const retour = i > 0 ? html`<button type="button" class="qz-retour" data-retour>← Retour</button>` : '';
@@ -211,15 +213,15 @@ if (racine) {
   });
   dialogue?.querySelector('[data-abandon-continuer]')?.addEventListener('click', () => dialogue.close());
 
-  // Story 10.13 : premier toucher, clic ou touche du clavier sur la question 1, compté une fois. Une question 1 quittée
-  // sans interaction (page jamais touchée) signale une page qui n'a pas été vue, ou qui ne répond pas.
-  let interaction = false;
+  // Story 10.13 : premier clic (ou toucher) ou touche du clavier dans la question 1, compté une fois ; un simple défilement
+  // ou un toucher sur l'en-tête ne compte pas. Une question 1 quittée sans interaction signale une page pas vue, ou un
+  // visiteur qui n'a pas essayé de répondre.
   const surInteraction = () => {
-    if (interaction || affiche !== ECRANS[0].id) return;
-    interaction = true;
+    if (affiche !== ECRANS[0].id) return;
+    for (const type of ['click', 'keydown']) zone.removeEventListener(type, surInteraction, { capture: true });
     compter('interaction');
   };
-  for (const type of ['pointerdown', 'touchstart', 'keydown']) document.addEventListener(type, surInteraction, { capture: true, passive: true });
+  for (const type of ['click', 'keydown']) zone.addEventListener(type, surInteraction, { capture: true, passive: true });
 
   const sauve = charger();
   if (sauve && sauve.ecran > 0 && sauve.ecran < N) rendreReprise(sauve);

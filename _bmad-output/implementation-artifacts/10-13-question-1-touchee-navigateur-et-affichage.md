@@ -28,11 +28,19 @@ Au 28 octobre 2026, environ 310 visiteurs venus de la publicité Meta ont vu la 
 - `npm run build` et `npm run check` (site et espace) : 0 erreur.
 - Migration 0016 appliquée sur une base locale qui contenait déjà des passages : lignes recopiées.
 - `node scripts/e2e-diagnostic.mjs` : 42 constats bons, dont 5 nouveaux : question 1 touchée, navigateur habituel, ordinateur et palier d'affichage pour chacun des trois parcours ; navigateur intégré d'Instagram sur iPhone reconnu par l'en-tête, palier inventé oublié ; page préchargée (pas à l'écran) comptée « cachee », sans toucher ; la table n'a que les colonnes prévues.
-- `node scripts/e2e-espace.mjs` : voir la section « Revue de code » (résultat cité avec la PR).
+- Après les corrections de la revue : `node scripts/e2e-diagnostic.mjs` « Tous les constats sont bons » (42 constats) ; `node scripts/e2e-espace.mjs` « Tout est bon » (296 constats, dont la ventilation 2,1,1,50 % et le bilan de Claude). Au premier passage, avant les corrections, une capture d'écran d'une fiche contact avait échoué (« frame was detached ») sans lien avec cette story ; non reproduit.
 
 ## Revue de code
-À faire en session neuve (story 9.8) avant de proposer la PR à JB.
+2026-10-28, PR #213, commit e883e60 relu en session neuve (méthode `bmad-code-review` appliquée à la main : le skill n'était pas invocable par l'agent de relecture). `npm run check` : 0 erreur (site et espace).
+1. « Autres campagnes » affichait la ventilation de toutes les campagnes : corrigé (une seule lecture groupée par campagne, filtrée ensuite ; le bilan de Claude passe d'une requête par campagne à une seule).
+2. Temps d'affichage faussé après « Recommencer » ou un retour à la question 1 : corrigé (mesuré seulement si la question 1 est le premier écran montré après le chargement).
+3. Un défilement ou un toucher sur l'en-tête comptait comme « écran touché » : corrigé (clic ou touche du clavier dans la question seulement, écoute retirée après le premier comptage ; texte du Bilan nuancé).
+4. Page préparée d'avance par le navigateur : corrigé (« cachee » pendant la préparation, temps compté depuis l'activation).
+5. Bilan de Claude indexé par libellé (collisions possibles) : corrigé (liste `campagnes` avec clé, libellé, ventilation).
+6. En-tête de groupe sans `scope` : corrigé (`scope="rowgroup"`).
+7. Les constructions de branche appliquent déjà la 0016 à la base d'aperçu : noté, toute retouche future passera par une 0017 (aucune retouche de la 0016 dans les corrections).
+Correctifs : commit suivant e883e60 dans la même PR.
 
 ## Ce qui reste
-- Revue de code, PR, accord de JB, fusion (la migration s'applique à la construction).
+- Accord de JB et fusion de la PR #213 (la migration s'applique à la construction), vérification en ligne.
 - Lundi 2 novembre : premier rituel de lecture (méthode d'analyse) avec cette ventilation.

@@ -16,6 +16,7 @@ export const GET: APIRoute = async ({ request, url }) => {
   const b = await bilan(env, periode);
   const couts = await coutsParCanal(env, b.debut);
   const diag = await entonnoir(env, b.debut);
+  const ventiler = await question1(env, b.debut, diag.campagnes);
   return new Response(JSON.stringify({
     periode, depuis: b.debut, total: { ...b.total, cout_centimes: [...couts.values()].reduce((t, c) => t + c, 0) },
     canaux: b.lignes.map((l) => ({ ...l, cout_centimes: couts.get(l.canal) ?? 0 })),
@@ -23,7 +24,7 @@ export const GET: APIRoute = async ({ request, url }) => {
     diagnostic: {
       total: diag.total, campagnes: diag.campagnes,
       // Story 10.13 : question 1 → question 2 par navigateur, appareil et temps d'affichage, toutes campagnes puis chacune.
-      question1: { toutes: await question1(env, b.debut, TOUTES), ...Object.fromEntries(await Promise.all(diag.campagnes.map(async (c) => [c.libelle, await question1(env, b.debut, c.cle)]))) },
+      question1: { toutes: ventiler(TOUTES), campagnes: diag.campagnes.map((c) => ({ cle: c.cle, libelle: c.libelle, ventilation: ventiler(c.cle) })) },
     },
   }), { headers: { 'Content-Type': 'application/json; charset=utf-8' } });
 };

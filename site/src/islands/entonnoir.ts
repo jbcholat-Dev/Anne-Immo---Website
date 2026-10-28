@@ -18,11 +18,13 @@ export function fixerCampagne(u: Record<string, string> | undefined) {
   if (u && Object.keys(u).length) utm = u;
 }
 
-/** Palier du temps d'affichage de la page, mesuré depuis le début de son chargement ; « cachee » si elle n'est pas à
- * l'écran à ce moment (préchargée par l'application avant le clic, ou ouverte en arrière-plan). */
+/** Palier du temps d'affichage de la page, mesuré du début de son chargement (ou de son activation si le navigateur l'a
+ * préparée d'avance) à l'exécution du script ; « cachee » si elle n'est pas à l'écran à ce moment (préchargée par
+ * l'application avant le clic, ou ouverte en arrière-plan). */
 export function palierAffichage(): 'moins-2s' | '2-5s' | 'plus-5s' | 'cachee' {
-  if (document.visibilityState !== 'visible') return 'cachee';
-  const ms = performance.now();
+  if (document.visibilityState !== 'visible' || (document as { prerendering?: boolean }).prerendering) return 'cachee';
+  const nav = performance.getEntriesByType?.('navigation')[0] as { activationStart?: number } | undefined;
+  const ms = performance.now() - (nav?.activationStart ?? 0);
   return ms < 2000 ? 'moins-2s' : ms <= 5000 ? '2-5s' : 'plus-5s';
 }
 
