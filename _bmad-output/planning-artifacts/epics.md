@@ -1733,7 +1733,7 @@ afin de réparer ou de changer la bonne chose.
 
 **Critères d'acceptation :** le premier toucher sur la question 1, le navigateur (intégré d'Instagram ou de Facebook, ou habituel), la famille d'appareil (iPhone, Android, ordinateur) et le temps d'affichage de la question 1 en paliers (moins de 2 s, 2 à 5 s, plus de 5 s, ou page pas à l'écran) sont comptés sans cookie ni donnée personnelle (AD-11) ; le Bilan de l'espace ventile le passage question 1 → question 2 selon chacun.
 
-**État :** en relecture (2026-10-28), détail dans `implementation-artifacts/10-13-question-1-touchee-navigateur-et-affichage.md`.
+**État :** fait, en ligne le 2026-10-28 (PR #213), détail dans `implementation-artifacts/10-13-question-1-touchee-navigateur-et-affichage.md`.
 
 ### Story 10.14: Test A/B de la publicité, accueil ou question 1
 
@@ -1743,7 +1743,7 @@ afin de garder la version qui amène le plus de visiteurs à la question 2 ou à
 
 **Critères d'acceptation :** l'arrivée sur l'accueil, le clic sur ses deux boutons et le début d'une demande d'estimation sur la page Contact (agenda touché, formulaire commencé, rendez-vous réservé, demande envoyée) sont comptés sans cookie ni donnée personnelle (AD-11) ; la campagne du lien suivi est gardée de l'accueil jusqu'au diagnostic et au contact par l'adresse seulement ; le Bilan de l'espace et le bilan de Claude montrent, campagne par campagne, entrées, objectif (question 2 ou estimation commencée) et taux.
 
-**État :** en relecture (2026-10-28), détail dans `implementation-artifacts/10-14-test-ab-accueil-ou-question-1.md`.
+**État :** fait, en ligne le 2026-10-28 (PR #216), détail dans `implementation-artifacts/10-14-test-ab-accueil-ou-question-1.md`.
 
 ### Story 10.9: E-mails du site à la charte
 
