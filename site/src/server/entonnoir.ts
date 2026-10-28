@@ -2,17 +2,24 @@
 // Le navigateur envoie { parcours, etape, ecran?, affichage?, utm, lang } ; on vérifie tout, on écrit une ligne `entonnoir`, on répond 204.
 // Story 10.13 : le serveur ajoute le type de navigateur (intégré d'Instagram ou de Facebook, ou normal) et la famille
 // d'appareil, lus dans l'en-tête User-Agent, qui n'est jamais gardé.
+// Story 10.14 (test A/B de la publicité) : arrivée sur l'accueil, clic sur ses deux boutons, et début d'une demande
+// d'estimation sur la page Contact (agenda touché, formulaire commencé, rendez-vous réservé, demande envoyée).
 // Un passage déjà compté pour la même étape est ignoré (index unique). Les comptages se lisent dans le Bilan de l'espace d'Anne.
 import contenu from '../content/diagnostic/questions.json';
 // Types seulement : purge.ts importe ce fichier et la page Confidentialité (prérendue) importe purge.ts, hors Cloudflare.
 import type { EnvSite } from './env';
 import { journal } from './journal';
 
-export const ETAPES = ['arrivee', 'reprise', 'ecran', 'interaction', 'coordonnees', 'envoi', 'echec', 'resultat'] as const;
+export const ETAPES = ['arrivee', 'reprise', 'ecran', 'interaction', 'coordonnees', 'envoi', 'echec', 'resultat', 'accueil', 'clic', 'estimation'] as const;
 export type Etape = (typeof ETAPES)[number];
 /** Numéro de passage : 26 caractères tirés au hasard (alphabet ULID), sans horodatage. */
 export const PARCOURS = /^[0-9A-HJKMNP-TV-Z]{26}$/;
 const ECRANS = new Set(contenu.ecrans.map((e) => e.id));
+/** Ce que précisent les étapes de la story 10.14 : le bouton cliqué sur l'accueil, le geste fait sur la page Contact. */
+export const PRECISIONS: Partial<Record<Etape, readonly string[]>> = {
+  clic: ['diagnostic', 'estimation'],
+  estimation: ['agenda', 'formulaire', 'reservation', 'demande'],
+};
 const UTM = { utm_source: 'source', utm_medium: 'support', utm_campaign: 'campagne', utm_content: 'contenu' } as const;
 const MAX_UTM = 40;
 /** Plafond de passages écrits par jour, toutes adresses confondues : au-delà, rien n'est écrit (la base est aussi celle des
@@ -79,8 +86,10 @@ export function lirePassage(d: unknown): Passage | null {
   if (typeof o.parcours !== 'string' || !PARCOURS.test(o.parcours)) return null;
   if (!ETAPES.includes(o.etape as Etape)) return null;
   const etape = o.etape as Etape;
-  const ecran = etape === 'ecran' || etape === 'reprise' ? (typeof o.ecran === 'string' ? o.ecran : '') : '';
+  const precisee = etape === 'ecran' || etape === 'reprise' || etape in PRECISIONS;
+  const ecran = precisee ? (typeof o.ecran === 'string' ? o.ecran : '') : '';
   if ((etape === 'ecran' || etape === 'reprise') && !ECRANS.has(ecran)) return null;
+  if (PRECISIONS[etape] && !PRECISIONS[etape]!.includes(ecran)) return null;
   const utm = o.utm && typeof o.utm === 'object' && !Array.isArray(o.utm) ? (o.utm as Record<string, unknown>) : {};
   // Le temps d'affichage n'a de sens que sur la ligne de la question 1 ; ailleurs, ou hors paliers, il est oublié.
   const affichage: Affichage = etape === 'ecran' && ecran === 'q01' && AFFICHAGES.includes(o.affichage as never) ? (o.affichage as Affichage) : '';

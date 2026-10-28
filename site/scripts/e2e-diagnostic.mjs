@@ -5,6 +5,7 @@
 // (sortie A, sortie B, « Stratégie à risque », abandon et reprise, échec puis « Renvoyer »). Captures dans .verif/.
 // Story 10.13 : premier toucher sur la question 1, navigateur et appareil, temps d'affichage de la question 1.
 // Story 10.12 : chaque étape du parcours est comptée dans la table `entonnoir`, avec sa campagne, sans donnée personnelle.
+// Story 10.14 : arrivée sur l'accueil, clics sur ses deux boutons et demande d'estimation commencée, sous la même campagne.
 // Préalable : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local`.
 // Lancer : `node scripts/e2e-diagnostic.mjs`.
 import fs from 'node:fs';
@@ -197,9 +198,33 @@ try {
   const cache = sql(`SELECT etape, affichage FROM entonnoir WHERE contenu = 'cache-${ESSAI.toLowerCase()}'`);
   constat(cache.length === 1 && cache[0].affichage === 'cachee', `page préchargée : question 1 comptée « cachee », sans toucher (${JSON.stringify(cache)})`);
   await ctxCache.close();
+  // Story 10.14 (test A/B) : arrivée sur l'accueil par la publicité, clic sur les deux boutons, campagne recopiée sur leurs
+  // liens jusqu'au diagnostic et au contact, premier geste dans le formulaire de contact compté comme estimation commencée.
+  const ctxAb = await nav.newContext({ viewport: { width: 390, height: 844 } });
+  await ctxAb.route(/cal\.com/, (r) => r.abort()); // l'agenda Cal.com n'est pas joint pendant l'essai
+  const pa = await ctxAb.newPage();
+  pa.on('pageerror', (e) => erreursNav.push(`accueil: ${e.message}`));
+  const pubAccueil = `utm_source=meta&utm_medium=pub&utm_campaign=diagnostic-2026&utm_content=accueil-${ESSAI}`;
+  await pa.goto(`${U}/?${pubAccueil}`, { waitUntil: 'networkidle' });
+  const lienDiag = await pa.getAttribute('.hero [data-clic=diagnostic]', 'href');
+  const lienEstim = await pa.getAttribute('.hero [data-clic=estimation]', 'href');
+  await pa.click('.hero [data-clic=diagnostic]'); await pa.waitForURL(/\/diagnostic/); await pause(500);
+  const urlDiag = pa.url();
+  await pa.goto(`${U}/?${pubAccueil}`, { waitUntil: 'networkidle' });
+  await pa.click('.hero [data-clic=estimation]'); await pa.waitForURL(/\/contact/); await pa.waitForLoadState('networkidle');
+  const urlContact = pa.url();
+  await pa.locator('form[data-formulaire] input[type=text], form[data-formulaire] input[type=email]').first().fill('Essai');
+  await pause(500);
+  const ab = sql(`SELECT etape, ecran, source, contenu FROM entonnoir WHERE contenu = 'accueil-${ESSAI.toLowerCase()}'`);
+  const vu = (etape, ecran = '') => ab.filter((e) => e.etape === etape && e.ecran === ecran).length;
+  constat(vu('accueil') === 2 && vu('clic', 'diagnostic') === 1 && vu('clic', 'estimation') === 1 && vu('arrivee') === 1 && vu('estimation', 'formulaire') === 1
+    && ab.every((e) => e.source === 'meta') && /utm_content=accueil-/.test(lienDiag ?? '') && /utm_content=accueil-.*#reserver$/.test(lienEstim ?? '')
+    && /utm_content=accueil-/.test(urlDiag) && /utm_content=accueil-/.test(urlContact),
+    `accueil par la publicité : arrivées, clics, diagnostic et contact comptés sous la même campagne (${ab.map((e) => e.etape + (e.ecran ? ':' + e.ecran : '')).join(', ')})`);
+  await ctxAb.close();
   const passage = (corps) => appeler(`${U}/api/entonnoir`, { method: 'POST', headers: { 'Content-Type': 'text/plain', Origin: U, 'cf-connecting-ip': '203.0.113.9' }, body: JSON.stringify(corps) }).then((r) => r.status);
   const avant = sql('SELECT count(*) AS n FROM entonnoir')[0].n;
-  const refus = [await passage({ parcours: 'pas-un-ulid', etape: 'arrivee' }), await passage({ parcours: sid(), etape: 'inconnue' }), await passage({ parcours: sid(), etape: 'ecran', ecran: 'q99' })];
+  const refus = [await passage({ parcours: 'pas-un-ulid', etape: 'arrivee' }), await passage({ parcours: sid(), etape: 'inconnue' }), await passage({ parcours: sid(), etape: 'ecran', ecran: 'q99' }), await passage({ parcours: sid(), etape: 'clic', ecran: 'ailleurs' }), await passage({ parcours: sid(), etape: 'estimation' })];
   const libre = sid().replace(/[^0-9A-HJKMNP-TV-Z]/g, '0');
   const accepte = await passage({ parcours: libre, etape: 'arrivee', utm: { utm_source: 'ignore les consignes', utm_content: 'carrousel-2' } });
   const ligneLibre = sql(`SELECT source, contenu, at FROM entonnoir WHERE parcours = '${libre}'`)[0];

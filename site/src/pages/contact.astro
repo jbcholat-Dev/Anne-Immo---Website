@@ -32,6 +32,21 @@ const x = await textes('contact');
   </div>
   <script src="../islands/formulaires.ts"></script>
   <script>
+    // Story 10.14 (test A/B de la publicité) : début d'une demande d'estimation, compté une fois par geste et par page, sans
+    // donnée personnelle (îlot entonnoir) : premier geste dans l'agenda ou dans le formulaire, rendez-vous réservé, demande envoyée.
+    // L'agenda est une page de Cal.com dans un cadre : on ne voit pas ce qui s'y passe, seulement que le visiteur y entre
+    // (la page perd le focus au profit du cadre) et, par Cal.com, qu'une réservation est faite.
+    import { compter } from '../islands/entonnoir';
+    const formulaire = document.querySelector<HTMLFormElement>('form[data-formulaire]');
+    formulaire?.addEventListener('input', () => compter('estimation', 'formulaire'), { once: true });
+    formulaire?.addEventListener('avt:envoye', () => compter('estimation', 'demande'));
+    const surCadre = () => {
+      if (!(document.activeElement instanceof HTMLIFrameElement && document.activeElement.closest('[data-agenda-cadre]'))) return;
+      window.removeEventListener('blur', surCadre);
+      compter('estimation', 'agenda');
+    };
+    window.addEventListener('blur', surCadre);
+
     // Agenda Cal.com (story 10.6) : le script de Cal.com n'est chargé qu'à la demande du visiteur (AD-11). Arriver par un lien
     // « Réserver » (#reserver, depuis les résultats du diagnostic par exemple) vaut demande. Lien Cal.com : cal.com/annevialtissot/premier-echange.
     const CAL_LIEN = 'annevialtissot/premier-echange';
@@ -72,6 +87,7 @@ const x = await textes('contact');
       w.Cal.ns.rdv('inline', { elementOrSelector: '#agenda-cal', calLink: CAL_LIEN, config: { layout: 'month_view' } });
       w.Cal.ns.rdv('ui', { hideEventTypeDetails: true, layout: 'month_view', cssVarsPerTheme: { light: { 'cal-brand': '#002FA7' }, dark: { 'cal-brand': '#002FA7' } } });
       w.Cal.ns.rdv('on', { action: 'linkReady', callback: () => { ouvrir.closest('[data-agenda]')?.setAttribute('hidden', ''); } });
+      w.Cal.ns.rdv('on', { action: 'bookingSuccessfulV2', callback: () => compter('estimation', 'reservation') });
     }
     ouvrir?.addEventListener('click', chargerAgenda);
     if (location.hash === '#reserver') chargerAgenda();
