@@ -1,7 +1,7 @@
 ---
 story: 10.13
 epic: 10 — Capture des leads et backend
-statut: review
+statut: done
 date: 2026-10-28
 ---
 
@@ -41,6 +41,8 @@ Au 28 octobre 2026, environ 310 visiteurs venus de la publicité Meta ont vu la 
 7. Les constructions de branche appliquent déjà la 0016 à la base d'aperçu : noté, toute retouche future passera par une 0017 (aucune retouche de la 0016 dans les corrections).
 Correctifs : commit suivant e883e60 dans la même PR.
 
+## Mise en ligne
+2026-10-28 : PR #213 fusionnée par JB (commit 609b4b3). `https://annevialtissot.fr/api/sante` répond `{"ok":true,"migrations":16}` ; `/api/entonnoir` refuse un corps invalide (400).
+
 ## Ce qui reste
-- Accord de JB et fusion de la PR #213 (la migration s'applique à la construction), vérification en ligne.
 - Lundi 2 novembre : premier rituel de lecture (méthode d'analyse) avec cette ventilation.
