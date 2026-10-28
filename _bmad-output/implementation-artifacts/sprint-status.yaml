@@ -207,7 +207,7 @@ development_status:
   13-30-fiche-contact-repensee: done   # 2026-10-24, PR n° 192 fusionnée (JB), ticket #176 fermé
   13-31-en-tete-et-historique-de-la-fiche: ready-for-dev   # 2026-10-24, ticket #182
   13-32-maquette-v3-de-l-espace: review   # 2026-10-24, maquette v3 publiée, en attente des retours de JB et Anne
-  13-33-connexion-de-30-jours: done   # 2026-10-28, réglage Access (720 h) fait par Claude, décision de JB
+  13-34-connexion-de-30-jours: done   # 2026-10-28, réglage Access (720 h) fait par Claude, décision de JB
   epic-13-retrospective: optional
 
   epic-14: in-progress

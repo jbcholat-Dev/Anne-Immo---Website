@@ -1,12 +1,12 @@
 ---
-story: 13.33
+story: 13.34
 epic: 13 — Espace de travail d'Anne
 statut: done
 date: 2026-10-28
 maj: 2026-10-28
 ---
 
-# Story 13.33 — Connexion à l'espace valable 30 jours
+# Story 13.34 — Connexion à l'espace valable 30 jours
 
 ## Objectif
 JB, le 2026-10-28 : « C'est un peu chiant à chaque fois de devoir récupérer le code sur la boîte mail. » Cloudflare Access (le portier de l'espace) demandait un code par e-mail toutes les 24 h, sur chaque appareil. Trouver l'entrée la plus simple sans affaiblir la protection des contacts.
