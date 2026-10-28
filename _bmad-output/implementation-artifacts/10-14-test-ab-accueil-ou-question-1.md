@@ -1,7 +1,7 @@
 ---
 story: 10.14
 epic: 10 — Capture des leads et backend
-statut: review
+statut: done
 date: 2026-10-28
 ---
 
@@ -44,7 +44,12 @@ Avant de lancer le test, le compteur de l'entonnoir (stories 10.12 et 10.13) doi
 
 ## Ce qui est vérifié (2026-10-28)
 - `npm run check` (site et espace) : 0 erreur.
-- Résultats des essais de bout en bout : voir « Revue de code » et la PR.
+- `node scripts/liens.mjs` : 27 pages, 1 863 liens, 0 cassé.
+- Migration 0017 appliquée sur une base locale qui contenait déjà des passages : lignes recopiées.
+- `node scripts/e2e-diagnostic.mjs` (après les corrections) : « Tous les constats sont bons » (43). Nouveau constat : un visiteur arrive sur l'accueil par la publicité et clique les deux boutons. Sont comptés sous la même campagne : les arrivées sur l'accueil, les deux clics, l'arrivée sur le diagnostic et le formulaire commencé. La campagne est présente dans les liens et dans les adresses atteintes. Les précisions inconnues sont refusées.
+- `node scripts/e2e-espace.mjs` : 297 constats bons, dont le tableau A/B (4,4,1,1,1,1,1,2,50 %) et le bilan de Claude.
+  - 1 échec sans lien avec la story : « Aujourd'hui : nouveaux contacts en tête ». La base locale d'essai a accumulé 125 contacts à qualifier au fil des passages de la journée, au-delà des 100 que montre la page, si bien que le contact récent de l'essai n'y figure plus.
+  - Cet essai passait le matin même avant ces passages, et la story ne touche pas la page « Aujourd'hui ».
 
 ## Revue de code
 2026-10-28, PR #216, commit fe29afc relu en session neuve (méthode `bmad-code-review` appliquée à la main). `npm run check` : 0 erreur.
@@ -58,6 +63,11 @@ Avant de lancer le test, le compteur de l'entonnoir (stories 10.12 et 10.13) doi
 8. Un visiteur qui reprend un ancien diagnostic garde sa première campagne (comportement de la story 10.12). Écarté : cas rare, choix déjà fait.
 Correctifs : commit suivant fe29afc dans la même PR.
 
+## Mise en ligne
+2026-10-28 : PR #216 fusionnée sur l'accord de JB (« merge », 21 h 05), commit 251f3f1. La construction de production a échoué une première fois : erreur interne de Cloudflare à l'envoi des fichiers (code 10500), sans rapport avec le code. Claude l'a relancée par l'API, réussite vers 22 h. Vérifié en ligne :
+- `/api/sante` répond `migrations: 17` ;
+- l'accueil porte les deux boutons comptés (`data-clic`) ;
+- `/api/entonnoir` refuse une précision inconnue (400).
+
 ## Ce qui reste
-- Revue de code, accord de JB, fusion. La migration 0017 s'applique à la construction.
 - Après la mise en ligne : le fil de la campagne Instagram crée la version « accueil » de la publicité B.
