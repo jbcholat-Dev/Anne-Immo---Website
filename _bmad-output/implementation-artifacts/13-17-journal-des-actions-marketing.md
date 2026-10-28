@@ -55,5 +55,5 @@ Voir `site/README.md` § « Écarts de la story 13.17 » : passages de boîtage 
 
 ## Ce qui reste
 - JB : fusionner la PR.
-- JB : mettre en place le jeton de service (RUNBOOK § 4 sexies, « Accès de Claude », ≈ 10 min), puis Claude vérifie avec `node espace/scripts/claude-espace.mjs actions`.
+- ~~JB : mettre en place le jeton de service~~ **Fait le 2026-10-28** : badge créé par JB, règle Access et secret `ACCESS_CLAUDE_ID` posés par Claude (accord de JB), `claude-espace.mjs actions` et `bilan semaine` répondent depuis une session neuve (RUNBOOK § 4 sexies).
 - Anne : noter ses premières actions (et le coût de ses passages de boîtage) ; dire si le rattachement d'office lui convient.
