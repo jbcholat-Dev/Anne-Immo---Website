@@ -5,6 +5,9 @@
 // L'envoi passe par sendBeacon, qui part même si la page change juste après (redirection vers les résultats).
 // Story 10.13 : sur la question 1, le temps mis à l'afficher, en paliers (le serveur ajoute le type de navigateur et
 // d'appareil, lus dans l'en-tête que tout navigateur envoie).
+// Story 10.14 : aussi sur l'accueil (arrivée, clic sur ses deux boutons) et sur la page Contact (début d'une demande
+// d'estimation). `garderCampagne` recopie les paramètres utm de l'adresse sur les liens qui mènent au diagnostic ou au
+// contact : la campagne suit le visiteur d'une page à l'autre sans rien déposer dans le navigateur.
 
 const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 const parcours = Array.from(crypto.getRandomValues(new Uint8Array(26)), (o) => ALPHABET[o % 32]).join('');
@@ -28,10 +31,23 @@ export function palierAffichage(): 'moins-2s' | '2-5s' | 'plus-5s' | 'cachee' {
   return ms < 2000 ? 'moins-2s' : ms <= 5000 ? '2-5s' : 'plus-5s';
 }
 
-export function compter(etape: 'arrivee' | 'reprise' | 'ecran' | 'interaction' | 'coordonnees' | 'envoi' | 'echec' | 'resultat', ecran?: string, affichage?: string) {
+export function compter(etape: 'arrivee' | 'reprise' | 'ecran' | 'interaction' | 'coordonnees' | 'envoi' | 'echec' | 'resultat' | 'accueil' | 'clic' | 'estimation', ecran?: string, affichage?: string) {
   const corps = JSON.stringify({ parcours, etape, ecran, affichage, utm, lang });
   try {
     if (navigator.sendBeacon?.('/api/entonnoir', new Blob([corps], { type: 'text/plain' }))) return;
     void fetch('/api/entonnoir', { method: 'POST', body: corps, headers: { 'Content-Type': 'text/plain' }, keepalive: true }).catch(() => {});
   } catch { /* le comptage ne doit jamais gêner le parcours */ }
+}
+
+/** Recopie les paramètres utm de l'adresse sur les liens de `racine` qui mènent à une page de `chemins` (story 10.12 pour
+ * /diagnostic, 10.14 pour l'accueil). Rien n'est déposé dans le navigateur (AD-11) : les paramètres restent dans l'adresse. */
+export function garderCampagne(racine: ParentNode, chemins: RegExp) {
+  const campagne = [...new URLSearchParams(location.search)].filter(([k]) => k.startsWith('utm_'));
+  if (!campagne.length) return;
+  racine.querySelectorAll<HTMLAnchorElement>('a[href]').forEach((a) => {
+    const u = new URL(a.href, location.href);
+    if (u.origin !== location.origin || !chemins.test(u.pathname)) return;
+    campagne.forEach(([k, v]) => u.searchParams.set(k, v));
+    a.href = u.pathname + u.search + u.hash;
+  });
 }

@@ -1735,6 +1735,16 @@ afin de réparer ou de changer la bonne chose.
 
 **État :** en relecture (2026-10-28), détail dans `implementation-artifacts/10-13-question-1-touchee-navigateur-et-affichage.md`.
 
+### Story 10.14: Test A/B de la publicité, accueil ou question 1
+
+En tant que JB,
+je veux comparer une publicité qui fait arriver sur l'accueil et une publicité qui fait arriver directement sur la question 1,
+afin de garder la version qui amène le plus de visiteurs à la question 2 ou à une demande d'estimation.
+
+**Critères d'acceptation :** l'arrivée sur l'accueil, le clic sur ses deux boutons et le début d'une demande d'estimation sur la page Contact (agenda touché, formulaire commencé, rendez-vous réservé, demande envoyée) sont comptés sans cookie ni donnée personnelle (AD-11) ; la campagne du lien suivi est gardée de l'accueil jusqu'au diagnostic et au contact par l'adresse seulement ; le Bilan de l'espace et le bilan de Claude montrent, campagne par campagne, entrées, objectif (question 2 ou estimation commencée) et taux.
+
+**État :** en relecture (2026-10-28), détail dans `implementation-artifacts/10-14-test-ab-accueil-ou-question-1.md`.
+
 ### Story 10.9: E-mails du site à la charte
 
 Ajoutée le 2026-10-08 à la demande de JB, après l'essai de la séquence sur l'aperçu : les e-mails partent en texte brut, sans mise en page.

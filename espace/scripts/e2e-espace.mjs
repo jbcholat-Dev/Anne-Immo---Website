@@ -35,6 +35,7 @@
 // rien d'autre ouvert, une personne refusée sur /api/claude/…, aucun contact dans les réponses).
 // Story 10.13 : passage de la question 1 à la question 2 ventilé par navigateur, appareil et temps d'affichage.
 // Story 10.12 : entonnoir du diagnostic dans le Bilan (par campagne, étape par étape, campagne choisie) et dans le bilan de Claude.
+// Story 10.14 : tableau du test A/B (accueil ou question 1) dans le Bilan et dans le bilan de Claude.
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
 // Lancer depuis espace/ : `node scripts/e2e-espace.mjs`.
@@ -717,6 +718,15 @@ try {
   sql(`INSERT INTO entonnoir (parcours, etape, ecran, source, support, contenu, lang, is_test, at) VALUES
        ('E2E${ESSAI}A1', 'interaction', '', 'facebook', 'paid', 'carrousel-${ESSAI.toLowerCase()}', 'fr', 1, '${new Date().toISOString()}'),
        ('E2E${ESSAI}A1', 'ecran', 'q02', 'facebook', 'paid', 'carrousel-${ESSAI.toLowerCase()}', 'fr', 1, '${new Date().toISOString()}')`);
+  // Story 10.14 : version « accueil » du test A/B. 4 arrivées sur l'accueil (H1 clique le diagnostic, H2 l'estimation),
+  // D1 va jusqu'à la question 2, C1 touche l'agenda et le formulaire (une estimation commencée) puis réserve.
+  const ab = [
+    ...[1, 2, 3, 4].map((i) => [`E2E${ESSAI}H${i}`, 'accueil', '']), [`E2E${ESSAI}H1`, 'clic', 'diagnostic'], [`E2E${ESSAI}H2`, 'clic', 'estimation'],
+    [`E2E${ESSAI}D1`, 'arrivee', ''], [`E2E${ESSAI}D2`, 'ecran', 'q01'], [`E2E${ESSAI}D2`, 'ecran', 'q02'],
+    [`E2E${ESSAI}C1`, 'estimation', 'agenda'], [`E2E${ESSAI}C1`, 'estimation', 'formulaire'], [`E2E${ESSAI}C1`, 'estimation', 'reservation'],
+  ];
+  sql(`INSERT INTO entonnoir (parcours, etape, ecran, source, support, campagne, contenu, lang, is_test, at) VALUES ${ab.map(([p, e, q]) => `('${p}', '${e}', '${q}', 'meta', 'pub', 'diagnostic-2026', 'accueil-${ESSAI.toLowerCase()}', 'fr', 1, '${new Date().toISOString()}')`).join(', ')}`);
+  const cleAb = `meta|pub|diagnostic-2026|accueil-${ESSAI.toLowerCase()}`;
   const cleE2e = `facebook|paid||carrousel-${ESSAI.toLowerCase()}`;
   r = await appeler(`${E}/bilan?p=semaine&d=${encodeURIComponent(cleE2e)}`, { headers: avecJeton() });
   html = await r.text();
@@ -731,6 +741,8 @@ try {
   constat(ligneVentil('Application Instagram ou Facebook') === '2,1,1,50\u00a0%' && ligneVentil('iPhone ou iPad') === '2,1,1,50\u00a0%'
     && ligneVentil('Affichée en moins de 2 s') === '1,1,1,100\u00a0%' && ligneVentil('préchargée ou en arrière-plan') === '1,0,0,0\u00a0%',
     `bilan : question 1 → 2 par navigateur, appareil et affichage (${ligneVentil('Application Instagram ou Facebook')} · ${ligneVentil('préchargée ou en arrière-plan')})`);
+  const ligneAb = [...(html.split(`data-ab-campagne="${cleAb}"`)[1]?.split('</tr>')[0] ?? '').matchAll(/class="n"[^>]*>([^<]+)</g)].map((m) => m[1]).join(',');
+  constat(ligneAb === '4,4,1,1,1,1,1,2,50\u00a0%', `bilan : test A/B, version accueil (entrées, accueil, clics, question 2, estimation, rendez-vous, objectif, taux : ${ligneAb})`);
   constat(q10.includes('>1<') && html.includes('Sans lien de campagne') && html.includes(`Étape par étape : facebook · paid · carrousel-${ESSAI.toLowerCase()}`),
     'bilan : étape par étape pour la campagne choisie, questions 10 a et b comptées une fois, visite sans campagne à part');
 
@@ -1070,6 +1082,8 @@ try {
     'Claude : bilan par canal avec les coûts, sans aucune coordonnée');
   constat(bilanClaude.diagnostic?.campagnes?.some((c) => c.libelle === `facebook · paid · carrousel-${ESSAI.toLowerCase()}` && c.arrivees === 3 && c.coordonnees === 1),
     'Claude : entonnoir du diagnostic par campagne dans le bilan');
+  constat(bilanClaude.diagnostic?.campagnes?.some((c) => c.cle === cleAb && c.ab?.entrees === 4 && c.ab?.objectif === 2 && c.ab?.reservations === 1),
+    'Claude : test A/B (entrées et objectif) dans le bilan');
   constat(bilanClaude.diagnostic?.question1?.toutes?.some((g) => g.titre === 'Navigateur' && g.lignes.some((l) => l.libelle === 'Application Instagram ou Facebook' && l.question1 >= 2)),
     'Claude : ventilation de la question 1 dans le bilan');
   r = await appeler(`${E}/actions`, { headers: avecJeton() });

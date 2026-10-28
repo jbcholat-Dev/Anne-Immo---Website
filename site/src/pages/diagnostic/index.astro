@@ -52,20 +52,11 @@ const note = String(inst.note).replace('.', ',');
 </Page>
 <script>
   // Story 10.12 : l'arrivée sur cette page est comptée sans donnée personnelle, avec sa campagne (îlot entonnoir).
-  import { compter } from '../../islands/entonnoir';
+  import { compter, garderCampagne } from '../../islands/entonnoir';
   compter('arrivee');
   // Une campagne arrive ici avec ses paramètres (utm_source, utm_campaign…) dans l'adresse. On les recopie sur les liens
   // vers le parcours, le guide et le contact, sinon ils se perdent au premier clic et le contact capté n'a plus d'origine.
-  // Rien n'est déposé dans le navigateur (AD-11) : les paramètres restent dans l'adresse.
-  const campagne = [...new URLSearchParams(location.search)].filter(([k]) => k.startsWith('utm_'));
-  if (campagne.length) {
-    document.querySelectorAll<HTMLAnchorElement>('main a[href]').forEach((a) => {
-      const u = new URL(a.href, location.href);
-      if (u.origin !== location.origin || !/^\/(?:en\/)?(?:diagnostic\/questions|guide|contact)\/?$/.test(u.pathname)) return;
-      campagne.forEach(([k, v]) => u.searchParams.set(k, v));
-      a.href = u.pathname + u.search + u.hash;
-    });
-  }
+  garderCampagne(document, /^\/(?:en\/)?(?:diagnostic\/questions|guide|contact)\/?$/);
 </script>
 <style>
   .dl-offre { padding: 80px var(--marge) 96px; display: grid; grid-template-columns: 1fr 520px; gap: 96px; align-items: center; }
