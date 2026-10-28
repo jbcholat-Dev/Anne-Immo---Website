@@ -4,7 +4,7 @@ import type { APIRoute } from 'astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { coutsParCanal } from '../../../server/actions';
 import { COMPTE_CLAUDE, pourSite as env } from '../../../server/env';
-import { entonnoir } from '../../../server/entonnoir';
+import { entonnoir, question1, TOUTES } from '../../../server/entonnoir';
 import { bilan, PERIODES, type Periode } from '../../../server/pipeline';
 
 export const prerender = false;
@@ -16,10 +16,15 @@ export const GET: APIRoute = async ({ request, url }) => {
   const b = await bilan(env, periode);
   const couts = await coutsParCanal(env, b.debut);
   const diag = await entonnoir(env, b.debut);
+  const ventiler = await question1(env, b.debut, diag.campagnes);
   return new Response(JSON.stringify({
     periode, depuis: b.debut, total: { ...b.total, cout_centimes: [...couts.values()].reduce((t, c) => t + c, 0) },
     canaux: b.lignes.map((l) => ({ ...l, cout_centimes: couts.get(l.canal) ?? 0 })),
     delai_rappel_heures: b.delaiHeures, perdus: b.perdus,
-    diagnostic: { total: diag.total, campagnes: diag.campagnes },
+    diagnostic: {
+      total: diag.total, campagnes: diag.campagnes,
+      // Story 10.13 : question 1 → question 2 par navigateur, appareil et temps d'affichage, toutes campagnes puis chacune.
+      question1: { toutes: ventiler(TOUTES), campagnes: diag.campagnes.map((c) => ({ cle: c.cle, libelle: c.libelle, ventilation: ventiler(c.cle) })) },
+    },
   }), { headers: { 'Content-Type': 'application/json; charset=utf-8' } });
 };
