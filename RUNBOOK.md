@@ -157,7 +157,9 @@ Rien n'est à effacer chez Resend : le site n'y garde aucun contact. Chaque expo
 
 **Quoi** : une seconde application, le Worker `anne-espace`, construite depuis le dossier `espace/` du même dépôt. Elle lit et écrit la base des leads du site (`anne-leads` pour `main`, `anne-leads-apercu` pour toute autre branche, choix fait par `espace/scripts/base.mjs`). Elle reprend aujourd'hui la gestion des demandes (§ 4 quinquies, mêmes boutons) ; le pipeline d'Anne s'y ajoutera (stories 13.4 et suivantes). Une relance d'e-mail faite dans l'espace part par la tâche planifiée du site, dans les 15 minutes.
 
-**Protection** : la même que `/gestion`. Cloudflare Access demande le code ; le serveur vérifie le jeton contre `ACCESS_EQUIPE` et `ACCESS_AUD` de `espace/wrangler.jsonc`. `ACCESS_AUD` vide = tout répond 403, feuilles de style comprises. Une adresse qu'Access ne couvrirait pas par erreur reste donc fermée.
+**Protection** : la même que `/gestion`. Cloudflare Access demande le code (connexion valable **30 jours** par navigateur depuis le 2026-10-28, story 13.33, décision de JB ; avant : 24 h) ; le serveur vérifie le jeton contre `ACCESS_EQUIPE` et `ACCESS_AUD` de `espace/wrangler.jsonc`. `ACCESS_AUD` vide = tout répond 403, feuilles de style comprises. Une adresse qu'Access ne couvrirait pas par erreur reste donc fermée.
+
+**Couper toutes les connexions** (appareil perdu ou volé) : Zero Trust → Access → Applications → `espace` (et `Gestion`) → ⋯ → *Revoke existing tokens* ; ou Zero Trust → Users → la personne → *Revoke session*. Le code sera redemandé à la prochaine visite. Raccourcir la durée : même application → Session duration.
 
 **Mise en place, une fois** (≈ 20 min, par JB, après la fusion de la PR de la story 13.3) :
 1. Cloudflare → Workers & Pages → Create → Import a repository → `Anne-Immo---Website`. Nom du projet : `anne-espace` (doit être exactement celui de `espace/wrangler.jsonc`). Dossier racine (*Root directory*) : `espace`. Construction : `npm ci && npm run build`. Mise en ligne : `npx wrangler deploy`. Branches autres que `main` : `npx wrangler versions upload`. La première construction lie la base `anne-leads` au nouveau Worker : si elle échoue sur la base, copier le journal dans le fil.
@@ -237,3 +239,4 @@ Envoi étalé : 8 e-mails toutes les 10 minutes (≈ 48 par heure), au plus 90 p
 - 2026-10-24 : fiche Google Business Profile d'Anne créée et validée (story 11.2), ajoutée à la carte des comptes (§ 1). Validation par l'adresse de Sciez, masquée ; reste à confirmer qu'Anne en est propriétaire.
 - 2026-10-26 : propriété principale de la fiche Google transférée à Anne ; doublon non validé supprimé ; « France » retiré des zones desservies (story 11.2 close).
 - 2026-10-28 : accès durable de Claude à Cloudflare (jeton d'API « Claude projet Anne », un an) et badge de l'espace en place (§ 4 sexies) ; Claude lit Web Analytics et le bilan de l'espace, et règle le site et l'espace depuis le projet.
+- 2026-10-28 : connexion à l'espace et à `/gestion` valable 30 jours au lieu de 24 h (story 13.33, décision de JB) ; marche à suivre pour couper toutes les connexions (§ 4 sexies).
