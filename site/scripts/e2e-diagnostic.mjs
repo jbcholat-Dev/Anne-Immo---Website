@@ -3,6 +3,7 @@
 // par le serveur, lead écrit avec son jeton, renvoi sans second lead, page de résultats rendue par le serveur dans un seul
 // navigateur pendant 24 heures (404 sinon), inscription à la séquence, e-mails ; puis les 17 écrans dans un navigateur
 // (sortie A, sortie B, « Stratégie à risque », abandon et reprise, échec puis « Renvoyer »). Captures dans .verif/.
+// Story 10.13 : premier toucher sur la question 1, navigateur et appareil, temps d'affichage de la question 1.
 // Story 10.12 : chaque étape du parcours est comptée dans la table `entonnoir`, avec sa campagne, sans donnée personnelle.
 // Préalable : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local`.
 // Lancer : `node scripts/e2e-diagnostic.mjs`.
@@ -164,10 +165,14 @@ try {
     await p.screenshot({ path: path.join(OUT, `diag-${nom}-resultats.png`), fullPage: true });
     await ctx.close();
     // Entonnoir (story 10.12) : les 17 écrans, les coordonnées, l'envoi et le résultat, comptés sous la campagne du lien.
-    const etapes = sql(`SELECT parcours, etape, ecran, source, is_test FROM entonnoir WHERE contenu = '${nom.toLowerCase()}-${ESSAI.toLowerCase()}'`);
+    const etapes = sql(`SELECT parcours, etape, ecran, source, is_test, integre, appareil, affichage FROM entonnoir WHERE contenu = '${nom.toLowerCase()}-${ESSAI.toLowerCase()}'`);
     const ecrans = new Set(etapes.filter((e) => e.etape === 'ecran').map((e) => e.ecran));
     const vues = new Set(etapes.map((e) => e.etape));
     const q08 = etapes.filter((e) => e.etape === 'ecran' && e.ecran === 'q08').length;
+    const q01 = etapes.find((e) => e.etape === 'ecran' && e.ecran === 'q01');
+    constat(!!q01 && q01.integre === 0 && q01.appareil === 'ordinateur' /* Chromium de l'essai : en-tête d'ordinateur */ && ['moins-2s', '2-5s', 'plus-5s'].includes(q01.affichage)
+      && etapes.some((e) => e.etape === 'interaction') && etapes.filter((e) => e.affichage).length === 1,
+      `${nom} : question 1 touchée, navigateur ${q01?.integre === 0 ? 'habituel' : '?'}, ${q01?.appareil}, affichée « ${q01?.affichage} »`);
     const attendues = ['ecran', 'coordonnees', 'envoi', 'resultat', ...(coupure ? ['echec'] : []), ...(nom === 'A' ? ['reprise'] : [])];
     constat(ecrans.size === 17 && attendues.every((x) => vues.has(x)) && etapes.every((e) => e.source === 'parcours' && e.is_test === 1) && (nom !== 'A' || q08 === 1),
       `${nom} : entonnoir compté${nom === 'A' ? ', question reprise comptée une seule fois' : ''}, ${ecrans.size} écrans et ${[...vues].join(', ')} (${new Set(etapes.map((e) => e.parcours)).size} passage(s))`);
@@ -184,6 +189,14 @@ try {
   const pub = sql(`SELECT etape, ecran, source, support FROM entonnoir WHERE contenu = 'carrousel-${ESSAI.toLowerCase()}' ORDER BY at`);
   constat(pub.some((e) => e.etape === 'arrivee') && pub.some((e) => e.etape === 'ecran' && e.ecran === 'q01') && pub.every((e) => e.source === 'facebook' && e.support === 'paid'),
     `arrivée par la publicité comptée, campagne gardée jusqu'à la question 1 (${pub.map((e) => e.etape + (e.ecran ? ':' + e.ecran : '')).join(', ')})`);
+  // Page préchargée par l'application (pas à l'écran quand la question 1 s'affiche) : palier « cachee », aucun toucher.
+  const ctxCache = await nav.newContext({ viewport: { width: 390, height: 844 } });
+  await ctxCache.addInitScript(() => Object.defineProperty(document, 'visibilityState', { get: () => 'hidden' }));
+  const pc = await ctxCache.newPage();
+  await pc.goto(`${U}/diagnostic/questions?utm_source=pub&utm_content=cache-${ESSAI}`, { waitUntil: 'networkidle' }); await pause(500);
+  const cache = sql(`SELECT etape, affichage FROM entonnoir WHERE contenu = 'cache-${ESSAI.toLowerCase()}'`);
+  constat(cache.length === 1 && cache[0].affichage === 'cachee', `page préchargée : question 1 comptée « cachee », sans toucher (${JSON.stringify(cache)})`);
+  await ctxCache.close();
   const passage = (corps) => appeler(`${U}/api/entonnoir`, { method: 'POST', headers: { 'Content-Type': 'text/plain', Origin: U, 'cf-connecting-ip': '203.0.113.9' }, body: JSON.stringify(corps) }).then((r) => r.status);
   const avant = sql('SELECT count(*) AS n FROM entonnoir')[0].n;
   const refus = [await passage({ parcours: 'pas-un-ulid', etape: 'arrivee' }), await passage({ parcours: sid(), etape: 'inconnue' }), await passage({ parcours: sid(), etape: 'ecran', ecran: 'q99' })];
@@ -192,9 +205,17 @@ try {
   const ligneLibre = sql(`SELECT source, contenu, at FROM entonnoir WHERE parcours = '${libre}'`)[0];
   constat(accepte === 204 && ligneLibre?.source === '' && ligneLibre?.contenu === 'carrousel-2' && /T\d{2}:00:00\.000Z$/.test(ligneLibre?.at ?? ''),
     `utm hors liste oubliée, heure arrondie à l'heure (${ligneLibre?.at})`);
+  // Navigateur intégré d'Instagram sur iPhone, lu dans l'en-tête User-Agent (qui n'est pas gardé) ; palier inventé oublié.
+  const insta = sid().replace(/[^0-9A-HJKMNP-TV-Z]/g, '0');
+  const r13 = await appeler(`${U}/api/entonnoir`, { method: 'POST', headers: { 'Content-Type': 'text/plain', Origin: U, 'cf-connecting-ip': '203.0.113.9',
+    'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 350.0.0' },
+    body: JSON.stringify({ parcours: insta, etape: 'ecran', ecran: 'q01', affichage: 'tres-vite', utm: {} }) }).then((r) => r.status);
+  const lInsta = sql(`SELECT integre, appareil, affichage FROM entonnoir WHERE parcours = '${insta}'`)[0];
+  constat(r13 === 204 && lInsta?.integre === 1 && lInsta?.appareil === 'ios' && lInsta?.affichage === '',
+    `navigateur intégré d'Instagram sur iPhone reconnu (${JSON.stringify(lInsta)}), palier d'affichage inconnu oublié`);
   const colonnes = sql("SELECT name FROM pragma_table_info('entonnoir')").map((c) => c.name).join(',');
-  constat(refus.every((x) => x === 400) && sql('SELECT count(*) AS n FROM entonnoir')[0].n === avant + 1 && // + le passage accepté juste au-dessus
-    colonnes === 'parcours,etape,ecran,source,support,campagne,contenu,lang,is_test,at',
+  constat(refus.every((x) => x === 400) && sql('SELECT count(*) AS n FROM entonnoir')[0].n === avant + 2 && // + les deux passages acceptés juste au-dessus
+    colonnes === 'parcours,etape,ecran,source,support,campagne,contenu,lang,is_test,at,integre,appareil,affichage',
     `passages non conformes refusés (${refus.join(', ')}) ; la table ne garde que l'étape, la campagne, la langue et la date`);
   await p.goto(`${U}/diagnostic/resultats`); await p.waitForSelector('[data-expire]');
   await p.screenshot({ path: path.join(OUT, 'diag-resultats-expire.png') });

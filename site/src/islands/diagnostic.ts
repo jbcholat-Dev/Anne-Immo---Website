@@ -6,7 +6,7 @@
 // Story 10.12 : chaque écran atteint, l'écran des coordonnées, l'envoi et son issue sont comptés sans donnée personnelle
 // (îlot entonnoir), pour savoir où les visiteurs s'arrêtent.
 import contenu from '../content/diagnostic/questions.json';
-import { compter, fixerCampagne } from './entonnoir';
+import { compter, fixerCampagne, palierAffichage } from './entonnoir';
 import { telephoneValide, emailValide, envoyer, ulid } from './formulaires';
 
 type Reponses = Record<string, string[]>;
@@ -45,10 +45,12 @@ if (racine) {
   }
 
   let dejaCompte = ''; // écran déjà compté par le premier passage d'un parcours repris : pas recompté (story 10.12)
+  let affiche = ''; // écran à l'écran en ce moment : le premier toucher n'est compté que sur la question 1 (story 10.13)
   function rendreEcran(i: number) {
     const e = ECRANS[i];
     majProgression(i);
-    if (e.id !== dejaCompte) compter('ecran', e.id);
+    affiche = e.id;
+    if (e.id !== dejaCompte) compter('ecran', e.id, i === 0 ? palierAffichage() : undefined);
     dejaCompte = '';
     const cat = categories[e.categorie]?.libelle ?? '';
     const retour = i > 0 ? html`<button type="button" class="qz-retour" data-retour>← Retour</button>` : '';
@@ -115,6 +117,7 @@ if (racine) {
   }
 
   function rendreGate() {
+    affiche = '';
     majProgression(N - 1);
     if (repere) repere.textContent = '';
     etat.submission_id ??= ulid(); // gardée jusqu'au succès : un renvoi ne crée jamais un second lead
@@ -185,6 +188,7 @@ if (racine) {
   }
 
   function rendreReprise(sauve: Etat) {
+    affiche = '';
     const e = ECRANS[Math.min(sauve.ecran, N - 1)];
     const n = Object.keys(sauve.reponses).length;
     majProgression(sauve.ecran);
@@ -206,6 +210,16 @@ if (racine) {
     dialogue.showModal();
   });
   dialogue?.querySelector('[data-abandon-continuer]')?.addEventListener('click', () => dialogue.close());
+
+  // Story 10.13 : premier toucher, clic ou touche du clavier sur la question 1, compté une fois. Une question 1 quittée
+  // sans interaction (page jamais touchée) signale une page qui n'a pas été vue, ou qui ne répond pas.
+  let interaction = false;
+  const surInteraction = () => {
+    if (interaction || affiche !== ECRANS[0].id) return;
+    interaction = true;
+    compter('interaction');
+  };
+  for (const type of ['pointerdown', 'touchstart', 'keydown']) document.addEventListener(type, surInteraction, { capture: true, passive: true });
 
   const sauve = charger();
   if (sauve && sauve.ecran > 0 && sauve.ecran < N) rendreReprise(sauve);

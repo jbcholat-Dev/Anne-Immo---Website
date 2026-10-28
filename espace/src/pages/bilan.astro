@@ -10,7 +10,7 @@ import { ENTETE_COMPTE } from '@site/server/acces';
 import { CANAUX_ORIGINE } from '@site/server/contacts';
 import { coutsParCanal, euros, parUnite } from '../server/actions';
 import { pourSite as env } from '../server/env';
-import { entonnoir, ETAPES_DETAIL, NUMERO_MILIEU, part, TOUTES } from '../server/entonnoir';
+import { entonnoir, ETAPES_DETAIL, NUMERO_MILIEU, part, question1, TOUTES } from '../server/entonnoir';
 import { bilan, constats, duree, echeance, PERIODES, type Periode } from '../server/pipeline';
 
 export const prerender = false;
@@ -28,6 +28,7 @@ const choisie = diag.campagnes.find((c) => c.cle === Astro.url.searchParams.get(
 // Base des pourcentages : le plus grand nombre de passages (d'ordinaire l'arrivée ; un lien direct vers les questions
 // peut donner plus de « Question 1 » que d'arrivées).
 const baseDetail = Math.max(0, ...ETAPES_DETAIL.map((e) => choisie.detail[e.cle] ?? 0));
+const ventilation = await question1(env, b.debut, choisie.cle);
 const lienCampagne = (cle: string) => `/bilan?p=${periode}&d=${encodeURIComponent(cle)}#diagnostic`;
 const tuiles = [
   ['Nouveaux contacts', String(b.total.contacts)],
@@ -106,6 +107,21 @@ const tuiles = [
           </tbody>
         </table>
       </div>
+      {ventilation.length > 0 && (<>
+        <h3 class="b-sous-titre">Question 1 : qui passe à la question 2 ? ({choisie.libelle})</h3>
+        <div class="e-table-zone">
+          <table class="e-table b-table" data-question1>
+            <thead><tr><th>Passages à la question 1</th><th class="n">Question 1</th><th class="n">Écran touché</th><th class="n">Question 2</th><th class="n">Passent</th></tr></thead>
+            {ventilation.map((g) => (
+              <tbody data-groupe={g.titre}>
+                <tr class="b-groupe"><th colspan="5">{g.titre}</th></tr>
+                {g.lignes.map((l) => <tr><td>{l.libelle}</td><td class="n">{l.question1}</td><td class="n">{l.touches}</td><td class="n">{l.question2}</td><td class="n">{part(l.question2, l.question1)}</td></tr>)}
+              </tbody>
+            ))}
+          </table>
+        </div>
+        <p class="e-muet" style="margin:0">Une question 1 jamais touchée et quittée signale une page pas vue (préchargée par l'application) ou qui ne répond pas ; touchée sans passer à la question 2, une page qui ne répond pas au toucher, ou un visiteur qui ne veut pas aller plus loin.</p>
+      </>)}
     </>)}
     <p class="e-muet" style="margin:0">Passages comptés par le site sans cookie ni donnée personnelle : une personne qui revient plus tard compte deux fois ; celle qui reprend un diagnostic interrompu continue sous sa première campagne. La campagne est lue dans le lien suivi (utm_source, utm_medium, utm_campaign, utm_content). Les essais faits sur le site en ligne sont comptés comme des visites.</p>
   </section>
@@ -156,4 +172,5 @@ const tuiles = [
   .b-total td { font-weight: 500; border-top: 1.5px solid var(--avt-galet); }
   [data-entonnoir] a[aria-current] { font-weight: 600; }
   .b-sous-titre { font-size: 18px; margin: 18px 0 6px; }
+  .b-groupe th { font-weight: 600; padding-top: 14px; }
 </style>

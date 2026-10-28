@@ -1725,6 +1725,16 @@ afin de décider s'il faut raccourcir le diagnostic ou déplacer la demande de c
 
 **État :** fait (2026-10-26, PR #205), détail dans `implementation-artifacts/10-12-entonnoir-du-diagnostic-par-campagne.md`.
 
+### Story 10.13: Question 1 touchée, navigateur, appareil et temps d'affichage
+
+En tant que JB,
+je veux savoir pourquoi les visiteurs venus de la publicité s'arrêtent à la question 1 (panne, lenteur ou désintérêt),
+afin de réparer ou de changer la bonne chose.
+
+**Critères d'acceptation :** le premier toucher sur la question 1, le navigateur (intégré d'Instagram ou de Facebook, ou habituel), la famille d'appareil (iPhone, Android, ordinateur) et le temps d'affichage de la question 1 en paliers (moins de 2 s, 2 à 5 s, plus de 5 s, ou page pas à l'écran) sont comptés sans cookie ni donnée personnelle (AD-11) ; le Bilan de l'espace ventile le passage question 1 → question 2 selon chacun.
+
+**État :** en relecture (2026-10-28), détail dans `implementation-artifacts/10-13-question-1-touchee-navigateur-et-affichage.md`.
+
 ### Story 10.9: E-mails du site à la charte
 
 Ajoutée le 2026-10-08 à la demande de JB, après l'essai de la séquence sur l'aperçu : les e-mails partent en texte brut, sans mise en page.
