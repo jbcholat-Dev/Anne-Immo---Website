@@ -67,6 +67,12 @@ try {
   const l4 = sql(`SELECT l.nom, l.telephone, c.prochaine_action FROM lead l LEFT JOIN contact c ON c.id = l.contact_id WHERE l.submission_id = '${s4}'`)[0];
   constat(r.ok && l4?.nom === null && l4?.telephone === null && l4?.prochaine_action === 'Écrire pour qualifier (pas de téléphone)',
     `sans nom ni téléphone : accepté, contact à qualifier par e-mail (${JSON.stringify(l4)})`);
+  // Le même prospect revient avec un téléphone : son contact redevient « à rappeler ».
+  const telPlusTard = `0699${String(Date.now()).slice(-6)}`; // numéro neuf : un numéro déjà porté par un autre contact n'est pas repris
+  r = await diagnostic({ submission_id: sid(), reponses: reponses(CHOIX_A), ...coord('Sanstel'), telephone: telPlusTard });
+  await pause(300);
+  const c4 = sql(`SELECT c.telephone, c.prochaine_action FROM lead l JOIN contact c ON c.id = l.contact_id WHERE l.submission_id = '${s4}'`)[0];
+  constat(r.ok && c4?.telephone === `+33${telPlusTard.slice(1)}` && c4?.prochaine_action === 'Rappeler pour qualifier', `téléphone laissé plus tard : contact à rappeler (${JSON.stringify(c4)})`);
   const telFaux = await diagnostic({ submission_id: sid(), reponses: reponses(CHOIX_A), ...coord('Telfaux'), telephone: '12' });
   constat(!telFaux.ok && telFaux.error?.champ === 'telephone', 'numéro mal saisi : refusé (telephone)');
 
@@ -205,7 +211,9 @@ try {
     // coordonnées en fin de parcours n'est plus compté.
     const premier = etapes.find((e) => e.etape === 'coordonnees' && e.ecran === 'entree');
     constat(!!premier && premier.integre === 0 && premier.appareil === 'ordinateur' /* Chromium de l'essai : en-tête d'ordinateur */ && ['moins-2s', '2-5s', 'plus-5s'].includes(premier.affichage)
-      && etapes.some((e) => e.etape === 'interaction') && etapes.filter((e) => e.affichage).length === 1 && !etapes.some((e) => e.etape === 'coordonnees' && e.ecran === ''),
+      && etapes.some((e) => e.etape === 'interaction') && etapes.filter((e) => e.affichage).length === 1 && !etapes.some((e) => e.etape === 'coordonnees' && e.ecran === '')
+      // une reprise redemande les coordonnées sans recompter l'écran d'entrée ni son premier toucher
+      && etapes.filter((e) => e.etape === 'coordonnees').length === 1 && etapes.filter((e) => e.etape === 'interaction').length === 1,
       `${nom} : écran d'entrée touché, navigateur ${premier?.integre === 0 ? 'habituel' : '?'}, ${premier?.appareil}, affiché « ${premier?.affichage} »`);
     const attendues = ['ecran', 'coordonnees', 'envoi', 'resultat', ...(coupure ? ['echec'] : []), ...(nom === 'A' ? ['reprise'] : [])];
     constat(ecrans.size === 17 && attendues.every((x) => vues.has(x)) && etapes.every((e) => e.source === 'parcours' && e.is_test === 1) && (nom !== 'A' || q08 === 1),

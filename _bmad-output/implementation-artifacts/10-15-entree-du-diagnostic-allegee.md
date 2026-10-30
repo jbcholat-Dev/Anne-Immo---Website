@@ -63,7 +63,14 @@ Le nom de famille n'est plus demandé : recommandation de Claude (carte de déci
 - Captures : `site/.verif/diag-*-entree*.png`, `diag-*-gate*.png`.
 
 ## Revue de code
-À faire dans une session neuve (`bmad-code-review`), avant fusion.
+2026-10-30, `bmad-code-review` dans une session neuve, PR #218, commit 68afbc2 relu. Rien de grave ; quatre constats et deux défauts plus anciens :
+1. (moyen) Une reprise recomptait l'écran d'entrée et son premier toucher : chaque reprise passait pour un visiteur perdu avant la question 1 (Bilan, test A/B, ventilation). Corrigé (commit suivant) : un parcours repris ne compte ni l'un ni l'autre ; constat ajouté à `e2e-diagnostic.mjs` (parcours A).
+2. (bas) Un contact à qualifier par e-mail qui laisse plus tard un téléphone gardait l'action « pas de téléphone ». Corrigé (commit suivant) : il redevient « Rappeler pour qualifier » ; constat ajouté.
+3. (bas) La notification à Anne disait « rappeler » pour une sortie A sans téléphone. Corrigé (commit suivant) : « écrire à <e-mail> … (pas de téléphone laissé) ».
+4. (bas) Sur une période qui commence avant le 30 octobre, « Partis avant » de l'écran d'entrée comptait les anciens passages comme perdus. Corrigé (commit suivant) : non calculé quand la question 1 a plus de passages que l'écran d'entrée.
+- Hors périmètre, déjà présent : sur l'écran d'entrée, le logo ouvrait la fenêtre « Vos réponses sont gardées » sans réponse à garder. Corrigé au passage : le logo mène directement à l'accueil tant que rien n'est répondu. Écarté : un rechargement sur l'écran final ne propose pas la reprise (comportement d'avant la story, à traiter à part si besoin).
+
+Après corrections : `npm run check` (site, espace) 0 erreur ; `e2e-diagnostic` tous bons ; `e2e-espace` 299 constats bons.
 
 ## Reste
 - Revue de code, PR, fusion (autorisée par JB le 2026-10-30), vérification en production.

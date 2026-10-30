@@ -126,6 +126,9 @@ export async function rattacherLead(env: EnvSite, leadId: string): Promise<strin
          commune = COALESCE(commune, ?7)
        WHERE id = ?1`,
     ).bind(contact.id, maintenant, lead.prenom, lead.nom, telephone, email, lead.commune_bien),
+    // Story 10.15 : un contact à qualifier par e-mail qui laisse enfin un téléphone redevient à rappeler.
+    env.DB.prepare(`UPDATE contact SET prochaine_action = ?2 WHERE id = ?1 AND prochaine_action = ?3 AND telephone IS NOT NULL`)
+      .bind(contact.id, ACTION_QUALIFIER, ACTION_QUALIFIER_EMAIL),
     env.DB.prepare(
       `INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, donnees)
        VALUES (?1, ?2, 'demande', 'site', ?3, ?4, ?5) ON CONFLICT DO NOTHING`,

@@ -122,7 +122,10 @@ const tuiles = [
             {etapes.map((e, i) => {
               const n = choisie.detail[e.cle] ?? 0;
               const avant = e.cle === 'echec' || i === 0 ? null : (choisie.detail[etapes[e.cle === 'resultat' ? i - 2 : i - 1].cle] ?? 0);
-              const perdus = avant === null ? null : Math.max(0, avant - n);
+              // Écran d'entrée (story 10.15) : sur une période qui commence avant le 30 octobre, les anciens passages n'en ont pas ;
+              // « partis avant » n'a de sens que si chaque passage à la question 1 est passé par lui.
+              const sansEntree = e.cle === 'coordonnees-entree' && (choisie.detail.q01 ?? 0) > n;
+              const perdus = avant === null || sansEntree ? null : Math.max(0, avant - n);
               return <tr data-etape={e.cle} class={n === 0 ? 'b-vide' : ''}><td>{e.libelle}</td><td class="n">{n}</td><td class="n">{e.cle === 'echec' ? '' : part(n, baseDetail)}</td><td class="n">{perdus ? perdus : ''}</td></tr>;
             })}
           </tbody>

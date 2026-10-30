@@ -147,7 +147,9 @@ export function notifierAnne(l: LigneLead): Message {
       ? `À faire : appeler ${telephoneLisible(l.telephone) || 'le prospect (numéro non transmis, voir l\'invitation Cal.com)'} le ${l.rdv_start ? rendezVous(l.rdv_start) : '(date dans l\'invitation Cal.com)'}. Cal.com a déjà envoyé les confirmations et l'invitation d'agenda.`
       : l.source === 'diagnostic'
       ? l.orientation === 'A'
-        ? 'À faire : rappeler sous un jour ouvré pour proposer le rendez-vous stratégique (sortie A).'
+        ? l.telephone
+          ? 'À faire : rappeler sous un jour ouvré pour proposer le rendez-vous stratégique (sortie A).'
+          : `À faire : écrire à ${l.email} sous un jour ouvré pour proposer le rendez-vous stratégique (sortie A, pas de téléphone laissé).`
         : 'À faire : un appel quand vous le jugez utile ; ses résultats lui proposent le guide (sortie B).'
       : l.source === 'guide'
       ? 'Le site lui a envoyé le guide par e-mail (lien valable 7 jours). À faire : un appel quand vous le jugez utile.'

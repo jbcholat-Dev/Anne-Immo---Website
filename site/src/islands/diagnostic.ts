@@ -122,12 +122,15 @@ if (racine) {
   // et facultatif. Les coordonnées restent en mémoire de la page (jamais dans le stockage local, AD-11) : un parcours repris
   // après fermeture redemande l'écran d'entrée. Rien ne part au serveur avant l'envoi final.
   let coord: { prenom: string; email: string; privacy: string } | null = null;
+  // Parcours repris : l'écran d'entrée qui suit redemande les coordonnées mais n'est pas un nouveau premier écran ; ni lui ni
+  // son premier toucher ne sont comptés (sinon chaque reprise passerait pour un visiteur perdu avant la question 1).
+  let repris = false;
 
   function rendreEntree(cible: number) {
     affiche = 'entree';
     majProgression(-1);
     if (repere) repere.textContent = '';
-    compter('coordonnees', 'entree', premierRendu ? palierAffichage() : undefined);
+    if (!repris) compter('coordonnees', 'entree', premierRendu ? palierAffichage() : undefined);
     premierRendu = false;
     zone.innerHTML = html`<div class="qz-gate">
       <div class="qz-gate-tete"><div class="chapeau-muet">15 questions · 3 minutes</div><h1 class="qz-gate-titre">À qui envoyer votre rapport ?</h1>
@@ -246,13 +249,13 @@ if (racine) {
       <p>${n === 1 ? 'Votre première réponse est gardée' : `Vos ${n} premières réponses sont gardées`} sur cet appareil.</p>
       <button type="button" class="btn btn-primaire" data-reprendre>Reprendre</button>
       <button type="button" class="qz-recommencer lien" style="background:none;border:0" data-recommencer>Recommencer</button></div>`;
-    zone.querySelector('[data-reprendre]')?.addEventListener('click', () => { etat = sauve; fixerCampagne(sauve.utm); compter('reprise', ECRANS[sauve.ecran]?.id); dejaCompte = ECRANS[sauve.ecran]?.id ?? ''; aller(sauve.ecran); });
+    zone.querySelector('[data-reprendre]')?.addEventListener('click', () => { etat = sauve; fixerCampagne(sauve.utm); compter('reprise', ECRANS[sauve.ecran]?.id); repris = true; dejaCompte = ECRANS[sauve.ecran]?.id ?? ''; aller(sauve.ecran); });
     zone.querySelector('[data-recommencer]')?.addEventListener('click', () => { etat = neuf(); aller(0); });
   }
 
   // abandon : clic sur le logo → confirmation ; les réponses restent sur l'appareil
   document.querySelector('[data-abandon]')?.addEventListener('click', (ev) => {
-    if (!dialogue) return;
+    if (!dialogue || (affiche === 'entree' && !Object.keys(etat.reponses).length)) return; // rien à garder : le logo mène à l'accueil
     ev.preventDefault();
     const texte = dialogue.querySelector<HTMLElement>('[data-abandon-texte]');
     const e = ECRANS[Math.min(etat.ecran, N - 1)];
@@ -265,7 +268,7 @@ if (racine) {
   // ou un toucher sur l'en-tête ne compte pas. Un premier écran quitté sans interaction signale une page pas vue, ou un
   // visiteur qui n'a pas essayé de répondre. Depuis la story 10.15, le premier écran est l'écran d'entrée (avant : la question 1).
   const surInteraction = () => {
-    if (affiche !== 'entree') return;
+    if (affiche !== 'entree' || repris) return;
     for (const type of ['click', 'keydown']) zone.removeEventListener(type, surInteraction, { capture: true });
     compter('interaction');
   };
