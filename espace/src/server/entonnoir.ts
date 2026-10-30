@@ -5,6 +5,9 @@
 // Story 10.14 (test A/B de la publicité, accueil ou question 1) : arrivées sur l'accueil, clics sur ses deux boutons, demandes
 // d'estimation commencées sur la page Contact, et le point de comparaison commun des deux versions : question 2 atteinte ou
 // demande d'estimation commencée, rapporté aux entrées (la page d'atterrissage de la publicité).
+// Story 10.15 (30 octobre 2026) : le prénom et l'e-mail sont demandés avant la question 1, sur un écran d'entrée (étape
+// « coordonnees », précision « entree ») ; l'ancien écran des coordonnées en fin de parcours n'existe plus. Atteindre la
+// question 1 veut donc dire, depuis, avoir donné son prénom et son e-mail.
 import contenu from '@site/content/diagnostic/questions.json';
 import { enProduction, type EnvSite } from '@site/server/env';
 import { journal } from '@site/server/journal';
@@ -29,7 +32,7 @@ export interface Campagne {
 }
 
 /** Test A/B de la publicité (story 10.14) : entrées = le plus grand nombre entre arrivées sur l'accueil, sur la page du
- * diagnostic et sur la question 1 (la page où la publicité fait atterrir) ; objectif = question 2 atteinte + demande
+ * diagnostic et sur le premier écran du questionnaire (la page où la publicité fait atterrir) ; objectif = question 2 atteinte + demande
  * d'estimation commencée (agenda touché ou formulaire commencé). Des passages, pas des personnes : une même personne qui
  * fait les deux compte deux fois. */
 export interface TestAB {
@@ -48,13 +51,13 @@ const NUMEROS = [...new Set(contenu.ecrans.map((e) => e.numero))];
 /** Les étapes dans l'ordre du parcours. Les questions 10 et 11 ont deux variantes (a/b) : comptées ensemble. */
 export const ETAPES_DETAIL: { cle: string; libelle: string }[] = [
   { cle: 'arrivee', libelle: 'Arrivée sur la page du diagnostic' },
-  ...NUMEROS.flatMap((n) => [
-    { cle: `q${String(n).padStart(2, '0')}`, libelle: `Question ${n}` },
-    // Story 10.13 : premier toucher sur la question 1 (compté depuis le 28 octobre 2026).
-    ...(n === NUMEROS[0] ? [{ cle: 'interaction', libelle: `Question ${n} : écran touché` }] : []),
-  ]),
-  { cle: 'coordonnees', libelle: 'Écran des coordonnées' },
-  { cle: 'envoi', libelle: 'Coordonnées envoyées' },
+  { cle: 'coordonnees-entree', libelle: "Écran d'entrée : prénom et e-mail (depuis le 30 octobre)" },
+  // Story 10.13 : premier toucher sur le premier écran (compté depuis le 28 octobre 2026 ; la question 1 jusqu'au 30 octobre,
+  // l'écran d'entrée depuis).
+  { cle: 'interaction', libelle: 'Premier écran touché' },
+  ...NUMEROS.map((n) => ({ cle: `q${String(n).padStart(2, '0')}`, libelle: `Question ${n}` })),
+  { cle: 'coordonnees', libelle: 'Écran des coordonnées en fin de parcours (jusqu\'au 30 octobre)' },
+  { cle: 'envoi', libelle: 'Envoi (téléphone facultatif depuis le 30 octobre)' },
   { cle: 'echec', libelle: 'Envoi refusé (champ à corriger, réseau)' },
   { cle: 'resultat', libelle: 'Envoi accepté, résultat ouvert' },
 ];
@@ -66,14 +69,14 @@ const AUTRES = 'autres';
 function resumer(c: Campagne) {
   const n = (k: string) => c.detail[k] ?? 0;
   c.ab = {
-    entrees: Math.max(n('accueil'), n('arrivee'), n('q01')), accueil: n('accueil'), clicDiagnostic: n('clic-diagnostic'),
+    entrees: Math.max(n('accueil'), n('arrivee'), n('coordonnees-entree'), n('q01')), accueil: n('accueil'), clicDiagnostic: n('clic-diagnostic'),
     clicEstimation: n('clic-estimation'), question2: n('q02'), estimation: n('estimation'), reservations: n('estimation-reservation'),
     demandes: n('estimation-demande'), objectif: n('q02') + n('estimation'),
   };
   c.arrivees = c.detail.arrivee ?? 0;
   c.commences = c.detail.q01 ?? 0;
   c.milieu = c.detail[MILIEU] ?? 0;
-  c.coordonnees = c.detail.coordonnees ?? 0;
+  c.coordonnees = c.detail['coordonnees-entree'] ?? 0; // écran d'entrée (story 10.15) : prénom et e-mail avant la question 1
   c.envois = c.detail.envoi ?? 0;
   c.resultats = c.detail.resultat ?? 0;
 }
@@ -155,22 +158,28 @@ const APPAREILS: [string, (b: Brute) => boolean][] = [
   ['Ordinateur', (b) => b.appareil === 'ordinateur'],
 ];
 const AFFICHAGES: [string, (b: Brute) => boolean][] = [
-  ['Affichée en moins de 2 s', (b) => b.affichage === 'moins-2s'],
-  ['Affichée en 2 à 5 s', (b) => b.affichage === '2-5s'],
-  ['Affichée en plus de 5 s', (b) => b.affichage === 'plus-5s'],
+  ['Affiché en moins de 2 s', (b) => b.affichage === 'moins-2s'],
+  ['Affiché en 2 à 5 s', (b) => b.affichage === '2-5s'],
+  ['Affiché en plus de 5 s', (b) => b.affichage === 'plus-5s'],
   ['Pas à l\'écran à l\'affichage (préchargée ou en arrière-plan)', (b) => b.affichage === 'cachee'],
 ];
 
-/** Passage de la question 1 à la question 2, ventilé par navigateur, appareil et temps d'affichage. Une seule lecture de la
- * base pour toutes les campagnes : la fonction rendue donne la ventilation d'une clé de `entonnoir()` (« toutes », une campagne,
- * ou « autres » = celles hors de la liste `campagnes`). Les passages d'avant le 28 octobre 2026 n'ont pas ces informations :
- * « non mesuré ». */
+/** Passage du premier écran du questionnaire à l'écran suivant, ventilé par navigateur, appareil et temps d'affichage. Le
+ * premier écran est l'écran d'entrée (prénom et e-mail) depuis la story 10.15, suivi de la question 1 ; avant, la question 1,
+ * suivie de la question 2. Une seule lecture de la base pour toutes les campagnes : la fonction rendue donne la ventilation
+ * d'une clé de `entonnoir()` (« toutes », une campagne, ou « autres » = celles hors de la liste `campagnes`). Les passages
+ * d'avant le 28 octobre 2026 n'ont pas ces informations : « non mesuré ». */
 export async function question1(env: EnvSite, debut: string, campagnes: Campagne[]): Promise<(cle: string) => { titre: string; lignes: LigneQuestion1[] }[]> {
   const toutes = await env.DB.prepare(
     `SELECT e.source, e.support, e.campagne, e.contenu, e.integre, e.appareil, e.affichage, count(*) AS n,
        sum(EXISTS (SELECT 1 FROM entonnoir i WHERE i.parcours = e.parcours AND i.etape = 'interaction' AND i.ecran = '')) AS touches,
-       sum(EXISTS (SELECT 1 FROM entonnoir s WHERE s.parcours = e.parcours AND s.etape = 'ecran' AND s.ecran = 'q02')) AS suivants
-     FROM entonnoir e WHERE e.etape = 'ecran' AND e.ecran = 'q01' AND e.at >= ?1 AND (e.is_test = 0 OR ?2 = 0)
+       sum(EXISTS (SELECT 1 FROM entonnoir s WHERE s.parcours = e.parcours AND s.etape = 'ecran'
+         AND s.ecran = CASE WHEN e.etape = 'coordonnees' THEN 'q01' ELSE 'q02' END)) AS suivants
+     FROM entonnoir e
+     WHERE ((e.etape = 'coordonnees' AND e.ecran = 'entree')
+        OR (e.etape = 'ecran' AND e.ecran = 'q01'
+          AND NOT EXISTS (SELECT 1 FROM entonnoir x WHERE x.parcours = e.parcours AND x.etape = 'coordonnees' AND x.ecran = 'entree')))
+       AND e.at >= ?1 AND (e.is_test = 0 OR ?2 = 0)
      GROUP BY e.source, e.support, e.campagne, e.contenu, e.integre, e.appareil, e.affichage`,
   ).bind(debut, enProduction(env) ? 1 : 0).all<Brute>().then((r) => r.results).catch((e) => {
     // Avant la migration 0016 (appliquée par la construction du site), les colonnes manquent : ventilation vide.
@@ -193,6 +202,6 @@ function ventiler(brutes: Brute[]): { titre: string; lignes: LigneQuestion1[] }[
   return [
     groupe('Navigateur', NAVIGATEURS, (b) => b.integre === null),
     groupe('Appareil', APPAREILS, (b) => b.appareil === ''),
-    groupe('Affichage de la question 1', AFFICHAGES, (b) => b.affichage === ''),
+    groupe('Affichage du premier écran', AFFICHAGES, (b) => b.affichage === ''),
   ].filter((g) => g.lignes.length);
 }

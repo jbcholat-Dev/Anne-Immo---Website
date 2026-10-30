@@ -367,9 +367,13 @@ try {
   const vieux = `VIEUX${NUM}`, retard = `RETARD${NUM}`, reveil = `REVEIL${NUM}`, avenir = `AVENIR${NUM}`;
   const hier = (() => { const d = new Date(`${auj}T12:00:00Z`); d.setUTCDate(d.getUTCDate() - 1); return d.toISOString().slice(0, 10); })();
   sql(`INSERT INTO contact (id, created_at, last_activity_at, nom, etape, prochaine_action, prochaine_action_le, canal, is_test) VALUES
-    ('${vieux}', '2026-01-02T08:00:00Z', '2026-01-02T08:00:00Z', 'Ancien${NUM}', 'a_qualifier', 'Rappeler pour qualifier', '2026-01-02T08:00:00Z', 'site', 1),
+    ('${vieux}', '2026-01-02T08:00:00Z', '2026-01-02T08:00:00Z', 'Ancien${NUM}', 'a_qualifier', 'Écrire pour qualifier (pas de téléphone)', '2026-01-02T08:00:00Z', 'site', 1),
     ('${retard}', '2026-02-01T08:00:00Z', '2026-02-01T08:00:00Z', 'Retard${NUM}', 'estimation', 'Envoyer l''estimation', '${hier}', 'rencontre', 1),
     ('${avenir}', '2026-02-01T08:00:00Z', '2026-02-01T08:00:00Z', 'Avenir${NUM}', 'second_rdv', 'Second rendez-vous', '2099-01-01', 'rencontre', 1)`);
+  // Story 10.15 : un ancien contact avec téléphone passe avant Didier, qui passe avant l'ancien sans téléphone.
+  const vieuxTel = `VIEUXTEL${NUM}`;
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, nom, telephone, etape, prochaine_action, prochaine_action_le, canal, is_test) VALUES
+    ('${vieuxTel}', '2026-01-03T08:00:00Z', '2026-01-03T08:00:00Z', 'AncienTel${NUM}', '+33608${NUM}', 'a_qualifier', 'Rappeler pour qualifier', '2026-01-03T08:00:00Z', 'site', 1)`);
   sql(`INSERT INTO contact (id, created_at, last_activity_at, nom, etape, prochaine_action, prochaine_action_le, reveil_le, canal, is_test) VALUES
     ('${reveil}', '2026-03-01T08:00:00Z', '2026-03-01T08:00:00Z', 'Reveil${NUM}', 'en_sommeil', 'Réveiller : rappeler', '${auj}', '${auj}', 'autre', 1)`);
   sql(`INSERT INTO passage_boitage (id, created_at, secteur, fait_le, mots) VALUES ('PASS${NUM}', '2026-01-01T00:00:00Z', 'Margencel-${NUM}', '2026-01-10', 150)`);
@@ -378,9 +382,10 @@ try {
   html = await r.text();
   const zone = (attr) => html.split(attr)[1]?.split('</section>')[0] ?? '';
   const nouveauxZone = zone('data-nouveaux'), rappelsZone = zone('data-rappels'), prospection = zone('data-prospection');
-  constat(nouveauxZone.includes(`data-contact="${vieux}"`) && nouveauxZone.includes(`data-contact="${didier}"`) && nouveauxZone.indexOf(vieux) < nouveauxZone.indexOf(didier)
-    && nouveauxZone.includes(`/contacts/qualifier?id=${didier}`) && nouveauxZone.includes('href="tel:'),
-    'aujourd\'hui : nouveaux contacts à qualifier en tête, le plus ancien d\'abord, avec Appeler et Qualifier');
+  const ordre = [vieuxTel, didier, vieux].map((id) => nouveauxZone.indexOf(`data-contact="${id}"`));
+  constat(ordre.every((i) => i >= 0) && ordre[0] < ordre[1] && ordre[1] < ordre[2]
+    && nouveauxZone.includes(`/contacts/qualifier?id=${didier}`) && nouveauxZone.includes('href="tel:') && nouveauxZone.includes('Écrire pour qualifier (pas de téléphone)'),
+    'aujourd\'hui : nouveaux contacts à qualifier en tête, ceux qui ont un téléphone d\'abord, puis le plus ancien, avec Appeler (ou Écrire) et Qualifier');
   constat(!html.includes(`data-contact="${carla}"`), 'aujourd\'hui : un contact pas joint à rappeler demain n\'y est pas encore');
   constat(rappelsZone.includes(`data-contact="${retard}"`) && rappelsZone.split(`data-contact="${retard}"`)[1].split('</article>')[0].includes('data-retard')
     && rappelsZone.includes(`data-contact="${reveil}"`) && !html.includes(`data-contact="${avenir}"`) && !html.includes(`data-contact="${reco.id}"`),
@@ -718,6 +723,11 @@ try {
   sql(`INSERT INTO entonnoir (parcours, etape, ecran, source, support, contenu, lang, is_test, at) VALUES
        ('E2E${ESSAI}A1', 'interaction', '', 'facebook', 'paid', 'carrousel-${ESSAI.toLowerCase()}', 'fr', 1, '${new Date().toISOString()}'),
        ('E2E${ESSAI}A1', 'ecran', 'q02', 'facebook', 'paid', 'carrousel-${ESSAI.toLowerCase()}', 'fr', 1, '${new Date().toISOString()}')`);
+  // Story 10.15 : A4 et A5 suivent le nouveau parcours (écran d'entrée, prénom et e-mail, avant la question 1), sur iPhone dans
+  // l'application ; A4 touche l'écran d'entrée et passe à la question 1, A5 (préchargé) ne fait rien.
+  const nouveaux = [[`E2E${ESSAI}A4`, 'arrivee', ''], [`E2E${ESSAI}A4`, 'coordonnees', 'entree'], [`E2E${ESSAI}A4`, 'interaction', ''], [`E2E${ESSAI}A4`, 'ecran', 'q01'],
+    [`E2E${ESSAI}A5`, 'arrivee', ''], [`E2E${ESSAI}A5`, 'coordonnees', 'entree']];
+  sql(`INSERT INTO entonnoir (parcours, etape, ecran, source, support, contenu, lang, is_test, at, integre, appareil, affichage) VALUES ${nouveaux.map(([p, e, q]) => `('${p}', '${e}', '${q}', 'facebook', 'paid', 'carrousel-${ESSAI.toLowerCase()}', 'fr', 1, '${new Date().toISOString()}', 1, 'ios', '${e === 'coordonnees' ? (p.endsWith('A4') ? 'moins-2s' : 'cachee') : ''}')`).join(', ')}`);
   // Story 10.14 : version « accueil » du test A/B. 4 arrivées sur l'accueil (H1 clique le diagnostic, H2 l'estimation),
   // D1 va jusqu'à la question 2, C1 touche l'agenda et le formulaire (une estimation commencée) puis réserve.
   const ab = [
@@ -734,13 +744,17 @@ try {
   const nCampagne = [...ligneCampagne.matchAll(/class="n"[^>]*>(\d+)</g)].map((m) => Number(m[1]));
   const detail = html.split(`data-detail="${cleE2e}"`)[1]?.split('</table>')[0] ?? '';
   const q10 = detail.split('data-etape="q10"')[1]?.split('</tr>')[0] ?? '';
-  constat(r.status === 200 && ligneCampagne.includes(`facebook · paid · carrousel-${ESSAI.toLowerCase()}`) && nCampagne.slice(0, 2).join(',') === '3,2' && nCampagne[3] === 1,
-    `bilan : entonnoir par campagne, 3 arrivées, 2 commencés, 1 aux coordonnées (${nCampagne.join(',')})`);
+  constat(r.status === 200 && ligneCampagne.includes(`facebook · paid · carrousel-${ESSAI.toLowerCase()}`) && nCampagne.slice(0, 4).join(',') === '5,2,3,0',
+    `bilan : entonnoir par campagne, 5 arrivées, 2 prénom et e-mail, 3 commencés, aucun à la question 8 (${nCampagne.join(',')})`);
+  const lignesDetail = (cle) => [...(detail.split(`data-etape="${cle}"`)[1]?.split('</tr>')[0] ?? '').matchAll(/class="n"[^>]*>([^<]*)</g)].map((m) => m[1]);
+  constat(lignesDetail('coordonnees-entree')[0] === '2' && lignesDetail('coordonnees')[0] === '1' && detail.indexOf('data-etape="coordonnees-entree"') < detail.indexOf('data-etape="q01"'),
+    `bilan : écran d'entrée avant la question 1, ancien écran des coordonnées gardé pour la période (${lignesDetail('coordonnees-entree')} · ${lignesDetail('coordonnees')})`);
   const ventil = html.split('data-question1')[1]?.split('</table>')[0] ?? '';
   const ligneVentil = (libelle) => [...(ventil.split(libelle)[1]?.split('</tr>')[0] ?? '').matchAll(/class="n"[^>]*>([^<]+)</g)].map((m) => m[1]).join(',');
-  constat(ligneVentil('Application Instagram ou Facebook') === '2,1,1,50\u00a0%' && ligneVentil('iPhone ou iPad') === '2,1,1,50\u00a0%'
-    && ligneVentil('Affichée en moins de 2 s') === '1,1,1,100\u00a0%' && ligneVentil('préchargée ou en arrière-plan') === '1,0,0,0\u00a0%',
-    `bilan : question 1 → 2 par navigateur, appareil et affichage (${ligneVentil('Application Instagram ou Facebook')} · ${ligneVentil('préchargée ou en arrière-plan')})`);
+  // Premier écran : la question 1 pour A1 et A2 (suite : question 2), l'écran d'entrée pour A4 et A5 (suite : question 1).
+  constat(ligneVentil('Application Instagram ou Facebook') === '4,2,2,50\u00a0%' && ligneVentil('iPhone ou iPad') === '4,2,2,50\u00a0%'
+    && ligneVentil('Affiché en moins de 2 s') === '2,2,2,100\u00a0%' && ligneVentil('préchargée ou en arrière-plan') === '2,0,0,0\u00a0%',
+    `bilan : premier écran → suite par navigateur, appareil et affichage (${ligneVentil('Application Instagram ou Facebook')} · ${ligneVentil('préchargée ou en arrière-plan')})`);
   const ligneAb = [...(html.split(`data-ab-campagne="${cleAb}"`)[1]?.split('</tr>')[0] ?? '').matchAll(/class="n"[^>]*>([^<]+)</g)].map((m) => m[1]).join(',');
   constat(ligneAb === '4,4,1,1,1,1,1,2,50\u00a0%', `bilan : test A/B, version accueil (entrées, accueil, clics, question 2, estimation, rendez-vous, objectif, taux : ${ligneAb})`);
   constat(q10.includes('>1<') && html.includes('Sans lien de campagne') && html.includes(`Étape par étape : facebook · paid · carrousel-${ESSAI.toLowerCase()}`),
@@ -1080,7 +1094,7 @@ try {
   const bilanClaude = await r.json();
   constat(r.status === 200 && bilanClaude.canaux?.find((l) => l.canal === 'rencontre')?.cout_centimes >= 40000 && !JSON.stringify(bilanClaude).includes('@'),
     'Claude : bilan par canal avec les coûts, sans aucune coordonnée');
-  constat(bilanClaude.diagnostic?.campagnes?.some((c) => c.libelle === `facebook · paid · carrousel-${ESSAI.toLowerCase()}` && c.arrivees === 3 && c.coordonnees === 1),
+  constat(bilanClaude.diagnostic?.campagnes?.some((c) => c.libelle === `facebook · paid · carrousel-${ESSAI.toLowerCase()}` && c.arrivees === 5 && c.coordonnees === 2 && c.commences === 3),
     'Claude : entonnoir du diagnostic par campagne dans le bilan');
   constat(bilanClaude.diagnostic?.campagnes?.some((c) => c.cle === cleAb && c.ab?.entrees === 4 && c.ab?.objectif === 2 && c.ab?.reservations === 1),
     'Claude : test A/B (entrées et objectif) dans le bilan');

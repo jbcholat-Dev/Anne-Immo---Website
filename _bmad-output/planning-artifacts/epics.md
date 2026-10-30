@@ -1745,6 +1745,16 @@ afin de garder la version qui amène le plus de visiteurs à la question 2 ou à
 
 **État :** fait, en ligne le 2026-10-28 (PR #216), détail dans `implementation-artifacts/10-14-test-ab-accueil-ou-question-1.md`.
 
+### Story 10.15: Entrée du diagnostic allégée, prénom et e-mail d'abord
+
+En tant que JB,
+je veux que le visiteur venu de la publicité donne son prénom et son e-mail avant la question 1, et son téléphone seulement s'il souhaite être appelé,
+afin que la page /diagnostic redevienne la destination des publicités sans annoncer la friction des quatre coordonnées.
+
+**Critères d'acceptation :** un écran d'entrée (prénom, e-mail, accord) précède la question 1, ses coordonnées restent en mémoire de la page et jamais dans le navigateur (AD-11) ; à la fin, le téléphone est facultatif avec la phrase « Votre rapport arrive par e-mail. Le téléphone, seulement si vous souhaitez qu'Anne vous appelle. », reprise sous le bouton de /diagnostic ; le nom de famille n'est plus demandé ; le serveur accepte un diagnostic sans nom ni téléphone ; l'écran d'entrée est compté (étape `coordonnees`, précision `entree`) et le Bilan le place avant la question 1 ; dans l'espace, les contacts à qualifier qui ont un téléphone passent en tête, ceux sans téléphone sont à qualifier par e-mail. Consentement et purge inchangés.
+
+**État :** en cours, détail dans `implementation-artifacts/10-15-entree-du-diagnostic-allegee.md`.
+
 ### Story 10.9: E-mails du site à la charte
 
 Ajoutée le 2026-10-08 à la demande de JB, après l'essai de la séquence sur l'aperçu : les e-mails partent en texte brut, sans mise en page.

@@ -24,6 +24,8 @@ export const GET: APIRoute = async ({ request, url }) => {
     diagnostic: {
       total: diag.total, campagnes: diag.campagnes,
       // Story 10.13 : question 1 → question 2 par navigateur, appareil et temps d'affichage, toutes campagnes puis chacune.
+      // Story 10.15 (30 octobre 2026) : « question1 » = le premier écran (l'écran d'entrée, prénom et e-mail, suivi de la
+      // question 1) ; « coordonnees » des campagnes = cet écran d'entrée, l'ancien écran final reste dans detail.coordonnees.
       question1: { toutes: ventiler(TOUTES), campagnes: diag.campagnes.map((c) => ({ cle: c.cle, libelle: c.libelle, ventilation: ventiler(c.cle) })) },
     },
   }), { headers: { 'Content-Type': 'application/json; charset=utf-8' } });
