@@ -1753,7 +1753,7 @@ afin que la page /diagnostic redevienne la destination des publicités sans anno
 
 **Critères d'acceptation :** un écran d'entrée (prénom, e-mail, accord) précède la question 1, ses coordonnées restent en mémoire de la page et jamais dans le navigateur (AD-11) ; à la fin, le téléphone est facultatif avec la phrase « Votre rapport arrive par e-mail. Le téléphone, seulement si vous souhaitez qu'Anne vous appelle. », reprise sous le bouton de /diagnostic ; le nom de famille n'est plus demandé ; le serveur accepte un diagnostic sans nom ni téléphone ; l'écran d'entrée est compté (étape `coordonnees`, précision `entree`) et le Bilan le place avant la question 1 ; dans l'espace, les contacts à qualifier qui ont un téléphone passent en tête, ceux sans téléphone sont à qualifier par e-mail. Consentement et purge inchangés.
 
-**État :** en cours, détail dans `implementation-artifacts/10-15-entree-du-diagnostic-allegee.md`.
+**État :** fait, en ligne le 2026-10-30 (PR #218), détail dans `implementation-artifacts/10-15-entree-du-diagnostic-allegee.md`.
 
 ### Story 10.9: E-mails du site à la charte
 
