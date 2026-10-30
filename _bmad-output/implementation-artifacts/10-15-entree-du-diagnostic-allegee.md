@@ -1,7 +1,7 @@
 ---
 story: 10.15
 epic: 10 — Capture des leads et backend
-statut: review
+statut: done
 date: 2026-10-30
 ---
 
@@ -72,6 +72,11 @@ Le nom de famille n'est plus demandé : recommandation de Claude (carte de déci
 
 Après corrections : `npm run check` (site, espace) 0 erreur ; `e2e-diagnostic` tous bons ; `e2e-espace` 299 constats bons.
 
+## En ligne (2026-10-30)
+PR #218 fusionnée le 2026-10-30 sur l'autorisation de JB (« Pour la PR, attends pas mon accord, tu pourras fusionner »). La construction de production a réussi. Vérifications sur annevialtissot.fr :
+- /diagnostic montre la nouvelle ligne sous le bouton ;
+- le script des questions contient l'écran d'entrée ;
+- `/api/sante` répond 17 migrations, aucune nouvelle.
+
 ## Reste
-- Revue de code, PR, fusion (autorisée par JB le 2026-10-30), vérification en production.
-- Prévenir le fil de la campagne : la question 2 veut dire désormais « coordonnées données et question 1 répondue ».
+- Le fil de la campagne est prévenu : la question 2 veut désormais dire « coordonnées données et question 1 répondue ».
