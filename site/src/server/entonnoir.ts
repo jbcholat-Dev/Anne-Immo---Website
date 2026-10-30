@@ -18,6 +18,9 @@ const ECRANS = new Set(contenu.ecrans.map((e) => e.id));
 /** Ce que précisent les étapes de la story 10.14 : le bouton cliqué sur l'accueil, le geste fait sur la page Contact. */
 export const PRECISIONS: Partial<Record<Etape, readonly string[]>> = {
   clic: ['diagnostic', 'estimation'],
+  // Story 10.15 : « entree » = l'écran d'entrée (prénom et e-mail, avant la question 1) ; sans précision = l'ancien écran des
+  // coordonnées en fin de parcours (pages encore ouvertes ou en cache au moment du changement).
+  coordonnees: ['', 'entree'],
   estimation: ['agenda', 'formulaire', 'reservation', 'demande'],
 };
 const UTM = { utm_source: 'source', utm_medium: 'support', utm_campaign: 'campagne', utm_content: 'contenu' } as const;
@@ -91,8 +94,10 @@ export function lirePassage(d: unknown): Passage | null {
   if ((etape === 'ecran' || etape === 'reprise') && !ECRANS.has(ecran)) return null;
   if (PRECISIONS[etape] && !PRECISIONS[etape]!.includes(ecran)) return null;
   const utm = o.utm && typeof o.utm === 'object' && !Array.isArray(o.utm) ? (o.utm as Record<string, unknown>) : {};
-  // Le temps d'affichage n'a de sens que sur la ligne de la question 1 ; ailleurs, ou hors paliers, il est oublié.
-  const affichage: Affichage = etape === 'ecran' && ecran === 'q01' && AFFICHAGES.includes(o.affichage as never) ? (o.affichage as Affichage) : '';
+  // Le temps d'affichage n'a de sens que sur la ligne du premier écran du questionnaire : la question 1 jusqu'à la story 10.15,
+  // l'écran d'entrée (prénom et e-mail) depuis ; ailleurs, ou hors paliers, il est oublié.
+  const premier = (etape === 'ecran' && ecran === 'q01') || (etape === 'coordonnees' && ecran === 'entree');
+  const affichage: Affichage = premier && AFFICHAGES.includes(o.affichage as never) ? (o.affichage as Affichage) : '';
   const p: Passage = { parcours: o.parcours, etape, ecran, source: '', support: '', campagne: '', contenu: '', lang: o.lang === 'en' ? 'en' : 'fr', affichage };
   for (const [cle, colonne] of Object.entries(UTM)) p[colonne] = nettoyer(utm[cle]);
   return p;

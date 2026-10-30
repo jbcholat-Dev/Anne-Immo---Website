@@ -150,6 +150,7 @@ development_status:
   10-12-entonnoir-du-diagnostic-par-campagne: done   # 2026-10-26 : PR #205 fusionnée sur l'accord de JB, migration 0015 constatée en production
   10-13-question-1-touchee-navigateur-et-affichage: done   # 2026-10-28, PR #213 fusionnée, en ligne (migrations 16)
   10-14-test-ab-accueil-ou-question-1: done   # 2026-10-28, PR #216 fusionnée, en ligne (migrations 17)
+  10-15-entree-du-diagnostic-allegee: review   # 2026-10-30, prénom et e-mail avant la question 1, téléphone facultatif ; fusion autorisée par JB après revue
   epic-10-retrospective: optional
 
   epic-11: in-progress

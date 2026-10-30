@@ -11,7 +11,8 @@ export interface LeadFormulaire {
   lang: 'fr' | 'en';
   /** Null pour un rendez-vous : Cal.com ne donne que le nom complet. */
   prenom: string | null;
-  nom: string;
+  /** Null pour le diagnostic depuis la story 10.15 : seul le prénom est demandé. */
+  nom: string | null;
   email: string;
   telephone: string | null;
   projet: 'vente' | 'achat' | null;
@@ -58,19 +59,21 @@ export function valider(source: SourceFormulaire, d: Record<string, unknown>): V
   if (!lang) return refus('lang');
 
   const prenom = texte(d.prenom);
-  const nom = texte(d.nom);
+  const nom = texte(d.nom) || null;
   if (!prenom || prenom.length > 100) return refus('prenom');
-  if (!nom || nom.length > 100) return refus('nom');
+  // Nom de famille : plus demandé par le diagnostic (story 10.15, prénom et e-mail seulement), exigé ailleurs.
+  if ((!nom && source !== 'diagnostic') || (nom && nom.length > 100)) return refus('nom');
 
   const email = texte(d.email).toLowerCase();
   if (!emailValide(email)) return refus('email');
 
-  // Téléphone : obligatoire pour le contact et l'estimation, facultatif pour le guide (AD-6, décision du 2026-09-07).
+  // Téléphone : obligatoire pour le contact et l'estimation, facultatif pour le guide (AD-6, décision du 2026-09-07) et pour
+  // le diagnostic (story 10.15, décision de JB du 2026-10-30 : « seulement si vous souhaitez qu'Anne vous appelle »).
   const telSaisi = texte(d.telephone);
   const indicatif = INDICATIFS.includes(texte(d.indicatif)) ? texte(d.indicatif) : '+33';
   const telephone = telSaisi ? e164(telSaisi, indicatif) : null;
   if (telSaisi && !telephone) return refus('telephone');
-  if (!telephone && source !== 'guide') return refus('telephone');
+  if (!telephone && source !== 'guide' && source !== 'diagnostic') return refus('telephone');
 
   if (!coche(d.privacy)) return refus('privacy');
 

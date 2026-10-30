@@ -45,6 +45,9 @@ export type Canal = keyof typeof CANAUX_ORIGINE;
 
 /** Action posée sur tout nouveau contact : le rappeler pour le qualifier, dès son arrivée. */
 export const ACTION_QUALIFIER = 'Rappeler pour qualifier';
+/** Story 10.15 : un contact du site sans téléphone (le diagnostic ne l'exige plus) se qualifie par e-mail, après ceux qui ont
+ * laissé un numéro (rangés en tête de « À rappeler maintenant » dans l'espace). */
+export const ACTION_QUALIFIER_EMAIL = 'Écrire pour qualifier (pas de téléphone)';
 
 interface LeadARattacher {
   id: string;
@@ -104,7 +107,7 @@ export async function rattacherLead(env: EnvSite, leadId: string): Promise<strin
        VALUES (?1, ?2, ?2, ?3, ?4, ?5, ?6, ?7, 'a_qualifier', ?8, ?2, 'site', ?9, ?10, ?11)
        ON CONFLICT DO NOTHING`,
     ).bind(ulid(), lead.created_at, lead.prenom, lead.nom, telephone, email, parcoursDeLaDemande(lead.source, lead.projet),
-      ACTION_QUALIFIER, lead.source, lead.commune_bien, lead.is_test).run();
+      telephone ? ACTION_QUALIFIER : ACTION_QUALIFIER_EMAIL, lead.source, lead.commune_bien, lead.is_test).run();
     // Relu dans tous les cas : si une autre demande a créé le même contact entre-temps, c'est le sien qu'on prend.
     contact = await trouver(env, telephone, email);
     if (!contact) throw new Error('contact introuvable après création');
@@ -123,6 +126,9 @@ export async function rattacherLead(env: EnvSite, leadId: string): Promise<strin
          commune = COALESCE(commune, ?7)
        WHERE id = ?1`,
     ).bind(contact.id, maintenant, lead.prenom, lead.nom, telephone, email, lead.commune_bien),
+    // Story 10.15 : un contact à qualifier par e-mail qui laisse enfin un téléphone redevient à rappeler.
+    env.DB.prepare(`UPDATE contact SET prochaine_action = ?2 WHERE id = ?1 AND prochaine_action = ?3 AND telephone IS NOT NULL`)
+      .bind(contact.id, ACTION_QUALIFIER, ACTION_QUALIFIER_EMAIL),
     env.DB.prepare(
       `INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, donnees)
        VALUES (?1, ?2, 'demande', 'site', ?3, ?4, ?5) ON CONFLICT DO NOTHING`,
@@ -134,9 +140,11 @@ export async function rattacherLead(env: EnvSite, leadId: string): Promise<strin
   if (contact.etape === 'en_sommeil' || contact.etape === 'perdu') {
     lot.push(
       env.DB.prepare(
-        `UPDATE contact SET etape = 'a_qualifier', prochaine_action = ?3, prochaine_action_le = ?2, reveil_le = NULL, motif_perte = NULL
+        // Le téléphone lu après la mise à jour qui précède dans le lot : celui du contact, ou celui de la nouvelle demande.
+        `UPDATE contact SET etape = 'a_qualifier', prochaine_action = CASE WHEN telephone IS NULL THEN ?4 ELSE ?3 END,
+           prochaine_action_le = ?2, reveil_le = NULL, motif_perte = NULL
          WHERE id = ?1`,
-      ).bind(contact.id, maintenant, ACTION_QUALIFIER),
+      ).bind(contact.id, maintenant, ACTION_QUALIFIER, ACTION_QUALIFIER_EMAIL),
       env.DB.prepare(
         `INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees) VALUES (?1, ?2, 'etape', 'site', ?3, ?4)`,
       ).bind(contact.id, maintenant, `${LIBELLES_ETAPES[contact.etape]} → À qualifier : nouvelle demande`,

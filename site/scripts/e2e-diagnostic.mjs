@@ -6,6 +6,7 @@
 // Story 10.13 : premier toucher sur la question 1, navigateur et appareil, temps d'affichage de la question 1.
 // Story 10.12 : chaque étape du parcours est comptée dans la table `entonnoir`, avec sa campagne, sans donnée personnelle.
 // Story 10.14 : arrivée sur l'accueil, clics sur ses deux boutons et demande d'estimation commencée, sous la même campagne.
+// Story 10.15 : prénom, e-mail et accord sur un écran d'entrée avant la question 1, téléphone facultatif à la fin, plus de nom.
 // Préalable : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local`.
 // Lancer : `node scripts/e2e-diagnostic.mjs`.
 import fs from 'node:fs';
@@ -31,7 +32,8 @@ const CHOIX_B = ['q01.a', 'q02.b', 'q03.b', 'q04.b', 'q05.c', 'q06.b', ['q07.a',
 const CHOIX_R = ['q01.d', 'q02.c', 'q03.c', 'q04.c', 'q05.e', 'q06.d', [], 'q08.d', 'q09.c', 'q10a.d', 'q10b.c', 'q11a.a', 'q11b.e', 'q12.b', ['q13.a'], 'q14.c', 'passer'];
 
 let ip = 0;
-const coord = (prenom) => ({ prenom, nom: 'Essai', email: `${prenom.toLowerCase()}+${ESSAI}@example.com`, telephone: '06 12 34 56 78', privacy: 'on' });
+// Story 10.15 : la page n'envoie plus de nom de famille ; le téléphone est facultatif (testé sans lui plus bas).
+const coord = (prenom) => ({ prenom, email: `${prenom.toLowerCase()}+${ESSAI}@example.com`, telephone: '06 12 34 56 78', privacy: 'on' });
 const diagnostic = (corps) =>
   appeler(`${U}/api/diagnostic`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'cf-connecting-ip': `198.51.100.${++ip}` }, body: JSON.stringify({ lang: 'fr', turnstile: 'jeton', journey_id: 'essai', ...corps }) })
     .then(async (r) => ({ statut: r.status, ...(await r.json()) }));
@@ -58,6 +60,21 @@ try {
   r = await diagnostic({ submission_id: s3, reponses: reponses(CHOIX_B), ...coord('Marc'), telephone: '079 123 45 67', indicatif: '+41' });
   const l3 = sql(`SELECT orientation, band, telephone FROM lead WHERE submission_id = '${s3}'`)[0];
   constat(r.ok && l3?.orientation === 'B' && l3?.telephone === '+41791234567', `« minimiser les frais » force la sortie B ; numéro suisse écrit ${l3?.telephone}`);
+  // Story 10.15 : sans nom ni téléphone, accepté ; le contact créé se qualifie par e-mail. Un numéro mal saisi reste refusé.
+  const s4 = sid();
+  r = await diagnostic({ submission_id: s4, reponses: reponses(CHOIX_A), ...coord('Sanstel'), telephone: '' });
+  await pause(300);
+  const l4 = sql(`SELECT l.nom, l.telephone, c.prochaine_action FROM lead l LEFT JOIN contact c ON c.id = l.contact_id WHERE l.submission_id = '${s4}'`)[0];
+  constat(r.ok && l4?.nom === null && l4?.telephone === null && l4?.prochaine_action === 'Écrire pour qualifier (pas de téléphone)',
+    `sans nom ni téléphone : accepté, contact à qualifier par e-mail (${JSON.stringify(l4)})`);
+  // Le même prospect revient avec un téléphone : son contact redevient « à rappeler ».
+  const telPlusTard = `0699${String(Date.now()).slice(-6)}`; // numéro neuf : un numéro déjà porté par un autre contact n'est pas repris
+  r = await diagnostic({ submission_id: sid(), reponses: reponses(CHOIX_A), ...coord('Sanstel'), telephone: telPlusTard });
+  await pause(300);
+  const c4 = sql(`SELECT c.telephone, c.prochaine_action FROM lead l JOIN contact c ON c.id = l.contact_id WHERE l.submission_id = '${s4}'`)[0];
+  constat(r.ok && c4?.telephone === `+33${telPlusTard.slice(1)}` && c4?.prochaine_action === 'Rappeler pour qualifier', `téléphone laissé plus tard : contact à rappeler (${JSON.stringify(c4)})`);
+  const telFaux = await diagnostic({ submission_id: sid(), reponses: reponses(CHOIX_A), ...coord('Telfaux'), telephone: '12' });
+  constat(!telFaux.ok && telFaux.error?.champ === 'telephone', 'numéro mal saisi : refusé (telephone)');
 
   // 4. Réponses non conformes au questionnaire : refusées, rien d'écrit.
   const invalides = [
@@ -103,7 +120,7 @@ try {
 
   // 7. E-mails : notification à Anne avec le score et les réponses, résumé au prospect, tous vers la boîte de test.
   await pause(1500);
-  const notif = recus.find((e) => e.subject.includes('Diagnostic') && e.subject.includes('Claire Essai'));
+  const notif = recus.find((e) => e.subject.includes('Diagnostic') && e.reply_to === coord('Claire').email);
   const conf = recus.find((e) => e.subject.includes('Votre diagnostic vendeur') && e.text.includes('Bonjour Claire'));
   constat(recus.length > 0 && recus.every((e) => e.to[0] === 'boite-test@example.com' && e.subject.startsWith('[TEST]')), `${recus.length} e-mails, tous vers la boîte de test`);
   constat(!!notif && notif.text.includes(`Diagnostic : ${sc1.total} / 100`) && notif.text.includes('Sortie A') && notif.text.includes('Réponses :') && notif.reply_to === coord('Claire').email, 'notification à Anne : score, sortie, réponses en clair, réponse au prospect');
@@ -120,6 +137,20 @@ try {
     const chargements = [];
     p.on('request', (rq) => chargements.push(rq.url()));
     await p.goto(`${U}/diagnostic/questions?utm_source=parcours&utm_content=${nom}-${ESSAI}`, { waitUntil: 'networkidle' });
+    const email = `${prenom.toLowerCase()}+nav-${ESSAI}@example.com`;
+    // Story 10.15 : écran d'entrée (prénom, e-mail, accord) avant la question 1 ; refusé vide, puis rempli.
+    const entree = async (vide) => {
+      await p.waitForSelector('[data-entree]');
+      if (vide) {
+        await p.click('[data-entree-bouton]'); await pause(200);
+        constat((await p.$$('[data-entree] [aria-invalid="true"]')).length === 3, `${nom} : écran d'entrée vide refusé (prénom, e-mail, accord)`);
+        await p.screenshot({ path: path.join(OUT, `diag-${nom}-entree-erreurs.png`), fullPage: true });
+      }
+      await p.fill('[name="prenom"]', prenom); await p.fill('[name="email"]', email); await p.check('[name="privacy"]');
+      await p.screenshot({ path: path.join(OUT, `diag-${nom}-entree.png`), fullPage: true });
+      await p.click('[data-entree-bouton]');
+    };
+    await entree(true);
     for (let i = 0; i < 17; i++) {
       await p.waitForSelector('[data-ecran] h1');
       if ([1, 7, 15].includes(i + 1)) await p.screenshot({ path: path.join(OUT, `diag-${nom}-ecran-${i + 1}.png`) });
@@ -134,31 +165,37 @@ try {
         await p.click('[data-abandon-continuer]');
         await p.reload({ waitUntil: 'networkidle' }); await p.waitForSelector('[data-reprendre]'); await p.screenshot({ path: path.join(OUT, `diag-${nom}-reprise.png`) });
         await p.click('[data-reprendre]');
+        await entree(false); // les coordonnées ne sont pas gardées sur l'appareil (AD-11) : redemandées
       }
     }
     await p.waitForSelector('[data-gate]');
     const texteGate = await p.textContent('.qz-gate-tete');
     const largeurTel = await p.$eval('#tel', (el) => el.getBoundingClientRect().width);
     await p.screenshot({ path: path.join(OUT, `diag-${nom}-gate.png`), fullPage: true });
-    constat(!/\d+\s*\/\s*100/.test(texteGate) && largeurTel > 150 && scripts.length === 0, `${nom} : gate sans score, case du téléphone ${Math.round(largeurTel)} px, Turnstile pas encore chargé`);
-    await p.click('[data-gate-bouton]'); await pause(200);
+    constat(!/\d+\s*\/\s*100/.test(texteGate) && texteGate.includes(email) && largeurTel > 150 && scripts.length === 0 && !(await p.$('[data-gate] [name="nom"]')),
+      `${nom} : écran final sans score ni nom, e-mail rappelé, case du téléphone ${Math.round(largeurTel)} px, Turnstile pas encore chargé`);
+    await p.fill('[name="telephone"]', '12'); await p.click('[data-gate-bouton]'); await pause(200);
     await p.screenshot({ path: path.join(OUT, `diag-${nom}-gate-erreurs.png`), fullPage: true });
-    await p.fill('[name="prenom"]', prenom); await p.fill('[name="nom"]', 'Navigateur'); await p.fill('[name="email"]', `${prenom.toLowerCase()}+nav-${ESSAI}@example.com`); await p.fill('[name="telephone"]', '06 12 34 56 78'); await p.check('[name="privacy"]');
+    constat((await p.getAttribute('[name="telephone"]', 'aria-invalid')) === 'true', `${nom} : numéro incomplet signalé`);
+    // Alice laisse le téléphone vide (facultatif) ; Bruno et Léa le donnent.
+    await p.fill('[name="telephone"]', nom === 'A' ? '' : '06 12 34 56 78');
     if (newsletter) await p.check('[name="newsletter"]');
     if (coupure) { // première tentative coupée : échec affiché, réponses gardées, « Renvoyer » réussit sans second lead
       await p.route('**/api/diagnostic', (route) => route.abort(), { times: 1 });
       await p.click('[data-gate-bouton]');
       await p.waitForSelector('[data-gate-echec]:not([hidden])');
       await p.screenshot({ path: path.join(OUT, `diag-${nom}-gate-echec.png`), fullPage: true });
-      constat((await p.textContent('[data-gate-bouton]')) === 'Renvoyer' && (await p.inputValue('[name="prenom"]')) === prenom, `${nom} : coupure, échec affiché, coordonnées gardées, bouton « Renvoyer »`);
+      constat((await p.textContent('[data-gate-bouton]')) === 'Renvoyer' && (await p.textContent('.qz-gate-tete')).includes(email), `${nom} : coupure, échec affiché, coordonnées gardées, bouton « Renvoyer »`);
     }
     await p.click('[data-gate-bouton]');
     await p.waitForURL('**/diagnostic/resultats', { timeout: 30000 }); await p.waitForSelector('.rs-score b');
     const score = await p.textContent('.rs-score b'); const pastille = await p.textContent('.rs-pastille'); const sortie = await p.textContent('.rs-sortie h2');
     const sauve = await p.evaluate(() => localStorage.getItem('avt.diagnostic.v1'));
     const bareme = chargements.some((u) => /bareme/.test(u));
-    const leads = sql(`SELECT orientation, utm, newsletter_opt_in_at FROM lead WHERE email = '${prenom.toLowerCase()}+nav-${ESSAI}@example.com'`);
-    constat(leads.length === 1 && leads[0].utm === `{"utm_source":"parcours","utm_content":"${nom}-${ESSAI}"}` && !sauve && !bareme, `${nom} → score ${score} · ${pastille} · « ${sortie} » ; un lead, campagne gardée, sauvegarde locale effacée`);
+    const leads = sql(`SELECT orientation, utm, newsletter_opt_in_at, prenom, nom, telephone FROM lead WHERE email = '${email}'`);
+    constat(leads.length === 1 && leads[0].utm === `{"utm_source":"parcours","utm_content":"${nom}-${ESSAI}"}` && !sauve && !bareme
+      && leads[0].prenom === prenom && leads[0].nom === null && (nom === 'A' ? leads[0].telephone === null : leads[0].telephone === '+33612345678'),
+      `${nom} → score ${score} · ${pastille} · « ${sortie} » ; un lead (téléphone ${leads[0]?.telephone ?? 'non donné'}), campagne gardée, sauvegarde locale effacée`);
     const seq = await p.$('[data-sequence]:not([hidden])');
     if (seq) { await seq.click(); await p.waitForSelector('[data-etat-sequence]:not([hidden])'); }
     if (newsletter) constat(!!leads[0].newsletter_opt_in_at && (await p.isVisible('[data-sequence-deja]')), `${nom} : séquence cochée au gate, écrite et affichée comme enregistrée`);
@@ -170,10 +207,14 @@ try {
     const ecrans = new Set(etapes.filter((e) => e.etape === 'ecran').map((e) => e.ecran));
     const vues = new Set(etapes.map((e) => e.etape));
     const q08 = etapes.filter((e) => e.etape === 'ecran' && e.ecran === 'q08').length;
-    const q01 = etapes.find((e) => e.etape === 'ecran' && e.ecran === 'q01');
-    constat(!!q01 && q01.integre === 0 && q01.appareil === 'ordinateur' /* Chromium de l'essai : en-tête d'ordinateur */ && ['moins-2s', '2-5s', 'plus-5s'].includes(q01.affichage)
-      && etapes.some((e) => e.etape === 'interaction') && etapes.filter((e) => e.affichage).length === 1,
-      `${nom} : question 1 touchée, navigateur ${q01?.integre === 0 ? 'habituel' : '?'}, ${q01?.appareil}, affichée « ${q01?.affichage} »`);
+    // Story 10.15 : le premier écran est l'écran d'entrée (« coordonnees », précision « entree ») ; l'ancien écran des
+    // coordonnées en fin de parcours n'est plus compté.
+    const premier = etapes.find((e) => e.etape === 'coordonnees' && e.ecran === 'entree');
+    constat(!!premier && premier.integre === 0 && premier.appareil === 'ordinateur' /* Chromium de l'essai : en-tête d'ordinateur */ && ['moins-2s', '2-5s', 'plus-5s'].includes(premier.affichage)
+      && etapes.some((e) => e.etape === 'interaction') && etapes.filter((e) => e.affichage).length === 1 && !etapes.some((e) => e.etape === 'coordonnees' && e.ecran === '')
+      // une reprise redemande les coordonnées sans recompter l'écran d'entrée ni son premier toucher
+      && etapes.filter((e) => e.etape === 'coordonnees').length === 1 && etapes.filter((e) => e.etape === 'interaction').length === 1,
+      `${nom} : écran d'entrée touché, navigateur ${premier?.integre === 0 ? 'habituel' : '?'}, ${premier?.appareil}, affiché « ${premier?.affichage} »`);
     const attendues = ['ecran', 'coordonnees', 'envoi', 'resultat', ...(coupure ? ['echec'] : []), ...(nom === 'A' ? ['reprise'] : [])];
     constat(ecrans.size === 17 && attendues.every((x) => vues.has(x)) && etapes.every((e) => e.source === 'parcours' && e.is_test === 1) && (nom !== 'A' || q08 === 1),
       `${nom} : entonnoir compté${nom === 'A' ? ', question reprise comptée une seule fois' : ''}, ${ecrans.size} écrans et ${[...vues].join(', ')} (${new Set(etapes.map((e) => e.parcours)).size} passage(s))`);
@@ -184,19 +225,22 @@ try {
   await parcours('R', { width: 390, height: 844 }, CHOIX_R, 'Lea', { newsletter: true });
   const ctx = await nav.newContext({ viewport: { width: 390, height: 844 } });
   const p = await ctx.newPage();
-  // Arrivée par une publicité : comptée sur la page du diagnostic, puis la campagne suit jusqu'à la première question.
+  // Arrivée par une publicité : comptée sur la page du diagnostic, puis la campagne suit jusqu'à l'écran d'entrée ; la ligne
+  // sous le bouton annonce le téléphone facultatif (story 10.15).
   await p.goto(`${U}/diagnostic?utm_source=Facebook&utm_medium=paid&utm_content=carrousel-${ESSAI}`, { waitUntil: 'networkidle' });
-  await p.click('.dl-cta a'); await p.waitForSelector('[data-ecran] h1'); await pause(500);
+  const ligne = await p.textContent('.dl-transparence');
+  await p.click('.dl-cta a'); await p.waitForSelector('[data-entree]'); await pause(500);
   const pub = sql(`SELECT etape, ecran, source, support FROM entonnoir WHERE contenu = 'carrousel-${ESSAI.toLowerCase()}' ORDER BY at`);
-  constat(pub.some((e) => e.etape === 'arrivee') && pub.some((e) => e.etape === 'ecran' && e.ecran === 'q01') && pub.every((e) => e.source === 'facebook' && e.support === 'paid'),
-    `arrivée par la publicité comptée, campagne gardée jusqu'à la question 1 (${pub.map((e) => e.etape + (e.ecran ? ':' + e.ecran : '')).join(', ')})`);
-  // Page préchargée par l'application (pas à l'écran quand la question 1 s'affiche) : palier « cachee », aucun toucher.
+  constat(pub.some((e) => e.etape === 'arrivee') && pub.some((e) => e.etape === 'coordonnees' && e.ecran === 'entree') && pub.every((e) => e.source === 'facebook' && e.support === 'paid')
+    && ligne.includes("Le téléphone, seulement si vous souhaitez qu'Anne vous appelle."),
+    `arrivée par la publicité comptée, campagne gardée jusqu'à l'écran d'entrée, ligne du téléphone facultatif (${pub.map((e) => e.etape + (e.ecran ? ':' + e.ecran : '')).join(', ')})`);
+  // Page préchargée par l'application (pas à l'écran quand le premier écran s'affiche) : palier « cachee », aucun toucher.
   const ctxCache = await nav.newContext({ viewport: { width: 390, height: 844 } });
   await ctxCache.addInitScript(() => Object.defineProperty(document, 'visibilityState', { get: () => 'hidden' }));
   const pc = await ctxCache.newPage();
   await pc.goto(`${U}/diagnostic/questions?utm_source=pub&utm_content=cache-${ESSAI}`, { waitUntil: 'networkidle' }); await pause(500);
   const cache = sql(`SELECT etape, affichage FROM entonnoir WHERE contenu = 'cache-${ESSAI.toLowerCase()}'`);
-  constat(cache.length === 1 && cache[0].affichage === 'cachee', `page préchargée : question 1 comptée « cachee », sans toucher (${JSON.stringify(cache)})`);
+  constat(cache.length === 1 && cache[0].affichage === 'cachee', `page préchargée : écran d'entrée compté « cachee », sans toucher (${JSON.stringify(cache)})`);
   await ctxCache.close();
   // Story 10.14 (test A/B) : arrivée sur l'accueil par la publicité, clic sur les deux boutons, campagne recopiée sur leurs
   // liens jusqu'au diagnostic et au contact, premier geste dans le formulaire de contact compté comme estimation commencée.

@@ -500,7 +500,7 @@ export async function journee(env: EnvSite): Promise<{ nouveaux: ContactDuJour[]
       AND json_extract(e.donnees, '$.modifies') IS NULL ORDER BY e.a DESC, e.id DESC LIMIT 1) AS dernier_texte`; // une correction de coordonnées n'est pas un « dernier texte » (13.23)
   const joints = 'FROM contact c LEFT JOIN passage_boitage p ON p.id = c.passage_id LEFT JOIN prescripteur r ON r.id = c.prescripteur_id';
   const [nouveaux, rappels, prescripteurs, secteurs] = await env.DB.batch([
-    env.DB.prepare(`SELECT ${champs} ${joints} WHERE c.etape = 'a_qualifier' AND ${du} ORDER BY c.created_at ASC LIMIT 100`).bind(auj, fin),
+    env.DB.prepare(`SELECT ${champs} ${joints} WHERE c.etape = 'a_qualifier' AND ${du} ORDER BY c.telephone IS NULL, c.created_at ASC LIMIT 100`).bind(auj, fin),
     env.DB.prepare(`SELECT ${champs} ${joints}
       WHERE c.etape NOT IN ('a_qualifier', 'perdu', 'vendu', 'acte_signe')
         AND (${du} OR (c.etape = 'en_sommeil' AND c.reveil_le <= ?1))

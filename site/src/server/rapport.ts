@@ -61,7 +61,7 @@ export function reponseLisible(q: string, r: Reponses): string {
 
 export interface DonneesRapport {
   prenom: string;
-  nom: string;
+  nom: string | null;
   date: Date;
   scores: Scores;
   orientation: 'A' | 'B';
@@ -102,7 +102,7 @@ export async function fabriquerRapport(d: DonneesRapport): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);
   const [gilda, jost, jost500] = await Promise.all([doc.embedFont(POLICES.gilda), doc.embedFont(POLICES.jost), doc.embedFont(POLICES.jost500)]);
-  const nomComplet = `${d.prenom} ${d.nom}`.trim();
+  const nomComplet = [d.prenom, d.nom].filter(Boolean).join(' ');
   doc.setTitle(`Rapport de diagnostic · ${lisible(jost, nomComplet)}`);
   doc.setAuthor('Anne VIAL-TISSOT');
   doc.setCreator('www.annevialtissot.fr');
