@@ -20,5 +20,9 @@ Le 31 octobre 2026, JB envoie une capture : « quand on clique et qu'on arrive s
 - `node scripts/e2e-diagnostic.mjs` : tous les constats sont bons, dont « titre de l'écran d'entrée focalisé, sans cadre » pour A, B et R.
 - Capture `site/.verif/diag-A-entree-erreurs.png` : titre sans cadre.
 
+- Contre-épreuve : règle retirée, le même constat échoue (« contour : solid » pour A, B et R). Le test détecte donc bien le cadre.
+
 ## Revue de code
-À faire (session neuve).
+2026-10-31, `bmad-code-review` dans une session neuve, PR #222, commit 4f7c7b7 relu. La règle l'emporte sur celle de `global.css` (priorité plus forte), ne touche que des titres, aucun champ ni bouton ne perd son cadre ; conforme à l'accessibilité (WCAG 2.4.7 ne vise que ce qu'on atteint au clavier). Deux constats mineurs :
+1. Commentaire CSS inexact : l'écran final et la reprise ne reçoivent pas le focus. Corrigé (commit suivant).
+2. Le test pourrait passer même sans le correctif. Vérifié par contre-épreuve (ci-dessus) : il échoue sans la règle. Pas de constat ajouté sur les écrans de question : même règle, même sélecteur.
