@@ -1763,7 +1763,7 @@ afin qu'Anne puisse rappeler chaque prospect : un e-mail seul ne permet pas de l
 
 **Critères d'acceptation :** l'ordre de la story 10.15 est gardé (prénom et e-mail avant la question 1, pas de nom) ; à la fin, le téléphone est obligatoire, vide ou mal saisi il est refusé par la page et par le serveur ; la ligne sous le bouton de /diagnostic et l'aide du champ deviennent « Votre rapport arrive par e-mail. Votre téléphone permet à Anne de vous rappeler pour en parler. »
 
-**État :** en cours, détail dans `implementation-artifacts/10-16-telephone-obligatoire-dans-le-diagnostic.md`.
+**État :** fait, en ligne le 2026-10-31 (PR #220), détail dans `implementation-artifacts/10-16-telephone-obligatoire-dans-le-diagnostic.md`.
 
 ### Story 10.9: E-mails du site à la charte
 

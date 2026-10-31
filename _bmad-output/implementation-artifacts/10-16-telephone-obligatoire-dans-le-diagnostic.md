@@ -1,7 +1,7 @@
 ---
 story: 10.16
 epic: 10 — Capture des leads et backend
-statut: review
+statut: done
 date: 2026-10-31
 ---
 
@@ -47,6 +47,9 @@ Le 31 octobre 2026, JB demande de repasser le téléphone en obligatoire à la f
 2. (mineur) Commentaire de `contacts.ts` disant que le diagnostic n'exige plus le téléphone : corrigé (commit suivant).
 3. (très mineur) Critère de la story 10.9 dans epics.md muet sur le nom du diagnostic : écarté, la story 10.15 le dit déjà et le README le liste dans les écarts assumés.
 
-## Reste
-- Revue, PR, fusion, vérification en ligne.
-- Prévenir les fils Campagne et Stratégie.
+## En ligne (2026-10-31)
+PR #220 fusionnée après l'accord de JB (« Ok pour cette version »). La construction de production a réussi. Sur annevialtissot.fr :
+- /diagnostic montre la nouvelle ligne ;
+- le script des questions contient le refus du téléphone vide.
+
+Les fils Campagne et Stratégie sont prévenus par le coordinateur.
