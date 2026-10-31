@@ -2605,6 +2605,18 @@ afin de repartir de l'existant pour la refonte.
 - Chaque page de l'espace a son écran dans la maquette, à la largeur d'un ordinateur, avec des données fictives.
 - La copie se refait par un script, sans retoucher les écrans à la main.
 
+
+### Story 13.35: Pilotage commercial dans l'espace
+
+En tant qu'Anne,
+je veux voir dans l'espace mon objectif de l'année, où j'en suis, et mes actions de la semaine,
+afin de savoir chaque lundi si je suis sur la bonne trajectoire sans tenir un autre outil.
+
+**Critères d'acceptation :**
+- L'objectif d'honoraires est remonté en entonnoir (contacts, rendez-vous, mandats, ventes) et comparé au réalisé compté depuis la base.
+- Les actions de la semaine se cochent d'un geste, avec leur cible.
+- Le journal de la page de pilotage provisoire est repris.
+
 ### Story 14.1: Décision de principe
 
 En tant que JB,

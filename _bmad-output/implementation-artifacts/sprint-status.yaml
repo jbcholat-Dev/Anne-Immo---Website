@@ -213,6 +213,7 @@ development_status:
   13-32-maquette-v3-de-l-espace: done   # 2026-10-26, remplacée par la recopie à l'identique de la 13.34 (demande de JB)
   13-33-connexion-de-30-jours: done   # 2026-10-28, réglage Access (720 h) fait par Claude, décision de JB
   13-34-recopie-de-l-espace-sur-ordinateur: review   # 2026-10-26, maquette v4 = l'espace en ligne sur ordinateur, base de la refonte
+  13-35-pilotage-commercial-dans-l-espace: backlog   # 2026-10-31, demande de JB (fil Atelier 10x), proposition à valider
   epic-13-retrospective: optional
 
   epic-14: in-progress
