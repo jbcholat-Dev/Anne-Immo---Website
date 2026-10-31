@@ -6,6 +6,8 @@
 // Deux boutons (retour d'Anne, ticket #40) : le diagnostic, et « Estimation offerte » vers l'agenda de /contact#reserver, en noir (ticket n° 106).
 // La ligne signature est sous « VIAL‑TISSOT », comme dans le logo, et non sous « Anne » (ticket n° 143) : elle vit dans le nom et en prend la largeur.
 // Les fichiers vidéo sont produits par `npm run video` (scripts/video.mjs) ; s'ils manquent, la balise <video> est masquée.
+// Story 10.14 (test A/B de la publicité) : l'arrivée sur l'accueil et le clic sur chacun des deux boutons sont comptés
+// sans donnée personnelle (îlot entonnoir), et la campagne du lien suivi est recopiée sur les liens vers le diagnostic et le contact.
 // Deux tailles (story 8.13) : 1280 px pour les écrans de 900 px de large au plus (téléphones), 1920 px sinon.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -36,8 +38,8 @@ const videoDispo = fs.existsSync(path.resolve(process.cwd(), 'public/video/ouver
     <h1 id="hero-titre" data-reveal="titre">Anne <span class="hero-nom">VIAL-TISSOT<Signature largeur={260} hauteur={10} class="hero-signature" /></span></h1>
     <p class="hero-ligne" data-reveal="petit">{d.accueil.hero_ligne}</p>
     <div class="hero-boutons" data-reveal="petit">
-      <a href={r('diagnostic', lang)} class="btn btn-primaire"><span class="seulement-desktop">{d.accueil.hero_cta}</span><span class="seulement-mobile">{d.accueil.hero_cta_m}</span></a>
-      <a href={`${r('contact', lang)}#reserver`} class="btn btn-noir">{d.accueil.hero_estimation}</a>
+      <a href={r('diagnostic', lang)} class="btn btn-primaire" data-clic="diagnostic"><span class="seulement-desktop">{d.accueil.hero_cta}</span><span class="seulement-mobile">{d.accueil.hero_cta_m}</span></a>
+      <a href={`${r('contact', lang)}#reserver`} class="btn btn-noir" data-clic="estimation">{d.accueil.hero_estimation}</a>
     </div>
   </div>
 </section>
@@ -72,6 +74,11 @@ const videoDispo = fs.existsSync(path.resolve(process.cwd(), 'public/video/ouver
 </style>
 
 <script>
+  import { compter, garderCampagne } from '../../islands/entonnoir';
+  compter('accueil');
+  garderCampagne(document, /^\/(?:en\/)?(?:diagnostic(?:\/questions)?|guide|contact)\/?$/);
+  document.querySelectorAll<HTMLAnchorElement>('.hero [data-clic]').forEach((a) => a.addEventListener('click', () => compter('clic', a.dataset.clic)));
+
   // AD-15 (budget de vitesse) : si le visiteur a demandé l'économie de données, on ne charge pas la vidéo, le poster reste.
   const v = document.querySelector<HTMLVideoElement>('.hero-video');
   const c = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;

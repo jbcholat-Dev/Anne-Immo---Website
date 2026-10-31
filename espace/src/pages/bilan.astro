@@ -5,12 +5,13 @@
 // Story 13.17 : ce que chaque canal a coûté sur la période (actions marketing commencées et passages de boîtage faits
 // depuis le début de la période), rapporté aux contacts, rendez-vous et mandats arrivés sur la même période.
 // Story 10.12 : l'entonnoir du diagnostic, campagne par campagne, puis étape par étape pour la campagne choisie (`d=`).
+// Story 10.14 : le tableau du test A/B de la publicité (accueil ou question 1), campagne par campagne.
 import Espace from '../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { CANAUX_ORIGINE } from '@site/server/contacts';
 import { coutsParCanal, euros, parUnite } from '../server/actions';
 import { pourSite as env } from '../server/env';
-import { entonnoir, ETAPES_DETAIL, NUMERO_MILIEU, part, TOUTES } from '../server/entonnoir';
+import { entonnoir, ETAPES_DETAIL, NUMERO_MILIEU, part, question1, TOUTES } from '../server/entonnoir';
 import { bilan, constats, duree, echeance, PERIODES, type Periode } from '../server/pipeline';
 
 export const prerender = false;
@@ -27,7 +28,14 @@ const diag = await entonnoir(env, b.debut);
 const choisie = diag.campagnes.find((c) => c.cle === Astro.url.searchParams.get('d')) ?? diag.total;
 // Base des pourcentages : le plus grand nombre de passages (d'ordinaire l'arrivée ; un lien direct vers les questions
 // peut donner plus de « Question 1 » que d'arrivées).
-const baseDetail = Math.max(0, ...ETAPES_DETAIL.map((e) => choisie.detail[e.cle] ?? 0));
+// Story 10.15 : l'ancien écran des coordonnées en fin de parcours n'apparaît que si la période en contient.
+const etapes = ETAPES_DETAIL.filter((e) => e.cle !== 'coordonnees' || choisie.detail.coordonnees);
+const baseDetail = Math.max(0, ...etapes.map((e) => choisie.detail[e.cle] ?? 0));
+const ventilation = (await question1(env, b.debut, diag.campagnes))(choisie.cle);
+// Story 10.14 : seulement les campagnes venues par un lien suivi (les visites ordinaires de l'accueil ne sont pas un test),
+// et seulement si l'une d'elles est passée par l'accueil.
+const avecLien = diag.campagnes.filter((c) => c.cle !== '|||' && c.ab.entrees > 0);
+const abCampagnes = avecLien.some((c) => c.ab.accueil > 0) ? avecLien : [];
 const lienCampagne = (cle: string) => `/bilan?p=${periode}&d=${encodeURIComponent(cle)}#diagnostic`;
 const tuiles = [
   ['Nouveaux contacts', String(b.total.contacts)],
@@ -84,28 +92,60 @@ const tuiles = [
     {diag.campagnes.length === 0 ? <p class="e-muet">Aucun passage sur le diagnostic pendant la période.</p> : (<>
       <div class="e-table-zone">
         <table class="e-table b-table">
-          <thead><tr><th>Campagne</th><th class="n">Arrivées</th><th class="n">Commencé</th><th class="n">Question {NUMERO_MILIEU}</th><th class="n">Coordonnées</th><th class="n">Envoyé</th><th class="n">Résultat</th></tr></thead>
+          <thead><tr><th>Campagne</th><th class="n">Arrivées</th><th class="n">Prénom et e-mail</th><th class="n">Commencé</th><th class="n">Question {NUMERO_MILIEU}</th><th class="n">Envoyé</th><th class="n">Résultat</th></tr></thead>
           <tbody>
             {[...diag.campagnes, ...(diag.campagnes.length > 1 ? [diag.total] : [])].map((c) => (
-              <tr data-campagne={c.cle} class={c.cle === TOUTES ? 'b-total' : ''}><td><a href={lienCampagne(c.cle)} aria-current={c.cle === choisie.cle ? 'true' : undefined}>{c.libelle}</a></td><td class="n">{c.arrivees}</td><td class="n">{c.commences}</td><td class="n">{c.milieu}</td><td class="n">{c.coordonnees}</td><td class="n">{c.envois}</td><td class="n">{c.resultats}</td></tr>
+              <tr data-campagne={c.cle} class={c.cle === TOUTES ? 'b-total' : ''}><td><a href={lienCampagne(c.cle)} aria-current={c.cle === choisie.cle ? 'true' : undefined}>{c.libelle}</a></td><td class="n">{c.arrivees}</td><td class="n">{c.coordonnees}</td><td class="n">{c.commences}</td><td class="n">{c.milieu}</td><td class="n">{c.envois}</td><td class="n">{c.resultats}</td></tr>
             ))}
           </tbody>
         </table>
       </div>
+      {abCampagnes.length > 0 && (<>
+        <h3 class="b-sous-titre">Test A/B : accueil ou question 1</h3>
+        <div class="e-table-zone">
+          <table class="e-table b-table" data-ab>
+            <thead><tr><th>Campagne</th><th class="n">Entrées</th><th class="n">Accueil</th><th class="n">Clic diagnostic</th><th class="n">Clic estimation</th><th class="n">Question 2</th><th class="n">Estimation commencée</th><th class="n">Rendez-vous ou demande</th><th class="n">Objectif</th><th class="n">Taux</th></tr></thead>
+            <tbody>
+              {abCampagnes.map((c) => (
+                <tr data-ab-campagne={c.cle}><td>{c.libelle}</td><td class="n">{c.ab.entrees}</td><td class="n">{c.ab.accueil}</td><td class="n">{c.ab.clicDiagnostic}</td><td class="n">{c.ab.clicEstimation}</td><td class="n">{c.ab.question2}</td><td class="n">{c.ab.estimation}</td><td class="n">{c.ab.reservations + c.ab.demandes}</td><td class="n">{c.ab.objectif}</td><td class="n">{part(c.ab.objectif, c.ab.entrees)}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="e-muet" style="margin:0">Entrées : arrivées sur la page où la publicité fait atterrir (accueil, page du diagnostic ou premier écran du questionnaire). Objectif : question 2 atteinte (depuis le 30 octobre, après avoir donné prénom et e-mail), ou demande d'estimation commencée sur la page Contact (agenda touché, formulaire de vente commencé, rendez-vous ou demande). Des passages, pas des personnes : quelqu'un qui fait les deux compte deux fois. Le visiteur qui passe par une autre page du site avant le diagnostic ou le contact perd sa campagne. À comparer aussi avec les vues de la page de destination de Meta.</p>
+      </>)}
       <h3 class="b-sous-titre">Étape par étape : {choisie.libelle}</h3>
       <div class="e-table-zone">
         <table class="e-table b-table" data-detail={choisie.cle}>
           <thead><tr><th>Étape</th><th class="n">Passages</th><th class="n">Part</th><th class="n">Partis avant</th></tr></thead>
           <tbody>
-            {ETAPES_DETAIL.map((e, i) => {
+            {etapes.map((e, i) => {
               const n = choisie.detail[e.cle] ?? 0;
-              const avant = e.cle === 'echec' || i === 0 ? null : (choisie.detail[ETAPES_DETAIL[e.cle === 'resultat' ? i - 2 : i - 1].cle] ?? 0);
-              const perdus = avant === null ? null : Math.max(0, avant - n);
+              const avant = e.cle === 'echec' || i === 0 ? null : (choisie.detail[etapes[e.cle === 'resultat' ? i - 2 : i - 1].cle] ?? 0);
+              // Écran d'entrée (story 10.15) : sur une période qui commence avant le 30 octobre, les anciens passages n'en ont pas ;
+              // « partis avant » n'a de sens que si chaque passage à la question 1 est passé par lui.
+              const sansEntree = e.cle === 'coordonnees-entree' && (choisie.detail.q01 ?? 0) > n;
+              const perdus = avant === null || sansEntree ? null : Math.max(0, avant - n);
               return <tr data-etape={e.cle} class={n === 0 ? 'b-vide' : ''}><td>{e.libelle}</td><td class="n">{n}</td><td class="n">{e.cle === 'echec' ? '' : part(n, baseDetail)}</td><td class="n">{perdus ? perdus : ''}</td></tr>;
             })}
           </tbody>
         </table>
       </div>
+      {ventilation.length > 0 && (<>
+        <h3 class="b-sous-titre">Premier écran : qui passe à la suite ? ({choisie.libelle})</h3>
+        <div class="e-table-zone">
+          <table class="e-table b-table" data-question1>
+            <thead><tr><th>Passages au premier écran</th><th class="n">Premier écran</th><th class="n">Écran touché</th><th class="n">Écran suivant</th><th class="n">Passent</th></tr></thead>
+            {ventilation.map((g) => (
+              <tbody data-groupe={g.titre}>
+                <tr class="b-groupe"><th colspan="5" scope="rowgroup">{g.titre}</th></tr>
+                {g.lignes.map((l) => <tr><td>{l.libelle}</td><td class="n">{l.question1}</td><td class="n">{l.touches}</td><td class="n">{l.question2}</td><td class="n">{part(l.question2, l.question1)}</td></tr>)}
+              </tbody>
+            ))}
+          </table>
+        </div>
+        <p class="e-muet" style="margin:0">Premier écran : l'écran d'entrée (prénom et e-mail) depuis le 30 octobre, suivi de la question 1 ; avant, la question 1, suivie de la question 2. « Écran touché » : un clic ou un toucher dans cet écran (un simple défilement ne compte pas). Un premier écran jamais touché et quitté signale une page pas vue (préchargée par l'application) ou un visiteur qui n'a pas essayé ; touché sans passer à la suite, un écran qui ne fonctionne pas sur cet appareil, ou un visiteur qui ne veut pas aller plus loin.</p>
+      </>)}
     </>)}
     <p class="e-muet" style="margin:0">Passages comptés par le site sans cookie ni donnée personnelle : une personne qui revient plus tard compte deux fois ; celle qui reprend un diagnostic interrompu continue sous sa première campagne. La campagne est lue dans le lien suivi (utm_source, utm_medium, utm_campaign, utm_content). Les essais faits sur le site en ligne sont comptés comme des visites.</p>
   </section>
@@ -156,4 +196,5 @@ const tuiles = [
   .b-total td { font-weight: 500; border-top: 1.5px solid var(--avt-galet); }
   [data-entonnoir] a[aria-current] { font-weight: 600; }
   .b-sous-titre { font-size: 18px; margin: 18px 0 6px; }
+  .b-groupe th { font-weight: 600; padding-top: 14px; }
 </style>

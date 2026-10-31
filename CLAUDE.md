@@ -92,7 +92,7 @@ node scripts/guide-pdf.mjs     # refait le PDF du guide (site/prive/guide.pdf) d
 cd ../espace           # l'espace d'Anne (story 13.3)
 npm install && npm run build && npm run check
 node scripts/e2e-espace.mjs    # site et espace sur la même base locale : accès, relance, Modelo, droits RGPD (préalable en tête du fichier)
-node scripts/maquette-espace.mjs <dossier>  # recopie chaque page de l'espace, sur ordinateur et avec des contacts fictifs, en écrans de la maquette (story 13.33, même préalable)
+node scripts/maquette-espace.mjs <dossier>  # recopie chaque page de l'espace, sur ordinateur et avec des contacts fictifs, en écrans de la maquette (story 13.34, même préalable)
 node scripts/claude-espace.mjs actions  # accès de Claude à l'espace : actions marketing et bilan, jamais les contacts (réglages : RUNBOOK § 4 sexies)
 ```
 

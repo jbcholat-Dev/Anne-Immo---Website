@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-26-2026 15:10
-last_updated: 10-25-2026 17:30
+last_updated: 10-28-2026 22:10
 project: Site Anne Vial-Tissot
 project_key: NOKEY
 tracking_system: file-system
@@ -121,6 +121,7 @@ development_status:
   8-20-ligne-signature-sous-le-nom-de-famille: done
   8-22-retour-au-terracotta-d-origine: done
   8-23-offert-plutôt-que-gratuit: done   # 2026-10-26, PR n° 204 fusionnée (JB) ; 2026-10-25, décision de JB : « offert », jamais « gratuit »
+  8-24-section-infographies-du-design-system: done   # 2026-10-27, PR n° 210 fusionnée sur l'accord de JB : règle des infographies « schéma » (style Herubel, flux et échelle en référence) dans design-system/infographies/, D-49
   epic-8-retrospective: optional
 
   epic-9: in-progress
@@ -147,6 +148,11 @@ development_status:
   10-10-rapport-pdf-personnalisé-du-diagnostic: review
   10-11-réponses-du-diagnostic-lisibles-dans-la-gestion: done
   10-12-entonnoir-du-diagnostic-par-campagne: done   # 2026-10-26 : PR #205 fusionnée sur l'accord de JB, migration 0015 constatée en production
+  10-13-question-1-touchee-navigateur-et-affichage: done   # 2026-10-28, PR #213 fusionnée, en ligne (migrations 16)
+  10-14-test-ab-accueil-ou-question-1: done   # 2026-10-28, PR #216 fusionnée, en ligne (migrations 17)
+  10-15-entree-du-diagnostic-allegee: done   # 2026-10-30, PR #218 fusionnée (accord de JB), en ligne à 12 h 55 UTC
+  10-16-telephone-obligatoire-dans-le-diagnostic: done   # 2026-10-31, PR #220 fusionnée (« Ok pour cette version », JB), en ligne
+  10-17-pas-de-cadre-autour-du-titre-du-diagnostic: done   # 2026-10-31, PR #222 fusionnée, en ligne
   epic-10-retrospective: optional
 
   epic-11: in-progress
@@ -204,8 +210,9 @@ development_status:
   13-29-retours-anne-libelles-et-suppression: done   # 2026-10-24, PR n° 188 fusionnée, tickets #177, #178, #185 fermés
   13-30-fiche-contact-repensee: done   # 2026-10-24, PR n° 192 fusionnée (JB), ticket #176 fermé
   13-31-en-tete-et-historique-de-la-fiche: ready-for-dev   # 2026-10-24, ticket #182
-  13-32-maquette-v3-de-l-espace: done   # 2026-10-26, remplacée par la recopie à l'identique de la 13.33 (demande de JB)
-  13-33-recopie-de-l-espace-sur-ordinateur: review   # 2026-10-26, maquette v4 = l'espace en ligne sur ordinateur, base de la refonte
+  13-32-maquette-v3-de-l-espace: done   # 2026-10-26, remplacée par la recopie à l'identique de la 13.34 (demande de JB)
+  13-33-connexion-de-30-jours: done   # 2026-10-28, réglage Access (720 h) fait par Claude, décision de JB
+  13-34-recopie-de-l-espace-sur-ordinateur: review   # 2026-10-26, maquette v4 = l'espace en ligne sur ordinateur, base de la refonte
   epic-13-retrospective: optional
 
   epic-14: in-progress

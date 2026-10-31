@@ -22,7 +22,7 @@ export const POST: APIRoute = async ({ request }) => {
   }
   if (!passage) return vide(400);
   try {
-    if (!(await compterPassage(env, passage))) journal('entonnoir_plafond', {});
+    if (!(await compterPassage(env, passage, request.headers.get('user-agent')))) journal('entonnoir_plafond', {});
   } catch (e) {
     journal('entonnoir_echec', { detail: String(e).slice(0, 200) });
     return vide(503);

@@ -1725,6 +1725,56 @@ afin de décider s'il faut raccourcir le diagnostic ou déplacer la demande de c
 
 **État :** fait (2026-10-26, PR #205), détail dans `implementation-artifacts/10-12-entonnoir-du-diagnostic-par-campagne.md`.
 
+### Story 10.13: Question 1 touchée, navigateur, appareil et temps d'affichage
+
+En tant que JB,
+je veux savoir pourquoi les visiteurs venus de la publicité s'arrêtent à la question 1 (panne, lenteur ou désintérêt),
+afin de réparer ou de changer la bonne chose.
+
+**Critères d'acceptation :** le premier toucher sur la question 1, le navigateur (intégré d'Instagram ou de Facebook, ou habituel), la famille d'appareil (iPhone, Android, ordinateur) et le temps d'affichage de la question 1 en paliers (moins de 2 s, 2 à 5 s, plus de 5 s, ou page pas à l'écran) sont comptés sans cookie ni donnée personnelle (AD-11) ; le Bilan de l'espace ventile le passage question 1 → question 2 selon chacun.
+
+**État :** fait, en ligne le 2026-10-28 (PR #213), détail dans `implementation-artifacts/10-13-question-1-touchee-navigateur-et-affichage.md`.
+
+### Story 10.14: Test A/B de la publicité, accueil ou question 1
+
+En tant que JB,
+je veux comparer une publicité qui fait arriver sur l'accueil et une publicité qui fait arriver directement sur la question 1,
+afin de garder la version qui amène le plus de visiteurs à la question 2 ou à une demande d'estimation.
+
+**Critères d'acceptation :** l'arrivée sur l'accueil, le clic sur ses deux boutons et le début d'une demande d'estimation sur la page Contact (agenda touché, formulaire commencé, rendez-vous réservé, demande envoyée) sont comptés sans cookie ni donnée personnelle (AD-11) ; la campagne du lien suivi est gardée de l'accueil jusqu'au diagnostic et au contact par l'adresse seulement ; le Bilan de l'espace et le bilan de Claude montrent, campagne par campagne, entrées, objectif (question 2 ou estimation commencée) et taux.
+
+**État :** fait, en ligne le 2026-10-28 (PR #216), détail dans `implementation-artifacts/10-14-test-ab-accueil-ou-question-1.md`.
+
+### Story 10.15: Entrée du diagnostic allégée, prénom et e-mail d'abord
+
+En tant que JB,
+je veux que le visiteur venu de la publicité donne son prénom et son e-mail avant la question 1, et son téléphone seulement s'il souhaite être appelé,
+afin que la page /diagnostic redevienne la destination des publicités sans annoncer la friction des quatre coordonnées.
+
+**Critères d'acceptation :** un écran d'entrée (prénom, e-mail, accord) précède la question 1, ses coordonnées restent en mémoire de la page et jamais dans le navigateur (AD-11) ; à la fin, le téléphone est facultatif avec la phrase « Votre rapport arrive par e-mail. Le téléphone, seulement si vous souhaitez qu'Anne vous appelle. », reprise sous le bouton de /diagnostic ; le nom de famille n'est plus demandé ; le serveur accepte un diagnostic sans nom ni téléphone ; l'écran d'entrée est compté (étape `coordonnees`, précision `entree`) et le Bilan le place avant la question 1 ; dans l'espace, les contacts à qualifier qui ont un téléphone passent en tête, ceux sans téléphone sont à qualifier par e-mail. Consentement et purge inchangés.
+
+**État :** fait, en ligne le 2026-10-30 (PR #218), détail dans `implementation-artifacts/10-15-entree-du-diagnostic-allegee.md`. Le téléphone redevient obligatoire le 2026-10-31 (story 10.16).
+
+### Story 10.16: Téléphone de nouveau obligatoire dans le diagnostic
+
+En tant que JB,
+je veux que le téléphone soit de nouveau exigé à la fin du diagnostic,
+afin qu'Anne puisse rappeler chaque prospect : un e-mail seul ne permet pas de le qualifier.
+
+**Critères d'acceptation :** l'ordre de la story 10.15 est gardé (prénom et e-mail avant la question 1, pas de nom) ; à la fin, le téléphone est obligatoire, vide ou mal saisi il est refusé par la page et par le serveur ; la ligne sous le bouton de /diagnostic et l'aide du champ deviennent « Votre rapport arrive par e-mail. Votre téléphone permet à Anne de vous rappeler pour en parler. »
+
+**État :** fait, en ligne le 2026-10-31 (PR #220), détail dans `implementation-artifacts/10-16-telephone-obligatoire-dans-le-diagnostic.md`.
+
+### Story 10.17: Pas de cadre autour du titre des écrans du diagnostic
+
+En tant que visiteur du diagnostic,
+je veux arriver sur l'écran « À qui envoyer votre rapport ? » sans cadre bleu autour du titre,
+afin que la page paraisse soignée dès le premier écran.
+
+**Critères d'acceptation :** le titre de chaque écran (question, écran d'entrée, écran final, reprise) garde le focus posé par la page, pour que les lecteurs d'écran annoncent le nouvel écran, mais sans cadre visible ; les champs, boutons et liens gardent leur cadre au clavier.
+
+**État :** fait, en ligne le 2026-10-31 (PR #222), détail dans `implementation-artifacts/10-17-pas-de-cadre-autour-du-titre-du-diagnostic.md`.
+
 ### Story 10.9: E-mails du site à la charte
 
 Ajoutée le 2026-10-08 à la demande de JB, après l'essai de la séquence sur l'aperçu : les e-mails partent en texte brut, sans mise en page.
@@ -2545,7 +2595,7 @@ afin d'affiner le design et les fonctions avec Anne avant de les construire.
 - Chaque changement retenu devient une story.
 
 
-### Story 13.33: Recopie de l'espace en ligne dans la maquette, sur ordinateur
+### Story 13.34: Recopie de l'espace en ligne dans la maquette, sur ordinateur
 
 En tant que JB,
 je veux dans la maquette une copie exacte de l'espace en ligne, en version ordinateur,

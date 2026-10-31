@@ -1,4 +1,4 @@
-// Recopie de l'espace d'Anne dans la maquette (story 13.33, demande de JB du 2026-10-26) : démarre le site et l'espace
+// Recopie de l'espace d'Anne dans la maquette (story 13.34, demande de JB du 2026-10-26) : démarre le site et l'espace
 // sur la base locale, y range des contacts fictifs, ouvre chaque page à la largeur d'un ordinateur et l'enregistre
 // en écran de maquette (.dc.html) : le rendu tel qu'il est en ligne, feuilles de style comprises, sans les scripts.
 // Préalable : celui de e2e-espace.mjs (dans site/ : build et base:local ; dans espace/ : build).

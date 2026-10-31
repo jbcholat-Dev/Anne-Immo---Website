@@ -29,4 +29,4 @@ Demande de JB (2026-10-24) : « mettre à jour la maquette de l'espace, on va af
 - Retours de JB et d'Anne sur la maquette, puis une story par changement retenu.
 
 ## Clôture
-- 2026-10-26 : JB demande une recopie à l'identique de l'espace en ligne, sur ordinateur seulement. La v3 est remplacée par la v4 (story 13.33) ; ses écrans restent dans l'historique des versions de la maquette.
+- 2026-10-26 : JB demande une recopie à l'identique de l'espace en ligne, sur ordinateur seulement. La v3 est remplacée par la v4 (story 13.34) ; ses écrans restent dans l'historique des versions de la maquette.

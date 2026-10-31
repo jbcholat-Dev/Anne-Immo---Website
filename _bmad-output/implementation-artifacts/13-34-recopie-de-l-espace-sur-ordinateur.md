@@ -1,12 +1,12 @@
 ---
-story: 13.33
+story: 13.34
 epic: 13 — Espace de travail d'Anne
 statut: review
 date: 2026-10-26
 maj: 2026-10-26
 ---
 
-# Story 13.33 — Recopie de l'espace en ligne dans la maquette, sur ordinateur
+# Story 13.34 — Recopie de l'espace en ligne dans la maquette, sur ordinateur
 
 ## Objectif
 Demande de JB (2026-10-26) : « recrée une version à l'identique de ce qui est aujourd'hui publié » dans la maquette, et seulement en version ordinateur : l'espace servira principalement, voire uniquement, sur ordinateur. La refonte part de cette copie.

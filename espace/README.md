@@ -39,7 +39,7 @@ npm install            # une fois
 npm run build          # construit l'espace dans espace/dist (base d'aperçu, sauf construction de main chez Cloudflare)
 npm run check          # vérification des types (pages et Worker)
 node scripts/e2e-espace.mjs   # essai de bout en bout, site et espace sur la même base locale (préalable en tête du fichier)
-node scripts/maquette-espace.mjs <dossier>  # recopie chaque page, sur ordinateur et avec des contacts fictifs, en écrans de maquette (story 13.33, même préalable)
+node scripts/maquette-espace.mjs <dossier>  # recopie chaque page, sur ordinateur et avec des contacts fictifs, en écrans de maquette (story 13.34, même préalable)
 ```
 
 `npm run dev` sert l'espace en local, mais sans jeton Access tout répond 403 : pour regarder les pages, passer par l'essai de bout en bout, qui imite Access.
