@@ -24,7 +24,9 @@ import Quiz from '../../layouts/Quiz.astro';
   .qz-ecran { flex: 1; display: flex; flex-direction: column; padding-top: 24px; }
   .qz-noscript { padding: 40px 0; font-size: 16px; }
   .qz-retour { font-size: 14px; color: var(--avt-brun); display: inline-flex; align-items: center; gap: 6px; min-height: 44px; align-self: flex-start; background: none; border: 0; padding: 0; font-family: inherit; }
-  .qz-question:focus { outline: none; }
+  /* Titre de chaque écran (question, écran d'entrée, écran final, reprise) : le script y pose le focus (tabindex=-1) pour que
+     les lecteurs d'écran annoncent le nouvel écran ; ce focus n'est pas un geste du visiteur, donc pas de cadre (story 10.17). */
+  [data-ecran] h1[tabindex="-1"]:focus, [data-ecran] h1[tabindex="-1"]:focus-visible { outline: none; }
   .qz-categorie { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--avt-klein); font-weight: 500; margin: 14px 0 14px; }
   .qz-question { font-size: 32px; line-height: 1.15; margin: 0 0 32px; }
   .qz-question-long { font-size: 25px; line-height: 1.12; margin-bottom: 4px; }

@@ -1765,6 +1765,16 @@ afin qu'Anne puisse rappeler chaque prospect : un e-mail seul ne permet pas de l
 
 **État :** fait, en ligne le 2026-10-31 (PR #220), détail dans `implementation-artifacts/10-16-telephone-obligatoire-dans-le-diagnostic.md`.
 
+### Story 10.17: Pas de cadre autour du titre des écrans du diagnostic
+
+En tant que visiteur du diagnostic,
+je veux arriver sur l'écran « À qui envoyer votre rapport ? » sans cadre bleu autour du titre,
+afin que la page paraisse soignée dès le premier écran.
+
+**Critères d'acceptation :** le titre de chaque écran (question, écran d'entrée, écran final, reprise) garde le focus posé par la page, pour que les lecteurs d'écran annoncent le nouvel écran, mais sans cadre visible ; les champs, boutons et liens gardent leur cadre au clavier.
+
+**État :** en cours (2026-10-31), détail dans `implementation-artifacts/10-17-pas-de-cadre-autour-du-titre-du-diagnostic.md`.
+
 ### Story 10.9: E-mails du site à la charte
 
 Ajoutée le 2026-10-08 à la demande de JB, après l'essai de la séquence sur l'aperçu : les e-mails partent en texte brut, sans mise en page.

@@ -143,6 +143,9 @@ try {
     // Story 10.15 : écran d'entrée (prénom, e-mail, accord) avant la question 1 ; refusé vide, puis rempli.
     const entree = async (vide) => {
       await p.waitForSelector('[data-entree]');
+      // Story 10.17 : le titre reçoit le focus (annoncé aux lecteurs d'écran) sans cadre visible.
+      const titre = await p.$eval('[data-ecran] h1', (h) => ({ focus: document.activeElement === h, contour: getComputedStyle(h).outlineStyle }));
+      constat(titre.focus && titre.contour === 'none', `${nom} : titre de l'écran d'entrée focalisé, sans cadre (${JSON.stringify(titre)})`);
       if (vide) {
         await p.click('[data-entree-bouton]'); await pause(200);
         constat((await p.$$('[data-entree] [aria-invalid="true"]')).length === 3, `${nom} : écran d'entrée vide refusé (prénom, e-mail, accord)`);
