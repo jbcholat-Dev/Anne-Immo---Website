@@ -67,13 +67,13 @@ export function valider(source: SourceFormulaire, d: Record<string, unknown>): V
   const email = texte(d.email).toLowerCase();
   if (!emailValide(email)) return refus('email');
 
-  // Téléphone : obligatoire pour le contact et l'estimation, facultatif pour le guide (AD-6, décision du 2026-09-07) et pour
-  // le diagnostic (story 10.15, décision de JB du 2026-10-30 : « seulement si vous souhaitez qu'Anne vous appelle »).
+  // Téléphone : obligatoire partout sauf pour le guide (AD-6, décision du 2026-09-07). Le diagnostic l'a eu facultatif du 30 au
+  // 31 octobre 2026 (story 10.15), puis de nouveau obligatoire (story 10.16, décision de JB du 2026-10-31).
   const telSaisi = texte(d.telephone);
   const indicatif = INDICATIFS.includes(texte(d.indicatif)) ? texte(d.indicatif) : '+33';
   const telephone = telSaisi ? e164(telSaisi, indicatif) : null;
   if (telSaisi && !telephone) return refus('telephone');
-  if (!telephone && source !== 'guide' && source !== 'diagnostic') return refus('telephone');
+  if (!telephone && source !== 'guide') return refus('telephone');
 
   if (!coche(d.privacy)) return refus('privacy');
 

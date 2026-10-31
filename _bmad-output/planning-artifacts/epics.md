@@ -1753,7 +1753,17 @@ afin que la page /diagnostic redevienne la destination des publicités sans anno
 
 **Critères d'acceptation :** un écran d'entrée (prénom, e-mail, accord) précède la question 1, ses coordonnées restent en mémoire de la page et jamais dans le navigateur (AD-11) ; à la fin, le téléphone est facultatif avec la phrase « Votre rapport arrive par e-mail. Le téléphone, seulement si vous souhaitez qu'Anne vous appelle. », reprise sous le bouton de /diagnostic ; le nom de famille n'est plus demandé ; le serveur accepte un diagnostic sans nom ni téléphone ; l'écran d'entrée est compté (étape `coordonnees`, précision `entree`) et le Bilan le place avant la question 1 ; dans l'espace, les contacts à qualifier qui ont un téléphone passent en tête, ceux sans téléphone sont à qualifier par e-mail. Consentement et purge inchangés.
 
-**État :** fait, en ligne le 2026-10-30 (PR #218), détail dans `implementation-artifacts/10-15-entree-du-diagnostic-allegee.md`.
+**État :** fait, en ligne le 2026-10-30 (PR #218), détail dans `implementation-artifacts/10-15-entree-du-diagnostic-allegee.md`. Le téléphone redevient obligatoire le 2026-10-31 (story 10.16).
+
+### Story 10.16: Téléphone de nouveau obligatoire dans le diagnostic
+
+En tant que JB,
+je veux que le téléphone soit de nouveau exigé à la fin du diagnostic,
+afin qu'Anne puisse rappeler chaque prospect : un e-mail seul ne permet pas de le qualifier.
+
+**Critères d'acceptation :** l'ordre de la story 10.15 est gardé (prénom et e-mail avant la question 1, pas de nom) ; à la fin, le téléphone est obligatoire, vide ou mal saisi il est refusé par la page et par le serveur ; la ligne sous le bouton de /diagnostic et l'aide du champ deviennent « Votre rapport arrive par e-mail. Votre téléphone permet à Anne de vous rappeler pour en parler. »
+
+**État :** en cours, détail dans `implementation-artifacts/10-16-telephone-obligatoire-dans-le-diagnostic.md`.
 
 ### Story 10.9: E-mails du site à la charte
 
