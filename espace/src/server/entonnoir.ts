@@ -57,7 +57,7 @@ export const ETAPES_DETAIL: { cle: string; libelle: string }[] = [
   { cle: 'interaction', libelle: 'Premier écran touché' },
   ...NUMEROS.map((n) => ({ cle: `q${String(n).padStart(2, '0')}`, libelle: `Question ${n}` })),
   { cle: 'coordonnees', libelle: 'Écran des coordonnées en fin de parcours (jusqu\'au 30 octobre)' },
-  { cle: 'envoi', libelle: 'Envoi (téléphone facultatif depuis le 30 octobre)' },
+  { cle: 'envoi', libelle: 'Envoi (téléphone facultatif du 30 au 31 octobre)' },
   { cle: 'echec', libelle: 'Envoi refusé (champ à corriger, réseau)' },
   { cle: 'resultat', libelle: 'Envoi accepté, résultat ouvert' },
 ];

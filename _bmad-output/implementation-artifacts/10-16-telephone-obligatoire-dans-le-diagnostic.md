@@ -42,7 +42,10 @@ Le 31 octobre 2026, JB demande de repasser le téléphone en obligatoire à la f
   - ligne sous le bouton.
 
 ## Revue de code
-À faire dans une session neuve, avant fusion.
+2026-10-31, `bmad-code-review` dans une session neuve, PR #220, commit 5c2ef40 relu. Page et serveur d'accord, test de bout en bout correct, rien de bloquant :
+1. (mineur) Libellé « Envoi (téléphone facultatif depuis le 30 octobre) » du Bilan périmé : corrigé (commit suivant), « du 30 au 31 octobre ».
+2. (mineur) Commentaire de `contacts.ts` disant que le diagnostic n'exige plus le téléphone : corrigé (commit suivant).
+3. (très mineur) Critère de la story 10.9 dans epics.md muet sur le nom du diagnostic : écarté, la story 10.15 le dit déjà et le README le liste dans les écarts assumés.
 
 ## Reste
 - Revue, PR, fusion, vérification en ligne.

@@ -45,7 +45,7 @@ export type Canal = keyof typeof CANAUX_ORIGINE;
 
 /** Action posée sur tout nouveau contact : le rappeler pour le qualifier, dès son arrivée. */
 export const ACTION_QUALIFIER = 'Rappeler pour qualifier';
-/** Story 10.15 : un contact du site sans téléphone (le diagnostic ne l'exige plus) se qualifie par e-mail, après ceux qui ont
+/** Story 10.15 : un contact du site sans téléphone (guide, ou diagnostic du 30 octobre 2026, story 10.15) se qualifie par e-mail, après ceux qui ont
  * laissé un numéro (rangés en tête de « À rappeler maintenant » dans l'espace). */
 export const ACTION_QUALIFIER_EMAIL = 'Écrire pour qualifier (pas de téléphone)';
 
