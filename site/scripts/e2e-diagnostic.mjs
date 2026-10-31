@@ -6,7 +6,7 @@
 // Story 10.13 : premier toucher sur la question 1, navigateur et appareil, temps d'affichage de la question 1.
 // Story 10.12 : chaque étape du parcours est comptée dans la table `entonnoir`, avec sa campagne, sans donnée personnelle.
 // Story 10.14 : arrivée sur l'accueil, clics sur ses deux boutons et demande d'estimation commencée, sous la même campagne.
-// Story 10.15 : prénom, e-mail et accord sur un écran d'entrée avant la question 1, téléphone facultatif à la fin, plus de nom.
+// Story 10.15 : prénom, e-mail et accord sur un écran d'entrée avant la question 1, téléphone à la fin, plus de nom (10.16 : téléphone obligatoire).
 // Préalable : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local`.
 // Lancer : `node scripts/e2e-diagnostic.mjs`.
 import fs from 'node:fs';
@@ -32,7 +32,7 @@ const CHOIX_B = ['q01.a', 'q02.b', 'q03.b', 'q04.b', 'q05.c', 'q06.b', ['q07.a',
 const CHOIX_R = ['q01.d', 'q02.c', 'q03.c', 'q04.c', 'q05.e', 'q06.d', [], 'q08.d', 'q09.c', 'q10a.d', 'q10b.c', 'q11a.a', 'q11b.e', 'q12.b', ['q13.a'], 'q14.c', 'passer'];
 
 let ip = 0;
-// Story 10.15 : la page n'envoie plus de nom de famille ; le téléphone est facultatif (testé sans lui plus bas).
+// Story 10.15 : la page n'envoie plus de nom de famille ; story 10.16 : le téléphone reste obligatoire (testé sans lui plus bas).
 const coord = (prenom) => ({ prenom, email: `${prenom.toLowerCase()}+${ESSAI}@example.com`, telephone: '06 12 34 56 78', privacy: 'on' });
 const diagnostic = (corps) =>
   appeler(`${U}/api/diagnostic`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'cf-connecting-ip': `198.51.100.${++ip}` }, body: JSON.stringify({ lang: 'fr', turnstile: 'jeton', journey_id: 'essai', ...corps }) })
@@ -60,19 +60,21 @@ try {
   r = await diagnostic({ submission_id: s3, reponses: reponses(CHOIX_B), ...coord('Marc'), telephone: '079 123 45 67', indicatif: '+41' });
   const l3 = sql(`SELECT orientation, band, telephone FROM lead WHERE submission_id = '${s3}'`)[0];
   constat(r.ok && l3?.orientation === 'B' && l3?.telephone === '+41791234567', `« minimiser les frais » force la sortie B ; numéro suisse écrit ${l3?.telephone}`);
-  // Story 10.15 : sans nom ni téléphone, accepté ; le contact créé se qualifie par e-mail. Un numéro mal saisi reste refusé.
-  const s4 = sid();
-  r = await diagnostic({ submission_id: s4, reponses: reponses(CHOIX_A), ...coord('Sanstel'), telephone: '' });
-  await pause(300);
-  const l4 = sql(`SELECT l.nom, l.telephone, c.prochaine_action FROM lead l LEFT JOIN contact c ON c.id = l.contact_id WHERE l.submission_id = '${s4}'`)[0];
-  constat(r.ok && l4?.nom === null && l4?.telephone === null && l4?.prochaine_action === 'Écrire pour qualifier (pas de téléphone)',
-    `sans nom ni téléphone : accepté, contact à qualifier par e-mail (${JSON.stringify(l4)})`);
-  // Le même prospect revient avec un téléphone : son contact redevient « à rappeler ».
+  // Story 10.15 : sans nom, accepté. Story 10.16 : sans téléphone, refusé de nouveau.
+  const sansTel = await diagnostic({ submission_id: sid(), reponses: reponses(CHOIX_A), ...coord('Sanstel'), telephone: '' });
+  constat(!sansTel.ok && sansTel.error?.champ === 'telephone', 'sans téléphone : refusé (telephone)');
+  // Un contact à qualifier par e-mail (venu du guide ou du diagnostic du 30 octobre) qui laisse un téléphone redevient « à rappeler ».
+  const ESSAI_C = `SANSTEL${Date.now()}`;
+  const emailSansTel = `sanstel+contact-${ESSAI}@example.com`;
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, email, parcours, etape, prochaine_action, prochaine_action_le, canal, is_test)
+       VALUES ('${ESSAI_C}', '2026-10-30T10:00:00Z', '2026-10-30T10:00:00Z', 'Sanstel', '${emailSansTel}', 'vendeur', 'a_qualifier', 'Écrire pour qualifier (pas de téléphone)', '2026-10-30T10:00:00Z', 'site', 1)`);
   const telPlusTard = `0699${String(Date.now()).slice(-6)}`; // numéro neuf : un numéro déjà porté par un autre contact n'est pas repris
-  r = await diagnostic({ submission_id: sid(), reponses: reponses(CHOIX_A), ...coord('Sanstel'), telephone: telPlusTard });
+  const s4 = sid();
+  r = await diagnostic({ submission_id: s4, reponses: reponses(CHOIX_A), ...coord('Sanstel'), email: emailSansTel, telephone: telPlusTard });
   await pause(300);
-  const c4 = sql(`SELECT c.telephone, c.prochaine_action FROM lead l JOIN contact c ON c.id = l.contact_id WHERE l.submission_id = '${s4}'`)[0];
-  constat(r.ok && c4?.telephone === `+33${telPlusTard.slice(1)}` && c4?.prochaine_action === 'Rappeler pour qualifier', `téléphone laissé plus tard : contact à rappeler (${JSON.stringify(c4)})`);
+  const l4 = sql(`SELECT l.nom, c.id, c.telephone, c.prochaine_action FROM lead l JOIN contact c ON c.id = l.contact_id WHERE l.submission_id = '${s4}'`)[0];
+  constat(r.ok && l4?.nom === null && l4?.id === ESSAI_C && l4?.telephone === `+33${telPlusTard.slice(1)}` && l4?.prochaine_action === 'Rappeler pour qualifier',
+    `sans nom : accepté ; contact sans téléphone qui en laisse un : à rappeler (${JSON.stringify(l4)})`);
   const telFaux = await diagnostic({ submission_id: sid(), reponses: reponses(CHOIX_A), ...coord('Telfaux'), telephone: '12' });
   constat(!telFaux.ok && telFaux.error?.champ === 'telephone', 'numéro mal saisi : refusé (telephone)');
 
@@ -177,8 +179,10 @@ try {
     await p.fill('[name="telephone"]', '12'); await p.click('[data-gate-bouton]'); await pause(200);
     await p.screenshot({ path: path.join(OUT, `diag-${nom}-gate-erreurs.png`), fullPage: true });
     constat((await p.getAttribute('[name="telephone"]', 'aria-invalid')) === 'true', `${nom} : numéro incomplet signalé`);
-    // Alice laisse le téléphone vide (facultatif) ; Bruno et Léa le donnent.
-    await p.fill('[name="telephone"]', nom === 'A' ? '' : '06 12 34 56 78');
+    // Story 10.16 : téléphone obligatoire ; vide, il est refusé aussi.
+    await p.fill('[name="telephone"]', ''); await p.click('[data-gate-bouton]'); await pause(200);
+    constat((await p.textContent('#g4')) === 'Indiquez votre téléphone.' && p.url().includes('/diagnostic/questions'), `${nom} : téléphone vide refusé`);
+    await p.fill('[name="telephone"]', '06 12 34 56 78');
     if (newsletter) await p.check('[name="newsletter"]');
     if (coupure) { // première tentative coupée : échec affiché, réponses gardées, « Renvoyer » réussit sans second lead
       await p.route('**/api/diagnostic', (route) => route.abort(), { times: 1 });
@@ -194,7 +198,7 @@ try {
     const bareme = chargements.some((u) => /bareme/.test(u));
     const leads = sql(`SELECT orientation, utm, newsletter_opt_in_at, prenom, nom, telephone FROM lead WHERE email = '${email}'`);
     constat(leads.length === 1 && leads[0].utm === `{"utm_source":"parcours","utm_content":"${nom}-${ESSAI}"}` && !sauve && !bareme
-      && leads[0].prenom === prenom && leads[0].nom === null && (nom === 'A' ? leads[0].telephone === null : leads[0].telephone === '+33612345678'),
+      && leads[0].prenom === prenom && leads[0].nom === null && leads[0].telephone === '+33612345678',
       `${nom} → score ${score} · ${pastille} · « ${sortie} » ; un lead (téléphone ${leads[0]?.telephone ?? 'non donné'}), campagne gardée, sauvegarde locale effacée`);
     const seq = await p.$('[data-sequence]:not([hidden])');
     if (seq) { await seq.click(); await p.waitForSelector('[data-etat-sequence]:not([hidden])'); }
@@ -232,8 +236,8 @@ try {
   await p.click('.dl-cta a'); await p.waitForSelector('[data-entree]'); await pause(500);
   const pub = sql(`SELECT etape, ecran, source, support FROM entonnoir WHERE contenu = 'carrousel-${ESSAI.toLowerCase()}' ORDER BY at`);
   constat(pub.some((e) => e.etape === 'arrivee') && pub.some((e) => e.etape === 'coordonnees' && e.ecran === 'entree') && pub.every((e) => e.source === 'facebook' && e.support === 'paid')
-    && ligne.includes("Le téléphone, seulement si vous souhaitez qu'Anne vous appelle."),
-    `arrivée par la publicité comptée, campagne gardée jusqu'à l'écran d'entrée, ligne du téléphone facultatif (${pub.map((e) => e.etape + (e.ecran ? ':' + e.ecran : '')).join(', ')})`);
+    && ligne.includes('Votre téléphone permet à Anne de vous rappeler pour en parler.'),
+    `arrivée par la publicité comptée, campagne gardée jusqu'à l'écran d'entrée, ligne du téléphone (${pub.map((e) => e.etape + (e.ecran ? ':' + e.ecran : '')).join(', ')})`);
   // Page préchargée par l'application (pas à l'écran quand le premier écran s'affiche) : palier « cachee », aucun toucher.
   const ctxCache = await nav.newContext({ viewport: { width: 390, height: 844 } });
   await ctxCache.addInitScript(() => Object.defineProperty(document, 'visibilityState', { get: () => 'hidden' }));

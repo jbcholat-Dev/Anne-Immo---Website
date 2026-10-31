@@ -5,7 +5,8 @@
 // jusqu'au succès ; « Renvoyer » réutilise la même clé submission_id (AD-4).
 // Story 10.12 : chaque écran atteint, l'écran des coordonnées, l'envoi et son issue sont comptés sans donnée personnelle
 // (îlot entonnoir), pour savoir où les visiteurs s'arrêtent. Story 10.15 : prénom et e-mail avant la question 1 (étape
-// « coordonnees », précision « entree »), téléphone facultatif à la fin, plus de nom de famille.
+// « coordonnees », précision « entree »), téléphone à la fin, plus de nom de famille. Story 10.16 : le téléphone redevient
+// obligatoire (décision de JB du 2026-10-31 : un e-mail seul ne permet pas de qualifier le contact).
 import contenu from '../content/diagnostic/questions.json';
 import { compter, fixerCampagne, palierAffichage } from './entonnoir';
 import { telephoneValide, emailValide, envoyer, ulid } from './formulaires';
@@ -119,7 +120,7 @@ if (racine) {
   }
 
   // Story 10.15 : prénom, e-mail et accord demandés avant la question 1 (écran d'entrée), le téléphone seulement à la fin
-  // et facultatif. Les coordonnées restent en mémoire de la page (jamais dans le stockage local, AD-11) : un parcours repris
+  // (obligatoire depuis la story 10.16). Les coordonnées restent en mémoire de la page (jamais dans le stockage local, AD-11) : un parcours repris
   // après fermeture redemande l'écran d'entrée. Rien ne part au serveur avant l'envoi final.
   let coord: { prenom: string; email: string; privacy: string } | null = null;
   // Parcours repris : l'écran d'entrée qui suit redemande les coordonnées mais n'est pas un nouveau premier écran ; ni lui ni
@@ -191,7 +192,7 @@ if (racine) {
       <p>${esc(c.prenom)}, votre rapport part à <strong>${esc(c.email)}</strong>. <button type="button" style="background:none;border:0;padding:0;font:inherit;color:var(--avt-klein);text-decoration:underline;min-height:44px;cursor:pointer" data-modifier>Modifier</button></p></div>
       <form data-gate novalidate>
         <div class="piege" aria-hidden="true" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden"><label>Site web <input type="text" name="site_web" tabindex="-1" autocomplete="off"></label></div>
-        <div class="champ"><label for="tel">Téléphone (facultatif)</label><div class="qz-tel"><select name="indicatif" aria-label="Indicatif"><option value="+33">FR +33</option><option value="+41">CH +41</option></select><input id="tel" type="tel" name="telephone" placeholder="06 12 34 56 78" autocomplete="tel" inputmode="tel" aria-describedby="g5 g4"></div><span class="qz-mention" id="g5">Votre rapport arrive par e-mail. Le téléphone, seulement si vous souhaitez qu'Anne vous appelle.</span><span class="champ-erreur" id="g4"></span></div>
+        <div class="champ"><label for="tel">Téléphone</label><div class="qz-tel"><select name="indicatif" aria-label="Indicatif"><option value="+33">FR +33</option><option value="+41">CH +41</option></select><input id="tel" type="tel" name="telephone" placeholder="06 12 34 56 78" required autocomplete="tel" inputmode="tel" aria-describedby="g5 g4"></div><span class="qz-mention" id="g5">Votre rapport arrive par e-mail. Votre téléphone permet à Anne de vous rappeler pour en parler.</span><span class="champ-erreur" id="g4"></span></div>
         <label class="case" data-case><input type="checkbox" name="newsletter"><span>Je souhaite recevoir la séquence d'e-mails d'Anne (7 jours, désinscription à tout moment). Facultatif.</span></label>
         <div class="alerte-douce" data-gate-erreurs hidden role="alert"></div>
         <div data-gate-echec hidden><div class="alerte" role="alert" data-gate-echec-texte>L'envoi n'a pas abouti. Vos réponses et vos coordonnées sont conservées : rien à ressaisir.</div></div>
@@ -207,7 +208,7 @@ if (racine) {
     form.addEventListener('submit', async (ev) => {
       ev.preventDefault();
       echec.hidden = true;
-      const n = marquer(form, 'telephone', 'g4', !tel.value.trim() || telephoneValide(tel.value) ? null : 'Dix chiffres attendus, ou laissez vide.');
+      const n = marquer(form, 'telephone', 'g4', !tel.value.trim() ? 'Indiquez votre téléphone.' : telephoneValide(tel.value) ? null : 'Dix chiffres attendus.');
       erreurs.hidden = n === 0;
       erreurs.textContent = 'Un champ à corriger avant d’afficher le diagnostic.';
       if (n) { tel.focus(); return; }
