@@ -1773,7 +1773,7 @@ afin que la page paraisse soignée dès le premier écran.
 
 **Critères d'acceptation :** le titre de chaque écran (question, écran d'entrée, écran final, reprise) garde le focus posé par la page, pour que les lecteurs d'écran annoncent le nouvel écran, mais sans cadre visible ; les champs, boutons et liens gardent leur cadre au clavier.
 
-**État :** en cours (2026-10-31), détail dans `implementation-artifacts/10-17-pas-de-cadre-autour-du-titre-du-diagnostic.md`.
+**État :** fait, en ligne le 2026-10-31 (PR #222), détail dans `implementation-artifacts/10-17-pas-de-cadre-autour-du-titre-du-diagnostic.md`.
 
 ### Story 10.9: E-mails du site à la charte
 

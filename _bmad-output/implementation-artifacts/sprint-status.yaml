@@ -152,7 +152,7 @@ development_status:
   10-14-test-ab-accueil-ou-question-1: done   # 2026-10-28, PR #216 fusionnée, en ligne (migrations 17)
   10-15-entree-du-diagnostic-allegee: done   # 2026-10-30, PR #218 fusionnée (accord de JB), en ligne à 12 h 55 UTC
   10-16-telephone-obligatoire-dans-le-diagnostic: done   # 2026-10-31, PR #220 fusionnée (« Ok pour cette version », JB), en ligne
-  10-17-pas-de-cadre-autour-du-titre-du-diagnostic: review   # 2026-10-31, demande de JB (capture), fusion autorisée une fois revue
+  10-17-pas-de-cadre-autour-du-titre-du-diagnostic: done   # 2026-10-31, PR #222 fusionnée, en ligne
   epic-10-retrospective: optional
 
   epic-11: in-progress
