@@ -36,8 +36,8 @@ Deux principes tranchent les choix :
 
 - **P-1. Le grand classement de départ (le parcours le plus important).** JB dépose le fichier exporté du téléphone d'Anne, puis celui de LinkedIn, puis le fichier Excel des animations. L'aperçu annonce 612 contacts, dont 9 doublons probables à confirmer. L'espace propose une catégorie à chacun selon sa source : « 612 à vérifier ». Le soir, Anne et JB s'installent devant le tableau. Ils filtrent « source LinkedIn, à vérifier » : 340 lignes. Ils filtrent « entreprise contient Danone », cochent les 38 anciens collègues, les rangent dans « proches », marquent vérifié. Ils cochent ensuite 120 inconnus d'un coup et les écartent. En une heure, le compteur « reste à vérifier » est à 210 ; ils reprendront dimanche.
 - **P-2. Mardi, Anne fait une séance de parrainage depuis le tableau (livraison 2).** Elle a noté sur sa feuille « mardi 14 h-16 h : parrainage ». Elle ouvre Contacts, choisit la vue enregistrée « Proches jamais recontactés », retire trois personnes, garde 15 lignes et clique « Lancer une séance ». Elle nomme la séance « Parrainage » et choisit le message type « Parrainage » de la catégorie. La séance s'affiche, une personne par ligne, le prénom déjà inséré dans le message. Pour chacune, elle choisit le canal (WhatsApp, SMS, appel, e-mail), copie le message, l'envoie depuis son téléphone, puis coche « contacté ». À 16 h, la séance affiche « 14 contactés sur 15 ». Dans le tableau, ces 14 personnes ont un dernier contact daté du jour, avec son canal.
-- **P-3. Le dimanche soir, Anne et JB planifient la semaine (livraison 3).** Ils ouvrent le bilan de la semaine écoulée : une barre pleine, une à moitié, un rendez-vous obtenu. Ils passent à la semaine suivante et placent quatre activités : mardi matin boîtage à Publier (200 flyers), mercredi 14 h-16 h séance de contacts « parrainage » avec les proches, jeudi séance « diagnostic offert » avec les rencontrés à l'EDB, vendredi deux rencontres de partenaires pros. Dix minutes, et ils ferment.
-- **P-4. Mardi midi, Anne note son boîtage (livraison 3).** Elle ouvre l'espace sur sa semaine : la colonne de mardi ressort, lundi est grisé avec ce qu'elle y a fait. Elle clique sur « Boîtage à Publier, 9 h-12 h, 200 flyers », tape 180, valide. La barre « Boîtage » passe à 90 %. Mercredi, elle glisse à la souris l'activité de jeudi, qu'elle ne pourra pas faire, sur vendredi.
+- **P-3. Le dimanche soir, Anne et JB planifient la semaine (livraison 3).** Ils ouvrent le bilan de la semaine écoulée : une barre pleine, une à moitié, un rendez-vous obtenu. Ils passent à la semaine suivante. Dans la colonne de gauche, la liste de leurs actions de prospection. Ils glissent « Boîtage » sur mardi 9 h et l'étirent jusqu'à 12 h ; « Parrainage » sur mercredi 14 h, étiré à 16 h ; « Diagnostic offert aux vendeurs tièdes » sur jeudi 10 h ; « Café partenaire » deux fois sur vendredi. La liste de gauche n'a pas bougé. Dix minutes, et ils ferment.
+- **P-4. Mardi midi, Anne note son boîtage (livraison 3).** Elle ouvre l'espace sur sa semaine : la colonne de mardi ressort, lundi est grisé avec ce qu'elle y a fait. Elle clique sur « Boîtage à Publier, 9 h-12 h, 200 flyers », tape 180, valide. La barre « Boîtage » passe à 90 %. Mercredi, elle glisse à la souris l'activité de jeudi, qu'elle ne pourra pas faire, sur vendredi 15 h. Mercredi à 14 h, elle clique sur « Parrainage » : le tableau des contacts s'ouvre sur la vue « Ambassadeurs » ; elle garde 15 personnes et lance la séance, déjà réglée sur le message « Parrainage ».
 
 ## 3. Glossaire
 
@@ -56,8 +56,10 @@ Deux principes tranchent les choix :
 - **Dernier contact** : la date et le canal de la dernière coche « contacté » d'une personne, toutes séances confondues. « Jamais recontacté » : aucune coche.
 - **Canal** : le moyen utilisé pour une personne : WhatsApp, SMS, appel, e-mail.
 - **Semaine** : du lundi au dimanche ; l'unité de planification et de bilan (livraison 3).
-- **Activité** : un moment de prospection placé dans la semaine : un jour, un type d'activité, une cible ; un créneau, un nombre visé et une note facultatifs ; puis une quantité réalisée. Une activité de type séance de contacts porte une séance. Une activité est soit à faire, soit faite.
-- **Type d'activité** : boîtage, séance de contacts, rencontre (partenaire pro, voisin…), autre. **[HYPOTHÈSE]** Liste de départ, modifiable par JB.
+- **Action de prospection** : un modèle d'action réutilisable, rangé dans la colonne de gauche de la semaine (JB, 01/11 19 h 21) : un nom (« Parrainage »), un type d'activité, une durée par défaut, et pour une séance de contacts, la vue enregistrée qui choisit les contacts et le message type ou le script d'appel. Exemple : « Parrainage » = vue « Ambassadeurs » + message type « Parrainage ». Une action n'est jamais consommée : la placer dans la semaine en fait une copie.
+- **Script d'appel** : pour une action faite par téléphone, le texte qu'Anne garde sous les yeux pendant ses appels (ce qu'elle dit, les questions à poser). **[HYPOTHÈSE]** Un simple texte, comme un message type, sans arbre de questions.
+- **Activité** : une action de prospection placée dans la semaine, sur un jour et un créneau de 1 à 3 heures (JB, 01/11 19 h 21) ; un nombre visé et une note facultatifs ; puis une quantité réalisée. Une activité de type séance de contacts porte une séance. Une activité est soit à faire, soit faite.
+- **Type d'activité** : boîtage, séance de contacts, rencontre (partenaire pro, voisin…), autre. Chaque action de prospection a un type. **[HYPOTHÈSE]** Liste de départ, modifiable par JB.
 - **Cible** : ce que vise une activité : une zone (boîtage), une ou plusieurs catégories (séance de contacts), une personne ou un lieu (rencontre).
 - **Quantité réalisée** : ce qui a été fait, dans l'unité du type : flyers pour un boîtage, personnes cochées « contacté » pour une séance, rencontres faites.
 - **Barre d'effort** : pour un type d'activité et une semaine, la quantité réalisée ; rapportée au total des nombres visés quand il y en a, sinon affichée seule.
@@ -178,7 +180,7 @@ La barre de navigation ne montre que les pages de la nouvelle version, et un men
 
 ### 4.5 La séance de contacts (livraison 2)
 
-**Description :** agir sur les contacts classés. Anne choisit une liste dans le tableau et la déroule, une personne après l'autre. La séance existe seule en livraison 2 ; en livraison 3, une activité de la semaine peut en porter une (FR-19). Réalise P-2.
+**Description :** agir sur les contacts classés. Anne choisit une liste dans le tableau et la déroule, une personne après l'autre. La séance existe seule en livraison 2 ; en livraison 3, une activité de la semaine peut en porter une (FR-20). Réalise P-2.
 
 #### FR-15 : Lancer une séance depuis le tableau
 Anne coche des contacts dans le tableau (souvent après avoir choisi une vue enregistrée) et clique « Lancer une séance » (JB, 01/11 15 h 09).
@@ -201,24 +203,35 @@ La séance affiche une personne par ligne, avec le message type, prénom insér�
 
 ### 4.6 La page de la semaine (livraison 3)
 
-**Description :** la semaine en cours, du lundi au dimanche, une colonne par jour, en plein écran. Elle devient la page d'accueil. La colonne d'aujourd'hui est mise en avant ; les jours passés sont grisés mais lisibles, pour voir ce qui a été fait la veille. Réalise P-3, P-4.
+**Description :** la semaine en cours, du lundi au dimanche, une colonne par jour, découpée en créneaux d'une heure de 8 h à 19 h, avec à gauche la colonne des actions de prospection. Elle devient la page d'accueil. La colonne d'aujourd'hui est mise en avant ; les jours passés sont grisés mais lisibles, pour voir ce qui a été fait la veille. Réalise P-3, P-4.
 
 #### FR-18 : Ouvrir sur la semaine, aujourd'hui en avant
 En ouvrant l'espace, Anne voit sa semaine entière, avec la journée d'aujourd'hui mise en avant (JB, 01/11 14 h 49).
-- Sept colonnes, du lundi au dimanche, sans défilement en largeur.
+- À gauche, la colonne des actions de prospection (FR-19) ; à droite, sept colonnes, du lundi au dimanche, sans défilement en largeur.
+- Chaque jour est découpé en créneaux d'une heure, de 8 h à 19 h (JB, 01/11 19 h 21). Une activité occupe la hauteur de ses heures.
 - La colonne d'aujourd'hui a un fond et une bordure qui la distinguent des autres.
 - Les jours passés sont grisés ; leurs activités restent lisibles, avec leur quantité réalisée.
 - S'il n'y a aucune activité aujourd'hui, la colonne du jour l'indique simplement et montre la prochaine activité prévue.
 - Aucun compteur de résultats (rendez-vous, mandats) n'apparaît sur cette page.
 
-#### FR-19 : Placer et déplacer une activité
-Anne ou JB ajoutent une activité à un jour de la semaine en cours ou de la suivante, sans quitter la page.
-- Champs : jour, type d'activité, cible ; créneau (par exemple 14 h-16 h), nombre visé et note facultatifs. Pour une séance de contacts, c'est souvent le temps qui sert de repère (« deux heures de parrainage ») plutôt qu'un nombre.
-- Une activité de type séance de contacts a un bouton « Préparer ma liste », qui ouvre le tableau des contacts filtré sur sa cible ; la séance lancée (FR-15) est rattachée à l'activité.
-- Une activité non faite se déplace à un autre jour en la faisant glisser à la souris d'une colonne à l'autre (glisser-déposer : on attrape l'activité, on la lâche sur le nouveau jour), par exemple de mardi à jeudi (JB, 01/11). Elle peut aussi être modifiée ou supprimée.
+#### FR-19 : La colonne des actions de prospection
+À gauche de la semaine, la liste des actions de prospection, toujours visible (JB, 01/11 19 h 21).
+- Chaque action affiche son nom, son type et sa durée par défaut.
+- Cliquer sur une action d'un type séance de contacts ouvre le tableau des contacts sur sa vue enregistrée ; « Lancer une séance » y reprend son message type ou son script d'appel. Rien d'autre à créer.
+- Anne ou JB ajoutent, modifient ou suppriment une action : nom, type, durée par défaut (1, 2 ou 3 heures), vue enregistrée, message type ou script d'appel. Supprimer une action ne touche pas les activités déjà placées.
+- **[HYPOTHÈSE]** Liste de départ : « Parrainage » (vue Ambassadeurs), « Diagnostic offert aux vendeurs tièdes », « Nouvelles aux anciens clients », « Nouvelles aux proches », « Rencontrés à l'EDB jamais recontactés », « Boîtage », « Café partenaire ». À revoir avec Anne.
+
+#### FR-20 : Placer et déplacer une activité
+Anne ou JB placent une activité en faisant glisser une action de la colonne de gauche sur un créneau de la semaine en cours ou de la suivante (glisser-déposer : on attrape l'action à la souris et on la lâche sur l'heure voulue) (JB, 01/11 19 h 21).
+- Glisser une action la copie : elle reste dans la colonne de gauche, et peut être placée autant de fois qu'on veut.
+- L'activité prend la durée par défaut de l'action. On la rallonge ou la raccourcit en tirant son bord du bas, par heure entière, de 1 à 3 heures.
+- Un nombre visé et une note s'ajoutent en cliquant sur l'activité. Pour une séance de contacts, c'est souvent le temps qui sert de repère (« deux heures de parrainage ») plutôt qu'un nombre.
+- Cliquer sur une activité de type séance de contacts ouvre le tableau des contacts sur la vue de son action ; la séance lancée (FR-15) est rattachée à l'activité.
+- Une activité non faite se déplace en la faisant glisser vers un autre créneau, du même jour ou d'un autre, par exemple de mardi 14 h à jeudi 10 h (JB, 01/11). Elle peut aussi être supprimée.
+- **[HYPOTHÈSE]** Deux activités peuvent se chevaucher ; elles s'affichent alors côte à côte.
 - **[HYPOTHÈSE]** Un jour passé n'accepte pas qu'on y dépose une activité ; une activité non faite d'un jour passé peut être glissée vers aujourd'hui ou un jour à venir.
 
-#### FR-20 : Noter une activité comme faite
+#### FR-21 : Noter une activité comme faite
 Anne indique la quantité réalisée.
 - Pour un boîtage, une rencontre ou une autre activité : un clic sur l'activité, une quantité, valider ; deux gestes au plus.
 - Pour une séance de contacts, la quantité est le nombre de personnes cochées dans la séance (FR-16) ; rien d'autre à saisir.
@@ -226,7 +239,7 @@ Anne indique la quantité réalisée.
 - **[HYPOTHÈSE]** Une activité faite peut être corrigée jusqu'à la fin de sa semaine.
 - Une activité non faite reste visible à son jour, sans alerte ni couleur alarmante (le gris des jours passés suffit).
 
-#### FR-21 : Voir les barres d'effort de la semaine
+#### FR-22 : Voir les barres d'effort de la semaine
 Sur la page de la semaine, une barre par type d'activité présent dans la semaine.
 - Elle montre la quantité réalisée sur le total des nombres visés quand il y en a, sinon la quantité seule (« 14 contactés »).
 - Les barres se mettent à jour dès qu'une activité est notée ou qu'une personne est cochée.
@@ -235,16 +248,16 @@ Sur la page de la semaine, une barre par type d'activité présent dans la semai
 
 **Description :** une vue à part, ouverte depuis la barre de navigation, regardée le dimanche avant de planifier. Elle montre ce qui a été fait et ce que ça a rapporté. Réalise P-3.
 
-#### FR-22 : Bilan de l'effort
+#### FR-23 : Bilan de l'effort
 Pour une semaine choisie, le bilan montre chaque type d'activité avec son nombre d'activités, sa quantité réalisée et sa barre d'effort.
 - Les mêmes totaux existent au mois et à l'année.
 - On passe d'une semaine à l'autre d'un clic.
 
-#### FR-23 : Noter un résultat
+#### FR-24 : Noter un résultat
 Anne ou JB notent un résultat (rendez-vous obtenu, recommandation reçue, mandat signé) avec sa date, et, si on le connaît, le contact et la séance ou l'activité dont il vient.
 - Les résultats se saisissent à la main : aujourd'hui, aucun rendez-vous ni mandat n'est suivi dans l'espace (JB, 01/11 15 h 13).
 
-#### FR-24 : Bilan des résultats
+#### FR-25 : Bilan des résultats
 Le bilan montre le nombre de rendez-vous, de recommandations et de mandats signés à la semaine, au mois et à l'année.
 - Un résultat noté apparaît dans le bilan dès qu'il est enregistré.
 - Un résultat rattaché à une séance est compté sous le type « séance de contacts ».
@@ -261,7 +274,7 @@ Le bilan montre le nombre de rendez-vous, de recommandations et de mandats sign�
 ### 6.1 Ordre de construction
 1. **Livraison 1 : la page Contacts.** Tableau, filtres et vues enregistrées, recherche, actions groupées, écarter, classement de départ (FR-1 à FR-6) ; import, doublons, pré-rangement, accord, reprise de l'existant (FR-7 à FR-11) ; catégories et méthodes (FR-12, FR-13) ; navigation réduite (FR-14). Contacts est la page d'accueil. Anne et JB commencent le classement dès sa mise en ligne.
 2. **Livraison 2 : la séance de contacts** (FR-15, FR-16), lancée directement depuis le tableau, avec sa page Séances.
-3. **Livraison 3 : la semaine et le bilan** (FR-18 à FR-24). La semaine devient la page d'accueil ; une activité peut porter une séance.
+3. **Livraison 3 : la semaine et le bilan** (FR-18 à FR-25). La semaine devient la page d'accueil ; une activité peut porter une séance.
 
 Ce que coûte cet ordre : pendant les livraisons 1 et 2, l'espace ne montre pas « quoi faire aujourd'hui ». Anne garde sa feuille du dimanche pour ses activités, et les séances lancées depuis le tableau couvrent la partie contacts.
 
@@ -275,8 +288,8 @@ Ce que coûte cet ordre : pendant les livraisons 1 et 2, l'espace ne montre pas 
 **Principaux**
 - **SM-1** : un mois après la mise en ligne de la livraison 1, tous les contacts importés sont vérifiés ou écartés. Valide FR-1 à FR-11.
 - **SM-2** : après la livraison 2, au moins deux séances de contacts par semaine pendant quatre semaines d'affilée. **[HYPOTHÈSE]** Seuil à confirmer avec JB. Valide FR-15, FR-16.
-- **SM-3** : un premier rendez-vous vendeur obtenu auprès d'une personne cochée « contacté » dans une séance (noté dans la séance, puis comme résultat en livraison 3). Valide FR-16, FR-23.
-- **SM-4** : après la livraison 3, une semaine planifiée chaque dimanche, au moins trois activités, et au moins 70 % notées comme faites, pendant quatre semaines d'affilée. Valide FR-18 à FR-21.
+- **SM-3** : un premier rendez-vous vendeur obtenu auprès d'une personne cochée « contacté » dans une séance (noté dans la séance, puis comme résultat en livraison 3). Valide FR-16, FR-24.
+- **SM-4** : après la livraison 3, une semaine planifiée chaque dimanche, au moins trois activités, et au moins 70 % notées comme faites, pendant quatre semaines d'affilée. Valide FR-18 à FR-22.
 
 **Secondaire**
 - **SM-5** : à la fin du premier mois de chaque livraison, Anne dit qu'elle sait quoi faire en ouvrant l'espace (question posée par JB).
@@ -299,7 +312,10 @@ Ce que coûte cet ordre : pendant les livraisons 1 et 2, l'espace ne montre pas 
 - FR-9 : règles de pré-rangement fixes en livraison 1.
 - FR-12 : appel non permis pour les rencontrés à l'EDB tant que la question 1 n'est pas tranchée.
 - FR-14 : nom du menu « Autres outils ».
+- § 3 : le script d'appel est un simple texte.
 - FR-17 : l'e-mail groupé passe par les Campagnes existantes.
-- FR-19 : pas de dépôt sur un jour passé.
-- FR-20 : correction d'une activité faite jusqu'à la fin de sa semaine.
+- FR-19 : liste de départ des actions de prospection.
+- FR-20 : deux activités peuvent se chevaucher.
+- FR-20 : pas de dépôt sur un jour passé.
+- FR-21 : correction d'une activité faite jusqu'à la fin de sa semaine.
 - SM-2 : deux séances par semaine.
