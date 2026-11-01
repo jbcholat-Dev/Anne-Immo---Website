@@ -139,7 +139,7 @@ Toute écriture d'un module met à jour `last_activity_at`. Entrée dans le pipe
 
 - **Binds:** FR-18 à FR-23
 - **Prevents:** une semaine passée réécrite parce qu'un modèle a changé ; une confusion avec le bilan des pubs
-- **Rule:** Tables `action_prospection` (modèle : `id`, `nom`, `type`, `duree_h` 1 à 3, `vue_id`, `message_type_id`, `script`, `ordre`) et `activite` (`id`, `action_id` facultatif, `nom`, `type`, `jour`, `heure_debut` 8 à 18, `duree_h` 1 à 3, `vise`, `fait`, `note`), avec `heure_debut + duree_h` ≤ 19. `type` ∈ {`seance`, `boitage`, `rencontre`, `autre`}. Poser une action copie son nom, son type et sa durée. Supprimer ou modifier un modèle ne touche aucune activité. Seul `semaine` écrit ces tables. La table `action_marketing` (bilan des pubs) reste distincte et intacte.
+- **Rule:** Tables `action_prospection` (modèle : `id`, `nom`, `type`, `duree_h` 1 à 3, `vue_id`, `message_type_id`, `script`, `ordre`) et `activite` (`id`, `action_id` facultatif, `nom`, `type`, `jour`, `heure_debut` 8 à 18, `duree_h` 1 à 3, `vise`, `fait`, `note`, `secteur` texte libre, rempli pour un boîtage ; une zone dessinée sur carte viendra plus tard dans une colonne à part, sans toucher à celle-ci), avec `heure_debut + duree_h` ≤ 19. `type` ∈ {`seance`, `boitage`, `rencontre`, `autre`}. Poser une action copie son nom, son type et sa durée. Supprimer ou modifier un modèle ne touche aucune activité. Seul `semaine` écrit ces tables. La table `action_marketing` (bilan des pubs) reste distincte et intacte.
 
 ### AD-31 — Écarter n'est pas effacer ; purge et effacement couvrent tout
 

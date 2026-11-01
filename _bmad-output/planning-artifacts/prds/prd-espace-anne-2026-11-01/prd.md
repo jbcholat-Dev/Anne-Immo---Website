@@ -240,6 +240,7 @@ Anne indique la quantité réalisée.
 - Pour un boîtage, une rencontre ou une autre activité : un clic sur l'activité, une quantité, valider ; deux gestes au plus.
 - Pour une séance de contacts, la quantité est le nombre de personnes cochées dans la séance (FR-16) ; rien d'autre à saisir.
 - La quantité peut dépasser le nombre visé.
+- Un boîtage porte un **secteur**, écrit en texte libre (« Publier, rue des Écoles et lotissement du Lac ») : à la pose de l'activité ou en notant la quantité. Il s'affiche sur l'activité dans la semaine (JB, 01/11 21 h 03).
 - **[HYPOTHÈSE]** Une activité faite peut être corrigée jusqu'à la fin de sa semaine.
 - Une activité non faite reste visible à son jour, sans alerte ni couleur alarmante (le gris des jours passés suffit).
 
@@ -286,6 +287,7 @@ Ce que coûte cet ordre : pendant les livraisons 1 et 2, l'espace ne montre pas 
 - E-mail groupé depuis une séance (FR-17) : attend le sous-domaine d'envoi.
 - Le traitement des leads entrants (Leedflow, boîte mail) dans la nouvelle version : revient depuis le menu quand la prospection tourne.
 - Version téléphone.
+- Secteur de boîtage dessiné sur une carte : ouvrir une carte et tracer la zone, au lieu du texte libre (JB, 01/11 21 h 03).
 
 ## 7. Comment on saura que ça marche
 
