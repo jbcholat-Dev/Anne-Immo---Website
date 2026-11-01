@@ -121,7 +121,7 @@ La page Contacts est un tableau, une ligne par contact.
 Anne combine des filtres en quelques clics, sans écrire de formule.
 - Filtres : catégorie, étiquette, source, ville, vérifié ou non, écarté ou non, accord, jamais recontacté, dernier contact plus ancien qu'une durée choisie.
 - Les filtres actifs sont affichés au-dessus du tableau et se retirent d'un clic.
-- **[HYPOTHÈSE]** Une combinaison de filtres peut être enregistrée sous un nom (« EDB non recontactés », « Danone Évian ») pour la retrouver d'un clic.
+- Une combinaison de filtres peut être enregistrée sous un nom (JB, 01/11) (« EDB non recontactés », « Danone Évian ») pour la retrouver d'un clic.
 
 #### FR-21 : Classer et étiqueter plusieurs contacts à la fois
 Anne coche plusieurs lignes (ou « tout ce qui est filtré ») et applique une action à toutes.
@@ -249,6 +249,5 @@ La barre de navigation ne montre que : Semaine, Contacts, Bilan, et un menu dér
 
 - § 3 : liste de départ des types d'activité (boîtage, SMS ou WhatsApp, e-mail, appel, rencontre), modifiable.
 - FR-9 : règles de pré-rangement fixes en v1.
-- FR-20 : combinaisons de filtres enregistrées sous un nom.
 - FR-17 : l'e-mail groupé passe par les Campagnes existantes.
 - FR-18 : nom du menu « Autres outils ».
