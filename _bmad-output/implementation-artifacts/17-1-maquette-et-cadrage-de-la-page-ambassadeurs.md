@@ -36,6 +36,7 @@ Le mot d'Anne (« Vous savez comment je travaille… ») est une proposition : A
 
 - **Adresse** : `annevialtissot.fr/ambassadeurs`. L'adresse `/ambassadeur` (déjà prévue pour les premiers QR codes, `?c=carte`) y renvoie, donc aucun code imprimé n'est perdu. Le paramètre `c` dit d'où vient l'inscrit (`carte`, `email`, `whatsapp`…) et suit la règle des origines de campagne (story 5.4, AD-11).
 - **Vocabulaire** (fil parrainage) : « remerciement », jamais « commission » ; toujours « jusqu'à 1 500 € », jamais « jusqu'à 5 % » seul (on lirait 5 % du prix de vente) ; « offert », jamais « gratuit ».
+- **Texte (choix de JB, 2026-11-01)** : Anne parle à la première personne sur toute la page. Le haut de page suit la méthode « avant, après, le lien » : « Votre ami vend sa maison. Vous, vous partez en voyage. » Cinq variantes ont été comparées (une méthode chacune), voir le journal du document de référence « [Anne] Méthode d'écriture » : https://claude.ai/artifact/QqJ4ADLBHt5y9H8cJf4GHJ.
 - **Champs** : prénom, nom, téléphone, e-mail, tous obligatoires (demande de JB).
 - **Deux cases séparées** :
   - « J'accepte le règlement du programme », **obligatoire**, avec lien vers le texte complet. La date d'acceptation et la version du règlement sont gardées : l'inscription vaut acceptation avant toute recommandation (exigence légale relevée par le fil parrainage).
