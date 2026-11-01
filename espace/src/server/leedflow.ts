@@ -138,10 +138,11 @@ async function page(env: EnvEspace, genre: Genre, apres: number, n: number) {
   return { elements: elements(j), pages: nombreDePages(j) };
 }
 
-/** Téléphone → contact, en une requête. */
+/** Téléphone → contact suivi (étape renseignée), en une requête. Un contact du carnet hors suivi n'est jamais trouvé :
+ * ses appels restent des numéros inconnus, pour ne pas ranger les appels privés d'Anne sur ses proches (AD-32, story 18.1). */
 async function contactsParTelephone(env: EnvEspace, tels: string[]): Promise<Map<string, string>> {
   if (!tels.length) return new Map();
-  const { results } = await env.DB.prepare('SELECT id, telephone FROM contact WHERE telephone IN (SELECT value FROM json_each(?1))')
+  const { results } = await env.DB.prepare('SELECT id, telephone FROM contact WHERE etape IS NOT NULL AND telephone IN (SELECT value FROM json_each(?1))')
     .bind(JSON.stringify([...new Set(tels)])).all<{ id: string; telephone: string }>();
   return new Map(results.map((r) => [r.telephone, r.id]));
 }
@@ -244,27 +245,28 @@ async function rangerTaches(env: EnvEspace, els: Element[], fiches: { reste: num
   return proposees;
 }
 
-/** Les éléments venus d'un numéro inconnu qui est désormais celui d'un contact passent dans son historique. */
+/** Les éléments venus d'un numéro inconnu qui est désormais celui d'un contact suivi passent dans son historique.
+ * Un contact hors suivi (étape NULL) ne les reçoit jamais tout seul (AD-32, story 18.1). */
 export async function rattacherInconnus(env: EnvEspace): Promise<void> {
   await env.DB.batch([
     env.DB.prepare(
       `INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, donnees)
-       SELECT c.id, i.a, 'appel', 'leedflow', i.source_id, i.texte, i.donnees FROM leedflow_inconnu i JOIN contact c ON c.telephone = i.telephone
+       SELECT c.id, i.a, 'appel', 'leedflow', i.source_id, i.texte, i.donnees FROM leedflow_inconnu i JOIN contact c ON c.telephone = i.telephone AND c.etape IS NOT NULL
        WHERE i.source_id NOT LIKE 'tache:%' ON CONFLICT (source, source_id) WHERE source_id IS NOT NULL DO NOTHING`,
     ),
     // Les tâches gardées avec le numéro deviennent des propositions sur le contact.
     env.DB.prepare(
       `INSERT INTO leedflow_tache (id, contact_id, a, texte, echeance)
        SELECT substr(i.source_id, 7), c.id, i.a, json_extract(i.donnees, '$.tache'), json_extract(i.donnees, '$.echeance')
-       FROM leedflow_inconnu i JOIN contact c ON c.telephone = i.telephone
+       FROM leedflow_inconnu i JOIN contact c ON c.telephone = i.telephone AND c.etape IS NOT NULL
        WHERE i.source_id LIKE 'tache:%' AND json_extract(i.donnees, '$.tache') IS NOT NULL ON CONFLICT (id) DO NOTHING`,
     ),
     env.DB.prepare(
       `INSERT OR IGNORE INTO leedflow_lien (leedflow_contact, contact_id)
-       SELECT json_extract(i.donnees, '$.leedflow_contact'), c.id FROM leedflow_inconnu i JOIN contact c ON c.telephone = i.telephone
+       SELECT json_extract(i.donnees, '$.leedflow_contact'), c.id FROM leedflow_inconnu i JOIN contact c ON c.telephone = i.telephone AND c.etape IS NOT NULL
        WHERE json_extract(i.donnees, '$.leedflow_contact') IS NOT NULL`,
     ),
-    env.DB.prepare('DELETE FROM leedflow_inconnu WHERE telephone IN (SELECT telephone FROM contact WHERE telephone IS NOT NULL)'),
+    env.DB.prepare('DELETE FROM leedflow_inconnu WHERE telephone IN (SELECT telephone FROM contact WHERE telephone IS NOT NULL AND etape IS NOT NULL)'),
   ]);
 }
 

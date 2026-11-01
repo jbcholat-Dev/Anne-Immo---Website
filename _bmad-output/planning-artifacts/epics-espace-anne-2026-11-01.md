@@ -103,6 +103,7 @@ En tant qu'Anne, je veux qu'une demande du site retrouve le bon contact et que l
 **Étant donné** une demande d'effacement
 **Quand** elle est exécutée
 **Alors** elle couvre `contact_coordonnee`, `contact_source`, `seance_personne`, `nouveau`, `resultat` (note vidée) et les tables Leedflow, et ajoute l'empreinte du téléphone et de l'e-mail à `opposition`
+**Et** l'effacement garde le classement « Privé » ou « Démarchage » du numéro dans `leedflow_ecarte`, pour que ses appels ne reviennent pas à trier (revue de code 18.1) ; une demande du site qui fait entrer un contact du carnet dans le suivi pose `suivi_le`
 **Et** la recherche par adresse de `rights.ts` cherche aussi dans `contact_coordonnee`, et la purge compte trois ans depuis l'import pour un contact importé jamais contacté.
 
 ### Story 18.4 : La page Contacts
