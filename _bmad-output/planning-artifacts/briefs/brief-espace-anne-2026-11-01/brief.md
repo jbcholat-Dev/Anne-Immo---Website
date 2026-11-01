@@ -1,13 +1,13 @@
 ---
 title: "Brief produit : l'espace de travail d'Anne"
-status: draft
+status: final
 created: 2026-11-01
 updated: 2026-11-01
 ---
 
 # Brief produit : l'espace de travail d'Anne
 
-_Version 2, rédigée avec JB le 2026-11-01 (méthode BMAD). Les points marqués **[HYPOTHÈSE]** sont déduits, pas encore confirmés._
+_Version 3, validée par JB le 2026-11-01 (méthode BMAD). Les points marqués **[HYPOTHÈSE]** restent à confirmer dans le PRD._
 
 ## En bref
 
@@ -38,7 +38,7 @@ Le dimanche, Anne (avec JB) place dans sa semaine quelques activités de prospec
 - On la regarde ensemble le dimanche, avant de planifier la semaine suivante. Elle n'est pas affichée en permanence.
 
 **3. Les contacts rassemblés et triés**
-- Import des sources : contacts du téléphone (filtrés), LinkedIn (surtout les anciens collègues de Danone à Évian, et de Paris qui viendraient s'installer), abonnés des réseaux si on peut les récupérer, fichier Excel des animations à l'Entrepôt du Bricolage. Entre 100 et 1 000 contacts au total, avec beaucoup de déchet attendu côté LinkedIn.
+- Import des sources : contacts du téléphone (filtrés), LinkedIn (surtout les anciens collègues de Danone à Évian, et de Paris qui viendraient s'installer), abonnés des réseaux si on peut les récupérer, fichier Excel des animations en magasin de bricolage (EDB). Entre 100 et 1 000 contacts au total, avec beaucoup de déchet attendu côté LinkedIn.
 - **Cinq catégories**, pré-classées à l'import selon la source ; Anne ne corrige que les exceptions, quelques-unes à la fois, jamais 600 d'un coup le dimanche (issu de la table ronde du 01/11, `table-ronde-categories.md`) :
 
   - **Anciens clients** : appel ou message personnel ; avis et parrainage. E-mail groupé possible.
@@ -47,6 +47,7 @@ Le dimanche, Anne (avec JB) place dans sa semaine quelques activités de prospec
   - **Prescripteurs** (notaires, banquiers, artisans…) : rencontre ou appel, échange de recommandations.
   - **À réchauffer** (abonnés des réseaux, le reste) : pas de campagne ; contenus réguliers, message privé quand quelqu'un réagit.
 
+- Ces catégories servent à démarrer : on les changera sans hésiter si elles ne collent pas à l'usage (JB, 01/11).
 - Le parrainage est un message possible pour plusieurs catégories (dès l'accord d'eXp), pas une catégorie.
 - Les voisins des biens vendus ne sont pas une liste : c'est une activité de boîtage de la semaine.
 - **[HYPOTHÈSE]** Le lien avec la semaine : une activité peut viser une catégorie (« jeudi 14 h : WhatsApp du parrainage au cercle proche »).
@@ -57,7 +58,7 @@ Le dimanche, Anne (avec JB) place dans sa semaine quelques activités de prospec
 - **Moins mais mieux.** Peu d'écrans, peu de champs. Ce qui n'aide pas à prospecter cette semaine attend.
 - **Saisie à la main, minimale.** Anne note ce qu'elle a fait ; pas de comptage automatique dans la première version.
 - **Ordinateur d'abord.** Le téléphone viendra plus tard.
-- **Rien n'est perdu.** L'espace actuel reste en ligne et en stock ; on reprendra ce qui sert (fiches contacts, import, campagnes) au moment de l'architecture.
+- **Rien n'est perdu, mais rien ne gêne.** Tout ce que l'espace sait déjà faire (pipeline, bilan, campagnes, prescripteurs, acheteurs, Leedflow…) reste en ligne, rangé dans un menu déroulant de la barre de navigation, hors du champ visuel. L'écran principal ne montre que la semaine et les contacts. Les fonctions rangées reviendront une par une.
 
 ## Pour qui
 
@@ -88,4 +89,6 @@ Le dimanche, Anne (avec JB) place dans sa semaine quelques activités de prospec
 
 ## Et ensuite
 
-Si ça marche, l'espace devient le rituel hebdomadaire d'Anne et de JB : planifier le dimanche, prospecter la semaine, constater les résultats. Les fonctions en stock reviendront une par une, seulement quand une activité de prospection en aura besoin.
+Si ça marche, l'espace devient le rituel hebdomadaire d'Anne et de JB : planifier le dimanche, prospecter la semaine, constater les résultats.
+
+Plus tard, une fois la machine à leads relancée, l'espace sera aussi l'endroit où l'on traite et classe les leads qui arrivent : liaison avec Leedflow (les appels d'Anne résumés), avec sa boîte mail et les autres sources. Ces liaisons restent d'actualité ; elles reviendront depuis le menu des fonctions rangées, quand la prospection de base tournera.
