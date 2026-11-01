@@ -1,5 +1,5 @@
 ---
-title: "PRD : l'espace de travail d'Anne (semaine de prospection et contacts)"
+title: "PRD : l'espace de travail d'Anne (contacts et prospection)"
 status: draft
 created: 2026-11-01
 updated: 2026-11-01
@@ -21,6 +21,8 @@ L'espace devient l'outil de la **prospection hebdomadaire** d'Anne. Le dimanche,
 
 Pour nourrir ces activités, l'espace rassemble tous les contacts d'Anne, les range dans cinq catégories, et dit pour chacune comment la contacter.
 
+**La page Contacts est la plus importante (JB, 01/11 15 h 13).** La semaine pourrait presque se tenir sur une feuille de papier ; ce qui apporte vraiment de la valeur, c'est d'avoir sous les yeux tous les contacts, de savoir d'où ils viennent et de les classer vite. Rassembler et classer ces contacts est déjà un travail en soi, qui prendra du temps ; on agit dessus ensuite. La page Contacts passe donc en premier, dans ce document comme dans la construction (§ 6).
+
 Le principe qui tranche chaque choix : **demain d'abord**. Anne a du mal à se concentrer et s'inquiète de ne pas signer ; l'outil la ramène toujours à la prochaine action simple.
 
 ## 2. Utilisateurs
@@ -35,7 +37,7 @@ Le principe qui tranche chaque choix : **demain d'abord**. Anne a du mal à se c
 - **P-1. Le dimanche soir, Anne et JB planifient la semaine.** Ils ouvrent le bilan de la semaine écoulée : deux barres pleines, une à moitié, un rendez-vous obtenu. Ils passent à la semaine suivante et placent quatre activités : mardi matin boîtage à Publier (200 flyers), mercredi 14 h WhatsApp du parrainage au cercle proche (10 personnes), jeudi e-mail aux rencontrés à l'EDB, vendredi deux appels à des prescripteurs. Dix minutes, et ils ferment.
 - **P-2. Mardi matin, Anne ouvre l'espace.** Elle voit une seule carte : « Boîtage à Publier, 9 h à 12 h, 200 flyers ». Elle part. À midi, elle clique sur la carte, tape 180, valide. La barre « Boîtage » de la semaine passe à 90 %.
 - **P-3. Mercredi, Anne fait ses deux heures de parrainage.** Dans sa semaine, une activité dit « 14 h-16 h : parrainage ». Elle clique sur « Préparer ma liste » : la page Contacts s'ouvre, déjà filtrée sur les catégories conseillées. Elle affine (une ville, « jamais recontactés »), corrige au passage la catégorie de deux personnes, et coche celles qu'elle veut contacter dans ces deux heures. Elle clique « Lancer » : sa liste apparaît, une personne par ligne, avec le message type. Pour chacune, elle choisit le canal (WhatsApp, SMS, appel, e-mail), copie le message, l'envoie depuis son téléphone, puis coche « contacté ». À la fin, l'activité affiche « 14 contactés » et la barre du parrainage a avancé. Chaque contact garde la date et le canal de ce contact (JB, 01/11 15 h 09).
-- **P-4. JB importe les contacts.** Il dépose le fichier exporté du téléphone d'Anne, puis celui de LinkedIn, puis le fichier Excel des animations. L'espace pré-range chaque contact dans une catégorie selon sa source et écarte les doublons. Anne corrige ensuite quelques catégories au fil de la semaine, dix à la fois, et écarte d'un geste les contacts sans intérêt.
+- **P-4. Le grand classement de départ (le parcours le plus important).** JB dépose le fichier exporté du téléphone d'Anne, puis celui de LinkedIn, puis le fichier Excel des animations. L'espace fusionne les doublons et propose une catégorie selon la source : 612 contacts, « 612 à vérifier ». Le soir, Anne et JB s'installent devant le tableau. Ils filtrent « source LinkedIn, à vérifier » : 340 lignes. Ils tapent « Danone » dans la recherche, cochent les 38 anciens collègues, leur posent l'étiquette « Danone » et la catégorie « cercle proche », marquent vérifié. Ils cochent ensuite 120 inconnus d'un coup et les écartent. En une heure, le compteur est à 210 ; ils reprendront dimanche.
 
 ## 3. Glossaire
 
@@ -45,7 +47,9 @@ Le principe qui tranche chaque choix : **demain d'abord**. Anne a du mal à se c
 - **Cible** — ce que vise une activité : une zone (pour le boîtage) ou une catégorie de contacts.
 - **Nombre visé / quantité réalisée** — ce qu'Anne compte faire et ce qu'elle a fait, dans l'unité du type (flyers, messages, appels, rencontres).
 - **Barre d'effort** — pour un type d'activité et une semaine : la quantité réalisée rapportée au nombre visé.
-- **Contact** — une personne connue d'Anne, avec au moins un nom et un téléphone ou un e-mail. Un contact a une seule catégorie et une source.
+- **Contact** — une personne connue d'Anne, avec au moins un nom et un téléphone ou un e-mail. Un contact a une seule catégorie, une ou plusieurs sources, et autant d'étiquettes qu'on veut.
+- **Étiquette** — un mot libre posé sur un contact pour le retrouver ou le regrouper : « Danone », « Évian », « voisin », « parrainage envoyé ». Contrairement à la catégorie, un contact peut en avoir plusieurs, et une étiquette ne porte pas de méthode.
+- **Vérifié** — un contact dont Anne a confirmé (ou corrigé) la catégorie proposée à l'import.
 - **Source** — d'où vient le contact : téléphone, LinkedIn, réseaux sociaux, animations EDB, saisie à la main, ou l'espace actuel.
 - **Catégorie** — le groupe de contacts qui reçoit une même méthode. Cinq au départ : anciens clients, cercle proche, rencontrés à l'EDB, prescripteurs, à réchauffer.
 - **Méthode** — ce qui est associé à une catégorie : canal conseillé, ce qu'on demande (recommander, proposer le diagnostic offert, prendre des nouvelles), un message type, et si l'envoi groupé est permis.
@@ -96,15 +100,40 @@ Sur la page de la semaine, une barre par type d'activité planifié montre la qu
 Le bilan montre, pour une semaine choisie, chaque type d'activité avec son nombre d'activités, sa quantité réalisée et sa barre d'effort ; et les mêmes totaux au mois et à l'année.
 
 #### FR-6 : Noter un résultat
-Anne ou JB peuvent noter un résultat (rendez-vous obtenu, recommandation reçue, mandat signé), avec sa date, et **[HYPOTHÈSE]** l'activité ou la catégorie dont il vient, si on la connaît.
-- **[HYPOTHÈSE]** Les rendez-vous et mandats déjà suivis dans le pipeline de l'espace actuel sont comptés automatiquement, pour ne pas saisir deux fois.
+Anne ou JB peuvent noter un résultat (rendez-vous obtenu, recommandation reçue, mandat signé), avec sa date, et l'activité ou la catégorie dont il vient, si on la connaît.
+- Les résultats se saisissent à la main : aujourd'hui, aucun rendez-vous ni mandat n'est suivi dans l'espace (JB, 01/11 15 h 13).
 
 #### FR-7 : Bilan des résultats
 Le bilan montre le nombre de rendez-vous, de recommandations et de mandats signés à la semaine, au mois et à l'année, ainsi que le nombre de mandats en cours.
 
-### 4.3 Les contacts rassemblés
+### 4.3 La page Contacts (priorité 1)
 
-**Description :** une page Contacts qui réunit toutes les sources dans une seule liste, rangée par catégorie. Réalise P-4.
+**Description :** la page la plus importante de l'espace (JB, 01/11). Un grand tableau qui réunit tous les contacts, toutes sources confondues, sur toute la largeur de l'écran d'ordinateur. On y filtre, on y étiquette, on y classe, vite et souvent plusieurs contacts à la fois. C'est là que se fait le gros travail de départ (rassembler et classer quelques centaines de contacts) puis la préparation de chaque séance de prospection. Réalise P-3, P-4.
+
+#### FR-19 : Voir tous les contacts dans un tableau
+La page Contacts est un tableau, une ligne par contact.
+- Colonnes : nom et prénom, catégorie, étiquettes, source(s), ville, téléphone, e-mail, dernier contact (date et canal), accord pour l'e-mail groupé, vérifié ou non.
+- On peut masquer ou afficher une colonne, et trier sur chacune.
+- Le nombre de contacts affichés est toujours visible (« 214 contacts sur 612 »).
+- Le tableau reste fluide avec 1 000 contacts ; pas de défilement horizontal sur un écran d'ordinateur courant.
+
+#### FR-20 : Filtrer facilement
+Anne combine des filtres en quelques clics, sans écrire de formule.
+- Filtres : catégorie, étiquette, source, ville, vérifié ou non, écarté ou non, accord, jamais recontacté, dernier contact plus ancien qu'une durée choisie.
+- Les filtres actifs sont affichés au-dessus du tableau et se retirent d'un clic.
+- **[HYPOTHÈSE]** Une combinaison de filtres peut être enregistrée sous un nom (« EDB non recontactés », « Danone Évian ») pour la retrouver d'un clic.
+
+#### FR-21 : Classer et étiqueter plusieurs contacts à la fois
+Anne coche plusieurs lignes (ou « tout ce qui est filtré ») et applique une action à toutes.
+- Actions groupées : changer la catégorie, ajouter ou retirer une étiquette, marquer vérifié, écarter.
+- Sur une seule ligne, catégorie et étiquettes se changent directement dans le tableau, sans ouvrir de fiche.
+- Une action groupée annonce le nombre de contacts touchés avant de s'appliquer, et peut être annulée juste après.
+
+#### FR-22 : Le travail de classement du départ
+Après un import, Anne voit d'un coup d'œil ce qui reste à classer.
+- Un filtre prêt à l'emploi « à vérifier » montre les contacts dont la catégorie a été proposée par l'import mais pas encore confirmée.
+- Le compteur « reste à vérifier » baisse à mesure qu'elle avance ; elle peut s'arrêter et reprendre quand elle veut.
+- Le travail peut se faire à plusieurs sessions et à deux (Anne et JB) ; rien n'est perdu entre deux sessions.
 
 #### FR-8 : Importer un fichier de contacts
 JB ou Anne peuvent importer un fichier de contacts.
@@ -122,17 +151,16 @@ Chaque contact importé reçoit une catégorie selon sa source :
 - prescripteurs de l'espace actuel → prescripteurs.
 - **[HYPOTHÈSE]** Ces règles sont fixes en v1 ; seul le résultat se corrige (FR-10).
 
-#### FR-10 : Corriger la catégorie et écarter
-Anne peut changer la catégorie d'un contact, ou l'écarter (contact sans intérêt pour la prospection).
-- La page Contacts propose les contacts à vérifier par petits paquets (**[HYPOTHÈSE]** dix à la fois), jamais toute la liste d'un coup.
-- Un contact écarté n'apparaît plus dans les listes de prospection ; il n'est pas effacé et peut revenir.
+#### FR-10 : Écarter un contact
+Anne peut écarter un contact sans intérêt pour la prospection, seul ou en groupe (FR-21).
+- Un contact écarté n'apparaît plus dans le tableau par défaut ni dans les listes de prospection ; il n'est pas effacé et peut revenir (filtre « écartés »).
 
 #### FR-11 : Garder la trace de l'accord
 À l'import du fichier des animations, l'accord pour les e-mails groupés est enregistré pour chaque contact (bulletin du jeu, JB 01/11). Les autres sources n'en donnent pas.
 - La règle d'accord existante de l'espace (story 13.26) s'applique telle quelle.
 
 #### FR-12 : Retrouver un contact
-Anne peut chercher un contact par nom, prénom, morceau de numéro ou e-mail, et filtrer par catégorie.
+Anne peut chercher un contact par nom, prénom, morceau de numéro ou e-mail, en plus des filtres (FR-20).
 - La recherche existante de l'espace (story 13.24) est reprise.
 
 ### 4.4 Les catégories et leur méthode
@@ -184,8 +212,10 @@ La barre de navigation ne montre que : Semaine, Contacts, Bilan, et un menu dér
 
 ## 6. Première version
 
-### 6.1 Dans la première version
-La page de la semaine (FR-1 à FR-4), le bilan (FR-5 à FR-7), l'import et le rangement des contacts (FR-8 à FR-12), les catégories et la liste des contacts d'une activité (FR-13 à FR-16), le rangement de l'existant (FR-18).
+### 6.1 Ordre de construction
+1. **D'abord, la page Contacts** : import (FR-8, FR-9, FR-11), tableau, filtres, étiquettes, classement groupé et travail de départ (FR-10, FR-12, FR-19 à FR-22), catégories et méthodes (FR-13, FR-14), rangement de l'existant dans le menu (FR-18). C'est la première livraison ; Anne et JB commencent le classement dès qu'elle est en ligne.
+2. **Ensuite, la séance de contacts** : préparer une liste depuis le tableau et la dérouler en cochant (FR-15, FR-16). Elle peut d'abord fonctionner sans la semaine, directement depuis le tableau.
+3. **Puis la semaine et le bilan** (FR-1 à FR-7). D'ici là, une feuille de papier fait l'affaire (JB, 01/11).
 
 ### 6.2 Plus tard
 - E-mail groupé depuis une activité (FR-17) : attend le sous-domaine d'envoi.
@@ -198,7 +228,7 @@ La page de la semaine (FR-1 à FR-4), le bilan (FR-5 à FR-7), l'import et le ra
 **Principaux**
 - **SM-1** : une semaine planifiée chaque dimanche, au moins 3 activités, pendant 4 semaines d'affilée. Valide FR-2.
 - **SM-2** : au moins 70 % des activités planifiées notées comme faites en fin de semaine. Valide FR-1, FR-3.
-- **SM-3** : tous les contacts importés ont une catégorie ou sont écartés, un mois après l'import. Valide FR-8 à FR-10.
+- **SM-3** : tous les contacts importés sont vérifiés ou écartés, un mois après l'import. Valide FR-8 à FR-10, FR-19 à FR-22.
 - **SM-4** : un premier rendez-vous vendeur noté comme venant d'une activité de l'espace. Valide FR-6, FR-15.
 
 **Secondaire**
@@ -218,8 +248,7 @@ La page de la semaine (FR-1 à FR-4), le bilan (FR-5 à FR-7), l'import et le ra
 ## 9. Hypothèses à confirmer
 
 - § 3 : liste de départ des types d'activité (boîtage, SMS ou WhatsApp, e-mail, appel, rencontre), modifiable.
-- FR-6 : l'origine d'un résultat (activité ou catégorie) est notée si on la connaît ; rendez-vous et mandats du pipeline comptés automatiquement.
 - FR-9 : règles de pré-rangement fixes en v1.
-- FR-10 : vérification par paquets de dix.
+- FR-20 : combinaisons de filtres enregistrées sous un nom.
 - FR-17 : l'e-mail groupé passe par les Campagnes existantes.
 - FR-18 : nom du menu « Autres outils ».
