@@ -44,7 +44,7 @@ Deux principes tranchent les choix :
 - **Contact** : une personne connue d'Anne, avec un nom et au moins un moyen de la joindre ou de la retrouver : téléphone, e-mail, ou lien de profil (LinkedIn, Instagram, Facebook). Un contact a une seule catégorie et une ou plusieurs sources ; il peut avoir une entreprise et une ville.
 - **Projet** : ce que la personne peut apporter à Anne (JB, 01/11 19 h 17) : à qualifier (valeur de départ), vendeur, acheteur, vendeur et acheteur (vend pour racheter), ambassadeur (pas de projet, peut recommander Anne). Indépendant de la catégorie.
 - **Température** : pour un vendeur ou un acheteur seulement, où en est son projet : froid (plus d'un an, simple idée), tiède (dans l'année), chaud (dans les trois mois), déjà en vente (vendeur : bien sur le marché, en direct ou chez une autre agence) ou en recherche active (acheteur : visite déjà), avec Anne (mandat signé ou acheteur accompagné), terminé (vendu, acheté ou abandonné).
-- **Source** : d'où vient le contact : téléphone, LinkedIn, réseaux sociaux, animations EDB, saisie à la main, ou l'espace actuel.
+- **Source** : d'où vient le contact : téléphone, LinkedIn, réseaux sociaux, animations EDB, saisie à la main, demande reçue (annonce, site, appel vu par Leedflow), ou l'espace actuel.
 - **Catégorie** : la réponse à « comment Anne connaît-elle cette personne ? », qui donne la façon de la contacter (JB, 01/11 19 h 15). Cinq au départ : anciens clients, proches, rencontrés à l'EDB, partenaires pros, relations lointaines. Si une personne entre dans deux catégories, on choisit celle qui sert le plus pour la contacter.
 - **Méthode** : ce qui est associé à une catégorie : canal conseillé, ce qu'on demande (recommander, proposer le diagnostic offert, prendre des nouvelles), un ou plusieurs messages types, et deux autorisations : l'envoi groupé par e-mail et l'appel.
 - **Vérifié** : un contact dont Anne ou JB a confirmé (ou corrigé) la catégorie proposée à l'import.
@@ -114,14 +114,30 @@ Après un import, Anne voit d'un coup d'œil ce qui reste à classer.
 - Le compteur « reste à vérifier » baisse à mesure qu'on avance ; on peut s'arrêter et reprendre quand on veut, rien n'est perdu.
 - Anne et JB peuvent classer à tour de rôle, chacun sur son ordinateur. **[HYPOTHÈSE]** Ils ne travaillent pas en même temps sur les mêmes contacts ; si cela arrive, la dernière modification l'emporte.
 
+#### FR-26 : Créer un contact à la main
+Anne crée un contact depuis la page Contacts, bouton « + Nouveau contact » (JB, 01/11 21 h 16).
+- Champs : prénom, nom, téléphone, e-mail, ville, catégorie, projet, température (si le projet en a une), note, accord e-mail.
+- Il faut au moins un nom ou un téléphone. Le contact est vérifié, source « saisie à la main ».
+- Un téléphone ou un e-mail déjà connu ne crée pas de doublon : l'espace propose d'ouvrir le contact existant (FR-8).
+
+#### FR-27 : Les nouveaux contacts reçus
+Au-dessus du tableau, une barre « Nouveaux » montre le nombre de demandes reçues et pas encore traitées. Un clic la déroule (JB, 01/11 21 h 16).
+- Trois sources : les demandes reçues par les sites où Anne publie ses annonces (Leboncoin, SeLoger…), qui arrivent par e-mail dans sa boîte pro ; les numéros inconnus vus par Leedflow (appels reçus) ; les demandes du site (contact, estimation, diagnostic, guide). **[HYPOTHÈSE]** Les demandes du site en font partie : JB a cité les deux premières.
+- Chaque demande montre sa source, sa date, le nom et les coordonnées connus, le message ou le résumé de l'appel, et l'annonce concernée.
+- Une demande du site ou d'une annonce crée déjà le contact toute seule, comme aujourd'hui (catégorie « Demandes reçues », projet deviné : acheteur pour une annonce, vendeur pour une estimation). Sa carte propose « Ranger » (ouvre la fiche préremplie pour corriger catégorie, projet, température), « Vu », ou « Écarter » (démarchage, erreur).
+- Un numéro inconnu vu par Leedflow ne crée jamais de contact tout seul (la ligne reçoit aussi des appels privés). Sa carte propose « Ajouter aux contacts » (création préremplie), « Ajouter à sa fiche » quand le numéro est déjà connu, ou « Ignorer » (privé, démarchage).
+- Chaque geste s'annule tout de suite.
+- La demande traitée sort de la liste. Le message reste sur la fiche du contact.
+- Les demandes des annonces n'arrivent qu'une fois le transfert de la boîte pro réglé (action de JB, voir l'architecture) ; d'ici là, la barre montre Leedflow et le site.
+
 ### 4.2 L'import des contacts (livraison 1)
 
 **Description :** faire entrer les contacts d'Anne, de toutes les sources, sans doublon et déjà pré-rangés. Réalise P-1.
 
 #### FR-7 : Importer un fichier de contacts
-JB ou Anne importent un fichier de contacts.
+Claude importe les fichiers de contacts que JB lui transmet. Il n'y a ni écran ni bouton d'import dans l'espace (JB, 01/11 20 h 55 et 21 h 16 : « importer un fichier n'a plus de sens, puisqu'on va le faire ici »).
 - Formats acceptés : l'export des contacts du téléphone (vCard ou CSV), l'export LinkedIn (CSV), un tableur Excel ou CSV (animations EDB, ou un fichier d'abonnés des réseaux).
-- Avant d'enregistrer, un aperçu montre combien de contacts sont nouveaux, combien complètent un contact existant, combien sont des doublons probables à confirmer, combien sont rejetés à l'import.
+- Avant d'enregistrer, Claude présente à JB, dans le fil, un aperçu qui montre combien de contacts sont nouveaux, combien complètent un contact existant, combien sont des doublons probables à confirmer, combien sont rejetés à l'import.
 - La source de chaque contact est enregistrée ; un contact trouvé dans deux fichiers garde ses deux sources.
 - Avant la mise en ligne, l'import est essayé avec de vrais fichiers : l'export vCard du téléphone Samsung d'Anne et un tableur Excel (JB, 01/11 19 h 40).
 - **[HYPOTHÈSE]** Chaque import est gardé comme un lot, qu'on peut annuler en entier tant que ses contacts n'ont pas été modifiés à la main (proposé à la table ronde du 01/11, pour qu'un mauvais fichier ne pollue pas tout le tableau).
@@ -130,7 +146,7 @@ JB ou Anne importent un fichier de contacts.
 #### FR-8 : Éviter les doublons
 Un même contact n'apparaît qu'une fois.
 - Un contact dont le téléphone, l'e-mail ou le lien de profil est déjà connu complète la fiche existante (règle déjà en place dans l'espace actuel pour le téléphone et l'e-mail).
-- Un contact qui n'a en commun qu'un nom et un prénom avec un contact existant est présenté dans l'aperçu comme doublon probable ; la personne qui importe confirme la fusion ou garde les deux.
+- Un contact qui n'a en commun qu'un nom et un prénom avec un contact existant est présenté dans l'aperçu comme doublon probable ; JB confirme la fusion ou garde les deux, sur l'aperçu de Claude.
 
 #### FR-9 : Pré-ranger à l'import
 Chaque contact importé reçoit une catégorie proposée, et reste « à vérifier ».
@@ -160,12 +176,13 @@ L'espace actuel ne contient presque aucun contact (JB, 01/11 19 h 14) : ils ne s
 JB peut renommer une catégorie, en ajouter une, ou en retirer une.
 - Renommer une catégorie ne change rien pour ses contacts.
 - Une catégorie ne peut être retirée que vide : ses contacts sont d'abord rangés ailleurs (FR-4).
-- Les cinq catégories de départ sont créées avec leur méthode :
+- Les six catégories de départ sont créées avec leur méthode :
   - **Anciens clients** (des gens pour qui Anne a déjà vendu ou acheté un bien) : appel ou message personnel ; on demande un avis et une recommandation (parrainage, dès l'accord d'eXp). Envoi groupé permis ; appel permis.
   - **Proches** (amis, famille, anciens collègues qu'Anne connaît vraiment) : message personnel, un par un (SMS, WhatsApp, appel) ; on prend des nouvelles et on parle du parrainage. Envoi groupé non permis ; appel permis.
   - **Rencontrés à l'EDB** : e-mail « on s'était vus à l'animation », avec le diagnostic offert. Envoi groupé permis (accord du bulletin) ; **[HYPOTHÈSE]** appel non permis tant que la question 1 (§ 8) n'est pas tranchée.
   - **Partenaires pros** (notaires, banquiers, artisans…) : rencontre ou appel ; échange de recommandations. Envoi groupé permis ; appel permis.
   - **Relations lointaines** (contacts LinkedIn jamais revus, abonnés des réseaux) : pas de message groupé ; un message privé quand la personne réagit à une publication. Envoi groupé non permis ; appel non permis.
+  - **Demandes reçues** (personnes venues d'elles-mêmes : annonce, site, appel ; ajoutée le 01/11 avec FR-27) : répondre vite, par appel ou e-mail. Envoi groupé permis seulement avec l'accord (FR-10) ; appel permis, la personne a demandé à être recontactée.
 
 #### FR-13 : Décrire la méthode d'une catégorie
 JB peut écrire pour chaque catégorie : le canal conseillé, ce qu'on demande, un ou plusieurs messages types nommés, et les deux autorisations (envoi groupé, appel).
@@ -182,6 +199,7 @@ La barre de navigation ne montre que les pages de la nouvelle version, et un men
 - Le menu donne accès à toutes les pages actuelles : l'actuelle page d'accueil « Aujourd'hui », pipeline, qualifier, ajouter, importer, prescripteurs, acheteurs, Prospection (actions marketing), campagnes, à trier, gestion.
 - Aucune page actuelle n'est supprimée ; les liens existants continuent de fonctionner.
 - Les relèves automatiques (Leedflow, e-mails de relance) continuent de tourner sans changement.
+- Le bouton « Un retour ? » reste sur chaque page de la nouvelle version (story 13.20) : Anne y demande une correction ou une nouvelle fonction, ce qui crée un ticket traité par Claude (JB, 01/11 21 h 18).
 
 ### 4.5 La séance de contacts (livraison 2)
 
@@ -279,7 +297,7 @@ Le bilan montre le nombre de rendez-vous, de recommandations et de mandats sign�
 ## 6. Première version
 
 ### 6.1 Ordre de construction
-1. **Livraison 1 : la page Contacts.** Tableau, filtres et vues enregistrées, recherche, actions groupées, écarter, classement de départ (FR-1 à FR-6) ; import, doublons, pré-rangement, accord, reprise de l'existant (FR-7 à FR-11) ; catégories et méthodes (FR-12, FR-13) ; navigation réduite (FR-14). Contacts est la page d'accueil. Anne et JB commencent le classement dès sa mise en ligne.
+1. **Livraison 1 : la page Contacts.** Tableau, filtres et vues enregistrées, recherche, actions groupées, écarter, classement de départ (FR-1 à FR-6), création à la main et barre « Nouveaux » (FR-26, FR-27) ; import, doublons, pré-rangement, accord, reprise de l'existant (FR-7 à FR-11) ; catégories et méthodes (FR-12, FR-13) ; navigation réduite (FR-14). Contacts est la page d'accueil. Anne et JB commencent le classement dès sa mise en ligne.
 2. **Livraison 2 : la séance de contacts** (FR-15, FR-16), lancée directement depuis le tableau, avec sa page Séances.
 3. **Livraison 3 : la semaine et le bilan** (FR-18 à FR-25). La semaine devient la page d'accueil ; une activité peut porter une séance.
 
@@ -287,7 +305,7 @@ Ce que coûte cet ordre : pendant les livraisons 1 et 2, l'espace ne montre pas 
 
 ### 6.2 Plus tard
 - E-mail groupé depuis une séance (FR-17) : attend le sous-domaine d'envoi.
-- Le traitement des leads entrants (Leedflow, boîte mail) dans la nouvelle version : revient depuis le menu quand la prospection tourne.
+- Le reste du traitement des leads entrants (étapes du pipeline, tâches Leedflow) reste dans « Autres outils » ; leur arrivée passe par la barre « Nouveaux » dès la livraison 1 (FR-27).
 - Version téléphone.
 - Secteur de boîtage dessiné sur une carte : ouvrir une carte et tracer la zone, au lieu du texte libre (JB, 01/11 21 h 03).
 
@@ -311,7 +329,7 @@ Ce que coûte cet ordre : pendant les livraisons 1 et 2, l'espace ne montre pas 
 1. La règle du 11/08/2026 sur les appels aux particuliers, citée d'après la presse spécialisée : à vérifier sur le texte officiel. D'ici là, l'appel n'est permis que pour les catégories où la méthode l'autorise (FR-12, FR-13).
 2. Comment récupérer les abonnés Instagram et Facebook d'Anne depuis son navigateur : export proposé par ces réseaux, ou relevé assisté des pages ? À étudier avant de le faire, avec l'accord de JB. Sinon, « relations lointaines » ne contiendra que LinkedIn au départ.
 3. Le message type du parrainage dépend de l'accord d'eXp France, toujours attendu.
-4. Où se fait l'import : dans l'espace (FR-7 à FR-9), ou directement avec Claude, qui lirait les fichiers, rangerait les contacts et les déposerait dans la base (JB, 01/11 19 h 40) ? À trancher à l'architecture. Si c'est Claude, FR-7 à FR-9 restent les règles à suivre, mais sans écran d'import.
+4. ~~Où se fait l'import~~ Tranché le 01/11 : par Claude, sans écran (FR-7). Question d'origine : dans l'espace (FR-7 à FR-9), ou directement avec Claude, qui lirait les fichiers, rangerait les contacts et les déposerait dans la base (JB, 01/11 19 h 40) ? À trancher à l'architecture. Si c'est Claude, FR-7 à FR-9 restent les règles à suivre, mais sans écran d'import.
 5. Le cadre légal pour prospecter les contacts du téléphone d'Anne (données personnelles) : sur quoi s'appuie-t-on, et faut-il informer ces personnes ? À vérifier avant le premier import.
 
 ## 9. Hypothèses à confirmer

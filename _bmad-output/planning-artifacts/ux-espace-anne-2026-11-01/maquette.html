@@ -150,6 +150,24 @@ label.champ input,label.champ select,label.champ textarea{font:inherit;padding:8
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 .ev small.secteur{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .vue-l{position:relative}.vue-l .vue{padding-right:26px}.vue-x{position:absolute;right:2px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--muted);font-size:16px;line-height:1;width:22px;height:22px;border-radius:6px;cursor:pointer;opacity:0}.vue-l:hover .vue-x,.vue-x:focus-visible{opacity:1}.vue-x:hover{background:var(--galet);color:inherit}.vue-l:hover .vue small{visibility:hidden}
+.nouveaux{margin:0 0 10px}
+.nv-barre{display:flex;align-items:center;gap:10px;width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 14px;cursor:pointer;font:inherit;color:inherit;text-align:left}
+.nv-barre.vide{cursor:default;color:var(--muted)}
+.nv-pastille{background:var(--terra);color:#fff;border-radius:999px;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;padding:0 6px}
+.nv-src{color:var(--muted);font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nv-liste{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;margin-top:10px}
+.nv-carte{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.nv-tete{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.nv-badge{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--brume);color:var(--klein)}
+.nv-badge[data-s="Leedflow"]{background:var(--galet);color:inherit}
+.nv-nom{font-weight:600}.nv-nom .pinfo{font-weight:400}
+.nv-txt{font-size:14px}
+.nv-auto{font-size:13px;color:var(--muted)}
+.nv-dej{font-size:13px;background:var(--warn-bg);color:var(--warn);padding:6px 8px;border-radius:8px}
+.nv-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.grille2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+@media (max-width:600px){.grille2{grid-template-columns:1fr}}
+.retour-btn{position:fixed;left:16px;bottom:16px;z-index:40;border:1px solid var(--line);background:var(--surface);color:inherit;border-radius:999px;padding:8px 14px;font:inherit;font-size:13px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.08)}
 </style>
 
 <div class="wrap">
@@ -173,7 +191,7 @@ label.champ input,label.champ select,label.champ textarea{font:inherit;padding:8
   <section id="v-contacts">
     <div class="tete">
       <div><h1>Contacts</h1><div class="sous">Tous les contacts d'Anne, toutes sources confondues.</div></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="btnImport">Importer un fichier</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn bleu" id="btnNouveau">+ Nouveau contact</button></div>
     </div>
     <div class="page">
       <aside>
@@ -195,6 +213,7 @@ label.champ input,label.champ select,label.champ textarea{font:inherit;padding:8
       </aside>
       <div style="min-width:0">
         <div class="bandeau" id="bandeau" hidden></div>
+        <div class="nouveaux" id="nouveaux"></div>
         <div class="outils">
           <input type="search" id="q" placeholder="Nom, numéro, e-mail…" aria-label="Rechercher">
           <select id="fSource" aria-label="Source"><option value="">Source</option></select>
@@ -244,12 +263,13 @@ label.champ input,label.champ select,label.champ textarea{font:inherit;padding:8
   </section>
 </div>
 
+<button class="retour-btn" id="btnRetour" type="button">Un retour ?</button>
 <div id="toast" class="toast" hidden><span id="toastTxt"></span><button id="toastUndo">Annuler</button></div>
 <div id="modal" class="modal-fond" hidden><div class="modal" id="modalBody"></div></div>
 
 <script>
 (function(){
-const CATS=["Anciens clients","Proches","Rencontrés à l'EDB","Partenaires pros","Relations lointaines"];
+const CATS=["Anciens clients","Proches","Rencontrés à l'EDB","Partenaires pros","Relations lointaines","Demandes reçues"];
 const METH={
  "Anciens clients":{appel:true,msgs:{"Parrainage":"Bonjour {prénom}, j'espère que vous êtes bien installés ! Si vous connaissez quelqu'un qui pense à vendre, je serais ravie de l'accompagner comme vous. Belle journée, Anne","Avis":"Bonjour {prénom}, auriez-vous deux minutes pour laisser un avis sur notre vente ? Ça m'aide beaucoup. Merci ! Anne"}},
  "Proches":{appel:true,msgs:{"Parrainage":"Coucou {prénom} ! Petite nouvelle : je développe mon activité d'immobilier dans le Chablais. Si tu entends parler de quelqu'un qui veut vendre, pense à moi 😊","Nouvelles":"Hello {prénom}, ça fait longtemps ! Tu deviens quoi ?"}},
@@ -340,6 +360,7 @@ function render(){
   $("#resteTxt").textContent=`sur ${TOTAL_IMPORT} importés. On peut s'arrêter et reprendre quand on veut.`;
   $("#resteBarre").style.width=Math.round((TOTAL_IMPORT-reste)/TOTAL_IMPORT*100)+"%";
   // vues
+  renderNouveaux();
   $("#vues").innerHTML=VUES.map((v,i)=>{const n=C.filter(c=>{const s=F;F=v.f;const r=filtre(c);F=s;return r}).length;return `<div class="vue-l"><button class="vue ${i===vueActive?"active":""}" data-vue="${i}"><span>${esc(v.n)}</span><small>${n}</small></button>${i?`<button class="vue-x" data-supvue="${i}" title="Supprimer la vue" aria-label="Supprimer la vue ${esc(v.n)}">×</button>`:""}</div>`}).join("");
   $("#cats").innerHTML=CATS.map(k=>`<button class="vue ${F.cat===k&&Object.keys(F).filter(x=>F[x]).length===1?"active":""}" data-catf="${esc(k)}"><span>${esc(k)}</span><small>${C.filter(c=>c.cat===k&&!c.ecarte).length}</small></button>`).join("");
   // lot
@@ -424,11 +445,51 @@ $("#btnEnreg").onclick=()=>{
   if(!actifs.length){toast("Choisissez d'abord des filtres dans le tableau, puis enregistrez-les comme vue",null);return}
   ouvrirModal(`<h2>Nouvelle vue</h2><p class="sous">Les filtres choisis dans le tableau seront retrouvés d'un clic.</p><label class="champ">Nom de la vue<input id="nomVue" placeholder="Ex. Vendeurs tièdes de Thonon"></label><div class="row-btns"><button class="btn" data-close>Annuler</button><button class="btn bleu" id="okVue">Enregistrer</button></div>`);
   $("#okVue").onclick=()=>{VUES.push({n:$("#nomVue").value||"Ma vue",f:{...F,q:undefined}});vueActive=VUES.length-1;fermerModal();render();toast("Vue enregistrée",null)}};
-$("#btnImport").onclick=()=>{
-  ouvrirModal(`<h2>Importer un fichier</h2><p class="sous">Exemple : export LinkedIn d'Anne (Connections.csv), 214 lignes.</p>
-  <div class="lignes"><span>Nouveaux contacts</span><span>187</span><span>Complètent un contact existant</span><span>14</span><span>Doublons probables à confirmer (même nom seulement)</span><span>9</span><span>Rejetés (ni nom, ni moyen de joindre)</span><span>4</span></div>
-  <p class="sous">Catégorie proposée selon la source (téléphone : proches, LinkedIn : relations lointaines…), à vérifier. Projet : « à qualifier » pour tous. Une catégorie déjà vérifiée n'est jamais changée par un import.</p>
-  <div class="row-btns"><button class="btn" data-close>Annuler</button><button class="btn" data-close>Voir les 9 doublons</button><button class="btn bleu" data-close>Importer 201 contacts</button></div>`)};
+// --- Nouveau contact (saisie à la main, ou depuis une demande reçue) ---
+function formContact(pre,surOk){pre=pre||{};const pj=pre.proj||"À qualifier";
+  ouvrirModal(`<h2>${pre.titre||"Nouveau contact"}</h2>${pre.sous?`<p class="sous">${esc(pre.sous)}</p>`:""}
+  <div class="grille2"><label class="champ">Prénom<input id="nP" value="${esc(pre.p||"")}"></label><label class="champ">Nom<input id="nN" value="${esc(pre.nm||"")}"></label>
+  <label class="champ">Téléphone<input id="nT" value="${esc(pre.tel||"")}"></label><label class="champ">E-mail<input id="nM" value="${esc(pre.mail||"")}"></label>
+  <label class="champ">Ville<input id="nV" value="${esc(pre.ville||"")}"></label><label class="champ">Catégorie<select id="nC">${CATS.map(k=>`<option ${k===(pre.cat||"Proches")?"selected":""}>${esc(k)}</option>`).join("")}</select></label>
+  <label class="champ">Projet<select id="nPj">${PROJ.map(k=>`<option ${k===pj?"selected":""}>${k}</option>`).join("")}</select></label><label class="champ">Température<select id="nTp"></select></label></div>
+  <label class="champ">Note<textarea id="nNote" rows="2">${esc(pre.note||"")}</textarea></label>
+  <label class="case"><input type="checkbox" id="nAcc" ${pre.accord?"checked":""}> A accepté de recevoir les e-mails d'Anne</label>
+  <div class="row-btns"><button class="btn" data-close>Annuler</button><button class="btn bleu" id="nOk">Enregistrer</button></div>`);
+  const majT=()=>{const l=temps($("#nPj").value);$("#nTp").innerHTML='<option value="">—</option>'+l.map(t=>`<option ${t===pre.temp?"selected":""}>${t}</option>`).join("");$("#nTp").disabled=!l.length};majT();$("#nPj").onchange=majT;
+  $("#nOk").onclick=()=>{if(!$("#nN").value.trim()&&!$("#nT").value.trim()){$("#nN").focus();return}
+    const vals={p:$("#nP").value.trim(),nm:$("#nN").value.trim(),cat:$("#nC").value,tags:[],src:[pre.src||"Saisie à la main"],ville:$("#nV").value.trim(),tel:$("#nT").value.trim(),mail:$("#nM").value.trim(),profil:false,dc:pre.dc||null,accord:$("#nAcc").checked,ok:true,ecarte:false,ent:"",proj:$("#nPj").value,temp:$("#nTp").value,note:$("#nNote").value.trim()};
+    let c;if(pre.cible){c=pre.cible;const src=c.src;Object.assign(c,vals,{src,id:c.id,dc:c.dc||vals.dc})}else{c={id:C.length,...vals};C.push(c)}fermerModal();fillSelects();render();toast(pre.cible?`Fiche de ${c.p} ${c.nm} rangée`:`${c.p} ${c.nm} ajouté aux contacts`.trim(),null);if(surOk)surOk(c)}}
+$("#btnNouveau").onclick=()=>formContact();
+$("#btnRetour").onclick=()=>ouvrirModal(`<h2>Un retour ?</h2><p class="sous">Une correction, une idée, une fonction qui manque : Claude reçoit le message et le traite.</p><label class="champ">Votre message<textarea rows="4" placeholder="Ex. : j'aimerais pouvoir trier les contacts par date d'ajout"></textarea></label><p class="pinfo">Ne citez aucun client par son nom.</p><div class="row-btns"><button class="btn" data-close>Annuler</button><button class="btn bleu" data-close>Envoyer</button></div>`);
+// --- Nouveaux : demandes reçues par les annonces (boîte pro), le site et Leedflow, à traiter ---
+const NV=[
+ {s:"Leboncoin",via:"Demande sur une annonce",quand:"aujourd'hui 9 h 12",p:"Karim",nm:"Benali",tel:"06 71 22 48 90",mail:"k.benali@mail.fr",txt:"La maison de Publier est-elle toujours disponible ? Visite possible samedi ?",bien:"Maison 5 pièces, Publier",proj:"Acheteur",temp:"Chaud"},
+ {s:"Leedflow",via:"Appel reçu",quand:"aujourd'hui 8 h 40",p:"",nm:"",tel:C[5].tel,mail:"",txt:"Rappelle au sujet de l'estimation de son appartement, disponible après 18 h.",proj:"Vendeur",temp:"Tiède"},
+ {s:"Site",via:"Demande d'estimation",quand:"hier 21 h 05",p:"Sophie",nm:"Morel",tel:"06 58 31 77 02",mail:"sophie.morel@mail.fr",txt:"T3 à Évian, vente envisagée d'ici six mois.",proj:"Vendeur",temp:"Tiède",accord:true},
+ {s:"SeLoger",via:"Demande sur une annonce",quand:"hier 14 h 30",p:"Marc",nm:"Duret",tel:"06 44 90 12 35",mail:"marc.duret@mail.fr",txt:"Intéressé par l'appartement d'Anthy, quel est le montant des charges ?",bien:"T4, Anthy-sur-Léman",proj:"Acheteur",temp:"Tiède"},
+ {s:"Leedflow",via:"Appel reçu",quand:"30 oct. 17 h 02",p:"",nm:"",tel:"07 82 15 60 43",mail:"",txt:"Appel de 40 s, pas de message.",proj:"À qualifier"}];
+NV.forEach(n=>{if(n.s!=="Leedflow"){const c={id:C.length,p:n.p,nm:n.nm,cat:"Demandes reçues",tags:[],src:[n.s==="Site"?"Site":"Annonces ("+n.s+")"],ville:"",tel:n.tel,mail:n.mail,profil:false,dc:null,accord:!!n.accord,ok:false,ecarte:false,ent:"",proj:n.proj,temp:n.temp||"",note:(n.bien?n.bien+" : ":"")+n.txt};C.push(c);n.cid=c.id}});
+let nvOuvert=false;
+const norm=t=>(t||"").replace(/\D/g,"").slice(-9);
+function renderNouveaux(){const el=$("#nouveaux");if(!el)return;
+  if(!NV.length){el.innerHTML=`<div class="nv-barre vide">Aucune nouvelle demande</div>`;return}
+  const srcs=[...new Set(NV.map(n=>n.s))].join(", ");
+  el.innerHTML=`<button class="nv-barre" id="nvToggle" aria-expanded="${nvOuvert}"><span class="nv-pastille">${NV.length}</span><strong>Nouveaux</strong><span class="nv-src">${esc(srcs)}</span><span class="nv-chev">${nvOuvert?"▴":"▾"}</span></button>`+
+  (nvOuvert?`<div class="nv-liste">${NV.map((n,k)=>{const auto=n.cid!==undefined?C[n.cid]:null;const dej=auto?null:C.find(c=>n.tel&&norm(c.tel)===norm(n.tel));
+    return `<div class="nv-carte"><div class="nv-tete"><span class="nv-badge" data-s="${esc(n.s)}">${esc(n.s)}</span><span class="pinfo">${esc(n.via)} · ${esc(n.quand)}</span></div>
+    <div class="nv-nom">${n.p||n.nm?esc((n.p+" "+n.nm).trim()):"Numéro inconnu"} <span class="pinfo">${esc(n.tel)}${n.mail?" · "+esc(n.mail):""}</span></div>
+    ${n.bien?`<div class="pinfo">Annonce : ${esc(n.bien)}</div>`:""}<div class="nv-txt">${esc(n.txt)}</div>
+    ${auto?`<div class="nv-auto">Contact créé automatiquement, à ranger</div>`:""}${dej?`<div class="nv-dej">Déjà dans les contacts : <b>${esc(dej.p+" "+dej.nm)}</b> (${esc(dej.cat)})</div>`:""}
+    <div class="nv-btns">${auto?`<button class="btn bleu" data-nv="ranger" data-k="${k}">Ranger</button><button class="btn" data-nv="vu" data-k="${k}">Vu</button><button class="btn" data-nv="ecart" data-k="${k}">Écarter</button>`:dej?`<button class="btn bleu" data-nv="lier" data-k="${k}" data-c="${dej.id}">Ajouter à sa fiche</button>`:`<button class="btn bleu" data-nv="ajout" data-k="${k}">Ajouter aux contacts</button>`}${auto?"":`<button class="btn" data-nv="ign" data-k="${k}">Ignorer</button>`}</div></div>`}).join("")}</div>`:"")}
+$("#nouveaux").addEventListener("click",e=>{if(e.target.closest("#nvToggle")){nvOuvert=!nvOuvert;renderNouveaux();return}
+  const b=e.target.closest("[data-nv]");if(!b)return;const k=+b.dataset.k,n=NV[k];
+  if(b.dataset.nv==="ranger"){const c=C[n.cid];formContact({titre:"Ranger ce contact",sous:`${n.s} · ${n.via} · ${n.quand}`,cible:c,p:c.p,nm:c.nm,tel:c.tel,mail:c.mail,cat:c.cat,proj:c.proj,temp:c.temp,accord:c.accord,note:c.note},()=>{NV.splice(NV.indexOf(n),1);renderNouveaux()});return}
+  if(b.dataset.nv==="vu"){NV.splice(k,1);renderNouveaux();toast("Demande marquée vue (le contact reste à vérifier dans le tableau)",()=>{NV.splice(k,0,n);renderNouveaux()});return}
+  if(b.dataset.nv==="ecart"){const c=C[n.cid];c.ecarte=true;NV.splice(k,1);render();toast(`${c.p} ${c.nm} écarté (démarchage, erreur)`,()=>{c.ecarte=false;NV.splice(k,0,n);render()});return}
+  if(b.dataset.nv==="ajout")formContact({titre:"Ajouter aux contacts",sous:`${n.s} · ${n.via} · ${n.quand}`,p:n.p,nm:n.nm,tel:n.tel,mail:n.mail,cat:"Demandes reçues",proj:n.proj,temp:n.temp,accord:n.accord,note:(n.bien?n.bien+" : ":"")+n.txt,src:n.s==="Site"?"Site":n.s==="Leedflow"?"Leedflow":"Annonces ("+n.s+")",dc:{d:"aujourd'hui",c:n.s==="Leedflow"?"Appel":"E-mail"}},()=>{NV.splice(NV.indexOf(n),1);renderNouveaux()});
+  else if(b.dataset.nv==="lier"){const c=C[+b.dataset.c];const s0=n.s==="Leedflow"?"Leedflow":n.s;if(!c.src.includes(s0))c.src.push(s0);c.note=((c.note||"")+" "+n.txt).trim();NV.splice(k,1);render();toast(`Demande ajoutée à la fiche de ${c.p} ${c.nm}`,()=>{NV.splice(k,0,n);renderNouveaux()})}
+  else{NV.splice(k,1);renderNouveaux();toast(n.s==="Leedflow"?"Numéro ignoré (privé ou démarchage)":"Demande ignorée",()=>{NV.splice(k,0,n);renderNouveaux()})}});
+
 
 // séance
 $("#lotSeance").onclick=()=>{
