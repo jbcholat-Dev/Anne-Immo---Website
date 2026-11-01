@@ -34,7 +34,7 @@ Le principe qui tranche chaque choix : **demain d'abord**. Anne a du mal à se c
 
 - **P-1. Le dimanche soir, Anne et JB planifient la semaine.** Ils ouvrent le bilan de la semaine écoulée : deux barres pleines, une à moitié, un rendez-vous obtenu. Ils passent à la semaine suivante et placent quatre activités : mardi matin boîtage à Publier (200 flyers), mercredi 14 h WhatsApp du parrainage au cercle proche (10 personnes), jeudi e-mail aux rencontrés à l'EDB, vendredi deux appels à des prescripteurs. Dix minutes, et ils ferment.
 - **P-2. Mardi matin, Anne ouvre l'espace.** Elle voit une seule carte : « Boîtage à Publier, 9 h à 12 h, 200 flyers ». Elle part. À midi, elle clique sur la carte, tape 180, valide. La barre « Boîtage » de la semaine passe à 90 %.
-- **P-3. Mercredi, Anne envoie les WhatsApp du parrainage.** La carte du jour vise le cercle proche ; elle ouvre la liste des dix contacts proposés, avec le message type. Elle envoie depuis son téléphone, coche chaque personne contactée. La quantité de l'activité se remplit toute seule, et chaque contact garde la date de ce contact.
+- **P-3. Mercredi, Anne fait ses deux heures de parrainage.** Dans sa semaine, une activité dit « 14 h-16 h : parrainage ». Elle clique sur « Préparer ma liste » : la page Contacts s'ouvre, déjà filtrée sur les catégories conseillées. Elle affine (une ville, « jamais recontactés »), corrige au passage la catégorie de deux personnes, et coche celles qu'elle veut contacter dans ces deux heures. Elle clique « Lancer » : sa liste apparaît, une personne par ligne, avec le message type. Pour chacune, elle choisit le canal (WhatsApp, SMS, appel, e-mail), copie le message, l'envoie depuis son téléphone, puis coche « contacté ». À la fin, l'activité affiche « 14 contactés » et la barre du parrainage a avancé. Chaque contact garde la date et le canal de ce contact (JB, 01/11 15 h 09).
 - **P-4. JB importe les contacts.** Il dépose le fichier exporté du téléphone d'Anne, puis celui de LinkedIn, puis le fichier Excel des animations. L'espace pré-range chaque contact dans une catégorie selon sa source et écarte les doublons. Anne corrige ensuite quelques catégories au fil de la semaine, dix à la fois, et écarte d'un geste les contacts sans intérêt.
 
 ## 3. Glossaire
@@ -69,7 +69,7 @@ En ouvrant l'espace, Anne voit sa semaine entière, avec la journée d'aujourd'h
 
 #### FR-2 : Placer une activité
 Anne ou JB peuvent ajouter une activité à un jour de la semaine en cours ou de la suivante.
-- Champs : jour, type d'activité, cible, nombre visé ; créneau horaire et note facultatifs.
+- Champs : jour, type d'activité, cible ; créneau horaire (par exemple 14 h-16 h), nombre visé et note facultatifs. Pour une activité de contacts, c'est souvent le temps qui sert de repère (« deux heures de parrainage ») plutôt qu'un nombre.
 - L'ajout se fait sans quitter la page de la semaine.
 - Une activité non faite se déplace à un autre jour en la faisant glisser à la souris d'une colonne à l'autre (glisser-déposer : on attrape l'activité, on la lâche sur le nouveau jour), par exemple de mardi à jeudi (JB, 01/11). Elle peut aussi être modifiée ou supprimée.
 - Un jour passé n'accepte pas qu'on y dépose une activité ; une activité non faite d'un jour passé peut, elle, être glissée vers aujourd'hui ou un jour à venir.
@@ -137,7 +137,7 @@ Anne peut chercher un contact par nom, prénom, morceau de numéro ou e-mail, et
 
 ### 4.4 Les catégories et leur méthode
 
-**Description :** chaque catégorie porte une méthode. Quand une activité vise une catégorie, l'espace propose les contacts à contacter et le message type. Réalise P-3.
+**Description :** chaque catégorie porte une méthode. Pour une activité de contacts, Anne prépare sa liste depuis la page Contacts, puis la déroule avec le message type. Réalise P-3.
 
 #### FR-13 : Gérer les catégories
 JB peut renommer une catégorie, en ajouter une, ou en retirer une vide.
@@ -147,15 +147,19 @@ JB peut renommer une catégorie, en ajouter une, ou en retirer une vide.
 JB peut écrire pour chaque catégorie : le canal conseillé, ce qu'on demande, un ou plusieurs messages types, et si l'envoi groupé par e-mail est permis.
 - L'envoi groupé ne peut être permis que pour les contacts qui ont un accord (FR-11) ou sont anciens clients.
 
-#### FR-15 : Liste des contacts d'une activité
-Pour une activité qui vise une catégorie, Anne ouvre la liste des contacts proposés, avec le message type.
-- **[HYPOTHÈSE]** La liste propose d'abord les contacts jamais recontactés, puis ceux dont le dernier contact est le plus ancien ; autant que le nombre visé.
-- Anne copie le message en un clic pour l'envoyer depuis son téléphone ou sa messagerie. L'espace n'envoie ni SMS ni WhatsApp.
+#### FR-15 : Préparer la liste d'une activité
+Depuis une activité de contacts, Anne prépare elle-même la liste des personnes qu'elle va contacter pendant ce créneau (JB, 01/11 15 h 09).
+- Le bouton « Préparer ma liste » ouvre la page Contacts, déjà filtrée sur la ou les catégories visées par l'activité.
+- Anne peut affiner les filtres (catégorie, source, ville, jamais recontactés, dernier contact ancien) et corriger la catégorie d'un contact sans quitter la page (FR-10).
+- Elle coche les personnes retenues ; la liste ainsi formée est rattachée à l'activité. Elle peut la compléter ou la réduire plus tard.
+- Par défaut, les contacts jamais recontactés apparaissent en premier.
 
-#### FR-16 : Cocher un contact contacté
-Dans cette liste, Anne coche chaque personne contactée.
-- Chaque coche enregistre la date du dernier contact sur le contact.
-- **[HYPOTHÈSE]** Le nombre de contacts cochés remplit la quantité réalisée de l'activité ; Anne peut toujours saisir une quantité à la main (FR-3).
+#### FR-16 : Dérouler la liste et cocher les contacts
+Le bouton « Lancer » affiche la liste de l'activité, une personne par ligne, avec le message type de sa catégorie.
+- Pour chaque personne, Anne choisit le canal (WhatsApp, SMS, appel, e-mail) et copie le message en un clic. L'espace n'envoie ni SMS ni WhatsApp : elle envoie depuis son téléphone ou sa messagerie.
+- Elle coche « contacté » ; la coche enregistre sur le contact la date et le canal de ce contact.
+- Le nombre de personnes cochées devient la quantité réalisée de l'activité et fait avancer la barre ; Anne n'a rien d'autre à saisir. Une quantité saisie à la main reste possible (FR-3), pour une activité sans liste.
+- Une personne non cochée reste dans la liste ; elle peut repasser dans une prochaine activité.
 
 #### FR-17 : E-mail groupé depuis une activité
 **[HYPOTHÈSE]** Pour une catégorie où l'envoi groupé est permis, l'activité de type e-mail peut passer par la fonction Campagnes existante (stories 13.26 et 13.27). Elle ne fonctionnera réellement qu'une fois le sous-domaine d'envoi créé (action de JB déjà listée).
@@ -217,7 +221,5 @@ La page de la semaine (FR-1 à FR-4), le bilan (FR-5 à FR-7), l'import et le ra
 - FR-6 : l'origine d'un résultat (activité ou catégorie) est notée si on la connaît ; rendez-vous et mandats du pipeline comptés automatiquement.
 - FR-9 : règles de pré-rangement fixes en v1.
 - FR-10 : vérification par paquets de dix.
-- FR-15 : ordre de la liste (jamais recontactés d'abord).
-- FR-16 : les coches remplissent la quantité réalisée.
 - FR-17 : l'e-mail groupé passe par les Campagnes existantes.
 - FR-18 : nom du menu « Autres outils ».
