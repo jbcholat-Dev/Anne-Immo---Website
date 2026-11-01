@@ -17,7 +17,7 @@ L'espace actuel (en ligne depuis le 15/10/2026, `espace/README.md`) reste la bas
 
 ## 1. Vision
 
-L'espace devient l'outil de la **prospection hebdomadaire** d'Anne. Le dimanche, Anne et JB placent quelques activités dans la semaine. Chaque jour, Anne ouvre l'espace et ne voit que ce qu'elle a à faire aujourd'hui ; elle le fait, note combien, et la barre de la semaine avance. Le bilan, avec les rendez-vous et les mandats, se regarde à part, le dimanche.
+L'espace devient l'outil de la **prospection hebdomadaire** d'Anne. Le dimanche, Anne et JB placent quelques activités dans la semaine. Chaque jour, Anne ouvre l'espace sur sa semaine : elle voit ce qu'elle a fait la veille et, mis en avant, ce qu'elle a à faire aujourd'hui ; elle le fait, note combien, et la barre de la semaine avance. Le bilan, avec les rendez-vous et les mandats, se regarde à part, le dimanche.
 
 Pour nourrir ces activités, l'espace rassemble tous les contacts d'Anne, les range dans cinq catégories, et dit pour chacune comment la contacter.
 
@@ -57,27 +57,29 @@ Le principe qui tranche chaque choix : **demain d'abord**. Anne a du mal à se c
 
 ### 4.1 La page de la semaine
 
-**Description :** la page d'accueil de l'espace. En plein écran sur ordinateur, elle montre la semaine en cours, jour par jour, avec ses activités. En haut, aujourd'hui (ou demain, le soir) est mis en avant ; le reste de la semaine est visible mais discret. Réalise P-1, P-2.
+**Description :** la page d'accueil de l'espace. En plein écran sur ordinateur, elle montre la semaine en cours, du lundi au dimanche, une colonne par jour, avec ses activités. La colonne d'aujourd'hui est mise en avant ; les jours passés sont grisés mais lisibles, pour voir ce qui a été fait la veille ; les jours à venir sont visibles normalement. Réalise P-1, P-2.
 
-#### FR-1 : Ouvrir sur aujourd'hui
-En ouvrant l'espace, Anne voit d'abord les activités du jour.
-- La page d'accueil de l'espace est la page de la semaine.
-- Les activités du jour sont affichées en premier et en grand ; s'il n'y en a aucune, la page propose la prochaine activité de la semaine.
-- **[HYPOTHÈSE]** Après 18 h, ce sont les activités du lendemain qui passent en premier.
+#### FR-1 : Ouvrir sur la semaine, aujourd'hui en avant
+En ouvrant l'espace, Anne voit sa semaine entière, avec la journée d'aujourd'hui mise en avant (JB, 01/11 14 h 49).
+- La page d'accueil de l'espace est la page de la semaine : sept colonnes, du lundi au dimanche, sur un écran d'ordinateur sans défilement horizontal.
+- La colonne d'aujourd'hui se distingue nettement (fond, bordure ou largeur).
+- Les jours déjà passés sont grisés ; leurs activités restent lisibles, avec leur quantité réalisée, pour qu'Anne voie ce qu'elle a fait la veille.
+- S'il n'y a aucune activité aujourd'hui, la colonne du jour l'indique simplement et montre la prochaine activité prévue.
 - Aucun compteur de résultats (rendez-vous, mandats) n'apparaît sur cette page.
 
 #### FR-2 : Placer une activité
 Anne ou JB peuvent ajouter une activité à un jour de la semaine en cours ou de la suivante.
 - Champs : jour, type d'activité, cible, nombre visé ; créneau horaire et note facultatifs.
 - L'ajout se fait sans quitter la page de la semaine.
-- Une activité peut être déplacée à un autre jour, modifiée ou supprimée tant qu'elle n'est pas faite.
+- Une activité non faite se déplace à un autre jour en la faisant glisser à la souris d'une colonne à l'autre (glisser-déposer : on attrape l'activité, on la lâche sur le nouveau jour), par exemple de mardi à jeudi (JB, 01/11). Elle peut aussi être modifiée ou supprimée.
+- Un jour passé n'accepte pas qu'on y dépose une activité ; une activité non faite d'un jour passé peut, elle, être glissée vers aujourd'hui ou un jour à venir.
 
 #### FR-3 : Noter une activité comme faite
 Anne indique la quantité réalisée d'une activité.
 - Un clic sur l'activité, une quantité, valider : deux gestes au plus.
 - La quantité peut dépasser le nombre visé.
 - Une activité faite peut être corrigée (quantité) le jour même et les jours suivants de la même semaine.
-- Une activité non faite reste visible à son jour, sans alerte ni couleur alarmante. **[HYPOTHÈSE]** On peut la reporter à un autre jour en un geste.
+- Une activité non faite reste visible à son jour, sans alerte ni couleur alarmante (le gris des jours passés suffit). Elle se reporte en la faisant glisser (FR-2).
 
 #### FR-4 : Voir les barres d'effort de la semaine
 Sur la page de la semaine, une barre par type d'activité planifié montre la quantité réalisée sur le nombre visé.
@@ -212,8 +214,6 @@ La page de la semaine (FR-1 à FR-4), le bilan (FR-5 à FR-7), l'import et le ra
 ## 9. Hypothèses à confirmer
 
 - § 3 : liste de départ des types d'activité (boîtage, SMS ou WhatsApp, e-mail, appel, rencontre), modifiable.
-- FR-1 : après 18 h, le lendemain passe en premier.
-- FR-3 : une activité non faite se reporte en un geste.
 - FR-6 : l'origine d'un résultat (activité ou catégorie) est notée si on la connaît ; rendez-vous et mandats du pipeline comptés automatiquement.
 - FR-9 : règles de pré-rangement fixes en v1.
 - FR-10 : vérification par paquets de dix.
