@@ -194,7 +194,7 @@ JB peut renommer une catégorie, en ajouter une, ou en retirer une.
 
 #### FR-13 : Décrire la méthode d'une catégorie
 JB peut écrire pour chaque catégorie : le canal conseillé, ce qu'on demande, un ou plusieurs messages types nommés, et les deux autorisations (envoi groupé, appel).
-- L'envoi groupé n'est permis que pour des contacts qui ont un accord enregistré (FR-10), anciens clients compris (revue du 01/11 : la loi ne dispense pas les anciens clients d'accord pour un e-mail groupé de prospection). L'espace vérifie les désinscriptions juste avant chaque envoi.
+- L'envoi groupé n'est permis que pour des contacts qui ont un accord enregistré (FR-10) ou sont anciens clients (exception de la CNIL pour les clients, sur des services proches, avec désinscription possible à chaque e-mail ; règle validée par JB le 24/10 avec les Campagnes, gardée après la revue du 01/11). L'espace vérifie les désinscriptions juste avant chaque envoi.
 - Un SMS ou un WhatsApp aux proches reste un message personnel, envoyé un par un depuis le téléphone d'Anne, jamais un envoi groupé.
 - Un message type peut contenir le prénom du contact, remplacé automatiquement à l'affichage.
 
