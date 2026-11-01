@@ -34,18 +34,17 @@ Deux principes tranchent les choix :
 
 ### 2.2 Parcours
 
-- **P-1. Le grand classement de départ (le parcours le plus important).** JB dépose le fichier exporté du téléphone d'Anne, puis celui de LinkedIn, puis le fichier Excel des animations. L'aperçu annonce 612 contacts, dont 9 doublons probables à confirmer. L'espace propose une catégorie à chacun selon sa source : « 612 à vérifier ». Le soir, Anne et JB s'installent devant le tableau. Ils filtrent « source LinkedIn, à vérifier » : 340 lignes. Ils tapent « Danone » dans la recherche, cochent les 38 anciens collègues, leur posent l'étiquette « Danone » et la catégorie « cercle proche », marquent vérifié. Ils cochent ensuite 120 inconnus d'un coup et les écartent. En une heure, le compteur « reste à vérifier » est à 210 ; ils reprendront dimanche.
-- **P-2. Mardi, Anne fait une séance de parrainage depuis le tableau (livraison 2).** Elle a noté sur sa feuille « mardi 14 h-16 h : parrainage ». Elle ouvre Contacts, choisit la vue enregistrée « Cercle proche jamais recontactés », retire trois personnes, garde 15 lignes et clique « Lancer une séance ». Elle nomme la séance « Parrainage » et choisit le message type « Parrainage » de la catégorie. La séance s'affiche, une personne par ligne, le prénom déjà inséré dans le message. Pour chacune, elle choisit le canal (WhatsApp, SMS, appel, e-mail), copie le message, l'envoie depuis son téléphone, puis coche « contacté ». À 16 h, la séance affiche « 14 contactés sur 15 ». Dans le tableau, ces 14 personnes ont un dernier contact daté du jour, avec son canal.
-- **P-3. Le dimanche soir, Anne et JB planifient la semaine (livraison 3).** Ils ouvrent le bilan de la semaine écoulée : une barre pleine, une à moitié, un rendez-vous obtenu. Ils passent à la semaine suivante et placent quatre activités : mardi matin boîtage à Publier (200 flyers), mercredi 14 h-16 h séance de contacts « parrainage » avec le cercle proche, jeudi séance « diagnostic offert » avec les rencontrés à l'EDB, vendredi deux rencontres de prescripteurs. Dix minutes, et ils ferment.
+- **P-1. Le grand classement de départ (le parcours le plus important).** JB dépose le fichier exporté du téléphone d'Anne, puis celui de LinkedIn, puis le fichier Excel des animations. L'aperçu annonce 612 contacts, dont 9 doublons probables à confirmer. L'espace propose une catégorie à chacun selon sa source : « 612 à vérifier ». Le soir, Anne et JB s'installent devant le tableau. Ils filtrent « source LinkedIn, à vérifier » : 340 lignes. Ils filtrent « entreprise contient Danone », cochent les 38 anciens collègues, les rangent dans « proches », marquent vérifié. Ils cochent ensuite 120 inconnus d'un coup et les écartent. En une heure, le compteur « reste à vérifier » est à 210 ; ils reprendront dimanche.
+- **P-2. Mardi, Anne fait une séance de parrainage depuis le tableau (livraison 2).** Elle a noté sur sa feuille « mardi 14 h-16 h : parrainage ». Elle ouvre Contacts, choisit la vue enregistrée « Proches jamais recontactés », retire trois personnes, garde 15 lignes et clique « Lancer une séance ». Elle nomme la séance « Parrainage » et choisit le message type « Parrainage » de la catégorie. La séance s'affiche, une personne par ligne, le prénom déjà inséré dans le message. Pour chacune, elle choisit le canal (WhatsApp, SMS, appel, e-mail), copie le message, l'envoie depuis son téléphone, puis coche « contacté ». À 16 h, la séance affiche « 14 contactés sur 15 ». Dans le tableau, ces 14 personnes ont un dernier contact daté du jour, avec son canal.
+- **P-3. Le dimanche soir, Anne et JB planifient la semaine (livraison 3).** Ils ouvrent le bilan de la semaine écoulée : une barre pleine, une à moitié, un rendez-vous obtenu. Ils passent à la semaine suivante et placent quatre activités : mardi matin boîtage à Publier (200 flyers), mercredi 14 h-16 h séance de contacts « parrainage » avec les proches, jeudi séance « diagnostic offert » avec les rencontrés à l'EDB, vendredi deux rencontres de partenaires pros. Dix minutes, et ils ferment.
 - **P-4. Mardi midi, Anne note son boîtage (livraison 3).** Elle ouvre l'espace sur sa semaine : la colonne de mardi ressort, lundi est grisé avec ce qu'elle y a fait. Elle clique sur « Boîtage à Publier, 9 h-12 h, 200 flyers », tape 180, valide. La barre « Boîtage » passe à 90 %. Mercredi, elle glisse à la souris l'activité de jeudi, qu'elle ne pourra pas faire, sur vendredi.
 
 ## 3. Glossaire
 
-- **Contact** : une personne connue d'Anne, avec un nom et au moins un moyen de la joindre ou de la retrouver : téléphone, e-mail, ou lien de profil (LinkedIn, Instagram, Facebook). Un contact a une seule catégorie, une ou plusieurs sources, et autant d'étiquettes qu'on veut.
+- **Contact** : une personne connue d'Anne, avec un nom et au moins un moyen de la joindre ou de la retrouver : téléphone, e-mail, ou lien de profil (LinkedIn, Instagram, Facebook). Un contact a une seule catégorie et une ou plusieurs sources ; il peut avoir une entreprise et une ville.
 - **Source** : d'où vient le contact : téléphone, LinkedIn, réseaux sociaux, animations EDB, saisie à la main, ou l'espace actuel.
-- **Catégorie** : le groupe de contacts qui reçoit une même méthode. Cinq au départ : anciens clients, cercle proche, rencontrés à l'EDB, prescripteurs, à réchauffer.
+- **Catégorie** : la réponse à « comment Anne connaît-elle cette personne ? », qui donne la façon de la contacter (JB, 01/11 19 h 15). Cinq au départ : anciens clients, proches, rencontrés à l'EDB, partenaires pros, relations lointaines. Si une personne entre dans deux catégories, on choisit celle qui sert le plus pour la contacter.
 - **Méthode** : ce qui est associé à une catégorie : canal conseillé, ce qu'on demande (recommander, proposer le diagnostic offert, prendre des nouvelles), un ou plusieurs messages types, et deux autorisations : l'envoi groupé par e-mail et l'appel.
-- **Étiquette** : un mot libre posé sur un contact pour le retrouver ou le regrouper : « Danone », « Évian », « voisin ». Un contact peut en avoir plusieurs ; une étiquette ne porte pas de méthode.
 - **Vérifié** : un contact dont Anne ou JB a confirmé (ou corrigé) la catégorie proposée à l'import.
 - **Écarté** : un contact mis de côté par Anne ou JB, sans intérêt pour la prospection. Il n'est pas effacé et peut revenir.
 - **Rejeté à l'import** : une ligne d'un fichier importé qui n'a ni nom, ni aucun moyen de joindre ou de retrouver la personne ; elle n'entre pas dans l'espace.
@@ -56,7 +55,7 @@ Deux principes tranchent les choix :
 - **Canal** : le moyen utilisé pour une personne : WhatsApp, SMS, appel, e-mail.
 - **Semaine** : du lundi au dimanche ; l'unité de planification et de bilan (livraison 3).
 - **Activité** : un moment de prospection placé dans la semaine : un jour, un type d'activité, une cible ; un créneau, un nombre visé et une note facultatifs ; puis une quantité réalisée. Une activité de type séance de contacts porte une séance. Une activité est soit à faire, soit faite.
-- **Type d'activité** : boîtage, séance de contacts, rencontre (prescripteur, notaire, voisin…), autre. **[HYPOTHÈSE]** Liste de départ, modifiable par JB.
+- **Type d'activité** : boîtage, séance de contacts, rencontre (partenaire pro, voisin…), autre. **[HYPOTHÈSE]** Liste de départ, modifiable par JB.
 - **Cible** : ce que vise une activité : une zone (boîtage), une ou plusieurs catégories (séance de contacts), une personne ou un lieu (rencontre).
 - **Quantité réalisée** : ce qui a été fait, dans l'unité du type : flyers pour un boîtage, personnes cochées « contacté » pour une séance, rencontres faites.
 - **Barre d'effort** : pour un type d'activité et une semaine, la quantité réalisée ; rapportée au total des nombres visés quand il y en a, sinon affichée seule.
@@ -70,11 +69,11 @@ Les fonctions sont rangées dans l'ordre de construction (§ 6). La largeur d'é
 
 ### 4.1 La page Contacts (livraison 1)
 
-**Description :** la page la plus importante de l'espace, et sa page d'accueil jusqu'à la livraison 3. Un grand tableau qui réunit tous les contacts, toutes sources confondues, sur toute la largeur de l'écran. On y filtre, on y étiquette, on y classe, souvent plusieurs contacts à la fois. Réalise P-1, P-2.
+**Description :** la page la plus importante de l'espace, et sa page d'accueil jusqu'à la livraison 3. Un grand tableau qui réunit tous les contacts, toutes sources confondues, sur toute la largeur de l'écran. On y filtre et on y classe, souvent plusieurs contacts à la fois. Réalise P-1, P-2.
 
 #### FR-1 : Voir tous les contacts dans un tableau
 La page Contacts est un tableau, une ligne par contact.
-- Colonnes : nom et prénom, catégorie, étiquettes, source(s), ville, téléphone, e-mail, lien de profil, dernier contact (date et canal), accord, vérifié ou non.
+- Colonnes : nom et prénom, entreprise, catégorie, source(s), ville, téléphone, e-mail, lien de profil, dernier contact (date et canal), accord, vérifié ou non.
 - On peut masquer ou afficher une colonne, et trier sur chacune.
 - Le nombre de contacts affichés est toujours visible (« 214 contacts sur 612 »).
 - Avec 1 000 contacts, un tri, un filtre ou une recherche s'applique en moins d'une seconde.
@@ -82,19 +81,19 @@ La page Contacts est un tableau, une ligne par contact.
 
 #### FR-2 : Filtrer et enregistrer des vues
 Anne combine des filtres sans écrire de formule.
-- Filtres : catégorie, étiquette, source, ville, vérifié ou non, écarté ou non, accord, jamais recontacté, dernier contact plus ancien qu'une durée choisie.
+- Filtres : catégorie, source, entreprise, ville, vérifié ou non, écarté ou non, accord, jamais recontacté, dernier contact plus ancien qu'une durée choisie.
 - Les filtres actifs sont affichés au-dessus du tableau et se retirent d'un clic chacun.
-- Une combinaison de filtres s'enregistre sous un nom (« EDB jamais recontactés », « Danone Évian ») et se retrouve d'un clic (JB, 01/11). Une vue enregistrée se renomme ou se supprime.
+- Une combinaison de filtres s'enregistre sous un nom (« EDB jamais recontactés », « Anciens de Danone ») et se retrouve d'un clic (JB, 01/11). Une vue enregistrée se renomme ou se supprime.
 
 #### FR-3 : Retrouver un contact
 Anne cherche un contact par nom, prénom, morceau de numéro, e-mail ou entreprise ; la recherche se combine avec les filtres.
 - La recherche existante de l'espace (story 13.24) est reprise.
 
-#### FR-4 : Classer et étiqueter plusieurs contacts à la fois
+#### FR-4 : Classer plusieurs contacts à la fois
 Anne coche plusieurs lignes, ou « tout ce qui est filtré », et applique une action à toutes.
-- Actions groupées : changer la catégorie, ajouter ou retirer une étiquette, marquer vérifié, écarter.
+- Actions groupées : changer la catégorie, marquer vérifié, écarter.
 - Changer la catégorie d'un contact le marque vérifié.
-- Sur une seule ligne, catégorie et étiquettes se changent directement dans le tableau, sans ouvrir de fiche.
+- Sur une seule ligne, la catégorie se change directement dans le tableau, sans ouvrir de fiche.
 - Une action groupée annonce le nombre de contacts touchés avant de s'appliquer. **[HYPOTHÈSE]** Elle peut être annulée tant qu'aucune autre action n'a été faite.
 
 #### FR-5 : Écarter un contact
@@ -126,10 +125,10 @@ Un même contact n'apparaît qu'une fois.
 
 #### FR-9 : Pré-ranger à l'import
 Chaque contact importé reçoit une catégorie proposée, et reste « à vérifier ».
-- Contacts de l'espace actuel au statut vendu ou acte signé → anciens clients ; prescripteurs de l'espace actuel → prescripteurs.
+- Contacts de l'espace actuel au statut vendu ou acte signé → anciens clients ; prescripteurs de l'espace actuel → partenaires pros.
 - Animations EDB → rencontrés à l'EDB.
-- Téléphone → cercle proche.
-- LinkedIn et réseaux sociaux → à réchauffer.
+- Téléphone → proches.
+- LinkedIn et réseaux sociaux → relations lointaines.
 - Pour un contact à plusieurs sources, la règle la plus haute de cette liste l'emporte.
 - Un contact saisi à la main reçoit la catégorie choisie au moment de la saisie, et il est vérifié.
 - Un import ne change jamais la catégorie d'un contact déjà vérifié.
@@ -151,11 +150,11 @@ JB peut renommer une catégorie, en ajouter une, ou en retirer une.
 - Renommer une catégorie ne change rien pour ses contacts.
 - Une catégorie ne peut être retirée que vide : ses contacts sont d'abord rangés ailleurs (FR-4).
 - Les cinq catégories de départ sont créées avec leur méthode :
-  - **Anciens clients** : appel ou message personnel ; on demande un avis et une recommandation (parrainage, dès l'accord d'eXp). Envoi groupé permis ; appel permis.
-  - **Cercle proche** (amis de la région, anciens collègues) : message personnel, un par un (SMS, WhatsApp, appel) ; on prend des nouvelles et on parle du parrainage. Envoi groupé non permis ; appel permis.
+  - **Anciens clients** (des gens pour qui Anne a déjà vendu ou acheté un bien) : appel ou message personnel ; on demande un avis et une recommandation (parrainage, dès l'accord d'eXp). Envoi groupé permis ; appel permis.
+  - **Proches** (amis, famille, anciens collègues qu'Anne connaît vraiment) : message personnel, un par un (SMS, WhatsApp, appel) ; on prend des nouvelles et on parle du parrainage. Envoi groupé non permis ; appel permis.
   - **Rencontrés à l'EDB** : e-mail « on s'était vus à l'animation », avec le diagnostic offert. Envoi groupé permis (accord du bulletin) ; **[HYPOTHÈSE]** appel non permis tant que la question 1 (§ 8) n'est pas tranchée.
-  - **Prescripteurs** (notaires, banquiers, artisans…) : rencontre ou appel ; échange de recommandations. Envoi groupé permis ; appel permis.
-  - **À réchauffer** (abonnés des réseaux, le reste) : pas de campagne ; contenus réguliers, message privé quand la personne réagit. Envoi groupé non permis ; appel non permis.
+  - **Partenaires pros** (notaires, banquiers, artisans…) : rencontre ou appel ; échange de recommandations. Envoi groupé permis ; appel permis.
+  - **Relations lointaines** (contacts LinkedIn jamais revus, abonnés des réseaux) : pas de message groupé ; un message privé quand la personne réagit à une publication. Envoi groupé non permis ; appel non permis.
 
 #### FR-13 : Décrire la méthode d'une catégorie
 JB peut écrire pour chaque catégorie : le canal conseillé, ce qu'on demande, un ou plusieurs messages types nommés, et les deux autorisations (envoi groupé, appel).
@@ -283,7 +282,7 @@ Ce que coûte cet ordre : pendant les livraisons 1 et 2, l'espace ne montre pas 
 ## 8. Questions ouvertes
 
 1. La règle du 11/08/2026 sur les appels aux particuliers, citée d'après la presse spécialisée : à vérifier sur le texte officiel. D'ici là, l'appel n'est permis que pour les catégories où la méthode l'autorise (FR-12, FR-13).
-2. Comment récupérer les abonnés Instagram et Facebook d'Anne depuis son navigateur : export proposé par ces réseaux, ou relevé assisté des pages ? À étudier avant de le faire, avec l'accord de JB. Sinon, « à réchauffer » ne contiendra que LinkedIn au départ.
+2. Comment récupérer les abonnés Instagram et Facebook d'Anne depuis son navigateur : export proposé par ces réseaux, ou relevé assisté des pages ? À étudier avant de le faire, avec l'accord de JB. Sinon, « relations lointaines » ne contiendra que LinkedIn au départ.
 3. Le message type du parrainage dépend de l'accord d'eXp France, toujours attendu.
 
 ## 9. Hypothèses à confirmer
