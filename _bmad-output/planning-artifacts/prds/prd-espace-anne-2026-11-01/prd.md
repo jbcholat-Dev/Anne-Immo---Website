@@ -341,7 +341,7 @@ Ce que coûte cet ordre : pendant les livraisons 1 et 2, l'espace ne montre pas 
 
 ## 8. Questions ouvertes
 
-1. La règle du 11/08/2026 sur les appels aux particuliers, citée d'après la presse spécialisée : à vérifier sur le texte officiel. D'ici là, l'appel n'est permis que pour les catégories où la méthode l'autorise (FR-12, FR-13).
+1. ~~La règle du 11/08/2026 sur les appels aux particuliers~~ Tranché par JB le 01/11 à 21 h 47 : l'appel reste permis d'office pour les proches et les anciens clients (risque accepté si l'un d'eux se plaint) ; il reste non permis pour les rencontrés à l'EDB et les relations lointaines, permis pour les partenaires pros et les demandes reçues. Une case « appel autorisé » sur la fiche (FR-28) permet de changer la règle pour une personne, par exemple quand quelqu'un demande à ne plus être appelé.
 2. Comment récupérer les abonnés Instagram et Facebook d'Anne depuis son navigateur : export proposé par ces réseaux, ou relevé assisté des pages ? À étudier avant de le faire, avec l'accord de JB. Sinon, « relations lointaines » ne contiendra que LinkedIn au départ.
 3. Le message type du parrainage dépend de l'accord d'eXp France, toujours attendu.
 4. ~~Où se fait l'import~~ Tranché le 01/11 : par Claude, sans écran (FR-7). Question d'origine : dans l'espace (FR-7 à FR-9), ou directement avec Claude, qui lirait les fichiers, rangerait les contacts et les déposerait dans la base (JB, 01/11 19 h 40) ? À trancher à l'architecture. Si c'est Claude, FR-7 à FR-9 restent les règles à suivre, mais sans écran d'import.
