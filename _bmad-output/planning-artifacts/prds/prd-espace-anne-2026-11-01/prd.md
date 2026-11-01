@@ -142,6 +142,8 @@ Chaque contact importé reçoit une catégorie proposée, et reste « à vérifi
 - Un contact saisi à la main reçoit la catégorie choisie au moment de la saisie, et il est vérifié.
 - Un import ne change jamais la catégorie d'un contact déjà vérifié.
 - **[HYPOTHÈSE]** Ces règles sont fixes en livraison 1 ; seul le résultat se corrige (FR-4).
+- **Fichier de suivi d'Anne** (« SUIVI PROSPECTION », Excel, reçu le 01/11) : onglet EDB → rencontrés à l'EDB, source « EDB <magasin>, <mois année> », « Projet vente OUI » → vendeur, « Projet achat OUI » → acheteur, les deux → vendeur et acheteur, sinon à qualifier ; commentaire et rappel en note. L'onglet Feuil1 est un extrait de l'onglet EDB : il ne crée personne, il complète projet et note. CONTACTS → relations lointaines ; PARTENAIRES → partenaires pros ; PAP (portes frappées, sans téléphone) → relations lointaines, adresse en note. Ne sont pas importés : PIGE (vendeurs d'annonces qu'Anne ne connaît pas ; appel sans accord interdit depuis le 11/08/2026), BAL Coudrée (noms sans coordonnées), annonces suivies. L'historique des boîtages est gardé pour plus tard (secteurs). Proposition du 01/11, sans objection de JB.
+- **Accord e-mail des contacts EDB** : les personnes rencontrées aux animations EDB ont coché une case pour recevoir les e-mails d'Anne (JB, 01/11 21 h 12). Elles sont importées avec l'accord e-mail, source « case cochée à l'animation EDB », et peuvent entrer dans un envoi groupé.
 
 #### FR-10 : Garder la trace de l'accord
 À l'import du fichier des animations, l'accord pour les e-mails groupés est enregistré pour chaque contact (bulletin du jeu, JB 01/11). Les autres sources n'en donnent pas.
