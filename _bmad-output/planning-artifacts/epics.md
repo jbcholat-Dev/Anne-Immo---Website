@@ -2594,6 +2594,29 @@ afin d'affiner le design et les fonctions avec Anne avant de les construire.
 - La maquette montre la fiche contact, noter la suite, les contacts, le pipeline, Qualifier avec les critères d'un acheteur et la ligne « Cherche » des acheteurs.
 - Chaque changement retenu devient une story.
 
+
+### Story 13.34: Recopie de l'espace en ligne dans la maquette, sur ordinateur
+
+En tant que JB,
+je veux dans la maquette une copie exacte de l'espace en ligne, en version ordinateur,
+afin de repartir de l'existant pour la refonte.
+
+**Critères d'acceptation :**
+- Chaque page de l'espace a son écran dans la maquette, à la largeur d'un ordinateur, avec des données fictives.
+- La copie se refait par un script, sans retoucher les écrans à la main.
+
+
+### Story 13.35: Pilotage commercial dans l'espace
+
+En tant qu'Anne,
+je veux voir dans l'espace mon objectif de l'année, où j'en suis, et mes actions de la semaine,
+afin de savoir chaque lundi si je suis sur la bonne trajectoire sans tenir un autre outil.
+
+**Critères d'acceptation :**
+- L'objectif d'honoraires est remonté en entonnoir (contacts, rendez-vous, mandats, ventes) et comparé au réalisé compté depuis la base.
+- Les actions de la semaine se cochent d'un geste, avec leur cible.
+- Le journal de la page de pilotage provisoire est repris.
+
 ### Story 14.1: Décision de principe
 
 En tant que JB,
@@ -2755,3 +2778,7 @@ afin de comprendre ce qu'apporte le mandat de recherche.
 **Quand** le visiteur arrive au bloc « Pendant la recherche »
 **Alors** une courte vidéo animée (même moteur et même charte que la story 15.2) montre les étapes d'un achat puis des maquettes de l'espace acheteur (recherche, sélection avec le pour et le contre, visites faites par Anne, point de la semaine), avec la mention « maquette, exemple fictif »
 **Et** le bloc ne s'affiche sur le site public qu'une fois les textes validés par Anne et la décision de JB prise, l'espace n'existant pas encore.
+
+## Epics 18 à 20 : nouvelle version de l'espace d'Anne
+
+Découpage dans un fichier à part : `epics-espace-anne-2026-11-01.md` (refonte BMAD du 2026-11-01 : PRD `prds/prd-espace-anne-2026-11-01/`, architecture `architecture/architecture-espace-anne-2026-11-01/`). Epic 18 : le carnet de contacts ; epic 19 : les séances et les campagnes ; epic 20 : la semaine et le bilan.
