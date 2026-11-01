@@ -42,6 +42,8 @@ Deux principes tranchent les choix :
 ## 3. Glossaire
 
 - **Contact** : une personne connue d'Anne, avec un nom et au moins un moyen de la joindre ou de la retrouver : téléphone, e-mail, ou lien de profil (LinkedIn, Instagram, Facebook). Un contact a une seule catégorie et une ou plusieurs sources ; il peut avoir une entreprise et une ville.
+- **Projet** : ce que la personne peut apporter à Anne (JB, 01/11 19 h 17) : à qualifier (valeur de départ), vendeur, acheteur, vendeur et acheteur (vend pour racheter), ambassadeur (pas de projet, peut recommander Anne). Indépendant de la catégorie.
+- **Température** : pour un vendeur ou un acheteur seulement, où en est son projet : froid (plus d'un an, simple idée), tiède (dans l'année), chaud (dans les trois mois), déjà en vente (vendeur : bien sur le marché, en direct ou chez une autre agence) ou en recherche active (acheteur : visite déjà), avec Anne (mandat signé ou acheteur accompagné), terminé (vendu, acheté ou abandonné).
 - **Source** : d'où vient le contact : téléphone, LinkedIn, réseaux sociaux, animations EDB, saisie à la main, ou l'espace actuel.
 - **Catégorie** : la réponse à « comment Anne connaît-elle cette personne ? », qui donne la façon de la contacter (JB, 01/11 19 h 15). Cinq au départ : anciens clients, proches, rencontrés à l'EDB, partenaires pros, relations lointaines. Si une personne entre dans deux catégories, on choisit celle qui sert le plus pour la contacter.
 - **Méthode** : ce qui est associé à une catégorie : canal conseillé, ce qu'on demande (recommander, proposer le diagnostic offert, prendre des nouvelles), un ou plusieurs messages types, et deux autorisations : l'envoi groupé par e-mail et l'appel.
@@ -73,7 +75,7 @@ Les fonctions sont rangées dans l'ordre de construction (§ 6). La largeur d'é
 
 #### FR-1 : Voir tous les contacts dans un tableau
 La page Contacts est un tableau, une ligne par contact.
-- Colonnes : nom et prénom, entreprise, catégorie, source(s), ville, téléphone, e-mail, lien de profil, dernier contact (date et canal), accord, vérifié ou non.
+- Colonnes : nom et prénom, entreprise, catégorie, projet, température, source(s), ville, téléphone, e-mail, lien de profil, dernier contact (date et canal), accord, vérifié ou non.
 - On peut masquer ou afficher une colonne, et trier sur chacune.
 - Le nombre de contacts affichés est toujours visible (« 214 contacts sur 612 »).
 - Avec 1 000 contacts, un tri, un filtre ou une recherche s'applique en moins d'une seconde.
@@ -81,19 +83,21 @@ La page Contacts est un tableau, une ligne par contact.
 
 #### FR-2 : Filtrer et enregistrer des vues
 Anne combine des filtres sans écrire de formule.
-- Filtres : catégorie, source, entreprise, ville, vérifié ou non, écarté ou non, accord, jamais recontacté, dernier contact plus ancien qu'une durée choisie.
+- Filtres : catégorie, projet, température, source, entreprise, ville, vérifié ou non, écarté ou non, accord, jamais recontacté, dernier contact plus ancien qu'une durée choisie.
 - Les filtres actifs sont affichés au-dessus du tableau et se retirent d'un clic chacun.
-- Une combinaison de filtres s'enregistre sous un nom (« EDB jamais recontactés », « Anciens de Danone ») et se retrouve d'un clic (JB, 01/11). Une vue enregistrée se renomme ou se supprime.
+- Une combinaison de filtres s'enregistre sous un nom (« Vendeurs chauds », « Ambassadeurs », « EDB jamais recontactés », « Anciens de Danone ») et se retrouve d'un clic (JB, 01/11). Une vue enregistrée se renomme ou se supprime.
 
 #### FR-3 : Retrouver un contact
 Anne cherche un contact par nom, prénom, morceau de numéro, e-mail ou entreprise ; la recherche se combine avec les filtres.
 - La recherche existante de l'espace (story 13.24) est reprise.
 
-#### FR-4 : Classer plusieurs contacts à la fois
+#### FR-4 : Classer et qualifier plusieurs contacts à la fois
 Anne coche plusieurs lignes, ou « tout ce qui est filtré », et applique une action à toutes.
-- Actions groupées : changer la catégorie, marquer vérifié, écarter.
+- Actions groupées : changer la catégorie, le projet ou la température, marquer vérifié, écarter.
 - Changer la catégorie d'un contact le marque vérifié.
-- Sur une seule ligne, la catégorie se change directement dans le tableau, sans ouvrir de fiche.
+- La température n'est proposée que pour un vendeur, un acheteur, ou un vendeur et acheteur ; passer un contact en ambassadeur ou à qualifier efface sa température.
+- Tout contact importé démarre « à qualifier » ; la qualification se fait au fil des échanges, sans obligation de tout remplir au classement de départ.
+- Sur une seule ligne, la catégorie, le projet et la température se changent directement dans le tableau, sans ouvrir de fiche.
 - Une action groupée annonce le nombre de contacts touchés avant de s'appliquer. **[HYPOTHÈSE]** Elle peut être annulée tant qu'aucune autre action n'a été faite.
 
 #### FR-5 : Écarter un contact
@@ -180,6 +184,8 @@ La barre de navigation ne montre que les pages de la nouvelle version, et un men
 Anne coche des contacts dans le tableau (souvent après avoir choisi une vue enregistrée) et clique « Lancer une séance » (JB, 01/11 15 h 09).
 - Elle donne un nom à la séance (« Parrainage ») et choisit le message type parmi ceux de la catégorie ; par défaut, le premier.
 - Les contacts jamais recontactés apparaissent en premier.
+- Pour une séance de parrainage, la vue proposée par défaut est celle des ambassadeurs (JB, 01/11).
+- Pendant la séance, Anne peut changer le projet et la température d'une personne selon sa réponse (« vend dans l'année » : vendeur, tiède).
 - Elle peut ajouter ou retirer des personnes tant que la séance est ouverte.
 - La page Séances liste les séances, ouvertes ou terminées, avec leur date et leur nombre de personnes contactées.
 
