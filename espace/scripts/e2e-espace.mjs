@@ -39,6 +39,8 @@
 // Story 18.2 : carnet (migration 0018) : contact hors suivi jamais rattaché par Leedflow ni montré dans les listes, autre numéro
 // d'un contact suivi, appels d'avant l'entrée seule dans le suivi gardés à part, « Ajouter » qui fait entrer dans le suivi,
 // projet et température tenus par la base, six catégories, demande du site rangée en « Demandes reçues ».
+// Revue de code 18.2 : tâche Leedflow d'avant suivi_le, numéro principal contre secondaire, « À trier », contact du carnet
+// déplacé dans le pipeline, projet suivant le parcours retenu.
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
 // Lancer depuis espace/ : `node scripts/e2e-espace.mjs`.
@@ -1182,6 +1184,46 @@ try {
     '18.2 : son historique Leedflow est repris et le numéro quitte les inconnus ; l\'entrée dans le suivi est notée');
   r = await appeler(`${E}/contacts`, { headers: avecJeton() });
   constat((await r.text()).includes(`fiche?id=${CARNET}`), '18.2 : une fois suivi, il apparaît dans Contacts');
+  // Revue de code 18.2. Une tâche Leedflow trouvée par le lien Leedflow d'un contact entré seul dans le suivi n'est
+  // proposée que si elle date d'après `suivi_le`.
+  sql(`INSERT OR IGNORE INTO leedflow_lien (leedflow_contact, contact_id) VALUES ('lfa-${NUM}', '${AMIE}')`);
+  LF.taches.push(
+    { id: `ta1-${NUM}`, created: Date.parse(suiviLe) - 2 * MIN, status: 'todo', task: 'Tâche privée d’avant', timestamp: null, id_contact: `lfa-${NUM}` },
+    { id: `ta2-${NUM}`, created: Date.now(), status: 'todo', task: 'Tâche du projet', timestamp: null, id_contact: `lfa-${NUM}` },
+  );
+  // Un numéro principal d'un contact suivi et secondaire d'un autre : l'échange gardé va au premier seulement.
+  const PRIN = `01KFPR${NUM}${'0'.repeat(14)}`, SECD = `01KFSD${NUM}${'0'.repeat(14)}`, TELP = `+33641${NUM}`;
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, nom, telephone, etape, prochaine_action, prochaine_action_le, canal) VALUES
+       ('${PRIN}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Principal${NUM}', '${TELP}', 'a_qualifier', 'Rappeler', '${auj}', 'autre'),
+       ('${SECD}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Secondaire${NUM}', NULL, 'a_qualifier', 'Rappeler', '${auj}', 'autre')`);
+  sql(`INSERT INTO contact_coordonnee (contact_id, type, valeur, ajoute_le) VALUES ('${SECD}', 'telephone', '${TELP}', '2026-10-01T08:00:00Z')`);
+  sql(`INSERT INTO leedflow_inconnu (source_id, telephone, a, texte, donnees) VALUES ('appel:p1-${NUM}', '${TELP}', '${new Date().toISOString()}', 'Appel', '{}')`);
+  await releve();
+  const tachesAmie = sql(`SELECT id FROM leedflow_tache WHERE contact_id = '${AMIE}'`).map((t) => t.id);
+  constat(tachesAmie.includes(`ta2-${NUM}`) && !tachesAmie.includes(`ta1-${NUM}`),
+    'revue 18.2 : une tâche trouvée par le lien Leedflow d\'un contact entré seul dans le suivi n\'est proposée que si elle suit suivi_le');
+  constat(evDe(PRIN).includes(`appel:p1-${NUM}`) && !evDe(SECD).includes(`appel:p1-${NUM}`),
+    'revue 18.2 : un numéro principal d\'un contact et secondaire d\'un autre : l\'échange va au contact dont c\'est le numéro principal');
+  html = await (await appeler(`${E}/a-trier`, { headers: avecJeton() })).text();
+  constat(gardes(TELA) === 1 && !html.includes(`data-numero="${TELA}"`),
+    'revue 18.2 : « À trier » ne montre plus les échanges d\'avant suivi_le d\'un numéro désormais suivi (gardés à part jusqu\'à la purge)');
+  // Un contact du carnet déplacé dans le pipeline (geste d'Anne) : libellé « Carnet → », température selon AD-24, suivi_le vide.
+  const PIPE = `01KFPN${NUM}${'0'.repeat(14)}`;
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, nom, projet, categorie_id) VALUES ('${PIPE}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Pipe${NUM}', 'vendeur', 'proches')`);
+  r = await page('/pipeline?parcours=vendeur', { id: PIPE, etape: 'premier_rdv', action: 'Premier rendez-vous', le: auj });
+  const pipe = sql(`SELECT etape, temperature, suivi_le FROM contact WHERE id = '${PIPE}'`)[0];
+  const evPipe = sql(`SELECT texte FROM contact_evenement WHERE contact_id = '${PIPE}' AND type = 'etape'`).map((e) => e.texte);
+  constat(r.status === 303 && pipe.etape === 'premier_rdv' && pipe.temperature === 'avec_anne' && pipe.suivi_le === null && evPipe.length === 1 && evPipe[0].startsWith('Carnet → R1'),
+    `revue 18.2 : un contact du carnet déplacé dans le pipeline : « Carnet → R1 », avec Anne, suivi_le vide (${evPipe[0]})`);
+  // « Ajouter » : le projet suit le parcours retenu (celui du contact), et une deuxième fois rien n'est noté à tort.
+  const PARC = `01KFPA${NUM}${'0'.repeat(14)}`, TELPA = `+33640${NUM}`;
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, nom, telephone, parcours, categorie_id) VALUES ('${PARC}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Parc${NUM}', '${TELPA}', 'acheteur', 'proches')`);
+  await page('/ajouter', { quoi: 'contact', telephone: TELPA, canal: 'rencontre', parcours: 'vendeur' });
+  await page('/ajouter', { quoi: 'contact', telephone: TELPA, canal: 'rencontre', parcours: 'vendeur' });
+  const parc = sql(`SELECT parcours, projet, temperature FROM contact WHERE id = '${PARC}'`)[0];
+  constat(parc.parcours === 'acheteur' && parc.projet === 'acheteur' && parc.temperature === 'avec_anne'
+    && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${PARC}' AND type = 'etape'`)[0].n === 1,
+    'revue 18.2 : « Ajouter » : le projet suit le parcours retenu (acheteur), une deuxième saisie ne note pas une seconde entrée dans le suivi');
   // Projet et température (AD-24) : la base refuse une température incohérente.
   const T = (projet, temperature, n) => `INSERT INTO contact (id, created_at, last_activity_at, nom, projet, temperature) VALUES ('T${n}${ESSAI}', '2026-11-01', '2026-11-01', 'Essai', '${projet}', '${temperature}')`;
   constat(refuse(T('a_qualifier', 'chaud', 1)) && refuse(T('ambassadeur', 'froid', 2)) && refuse(T('acheteur', 'en_vente', 3)) && refuse(T('vendeur', 'recherche_active', 4))

@@ -87,26 +87,30 @@ function inserer(env: EnvSite, id: string, p: Personne, o: Origine, maintenant: 
     o.canal, o.origine_detail, o.passage_id, o.prescripteur_id, o.rappel_individuel_seul ? 1 : 0, is_test);
 }
 
+/** Le projet qu'aura un contact « à qualifier » une fois son parcours connu (expression SQL sur les valeurs d'avant). */
+const PROJET_SUIVI = (parcoursSql: string) => `CASE WHEN projet = 'a_qualifier' THEN coalesce(parcours, ${parcoursSql}, 'a_qualifier') ELSE projet END`;
+/** La température d'un contact qui entre dans le suivi (AD-24) : « avec Anne » si son projet est vendeur ou acheteur, aucune sinon. */
+const TEMPERATURE_SUIVI = (projetSql: string) => `CASE WHEN ${projetSql} IN ('vendeur', 'acheteur', 'vendeur_acheteur') THEN 'avec_anne' END`;
+
 /**
  * Un contact du carnet (étape NULL) qu'Anne ajoute à la main entre dans le suivi, à qualifier aujourd'hui (règle
  * d'AD-20). C'est sa décision : `suivi_le` reste NULL, et la relève Leedflow reprend l'historique de son numéro
- * (revue de la story 18.1). Le projet est pris du parcours choisi s'il était à qualifier ; la température passe à
- * « avec Anne » si le projet est connu (AD-24) ; l'origine choisie dans le formulaire est notée si le contact n'en avait
- * pas (contact importé). Sans effet sur un contact déjà suivi.
+ * (revue de la story 18.1, AD-32). Le parcours retenu est celui du contact, sinon celui choisi ; le projet suit ce
+ * parcours s'il était à qualifier, et la température passe à « avec Anne » si le projet est connu (AD-24), en une seule
+ * écriture pour que la base vérifie la cohérence sur le résultat. L'origine choisie est notée si le contact n'en avait
+ * pas (contact importé). Sans effet sur un contact déjà suivi (garde `etape IS NULL`).
  */
 function entrerDansLeSuivi(env: EnvSite, id: string, o: Origine, maintenant: string) {
+  const projet = PROJET_SUIVI('?5');
   return env.DB.prepare(
     `UPDATE contact SET etape = 'a_qualifier', prochaine_action = ?3, prochaine_action_le = ?4, reveil_le = NULL, motif_perte = NULL,
        parcours = coalesce(parcours, ?5),
-       projet = CASE WHEN projet = 'a_qualifier' AND ?5 IS NOT NULL THEN ?5 ELSE projet END,
+       projet = ${projet}, temperature = ${TEMPERATURE_SUIVI(projet)},
        canal = coalesce(canal, ?6), origine_detail = coalesce(origine_detail, ?7),
        passage_id = coalesce(passage_id, ?8), prescripteur_id = coalesce(prescripteur_id, ?9),
        last_activity_at = ?2
      WHERE id = ?1 AND etape IS NULL`,
   ).bind(id, maintenant, ACTION_QUALIFIER, aujourdhui(), o.parcours, o.canal, o.origine_detail, o.passage_id, o.prescripteur_id);
-}
-function temperatureDuSuivi(env: EnvSite, id: string) {
-  return env.DB.prepare(`UPDATE contact SET temperature = 'avec_anne' WHERE id = ?1 AND projet IN ('vendeur', 'acheteur', 'vendeur_acheteur')`).bind(id);
 }
 
 function evenement(env: EnvSite, contactId: string, a: string, type: 'creation' | 'note' | 'qualification', source: 'anne' | 'import', texteEv: string, par: string, donnees?: unknown) {
@@ -114,8 +118,8 @@ function evenement(env: EnvSite, contactId: string, a: string, type: 'creation' 
     .bind(contactId, a, type, source, texteEv, donnees === undefined ? null : JSON.stringify(donnees), par);
 }
 
-export function libelleOrigine(o: Pick<Origine, 'canal' | 'origine_detail'>, passage?: Passage | null, prescripteur?: Prescripteur | null): string {
-  const base = CANAUX_ORIGINE[o.canal];
+export function libelleOrigine(o: { canal: Canal | null; origine_detail: string | null }, passage?: Passage | null, prescripteur?: Prescripteur | null): string {
+  const base = o.canal ? CANAUX_ORIGINE[o.canal] : 'Sans origine';
   if (passage) return `${base} ${passage.secteur}, ${passage.fait_le}`;
   if (prescripteur) return `${base} de ${prescripteur.nom}`;
   return o.origine_detail ? `${base} : ${o.origine_detail}` : base;
@@ -132,9 +136,12 @@ export async function saisirContact(env: EnvSite, p: Personne, o: Origine, note:
   if (connu) {
     const lot = [completer(env, connu.id, p, maintenant)];
     if (connu.etape === null) {
-      lot.push(entrerDansLeSuivi(env, connu.id, o, maintenant), temperatureDuSuivi(env, connu.id),
-        env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees, par) VALUES (?1, ?2, 'etape', 'anne', ?3, ?4, ?5)`)
-          .bind(connu.id, maintenant, `Carnet → ${LIBELLES_ETAPES.a_qualifier} : ajouté au suivi à la main`, JSON.stringify({ de: null, vers: 'a_qualifier' }), par));
+      // L'événement d'abord, écrit seulement si le contact est encore hors suivi au moment de l'écriture (même lot).
+      lot.push(
+        env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees, par)
+          SELECT ?1, ?2, 'etape', 'anne', ?3, ?4, ?5 WHERE EXISTS (SELECT 1 FROM contact WHERE id = ?1 AND etape IS NULL)`)
+          .bind(connu.id, maintenant, `Carnet → ${LIBELLES_ETAPES.a_qualifier} : ajouté au suivi à la main`, JSON.stringify({ de: null, vers: 'a_qualifier' }), par),
+        entrerDansLeSuivi(env, connu.id, o, maintenant));
     }
     if (note) lot.push(evenement(env, connu.id, maintenant, 'note', 'anne', note, par));
     await env.DB.batch(lot);
@@ -300,10 +307,10 @@ export interface ResumeContact {
   email: string | null;
   commune: string | null;
   parcours: string | null;
-  etape: Etape;
+  etape: Etape | null;
   prochaine_action: string | null;
   prochaine_action_le: string | null;
-  canal: Canal;
+  canal: Canal | null;
   origine_detail: string | null;
   last_activity_at: string;
   is_test: number;
@@ -759,15 +766,37 @@ export type Changement = { etape: Etape; action: string | null; le: string | nul
 
 /** Change l'étape d'un contact, avec la prochaine action exigée par la règle d'AD-20, et note le changement. */
 export async function changerEtape(env: EnvSite, id: string, ch: Changement, par: string): Promise<boolean> {
-  const c = await env.DB.prepare('SELECT etape FROM contact WHERE id = ?1').bind(id).first<{ etape: Etape }>();
+  const c = await env.DB.prepare('SELECT etape FROM contact WHERE id = ?1').bind(id).first<{ etape: Etape | null }>();
   if (!c) return false;
   const maintenant = new Date().toISOString();
-  await env.DB.batch([majEtape(env, id, maintenant, ch), evenementEtape(env, id, maintenant, c.etape, ch.etape, resumeChangement(ch), par)]);
+  const lot = [majEtape(env, id, maintenant, ch), evenementEtape(env, id, maintenant, c.etape, ch.etape, resumeChangement(ch), par)];
+  if (c.etape === null) lot.unshift(temperatureEntree(env, id, ch.etape));
+  await env.DB.batch(lot);
   return true;
 }
 
 const resumeChangement = (ch: Changement) =>
   ch.etape === 'perdu' ? `motif : ${ch.motif}` : ch.etape === 'en_sommeil' ? `réveil le ${echeance(ch.reveil)}` : ch.le ? `${ch.action} · ${echeance(ch.le)}` : '';
+
+/**
+ * Un contact du carnet qui entre dans le suivi par un changement d'étape (geste d'Anne, donc `suivi_le` reste NULL,
+ * AD-32) : projet tiré du parcours s'il était à qualifier, température selon AD-24 (« terminé » pour une vente ou un achat
+ * conclu, inchangée pour perdu ou en sommeil, « avec Anne » sinon), pour un projet connu. Écrit avant `majEtape`, dans le
+ * même lot, avec la garde `etape IS NULL`.
+ */
+function temperatureEntree(env: EnvSite, id: string, vers: Etape) {
+  const projet = PROJET_SUIVI('NULL');
+  return env.DB.prepare(
+    `UPDATE contact SET projet = ${projet}, temperature = CASE WHEN ${projet} IN ('vendeur', 'acheteur', 'vendeur_acheteur') THEN
+       CASE WHEN ?2 IN ('vendu', 'acte_signe') THEN 'termine' WHEN ?2 IN ('perdu', 'en_sommeil') THEN temperature ELSE 'avec_anne' END END
+     WHERE id = ?1 AND etape IS NULL`,
+  ).bind(id, vers);
+}
+
+/** Libellé d'une étape, « Carnet » pour un contact hors suivi (étape NULL). */
+export const libelleEtape = (e: Etape | null) => (e ? LIBELLES_ETAPES[e] : 'Carnet');
+/** Libellé d'une origine, « Sans origine » pour un contact importé (canal NULL). */
+export const libelleCanal = (c: Canal | null) => (c ? CANAUX_ORIGINE[c] : 'Sans origine');
 
 /** Écrit l'étape et ce que la règle d'AD-20 exige avec elle. En sommeil, la prochaine action tombe le jour du réveil. */
 function majEtape(env: EnvSite, id: string, maintenant: string, ch: Changement) {
@@ -780,9 +809,9 @@ function majEtape(env: EnvSite, id: string, maintenant: string, ch: Changement) 
  * Tous les changements d'étape passent ici (pipeline, qualification, suite) : c'est l'endroit où brancher ce qu'un
  * mandat signé déclenche (story 13.9, Modelo).
  */
-function evenementEtape(env: EnvSite, id: string, maintenant: string, de: Etape, vers: Etape, suite: string, par: string) {
+function evenementEtape(env: EnvSite, id: string, maintenant: string, de: Etape | null, vers: Etape, suite: string, par: string) {
   return env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees, par) VALUES (?1, ?2, 'etape', 'anne', ?3, ?4, ?5)`)
-    .bind(id, maintenant, `${LIBELLES_ETAPES[de]} → ${LIBELLES_ETAPES[vers]}${suite ? ` (${suite})` : ''}`, JSON.stringify({ de, vers }), par);
+    .bind(id, maintenant, `${libelleEtape(de)} → ${LIBELLES_ETAPES[vers]}${suite ? ` (${suite})` : ''}`, JSON.stringify({ de, vers }), par);
 }
 
 // ——— Noter la suite d'un contact en cours (story 13.22) ———
@@ -814,7 +843,7 @@ export type Suite = { resultat: 'pas_joint'; le: string; note: string | null } |
  */
 export async function noterSuite(env: EnvSite, id: string, s: Suite, par: string): Promise<boolean> {
   const c = await env.DB.prepare('SELECT etape, prochaine_action, prochaine_action_le FROM contact WHERE id = ?1').bind(id)
-    .first<{ etape: Etape; prochaine_action: string | null; prochaine_action_le: string | null }>();
+    .first<{ etape: Etape | null; prochaine_action: string | null; prochaine_action_le: string | null }>();
   if (!c) return false;
   const maintenant = new Date().toISOString();
   const lignes: string[] = [];
@@ -826,6 +855,7 @@ export async function noterSuite(env: EnvSite, id: string, s: Suite, par: string
     if (s.resultat === 'fait') lignes.push(`Fait : ${c.prochaine_action ?? 'action prévue'}`);
     lot.push(majEtape(env, id, maintenant, s.ch));
     const suite = resumeChangement(s.ch);
+    if (c.etape === null) lot.unshift(temperatureEntree(env, id, s.ch.etape));
     if (s.ch.etape !== c.etape) lot.push(evenementEtape(env, id, maintenant, c.etape, s.ch.etape, suite, par));
     else if (s.ch.le && s.ch.etape !== 'en_sommeil' && (s.ch.action !== c.prochaine_action || s.ch.le !== c.prochaine_action_le)) lignes.push(`Prochaine action : ${suite}`);
   }

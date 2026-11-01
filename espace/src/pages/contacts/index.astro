@@ -9,7 +9,7 @@ import { ENTETE_COMPTE } from '@site/server/acces';
 import { CANAUX_ORIGINE, LIBELLES_ETAPES } from '@site/server/contacts';
 import { telLisible } from '@site/server/recherche';
 import { pourSite as env } from '../../server/env';
-import { echeance, enRetard, FILTRES_CONTACTS, listerContacts, type FiltreContacts } from '../../server/pipeline';
+import { echeance, enRetard, FILTRES_CONTACTS, listerContacts, type FiltreContacts, libelleEtape, libelleCanal } from '../../server/pipeline';
 
 export const prerender = false;
 if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
@@ -23,8 +23,8 @@ const importe = /^import-(\d+)-(\d+)$/.exec(m);
 const nomDe = (c: { prenom: string | null; nom: string | null; telephone: string | null; email: string | null }) =>
   [c.prenom, c.nom].filter(Boolean).join(' ') || telLisible(c.telephone) || c.email || '—';
 const lien = (f: string | null) => `/contacts?${new URLSearchParams({ ...(q ? { q } : {}), ...(f ? { f } : {}) })}`;
-const actif = (e: string) => !['perdu', 'vendu', 'acte_signe'].includes(e);
-const retard = (c: { etape: string; prochaine_action_le: string | null }) => actif(c.etape) && c.etape !== 'en_sommeil' && enRetard(c.prochaine_action_le);
+const actif = (e: string | null) => e !== null && !['perdu', 'vendu', 'acte_signe'].includes(e);
+const retard = (c: { etape: string | null; prochaine_action_le: string | null }) => actif(c.etape) && c.etape !== 'en_sommeil' && enRetard(c.prochaine_action_le);
 ---
 <Espace titre="Contacts" actif="contacts">
   <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><h1>Contacts</h1><span style="display:flex;gap:16px;flex-wrap:wrap"><a href="/pipeline">Pipeline</a><a href="/prescripteurs">Prescripteurs</a><a href="/acheteurs">Acheteurs</a><a href="/gestion">Demandes du site</a><a href="/a-trier">Numéros à trier</a></span></div>
@@ -45,7 +45,7 @@ const retard = (c: { etape: string; prochaine_action_le: string | null }) => act
       {contacts.map((c) => (
         <li class="ct-carte" data-carte={c.id}>
           <a href={`/contacts/fiche?id=${c.id}`} class="ct-nom">{nomDe(c)}{c.commune && <span class="e-muet"> · {c.commune}</span>}</a>
-          <div class="ct-ligne"><span class="e-tag">{CANAUX_ORIGINE[c.canal]}</span><span class="e-tag neutre">{LIBELLES_ETAPES[c.etape]}</span>{c.is_test ? <span class="e-tag neutre">test</span> : ''}</div>
+          <div class="ct-ligne"><span class="e-tag">{libelleCanal(c.canal)}</span><span class="e-tag neutre">{libelleEtape(c.etape)}</span>{c.is_test ? <span class="e-tag neutre">test</span> : ''}</div>
           {actif(c.etape) && c.prochaine_action && (
             <div class={retard(c) ? 'ct-action retard' : 'ct-action'} data-retard={retard(c) ? '' : undefined}>{c.prochaine_action}{c.prochaine_action_le ? ` · ${echeance(c.prochaine_action_le)}` : ''}</div>
           )}
@@ -59,8 +59,8 @@ const retard = (c: { etape: string; prochaine_action_le: string | null }) => act
           {contacts.map((c) => (
             <tr data-contact={c.id}>
               <td><a href={`/contacts/fiche?id=${c.id}`}>{nomDe(c)}</a>{c.commune && <div class="e-muet">{c.commune}</div>}{c.is_test ? <span class="e-tag neutre">test</span> : ''}</td>
-              <td><span class="e-tag">{CANAUX_ORIGINE[c.canal]}{c.origine_detail ? ` · ${c.origine_detail}` : ''}</span></td>
-              <td>{LIBELLES_ETAPES[c.etape]}{c.parcours && <div class="e-muet">{c.parcours === 'vendeur' ? 'Vendeur' : 'Acheteur'}</div>}</td>
+              <td><span class="e-tag">{libelleCanal(c.canal)}{c.origine_detail ? ` · ${c.origine_detail}` : ''}</span></td>
+              <td>{libelleEtape(c.etape)}{c.parcours && <div class="e-muet">{c.parcours === 'vendeur' ? 'Vendeur' : 'Acheteur'}</div>}</td>
               <td class={retard(c) ? 'ct-retard' : ''}>{c.prochaine_action ?? '—'}{c.prochaine_action_le && <div class="e-muet">{echeance(c.prochaine_action_le)}</div>}</td>
             </tr>
           ))}

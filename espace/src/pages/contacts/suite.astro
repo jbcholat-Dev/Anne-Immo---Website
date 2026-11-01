@@ -12,8 +12,7 @@ import { ETAPES_ACHETEUR, ETAPES_VENDEUR, LIBELLES_ETAPES, type Etape } from '@s
 import { pourSite as env } from '../../server/env';
 import {
   ACTIONS_HABITUELLES, aujourdhui, echeance, ETAPES_FINALES, libelleOrigine, lireContact, MOTIFS_PERTE, noterSuite, parisVersUtc, plusTard,
-  RESULTATS_SUITE, type Changement, type ResultatSuite, type Suite,
-} from '../../server/pipeline';
+  RESULTATS_SUITE, type Changement, type ResultatSuite, type Suite, libelleEtape } from '../../server/pipeline';
 
 export const prerender = false;
 const compte = Astro.request.headers.get(ENTETE_COMPTE);
@@ -40,7 +39,7 @@ if (Astro.request.method === 'POST') {
   saisi = Object.fromEntries([...f.entries()].map(([k, v]) => [k, typeof v === 'string' ? v.trim().slice(0, k === 'note' ? 2000 : 200) : '']));
   const resultat = saisi.resultat in RESULTATS_SUITE ? (saisi.resultat as ResultatSuite) : null;
   const note = saisi.note || null;
-  const etape = etapes.includes(saisi.etape as Etape) ? (saisi.etape as Etape) : c.etape;
+  const etape = etapes.includes(saisi.etape as Etape) ? (saisi.etape as Etape) : (c.etape ?? 'a_qualifier');
   // Le jour choisi, avec l'heure si elle est donnée (heure de Paris).
   const jour = choixDate(saisi.quand ?? '', saisi.le ?? '');
   const heure = /^\d{2}:\d{2}$/.test(saisi.heure ?? '') ? saisi.heure : '';
@@ -91,7 +90,7 @@ const habituelles = JSON.stringify({ ...ACTIONS_HABITUELLES, prevue: c.prochaine
     <div style="flex:1;min-width:0">
       <div class="e-muet"><a href={retour === 'jour' ? '/' : `/contacts/fiche?id=${c.id}`}>{retour === 'jour' ? 'Aujourd\'hui' : 'Fiche'}</a></div>
       <h1 style="overflow-wrap:anywhere">{nom}{c.commune ? ` · ${c.commune}` : ''}</h1>
-      <div class="e-muet">{LIBELLES_ETAPES[c.etape]} · {libelleOrigine(c, passage, prescripteur)}</div>
+      <div class="e-muet">{libelleEtape(c.etape)} · {libelleOrigine(c, passage, prescripteur)}</div>
     </div>
     {c.telephone && <a class="e-bouton second" href={`tel:${c.telephone}`} aria-label={`Appeler ${nom}`}>Appeler</a>}
   </div>
@@ -108,7 +107,7 @@ const habituelles = JSON.stringify({ ...ACTIONS_HABITUELLES, prevue: c.prochaine
     </label>
 
     <details class="su-etapes" open={etapeChoisie !== c.etape} data-pour-resultat="fait note">
-      <summary>Changer l'étape <span class="e-muet">(actuelle : {LIBELLES_ETAPES[c.etape]})</span></summary>
+      <summary>Changer l'étape <span class="e-muet">(actuelle : {libelleEtape(c.etape)})</span></summary>
       <fieldset class="e-pastilles" data-etapes>
         <legend class="e-muet">Seulement si elle avance, ou pour la mettre en sommeil ou perdue</legend>
         {etapes.map((e) => <label><input type="radio" name="etape" value={e} checked={etapeChoisie === e} /><span>{LIBELLES_ETAPES[e]}{e === c.etape ? ' (actuelle)' : ''}</span></label>)}

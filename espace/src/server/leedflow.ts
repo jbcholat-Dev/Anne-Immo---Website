@@ -202,12 +202,13 @@ async function rangerEchanges(env: EnvEspace, genre: Exclude<Genre, 'tache'>, el
 async function rangerTaches(env: EnvEspace, els: Element[], fiches: { reste: number }): Promise<number> {
   const limite = Date.now() - TACHES_JOURS * JOUR_MS;
   const ids = [...new Set(els.map((e) => e.id_contact).filter((x): x is string => !!x))];
-  // Seuls les liens vers un contact suivi comptent (AD-32) : un contact repassé au carnet ne reçoit plus de tâche.
+  // Seuls les liens vers un contact suivi comptent (AD-32) : un contact repassé au carnet ne reçoit plus de tâche. Une
+  // tâche antérieure à son entrée seule dans le suivi (`suivi_le`) ne lui est pas proposée non plus (revue de code 18.2).
   const { results } = await env.DB.prepare(
-    `SELECT l.leedflow_contact, l.contact_id FROM leedflow_lien l JOIN contact c ON c.id = l.contact_id AND c.etape IS NOT NULL
+    `SELECT l.leedflow_contact, l.contact_id, c.suivi_le FROM leedflow_lien l JOIN contact c ON c.id = l.contact_id AND c.etape IS NOT NULL
      WHERE l.leedflow_contact IN (SELECT value FROM json_each(?1))`,
-  ).bind(JSON.stringify(ids)).all<{ leedflow_contact: string; contact_id: string }>();
-  const liens = new Map(results.map((r) => [r.leedflow_contact, r.contact_id]));
+  ).bind(JSON.stringify(ids)).all<{ leedflow_contact: string; contact_id: string; suivi_le: string | null }>();
+  const liens = new Map(results.map((r) => [r.leedflow_contact, { id: r.contact_id, suivi_le: r.suivi_le }]));
   // Numéros déjà vus pour ces contacts Leedflow, dans les appels de numéros inconnus.
   const { results: vus } = await env.DB.prepare(
     `SELECT json_extract(donnees, '$.leedflow_contact') AS lc, telephone FROM leedflow_inconnu
@@ -224,18 +225,20 @@ async function rangerTaches(env: EnvEspace, els: Element[], fiches: { reste: num
       continue;
     }
     if (!e.task?.trim() || !e.id_contact || e.created < limite) continue;
-    let contact = liens.get(e.id_contact);
+    let contact = pourLeContact(liens.get(e.id_contact), new Date(e.created).toISOString());
+    const lie = liens.has(e.id_contact);
     // Contact Leedflow pas encore vu dans un appel : sa fiche donne son numéro (quelques fiches par passage).
     let tel = numeros.get(e.id_contact) ?? null;
-    if (!contact && !tel && fiches.reste > 0) {
+    if (!contact && !lie && !tel && fiches.reste > 0) {
       fiches.reste--;
       tel = (await ficheLeedflow(env, e.id_contact))?.telephone ?? null;
       if (tel) numeros.set(e.id_contact, tel);
     }
-    if (!contact && tel) {
-      contact = pourLeContact((await contactsParTelephone(env, [tel])).get(tel), new Date(e.created).toISOString());
-      if (contact) {
-        liens.set(e.id_contact, contact);
+    if (!contact && !lie && tel) {
+      const suivi = (await contactsParTelephone(env, [tel])).get(tel);
+      contact = pourLeContact(suivi, new Date(e.created).toISOString());
+      if (contact && suivi) {
+        liens.set(e.id_contact, suivi);
         lot.push(env.DB.prepare('INSERT OR IGNORE INTO leedflow_lien (leedflow_contact, contact_id) VALUES (?1, ?2)').bind(e.id_contact, contact));
       }
     }
@@ -259,11 +262,16 @@ async function rangerTaches(env: EnvEspace, els: Element[], fiches: { reste: num
 }
 
 /** Les numéros des contacts suivis (principal et autres numéros), avec leur date d'entrée dans le suivi : pour
- * `rattacherInconnus`. */
+ * `rattacherInconnus` et « À trier ». Un numéro principal d'un contact et secondaire d'un autre va au premier, comme
+ * dans `contactsParTelephone` (revue de code 18.2) : une seule ligne par numéro. */
 const NUMEROS_SUIVIS = `numeros AS (
-  SELECT id, telephone, suivi_le FROM contact WHERE etape IS NOT NULL AND telephone IS NOT NULL
-  UNION
-  SELECT c.id, k.valeur, c.suivi_le FROM contact_coordonnee k JOIN contact c ON c.id = k.contact_id WHERE k.type = 'telephone' AND c.etape IS NOT NULL
+  SELECT id, telephone, suivi_le FROM (
+    SELECT id, telephone, suivi_le, row_number() OVER (PARTITION BY telephone ORDER BY rang, id) AS r FROM (
+      SELECT id, telephone, suivi_le, 0 AS rang FROM contact WHERE etape IS NOT NULL AND telephone IS NOT NULL
+      UNION ALL
+      SELECT c.id, k.valeur, c.suivi_le, 1 FROM contact_coordonnee k JOIN contact c ON c.id = k.contact_id WHERE k.type = 'telephone' AND c.etape IS NOT NULL
+    )
+  ) WHERE r = 1
 )`;
 /** Un élément gardé passe au contact s'il date de son entrée dans le suivi ou après (story 18.2) ; `suivi_le` NULL =
  * contact créé dans le suivi ou entré par décision d'Anne : tout l'historique du numéro est repris. */
@@ -471,11 +479,13 @@ function grouper(lignes: LigneInconnu[], categories: Map<string, Categorie> = ne
 const sansEchange = (r: { telephone: string; a: string; categorie: Categorie }): NumeroInconnu =>
   ({ telephone: r.telephone, prenom: '', nom: '', email: '', dernier: r.a, echanges: [], taches: [], categorie: r.categorie, silencieux: false });
 
-/** Les numéros vus par Leedflow pour la page « À trier », selon le filtre choisi. */
+/** Les numéros vus par Leedflow pour la page « À trier », selon le filtre choisi. Les échanges d'un numéro devenu celui d'un
+ * contact suivi n'y sont plus (ceux d'avant son entrée seule dans le suivi restent gardés, jusqu'à la purge des 90 jours,
+ * mais il n'y a plus rien à trier : revue de code 18.2). */
 export async function numerosLeedflow(env: EnvEspace, filtre: Filtre): Promise<NumeroInconnu[]> {
   const [lignes, classes] = await env.DB.batch([
-    env.DB.prepare(`SELECT source_id, telephone, a, texte, donnees FROM leedflow_inconnu
-      WHERE ${filtre === 'a_trier' ? 'telephone NOT IN (SELECT telephone FROM leedflow_ecarte)' : filtre === 'pro' ? `telephone IN (SELECT telephone FROM leedflow_ecarte WHERE categorie = 'pro')` : filtre === 'tous' ? '1' : '0'}
+    env.DB.prepare(`WITH ${NUMEROS_SUIVIS} SELECT source_id, telephone, a, texte, donnees FROM leedflow_inconnu
+      WHERE telephone NOT IN (SELECT telephone FROM numeros) AND ${filtre === 'a_trier' ? 'telephone NOT IN (SELECT telephone FROM leedflow_ecarte)' : filtre === 'pro' ? `telephone IN (SELECT telephone FROM leedflow_ecarte WHERE categorie = 'pro')` : filtre === 'tous' ? '1' : '0'}
       ORDER BY a DESC LIMIT 600`),
     env.DB.prepare(`SELECT telephone, a, categorie FROM leedflow_ecarte WHERE ?1 = 'tous' OR categorie = ?1 ORDER BY a DESC LIMIT 300`).bind(filtre),
   ]);

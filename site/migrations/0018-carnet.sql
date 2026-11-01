@@ -12,6 +12,14 @@
 -- l'autre dans D1), on reconstruit `contact`, puis on les restaure et on supprime les copies.
 -- Une erreur se corrige par une migration 0019, jamais en modifiant celle-ci une fois poussée.
 
+-- Relance après un arrêt à mi-chemin (revue de code 18.2) : des copies `_sauve_*` d'un essai interrompu ne doivent pas
+-- faire buter la création ci-dessous.
+DROP TABLE IF EXISTS _sauve_contact_evenement;
+DROP TABLE IF EXISTS _sauve_leedflow_tache;
+DROP TABLE IF EXISTS _sauve_leedflow_lien;
+DROP TABLE IF EXISTS _sauve_campagne_destinataire;
+DROP TABLE IF EXISTS _sauve_lead_contact;
+
 -- 1. Les catégories (AD-25, PRD FR-12, FR-13) : six catégories de départ à identifiants fixes, avec leur méthode.
 -- `envoi_groupe_permis` = 1 : l'envoi groupé est possible, toujours sous réserve de l'accord vérifié par
 -- espace/src/server/accord.ts (accord enregistré, ou ancien client ; désinscriptions vérifiées avant chaque envoi).
