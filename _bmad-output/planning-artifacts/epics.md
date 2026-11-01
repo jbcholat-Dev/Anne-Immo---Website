@@ -2755,3 +2755,56 @@ afin de comprendre ce qu'apporte le mandat de recherche.
 **Quand** le visiteur arrive au bloc « Pendant la recherche »
 **Alors** une courte vidéo animée (même moteur et même charte que la story 15.2) montre les étapes d'un achat puis des maquettes de l'espace acheteur (recherche, sélection avec le pour et le contre, visites faites par Anne, point de la semaine), avec la mention « maquette, exemple fictif »
 **Et** le bloc ne s'affiche sur le site public qu'une fois les textes validés par Anne et la décision de JB prise, l'espace n'existant pas encore.
+
+## Epic 17: Programme ambassadeurs
+
+Les cartes de visite d'Anne deviennent des cartes « ambassadeur » : un QR code au dos mène à une page où l'on s'inscrit au programme. Un ambassadeur qui présente à Anne un proche qui vend reçoit un remerciement, jusqu'à 1 500 € (5 % des honoraires HT, plafonné). But : donner à Anne un pitch simple et pas insistant, et faire monter les recommandations. Origine : idée de JB du 2026-11-01 (fil « [Site] Page ambassadeurs du QR code »). Règle du remerciement, règlement, cartes et accord d'eXp France : fil « [Com] Campagne de parrainage ». Fichier des ambassadeurs : chantier de l'espace d'Anne (PRD du 2026-11-01).
+
+**Capacités couvertes :** CAP-11 (prise de contact) étendue ; CAP-12 (espace d'Anne). **Décisions :** AD-6 (une seule table `lead`, une source `ambassadeur` de plus), AD-7 (contrôles anti-robots), AD-11 (origine `c` dans l'adresse), AD-18 (droits RGPD).
+
+### Story 17.1: Maquette et cadrage de la page ambassadeurs
+
+En tant que JB,
+je veux une maquette de la page et ce qu'il faut construire,
+afin de valider le programme avant d'écrire du code.
+
+**Critères d'acceptation :**
+- La maquette montre la page sur téléphone, l'écran après l'inscription et l'arrivée dans l'espace d'Anne.
+- Les champs, les deux cases (règlement obligatoire, nouvelles facultatives) et le parcours de la recommandation sont écrits.
+
+**État :** en relecture par JB — 2026-11-01. Story : `_bmad-output/implementation-artifacts/17-1-maquette-et-cadrage-de-la-page-ambassadeurs.md`. Maquette : https://claude.ai/artifact/JRzaQnTFGuTM83oyuFdHby.
+
+### Story 17.2: Page `/ambassadeurs` et formulaire
+
+En tant que personne qui vient de scanner la carte d'Anne,
+je veux m'inscrire en 30 secondes depuis mon téléphone,
+afin de pouvoir recommander Anne et être remerciée.
+
+**Critères d'acceptation :**
+**Étant donné** la maquette validée (17.1)
+**Quand** le visiteur envoie prénom, nom, téléphone, e-mail et la case du règlement
+**Alors** une ligne `lead` de source `ambassadeur` est écrite avec la version et la date du règlement accepté, l'accord e-mail seulement si la case facultative est cochée, et l'origine `c`
+**Et** l'inscrit reçoit le règlement par e-mail, Anne reçoit une alerte, une seconde inscription ne crée pas de doublon, `/ambassadeur` renvoie à `/ambassadeurs`, la page reste non indexée avant 17.4, et build, check, liens, captures et revue de code sont faits.
+
+### Story 17.3: Arrivée de l'ambassadeur dans l'espace d'Anne
+
+En tant qu'Anne,
+je veux retrouver chaque ambassadeur dans mes contacts, sans doublon,
+afin de lui proposer le parrainage et de savoir qui m'a recommandé qui.
+
+**Critères d'acceptation :**
+**Étant donné** une inscription sur `/ambassadeurs`
+**Quand** elle arrive dans l'espace (demandes reçues)
+**Alors** un contact nouveau porte la marque ambassadeur, la source « page ambassadeurs » et la date du règlement ; un contact existant (même téléphone ou e-mail) gagne la marque sans changer de projet ni de catégorie
+**Et** la vue « Ambassadeurs » les retrouve. À construire avec le chantier de l'espace.
+
+### Story 17.4: Ouverture du programme
+
+En tant que JB,
+je veux ouvrir la page au public une fois les accords obtenus,
+afin que les cartes imprimées mènent à une page en règle.
+
+**Critères d'acceptation :**
+**Étant donné** l'accord écrit d'eXp France, le montant validé par JB, l'avis du comptable et le règlement final
+**Quand** le programme ouvre
+**Alors** la page est indexée, la page Confidentialité mentionne la finalité et la durée de conservation, et l'adresse définitive du QR code est transmise au fil parrainage.

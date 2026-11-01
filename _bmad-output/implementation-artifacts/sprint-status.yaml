@@ -234,6 +234,13 @@ development_status:
   16-1-session-de-cadrage-de-l-espace-acheteurs: in-progress   # revu le 2026-10-25 : attend JB et Anne : outil actuel des sélections, capacité à écrire ; aucune avancée depuis le 2026-10-11
   16-2-video-espace-acheteur: done
   epic-16-retrospective: optional
+
+  epic-17: in-progress
+  17-1-maquette-et-cadrage-de-la-page-ambassadeurs: review   # 2026-11-01 : maquette https://claude.ai/artifact/JRzaQnTFGuTM83oyuFdHby, attend l'accord de JB
+  17-2-page-ambassadeurs-et-formulaire: backlog
+  17-3-arrivee-de-l-ambassadeur-dans-l-espace: backlog
+  17-4-ouverture-du-programme: backlog   # attend l'accord d'eXp France (fil parrainage)
+  epic-17-retrospective: optional
 action_items:
   - id: "epic-1-retro-item-1-ajouter-node-scripts-ecrans-mjs-à-la-déf"
     epic: 1
