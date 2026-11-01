@@ -139,8 +139,8 @@ Chaque contact importé reçoit une catégorie proposée, et reste « à vérifi
 À l'import du fichier des animations, l'accord pour les e-mails groupés est enregistré pour chaque contact (bulletin du jeu, JB 01/11). Les autres sources n'en donnent pas.
 - La règle d'accord existante de l'espace (story 13.26) s'applique telle quelle.
 
-#### FR-11 : Reprendre les contacts de l'espace actuel
-**[HYPOTHÈSE]** Tous les contacts déjà dans l'espace (vendeurs du pipeline, prescripteurs, acheteurs, contacts à trier) apparaissent dans le tableau, avec la source « espace actuel ». Ceux que FR-9 ne range pas reçoivent la catégorie « à réchauffer », à vérifier. Un seul tableau pour tous les contacts : Anne n'a jamais à se demander où chercher. Leur suivi actuel (étapes du pipeline, fiche) reste inchangé dans les pages du menu « Autres outils ».
+#### FR-11 : Les contacts de l'espace actuel
+L'espace actuel ne contient presque aucun contact (JB, 01/11 19 h 14) : ils ne sont pas repris dans le tableau. Ils restent dans leurs pages, rangées dans le menu « Autres outils ».
 
 ### 4.3 Les catégories et leur méthode (livraison 1)
 
@@ -292,7 +292,6 @@ Ce que coûte cet ordre : pendant les livraisons 1 et 2, l'espace ne montre pas 
 - FR-4 : annulation d'une action groupée tant qu'aucune autre action n'a été faite.
 - FR-6 : pas de travail simultané sur les mêmes contacts ; la dernière modification l'emporte.
 - FR-9 : règles de pré-rangement fixes en livraison 1.
-- FR-11 : tous les contacts de l'espace actuel entrent dans le tableau ; ceux qui ne sont ni anciens clients ni prescripteurs vont dans « à réchauffer », à vérifier.
 - FR-12 : appel non permis pour les rencontrés à l'EDB tant que la question 1 n'est pas tranchée.
 - FR-14 : nom du menu « Autres outils ».
 - FR-17 : l'e-mail groupé passe par les Campagnes existantes.
