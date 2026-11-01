@@ -45,7 +45,7 @@ companions:
 | AD-18 | spine du site | Export et effacement couvrent les nouvelles tables ; la recherche par téléphone ou identifiant (story 13.23) sert aux contacts sans e-mail. |
 | AD-19 | spine du site | L'espace reste un Worker séparé sur la même base ; migrations dans `site/migrations/`, essayées contre les deux applications. |
 | AD-20 | spine du site | Une personne = un contact ; le site ne fait que rattacher ou créer. Amendé par AD-22 : la règle « prochaine action datée » ne vaut que dans le pipeline. |
-| AD-21 | spine du site | L'accord e-mail reste sur `contact` (`email_accord_*`), écrit par `accord` ; FR-10 l'alimente sans nouvelle colonne. |
+| AD-21 | spine du site | L'accord e-mail reste sur `contact` (`email_accord_*`), écrit par `accord` ; FR-10 l'alimente sans nouvelle colonne. Les Campagnes (13.26, 13.27, Resend sur `nouvelles.annevialtissot.fr`) restent le seul chemin d'e-mail groupé ; leur choix de destinataires accepte en plus le filtre JSON d'une vue (AD-27) ou une catégorie, et `accord` vérifie l'accord et les désinscriptions juste avant chaque envoi (FR-17, fil Campagnes fondu le 01/11). |
 
 ## Invariants & Rules
 

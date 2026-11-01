@@ -234,8 +234,11 @@ La séance affiche une personne par ligne, avec le message type, prénom insér�
 - Elle peut noter une date « à rappeler le » ; le filtre et la vue « à rappeler » montrent les contacts dont la date est arrivée (revue du 01/11).
 - La séance affiche « 14 contactés sur 15 ». Une personne non cochée reste disponible pour une prochaine séance.
 
-#### FR-17 : E-mail groupé depuis une séance (plus tard)
-**[HYPOTHÈSE]** Pour une catégorie où l'envoi groupé est permis, une séance par e-mail peut passer par la fonction Campagnes existante (stories 13.26 et 13.27). Elle ne fonctionnera réellement qu'une fois le sous-domaine d'envoi créé (action de JB déjà listée).
+#### FR-17 : E-mail groupé : les Campagnes (déjà construites, à brancher sur le carnet)
+L'onglet « Campagnes » existe déjà dans l'espace (stories 13.26 et 13.27, en ligne depuis le 24/10) : Anne écrit l'objet et le texte (« [Prénom] » remplacé), choisit les destinataires, voit qui est écarté et pourquoi (pas d'accord, désinscrit, pas d'adresse), s'envoie un essai, puis envoie. Envoi étalé (environ 48 par heure, 90 par jour avec ceux du site), lien de désinscription dans chaque e-mail, trace sur la fiche. Le fil « Campagnes d'e-mailing depuis l'espace » est fondu dans celui-ci (JB, 01/11 21 h 43).
+- Ce qui change avec le carnet : les destinataires se choisissent par une vue enregistrée ou une catégorie (FR-2, FR-12), plus seulement par étape du pipeline ; seuls partent les contacts avec un accord enregistré (FR-10, FR-13). Une séance peut aussi lancer une campagne pour ses personnes qui ont un accord.
+- Reste à construire : le bilan d'une campagne (story 13.28 : envoyés, erreurs, désinscriptions).
+- Rien ne part tant que l'adresse d'envoi `nouvelles.annevialtissot.fr` n'est pas créée par JB dans Resend et Cloudflare (environ 15 min, notice au RUNBOOK § 4 sexies).
 
 ### 4.6 La page de la semaine (livraison 3)
 
@@ -310,13 +313,12 @@ Le bilan montre le nombre de rendez-vous, de recommandations et de mandats sign�
 
 ### 6.1 Ordre de construction
 1. **Livraison 1 : la page Contacts.** Tableau, filtres et vues enregistrées, recherche, actions groupées, écarter, classement de départ (FR-1 à FR-6), création à la main, barre « Nouveaux » et fiche contact (FR-26 à FR-28) ; import, doublons, pré-rangement, accord, reprise de l'existant (FR-7 à FR-11) ; catégories et méthodes (FR-12, FR-13) ; navigation réduite (FR-14). Contacts est la page d'accueil. Anne et JB commencent le classement dès sa mise en ligne.
-2. **Livraison 2 : la séance de contacts** (FR-15, FR-16), lancée directement depuis le tableau, avec sa page Séances.
+2. **Livraison 2 : la séance de contacts** (FR-15, FR-16), lancée directement depuis le tableau, avec sa page Séances ; les Campagnes branchées sur le carnet, avec leur bilan (FR-17).
 3. **Livraison 3 : la semaine et le bilan** (FR-18 à FR-25). La semaine devient la page d'accueil ; une activité peut porter une séance.
 
 Ce que coûte cet ordre : pendant les livraisons 1 et 2, l'espace ne montre pas « quoi faire aujourd'hui ». Anne garde sa feuille du dimanche pour ses activités, et les séances lancées depuis le tableau couvrent la partie contacts.
 
 ### 6.2 Plus tard
-- E-mail groupé depuis une séance (FR-17) : attend le sous-domaine d'envoi.
 - Le reste du traitement des leads entrants (étapes du pipeline, tâches Leedflow) reste dans « Autres outils » ; leur arrivée passe par la barre « Nouveaux » dès la livraison 1 (FR-27).
 - Version téléphone.
 - Import par Anne elle-même, depuis l'espace : pas en V1, Claude fait les imports (FR-7). C'est une dépendance assumée envers Claude.
