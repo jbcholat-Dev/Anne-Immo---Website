@@ -130,6 +130,13 @@ Au-dessus du tableau, une barre « Nouveaux » montre le nombre de demandes reç
 - La demande traitée sort de la liste. Le message reste sur la fiche du contact.
 - Les demandes des annonces n'arrivent qu'une fois le transfert de la boîte pro réglé (action de JB, voir l'architecture) ; d'ici là, la barre montre Leedflow et le site.
 
+#### FR-28 : La fiche d'un contact
+Un clic sur un nom ouvre sa fiche (revue du 01/11 : sans elle, on ne peut ni corriger un numéro ni relire une note).
+- Elle montre et laisse corriger tous les champs : nom, téléphones, e-mails, ville, catégorie, projet, température, accord e-mail, appel autorisé, date « à rappeler le ».
+- Elle montre l'historique : sources, séances, dernier contact, notes, et le message d'une demande reçue (FR-27).
+- Anne peut y ajouter une note, et noter un contact fait hors séance (un appel reçu, une rencontre) avec sa date et son canal.
+- Elle peut écarter le contact (FR-5) ; l'effacement définitif reste le droit d'effacement existant (page Gestion).
+
 ### 4.2 L'import des contacts (livraison 1)
 
 **Description :** faire entrer les contacts d'Anne, de toutes les sources, sans doublon et déjà pré-rangés. Réalise P-1.
@@ -146,6 +153,7 @@ Claude importe les fichiers de contacts que JB lui transmet. Il n'y a ni écran 
 #### FR-8 : Éviter les doublons
 Un même contact n'apparaît qu'une fois.
 - Un contact dont le téléphone, l'e-mail ou le lien de profil est déjà connu complète la fiche existante (règle déjà en place dans l'espace actuel pour le téléphone et l'e-mail).
+- Un nouvel import ne fait jamais revenir un contact écarté, ne modifie pas un contact vérifié (il peut seulement lui ajouter une source ou un numéro manquant) et ne recrée jamais une personne qui a demandé l'effacement : l'espace garde une liste d'opposition (téléphone et e-mail sous forme chiffrée) vérifiée à chaque import (revue du 01/11).
 - Un contact qui n'a en commun qu'un nom et un prénom avec un contact existant est présenté dans l'aperçu comme doublon probable ; JB confirme la fusion ou garde les deux, sur l'aperçu de Claude.
 
 #### FR-9 : Pré-ranger à l'import
@@ -186,7 +194,8 @@ JB peut renommer une catégorie, en ajouter une, ou en retirer une.
 
 #### FR-13 : Décrire la méthode d'une catégorie
 JB peut écrire pour chaque catégorie : le canal conseillé, ce qu'on demande, un ou plusieurs messages types nommés, et les deux autorisations (envoi groupé, appel).
-- L'envoi groupé ne peut être permis que pour des contacts qui ont un accord (FR-10) ou sont anciens clients.
+- L'envoi groupé n'est permis que pour des contacts qui ont un accord enregistré (FR-10), anciens clients compris (revue du 01/11 : la loi ne dispense pas les anciens clients d'accord pour un e-mail groupé de prospection). L'espace vérifie les désinscriptions juste avant chaque envoi.
+- Un SMS ou un WhatsApp aux proches reste un message personnel, envoyé un par un depuis le téléphone d'Anne, jamais un envoi groupé.
 - Un message type peut contenir le prénom du contact, remplacé automatiquement à l'affichage.
 
 ### 4.4 Le rangement de l'existant (livraison 1)
@@ -212,14 +221,17 @@ Anne coche des contacts dans le tableau (souvent après avoir choisi une vue enr
 - Les contacts jamais recontactés apparaissent en premier.
 - Pour une séance de parrainage, la vue proposée par défaut est celle des ambassadeurs (JB, 01/11).
 - Pendant la séance, Anne peut changer le projet et la température d'une personne selon sa réponse (« vend dans l'année » : vendeur, tiède).
-- Elle peut ajouter ou retirer des personnes tant que la séance est ouverte.
+- Elle peut ajouter ou retirer des personnes tant que la séance est ouverte. Plusieurs séances peuvent être ouvertes en même temps ; une séance terminée se rouvre depuis la page Séances (revue du 01/11).
+- Si la séance mélange des catégories, le message type se choisit par personne : par défaut celui de sa catégorie. Une personne pour qui le canal choisi n'est pas permis (appel, envoi groupé) est signalée dans la liste (revue du 01/11).
 - La page Séances liste les séances, ouvertes ou terminées, avec leur date et leur nombre de personnes contactées.
 
 #### FR-16 : Dérouler la séance et cocher les contacts
 La séance affiche une personne par ligne, avec le message type, prénom inséré.
 - Pour chaque personne, Anne choisit le canal (WhatsApp, SMS, e-mail, ou appel si la méthode de la catégorie le permet).
-- Pour un message, elle le copie en un clic et l'envoie depuis son téléphone ou sa messagerie ; l'espace n'envoie ni SMS ni WhatsApp. Pour un appel, l'espace affiche le numéro, cliquable, et le message sert d'aide-mémoire.
+- Pour un message, un bouton ouvre WhatsApp ou la messagerie e-mail avec le message déjà écrit et le bon destinataire ; pour un SMS, elle copie le message en un clic. L'espace n'envoie lui-même ni SMS ni WhatsApp (revue du 01/11). Pour un appel, l'espace affiche le numéro, cliquable, et le message sert d'aide-mémoire.
 - Elle coche « contacté » ; la coche enregistre sur le contact la date et le canal (le dernier contact du tableau). Elle peut ajouter une courte note (« rappeler en janvier », « rendez-vous jeudi »).
+- Décocher « contacté » par erreur remet le dernier contact d'avant, pas une case vide (revue du 01/11).
+- Elle peut noter une date « à rappeler le » ; le filtre et la vue « à rappeler » montrent les contacts dont la date est arrivée (revue du 01/11).
 - La séance affiche « 14 contactés sur 15 ». Une personne non cochée reste disponible pour une prochaine séance.
 
 #### FR-17 : E-mail groupé depuis une séance (plus tard)
@@ -297,7 +309,7 @@ Le bilan montre le nombre de rendez-vous, de recommandations et de mandats sign�
 ## 6. Première version
 
 ### 6.1 Ordre de construction
-1. **Livraison 1 : la page Contacts.** Tableau, filtres et vues enregistrées, recherche, actions groupées, écarter, classement de départ (FR-1 à FR-6), création à la main et barre « Nouveaux » (FR-26, FR-27) ; import, doublons, pré-rangement, accord, reprise de l'existant (FR-7 à FR-11) ; catégories et méthodes (FR-12, FR-13) ; navigation réduite (FR-14). Contacts est la page d'accueil. Anne et JB commencent le classement dès sa mise en ligne.
+1. **Livraison 1 : la page Contacts.** Tableau, filtres et vues enregistrées, recherche, actions groupées, écarter, classement de départ (FR-1 à FR-6), création à la main, barre « Nouveaux » et fiche contact (FR-26 à FR-28) ; import, doublons, pré-rangement, accord, reprise de l'existant (FR-7 à FR-11) ; catégories et méthodes (FR-12, FR-13) ; navigation réduite (FR-14). Contacts est la page d'accueil. Anne et JB commencent le classement dès sa mise en ligne.
 2. **Livraison 2 : la séance de contacts** (FR-15, FR-16), lancée directement depuis le tableau, avec sa page Séances.
 3. **Livraison 3 : la semaine et le bilan** (FR-18 à FR-25). La semaine devient la page d'accueil ; une activité peut porter une séance.
 
@@ -307,6 +319,7 @@ Ce que coûte cet ordre : pendant les livraisons 1 et 2, l'espace ne montre pas 
 - E-mail groupé depuis une séance (FR-17) : attend le sous-domaine d'envoi.
 - Le reste du traitement des leads entrants (étapes du pipeline, tâches Leedflow) reste dans « Autres outils » ; leur arrivée passe par la barre « Nouveaux » dès la livraison 1 (FR-27).
 - Version téléphone.
+- Import par Anne elle-même, depuis l'espace : pas en V1, Claude fait les imports (FR-7). C'est une dépendance assumée envers Claude.
 - Secteur de boîtage dessiné sur une carte : ouvrir une carte et tracer la zone, au lieu du texte libre (JB, 01/11 21 h 03).
 
 ## 7. Comment on saura que ça marche
@@ -330,7 +343,8 @@ Ce que coûte cet ordre : pendant les livraisons 1 et 2, l'espace ne montre pas 
 2. Comment récupérer les abonnés Instagram et Facebook d'Anne depuis son navigateur : export proposé par ces réseaux, ou relevé assisté des pages ? À étudier avant de le faire, avec l'accord de JB. Sinon, « relations lointaines » ne contiendra que LinkedIn au départ.
 3. Le message type du parrainage dépend de l'accord d'eXp France, toujours attendu.
 4. ~~Où se fait l'import~~ Tranché le 01/11 : par Claude, sans écran (FR-7). Question d'origine : dans l'espace (FR-7 à FR-9), ou directement avec Claude, qui lirait les fichiers, rangerait les contacts et les déposerait dans la base (JB, 01/11 19 h 40) ? À trancher à l'architecture. Si c'est Claude, FR-7 à FR-9 restent les règles à suivre, mais sans écran d'import.
-5. Le cadre légal pour prospecter les contacts du téléphone d'Anne (données personnelles) : sur quoi s'appuie-t-on, et faut-il informer ces personnes ? À vérifier avant le premier import.
+5. Le cadre légal pour prospecter les contacts du téléphone d'Anne (données personnelles) : sur quoi s'appuie-t-on, et faut-il informer ces personnes ? **Bloquant avant le premier import (revue du 01/11)** : une fiche d'une page, préparée par Claude et validée par JB (intérêt légitime pesé, information des personnes au premier message, ligne au registre). On n'importe que les champs utiles (nom, téléphones, e-mails, ville), pas les adresses, dates de naissance ni notes du téléphone.
+6. Sauvegarde avant la refonte de la base (revue du 01/11) : avant la migration qui reconstruit la table des contacts et avant le premier import, JB fait un export de la base de production et note le point de retour arrière. Claude n'a pas ce droit sur la base, volontairement.
 
 ## 9. Hypothèses à confirmer
 
