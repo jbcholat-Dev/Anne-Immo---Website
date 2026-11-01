@@ -95,6 +95,7 @@ Anne cherche un contact par nom, prénom, morceau de numéro, e-mail ou entrepri
 
 #### FR-4 : Classer et qualifier plusieurs contacts à la fois
 Anne coche plusieurs lignes, ou « tout ce qui est filtré », et applique une action à toutes.
+- Maj + clic sur une case coche (ou décoche) toutes les lignes entre la case cliquée juste avant et celle-ci, dans l'ordre affiché (JB, 01/11 20 h 53).
 - Actions groupées : changer la catégorie, le projet ou la température, marquer vérifié, écarter.
 - Changer la catégorie d'un contact le marque vérifié.
 - La température n'est proposée que pour un vendeur, un acheteur, ou un vendeur et acheteur ; passer un contact en ambassadeur ou à qualifier efface sa température.

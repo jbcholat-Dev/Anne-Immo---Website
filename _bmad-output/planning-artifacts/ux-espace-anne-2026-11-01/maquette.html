@@ -287,6 +287,7 @@ Q.forEach(([i,pj,t])=>{if(C[i]){C[i].proj=pj;C[i].temp=t||""}});
 const TOTAL_IMPORT=C.filter(c=>!c.ok).length;
 const VUES=[{n:"Tous les contacts",f:{}},{n:"À vérifier",f:{etat:"av"}},{n:"LinkedIn à vérifier",f:{src:"LinkedIn",etat:"av"}},{n:"Proches jamais recontactés",f:{cat:"Proches",contact:"jamais"}},{n:"Vendeurs chauds",f:{proj:"Vendeur",temp:"Chaud"}},{n:"Ambassadeurs",f:{proj:"Ambassadeur"}},{n:"À qualifier, déjà vérifiés",f:{proj:"À qualifier",etat:"ok"}},{n:"Anciens de Danone",f:{ent:"Danone"}},{n:"EDB jamais recontactés",f:{cat:"Rencontrés à l'EDB",contact:"jamais"}}];
 let F={},vueActive=0,sel=new Set(),tri={k:"nom",dir:1},undo=null;
+let dernierClic=null; // case cliquée en dernier, pour Maj + clic
 const SEANCES=[{nom:"Parrainage",cat:"Anciens clients",date:"28 octobre",ids:[],faits:4,total:4,msg:"Parrainage",close:true}];
 let seance=null;
 const $=s=>document.querySelector(s);
@@ -365,12 +366,16 @@ function appliquer(fn,texte){
   const snap=snapshot();
   C.forEach(c=>{if(sel.has(c.id))fn(c)});
   toast(texte.replace("{n}",n),snap);sel.clear();render()}
-function setFiltres(f,vi){F={...f};vueActive=vi===undefined?-1:vi;sel.clear();render()}
+function setFiltres(f,vi){F={...f};vueActive=vi===undefined?-1:vi;sel.clear();dernierClic=null;render()}
 
 // événements contacts
 $("#tb").addEventListener("click",e=>{
   const tr=e.target.closest("tr[data-id]");if(!tr)return;const cid=+tr.dataset.id;const c=C[cid];
-  if(e.target.matches(".ck")){e.target.checked?sel.add(cid):sel.delete(cid);render();return}
+  if(e.target.matches(".ck")){const on=e.target.checked;
+    if(e.shiftKey&&dernierClic!==null){const ids=visibles().map(x=>x.id);const a=ids.indexOf(dernierClic),b=ids.indexOf(cid);
+      if(a>=0&&b>=0){ids.slice(Math.min(a,b),Math.max(a,b)+1).forEach(i=>on?sel.add(i):sel.delete(i))}else{on?sel.add(cid):sel.delete(cid)}}
+    else{on?sel.add(cid):sel.delete(cid)}
+    dernierClic=cid;render();return}
   if(e.target.closest("[data-cat]")){
     const b=e.target.closest("[data-cat]");
     const s=document.createElement("select");s.setAttribute("aria-label","Catégorie");
