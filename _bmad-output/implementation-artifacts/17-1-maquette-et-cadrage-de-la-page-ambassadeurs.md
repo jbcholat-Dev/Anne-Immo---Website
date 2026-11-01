@@ -60,7 +60,7 @@ Le mot d'Anne (« Vous savez comment je travaille… ») est une proposition : A
 - Si la personne existe déjà (même téléphone ou même e-mail), on n'en crée pas une deuxième : la fiche gagne la source et la marque d'ambassadeur ; si elle est déjà vendeuse ou acheteuse, son projet ne change pas.
 - La fiche montre « Règlement accepté le … (version …) ».
 - La vue enregistrée « Ambassadeurs » les retrouve tous ; l'action « Parrainage » s'en sert.
-- Point ouvert pour le fil de l'espace : le PRD fait d'« ambassadeur » une valeur du projet, qui n'en a qu'une. Une personne peut être vendeuse et ambassadrice : proposition d'une marque « ambassadeur » à part (date d'inscription, version du règlement), indépendante du projet.
+- Réglé avec le fil de l'espace (2026-11-01) : la marque « ambassadeur » est indépendante du projet et de la catégorie (une vendeuse peut être ambassadrice). Colonnes `contact.ambassadeur_inscrit_le` et `contact.ambassadeur_reglement`, créées par la migration 0018 de l'espace (story 18.2) et écrites par `site/src/server/contacts.ts` au rattachement d'un lead `ambassadeur` (story 18.3). La story 17.2 n'écrit que dans `lead`, pour éviter deux migrations sur `contact`. La vue « Ambassadeurs » = inscrits ou projet ambassadeur.
 
 ### Story 17.4 — Ouverture du programme
 - Préalables : accord écrit d'eXp France, montant validé par JB, avis du comptable, règlement rédigé (fil parrainage).
@@ -84,5 +84,4 @@ Le mot d'Anne (« Vous savez comment je travaille… ») est une proposition : A
 
 - Accord de JB sur la maquette et sur les quatre choix ci-dessus (adresse, deux cases, recommandation hors formulaire, professionnels hors programme).
 - Relecture du mot d'Anne par Anne.
-- Réponse du fil de l'espace sur la marque « ambassadeur ».
 - Accord d'eXp France (bloque l'ouverture, pas la construction sur l'aperçu).
