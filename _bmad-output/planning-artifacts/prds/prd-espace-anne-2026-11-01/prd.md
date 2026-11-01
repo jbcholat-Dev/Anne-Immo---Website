@@ -231,7 +231,7 @@ Anne ou JB placent une activité en faisant glisser une action de la colonne de 
 - L'activité prend la durée par défaut de l'action. On la rallonge ou la raccourcit en tirant son bord du bas, par heure entière, de 1 à 3 heures.
 - Un nombre visé et une note s'ajoutent en cliquant sur l'activité. Pour une séance de contacts, c'est souvent le temps qui sert de repère (« deux heures de parrainage ») plutôt qu'un nombre.
 - Cliquer sur une activité de type séance de contacts ouvre le tableau des contacts sur la vue de son action ; la séance lancée (FR-15) est rattachée à l'activité.
-- Une activité non faite se déplace en la faisant glisser vers un autre créneau, du même jour ou d'un autre, par exemple de mardi 14 h à jeudi 10 h (JB, 01/11). Elle peut aussi être supprimée.
+- Une activité non faite se déplace en la faisant glisser vers un autre créneau, du même jour ou d'un autre, par exemple de mardi 14 h à jeudi 10 h (JB, 01/11). Elle peut aussi être retirée de la semaine, quel que soit son type : un clic sur l'activité propose de l'ouvrir ou de la retirer, et le retrait s'annule tout de suite (JB, 01/11 20 h 56).
 - **[HYPOTHÈSE]** Deux activités peuvent se chevaucher ; elles s'affichent alors côte à côte.
 - **[HYPOTHÈSE]** Un jour passé n'accepte pas qu'on y dépose une activité ; une activité non faite d'un jour passé peut être glissée vers aujourd'hui ou un jour à venir.
 

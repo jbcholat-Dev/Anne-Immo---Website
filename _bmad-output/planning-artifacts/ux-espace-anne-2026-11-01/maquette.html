@@ -412,7 +412,7 @@ $("#lotCat").addEventListener("change",e=>{const v=e.target.value;if(!v)return;a
 $("#lotOk").onclick=()=>appliquer(c=>{c.ok=true},"{n} contacts marqués vérifiés");
 $("#lotEcart").onclick=()=>appliquer(c=>{c.ecarte=true},"{n} contacts écartés (filtre « Écartés » pour les revoir)");
 $("#lotNone").onclick=()=>{sel.clear();render()};
-$("#toastUndo").onclick=()=>{if(undo){undo.forEach((u,i)=>Object.assign(C[i],u));undo=null;$("#toast").hidden=true;render()}};
+$("#toastUndo").onclick=()=>{if(typeof undo==="function"){undo();undo=null;$("#toast").hidden=true;return}if(undo){undo.forEach((u,i)=>Object.assign(C[i],u));undo=null;$("#toast").hidden=true;render()}};
 $("#btnEnreg").onclick=()=>{
   const actifs=Object.entries(F).filter(([k,v])=>v&&k!=="q");
   if(!actifs.length){toast("Choisissez d'abord au moins un filtre",null);return}
@@ -529,6 +529,14 @@ function menuAction(ac){fermerMenuAct();const i=+ac.dataset.ai,x=ACTIONS[i];cons
     if(b.dataset.m==="seance")ouvrirAction(i);
     else if(b.dataset.m==="dup"){ACTIONS.splice(i+1,0,{...x,n:x.n+" (copie)"});renderSemaine();toast(`« ${x.n} » dupliquée : renommez la copie et changez sa vue`,null)}
     else{const snap=ACTIONS.slice();ACTIONS.splice(i,1);ACTS.forEach(a=>{if(a.a===i)a.a=-1;else if(a.a>i)a.a--});renderSemaine();toast(`« ${x.n} » supprimée (les activités déjà placées restent)`,null)}})}
+// clic sur une activité placée : ouvrir (séance ou quantité) ou la retirer de la semaine, quel que soit son type
+function menuActivite(ev){fermerMenuAct();const a=ACTS[+ev.dataset.k],x=ACTIONS[a.a];const sea=x&&x.type==="Séance de contacts";
+  const m=document.createElement("div");m.className="menu-act";
+  m.innerHTML=(sea?`<button data-m="ouvrir">Créer une séance (ouvrir les contacts)</button>`:x?`<button data-m="ouvrir">Noter la quantité réalisée</button>`:"")+`<button data-m="sup" class="danger">Retirer de la semaine</button>`;
+  const r=ev.getBoundingClientRect();m.style.left=(r.right+window.scrollX+6)+"px";m.style.top=(r.top+window.scrollY)+"px";document.body.appendChild(m);
+  m.addEventListener("click",e2=>{const b=e2.target.closest("[data-m]");if(!b)return;e2.stopPropagation();fermerMenuAct();
+    if(b.dataset.m==="ouvrir")ouvrirAction(a.a,a);
+    else{const i=ACTS.indexOf(a),copie={...a};ACTS.splice(i,1);renderSemaine();toast(`« ${a.t} » retiré de ${JOURS[a.j]}`,()=>{ACTS.splice(i,0,copie);renderSemaine()})}})}
 function ouvrirAction(i,act){const x=ACTIONS[i]||{type:"Autre"};
   if(x.type!=="Séance de contacts"){if(act){ouvrirModal(`<h2>${esc(act.t)}</h2><p class="sous">${JOURS[act.j]}, ${act.h} h-${act.h+act.dur} h</p><label class="champ">Quantité réalisée (${x.type==="Boîtage"?"flyers":"rencontres faites"})<input id="qte" type="number" value="${act.fait||""}"></label><div class="row-btns"><button class="btn" id="supAct">Supprimer</button><button class="btn primaire" id="okQte">Valider</button></div>`);$("#okQte").onclick=()=>{act.fait=+$("#qte").value||0;fermerModal();renderSemaine()};$("#supAct").onclick=()=>{ACTS.splice(ACTS.indexOf(act),1);fermerModal();renderSemaine()}}
     else toast("Pas de contacts pour cette action : glissez-la dans la semaine",null);return}
@@ -537,7 +545,7 @@ function ouvrirAction(i,act){const x=ACTIONS[i]||{type:"Autre"};
   $("#bandeauX").onclick=()=>{actionCourante=null;$("#bandeau").hidden=true}}
 $("#v-semaine").addEventListener("click",e=>{if(e.target.closest("[data-resize]"))return;
   const ac=e.target.closest(".action");if(ac){e.stopPropagation();menuAction(ac);return}
-  const ev=e.target.closest(".ev");if(ev){const a=ACTS[+ev.dataset.k];ouvrirAction(a.a,a);return}
+  const ev=e.target.closest(".ev");if(ev){e.stopPropagation();menuActivite(ev);return}
   if(e.target.id==="nvAction")ouvrirModal(`<h2>Nouvelle action de prospection</h2><label class="champ">Nom<input value="Relance vendeurs chauds"></label><label class="champ">Type<select><option>Séance de contacts</option><option>Boîtage</option><option>Rencontre</option><option>Autre</option></select></label><label class="champ">Vue des contacts<select>${VUES.map(v=>`<option>${esc(v.n)}</option>`).join("")}</select></label><label class="champ">Message type ou script d'appel<select><option>Parrainage</option><option>Diagnostic offert</option><option>Script d'appel…</option></select></label><label class="champ">Durée par défaut<select><option>1 h</option><option>2 h</option><option>3 h</option></select></label><div class="row-btns"><button class="btn" data-close>Annuler</button><button class="btn primaire" data-close>Enregistrer</button></div>`)});
 
 // navigation
