@@ -2778,3 +2778,7 @@ afin de comprendre ce qu'apporte le mandat de recherche.
 **Quand** le visiteur arrive au bloc « Pendant la recherche »
 **Alors** une courte vidéo animée (même moteur et même charte que la story 15.2) montre les étapes d'un achat puis des maquettes de l'espace acheteur (recherche, sélection avec le pour et le contre, visites faites par Anne, point de la semaine), avec la mention « maquette, exemple fictif »
 **Et** le bloc ne s'affiche sur le site public qu'une fois les textes validés par Anne et la décision de JB prise, l'espace n'existant pas encore.
+
+## Epics 18 à 20 : nouvelle version de l'espace d'Anne
+
+Découpage dans un fichier à part : `epics-espace-anne-2026-11-01.md` (refonte BMAD du 2026-11-01 : PRD `prds/prd-espace-anne-2026-11-01/`, architecture `architecture/architecture-espace-anne-2026-11-01/`). Epic 18 : le carnet de contacts ; epic 19 : les séances et les campagnes ; epic 20 : la semaine et le bilan.

@@ -186,7 +186,7 @@ development_status:
   13-5-page-aujourd-hui: done
   13-6-qualifier-en-deux-minutes-et-fiche-contact: done
   13-7-saisie-à-la-main-passage-de-boîtage-et-import: done
-  13-8-demandes-des-portails-d-annonces: backlog
+  13-8-demandes-des-portails-d-annonces: backlog   # 2026-11-01 : reprise en story 18.12 (nouvelle version de l'espace)
   13-9-recopie-dans-modelo-à-la-signature: backlog
   13-10-résumés-d-appels-leedflow: done
   13-11-e-mails-des-clients-différée: backlog
@@ -206,7 +206,7 @@ development_status:
   13-25-synthese-du-contact: done   # 2026-10-24, PR n° 187 fusionnée (JB)
   13-26-accord-e-mail-sur-la-fiche-contact: done   # 2026-10-24, PR n° 196 fusionnée (accord de JB) ; campagnes e-mail (AD-21)
   13-27-écrire-et-envoyer-une-campagne: done   # 2026-10-24, PR n° 199 fusionnée (JB) ; envoi réel dès que JB a créé nouvelles.annevialtissot.fr (RUNBOOK § 4 sexies)
-  13-28-bilan-d-une-campagne: ready-for-dev
+  13-28-bilan-d-une-campagne: ready-for-dev   # 2026-11-01 : reprise en story 19.4 (nouvelle version de l'espace)
   13-29-retours-anne-libelles-et-suppression: done   # 2026-10-24, PR n° 188 fusionnée, tickets #177, #178, #185 fermés
   13-30-fiche-contact-repensee: done   # 2026-10-24, PR n° 192 fusionnée (JB), ticket #176 fermé
   13-31-en-tete-et-historique-de-la-fiche: ready-for-dev   # 2026-10-24, ticket #182
@@ -236,6 +236,37 @@ development_status:
   16-1-session-de-cadrage-de-l-espace-acheteurs: in-progress   # revu le 2026-10-25 : attend JB et Anne : outil actuel des sélections, capacité à écrire ; aucune avancée depuis le 2026-10-11
   16-2-video-espace-acheteur: done
   epic-16-retrospective: optional
+  # Nouvelle version de l'espace d'Anne (refonte BMAD du 2026-11-01) : _bmad-output/planning-artifacts/epics-espace-anne-2026-11-01.md
+  epic-18: backlog   # le carnet de contacts (livraison 1)
+  18-1-leedflow-ne-range-un-appel-que-sur-un-contact-suivi: backlog
+  18-2-nouvelle-base-du-carnet-migration-0018: backlog
+  18-3-demandes-du-site-et-droits-sur-le-nouveau-carnet: backlog
+  18-4-page-contacts: backlog
+  18-5-filtres-et-vues-enregistrees: backlog
+  18-6-classer-plusieurs-contacts-et-ecarter: backlog
+  18-7-fiche-contact-et-creation-a-la-main: backlog
+  18-8-categories-et-methodes: backlog
+  18-9-import-par-claude: backlog
+  18-10-premier-import-et-classement-de-depart: backlog
+  18-11-barre-nouveaux-site-et-leedflow: backlog
+  18-12-demandes-des-portails-par-e-mail: backlog
+  epic-18-retrospective: optional
+
+  epic-19: backlog   # les séances et les campagnes (livraison 2)
+  19-1-lancer-et-derouler-une-seance: backlog
+  19-2-page-seances: backlog
+  19-3-campagnes-branchees-sur-le-carnet: backlog
+  19-4-bilan-d-une-campagne: backlog
+  epic-19-retrospective: optional
+
+  epic-20: backlog   # la semaine et le bilan (livraison 3)
+  20-1-page-de-la-semaine: backlog
+  20-2-actions-de-prospection: backlog
+  20-3-placer-deplacer-retirer-une-activite: backlog
+  20-4-noter-une-activite-faite-et-effort-de-la-semaine: backlog
+  20-5-noter-un-resultat: backlog
+  20-6-bilan: backlog
+  epic-20-retrospective: optional
 action_items:
   - id: "epic-1-retro-item-1-ajouter-node-scripts-ecrans-mjs-à-la-déf"
     epic: 1
