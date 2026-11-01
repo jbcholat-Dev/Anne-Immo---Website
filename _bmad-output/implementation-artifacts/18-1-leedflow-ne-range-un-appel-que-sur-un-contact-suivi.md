@@ -1,7 +1,7 @@
 ---
 story: 18.1
 epic: 18 — Espace d'Anne : le carnet de contacts
-statut: review
+statut: done
 date: 2026-11-01
 maj: 2026-11-01
 ---
@@ -24,7 +24,12 @@ Avant le premier import des 882 contacts du téléphone d'Anne, empêcher que la
 - Le cas « contact hors suivi » ne peut pas encore être essayé (étape obligatoire avant 0018) : son essai est ajouté par la story 18.2.
 
 ## Revue de code
-(à remplir)
+2026-11-01, `bmad-code-review` par une session neuve, PR #225, commit e6905c8. Aucun constat bloquant pour cette story.
+- Reprise de l'historique quand un contact du carnet entre seul dans le suivi (appels privés versés) : reporté en 18.2 (colonne `suivi_le`, AD-32 complété).
+- Bouton « Ajouter » d'un numéro inconnu sur un contact du carnet sans effet : reporté en 18.2 (`saisirContact` le fait entrer dans le suivi).
+- `rangerTaches` et `lireSyntheses` passent par `leedflow_lien` sans filtre d'étape : reporté en 18.2 (sans effet tant qu'aucun lien ne vise un contact du carnet).
+- Numéros secondaires (`contact_coordonnee`) non cherchés : reporté en 18.2, la table arrive avec 0018.
+- L'effacement retire le classement « Privé » d'un numéro : reporté en 18.3.
 
 ## Ce qui reste
 - Essai du cas « contact du carnet hors suivi qui appelle » dans la story 18.2.
