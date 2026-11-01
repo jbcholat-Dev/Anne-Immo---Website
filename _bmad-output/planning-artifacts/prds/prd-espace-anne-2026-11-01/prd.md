@@ -1,6 +1,6 @@
 ---
 title: "PRD : l'espace de travail d'Anne (contacts et prospection)"
-status: draft
+status: final
 created: 2026-11-01
 updated: 2026-11-01
 ---
@@ -122,6 +122,8 @@ JB ou Anne importent un fichier de contacts.
 - Formats acceptés : l'export des contacts du téléphone (vCard ou CSV), l'export LinkedIn (CSV), un tableur Excel ou CSV (animations EDB, ou un fichier d'abonnés des réseaux).
 - Avant d'enregistrer, un aperçu montre combien de contacts sont nouveaux, combien complètent un contact existant, combien sont des doublons probables à confirmer, combien sont rejetés à l'import.
 - La source de chaque contact est enregistrée ; un contact trouvé dans deux fichiers garde ses deux sources.
+- Avant la mise en ligne, l'import est essayé avec de vrais fichiers : l'export vCard du téléphone Samsung d'Anne et un tableur Excel (JB, 01/11 19 h 40).
+- **[HYPOTHÈSE]** Chaque import est gardé comme un lot, qu'on peut annuler en entier tant que ses contacts n'ont pas été modifiés à la main (proposé à la table ronde du 01/11, pour qu'un mauvais fichier ne pollue pas tout le tableau).
 - Les abonnés des réseaux sociaux se récupèrent depuis le navigateur d'Anne, connecté à ses comptes, et jamais depuis celui de JB (JB, 01/11 14 h 42). Claude prépare ce relevé avec l'accord de JB et en fait un fichier, importé comme les autres. Le moyen exact dépend de la question 2 (§ 8).
 
 #### FR-8 : Éviter les doublons
@@ -131,7 +133,7 @@ Un même contact n'apparaît qu'une fois.
 
 #### FR-9 : Pré-ranger à l'import
 Chaque contact importé reçoit une catégorie proposée, et reste « à vérifier ».
-- Contacts de l'espace actuel au statut vendu ou acte signé → anciens clients ; prescripteurs de l'espace actuel → partenaires pros.
+- Fichier des anciens clients (tableur fourni par Anne) → anciens clients ; fichier des partenaires (notaires, banquiers, artisans) → partenaires pros. Les contacts de l'espace actuel ne sont pas repris (FR-11).
 - Animations EDB → rencontrés à l'EDB.
 - Téléphone → proches.
 - LinkedIn et réseaux sociaux → relations lointaines.
@@ -185,6 +187,7 @@ La barre de navigation ne montre que les pages de la nouvelle version, et un men
 #### FR-15 : Lancer une séance depuis le tableau
 Anne coche des contacts dans le tableau (souvent après avoir choisi une vue enregistrée) et clique « Lancer une séance » (JB, 01/11 15 h 09).
 - Elle donne un nom à la séance (« Parrainage ») et choisit le message type parmi ceux de la catégorie ; par défaut, le premier.
+- Elle peut ajouter un commentaire à la séance : son but, le contexte, ce qu'elle veut obtenir (JB, 01/11 19 h 40). **[HYPOTHÈSE]** Un simple texte libre en V1 ; JB veut retravailler ce point plus tard.
 - Les contacts jamais recontactés apparaissent en premier.
 - Pour une séance de parrainage, la vue proposée par défaut est celle des ambassadeurs (JB, 01/11).
 - Pendant la séance, Anne peut changer le projet et la température d'une personne selon sa réponse (« vend dans l'année » : vendeur, tiède).
@@ -303,6 +306,8 @@ Ce que coûte cet ordre : pendant les livraisons 1 et 2, l'espace ne montre pas 
 1. La règle du 11/08/2026 sur les appels aux particuliers, citée d'après la presse spécialisée : à vérifier sur le texte officiel. D'ici là, l'appel n'est permis que pour les catégories où la méthode l'autorise (FR-12, FR-13).
 2. Comment récupérer les abonnés Instagram et Facebook d'Anne depuis son navigateur : export proposé par ces réseaux, ou relevé assisté des pages ? À étudier avant de le faire, avec l'accord de JB. Sinon, « relations lointaines » ne contiendra que LinkedIn au départ.
 3. Le message type du parrainage dépend de l'accord d'eXp France, toujours attendu.
+4. Où se fait l'import : dans l'espace (FR-7 à FR-9), ou directement avec Claude, qui lirait les fichiers, rangerait les contacts et les déposerait dans la base (JB, 01/11 19 h 40) ? À trancher à l'architecture. Si c'est Claude, FR-7 à FR-9 restent les règles à suivre, mais sans écran d'import.
+5. Le cadre légal pour prospecter les contacts du téléphone d'Anne (données personnelles) : sur quoi s'appuie-t-on, et faut-il informer ces personnes ? À vérifier avant le premier import.
 
 ## 9. Hypothèses à confirmer
 
@@ -313,6 +318,8 @@ Ce que coûte cet ordre : pendant les livraisons 1 et 2, l'espace ne montre pas 
 - FR-12 : appel non permis pour les rencontrés à l'EDB tant que la question 1 n'est pas tranchée.
 - FR-14 : nom du menu « Autres outils ».
 - § 3 : le script d'appel est un simple texte.
+- FR-7 : chaque import peut être annulé en entier.
+- FR-15 : le commentaire de séance est un simple texte.
 - FR-17 : l'e-mail groupé passe par les Campagnes existantes.
 - FR-19 : liste de départ des actions de prospection.
 - FR-20 : deux activités peuvent se chevaucher.
