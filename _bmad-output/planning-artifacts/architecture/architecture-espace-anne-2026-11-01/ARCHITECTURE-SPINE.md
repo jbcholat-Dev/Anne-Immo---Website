@@ -5,7 +5,7 @@ purpose: build-substrate
 altitude: epic
 paradigm: "Carnet unique côté serveur, colonnes réparties entre modules écrivains nommés, un îlot par page"
 scope: "Refonte de l'espace d'Anne décrite par le PRD du 2026-11-01 : page Contacts, catégories et messages types, import, séance de contacts, semaine en créneaux, bilan."
-status: draft
+status: final
 created: '2026-11-01'
 updated: '2026-11-01'
 binds: [FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, FR-8, FR-9, FR-10, FR-11, FR-12, FR-13, FR-14, FR-15, FR-16, FR-17, FR-18, FR-19, FR-20, FR-21, FR-22, FR-23, FR-24, FR-25, AD-4, AD-8, AD-9, AD-16, AD-18, AD-19, AD-20, AD-21]
@@ -115,7 +115,7 @@ Toute écriture d'un module met à jour `last_activity_at`. Entrée dans le pipe
 
 - **Binds:** FR-7 à FR-11, question 4 du PRD
 - **Prevents:** un mauvais fichier qui salit tout le tableau sans retour ; deux chemins d'import qui dédoublonnent différemment ; une fusion invisible
-- **Rule:** Tout import passe par `espace/src/server/import`, appelé par la route `api/import`, depuis l'écran de l'espace ou par Claude avec le jeton de service Access ; jamais de SQL direct. L'ancien import de `pipeline` et sa page sont retirés quand ce module est en ligne. Deux temps : aperçu sans écriture (nouveaux, compléments, doublons probables, rejetés), puis `import_lot` (`id`, `fichier`, `source`, `a`, `par`, compteurs). Formats : vCard 2.1, 3.0 et 4.0 avec décodage quoted-printable, CSV et `.xlsx` (module `tableur`). Les numéros passent en E.164 avant toute comparaison. Doublon sûr : même téléphone, même e-mail ou même lien de profil, cherchés dans `contact` et `contact_coordonnee`. Le premier téléphone et le premier e-mail vont sur `contact`, les autres dans `contact_coordonnee` (`contact_id`, `type` ∈ {`telephone`, `email`, `profil`}, `reseau`, `valeur` unique). Chaque contact touché reçoit une ligne `contact_source` (`contact_id`, `source`, `import_lot_id`) et un `contact_evenement` qui garde l'avant-image (AD-29). Pré-rangement selon FR-9, sans jamais changer une catégorie vérifiée. Annuler un lot rejoue les avant-images des contacts qu'il a touchés et supprime ceux qu'il a créés, sauf ceux modifiés depuis par Anne, JB ou une séance (AD-29), qui restent et sont listés.
+- **Rule:** Tout import passe par `espace/src/server/import`, appelé par la route `api/import`, depuis l'écran de l'espace ou par Claude avec le jeton de service Access ; jamais de SQL direct. L'ancien import de `pipeline` et sa page sont retirés quand ce module est en ligne. Deux temps : aperçu sans écriture (nouveaux, compléments, doublons probables, rejetés), puis `import_lot` (`id`, `fichier`, `source`, `a`, `par`, compteurs). Formats : vCard 2.1, 3.0 et 4.0 avec décodage quoted-printable, CSV et `.xlsx` (module `tableur`). Les numéros passent en E.164 avant toute comparaison. Doublon sûr : même téléphone, même e-mail ou même lien de profil, cherchés dans `contact` et `contact_coordonnee`. Le premier téléphone et le premier e-mail vont sur `contact`, les autres dans `contact_coordonnee` (`contact_id`, `type` ∈ {`telephone`, `email`, `profil`}, `reseau`, `valeur` unique). Chaque contact touché reçoit une ligne `contact_source` (`contact_id`, `source`, `import_lot_id`) et un `contact_evenement` qui garde l'avant-image (AD-29). Pré-rangement selon FR-9, sans jamais changer une catégorie vérifiée. Annuler un lot rejoue les avant-images des contacts qu'il a touchés et supprime ceux qu'il a créés, sauf ceux modifiés depuis par Anne, JB ou une séance (AD-29), qui restent et sont listés. **Décision de JB (01/11, 20 h 55) : le premier import, les 882 contacts du téléphone d'Anne, est fait par Claude.** Le jeton de service Access de Claude reçoit l'accès à `api/import` seulement (aperçu, import, annulation d'un lot) : jamais la lecture du tableau ni des fiches. Le réglage est décrit au RUNBOOK § 4 sexies au moment de la livraison. L'écran d'import de l'espace vient après.
 
 ### AD-27 — Une vue enregistrée est un filtre, dans un vocabulaire fermé
 
@@ -227,7 +227,6 @@ Environnements inchangés (AD-19) : la branche de travail est construite sur l'a
 
 ## Deferred
 
-- **Qui fait l'import (écran ou Claude)** : l'architecture est la même (AD-26). Si c'est Claude, son jeton reçoit l'accès à `api/import` seulement. À trancher par JB avant la livraison 1, parce que la règle actuelle interdit à Claude tout accès aux contacts.
 - **Cadre légal des contacts du téléphone** (question 5 du PRD) : à vérifier avant le premier import réel.
 - **E-mail groupé depuis une séance (FR-17)** : reprend AD-21 le moment venu.
 - **Travail à plusieurs en même temps** : la dernière écriture l'emporte (hypothèse FR-6) ; pas de verrou.
