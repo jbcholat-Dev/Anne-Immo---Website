@@ -36,6 +36,9 @@
 // Story 10.13 : passage de la question 1 à la question 2 ventilé par navigateur, appareil et temps d'affichage.
 // Story 10.12 : entonnoir du diagnostic dans le Bilan (par campagne, étape par étape, campagne choisie) et dans le bilan de Claude.
 // Story 10.14 : tableau du test A/B (accueil ou question 1) dans le Bilan et dans le bilan de Claude.
+// Story 18.2 : carnet (migration 0018) : contact hors suivi jamais rattaché par Leedflow ni montré dans les listes, autre numéro
+// d'un contact suivi, appels d'avant l'entrée seule dans le suivi gardés à part, « Ajouter » qui fait entrer dans le suivi,
+// projet et température tenus par la base, six catégories, demande du site rangée en « Demandes reçues ».
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
 // Lancer depuis espace/ : `node scripts/e2e-espace.mjs`.
@@ -135,6 +138,8 @@ try {
   const fiche = contact ? sql(`SELECT * FROM contact WHERE id = '${contact}'`)[0] : null;
   constat(!!fiche && fiche.etape === 'a_qualifier' && fiche.canal === 'site' && fiche.origine_detail === 'guide' && fiche.parcours === 'vendeur'
     && fiche.email === EMAIL && !!fiche.prochaine_action_le, 'demande rattachée à un nouveau contact « à qualifier », origine site · guide, à rappeler');
+  constat(fiche?.categorie_id === 'demandes_recues' && fiche.projet === 'vendeur' && fiche.temperature === 'avec_anne' && !!fiche.verifie_le && fiche.suivi_le === null,
+    '18.2 : une demande du site crée un contact « Demandes reçues », projet tiré du parcours (vendeur), avec Anne');
   constat(sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${contact}' AND type = 'demande' AND source_id = '${lead}'`)[0].n === 1,
     'historique du contact : la demande notée une fois');
   // Une deuxième demande avec la même adresse (casse différente) va sur le même contact.
@@ -1129,6 +1134,71 @@ try {
   r = await appeler(`${E}/`, { headers: avecJeton() });
   html = await r.text();
   constat(html.includes('data-retour-ouvrir') && html.includes('data-retour-public'), 'le bouton « Un retour ? » est sur les pages de l\'espace, avec le rappel que le ticket est public');
+
+  // Story 18.2 : le carnet (migration 0018). Contacts hors suivi (étape NULL), autres numéros, date d'entrée dans le suivi.
+  // Cas laissé par la story 18.1 : un contact du carnet qui appelle ne reçoit pas l'appel, le numéro reste inconnu, et
+  // rattacherInconnus ne le supprime pas.
+  const CARNET = `01KFCA${NUM}${'0'.repeat(14)}`, AMIE = `01KFSA${NUM}${'0'.repeat(14)}`;
+  const TELC = `+33645${NUM}`, TELA = `+33643${NUM}`, TEL2K = `+33642${NUM}`;
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, categorie_id) VALUES
+       ('${CARNET}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Carla', 'Carnet${NUM}', '${TELC}', 'proches'),
+       ('${AMIE}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Alice', 'Amie${NUM}', '${TELA}', 'proches')`);
+  sql(`INSERT INTO contact_coordonnee (contact_id, type, valeur, ajoute_le) VALUES ('${KLF}', 'telephone', '${TEL2K}', '2026-10-01T08:00:00Z')`);
+  const t18 = Date.now();
+  LF.appels.push(
+    { id: `c1-${NUM}`, created: t18 - 5 * MIN, customer: TELC, direction: 'inbound', duration: 120, missed: false, transcription: 'Appel privé de Carla' },
+    { id: `c2-${NUM}`, created: t18 - 4 * MIN, customer: TEL2K, direction: 'inbound', duration: 60, missed: false, transcription: 'Luc appelle de son autre numéro' },
+    { id: `c3-${NUM}`, created: t18 - 3 * MIN, customer: TELA, direction: 'inbound', duration: 60, missed: false, transcription: 'Appel privé d\'Alice' },
+  );
+  await releve();
+  const carnet = () => sql(`SELECT etape, suivi_le, prochaine_action_le, canal, projet, temperature FROM contact WHERE id = '${CARNET}'`)[0];
+  const evDe = (id) => sql(`SELECT source_id FROM contact_evenement WHERE contact_id = '${id}' AND source = 'leedflow'`).map((e) => e.source_id);
+  constat(carnet().etape === null && evDe(CARNET).length === 0 && gardes(TELC) === 1 && evDe(AMIE).length === 0 && gardes(TELA) === 1,
+    '18.1/18.2 : un contact du carnet (hors suivi) qui appelle ne reçoit pas l\'appel ; le numéro reste dans les inconnus, même après rattacherInconnus');
+  constat(evDe(KLF).includes(`appel:c2-${NUM}`), '18.2 : un appel depuis l\'autre numéro d\'un contact suivi (contact_coordonnee) va sur sa fiche');
+  r = await appeler(`${E}/contacts`, { headers: avecJeton() });
+  html = await r.text();
+  const rp = await appeler(`${E}/pipeline`, { headers: avecJeton() });
+  const ra = await appeler(`${E}/`, { headers: avecJeton() });
+  const absent = (h) => !h.includes(`fiche?id=${CARNET}`) && !h.includes(`fiche?id=${AMIE}`);
+  constat(absent(html) && absent(await rp.text()) && absent(await ra.text()), '18.2 : les contacts du carnet n\'apparaissent ni dans Contacts, ni dans le pipeline, ni sur « Aujourd\'hui »');
+  // L'amie entre seule dans le suivi (ce que fera une demande du site, story 18.3) : `suivi_le` posé ; ses appels
+  // d'avant ne sont pas versés dans son historique, ceux d'après oui.
+  const suiviLe = new Date().toISOString();
+  sql(`UPDATE contact SET etape = 'a_qualifier', prochaine_action = 'Rappeler pour qualifier', prochaine_action_le = '${auj}', suivi_le = '${suiviLe}' WHERE id = '${AMIE}'`);
+  await pause(20);
+  LF.appels.push({ id: `c4-${NUM}`, created: Date.now(), customer: TELA, direction: 'inbound', duration: 60, missed: false, transcription: 'Alice rappelle pour son projet' });
+  await releve();
+  constat(evDe(AMIE).includes(`appel:c4-${NUM}`) && !evDe(AMIE).includes(`appel:c3-${NUM}`) && gardes(TELA) === 1,
+    '18.2 : entrée seule dans le suivi (suivi_le) : l\'appel d\'après rangé, l\'appel privé d\'avant reste dans les inconnus');
+  // « Ajouter » d'Anne sur un numéro du carnet : le contact entre dans le suivi par sa décision, l'historique est repris.
+  r = await page('/ajouter', { quoi: 'contact', telephone: TELC, canal: 'rencontre', parcours: 'vendeur' });
+  const c18 = carnet();
+  constat(r.headers.get('location') === `/contacts/fiche?id=${CARNET}&m=existant` && c18.etape === 'a_qualifier' && c18.suivi_le === null && c18.prochaine_action_le === auj
+    && c18.canal === 'rencontre' && c18.projet === 'vendeur' && c18.temperature === 'avec_anne',
+    '18.2 : « Ajouter » sur un contact du carnet : entré dans le suivi (à qualifier aujourd\'hui, origine et projet notés, avec Anne), suivi_le laissé vide');
+  constat(evDe(CARNET).includes(`appel:c1-${NUM}`) && gardes(TELC) === 0
+    && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${CARNET}' AND type = 'etape' AND json_extract(donnees, '$.vers') = 'a_qualifier'`)[0].n === 1,
+    '18.2 : son historique Leedflow est repris et le numéro quitte les inconnus ; l\'entrée dans le suivi est notée');
+  r = await appeler(`${E}/contacts`, { headers: avecJeton() });
+  constat((await r.text()).includes(`fiche?id=${CARNET}`), '18.2 : une fois suivi, il apparaît dans Contacts');
+  // Projet et température (AD-24) : la base refuse une température incohérente.
+  const T = (projet, temperature, n) => `INSERT INTO contact (id, created_at, last_activity_at, nom, projet, temperature) VALUES ('T${n}${ESSAI}', '2026-11-01', '2026-11-01', 'Essai', '${projet}', '${temperature}')`;
+  constat(refuse(T('a_qualifier', 'chaud', 1)) && refuse(T('ambassadeur', 'froid', 2)) && refuse(T('acheteur', 'en_vente', 3)) && refuse(T('vendeur', 'recherche_active', 4))
+    && refuse(T('vendeur', 'brulant', 5)) && refuse(T('inconnu', 'froid', 6)),
+    '18.2 : la base refuse une température sur « à qualifier » ou « ambassadeur », « en vente » sur un acheteur, « recherche active » sur un vendeur, une valeur inconnue');
+  constat(!refuse(T('vendeur', 'chaud', 7)) && !refuse(T('acheteur', 'recherche_active', 8)), '18.2 : vendeur chaud et acheteur en recherche active acceptés');
+  sql(`DELETE FROM contact WHERE id IN ('T7${ESSAI}', 'T8${ESSAI}')`);
+  const cats = Object.fromEntries(sql('SELECT id, appel_permis, envoi_groupe_permis FROM categorie ORDER BY id').map((c) => [c.id, `${c.appel_permis}${c.envoi_groupe_permis}`]));
+  constat(JSON.stringify(cats) === JSON.stringify({ anciens_clients: '11', demandes_recues: '11', edb: '01', lointains: '00', partenaires: '11', proches: '10' }),
+    `18.2 : les six catégories de départ existent avec leurs autorisations d'appel et d'envoi groupé (${JSON.stringify(cats)})`);
+  const bea = sql(`SELECT categorie_id, projet FROM contact WHERE nom = 'Boitage${ESSAI}'`)[0];
+  constat(bea?.categorie_id === 'demandes_recues' && bea.projet === 'vendeur', '18.2 : un contact ajouté à la main est rangé en « Demandes reçues », projet tiré du parcours');
+  constat(sql('SELECT count(*) AS n FROM vue')[0].n >= 5 && refuse(`INSERT INTO vue (id, nom, filtre, created_at, maj_le) VALUES ('V${ESSAI}', 'x', 'pas du json', '2026-11-01', '2026-11-01')`)
+    && refuse(`INSERT INTO leedflow_ecarte (telephone, a, categorie) VALUES ('+33600${NUM}', '2026-11-01', 'inconnue')`)
+    && !refuse(`INSERT INTO leedflow_ecarte (telephone, a, categorie, contact_id) VALUES ('+33600${NUM}', '2026-11-01', 'prospect', '${CARNET}')`),
+    '18.2 : vues de départ présentes (filtre JSON exigé), numéro classé « prospect » avec son contact accepté');
+  sql(`DELETE FROM leedflow_ecarte WHERE telephone = '+33600${NUM}'`);
 
   // Clé refusée (révoquée) : la relève le note et « Aujourd'hui » le dit.
   LF.refuse = true;

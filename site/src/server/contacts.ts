@@ -79,12 +79,14 @@ export function parcoursDeLaDemande(source: string, projet: string | null): 'ven
   return null;
 }
 
-async function trouver(env: EnvSite, telephone: string | null, email: string | null): Promise<{ id: string; etape: Etape } | null> {
+// Depuis la migration 0018, un contact trouvé peut être hors suivi (étape NULL, contact du carnet) : la demande lui est
+// rattachée sans le faire entrer dans le suivi ; l'entrée dans le suivi (avec `suivi_le`) est l'objet de la story 18.3.
+async function trouver(env: EnvSite, telephone: string | null, email: string | null): Promise<{ id: string; etape: Etape | null } | null> {
   // Le téléphone l'emporte sur l'e-mail quand les deux désignent des contacts différents.
   return env.DB.prepare(
     `SELECT id, etape FROM contact WHERE (?1 IS NOT NULL AND telephone = ?1) OR (?2 IS NOT NULL AND email = ?2)
      ORDER BY (telephone IS ?1) DESC LIMIT 1`,
-  ).bind(telephone, email).first<{ id: string; etape: Etape }>();
+  ).bind(telephone, email).first<{ id: string; etape: Etape | null }>();
 }
 
 /** Rattache une demande à son contact, en le créant au besoin. Sans effet si elle l'est déjà. Renvoie l'id du contact. */
@@ -102,9 +104,12 @@ export async function rattacherLead(env: EnvSite, leadId: string): Promise<strin
   let contact = await trouver(env, telephone, email);
   if (!contact) {
     await env.DB.prepare(
+      // Carnet (story 18.2, AD-22, AD-24) : catégorie « Demandes reçues » (c'est sa définition, donc vérifiée), projet tiré
+      // du parcours, et température « avec Anne » quand il est connu.
       `INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, email, parcours, etape,
-         prochaine_action, prochaine_action_le, canal, origine_detail, commune, is_test)
-       VALUES (?1, ?2, ?2, ?3, ?4, ?5, ?6, ?7, 'a_qualifier', ?8, ?2, 'site', ?9, ?10, ?11)
+         prochaine_action, prochaine_action_le, canal, origine_detail, commune, is_test, categorie_id, verifie_le, projet, temperature)
+       VALUES (?1, ?2, ?2, ?3, ?4, ?5, ?6, ?7, 'a_qualifier', ?8, ?2, 'site', ?9, ?10, ?11,
+         'demandes_recues', ?2, coalesce(?7, 'a_qualifier'), CASE WHEN ?7 IS NOT NULL THEN 'avec_anne' END)
        ON CONFLICT DO NOTHING`,
     ).bind(ulid(), lead.created_at, lead.prenom, lead.nom, telephone, email, parcoursDeLaDemande(lead.source, lead.projet),
       telephone ? ACTION_QUALIFIER : ACTION_QUALIFIER_EMAIL, lead.source, lead.commune_bien, lead.is_test).run();

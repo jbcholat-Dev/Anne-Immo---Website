@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-26-2026 15:10
-last_updated: 10-28-2026 22:10
+last_updated: 11-01-2026 22:30
 project: Site Anne Vial-Tissot
 project_key: NOKEY
 tracking_system: file-system
@@ -239,7 +239,7 @@ development_status:
   # Nouvelle version de l'espace d'Anne (refonte BMAD du 2026-11-01) : _bmad-output/planning-artifacts/epics-espace-anne-2026-11-01.md
   epic-18: in-progress   # le carnet de contacts (livraison 1)
   18-1-leedflow-ne-range-un-appel-que-sur-un-contact-suivi: done   # 2026-11-01, PR #225
-  18-2-nouvelle-base-du-carnet-migration-0018: backlog
+  18-2-nouvelle-base-du-carnet-migration-0018: review
   18-3-demandes-du-site-et-droits-sur-le-nouveau-carnet: backlog
   18-4-page-contacts: backlog
   18-5-filtres-et-vues-enregistrees: backlog

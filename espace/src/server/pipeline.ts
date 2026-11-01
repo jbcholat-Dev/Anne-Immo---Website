@@ -41,12 +41,12 @@ export function personne(d: Record<string, unknown>): Personne | null {
 }
 
 /** Le contact qui porte ce téléphone ou cet e-mail ; le téléphone l'emporte. */
-export async function contactConnu(env: EnvSite, telephone: string | null, email: string | null): Promise<{ id: string; etape: Etape } | null> {
+export async function contactConnu(env: EnvSite, telephone: string | null, email: string | null): Promise<{ id: string; etape: Etape | null } | null> {
   if (!telephone && !email) return null;
   return env.DB.prepare(
     `SELECT id, etape FROM contact WHERE (?1 IS NOT NULL AND telephone = ?1) OR (?2 IS NOT NULL AND email = ?2)
      ORDER BY (telephone IS ?1) DESC LIMIT 1`,
-  ).bind(telephone, email).first<{ id: string; etape: Etape }>();
+  ).bind(telephone, email).first<{ id: string; etape: Etape | null }>();
 }
 
 /** Complète un contact existant avec ce qui lui manque, sans prendre un téléphone ou un e-mail porté par un autre. */
@@ -72,13 +72,41 @@ export interface Origine {
   rappel_individuel_seul?: boolean;
 }
 
+/**
+ * Un contact créé ici entre dans le suivi (à qualifier). Carnet (story 18.2, AD-22, AD-24) : catégorie « Demandes
+ * reçues », vérifiée (c'est Anne qui l'ajoute) ; projet tiré du parcours, et température « avec Anne » quand il est connu.
+ */
 function inserer(env: EnvSite, id: string, p: Personne, o: Origine, maintenant: string, is_test: number) {
   return env.DB.prepare(
     `INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, email, commune, parcours, etape,
-       prochaine_action, prochaine_action_le, canal, origine_detail, passage_id, prescripteur_id, rappel_individuel_seul, is_test)
-     VALUES (?1, ?2, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 'a_qualifier', ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)`,
+       prochaine_action, prochaine_action_le, canal, origine_detail, passage_id, prescripteur_id, rappel_individuel_seul, is_test,
+       categorie_id, verifie_le, projet, temperature)
+     VALUES (?1, ?2, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 'a_qualifier', ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16,
+       'demandes_recues', ?2, coalesce(?8, 'a_qualifier'), CASE WHEN ?8 IS NOT NULL THEN 'avec_anne' END)`,
   ).bind(id, maintenant, p.prenom, p.nom, p.telephone, p.email, p.commune, o.parcours, ACTION_QUALIFIER, aujourdhui(),
     o.canal, o.origine_detail, o.passage_id, o.prescripteur_id, o.rappel_individuel_seul ? 1 : 0, is_test);
+}
+
+/**
+ * Un contact du carnet (étape NULL) qu'Anne ajoute à la main entre dans le suivi, à qualifier aujourd'hui (règle
+ * d'AD-20). C'est sa décision : `suivi_le` reste NULL, et la relève Leedflow reprend l'historique de son numéro
+ * (revue de la story 18.1). Le projet est pris du parcours choisi s'il était à qualifier ; la température passe à
+ * « avec Anne » si le projet est connu (AD-24) ; l'origine choisie dans le formulaire est notée si le contact n'en avait
+ * pas (contact importé). Sans effet sur un contact déjà suivi.
+ */
+function entrerDansLeSuivi(env: EnvSite, id: string, o: Origine, maintenant: string) {
+  return env.DB.prepare(
+    `UPDATE contact SET etape = 'a_qualifier', prochaine_action = ?3, prochaine_action_le = ?4, reveil_le = NULL, motif_perte = NULL,
+       parcours = coalesce(parcours, ?5),
+       projet = CASE WHEN projet = 'a_qualifier' AND ?5 IS NOT NULL THEN ?5 ELSE projet END,
+       canal = coalesce(canal, ?6), origine_detail = coalesce(origine_detail, ?7),
+       passage_id = coalesce(passage_id, ?8), prescripteur_id = coalesce(prescripteur_id, ?9),
+       last_activity_at = ?2
+     WHERE id = ?1 AND etape IS NULL`,
+  ).bind(id, maintenant, ACTION_QUALIFIER, aujourdhui(), o.parcours, o.canal, o.origine_detail, o.passage_id, o.prescripteur_id);
+}
+function temperatureDuSuivi(env: EnvSite, id: string) {
+  return env.DB.prepare(`UPDATE contact SET temperature = 'avec_anne' WHERE id = ?1 AND projet IN ('vendeur', 'acheteur', 'vendeur_acheteur')`).bind(id);
 }
 
 function evenement(env: EnvSite, contactId: string, a: string, type: 'creation' | 'note' | 'qualification', source: 'anne' | 'import', texteEv: string, par: string, donnees?: unknown) {
@@ -103,6 +131,11 @@ export async function saisirContact(env: EnvSite, p: Personne, o: Origine, note:
   const connu = await contactConnu(env, p.telephone, p.email);
   if (connu) {
     const lot = [completer(env, connu.id, p, maintenant)];
+    if (connu.etape === null) {
+      lot.push(entrerDansLeSuivi(env, connu.id, o, maintenant), temperatureDuSuivi(env, connu.id),
+        env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees, par) VALUES (?1, ?2, 'etape', 'anne', ?3, ?4, ?5)`)
+          .bind(connu.id, maintenant, `Carnet → ${LIBELLES_ETAPES.a_qualifier} : ajouté au suivi à la main`, JSON.stringify({ de: null, vers: 'a_qualifier' }), par));
+    }
     if (note) lot.push(evenement(env, connu.id, maintenant, 'note', 'anne', note, par));
     await env.DB.batch(lot);
     return { id: connu.id, existant: true };
@@ -286,7 +319,8 @@ export type FiltreContacts = keyof typeof FILTRES_CONTACTS;
  */
 export async function listerContacts(env: EnvSite, q = '', limite = 200, filtre: FiltreContacts | null = null): Promise<ResumeContact[]> {
   const champs = 'id, prenom, nom, telephone, email, commune, parcours, etape, prochaine_action, prochaine_action_le, canal, origine_detail, last_activity_at, is_test';
-  const conditions: string[] = [];
+  // Seuls les contacts suivis (étape renseignée) ; ceux du carnet seront montrés par la page Contacts (story 18.4).
+  const conditions: string[] = ['etape IS NOT NULL'];
   const valeurs: (string | number)[] = [limite];
   const f = filtreRecherche(q, ['prenom', 'nom', 'commune', 'email'], 'telephone', 2);
   if (f) { conditions.push(`(${f.sql})`); valeurs.push(...f.valeurs); }
@@ -302,7 +336,7 @@ export async function listerContacts(env: EnvSite, q = '', limite = 200, filtre:
     valeurs.push(aujourdhui(), parisVersUtc(`${aujourdhui()}T00:00`) ?? '');
   }
   const ordre = filtre === 'retard' ? 'prochaine_action_le ASC' : 'last_activity_at DESC';
-  const { results } = await env.DB.prepare(`SELECT ${champs} FROM contact ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''} ORDER BY ${ordre} LIMIT ?1`)
+  const { results } = await env.DB.prepare(`SELECT ${champs} FROM contact WHERE ${conditions.join(' AND ')} ORDER BY ${ordre} LIMIT ?1`)
     .bind(...valeurs).all<ResumeContact>();
   return results;
 }
@@ -561,13 +595,13 @@ export async function bilan(env: EnvSite, periode: Periode) {
   const [canaux, delai, secteurs, perdus] = await env.DB.batch([
     env.DB.prepare(`SELECT c.canal, count(*) AS contacts, sum(c.qualifie_le IS NOT NULL) AS qualifies,
         sum(${aAtteint(ETAPES_RDV)}) AS rdv, sum(${aAtteint(ETAPES_MANDAT)}) AS mandats
-      FROM contact c WHERE c.created_at >= ?1 GROUP BY c.canal`).bind(debut),
+      FROM contact c WHERE c.created_at >= ?1 AND c.etape IS NOT NULL GROUP BY c.canal`).bind(debut),
     // Délai de rappel : de l'arrivée du contact à la première tentative d'Anne (qualification, même « pas joint », ou appel
     // qu'elle a passé, relevé par Leedflow ; un appel ou un SMS reçu ne compte pas).
     env.DB.prepare(`SELECT avg((julianday(premier) - julianday(created_at)) * 24) AS heures, count(*) AS n FROM (
         SELECT c.created_at, (SELECT min(e.a) FROM contact_evenement e WHERE e.contact_id = c.id
           AND (e.type = 'qualification' OR (e.type = 'appel' AND json_extract(e.donnees, '$.sens') = 'sortant' AND json_extract(e.donnees, '$.genre') = 'appel'))) AS premier
-        FROM contact c WHERE c.created_at >= ?1) WHERE premier IS NOT NULL`).bind(debut),
+        FROM contact c WHERE c.created_at >= ?1 AND c.etape IS NOT NULL) WHERE premier IS NOT NULL`).bind(debut),
     env.DB.prepare(`SELECT p.secteur, p.fait_le AS dernier, p.mots, (SELECT count(*) FROM contact c WHERE c.passage_id = p.id) AS contacts
       FROM passage_boitage p WHERE p.id = (SELECT p2.id FROM passage_boitage p2 WHERE p2.secteur = p.secteur ORDER BY p2.fait_le DESC, p2.created_at DESC LIMIT 1)
       ORDER BY p.fait_le DESC LIMIT 30`),
@@ -714,7 +748,7 @@ export async function contactsDuPipeline(env: EnvSite, parcours: 'vendeur' | 'ac
   const depuis90 = new Date(Date.now() - 90 * 86_400_000).toISOString();
   const { results } = await env.DB.prepare(
     `SELECT id, prenom, nom, telephone, email, commune, parcours, etape, prochaine_action, prochaine_action_le, canal, origine_detail, last_activity_at, is_test
-     FROM contact WHERE (parcours = ?1 OR (?1 = 'vendeur' AND parcours IS NULL))
+     FROM contact WHERE (parcours = ?1 OR (?1 = 'vendeur' AND parcours IS NULL)) AND etape IS NOT NULL
        AND (etape <> 'perdu' OR last_activity_at >= ?2)
      ORDER BY coalesce(prochaine_action_le, '9999') ASC LIMIT 500`,
   ).bind(parcours, depuis90).all<ResumeContact>();
