@@ -7,7 +7,7 @@ updated: 2026-11-01
 
 # Brief produit : l'espace de travail d'Anne
 
-_Version 1, rédigée avec JB le 2026-11-01 (méthode BMAD). Les points marqués **[HYPOTHÈSE]** sont déduits, pas encore confirmés._
+_Version 2, rédigée avec JB le 2026-11-01 (méthode BMAD). Les points marqués **[HYPOTHÈSE]** sont déduits, pas encore confirmés._
 
 ## En bref
 
@@ -39,9 +39,17 @@ Le dimanche, Anne (avec JB) place dans sa semaine quelques activités de prospec
 
 **3. Les contacts rassemblés et triés**
 - Import des sources : contacts du téléphone (filtrés), LinkedIn (surtout les anciens collègues de Danone à Évian, et de Paris qui viendraient s'installer), abonnés des réseaux si on peut les récupérer, fichier Excel des animations à l'Entrepôt du Bricolage. Entre 100 et 1 000 contacts au total, avec beaucoup de déchet attendu côté LinkedIn.
-- Tri par catégorie de personnes, par exemple anciens clients, proches de la région, anciens collègues, personnes rencontrées en magasin, professionnels qui peuvent recommander. **[HYPOTHÈSE]** La liste exacte reste à fixer avec Anne.
-- Une méthode par catégorie : par quel canal (SMS ou WhatsApp un par un, e-mail, appel) et avec quoi (parrainage, diagnostic du site, autre).
-- **[HYPOTHÈSE]** Le lien avec la semaine : une activité peut viser une catégorie (« jeudi 14 h : WhatsApp du parrainage aux proches de la région »).
+- **Cinq catégories**, pré-classées à l'import selon la source ; Anne ne corrige que les exceptions, quelques-unes à la fois, jamais 600 d'un coup le dimanche (issu de la table ronde du 01/11, `table-ronde-categories.md`) :
+
+  - **Anciens clients** : appel ou message personnel ; avis et parrainage. E-mail groupé possible.
+  - **Cercle proche** (amis de la région, anciens collègues) : message personnel, un par un (SMS, WhatsApp, appel). Pas d'e-mail groupé.
+  - **Rencontrés à l'EDB** : e-mail « on s'était vus à l'animation », avec le diagnostic offert ; ils ont accepté en remplissant le bulletin du jeu.
+  - **Prescripteurs** (notaires, banquiers, artisans…) : rencontre ou appel, échange de recommandations.
+  - **À réchauffer** (abonnés des réseaux, le reste) : pas de campagne ; contenus réguliers, message privé quand quelqu'un réagit.
+
+- Le parrainage est un message possible pour plusieurs catégories (dès l'accord d'eXp), pas une catégorie.
+- Les voisins des biens vendus ne sont pas une liste : c'est une activité de boîtage de la semaine.
+- **[HYPOTHÈSE]** Le lien avec la semaine : une activité peut viser une catégorie (« jeudi 14 h : WhatsApp du parrainage au cercle proche »).
 
 ## Principes
 
@@ -74,7 +82,7 @@ Le dimanche, Anne (avec JB) place dans sa semaine quelques activités de prospec
 
 ## Points d'attention
 
-- **Accord des personnes.** Les bulletins remplis aux animations ne valent pas forcément accord pour être démarché. Pas de SMS groupé sans accord ; e-mail groupé seulement aux contacts qui l'ont accepté. Le démarchage téléphonique des particuliers sans accord est interdit depuis le 11/08/2026.
+- **Accord des personnes.** Les personnes rencontrées aux animations ont accepté d'être contactées en remplissant le bulletin du jeu (JB, 01/11) : garder la trace de cet accord à l'import. Connaître quelqu'un autorise un message personnel, pas un envoi groupé (sauf anciens clients). Le démarchage téléphonique des particuliers sans accord est interdit depuis le 11/08/2026 ; une règle plus précise sur les anciens clients, citée d'après la presse, reste à vérifier sur le texte officiel.
 - **Parrainage.** Il attend encore la réponse d'eXp France.
 - **Récupérer les contacts.** Le téléphone et LinkedIn s'exportent en fichier. Les abonnés des réseaux sociaux sont plus difficiles à récupérer.
 
