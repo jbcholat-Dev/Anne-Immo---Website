@@ -87,7 +87,7 @@ La page Contacts est un tableau, une ligne par contact.
 Anne combine des filtres sans écrire de formule.
 - Filtres : catégorie, projet, température, source, entreprise, ville, vérifié ou non, écarté ou non, accord, jamais recontacté, dernier contact plus ancien qu'une durée choisie.
 - Les filtres actifs sont affichés au-dessus du tableau et se retirent d'un clic chacun.
-- Une combinaison de filtres s'enregistre sous un nom (« Vendeurs chauds », « Ambassadeurs », « EDB jamais recontactés », « Anciens de Danone ») et se retrouve d'un clic (JB, 01/11). Une vue enregistrée se renomme ou se supprime.
+- Une combinaison de filtres s'enregistre sous un nom (« Vendeurs chauds », « Ambassadeurs », « EDB jamais recontactés », « Anciens de Danone ») et se retrouve d'un clic (JB, 01/11). Une vue enregistrée se renomme ou se supprime, y compris celles fournies au départ ; seule « Tous les contacts » reste. Anne crée une nouvelle vue en choisissant ses filtres dans le tableau puis « Nouvelle vue avec ces filtres ». Supprimer une vue s'annule tout de suite et ne casse aucune action de prospection, qui garde ses propres filtres (JB, 01/11 21 h 04).
 
 #### FR-3 : Retrouver un contact
 Anne cherche un contact par nom, prénom, morceau de numéro, e-mail ou entreprise ; la recherche se combine avec les filtres.
