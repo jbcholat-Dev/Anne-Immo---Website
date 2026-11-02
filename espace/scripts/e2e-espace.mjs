@@ -1341,8 +1341,8 @@ try {
   const ecartes = Object.fromEntries(sql(`SELECT telephone, categorie, contact_id FROM leedflow_ecarte WHERE telephone IN ('${TELD1}', '${TELD2}')`).map((e) => [e.telephone, e]));
   constat(ecartes[TELD1]?.categorie === 'prive' && ecartes[TELD1].contact_id === null && !ecartes[TELD2],
     '18.3 : effacement : le numéro classé Privé reste classé (sans lien vers le contact), le classement « prospect » part');
-  constat(sql(`SELECT count(*) AS n FROM lead WHERE id = 'LORP${ESSAI}'`)[0].n === 0 && sql(`SELECT count(*) AS n FROM opposition WHERE empreinte = '${hmac(MAILO)}'`)[0].n === 1,
-    'revue 18.3 : effacement : la demande restée sans contact faite avec l\'un de ses numéros part aussi, son e-mail va dans « opposition »');
+  constat(sql(`SELECT count(*) AS n FROM lead WHERE id = 'LORP${ESSAI}'`)[0].n === 0 && sql(`SELECT count(*) AS n FROM opposition WHERE empreinte = '${hmac(MAILO)}'`)[0].n === 0,
+    'revue 18.3 et 18.4 : effacement : la demande restée sans contact faite avec l\'un de ses numéros part aussi ; trouvée par le seul téléphone, son e-mail (peut-être celui d\'un proche) ne va pas dans « opposition »');
   constat(sql(`SELECT count(*) AS n FROM contact WHERE id = '${AUTRE}'`)[0].n === 1 && sql(`SELECT count(*) AS n FROM lead WHERE id = 'LAUT${ESSAI}'`)[0].n === 1
     && sql(`SELECT contact_id FROM leedflow_ecarte WHERE telephone = '${TELD3}' AND categorie = 'pro'`)[0]?.contact_id === AUTRE,
     'revue 18.3 : effacement : une autre personne, sa demande et le classement « pro » d\'un numéro rangé sur elle sont épargnés');
@@ -1361,6 +1361,16 @@ try {
   constat(sql(`SELECT count(*) AS n FROM contact WHERE id = '${EMS}'`)[0].n === 0 && sql(`SELECT count(*) AS n FROM contact_coordonnee WHERE valeur = '${MAIL2}'`)[0].n === 0
     && sql(`SELECT count(*) AS n FROM opposition WHERE empreinte IN ('${hmac(MAIL2)}', '${hmac(`principal+${ESSAI}@example.com`)}')`)[0].n === 2,
     '18.3 : effacement par adresse : le contact de l\'e-mail secondaire est effacé, ses deux e-mails vont dans « opposition »');
+  // Revue 18.4 : effacement par adresse d'une personne sans contact : le téléphone de sa demande va dans « opposition » et
+  // emporte la demande d'un proche faite du même numéro (ligne fixe), sans mettre l'e-mail de ce proche en opposition.
+  const MAILP = `perso+${ESSAI}@example.com`, MAILC = `conjoint+${ESSAI}@example.com`, TELF = `+33450${NUM}`;
+  sql(`INSERT INTO lead (id, submission_id, created_at, last_activity_at, lang, source, email, privacy_accepted_at, is_test, contact_id, telephone) VALUES
+    ('LPER${ESSAI}', 'lper-${ESSAI}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'fr', 'contact', '${MAILP}', '2026-10-01T08:00:00Z', 1, NULL, '${TELF}'),
+    ('LCON${ESSAI}', 'lcon-${ESSAI}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'fr', 'contact', '${MAILC}', '2026-10-01T08:00:00Z', 1, NULL, '${TELF}')`);
+  r = await formulaire('effacer', { email: MAILP, confirmation: MAILP });
+  const oppDe = (v) => sql(`SELECT count(*) AS n FROM opposition WHERE empreinte = '${hmac(v)}'`)[0].n;
+  constat(sql(`SELECT count(*) AS n FROM lead WHERE id IN ('LPER${ESSAI}', 'LCON${ESSAI}')`)[0].n === 0 && oppDe(MAILP) === 1 && oppDe(TELF) === 1 && oppDe(MAILC) === 0,
+    'revue 18.4 : effacement par adresse : le téléphone d\'une demande restée sans contact va dans « opposition » et emporte la demande du même numéro, sans l\'e-mail du proche');
   // Projet et température (AD-24) : la base refuse une température incohérente.
   const T = (projet, temperature, n) => `INSERT INTO contact (id, created_at, last_activity_at, nom, projet, temperature) VALUES ('T${n}${ESSAI}', '2026-11-01', '2026-11-01', 'Essai', '${projet}', '${temperature}')`;
   constat(refuse(T('a_qualifier', 'chaud', 1)) && refuse(T('ambassadeur', 'froid', 2)) && refuse(T('acheteur', 'en_vente', 3)) && refuse(T('vendeur', 'recherche_active', 4))
@@ -1398,6 +1408,8 @@ try {
   const ENT4 = `Fromagerie${NUM}`, PROFIL4 = `https://www.linkedin.com/in/essai-${NUM}`;
   sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, email, commune, entreprise, categorie_id, projet, temperature, verifie_le, dernier_contact_le, dernier_contact_canal) VALUES
        ('${C4}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Zoé', 'Tableau${NUM}', '${TEL4}', 'zoe.tableau+${ESSAI}@example.com', 'Évian', '${ENT4}', 'partenaires', 'vendeur', 'tiede', '2026-10-02T08:00:00Z', '2026-10-28T09:00:00Z', 'whatsapp')`);
+  const HEL = `01KFHE${NUM}${'0'.repeat(14)}`;
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, categorie_id) VALUES ('${HEL}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Hélène', 'Accentuée${NUM}', 'proches')`);
   sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, categorie_id, ecarte_le) VALUES ('${ECART}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Écarté', 'Tableau${NUM}', '+33632${NUM}', 'lointains', '2026-10-05T08:00:00Z')`);
   sql(`INSERT INTO contact_coordonnee (contact_id, type, reseau, valeur, ajoute_le) VALUES ('${C4}', 'telephone', NULL, '${TEL4B}', '2026-10-01T08:00:00Z'), ('${C4}', 'profil', 'linkedin', '${PROFIL4}', '2026-10-01T08:00:00Z')`);
   sql(`INSERT INTO contact_source (contact_id, source, a) VALUES ('${C4}', 'linkedin', '2026-10-01T08:00:00Z')`);
@@ -1412,7 +1424,7 @@ try {
   constat(donnees.length === sql('SELECT count(*) AS n FROM contact')[0].n, `18.4 : une ligne par contact non effacé (${donnees.length})`);
   r = await appeler(`${E}/?m=suite`, { headers: avecJeton(), redirect: 'manual' });
   const rj = await appeler(`${E}/aujourdhui`, { headers: avecJeton() });
-  constat(r.status === 301 && r.headers.get('location') === '/aujourdhui?m=suite' && rj.status === 200 && (await rj.text()).includes('Bonjour Anne'),
+  constat(r.status === 302 && r.headers.get('location') === '/aujourdhui?m=suite' && rj.status === 200 && (await rj.text()).includes('Bonjour Anne'),
     '18.4 : l\'ancienne page d\'accueil « Aujourd\'hui » reste joignable à /aujourdhui, ses anciens retours (/?m=…) y sont renvoyés');
   const outils = [...html.matchAll(/<a href="([^"]+)"[^>]*data-outil="([^"]+)"/g)].map((m) => [m[2], m[1].replace(/&amp;/g, '&')]);
   const reponses = await Promise.all(outils.map(([, h]) => appeler(`${E}${h}`, { headers: avecJeton() }).then((x) => x.status)));
@@ -1436,16 +1448,19 @@ try {
       constat(['Zoé Tableau', ENT4, 'Partenaires pros', 'Vendeur', 'Tiède', 'LinkedIn', 'Évian', telLisible(TEL4), `zoe.tableau+${ESSAI}@example.com`, '28/10/2026 · WhatsApp', 'Sans accord', '✓ vérifié'].every((t) => ligne4.includes(t))
         && await lien.count() === 1 && (await lien.getAttribute('rel'))?.includes('noopener'),
         '18.4 : les colonnes de FR-1 (nom, entreprise, catégorie, projet, température, source, ville, téléphone, e-mail, profil, dernier contact, accord, état)');
-      // Recherche par un morceau du milieu de l'autre numéro, tapé avec des espaces ; puis par l'entreprise.
-      await o.fill('[data-recherche]', `33 ${NUM.slice(0, 2)} ${NUM.slice(2, 4)}`);
-      const parNumero = await o.locator('[data-lignes] tr[data-contact]').evaluateAll((t) => t.map((x) => x.dataset.contact));
-      await o.fill('[data-recherche]', `06 33 ${NUM.slice(0, 2)}`);
-      const parDebut = await o.locator('[data-lignes] tr[data-contact]').evaluateAll((t) => t.map((x) => x.dataset.contact));
-      await o.fill('[data-recherche]', ENT4.toLowerCase());
-      const parEntreprise = await o.locator('[data-lignes] tr[data-contact]').evaluateAll((t) => t.map((x) => x.dataset.contact));
+      // Recherche par un morceau du milieu de l'autre numéro, tapé avec des espaces ; puis par l'entreprise. Le tableau se
+      // recalcule 120 ms après la dernière frappe : l'essai attend 300 ms.
+      const chercher = async (v) => { await o.fill('[data-recherche]', v); await o.waitForTimeout(300); return o.locator('[data-lignes] tr[data-contact]').evaluateAll((t) => t.map((x) => x.dataset.contact)); };
+      const parNumero = await chercher(`33 ${NUM.slice(0, 2)} ${NUM.slice(2, 4)}`);
+      const parDebut = await chercher(`06 33 ${NUM.slice(0, 2)}`);
+      const parAccent = await chercher(`helene accentuee${NUM}`);
+      const parChiffres = await chercher(NUM);
+      const parEntreprise = await chercher(ENT4.toLowerCase());
       constat(parNumero.includes(C4) && parDebut.includes(C4) && !parDebut.includes(KLF) && parEntreprise.join() === C4 && (await o.textContent('[data-compteur]')) === `1 contact sur ${nonEcartes}`,
         '18.4 : recherche par un morceau de numéro (autre numéro compris, début tapé en 06), par l\'entreprise ; le compteur suit');
-      await o.fill('[data-recherche]', '');
+      constat(parAccent.join() === HEL && parChiffres.includes(C4) && parChiffres.includes(HEL),
+        'revue 18.4 : « helene » trouve « Hélène » (accents ignorés) ; des chiffres cherchent aussi dans le texte (entreprise, nom)');
+      await chercher('');
       // Tri par ville, puis à l'envers : vides en fin de liste dans les deux sens.
       const villes = () => o.locator('[data-lignes] tr[data-contact]').evaluateAll((t) => t.map((x) => x.children[6]?.textContent ?? ''));
       const ordonne = (l, sens) => { const v = l.filter((x) => x !== '—'); const c = new Intl.Collator('fr', { sensitivity: 'base', numeric: true }); return v.every((x, i) => i === 0 || sens * c.compare(v[i - 1], x) <= 0) && l.slice(v.length).every((x) => x === '—'); };
@@ -1489,13 +1504,20 @@ try {
     const o = await ctx.newPage();
     await o.goto(`${E}/`);
     await o.waitForSelector('[data-lignes] tr[data-contact]');
-    const mesure = await o.evaluate(() => {
+    const mesure = await o.evaluate(async () => {
       const temps = (f) => { const t = performance.now(); f(); return Math.round(performance.now() - t); };
       const q = document.querySelector('[data-recherche]');
-      const chercher = (v) => temps(() => { q.value = v; q.dispatchEvent(new Event('input')); });
+      const corps = document.querySelector('[data-lignes]');
+      // Recherche : de la frappe au tableau redessiné, attente de 120 ms comprise.
+      const chercher = (v) => new Promise((ok) => {
+        const t = performance.now();
+        const obs = new MutationObserver(() => { obs.disconnect(); ok(Math.round(performance.now() - t)); });
+        obs.observe(corps, { childList: true });
+        q.value = v; q.dispatchEvent(new Event('input'));
+      });
       const trier = (cle) => temps(() => document.querySelector(`th[data-cle=${cle}] button`).click());
       return { lignes: document.querySelectorAll('[data-lignes] tr[data-contact]').length, triNom: trier('nom'), triVille: trier('ville'), triDernier: trier('dernier'),
-        rechercheMot: chercher('perf'), rechercheNumero: chercher('06 99 00 05'), rechercheVide: chercher('') };
+        rechercheMot: await chercher('perf'), rechercheNumero: await chercher('06 99 00 05'), rechercheVide: await chercher('') };
     });
     const pire = Math.max(mesure.triNom, mesure.triVille, mesure.triDernier, mesure.rechercheMot, mesure.rechercheNumero, mesure.rechercheVide);
     constat(mesure.lignes >= 1000 && pire < 1000, `18.4 : avec ${mesure.lignes} contacts, tri et recherche en moins d'une seconde (${JSON.stringify(mesure)} ms)`);
@@ -1538,6 +1560,9 @@ try {
           `suite sur ${nom} : « Pas joint » ne demande que la date du rappel`);
         await onglet.click('[data-resultat] label:has(input[value=fait]) span');
         constat(await onglet.isVisible('[data-action]') && await onglet.isVisible('.su-etapes summary'), `suite sur ${nom} : « Fait » demande la prochaine action, l'étape se change en dépliant`);
+      }
+      if (nomPage === 'accueil-contacts' && nom === 'telephone') {
+        constat(await onglet.getAttribute('.e-menu-bas a:nth-child(2)', 'href') === '/contacts', 'revue 18.4 : sur téléphone, « Contacts » du menu du bas mène à la liste en cartes');
       }
       if (nomPage === 'aujourdhui') {
         const bouton = await onglet.locator('[data-retour-ouvrir]').boundingBox();

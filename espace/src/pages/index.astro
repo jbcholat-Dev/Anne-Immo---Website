@@ -16,7 +16,7 @@ import { COLONNES } from '../server/tableau-colonnes';
 export const prerender = false;
 if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
 const m = Astro.url.searchParams.get('m') ?? '';
-if (['suite', 'tache-acceptee', 'tache-ignoree'].includes(m)) return Astro.redirect(`/aujourdhui?m=${m}`, 301);
+if (['suite', 'tache-acceptee', 'tache-ignoree'].includes(m)) return Astro.redirect(`/aujourdhui?m=${m}`, 302);
 
 const lignes = await lireTableau(env);
 const total = lignes.filter((l) => !l.ecarte).length;
@@ -149,7 +149,9 @@ const donnees = JSON.stringify(lignes).replace(/</g, '\\u003c');
     tri = tri.cle === cle ? { cle, sens: tri.sens === 1 ? -1 : 1 } : { cle, sens: 1 };
     afficher();
   });
-  recherche.addEventListener('input', afficher);
+  // Le tableau se recalcule 120 ms après la dernière frappe, pas à chaque lettre (revue de code 18.4).
+  let attente: ReturnType<typeof setTimeout> | undefined;
+  recherche.addEventListener('input', () => { clearTimeout(attente); attente = setTimeout(afficher, 120); });
   for (const boite of menuColonnes.querySelectorAll<HTMLInputElement>('input[type=checkbox]')) {
     boite.checked = !cachees.has(boite.value as CleColonne);
     boite.addEventListener('change', () => {

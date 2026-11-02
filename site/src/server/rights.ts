@@ -120,15 +120,21 @@ async function coordonneesDe(env: EnvSite, ids: string[]): Promise<{ telephones:
 /**
  * Demandes du site restées sans contact (rattachement en échec, en attente du filet de la tâche planifiée) faites avec
  * l'un de ces téléphones ou e-mails : effacées avec la personne, sinon `rattacherOrphelins` recréerait le contact
- * effacé (revue de code 18.3). Renvoie leurs identifiants et leurs coordonnées, pour l'opposition.
+ * effacé (revue de code 18.3). Renvoie leurs identifiants et les coordonnées à passer à l'opposition : téléphone et
+ * e-mail pour une demande trouvée par l'e-mail de la personne ; le téléphone seul pour une demande trouvée seulement par
+ * le téléphone (un couple, une ligne fixe : l'e-mail peut être celui d'une autre personne, revue de code 18.4).
  */
 async function orphelinsDe(env: EnvSite, telephones: string[], emails: string[]): Promise<{ ids: string[]; valeurs: string[] }> {
   if (!telephones.length && !emails.length) return { ids: [], valeurs: [] };
+  const E = emails.map((e) => e.toLowerCase());
   const { results } = await env.DB.prepare(
     `SELECT id, telephone, lower(email) AS email FROM lead WHERE contact_id IS NULL
        AND (telephone IN (SELECT value FROM json_each(?1)) OR lower(email) IN (SELECT value FROM json_each(?2)))`,
-  ).bind(JSON.stringify(telephones), JSON.stringify(emails.map((e) => e.toLowerCase()))).all<{ id: string; telephone: string | null; email: string | null }>();
-  return { ids: results.map((l) => l.id), valeurs: results.flatMap((l) => [l.telephone, l.email].filter((v): v is string => !!v)) };
+  ).bind(JSON.stringify(telephones), JSON.stringify(E)).all<{ id: string; telephone: string | null; email: string | null }>();
+  return {
+    ids: results.map((l) => l.id),
+    valeurs: results.flatMap((l) => (l.email && E.includes(l.email) ? [l.telephone, l.email] : [l.telephone]).filter((v): v is string => !!v)),
+  };
 }
 
 /** Effacement des demandes désignées par leurs identifiants, avec leurs envois. */
@@ -177,7 +183,8 @@ export async function effacerContact(env: EnvSite, id: string, compte: string): 
   if (!c) return null;
   const { telephones, emails } = await coordonneesDe(env, [id]);
   const { results: adresses } = await env.DB.prepare('SELECT DISTINCT lower(email) AS e FROM lead WHERE contact_id = ?1').bind(id).all<{ e: string }>();
-  const orphelins = await orphelinsDe(env, telephones, emails);
+  // Les e-mails de ses demandes comptent aussi pour trouver les demandes restées sans contact (revue de code 18.4).
+  const orphelins = await orphelinsDe(env, telephones, [...emails, ...adresses.map((a) => a.e)]);
   const maintenant = new Date().toISOString();
   const opposition = await ecrituresOpposition(env, [...telephones, ...emails, ...adresses.map((a) => a.e), ...orphelins.valeurs], maintenant);
   const [, leads, ...suite] = await env.DB.batch([
@@ -199,9 +206,15 @@ export async function effacer(env: EnvSite, email: string, compte: string): Prom
   const { results: contacts } = await env.DB.prepare(`SELECT id FROM contact WHERE ${CONTACTS_DE_L_ADRESSE}`).bind(adresse).all<{ id: string }>();
   const liste = contacts.map((c) => c.id);
   const ids = JSON.stringify(liste);
-  const { telephones, emails } = await coordonneesDe(env, liste);
-  // Demandes sans contact de ces téléphones et e-mails ; celles de l'adresse elle-même partent par la requête suivante.
-  const orphelins = await orphelinsDe(env, telephones, emails);
+  const coordonnees = await coordonneesDe(env, liste);
+  // Les téléphones des demandes de cette adresse restées sans contact sont ceux de la personne (revue de code 18.4).
+  const { results: telsOrphelins } = await env.DB.prepare(
+    'SELECT DISTINCT telephone AS t FROM lead WHERE lower(email) = ?1 AND contact_id IS NULL AND telephone IS NOT NULL',
+  ).bind(adresse).all<{ t: string }>();
+  const telephones = [...new Set([...coordonnees.telephones, ...telsOrphelins.map((x) => x.t)])];
+  const emails = coordonnees.emails;
+  // Demandes sans contact de ces téléphones et e-mails (l'adresse comprise) ; elles partent avec la requête suivante.
+  const orphelins = await orphelinsDe(env, telephones, [adresse, ...emails]);
   const maintenant = new Date().toISOString();
   const opposition = await ecrituresOpposition(env, [adresse, ...telephones, ...emails, ...orphelins.valeurs], maintenant);
   const touchees = `lower(email) = ?1 OR contact_id IN (SELECT value FROM json_each(?2)) OR id IN (SELECT value FROM json_each(?3))`;

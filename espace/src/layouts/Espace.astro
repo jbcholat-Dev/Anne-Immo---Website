@@ -7,7 +7,8 @@
 // Bouton « Un retour ? » (story 13.20) : le même que celui de l'aperçu du site ; chaque remarque devient un ticket GitHub.
 // Story 18.4 (FR-14, livraison 1) : la barre du haut ne montre plus que « Contacts » (la page d'accueil) et le menu
 // « Autres outils », qui mène à toutes les pages actuelles ; elle est visible à toutes les largeurs. Le menu du bas du
-// téléphone reste (Aujourd'hui, Contacts, Ajouter, Bilan). `large` : page sur toute la largeur (tableau des contacts).
+// téléphone reste (Aujourd'hui, Contacts, Ajouter, Bilan) ; son « Contacts » mène à la liste en cartes `/contacts`, avec
+// l'appel en un geste (revue de code 18.4) : le grand tableau est l'accueil sur ordinateur. `large` : page sur toute la largeur (tableau des contacts).
 import '@site/styles/global.css';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import RetourApercu from '@site/components/RetourApercu.astro';
@@ -60,7 +61,7 @@ const dansOutils = !!actif && actif !== 'contacts';
     <main class:list={['e-page', { 'e-page-large': large }]}><slot /></main>
     <nav class="e-menu-bas" aria-label="Menu">
       <a href="/aujourdhui" aria-current={actif === 'aujourdhui' ? 'page' : undefined}>Aujourd'hui</a>
-      <a href="/" aria-current={actif === 'contacts' || actif === 'suivis' ? 'page' : undefined}>Contacts</a>
+      <a href="/contacts" aria-current={actif === 'contacts' || actif === 'suivis' ? 'page' : undefined}>Contacts</a>
       <a href="/ajouter" class="e-plus" aria-label="Ajouter"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg></a>
       <a href="/bilan" aria-current={actif === 'bilan' || actif === 'actions' || actif === 'campagnes' ? 'page' : undefined}>Bilan</a>
     </nav>

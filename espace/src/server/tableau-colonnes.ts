@@ -71,20 +71,25 @@ export const SOURCES: Record<string, string> = {
 };
 export const libelleSource = (s: string) => SOURCES[s] ?? s;
 
-/** Le texte où chercher les mots d'une recherche (story 13.24 : prénom, nom, ville, e-mails ; FR-3 : entreprise). */
+/** Sans accents ni majuscules : « Hélène » se trouve en tapant « helene » (revue de code 18.4). */
+export const sansAccents = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+/** Le texte où chercher les mots d'une recherche (story 13.24 : prénom, nom, ville, e-mails ; FR-3 : entreprise), sans accents. */
 export const texteRecherche = (l: LigneTableau) =>
-  [l.prenom, l.nom, l.ville, l.entreprise, ...l.emails].filter(Boolean).join(' ').toLowerCase();
+  sansAccents([l.prenom, l.nom, l.ville, l.entreprise, ...l.emails].filter(Boolean).join(' '));
 
 /**
  * La recherche de la story 13.24, dans le navigateur : un morceau de numéro tapé en 0 est cherché au format +33 dans
- * tous les numéros du contact ; sinon chaque mot doit se trouver dans le texte du contact. `texte` est `texteRecherche`
- * calculé une fois par ligne.
+ * tous les numéros du contact, et aussi tel quel dans le texte (une entreprise ou une adresse avec des chiffres, revue de
+ * code 18.4) ; sinon chaque mot doit se trouver dans le texte du contact. Accents ignorés des deux côtés. `texte` est
+ * `texteRecherche` calculé une fois par ligne.
  */
 export function preparerRecherche(q: string): (l: LigneTableau, texte: string) => boolean {
-  const { telephone, mots } = lireRecherche(q);
+  const { telephone, mots } = lireRecherche(sansAccents(q));
   if (telephone) {
     // « 06 12 » devient « +33612 » ; un morceau du milieu (« 34 56 ») reste « 3456 », cherché tel quel.
-    return (l) => l.telephones.some((t) => t.includes(telephone));
+    const brut = sansAccents(q.trim());
+    return (l, texte) => l.telephones.some((t) => t.includes(telephone)) || texte.includes(brut);
   }
   if (!mots.length) return () => true;
   return (_l, texte) => mots.every((m) => texte.includes(m));

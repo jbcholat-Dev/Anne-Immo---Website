@@ -1,5 +1,5 @@
 // Page Contacts (story 18.4, FR-1, AD-27) : tous les contacts non effacés (un effacement supprime la ligne, AD-31), du
-// carnet comme du suivi des ventes, écartés compris (masqués par défaut dans le navigateur), lus en quatre requêtes et
+// carnet comme du suivi des ventes, écartés compris (masqués par défaut dans le navigateur), lus en trois requêtes et
 // réunis ici. Lecture seule : les écritures du tableau passeront par `carnet` (AD-22, stories 18.6 et 18.7).
 import type { EnvSite } from '@site/server/env';
 import { etatEmail, SQL_ACCORD, type DonneesAccord } from './accord';
