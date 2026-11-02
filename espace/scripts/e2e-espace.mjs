@@ -72,6 +72,10 @@
 // (menu, liste, aperçu avec un prénom d'exemple, enregistrement, renommage, retrait refusé puis accepté, flèches).
 // Revue de code 18.7 : premier e-mail changé (accord noté retiré, accord du site « à reconfirmer »), coordonnée d'une
 // personne en opposition refusée à la correction, remise en place d'une vue plafonnée.
+// Story 18.11 : barre « Nouveaux » (/api/nouveaux : demande du site avec son message, Vu, Écarter, Ranger et leur annulation,
+// second geste refusé, annulation trop tardive ; numéros inconnus de Leedflow, une ligne par numéro, Ignorer, Ajouter à sa
+// fiche, Ajouter aux contacts, chacun annulé, numéro ajouté à une fiche qui ne revient plus, opposition, 400, 403, 413) ;
+// la page (barre repliée, cartes, Vu puis Annuler, création préremplie) à 1440 et 1280 px.
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
 // Lancer depuis espace/ : `node scripts/e2e-espace.mjs`.
@@ -216,9 +220,32 @@ try {
     constat(pages.every((p) => p.statut === 403 && !p.corps.includes(EMAIL) && /noindex/.test(p.robots ?? '')), `${nom} : 403 partout (accueil, liste, fiche, export, fichiers), aucune donnée`);
   }
 
+  const surAujourdhui = async (gardes = { contacts: [], prescripteurs: [], passages: [] }) => {
+    const liste = (ids) => (ids?.length ? ids.map((id) => `'${id}'`).join(', ') : "''");
+    sql('DROP TABLE IF EXISTS _essai_aujourdhui');
+    sql(`CREATE TABLE _essai_aujourdhui AS
+      SELECT 'contact' AS t, id, prochaine_action_le AS v1, reveil_le AS v2 FROM contact WHERE etape IS NOT NULL AND id NOT IN (${liste(gardes.contacts)})
+      UNION ALL SELECT 'prescripteur', id, prochaine_relance_le, NULL FROM prescripteur WHERE prochaine_relance_le IS NOT NULL AND id NOT IN (${liste(gardes.prescripteurs)})
+      UNION ALL SELECT 'passage', id, fait_le, NULL FROM passage_boitage WHERE id NOT IN (${liste(gardes.passages)})`);
+    sql(`UPDATE contact SET prochaine_action_le = '2099-12-31', reveil_le = CASE WHEN reveil_le IS NULL THEN NULL ELSE '2099-12-31' END WHERE id IN (SELECT id FROM _essai_aujourdhui WHERE t = 'contact')`);
+    sql(`UPDATE prescripteur SET prochaine_relance_le = '2099-12-31' WHERE id IN (SELECT id FROM _essai_aujourdhui WHERE t = 'prescripteur')`);
+    sql(`UPDATE passage_boitage SET fait_le = '${new Intl.DateTimeFormat('fr-CA', { timeZone: 'Europe/Paris' }).format(new Date())}' WHERE id IN (SELECT id FROM _essai_aujourdhui WHERE t = 'passage')`);
+    try {
+      return await (await appeler(`${E}/aujourdhui`, { headers: avecJeton() })).text();
+    } finally {
+      sql(`UPDATE contact SET prochaine_action_le = (SELECT s.v1 FROM _essai_aujourdhui s WHERE s.t = 'contact' AND s.id = contact.id),
+        reveil_le = (SELECT s.v2 FROM _essai_aujourdhui s WHERE s.t = 'contact' AND s.id = contact.id) WHERE id IN (SELECT id FROM _essai_aujourdhui WHERE t = 'contact')`);
+      sql(`UPDATE prescripteur SET prochaine_relance_le = (SELECT s.v1 FROM _essai_aujourdhui s WHERE s.t = 'prescripteur' AND s.id = prescripteur.id) WHERE id IN (SELECT id FROM _essai_aujourdhui WHERE t = 'prescripteur')`);
+      sql(`UPDATE passage_boitage SET fait_le = (SELECT s.v1 FROM _essai_aujourdhui s WHERE s.t = 'passage' AND s.id = passage_boitage.id) WHERE id IN (SELECT id FROM _essai_aujourdhui WHERE t = 'passage')`);
+      sql('DROP TABLE _essai_aujourdhui');
+    }
+  };
+
   // 2. Base partagée : la demande du site est dans l'espace, sans délai.
+  // La page ne montre que les 100 premiers contacts à qualifier : les autres contacts de la base locale, laissés par les
+  // passages précédents, sont mis de côté le temps de la lecture (surAujourdhui), pour ne dépendre que de celui-ci.
   let r = await appeler(`${E}/aujourdhui`, { headers: avecJeton(), redirect: 'manual' });
-  let html = await r.text();
+  let html = await surAujourdhui({ contacts: [contact] });
   constat(r.status === 200 && html.includes('Bonjour Anne') && html.includes(`data-contact="${contact}"`), 'accueil « Aujourd\'hui » : la demande du site est à rappeler');
   r = await appeler(`${E}/gestion`, { headers: avecJeton() });
   html = await r.text();
@@ -357,6 +384,10 @@ try {
   constat(q3.etape === 'a_qualifier' && q3.prochaine_action_le === demain && /pas joint/.test(q3.prochaine_action) && q3.qualifie_le === null,
     'pas joint : reste à qualifier, rappel demain');
 
+  // « Aujourd'hui » montre au plus 100 contacts par liste, 50 prescripteurs et 10 secteurs, et la base locale garde les
+  // données des essais précédents : au-delà de quelques passages, les contacts de cet essai n'y entraient plus. Pour lire
+  // la page, on met de côté le temps d'une lecture tout ce qui n'est pas à cet essai (contacts suivis, prescripteurs à
+  // relancer, passages de boîtage), puis on le remet exactement comme avant. `gardes` : identifiants laissés tels quels.
   // 5 quater. Aujourd'hui (story 13.5).
   const didier = sql(`SELECT id FROM contact WHERE telephone = '+33601${NUM}'`)[0].id;
   const vieux = `VIEUX${NUM}`, retard = `RETARD${NUM}`, reveil = `REVEIL${NUM}`, avenir = `AVENIR${NUM}`;
@@ -373,8 +404,10 @@ try {
     ('${reveil}', '2026-03-01T08:00:00Z', '2026-03-01T08:00:00Z', 'Reveil${NUM}', 'en_sommeil', 'Réveiller : rappeler', '${auj}', '${auj}', 'autre', 1)`);
   sql(`INSERT INTO passage_boitage (id, created_at, secteur, fait_le, mots) VALUES ('PASS${NUM}', '2026-01-01T00:00:00Z', 'Margencel-${NUM}', '2026-01-10', 150)`);
   sql(`UPDATE prescripteur SET prochaine_relance_le = '${auj}', relance_raison = 'Lui montrer la vente d''Anthy' WHERE nom = 'Maître Durand ${ESSAI}'`);
-  r = await appeler(`${E}/aujourdhui`, { headers: avecJeton() });
-  html = await r.text();
+  // Les contacts dont la page doit dire qu'ils n'y sont pas (carla, avenir, reco) restent aussi tels quels.
+  const passagesEssai = sql(`SELECT id FROM passage_boitage WHERE secteur IN ('Margencel-${NUM}', '${SECTEUR}')`).map((x) => x.id);
+  html = await surAujourdhui({ contacts: [vieuxTel, didier, vieux, retard, reveil, avenir, carla, reco.id], passages: passagesEssai,
+    prescripteurs: sql(`SELECT id FROM prescripteur WHERE nom = 'Maître Durand ${ESSAI}'`).map((x) => x.id) });
   const zone = (attr) => html.split(attr)[1]?.split('</section>')[0] ?? '';
   const nouveauxZone = zone('data-nouveaux'), rappelsZone = zone('data-rappels'), prospection = zone('data-prospection');
   const ordre = [vieuxTel, didier, vieux].map((id) => nouveauxZone.indexOf(`data-contact="${id}"`));
@@ -397,8 +430,7 @@ try {
     ('${SUITE}', '2026-02-01T08:00:00Z', '2026-02-01T08:00:00Z', 'Sylvie', 'Suite${NUM}', '+33645${NUM}', 'vendeur', 'estimation', 'Envoyer l''estimation', '${hier}', '2026-02-01T09:00:00Z', 'rencontre', 1)`);
   const etatSuite = () => sql(`SELECT etape, prochaine_action, prochaine_action_le FROM contact WHERE id = '${SUITE}'`)[0];
   const derniereNote = () => sql(`SELECT texte FROM contact_evenement WHERE contact_id = '${SUITE}' AND type = 'note' ORDER BY id DESC LIMIT 1`)[0]?.texte ?? '';
-  r = await appeler(`${E}/aujourdhui`, { headers: avecJeton() });
-  html = await r.text();
+  html = await surAujourdhui({ contacts: [SUITE] });
   const carteSuite = html.split(`data-contact="${SUITE}"`)[1]?.split('</article>')[0] ?? '';
   constat(carteSuite.includes(`/contacts/suite?id=${SUITE}`) && !carteSuite.includes('/contacts/qualifier'), 'aujourd\'hui : « Noter la suite » d\'un rappel ouvre le formulaire de suite, pas la qualification');
   r = await appeler(`${E}/contacts/suite?id=${SUITE}&retour=jour`, { headers: avecJeton() });
@@ -468,7 +500,7 @@ try {
     ('${NOTE}', '2026-02-01T08:00:00Z', '2026-02-01T08:00:00Z', 'Noté${NUM}', 'estimation', 'Envoyer l''estimation', '${hier}', 'rencontre', 1)`);
   r = await surFiche(NOTE, { quoi: 'note', note: `Note libre ${NUM} : rappeler après les vacances` });
   constat(r.headers.get('location') === `/contacts/fiche?id=${NOTE}&m=note`, 'note libre ajoutée depuis la fiche');
-  html = await (await appeler(`${E}/aujourdhui`, { headers: avecJeton() })).text();
+  html = await surAujourdhui({ contacts: [NOTE] });
   constat((html.split(`data-contact="${NOTE}"`)[1]?.split('</article>')[0] ?? '').includes(`Note libre ${NUM}`), 'aujourd\'hui : la note libre est le dernier texte du rappel');
   r = await page('/ajouter', { quoi: 'contact', nom: `Boitage${NUM}`, telephone: `06 47 ${NUM.slice(0, 2)} ${NUM.slice(2, 4)} ${NUM.slice(4, 6)}`, canal: 'rencontre', note: 'Rencontré au marché' });
   const sansMail = sql(`SELECT id FROM contact WHERE telephone = '+33647${NUM}'`)[0].id;
@@ -2818,6 +2850,180 @@ try {
     if (restes8) sql(`DELETE FROM categorie WHERE id IN (${restes8})`);
     for (const k of departs8) {
       sql(`UPDATE categorie SET nom = '${k.nom.replace(/'/g, "''")}', ordre = ${k.ordre}, canal_conseille = '${(k.canal_conseille ?? '').replace(/'/g, "''")}', demande = '${(k.demande ?? '').replace(/'/g, "''")}', appel_permis = ${k.appel_permis}, envoi_groupe_permis = ${k.envoi_groupe_permis} WHERE id = '${k.id}'`);
+    }
+  }
+  // Story 18.11 : la barre « Nouveaux » (site et Leedflow), par /api/nouveaux puis dans la page. Une demande du site, quatre
+  // numéros inconnus vus par Leedflow (dont un déjà porté par un contact du carnet, un en opposition) ; chaque geste,
+  // son annulation, un numéro ajouté à une fiche qui ne revient plus.
+  {
+    const nv = async (corps, { jeton = JETON, type = 'application/json', methode = 'POST' } = {}) => {
+      const rr = await appeler(`${E}/api/nouveaux`, methode === 'GET' ? { headers: avecJeton(jeton) }
+        : { method: 'POST', headers: avecJeton(jeton, { 'Content-Type': type }), body: typeof corps === 'string' ? corps : JSON.stringify(corps) });
+      return { status: rr.status, d: await rr.json().catch(() => ({})) };
+    };
+    const cartesNv = async () => (await nv(null, { methode: 'GET' })).d.cartes ?? [];
+    const ligneNv = (id) => sql(`SELECT * FROM nouveau WHERE id = '${id}'`)[0];
+    // Une demande du site (formulaire de contact, avec un message).
+    const MSG11 = `Bonjour, je voudrais vendre mon T3 à Évian ${NUM} <b>vite</b>`;
+    const s11 = sid();
+    await poster('contact', { submission_id: s11, prenom: 'Sophie', nom: `Nouveaux${NUM}`, email: `sophie+nv${NUM}@example.com`, telephone: `0658${NUM}11`.slice(0, 10), message: MSG11, projet: 'vente' });
+    let lead11 = null;
+    for (let i = 0; i < 40 && !(lead11 = sql(`SELECT id, contact_id FROM lead WHERE submission_id = '${s11}' AND contact_id IS NOT NULL`)[0]); i++) await pause(250);
+    const NS = sql(`SELECT n.id FROM nouveau n JOIN contact_evenement e ON e.id = n.evenement_id WHERE e.source = 'site' AND e.source_id = '${lead11?.id}'`)[0]?.id;
+    const KS = lead11?.contact_id;
+    let cartes = await cartesNv();
+    const cs = cartes.find((c) => c.id === NS);
+    if (!cs || cs.texte !== MSG11) console.log('Détail 18.11 :', NS, JSON.stringify(cs ?? null));
+    constat(!!cs && cs.origine === 'Site' && cs.titre === 'Demande de contact' && cs.nom === `Sophie Nouveaux${NUM}` && cs.texte === MSG11 && cs.contact_id === KS
+      && JSON.stringify(cs.gestes) === '["ranger","vu","ecarter"]',
+      '18.11 : une demande du site arrive dans « Nouveaux » avec sa source, son nom, ses coordonnées et son message ; gestes Ranger, Vu, Écarter');
+    // Vu, puis annulation, puis double geste.
+    let x = await nv({ id: NS, geste: 'vu' });
+    const vu1 = ligneNv(NS);
+    constat(x.status === 200 && vu1.issue === 'vu' && !!vu1.vu_le && !(await cartesNv()).some((c) => c.id === NS), '18.11 : « Vu » sort la demande de la liste (vu_le et issue posés)');
+    x = await nv({ id: NS, geste: 'vu' });
+    constat(x.status === 409 && x.d.error?.code === 'traitee', '18.11 : un second geste sur une demande déjà traitée est refusé (409)');
+    x = await nv({ annuler: NS });
+    constat(x.status === 200 && ligneNv(NS).vu_le === null && ligneNv(NS).issue === null && (await cartesNv()).some((c) => c.id === NS), '18.11 : « Vu » s\'annule tout de suite, la demande revient');
+    // Écarter, avec l'avant-image du carnet, puis annulation.
+    x = await nv({ id: NS, geste: 'ecarter' });
+    const evEc = sql(`SELECT donnees FROM contact_evenement WHERE contact_id = '${KS}' AND type = 'classement' ORDER BY id DESC LIMIT 1`)[0];
+    constat(x.status === 200 && !!c7(KS).ecarte_le && ligneNv(NS).issue === 'ecarte' && JSON.parse(evEc.donnees).nouveau === NS && JSON.parse(evEc.donnees).avant.ecarte_le === null && x.d.ligne?.ecarte === true,
+      '18.11 : « Écarter » écarte le contact par le carnet (avant-image gardée), la ligne du tableau suit');
+    x = await nv({ annuler: NS });
+    constat(x.status === 200 && c7(KS).ecarte_le === null && ligneNv(NS).vu_le === null && x.d.ligne?.ecarte === false, '18.11 : « Écarter » s\'annule : le contact revient, la demande aussi');
+    // Ranger : la carte sort, le contact est renvoyé pour ouvrir sa fiche.
+    x = await nv({ id: NS, geste: 'ranger' });
+    constat(x.status === 200 && x.d.contact_id === KS && ligneNv(NS).issue === 'range' && x.d.ligne?.id === KS, '18.11 : « Ranger » sort la demande et renvoie le contact dont la page ouvre la fiche');
+    x = await nv({ annuler: NS });
+    constat(x.status === 200 && ligneNv(NS).vu_le === null, '18.11 : « Ranger » s\'annule');
+    // Trop tard pour annuler : au-delà de dix minutes.
+    await nv({ id: NS, geste: 'vu' });
+    sql(`UPDATE nouveau SET vu_le = '${new Date(Date.now() - 11 * 60_000).toISOString()}' WHERE id = '${NS}'`);
+    x = await nv({ annuler: NS });
+    constat(x.status === 409 && x.d.error?.code === 'tard' && !!ligneNv(NS).vu_le, '18.11 : après dix minutes, l\'annulation depuis la barre est refusée');
+    sql(`UPDATE nouveau SET vu_le = NULL, issue = NULL WHERE id = '${NS}'`);
+
+    // Numéros inconnus de Leedflow. NV_A : inconnu (deux appels, une seule carte) ; NV_B : numéro d'un contact du carnet
+    // hors suivi ; NV_C : à ignorer ; NV_D : personne en opposition.
+    const NV_A = `+33761${NUM}`, NV_B = `+33762${NUM}`, NV_C = `+33763${NUM}`, NV_D = `+33764${NUM}`;
+    const KB = `01KFNB${NUM}${'0'.repeat(14)}`;
+    sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, categorie_id, projet) VALUES ('${KB}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Bruno', 'Carnet${NUM}', '${NV_B}', 'lointains', 'a_qualifier')`);
+    sql(`INSERT INTO opposition (empreinte, le) VALUES ('${createHmac('sha256', 'essai').update(`opposition:${NV_D}`).digest('hex')}', '2026-10-01T00:00:00Z') ON CONFLICT DO NOTHING`);
+    const t11 = Date.now();
+    LF.appels.push(
+      { id: `nva1-${NUM}`, created: t11 - 9 * 60_000, customer: NV_A, direction: 'inbound', duration: 130, missed: false, transcription: '## Résumé\n- Cherche à **vendre** une maison à Publier', id_contact: `lfnva-${NUM}` },
+      { id: `nva2-${NUM}`, created: t11 - 8 * 60_000, customer: NV_A, direction: 'inbound', duration: 0, missed: true, transcription: null, id_contact: `lfnva-${NUM}` },
+      { id: `nvb1-${NUM}`, created: t11 - 7 * 60_000, customer: NV_B, direction: 'inbound', duration: 60, missed: false, transcription: 'Rappelle au sujet de l\'estimation', id_contact: `lfnvb-${NUM}` },
+      { id: `nvc1-${NUM}`, created: t11 - 6 * 60_000, customer: NV_C, direction: 'inbound', duration: 30, missed: false, transcription: 'Appel personnel <script>' },
+      { id: `nvd1-${NUM}`, created: t11 - 5 * 60_000, customer: NV_D, direction: 'inbound', duration: 30, missed: false, transcription: 'Veut acheter' },
+    );
+    LF.contacts[`lfnva-${NUM}`] = { id: `lfnva-${NUM}`, firstname: 'Amel', lastname: `Leedflow${NUM}`, email: `amel+${NUM}@example.com`, phone: NV_A };
+    await releve();
+    const nvDe = (tel) => sql(`SELECT n.id FROM nouveau n JOIN leedflow_inconnu i ON i.source_id = n.leedflow_inconnu_id WHERE n.source = 'leedflow' AND n.vu_le IS NULL AND i.telephone = '${tel}'`);
+    const [NA, NB, NC, ND] = [NV_A, NV_B, NV_C, NV_D].map((t) => nvDe(t));
+    constat(NA.length === 1 && NB.length === 1 && NC.length === 1 && ND.length === 1, '18.11 : la relève écrit une ligne « Nouveaux » par numéro inconnu, une seule pour deux appels du même numéro');
+    await releve();
+    constat(nvDe(NV_A).length === 1, '18.11 : une seconde relève n\'en écrit pas d\'autre');
+    cartes = await cartesNv();
+    const ca = cartes.find((c) => c.id === NA[0]?.id), cb = cartes.find((c) => c.id === NB[0]?.id);
+    constat(!!ca && ca.origine === 'Leedflow' && ca.telephone === NV_A && ca.nom === `Amel Leedflow${NUM}` && ca.connu === null && JSON.stringify(ca.gestes) === '["ajouter","ignorer"]'
+      && ca.echanges === 2 && ca.prerempli?.email === `amel+${NUM}@example.com`,
+      '18.11 : un numéro inconnu montre le nom lu dans Leedflow, ses échanges, et propose Ajouter aux contacts ou Ignorer');
+    constat(!!cb && cb.connu?.id === KB && JSON.stringify(cb.gestes) === '["rattacher","ignorer"]' && cb.texte.includes('estimation'),
+      '18.11 : un numéro déjà porté par un contact du carnet propose « Ajouter à sa fiche » et nomme ce contact');
+    // Ignorer, annuler, ignorer.
+    x = await nv({ id: NC[0].id, geste: 'ignorer' });
+    const ecC = sql(`SELECT categorie, a FROM leedflow_ecarte WHERE telephone = '${NV_C}'`)[0];
+    constat(x.status === 200 && ecC?.categorie === 'prive' && ecC.a === ligneNv(NC[0].id).vu_le && sql(`SELECT count(*) AS n FROM leedflow_inconnu WHERE telephone = '${NV_C}'`)[0].n === 1,
+      '18.11 : « Ignorer » classe le numéro « privé » ; ses échanges restent le temps de l\'annulation');
+    x = await nv({ annuler: NC[0].id });
+    constat(x.status === 200 && !sql(`SELECT 1 FROM leedflow_ecarte WHERE telephone = '${NV_C}'`).length && (await cartesNv()).some((c) => c.id === NC[0].id && c.texte.includes('<script')),
+      '18.11 : « Ignorer » s\'annule : le numéro revient à trier, sa carte avec son résumé');
+    await nv({ id: NC[0].id, geste: 'ignorer' });
+    sql(`UPDATE leedflow_ecarte SET a = '2026-01-01T00:00:00Z' WHERE telephone = '${NV_C}'`);
+    await appeler(`${E}/cdn-cgi/handler/scheduled`);
+    for (let i = 0; i < 40 && sql(`SELECT count(*) AS n FROM leedflow_inconnu WHERE telephone = '${NV_C}'`)[0].n; i++) await pause(250);
+    constat(sql(`SELECT count(*) AS n FROM leedflow_inconnu WHERE telephone = '${NV_C}'`)[0].n === 0, '18.11 : après le délai d\'annulation, la tâche planifiée efface les échanges du numéro ignoré');
+    // Ajouter à sa fiche, annuler, refaire.
+    x = await nv({ id: NB[0].id, geste: 'rattacher' });
+    let kb = c7(KB);
+    const ecB = sql(`SELECT categorie, contact_id FROM leedflow_ecarte WHERE telephone = '${NV_B}'`)[0];
+    constat(x.status === 200 && x.d.contact_id === KB && ecB?.categorie === 'prospect' && ecB.contact_id === KB && kb.etape === 'a_qualifier' && kb.suivi_le === null && kb.categorie_id === 'lointains',
+      '18.11 : « Ajouter à sa fiche » classe le numéro « prospect » avec ce contact, qui entre dans le suivi (suivi_le NULL : son historique sera repris)');
+    x = await nv({ annuler: NB[0].id });
+    kb = c7(KB);
+    constat(x.status === 200 && kb.etape === null && kb.prochaine_action === null && !sql(`SELECT 1 FROM leedflow_ecarte WHERE telephone = '${NV_B}'`).length && ligneNv(NB[0].id).vu_le === null,
+      '18.11 : « Ajouter à sa fiche » s\'annule : contact remis au carnet, numéro remis à trier');
+    x = await nv({ id: NB[0].id, geste: 'rattacher' });
+    // Le numéro ne revient plus : un nouvel appel va sur la fiche, sans nouvelle carte ; passé le délai d'annulation,
+    // les échanges gardés rejoignent l'historique du contact.
+    LF.appels.push({ id: `nvb2-${NUM}`, created: Date.now() - 60_000, customer: NV_B, direction: 'inbound', duration: 40, missed: false, transcription: 'Confirme le rendez-vous' });
+    await releve();
+    constat(sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${KB}' AND source_id = 'appel:nvb2-${NUM}'`)[0].n === 1 && nvDe(NV_B).length === 0
+      && !(await cartesNv()).some((c) => c.telephone === NV_B),
+      '18.11 : un numéro ajouté à une fiche ne revient plus dans « Nouveaux » ; son nouvel appel va sur la fiche');
+    sql(`UPDATE leedflow_ecarte SET a = '2026-01-01T00:00:00Z' WHERE telephone = '${NV_B}'`);
+    await releve();
+    constat(sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${KB}' AND source_id = 'appel:nvb1-${NUM}'`)[0].n === 1
+      && sql(`SELECT count(*) AS n FROM leedflow_inconnu WHERE telephone = '${NV_B}'`)[0].n === 0,
+      '18.11 : passé le délai d\'annulation, l\'appel d\'avant rejoint l\'historique du contact');
+    // Ajouter aux contacts : saisie refusée, création, annulation (contact supprimé), création.
+    x = await nv({ id: NA[0].id, geste: 'ajouter', saisie: { nom: 'X', telephone: '0600000000', categorie_id: 'demandes_recues' } });
+    constat(x.status === 400, '18.11 : « Ajouter aux contacts » refuse un autre numéro que celui de la carte (400)');
+    x = await nv({ id: NA[0].id, geste: 'ajouter', saisie: { prenom: 'Amel', nom: `Leedflow${NUM}`, email: `amel+${NUM}@example.com`, categorie_id: 'demandes_recues', projet: 'vendeur' } });
+    const KA = x.d.contact_id;
+    let ka = KA ? c7(KA) : null;
+    constat(x.status === 200 && ka?.telephone === NV_A && ka.etape === 'a_qualifier' && ka.categorie_id === 'demandes_recues' && ka.projet === 'vendeur' && ka.temperature === 'avec_anne' && !!ka.verifie_le
+      && sql(`SELECT source FROM contact_source WHERE contact_id = '${KA}'`).map((s) => s.source).join() === 'leedflow'
+      && sql(`SELECT contact_id FROM leedflow_ecarte WHERE telephone = '${NV_A}' AND categorie = 'prospect'`)[0]?.contact_id === KA && x.d.ligne?.id === KA,
+      '18.11 : « Ajouter aux contacts » crée le contact par le carnet (vérifié, source Leedflow, suivi), numéro classé « prospect » avec lui');
+    x = await nv({ annuler: NA[0].id });
+    constat(x.status === 200 && x.d.supprime === KA && !c7(KA) && !sql(`SELECT 1 FROM leedflow_ecarte WHERE telephone = '${NV_A}'`).length && ligneNv(NA[0].id).vu_le === null,
+      '18.11 : « Ajouter aux contacts » s\'annule : le contact créé est supprimé, le numéro revient à trier');
+    // Opposition : la personne a demandé l'effacement, le contact n'est pas créé, la carte reste.
+    x = await nv({ id: ND[0].id, geste: 'ajouter', saisie: { nom: `Opposee${NUM}`, categorie_id: 'demandes_recues' } });
+    constat(x.status === 409 && x.d.error?.code === 'opposition' && ligneNv(ND[0].id).vu_le === null && !sql(`SELECT 1 FROM contact WHERE telephone = '${NV_D}'`).length,
+      '18.11 : « Ajouter aux contacts » refuse une personne en opposition ; la carte reste');
+    // Contrôles de la route.
+    const refusClaude = await nv({ id: NS, geste: 'vu' }, { jeton: JETON_CLAUDE });
+    const getClaude = await nv(null, { methode: 'GET', jeton: JETON_CLAUDE });
+    constat(refusClaude.status === 403 && getClaude.status === 403 && (await nv({ id: NS, geste: 'effacer' })).status === 400 && (await nv('id=x', { type: 'application/x-www-form-urlencoded' })).status === 400
+      && (await nv({ id: NS, geste: 'vu', saisie: {} })).status === 400 && (await nv({ id: NS, geste: 'vu', x: 'x'.repeat(21_000) })).status === 413 && ligneNv(NS).vu_le === null,
+      '18.11 : /api/nouveaux refuse le jeton de Claude (403), un geste inconnu, un formulaire, un champ en trop (400) et un corps trop grand (413)');
+
+    // La page : la barre, ses cartes, un geste et son annulation, à 1440 et 1280 px.
+    for (const largeur of [1440, 1280]) {
+      const ctx = await nav.newContext({ viewport: { width: largeur, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
+      const o = await ctx.newPage();
+      await o.goto(`${E}/`);
+      const n0 = Number(await o.textContent('[data-nv-compte]'));
+      constat(n0 >= 3 && await o.isHidden('[data-nv-liste]') && (await o.textContent('[data-nv-src]')).includes('Site'), `18.11 : à ${largeur} px, la barre repliée donne le nombre de demandes (${n0}) et leurs sources`);
+      await o.click('[data-nv-barre]');
+      await o.waitForSelector(`[data-nv-carte="${NS}"]`);
+      constat(await o.locator('[data-nv-liste] script').count() === 0, `18.11 : à ${largeur} px, un clic déroule les cartes ; un résumé reste du texte`);
+      await o.locator(`[data-nv-carte="${NS}"]`).scrollIntoViewIfNeeded();
+      await o.screenshot({ path: path.join(OUT, `espace-nouveaux-${largeur}.png`) });
+      await o.click(`[data-nv-carte="${NS}"] [data-nv-geste=vu]`);
+      await o.waitForSelector(`[data-nv-carte="${NS}"]`, { state: 'detached' });
+      const n1 = Number(await o.textContent('[data-nv-compte]'));
+      await o.click('[data-toast-annuler]');
+      await o.waitForSelector(`[data-nv-carte="${NS}"]`);
+      constat(n1 === n0 - 1 && Number(await o.textContent('[data-nv-compte]')) === n0 && ligneNv(NS).vu_le === null, `18.11 : à ${largeur} px, « Vu » sort la carte, « Annuler » la fait revenir`);
+      if (largeur === 1440) {
+        // Ajouter aux contacts depuis la page : la fenêtre de création s'ouvre préremplie, numéro non modifiable.
+        await o.click(`[data-nv-carte="${NA[0].id}"] [data-nv-geste=ajouter]`);
+        await o.waitForSelector('[data-creation][open]');
+        const pre = { prenom: await o.inputValue('[data-creation] input[name=prenom]'), tel: await o.inputValue('[data-creation] input[name=telephone]'), lecture: await o.getAttribute('[data-creation] input[name=telephone]', 'readonly'), accord: await o.isVisible('[data-creation] input[name=accord]') };
+        await o.screenshot({ path: path.join(OUT, `espace-nouveaux-ajouter-${largeur}.png`) });
+        await o.click('[data-creation] button[type=submit]');
+        await o.waitForSelector(`[data-nv-carte="${NA[0].id}"]`, { state: 'detached' });
+        const kaPage = sql(`SELECT contact_id FROM leedflow_ecarte WHERE telephone = '${NV_A}'`)[0]?.contact_id;
+        constat(pre.prenom === 'Amel' && pre.tel.replace(/\s/g, '') === `07${NV_A.slice(4)}` && pre.lecture !== null && !pre.accord && !!kaPage && (await o.locator(`tr[data-contact="${kaPage}"]`).count()) <= 1,
+          '18.11 : « Ajouter aux contacts » ouvre la création préremplie (nom Leedflow, numéro non modifiable, sans case d\'accord), le contact est créé');
+      }
+      constat(!(await o.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)), `18.11 : page Contacts avec la barre ouverte à ${largeur} px : pas de débordement horizontal`);
+      await ctx.close();
     }
   }
   // 1 150 contacts fictifs (environ 1 230 en tout, story 18.5) : tri, recherche et filtres dans le navigateur.

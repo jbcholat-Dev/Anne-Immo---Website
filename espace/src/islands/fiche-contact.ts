@@ -8,8 +8,10 @@ import {
 } from '../server/tableau-colonnes';
 import type { Fiche } from '../server/fiche';
 
+/** Une création préremplie (story 18.11) : valeurs des champs, et l'envoi par la barre « Nouveaux ». */
+export interface Prerempli { valeurs: Record<string, string | null>; envoyer: (saisie: Record<string, unknown>) => Promise<Reponse> }
 interface Reglages { categories: { id: string; nom: string }[]; surLigne: (l: LigneTableau) => void; annoncer: (texte: string) => void }
-type Reponse = { ok: boolean; status: number; error?: { code: string; message: string }; existant?: { id: string; nom: string }; fiche?: Fiche; ligne?: LigneTableau | null; id?: string; ignore?: boolean; remplace?: boolean; changes?: string[] };
+export type Reponse = { ok: boolean; status: number; error?: { code: string; message: string }; existant?: { id: string; nom: string }; fiche?: Fiche; ligne?: LigneTableau | null; id?: string; ignore?: boolean; remplace?: boolean; changes?: string[] };
 
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 const JOUR_PARIS = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' });
@@ -232,12 +234,32 @@ export function brancherFiche(r: Reglages) {
   const tempC = formCreation.querySelector<HTMLSelectElement>('select[name=temperature]')!;
   const majTempC = () => { tempC.innerHTML = options(temperatures(projetC.value), ''); tempC.disabled = !PROJETS_AVEC_TEMPERATURE.includes(projetC.value); };
   projetC.addEventListener('change', majTempC);
-  function ouvrirCreation() {
+  // Story 18.11 : « Ajouter aux contacts » d'une carte « Nouveaux » ouvre la même fenêtre, préremplie avec ce que la
+  // demande sait, le numéro de la carte non modifiable et sans case d'accord (un appel ne vaut pas accord) ; l'envoi passe
+  // alors par la barre (`envoyer`, /api/nouveaux), qui classe aussi le numéro.
+  const titreCreation = creation.querySelector<HTMLElement>('#ct-creation-titre')!;
+  const introCreation = creation.querySelector<HTMLElement>('[data-creation-intro]');
+  const introSaisie = introCreation?.textContent ?? '';
+  const telC = formCreation.querySelector<HTMLInputElement>('input[name=telephone]')!;
+  const accordC = formCreation.querySelector<HTMLElement>('input[name=accord]')!.closest<HTMLElement>('label')!;
+  let depuisNouveau: Prerempli | null = null;
+  function ouvrirCreation(pre: Prerempli | null = null) {
     formCreation.reset();
+    depuisNouveau = pre;
+    titreCreation.textContent = pre ? 'Ajouter aux contacts' : 'Nouveau contact';
+    if (introCreation) introCreation.textContent = pre ? 'Le contact est créé vérifié, source « Leedflow », avec le numéro de la carte ; il entre dans le suivi pour que ses appels lui soient rangés.' : introSaisie;
+    telC.readOnly = !!pre;
+    accordC.hidden = !!pre;
+    if (pre) {
+      for (const [k, v] of Object.entries(pre.valeurs)) {
+        const champ = formCreation.querySelector<HTMLInputElement | HTMLSelectElement>(`[name=${k}]`);
+        if (champ && v) champ.value = v;
+      }
+    }
     majTempC();
     erreurCreation.hidden = true;
     creation.showModal();
-    formCreation.querySelector<HTMLInputElement>('input[name=prenom]')?.focus();
+    formCreation.querySelector<HTMLInputElement>(pre?.valeurs.prenom ? 'input[name=nom]' : 'input[name=prenom]')?.focus();
   }
   creation.querySelector('[data-creation-annuler]')!.addEventListener('click', () => creation.close());
   formCreation.addEventListener('submit', async (e) => {
@@ -251,8 +273,11 @@ export function brancherFiche(r: Reglages) {
     const saisie: Record<string, unknown> = { categorie_id: v('categorie_id'), projet: v('projet'), accord: d.has('accord') };
     for (const k of ['prenom', 'nom', 'telephone', 'email', 'commune', 'entreprise', 'note']) if (v(k)) saisie[k] = v(k);
     if (v('temperature')) saisie.temperature = v('temperature');
-    const x = await appeler('POST', { creer: saisie });
+    const pre = depuisNouveau;
+    if (pre) { delete saisie.telephone; delete saisie.accord; }
+    const x = pre ? await pre.envoyer(saisie) : await appeler('POST', { creer: saisie });
     bouton.disabled = false;
+    if (pre && x.ok) { creation.close(); return; }
     if (x.ok && x.ligne) {
       creation.close();
       r.surLigne(x.ligne);

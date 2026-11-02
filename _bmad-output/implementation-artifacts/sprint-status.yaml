@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-26-2026 15:10
-last_updated: 11-02-2026 07:40
+last_updated: 11-02-2026 11:16
 project: Site Anne Vial-Tissot
 project_key: NOKEY
 tracking_system: file-system
@@ -248,18 +248,21 @@ development_status:
   18-8-categories-et-methodes: done   # 2026-11-02, PR #227, revue de code faite et corrigée
   18-9-import-par-claude: review   # 2026-11-02, en attente de la revue de code (session neuve)
   18-10-premier-import-et-classement-de-depart: backlog
-  18-11-barre-nouveaux-site-et-leedflow: backlog
+  # 2026-11-02 : décision de JB, relecture par lot de 2 ou 3 stories
+  # 2026-11-02 (10 h 23) : décision de JB, dans les relectures on ne corrige que les constats « bloquant » et « à corriger » ; les « mineurs » sont notés dans la story sans être corrigés ; deux personnes qui écrivent en même temps = mineur (deux utilisateurs seulement)
+  # 2026-11-02 (10 h 23) : décision de JB, epics 19 et 20 en pause jusqu'à ce qu'Anne ait utilisé le carnet (premier import fait, contacts classés)
+  18-11-barre-nouveaux-site-et-leedflow: review   # 2026-11-02, en attente de la revue de code (par lot, avec la 18.12)
   18-12-demandes-des-portails-par-e-mail: backlog
   epic-18-retrospective: optional
 
-  epic-19: backlog   # les séances et les campagnes (livraison 2)
+  epic-19: backlog   # les séances et les campagnes (livraison 2) ; en pause (décision JB 2026-11-02)
   19-1-lancer-et-derouler-une-seance: backlog
   19-2-page-seances: backlog
   19-3-campagnes-branchees-sur-le-carnet: backlog
   19-4-bilan-d-une-campagne: backlog
   epic-19-retrospective: optional
 
-  epic-20: backlog   # la semaine et le bilan (livraison 3)
+  epic-20: backlog   # la semaine et le bilan (livraison 3) ; en pause (décision JB 2026-11-02)
   20-1-page-de-la-semaine: backlog
   20-2-actions-de-prospection: backlog
   20-3-placer-deplacer-retirer-une-activite: backlog

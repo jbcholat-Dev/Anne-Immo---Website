@@ -120,13 +120,13 @@ interface Ecriture { id: string; avant: Partial<Classement>; apres: Partial<Clas
  * catégorie supprimée entre-temps, n'est donc ni écrit ni cause d'échec du lot. Pas de `last_activity_at` : un classement
  * n'est pas un échange avec la personne (AD-22 amendé). Renvoie les identifiants réellement écrits.
  */
-async function ecrire(env: EnvSite, ecritures: Ecriture[], lot: string, par: string, texte: string, annule?: string): Promise<string[]> {
+async function ecrire(env: EnvSite, ecritures: Ecriture[], lot: string, par: string, texte: string, annule?: string, extra: Record<string, string> = {}): Promise<string[]> {
   if (!ecritures.length) return [];
   const maintenant = new Date().toISOString();
   const set = COLONNES.map((c) => `${c} = CASE WHEN json_type(j.value, '$.apres.${c}') IS NULL THEN contact.${c} ELSE json_extract(j.value, '$.apres.${c}') END`).join(', ');
   const garde = [...COLONNES, 'etape'].map((c) => `(json_type(j.value, '$.garde.${c}') IS NULL OR c.${c} IS json_extract(j.value, '$.garde.${c}'))`).join(' AND ');
   const charge = JSON.stringify(ecritures.map((x) => ({
-    id: x.id, apres: x.apres, garde: x.garde, donnees: JSON.stringify({ avant: x.avant, apres: x.apres, lot, ...(annule ? { annule } : {}) }),
+    id: x.id, apres: x.apres, garde: x.garde, donnees: JSON.stringify({ avant: x.avant, apres: x.apres, lot, ...(annule ? { annule } : {}), ...extra }),
   })));
   await env.DB.batch([
     env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, donnees, par)
@@ -184,7 +184,7 @@ export interface ResultatLot { lot: string | null; touches: number; ignores: num
  * qui ne s'applique pas, ou contact changé entre la lecture et l'écriture (revue de code 18.6) ; `inchanges` : déjà dans
  * l'état demandé ; `inconnus` : identifiants absents (effacés, même entre la lecture et l'écriture).
  */
-export async function classer(env: EnvSite, ids: string[], ch: Changements, par: string): Promise<ResultatLot> {
+export async function classer(env: EnvSite, ids: string[], ch: Changements, par: string, extra: Record<string, string> = {}): Promise<ResultatLot> {
   const etats = await lireEtats(env, ids);
   const maintenant = new Date().toISOString();
   const lot = ulid();
@@ -201,7 +201,7 @@ export async function classer(env: EnvSite, ids: string[], ch: Changements, par:
     if ('projet' in x.apres || 'temperature' in x.apres) Object.assign(x.garde, { projet: e.projet, temperature: e.temperature });
     if (Object.keys(x.apres).length) ecritures.push(x);
   }
-  const ecrits = await ecrire(env, ecritures, lot, par, resume(ch));
+  const ecrits = await ecrire(env, ecritures, lot, par, resume(ch), undefined, extra);
   const faits = new Set(ecrits);
   const manques = ecritures.filter((x) => !faits.has(x.id)).map((x) => x.id);
   const partis = await effaces(env, manques);
@@ -645,7 +645,7 @@ export async function enOpposition(env: EnvSite, valeurs: (string | null)[]): Pr
  * (`contact` ou `contact_coordonnee`) ne crée rien : le contact existant est renvoyé pour être ouvert. Une personne qui a
  * demandé l'effacement (opposition) n'est pas recréée. L'accord e-mail, s'il est coché, est noté par `accord` (AD-21).
  */
-export async function creerContact(env: EnvSite, s: Saisie, par: string): Promise<ResultatCreation> {
+export async function creerContact(env: EnvSite, s: Saisie, par: string, depuis?: { source: 'leedflow'; nouveau: string }): Promise<ResultatCreation> {
   const deja = await existant(env, s.telephone, s.email);
   if (deja) return { ok: false, existant: deja };
   const opp = await enOpposition(env, [s.telephone, s.email]);
@@ -658,9 +658,12 @@ export async function creerContact(env: EnvSite, s: Saisie, par: string): Promis
     env.DB.prepare(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, email, commune, entreprise, categorie_id, projet, temperature, verifie_le)
        VALUES (?1, ?2, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?2)`)
       .bind(id, maintenant, s.prenom, s.nom, s.telephone, s.email, s.commune, s.entreprise, s.categorie_id, s.projet, s.temperature),
-    env.DB.prepare(`INSERT INTO contact_source (contact_id, source, a) VALUES (?1, 'saisie', ?2)`).bind(id, maintenant),
-    env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, donnees, par) VALUES (?1, ?2, 'creation', 'anne', ?3, 'Contact créé à la main', ?4, ?5)`)
-      .bind(id, maintenant, `${lot}.${id}`, JSON.stringify({ avant: {}, apres: colonnes, lot }), par),
+    // Story 18.11 : depuis la barre « Nouveaux », la source est celle de la demande (un numéro vu par Leedflow), et
+    // l'événement porte la ligne `nouveau`, pour que le geste s'annule (`annulerCreation`).
+    env.DB.prepare(`INSERT INTO contact_source (contact_id, source, a) VALUES (?1, ?3, ?2)`).bind(id, maintenant, depuis?.source ?? 'saisie'),
+    env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, donnees, par) VALUES (?1, ?2, 'creation', 'anne', ?3, ?6, ?4, ?5)`)
+      .bind(id, maintenant, `${lot}.${id}`, JSON.stringify({ avant: {}, apres: colonnes, lot, ...(depuis ? { nouveau: depuis.nouveau } : {}) }), par,
+        depuis ? 'Contact créé depuis « Nouveaux » : numéro vu par Leedflow' : 'Contact créé à la main'),
   ];
   if (s.note) ecritures.push(env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, par) VALUES (?1, ?2, 'note', 'anne', ?3, ?4)`).bind(id, maintenant, s.note, par));
   try {
@@ -675,6 +678,22 @@ export async function creerContact(env: EnvSite, s: Saisie, par: string): Promis
     await noterAccord(env, id, true, par);
   }
   return { ok: true, id };
+}
+
+/**
+ * Annule « Ajouter aux contacts » de la barre « Nouveaux » (story 18.11, AD-29) : l'avant-image d'une création est
+ * l'absence du contact. Il est supprimé seulement si tout son historique vient de ce geste (événements qui portent la
+ * même ligne `nouveau` : création, entrée dans le suivi) ; sinon il a été modifié depuis (note, appel rattaché…) et il est
+ * gardé. Les lignes qui le référencent partent avec lui (ON DELETE CASCADE, dont le classement « prospect » du numéro).
+ */
+export async function annulerCreation(env: EnvSite, id: string, nouveau: string): Promise<'supprime' | 'garde' | 'absent'> {
+  const r = await env.DB.prepare(
+    `DELETE FROM contact WHERE id = ?1
+       AND EXISTS (SELECT 1 FROM contact_evenement e WHERE e.contact_id = ?1 AND e.type = 'creation' AND json_valid(e.donnees) AND json_extract(e.donnees, '$.nouveau') = ?2)
+       AND NOT EXISTS (SELECT 1 FROM contact_evenement e WHERE e.contact_id = ?1 AND (e.donnees IS NULL OR NOT json_valid(e.donnees) OR json_extract(e.donnees, '$.nouveau') IS NOT ?2))`,
+  ).bind(id, nouveau).run();
+  if (r.meta.changes) return 'supprime';
+  return (await env.DB.prepare('SELECT 1 AS n FROM contact WHERE id = ?1').bind(id).first()) ? 'garde' : 'absent';
 }
 
 // ——— Import par Claude (story 18.9, AD-22, AD-26, AD-29) ———

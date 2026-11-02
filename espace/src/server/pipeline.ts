@@ -115,6 +115,76 @@ function entrerDansLeSuivi(env: EnvSite, id: string, o: Origine, maintenant: str
   ).bind(id, maintenant, ACTION_QUALIFIER, aujourdhui(), o.parcours, o.canal, o.origine_detail, o.passage_id, o.prescripteur_id);
 }
 
+// ——— Barre « Nouveaux » (story 18.11, FR-27, AD-32, AD-34) ———
+// « Ajouter à sa fiche » ou « Ajouter aux contacts » sur un numéro vu par Leedflow : Anne dit que ce numéro est un
+// prospect. Le contact entre dans le suivi s'il n'y est pas (à qualifier aujourd'hui), par sa décision : `suivi_le` reste
+// NULL et la relève reprend tout l'historique du numéro (AD-32) ; un contact déjà suivi, entré seul par une demande du
+// site (`suivi_le` posé), voit aussi `suivi_le` remis à NULL. L'événement `etape` garde l'avant-image (`avant`) et la
+// ligne `nouveau`, pour l'annulation tout de suite (AD-29). `last_activity_at` ne bouge pas : ce n'est pas un échange.
+
+interface EtatSuivi { etape: Etape | null; prochaine_action: string | null; prochaine_action_le: string | null; reveil_le: string | null; motif_perte: string | null;
+  parcours: string | null; projet: string; temperature: string | null; suivi_le: string | null }
+const COLONNES_SUIVI = ['etape', 'prochaine_action', 'prochaine_action_le', 'reveil_le', 'motif_perte', 'parcours', 'projet', 'temperature', 'suivi_le'] as const;
+
+/** Fait suivre un contact après un geste de la barre « Nouveaux ». false si le contact n'existe plus ou a changé entre-temps. */
+export async function suivreParGeste(env: EnvSite, id: string, nouveau: string, par: string): Promise<boolean> {
+  const c = await env.DB.prepare(`SELECT ${COLONNES_SUIVI.join(', ')} FROM contact WHERE id = ?1`).bind(id).first<EtatSuivi>();
+  if (!c) return false;
+  if (c.etape !== null && c.suivi_le === null) return true;
+  const maintenant = new Date().toISOString();
+  const avant = Object.fromEntries(COLONNES_SUIVI.map((k) => [k, c[k]]));
+  if (c.etape !== null) {
+    const r = await env.DB.batch([
+      env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees, par)
+         SELECT ?1, ?2, 'etape', 'anne', ?3, ?4, ?5 WHERE EXISTS (SELECT 1 FROM contact WHERE id = ?1 AND suivi_le IS ?6 AND etape IS ?7)`)
+        .bind(id, maintenant, 'Historique des appels de ce numéro repris (ajouté à sa fiche depuis « Nouveaux »)',
+          JSON.stringify({ de: c.etape, vers: c.etape, avant, nouveau }), par, c.suivi_le, c.etape),
+      env.DB.prepare('UPDATE contact SET suivi_le = NULL WHERE id = ?1 AND suivi_le IS ?2 AND etape IS ?3').bind(id, c.suivi_le, c.etape),
+    ]);
+    return r[1].meta.changes > 0;
+  }
+  const projet = PROJET_SUIVI(`CASE WHEN projet IN ('vendeur', 'acheteur') THEN projet END`);
+  const r = await env.DB.batch([
+    env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees, par)
+       SELECT ?1, ?2, 'etape', 'anne', ?3, ?4, ?5 WHERE EXISTS (SELECT 1 FROM contact WHERE id = ?1 AND etape IS NULL)`)
+      .bind(id, maintenant, `Carnet → ${LIBELLES_ETAPES.a_qualifier} : numéro ajouté depuis « Nouveaux »`, JSON.stringify({ de: null, vers: 'a_qualifier', avant, nouveau }), par),
+    env.DB.prepare(
+      `UPDATE contact SET etape = 'a_qualifier', prochaine_action = ?2, prochaine_action_le = ?3, reveil_le = NULL, motif_perte = NULL, suivi_le = NULL,
+         parcours = coalesce(parcours, CASE WHEN projet IN ('vendeur', 'acheteur') THEN projet END),
+         projet = ${projet}, temperature = ${TEMPERATURE_SUIVI(projet)}
+       WHERE id = ?1 AND etape IS NULL`,
+    ).bind(id, ACTION_QUALIFIER, aujourdhui()),
+  ]);
+  return r[1].meta.changes > 0;
+}
+
+/**
+ * Annule `suivreParGeste` (AD-29) : réécrit l'avant-image si le contact n'a rien reçu depuis l'événement du geste et est
+ * encore tel que le geste l'a laissé. Renvoie « rendu », « garde » (modifié depuis, laissé tel quel) ou « rien » (le
+ * geste n'avait rien changé au suivi).
+ */
+export async function annulerSuiviParGeste(env: EnvSite, id: string, nouveau: string, par: string): Promise<'rendu' | 'garde' | 'rien'> {
+  const e = await env.DB.prepare(
+    `SELECT e.id, e.donnees, NOT EXISTS (SELECT 1 FROM contact_evenement x WHERE x.contact_id = e.contact_id AND x.id > e.id) AS dernier
+     FROM contact_evenement e WHERE e.contact_id = ?1 AND e.type = 'etape' AND e.source = 'anne' AND json_valid(e.donnees) AND json_extract(e.donnees, '$.nouveau') = ?2
+     ORDER BY e.id DESC LIMIT 1`,
+  ).bind(id, nouveau).first<{ id: number; donnees: string; dernier: number }>();
+  if (!e) return 'rien';
+  const d = JSON.parse(e.donnees) as { de: Etape | null; avant: EtatSuivi };
+  if (!e.dernier) return 'garde';
+  const maintenant = new Date().toISOString();
+  const set = COLONNES_SUIVI.map((k, i) => `${k} = ?${i + 2}`).join(', ');
+  // Garde : encore dans l'état laissé par le geste (à qualifier, suivi_le NULL) ; le CHECK de 0018 reste le dernier filet.
+  const garde = d.de === null ? `etape = 'a_qualifier' AND suivi_le IS NULL` : `etape IS ?${COLONNES_SUIVI.length + 2} AND suivi_le IS NULL`;
+  const valeurs = COLONNES_SUIVI.map((k) => d.avant[k] ?? null);
+  const r = await env.DB.prepare(`UPDATE contact SET ${set} WHERE id = ?1 AND ${garde}`).bind(id, ...valeurs, ...(d.de === null ? [] : [d.de])).run();
+  if (!r.meta.changes) return 'garde';
+  await env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees, par) VALUES (?1, ?2, 'etape', 'anne', ?3, ?4, ?5)`)
+    .bind(id, maintenant, d.de === null ? `${LIBELLES_ETAPES.a_qualifier} → Carnet : ajout depuis « Nouveaux » annulé` : 'Reprise de l\'historique du numéro annulée',
+      JSON.stringify({ de: d.de === null ? 'a_qualifier' : d.de, vers: d.de, annule: nouveau }), par).run();
+  return 'rendu';
+}
+
 function evenement(env: EnvSite, contactId: string, a: string, type: 'creation' | 'note' | 'qualification', source: 'anne' | 'import', texteEv: string, par: string, donnees?: unknown) {
   return env.DB.prepare('INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees, par) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)')
     .bind(contactId, a, type, source, texteEv, donnees === undefined ? null : JSON.stringify(donnees), par);

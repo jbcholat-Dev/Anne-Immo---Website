@@ -14,7 +14,8 @@
 // « + Nouveau contact » en haut à droite ouvre la saisie de la maquette. La ligne écrite revient dans le tableau sans
 // recharger ; `/?fiche=<id>` ouvre la page avec la fiche ouverte.
 // Story 18.8 : sous les catégories, un lien vers « Catégories et méthodes » (/categories).
-// Place laissée à la story 18.11 : barre « Nouveaux » au-dessus de la recherche.
+// Story 18.11 : la barre « Nouveaux » au-dessus de la recherche (`islands/nouveaux`, /api/nouveaux) : les demandes
+// reçues pas encore vues (site, numéros inconnus de Leedflow), dépliées d'un clic, chacune avec ses gestes et l'annulation.
 // L'ancienne page d'accueil « Aujourd'hui » est à /aujourdhui ; ses anciens retours (`/?m=…`) y sont renvoyés.
 import Espace from '../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
@@ -23,19 +24,22 @@ import { lireCategories, lireTableau } from '../server/tableau';
 import { ACCORDS, COLONNES, PROJETS, TEMPERATURES, TEMPERATURES_CHOIX } from '../server/tableau-colonnes';
 import { DUREES } from '../server/vues';
 import { listerVues } from '../server/vues-base';
+import { lireNouveaux } from '../server/nouveaux';
+import { envEspace } from '../server/env';
 
 export const prerender = false;
 if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
 const m = Astro.url.searchParams.get('m') ?? '';
 if (['suite', 'tache-acceptee', 'tache-ignoree'].includes(m)) return Astro.redirect(`/aujourdhui?m=${m}`, 302);
 
-const [lignes, vues, categories] = await Promise.all([lireTableau(env), listerVues(env), lireCategories(env)]);
+const [lignes, vues, categories, nouveaux] = await Promise.all([lireTableau(env), listerVues(env), lireCategories(env), lireNouveaux(envEspace)]);
 const total = lignes.filter((l) => !l.ecarte).length;
 const q = (Astro.url.searchParams.get('q') ?? '').trim().slice(0, 100);
 // Dans un <script type="application/json"> : « < » échappé, pour qu'aucun texte saisi ne ferme la balise.
 const enJson = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
 const donnees = enJson(lignes);
 const reglages = enJson({ vues, categories });
+const donneesNouveaux = enJson(nouveaux);
 ---
 <Espace titre="Contacts" actif="contacts" large>
   <div class="ct-tete">
@@ -59,6 +63,12 @@ const reglages = enJson({ vues, categories });
       </div>
     </aside>
     <div class="ct-principal">
+      <section class="nv" data-nouveaux aria-label="Nouvelles demandes">
+        <button type="button" class="nv-barre" data-nv-barre aria-expanded="false" aria-controls="nv-liste">
+          <span class="nv-pastille" data-nv-compte>{nouveaux.total}</span><strong>Nouveaux</strong><span class="nv-src" data-nv-src></span><span class="nv-chev" aria-hidden="true">▾</span>
+        </button>
+        <div class="nv-liste" id="nv-liste" data-nv-liste hidden></div>
+      </section>
       <div class="ct-outils">
         <input type="search" data-recherche value={q} placeholder="Nom, numéro, e-mail, entreprise…" aria-label="Rechercher un contact" autocomplete="off" />
         <details class="ct-menu" data-colonnes>
@@ -117,7 +127,7 @@ const reglages = enJson({ vues, categories });
   <dialog class="ct-dialogue ct-creation" data-creation aria-labelledby="ct-creation-titre">
     <form data-form-creation novalidate>
       <h2 id="ct-creation-titre">Nouveau contact</h2>
-      <p class="e-muet">Au moins un nom ou un téléphone. Le contact est créé vérifié, source « saisie à la main ».</p>
+      <p class="e-muet" data-creation-intro>Au moins un nom ou un téléphone. Le contact est créé vérifié, source « saisie à la main ».</p>
       <div class="fc-grille">
         <label class="ct-champ">Prénom<input name="prenom" maxlength="80" autocomplete="off" /></label>
         <label class="ct-champ">Nom<input name="nom" maxlength="80" autocomplete="off" /></label>
@@ -138,6 +148,7 @@ const reglages = enJson({ vues, categories });
   <div class="ct-toast" data-toast role="status" hidden><span data-toast-texte></span><button type="button" data-toast-annuler hidden>Annuler</button></div>
   <script type="application/json" id="ct-donnees" set:html={donnees}></script>
   <script type="application/json" id="ct-reglages" set:html={reglages}></script>
+  <script type="application/json" id="nv-donnees" set:html={donneesNouveaux}></script>
 </Espace>
 
 <script>
@@ -151,6 +162,7 @@ const reglages = enJson({ vues, categories });
   } from '../server/tableau-colonnes';
   import { ajouter, pastilles, preparerFiltre, retirer, type CleFiltre, type Filtre, type Vue } from '../server/vues';
   import { brancherFiche } from '../islands/fiche-contact';
+  import { brancherNouveaux } from '../islands/nouveaux';
 
   const MEMOIRE = 'espace.contacts.colonnes';
   // Premier paquet de lignes écrit tout de suite, la suite par paquets aux images suivantes : le tableau répond vite même
@@ -162,7 +174,10 @@ const reglages = enJson({ vues, categories });
   const index = lignes.map(indexer);
   const dateDe = (l: LigneTableau) => l.dernier_le ? new Date(l.dernier_le).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' }) : '';
   const dates = lignes.map(dateDe);
-  let total = lignes.filter((l) => !l.ecarte).length;
+  /** Story 18.11 : contacts supprimés depuis le chargement (« Ajouter aux contacts » annulé) : plus jamais affichés ni comptés. */
+  const retires = new Set<string>();
+  const actifs = () => lignes.filter((x) => !x.ecarte && !retires.has(x.id)).length;
+  let total = actifs();
   const parId = new Map(lignes.map((l, i) => [l.id, i]));
   const nomsCategories = new Map(reglages.categories.map((c) => [c.id, c.nom]));
   let vues: Vue[] = reglages.vues;
@@ -246,7 +261,7 @@ const reglages = enJson({ vues, categories });
   function garder(f: Filtre, q: string): number[] {
     const passe = preparerFiltre(f), cherche = preparerRecherche(q);
     const r: number[] = [];
-    for (let i = 0; i < lignes.length; i++) if (passe(lignes[i], index[i]) && cherche(index[i])) r.push(i);
+    for (let i = 0; i < lignes.length; i++) if (!retires.has(lignes[i].id) && passe(lignes[i], index[i]) && cherche(index[i])) r.push(i);
     return r;
   }
 
@@ -305,7 +320,7 @@ const reglages = enJson({ vues, categories });
         + `<span class="ct-vue-gestes"><button type="button" class="ct-vue-x" data-renommer-vue="${esc(v.id)}" title="Renommer la vue" aria-label="Renommer la vue ${esc(v.nom)}">✎</button>`
         + `<button type="button" class="ct-vue-x" data-supprimer-vue="${esc(v.id)}" title="Supprimer la vue" aria-label="Supprimer la vue ${esc(v.nom)}">×</button></span></div>`).join('');
     const parCategorie = new Map<string, number>();
-    for (const l of lignes) if (!l.ecarte && l.categorie_id) parCategorie.set(l.categorie_id, (parCategorie.get(l.categorie_id) ?? 0) + 1);
+    for (const l of lignes) if (!l.ecarte && !retires.has(l.id) && l.categorie_id) parCategorie.set(l.categorie_id, (parCategorie.get(l.categorie_id) ?? 0) + 1);
     zoneCategories.innerHTML = reglages.categories.map((c) => `<button type="button" class="ct-vue" data-categorie="${esc(c.id)}"><span>${esc(c.nom)}</span><small>${parCategorie.get(c.id) ?? 0}</small></button>`).join('');
     marquerVue();
   }
@@ -546,7 +561,7 @@ const reglages = enJson({ vues, categories });
       html[i] = undefined;
     }
     valeurs.clear();
-    total = lignes.filter((x) => !x.ecarte).length;
+    total = actifs();
     compterVues();
     afficherVues();
     afficher();
@@ -667,16 +682,28 @@ const reglages = enJson({ vues, categories });
   /** Une ligne écrite par la fiche ou la création (story 18.7) : remplacée, ou ajoutée au tableau, sans recharger. */
   function remettreLigne(l: LigneTableau) {
     let i = parId.get(l.id);
+    retires.delete(l.id);
     if (i === undefined) { i = lignes.length; lignes.push(l); index.push(indexer(l)); dates.push(dateDe(l)); parId.set(l.id, i); }
     else { lignes[i] = l; index[i] = indexer(l); dates[i] = dateDe(l); }
     html[i] = undefined;
     valeurs.clear();
-    total = lignes.filter((x) => !x.ecarte).length;
+    total = actifs();
     compterVues();
     afficherVues();
     afficher();
   }
   const fiches = brancherFiche({ categories: reglages.categories, surLigne: remettreLigne, annoncer: (t) => montrer(t) });
+  /** Un contact qui n'existe plus (création annulée depuis la barre « Nouveaux ») sort du tableau sans recharger. */
+  function retirerLigne(id: string) {
+    retires.add(id);
+    coches.delete(id);
+    valeurs.clear();
+    total = actifs();
+    compterVues();
+    afficherVues();
+    afficher();
+  }
+  brancherNouveaux({ fiches, surLigne: remettreLigne, retirer: retirerLigne, montrer });
   $<HTMLButtonElement>('[data-nouveau-contact]').addEventListener('click', () => fiches.ouvrirCreation());
   const ficheDemandee = new URL(location.href).searchParams.get('fiche');
   if (ficheDemandee && /^[0-9A-HJKMNP-TV-Z]{26}$/.test(ficheDemandee)) void fiches.ouvrirFiche(ficheDemandee);
@@ -689,6 +716,30 @@ const reglages = enJson({ vues, categories });
 <style is:global>
   /* Mise en page de la maquette : colonne des vues à gauche, tableau sur toute la largeur restante. Classes globales :
      les lignes du tableau sont écrites par l'îlot, hors du gabarit. */
+  /* Barre « Nouveaux » (story 18.11, maquette) : une ligne repliée, dépliée en cartes. */
+  .nv { margin: 0 0 10px; }
+  .nv-barre { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; border: 1px solid var(--avt-galet); background: #fff; border-radius: 12px; padding: 10px 14px; cursor: pointer; font: inherit; color: inherit; text-align: left; }
+  .nv-barre:focus-visible, .nv-carte button:focus-visible { outline: 2px solid var(--avt-klein); outline-offset: 2px; }
+  .nv-barre.vide { cursor: default; color: var(--avt-text-muted); }
+  .nv-pastille { background: var(--avt-terra); color: #fff; border-radius: 999px; min-width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; padding: 0 6px; font-variant-numeric: tabular-nums; }
+  .nv-barre.vide .nv-pastille { background: var(--avt-galet); color: var(--avt-brun); }
+  .nv-src { color: var(--avt-text-muted); font-size: 13px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nv-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; margin-top: 10px; }
+  .nv-liste[hidden] { display: none; }
+  .nv-carte { border: 1px solid var(--avt-galet); background: #fff; border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .nv-tete { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--avt-text-muted); }
+  .nv-badge { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--avt-brume); color: var(--avt-klein); }
+  .nv-badge[data-s=leedflow] { background: var(--avt-galet); color: var(--avt-brun); }
+  .nv-badge[data-s=portail] { background: #f6e3da; color: var(--avt-terra-deep); }
+  .nv-nom { font-weight: 600; overflow-wrap: anywhere; }
+  .nv-coord { font-weight: 400; color: var(--avt-text-muted); font-size: 13.5px; }
+  .nv-txt { font-size: 14px; margin: 0; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .nv-info, .nv-auto { font-size: 13px; color: var(--avt-text-muted); }
+  .nv-dej { font-size: 13px; background: #fbf1e3; color: #7a4a12; padding: 6px 8px; border-radius: 8px; }
+  .nv-alerte { font-size: 13px; background: #fbe9e7; color: #8a2a1c; padding: 6px 8px; border-radius: 8px; }
+  .nv-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+  .nv-btns .ct-btn { min-height: 40px; }
+  .nv-vide { color: var(--avt-text-muted); font-size: 14px; margin: 0; }
   .ct-tete { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
   .ct-tete h1 { font-size: 28px; margin: 0; }
   .ct-page { display: grid; grid-template-columns: 1fr; gap: 20px; align-items: start; }
