@@ -11,14 +11,14 @@ export async function getStaticPaths() {
 const { a } = Astro.props as { a: Actualite };
 const { Content } = await render(a);
 const photo = clePhoto(a.data.photo);
-const jour = a.data.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+const jour = a.data.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 ---
 <Page titre={`${a.data.titre} — Anne VIAL-TISSOT`} description={a.data.resume ?? a.data.titre} courante="actualites">
   <article class="actu">
     <a href={r('actualites')} class="lien actu-retour">Toutes les actualités</a>
     <p class="actu-date"><time datetime={a.data.date.toISOString().slice(0, 10)}>{jour}</time></p>
     <h1>{a.data.titre}</h1>
-    {photo && <div class="actu-photo"><Picture id={photo} alt="" sizes="(max-width: 899px) 100vw, 760px" loading="eager" /></div>}
+    {photo && <div class="actu-photo"><Picture id={photo} alt={a.data.photo_alt ?? ""} sizes="(max-width: 899px) 100vw, 760px" loading="eager" /></div>}
     <div class="recit"><Content /></div>
   </article>
 </Page>

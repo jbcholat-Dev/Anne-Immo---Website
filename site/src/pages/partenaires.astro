@@ -16,8 +16,8 @@ const liste = await Promise.all((await partenaires()).map(async (p) => ({ p, log
   {liste.length === 0 ? (
     <div class="index-vide">
       <h2>Bientôt</h2>
-      <p>Anne présentera ici les professionnels avec qui elle travaille. En attendant, elle vous répond directement.</p>
-      <a href={r('contact')} class="btn btn-primaire btn-m">Contacter Anne</a>
+      <p>Je présenterai ici les professionnels avec qui je travaille. En attendant, je vous réponds directement.</p>
+      <a href={r('contact')} class="btn btn-primaire btn-m">Me contacter</a>
     </div>
   ) : (
     <div class="partenaires">

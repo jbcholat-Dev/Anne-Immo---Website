@@ -206,7 +206,7 @@ export async function aPropos(): Promise<APropos | null> {
 const visible = (statut: string) => import.meta.env.PUBLIC_INDEXATION !== 'oui' || statut === 'publie';
 export async function partenaires(): Promise<Partenaire[]> {
   const all = (await getCollection('partenaires')).filter((p) => visible(p.data.statut));
-  return all.sort((a, b) => (a.data.ordre ?? 999) - (b.data.ordre ?? 999) || a.data.nom.localeCompare(b.data.nom, 'fr'));
+  return all.sort((a, b) => (Number(a.data.ordre ?? 999) || 999) - (Number(b.data.ordre ?? 999) || 999) || a.data.nom.localeCompare(b.data.nom, 'fr'));
 }
 export async function actualites(): Promise<Actualite[]> {
   const all = (await getCollection('actualites')).filter((a) => visible(a.data.statut));
@@ -224,5 +224,6 @@ export async function rubriquesVisibles(): Promise<{ partenaires: boolean; actua
 export function clePhoto(valeur: string | null | undefined): string | null {
   if (!valeur) return null;
   const cle = `photos/${path.basename(valeur).replace(/\.[^.]+$/, '')}`;
+  if (!images[cle]) console.warn(`[contenu] photo « ${valeur} » introuvable parmi les images préparées (formats acceptés : JPG, PNG, WebP) : la fiche s'affiche sans photo.`);
   return images[cle] ? cle : null;
 }

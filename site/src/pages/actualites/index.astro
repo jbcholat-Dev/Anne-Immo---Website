@@ -6,7 +6,7 @@ import Picture from '../../components/Picture.astro';
 import { actualites, clePhoto } from '../../lib/contenu';
 import { r } from '../../i18n';
 const liste = (await actualites()).map((a) => ({ a, photo: clePhoto(a.data.photo) }));
-const jour = (d: Date) => d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+const jour = (d: Date) => d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 ---
 <Page titre="Actualités — Anne VIAL-TISSOT" description="Les nouvelles d'Anne et du marché immobilier dans le Chablais et le bassin lémanique." courante="actualites" noindex={liste.length === 0}>
   <div class="index-tete">
@@ -16,7 +16,7 @@ const jour = (d: Date) => d.toLocaleDateString('fr-FR', { day: 'numeric', month:
   {liste.length === 0 ? (
     <div class="index-vide">
       <h2>Bientôt</h2>
-      <p>Anne publiera ici ses premières actualités. En attendant, ses ventes sont racontées dans les réalisations.</p>
+      <p>Je publierai ici mes premières actualités. En attendant, mes ventes sont racontées dans les réalisations.</p>
       <a href={r('realisation')} class="btn btn-primaire btn-m">Voir les réalisations</a>
     </div>
   ) : (

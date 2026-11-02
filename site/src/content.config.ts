@@ -126,9 +126,10 @@ const partenaires = defineCollection({
     nom: z.string(),
     activite: z.string(),
     commune: vide,
-    site: vide,
+    // Adresse complète seulement : « www.x.fr » ferait un lien relatif cassé, « javascript: » un lien dangereux (revue de code 8.21).
+    site: vide.refine((v) => v === null || /^https?:\/\/[^\s]+$/i.test(v), { message: 'Le site internet doit commencer par https://' }),
     logo: vide,
-    ordre: z.number().optional(),
+    ordre: vide, // « Ordre » laissé vide dans l'espace d'édition = null : toléré comme annee_vente (revue de code 8.21)
     statut: statutFiche,
   }),
 });
@@ -139,6 +140,7 @@ const actualites = defineCollection({
     date: z.coerce.date(),
     resume: vide,
     photo: vide,
+    photo_alt: vide,
     statut: statutFiche,
   }),
 });

@@ -1,7 +1,7 @@
 ---
 story: 8.21
 epic: 8 — Structure et visuel
-statut: in-progress
+statut: review
 date: 2026-10-15
 ---
 
@@ -15,7 +15,7 @@ Deux retours d'Anne du 2026-10-15 sur l'aperçu (bouton « Un retour ? ») :
 ## Ce qui est fait
 - **Guide (n° 154)** : l'erreur n° 2 de `contenu-anne/guide/texte-actuel.md` prend le titre d'Anne et liste les trois dates ; ce qui suit (coût, valeur de l'étiquette, audit, solution, liste des diagnostics) est gardé. Deux sources ajoutées (8 : ministère de l'Économie, arrêté du 13 août 2025, coefficient de l'électricité de 2,3 à 1,9 au 1er janvier 2026 ; 9 : Que Choisir, août 2026, de 1,9 à 1,7 au 1er janvier 2027). Les dates d'Anne ont été vérifiées. PDF refait (`node scripts/guide-pdf.mjs`, `site/prive/guide.pdf`).
 - **Onglets (n° 153)** : deux collections de contenu (`contenu-anne/partenaires/`, `contenu-anne/actualites/`), deux rubriques dans l'espace d'édition (`site/public/admin/config.yml`), les pages `/partenaires`, `/actualites` et `/actualites/<article>`, les entrées dans la barre (entre Acheter et Contact) et le pied de page. Anglais : « Partners », « News ».
-- **Règle d'affichage (D-46)** : toujours visibles sur l'aperçu ; sur le site public, un onglet n'apparaît qu'à la première fiche « Publiée » de sa rubrique, et sa page reste non indexée tant qu'elle est vide. Option recommandée sur la carte de décision posée à JB le 2026-10-15 (à confirmer).
+- **Règle d'affichage (D-46)** : toujours visibles sur l'aperçu ; sur le site public, un onglet n'apparaît qu'à la première fiche « Publiée » de sa rubrique, et sa page reste non indexée tant qu'elle est vide. Confirmée par JB le 2026-11-02 (carte de décision).
 - **Barre** : entre 900 et 1 179 px, quand ces onglets sont là, les icônes des réseaux quittent la barre (elles restent dans le pied de page et le menu du téléphone) ; les libellés ne se coupent plus.
 - Documents : `site/README.md` (pages, navigation, écart assumé), `maquettes/lot-3-complet/DECISIONS.md` (D-46), `contenu-anne/README.md` (les deux dossiers).
 
@@ -79,3 +79,18 @@ Relecture adverse `bmad-code-review` (story 9.8), dans une session neuve qui n'a
 - écarté : tableau de bord et tickets n° 153 et 154 non mis à jour : relève de la clôture, pas de ce diff.
 
 **Avis** : la règle D-46 et la barre font ce qui est annoncé. À ne pas fusionner en l'état à cause du constat élevé (un « Ordre » vide casse la construction dès la première fiche d'Anne) et des trois constats moyens. Les corrections relèvent du fil qui a écrit le code ; la story repasse en `in-progress`.
+
+## Corrections après la revue de code (2026-11-02)
+- [Élevé] « Ordre » vide : corrigé, `ordre` toléré vide comme `annee_vente` (`content.config.ts`), tri par nombre dans `lib/contenu.ts`. Essayé par `scripts/e2e-rubriques.mjs` (fiche d'essai avec `ordre:` vide).
+- [Moyen] « Site internet » : corrigé, `pattern` `^https?://` dans l'espace d'édition et refus à la construction pour toute autre forme.
+- [Moyen] `delete: true` : corrigé, `delete: false` sur les deux rubriques comme les autres ; la description de la rubrique dit de repasser la fiche en « Brouillon » pour la retirer du site.
+- [Moyen] Vérification : corrigé, `/partenaires`, `/actualites` et les articles dans `scripts/ecrans.mjs` et `npm run verif` ; nouveau `scripts/e2e-rubriques.mjs` (deux constructions publiques avec fiches d'essai, retirées ensuite) : 13 vérifications passent.
+- [Faible] Logo SVG : corrigé, indice du champ (JPG, PNG ou WebP) et avertissement à la construction quand une photo choisie n'est pas trouvée.
+- [Faible] Adresse d'un article : corrigé, `slug: "{{titre}}"` (plus de date de création dans l'adresse).
+- [Faible] Fuseau : corrigé, `timeZone: 'UTC'` sur les deux pages ; vérifié par le script (« 15 janvier 2026 »).
+- [Faible] « Bientôt » à la troisième personne : corrigé, tout à la première personne.
+- [Faible] Photo d'article sans texte alternatif : corrigé, champ facultatif « Description de la photo » (`photo_alt`), repris en `alt`.
+- D-46 : confirmée par JB le 2026-11-02, ✅ dans `DECISIONS.md`.
+- PDF du guide (erreur n° 2 sur deux pages) : laissé tel quel, choix de JB du 2026-11-02.
+
+Vérifié après corrections : `npm run build` OK ; `npm run check` 0 erreur, 0 avertissement ; `scripts/liens.mjs` 29 pages, 2 161 liens, 0 cassé ; `scripts/ecrans.mjs` (390, 1 024, 1 280 px) sans signalement ; `scripts/e2e-rubriques.mjs` 13/13.

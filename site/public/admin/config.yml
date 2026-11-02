@@ -100,11 +100,12 @@ collections:
     description: >
       Une fiche par professionnel avec qui Anne travaille (onglet « Partenaires »).
       L'onglet apparaît sur le site public dès la première fiche « Publiée ».
+      Pour retirer une fiche du site, repassez-la en « Brouillon ».
     folder: contenu-anne/partenaires
     extension: md
     format: frontmatter
     create: true
-    delete: true
+    delete: false
     publish: false
     slug: "{{nom}}"
     identifier_field: nom
@@ -114,8 +115,8 @@ collections:
       - { name: nom, label: Nom, widget: string }
       - { name: activite, label: Activité, widget: string, hint: "Ex. « Diagnostiqueur immobilier », « Notaire »." }
       - { name: commune, label: Commune, widget: string, required: false }
-      - { name: site, label: Site internet, widget: string, required: false, hint: "L'adresse complète, qui commence par https://" }
-      - { name: logo, label: Logo ou photo, widget: image, required: false, hint: "Facultatif. Format carré de préférence ; réduit automatiquement à l'envoi." }
+      - { name: site, label: Site internet, widget: string, required: false, pattern: ['^https?://\S+$', "L'adresse doit commencer par https://"], hint: "L'adresse complète, qui commence par https://" }
+      - { name: logo, label: Logo ou photo, widget: image, required: false, hint: "Facultatif. Une image JPG, PNG ou WebP (pas de SVG), carrée de préférence ; réduite automatiquement à l'envoi." }
       - { name: ordre, label: Ordre, widget: number, value_type: int, required: false, hint: "Facultatif : 1 passe en premier. Sans ordre, rangement par nom." }
       - name: statut
         label: Statut
@@ -133,13 +134,14 @@ collections:
     description: >
       Un article par fiche (onglet « Actualités »), du plus récent au plus ancien.
       L'onglet apparaît sur le site public dès le premier article « Publié ».
+      Pour retirer un article du site, repassez-le en « Brouillon ».
     folder: contenu-anne/actualites
     extension: md
     format: frontmatter
     create: true
-    delete: true
+    delete: false
     publish: false
-    slug: "{{year}}-{{month}}-{{day}}-{{titre}}"
+    slug: "{{titre}}"
     identifier_field: titre
     summary: "{{date}} · {{titre}} · {{statut}}"
     sortable_fields: [date, titre, statut]
@@ -147,7 +149,8 @@ collections:
       - { name: titre, label: Titre, widget: string }
       - { name: date, label: Date, widget: datetime, time_format: false, format: "YYYY-MM-DD", date_format: "DD/MM/YYYY" }
       - { name: resume, label: Résumé, widget: text, required: false, hint: "Une ou deux phrases, affichées dans la liste des actualités et sous le titre dans Google." }
-      - { name: photo, label: Photo, widget: image, required: false, hint: "Facultative, au format paysage de préférence ; réduite automatiquement à l'envoi." }
+      - { name: photo, label: Photo, widget: image, required: false, hint: "Facultative : JPG, PNG ou WebP, au format paysage de préférence ; réduite automatiquement à l'envoi." }
+      - { name: photo_alt, label: Description de la photo, widget: string, required: false, hint: "Une phrase qui dit ce que montre la photo, lue aux personnes malvoyantes. Ex. « Vue du lac depuis le port de Thonon »." }
       - name: statut
         label: Statut
         widget: select
