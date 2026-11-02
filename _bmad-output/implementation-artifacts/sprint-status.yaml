@@ -239,7 +239,7 @@ development_status:
   16-2-video-espace-acheteur: done
   epic-16-retrospective: optional
   # Nouvelle version de l'espace d'Anne (refonte BMAD du 2026-11-01) : _bmad-output/planning-artifacts/epics-espace-anne-2026-11-01.md
-  epic-18: in-progress   # le carnet de contacts (livraison 1)
+  epic-18: done          # le carnet de contacts (livraison 1)
   18-1-leedflow-ne-range-un-appel-que-sur-un-contact-suivi: done   # 2026-11-01, PR #225
   18-2-nouvelle-base-du-carnet-migration-0018: done   # 2026-11-02, PR #226
   18-3-demandes-du-site-et-droits-sur-le-nouveau-carnet: done   # 2026-11-02, PR #226, avec les corrections de la revue 18.2
@@ -249,13 +249,13 @@ development_status:
   18-7-fiche-contact-et-creation-a-la-main: done   # 2026-11-02, PR #227, revue de code faite et corrigée
   18-8-categories-et-methodes: done   # 2026-11-02, PR #227, revue de code faite et corrigée
   18-9-import-par-claude: done   # 2026-11-02, PR #227, revue de code faite (par lot avec 18.11 et 18.12), constats à corriger corrigés, mineurs notés
-  18-10-premier-import-et-classement-de-depart: backlog
+  18-10-premier-import-et-classement-de-depart: done
   # 2026-11-02 : décision de JB, relecture par lot de 2 ou 3 stories
   # 2026-11-02 (10 h 23) : décision de JB, dans les relectures on ne corrige que les constats « bloquant » et « à corriger » ; les « mineurs » sont notés dans la story sans être corrigés ; deux personnes qui écrivent en même temps = mineur (deux utilisateurs seulement)
   # 2026-11-02 (10 h 23) : décision de JB, epics 19 et 20 en pause jusqu'à ce qu'Anne ait utilisé le carnet (premier import fait, contacts classés)
   18-11-barre-nouveaux-site-et-leedflow: done   # 2026-11-02, PR #227, revue de code faite (par lot), mineur noté
   18-12-demandes-des-portails-par-e-mail: done   # 2026-11-02, PR #227, revue de code faite (par lot), constat corrigé (réglage PORTAILS_EXPEDITEUR_AUTORISE), DKIM noté ; réglages de JB à faire (RUNBOOK § 4 sexies)
-  epic-18-retrospective: optional
+  epic-18-retrospective: optional   # non faite : décision JB « Finir économe » du 2026-11-02
 
   epic-19: backlog   # les séances et les campagnes (livraison 2) ; en pause (décision JB 2026-11-02)
   19-1-lancer-et-derouler-une-seance: backlog
