@@ -31,7 +31,13 @@
   ],
   // Limite de fréquence des formulaires (story 10.3, AD-7) : 5 envois par minute et par adresse IP.
   // namespace_id : un numéro choisi librement, unique dans le compte Cloudflare.
-  "ratelimits": [{ "name": "LIMITE_FORMULAIRES", "namespace_id": "1001", "simple": { "limit": 5, "period": 60 } }],
+  "ratelimits": [
+    { "name": "LIMITE_FORMULAIRES", "namespace_id": "1001", "simple": { "limit": 5, "period": 60 } },
+    // Comptage de l'entonnoir du diagnostic (story 10.12) : 120 passages par minute et par adresse IP (environ 22 par
+    // diagnostic : plusieurs visiteurs derrière une même adresse, réseau mobile ou bureau, passent). Le plafond du jour
+    // (src/server/entonnoir.ts) protège la base au-delà.
+    { "name": "LIMITE_ENTONNOIR", "namespace_id": "1002", "simple": { "limit": 120, "period": 60 } }
+  ],
   // Tâche planifiée (worker.ts → scheduled) : toutes les 15 minutes, réessaie les e-mails qui ont échoué (story 10.3).
   "triggers": { "crons": ["*/15 * * * *"] },
   // Journaux du Worker visibles dans Cloudflare (Workers → anne-vial-tissot-site → Logs), gratuits.

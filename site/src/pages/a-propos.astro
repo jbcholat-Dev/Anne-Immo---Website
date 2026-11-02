@@ -62,7 +62,7 @@ for (const rg of methode.rangs) {
       <p class="ap-zone seulement-desktop">Chablais · bassin lémanique · réseau eXp France</p>
     </div>
     <div class="ap-texte">
-      <h2 id="qui-titre" class="ap-nom">Anne <span class="ap-nom-famille">Vial‑Tissot<Signature largeur={180} hauteur={9} class="ap-signature" /></span></h2>
+      <h2 id="qui-titre" class="ap-nom">Anne <span class="ap-nom-famille">Vial-Tissot<Signature largeur={180} hauteur={9} class="ap-signature" /></span></h2>
       {qui.map((b) => <>
         {b.titre && <h3 class="chapeau">{b.titre}</h3>}
         <div class="ap-md" set:html={b.html} />
@@ -172,7 +172,7 @@ for (const rg of methode.rangs) {
   .ap-texte { max-width: 62ch; font-size: 17px; line-height: 1.75; }
   .ap-nom { font-size: 64px; line-height: 1.02; margin-bottom: 53px; }
   /* Ligne signature sous le nom de famille, comme dans le logo (ticket n° 143). */
-  .ap-nom-famille { position: relative; display: inline-block; }
+  .ap-nom-famille { position: relative; display: inline-block; white-space: nowrap; }
   .ap-nom-famille :global(.ap-signature) { position: absolute; left: 0; top: calc(100% + 8px); width: 100% !important; height: 9px !important; }
   .ap-texte h3.chapeau { font-family: var(--avt-font-text); margin: 0 0 12px; }
   .ap-texte p { margin-bottom: 40px; }

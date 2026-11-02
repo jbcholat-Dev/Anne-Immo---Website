@@ -50,7 +50,7 @@ Des exemples concrets, vente par vente : https://annevialtissot.fr/realisation
 
 ## On en parle ?
 
-Je vous propose un rendez-vous de 30 minutes, gratuit et sans engagement :
+Je vous propose un rendez-vous de 30 minutes, offert et sans engagement :
 
 - un regard sur votre annonce actuelle, si elle est en ligne ;
 - les points forts et les points faibles de votre bien ;

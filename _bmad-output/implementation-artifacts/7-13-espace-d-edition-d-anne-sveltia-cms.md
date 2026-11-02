@@ -1,7 +1,7 @@
 ---
 story: 7.13
 epic: 7 — Contenu d'Anne
-statut: in-progress
+statut: done
 date: 2026-10-05
 autorisations: sans objet (aucune photo ni témoignage nouveau)
 ---
@@ -45,3 +45,6 @@ Qu'Anne (et JB) modifient eux-mêmes les ventes, les pages, les coordonnées et 
 - Anne : créer son compte GitHub avec la validation en deux étapes.
 - Séance d'essai (Anne et JB) : créer une vente avec photos, vérifier la demande de fusion, l'aperçu, la fusion ; vérifier qu'un avis enregistré garde son texte à l'identique et qu'une photo envoyée ne garde pas de coordonnées GPS.
 - Après l'essai : passer la story en `done`, mettre à jour le tableau de bord.
+
+## Revue du suivi (2026-10-25)
+Statut passé à `done` lors de la remise à jour du statut de sprint demandée par JB après l'audit BMAD du 2026-10-25. L'espace d'édition est en service depuis le 2026-10-10 : les ventes ont été publiées par lui (PR n° 83 à 89) et ses enregistrements fusionnent seuls (story 9.7). Restent hors de cette story le compte GitHub d'Anne et son invitation (actions A16 et J25).

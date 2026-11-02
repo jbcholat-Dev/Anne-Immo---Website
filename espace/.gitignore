@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.astro/
+.dev.vars
+.wrangler/
+# Généré par `npm run types` (wrangler types), recréé avant chaque `npm run check`
+worker-configuration.d.ts
+# Copiés depuis site/public/ par scripts/partage.mjs avant chaque construction : une seule source, celle du site
+public/fonts/
+public/favicon*
+public/apple-touch-icon.png
+public/curseur.svg
+.verif/

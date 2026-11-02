@@ -1,0 +1,12 @@
+{
+  // Vérification des types du code serveur de l'espace : worker.ts, src/pages/api/ et src/server/,
+  // avec les types de l'exécution Cloudflare générés par `wrangler types` (worker-configuration.d.ts).
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "lib": ["es2024"],
+    "types": ["vite/client"],
+    "noEmit": true,
+    "paths": { "@site/*": ["../site/src/*"] }
+  },
+  "include": ["worker.ts", "src/pages/api/**/*.ts", "src/server/**/*.ts", "worker-configuration.d.ts"]
+}

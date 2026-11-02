@@ -84,3 +84,40 @@ export async function abonnement(env: EnvSite, leadId: string): Promise<{ lang: 
     .first<{ lang: 'fr' | 'en'; newsletter_unsubscribed_at: string | null }>();
   return l ? { lang: l.lang, desabonne: !!l.newsletter_unsubscribed_at } : null;
 }
+
+// ——— Campagnes e-mail de l'espace d'Anne (story 13.27, AD-21) ———
+// Le lien de désinscription d'une campagne désigne un contact, pas une demande : un contact saisi à la main ou importé
+// n'a jamais rien demandé sur le site. Préfixe d'empreinte distinct : un lien de la séquence n'ouvre pas celui-ci.
+
+/** Lien de désinscription des campagnes pour un contact (sans date de fin). Null sans secret. */
+export async function lienDesinscriptionContact(env: EnvSite, contactId: string): Promise<string | null> {
+  if (!env.LIEN_SECRET) return null;
+  return `${urlSite(env)}/desabonnement?c=${contactId}&s=${await empreinte(env.LIEN_SECRET, `desinscription.${contactId}`)}`;
+}
+
+export async function verifierDesinscriptionContact(env: EnvSite, url: URL): Promise<string | null> {
+  const c = url.searchParams.get('c') ?? '';
+  const s = url.searchParams.get('s') ?? '';
+  if (!env.LIEN_SECRET || !ID.test(c) || !s) return null;
+  return egales(s, await empreinte(env.LIEN_SECRET, `desinscription.${c}`)) ? c : null;
+}
+
+/** Le contact ne veut plus d'e-mails groupés : horodaté une fois, envois de campagne pas encore partis annulés, noté dans son historique. */
+export async function desinscrireContact(env: EnvSite, contactId: string): Promise<boolean> {
+  const maintenant = new Date().toISOString();
+  const r = await env.DB.prepare('UPDATE contact SET email_desinscrit_le = ?2, last_activity_at = ?2 WHERE id = ?1 AND email_desinscrit_le IS NULL')
+    .bind(contactId, maintenant).run();
+  await env.DB.prepare(`UPDATE campagne_destinataire SET statut = 'annule', erreur = 'désinscrit' WHERE contact_id = ?1 AND statut = 'a_envoyer'`).bind(contactId).run();
+  if (r.meta.changes) {
+    await env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte) VALUES (?1, ?2, 'note', 'site', 'Désinscrit des e-mails groupés d''Anne (lien d''un e-mail)')`)
+      .bind(contactId, maintenant).run();
+  }
+  return true;
+}
+
+/** Le contact d'un lien de désinscription existe-t-il, et est-il déjà désinscrit ? */
+export async function inscriptionContact(env: EnvSite, contactId: string): Promise<{ desinscrit: boolean } | null> {
+  const c = await env.DB.prepare('SELECT email_desinscrit_le FROM contact WHERE id = ?1').bind(contactId).first<{ email_desinscrit_le: string | null }>();
+  return c ? { desinscrit: !!c.email_desinscrit_le } : null;
+}
+

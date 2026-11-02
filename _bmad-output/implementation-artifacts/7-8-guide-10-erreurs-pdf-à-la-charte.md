@@ -1,7 +1,7 @@
 ---
 story: 7.8
 epic: 7 — Contenu d'Anne
-statut: in-progress
+statut: done
 date: 2026-10-04
 ---
 
@@ -22,3 +22,6 @@ Qu'Anne puisse corriger le guide sans ouvrir Gamma, pour que JB et Claude refass
 - Anne : corrections et réponses.
 - JB : choisir l'outil de production du PDF.
 - JB et Claude : produire le PDF, puis la couverture A-10 sur le site.
+
+## Revue du suivi (2026-10-25)
+Statut passé à `done` lors de la remise à jour du statut de sprint demandée par JB après l'audit BMAD du 2026-10-25. Guide relu et passé en `statut: publie` le 2026-10-10 (validation de JB, 20 h 47), PDF refait par `node scripts/guide-pdf.mjs` (`site/prive/guide.pdf`) et couverture sur `/guide` (story 12.5).

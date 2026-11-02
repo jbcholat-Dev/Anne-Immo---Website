@@ -13,7 +13,7 @@
 // l'e-mail et appelé par `cid:logo`), largeur 600 px qui se réduit sur téléphone. Les polices du site sont appelées
 // depuis annevialtissot.fr : Apple Mail et l'iPhone les affichent, Gmail et Outlook les ignorent et prennent Arial.
 
-const C = { brun: '#26201A', klein: '#002FA7', terra: '#A34E30', galet: '#E9E0D2', ecru: '#F7F2EA', muet: '#5C5248', blanc: '#FFFFFF' };
+const C = { brun: '#26201A', klein: '#002FA7', terra: '#C4623E', galet: '#E9E0D2', ecru: '#F7F2EA', muet: '#5C5248', blanc: '#FFFFFF' };
 const POLICES = 'https://annevialtissot.fr/fonts';
 const SERIF = "'Gilda Display', Arial, Helvetica, sans-serif";
 const SANS = "Jost, Arial, Helvetica, sans-serif";

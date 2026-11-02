@@ -2,6 +2,7 @@
 // Dans l'ordre : barrières anti-robot, validation du contenu, écriture en base, réponse au visiteur ;
 // les e-mails partent ensuite, sans faire attendre le visiteur (et sans jamais le mettre en échec).
 import type { APIContext } from 'astro';
+import { rattacherLead } from './contacts';
 import { diffuser } from './delivery';
 import { evaluer, type Diagnostic } from './diagnostic';
 import { enProduction, envSite } from './env';
@@ -77,7 +78,11 @@ export async function traiterCapture(source: SourceFormulaire, { request, locals
   }
   journal('lead_ecrit', { source, lead: ecriture.leadId, nouveau: ecriture.nouveau, test: isTest, email: await empreinte(verdict.lead.email) });
 
-  const envoi = diffuser(env, ecriture.leadId).catch((e) => journal('diffusion_interrompue', { lead: ecriture.leadId, erreur: String(e).slice(0, 200) }));
+  // Ensuite, sans faire attendre le visiteur : les e-mails, et le rattachement de la demande à son contact (story 13.4).
+  const envoi = Promise.all([
+    diffuser(env, ecriture.leadId).catch((e) => journal('diffusion_interrompue', { lead: ecriture.leadId, erreur: String(e).slice(0, 200) })),
+    rattacherLead(env, ecriture.leadId).catch((e) => journal('rattachement_echec', { lead: ecriture.leadId, erreur: String(e).slice(0, 200) })),
+  ]);
   const cf = (locals as { cfContext?: ExecutionContext }).cfContext;
   if (cf) cf.waitUntil(envoi);
   else await envoi;

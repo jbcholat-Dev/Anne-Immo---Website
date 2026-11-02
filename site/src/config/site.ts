@@ -20,6 +20,12 @@ export const identite = {
   /** Médiateur de la consommation (art. L.616-1 du Code de la consommation), celui du réseau eXp, transmis par JB le 2026-10-11. */
   mediateur: { nom: 'MEDIMMOCONSO', adresse: '1 allée du Parc de Mesemena, 44505 La Baule', site: 'https://www.medimmoconso.fr' },
   immodvisor: 'https://www.immodvisor.com/professionnels/mandataire-immobilier/pro/exp-france-anne-vial-tissot-70511',
+  /** Autres profils publics d'Anne, annoncés à Google dans la fiche de l'accueil (story 11.6) pour qu'il les relie au site ; non affichés. */
+  profils: [
+    'https://www.facebook.com/p/Anne-Vial-tissot-100090273117206/',
+    'https://www.expluxury.fr/fr/conseillers/haute-savoie/anne-vial-tissot/1647',
+    'https://www.seloger.com/professionnels-immobilier/DzrSFv6jVPLGhce17xsQm8',
+  ],
 };
 
 /** Téléphone d'Anne pour les visiteurs (revue du 2026-10-11, story 12.6) : affichage « 06 … » et lien d'appel « tel:+33… ». */

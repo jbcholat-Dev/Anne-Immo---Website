@@ -147,22 +147,22 @@ La clientèle internationale lit le site complet en anglais. **FRs :** FR10. **�
 Anne fournit ce que le site attend, pièce par pièce. **FRs :** FR1, FR2, FR3, FR7, FR8 ; NFR9. **État :** en cours.
 
 - **Epic 8 : Finition visuelle**
-Le site rend comme la maquette sur tous les écrans, avec des polices stables et la vidéo d'ouverture. **FRs :** FR1 ; NFR1, UX-DR15. **État :** à faire.
+Le site rend comme la maquette sur tous les écrans, avec des polices stables et la vidéo d'ouverture. **FRs :** FR1 ; NFR1, UX-DR15. **État :** en cours (au 2026-10-25) ; reste 8.4, retouches contre la maquette.
 
 - **Epic 9 : Mise en ligne d'aperçu**
-Anne et JB voient chaque changement sur une adresse en ligne protégée, depuis leur téléphone. **AD-9, AD-10, AD-11.** **État :** à faire, prochain lot.
+Anne et JB voient chaque changement sur une adresse en ligne protégée, depuis leur téléphone. **AD-9, AD-10, AD-11.** **État :** en cours (au 2026-10-25) ; aperçu en service, restent 9.7 (première fusion automatique à constater) et 9.8 (revue de code avant fusion).
 
 - **Epic 10 : Capture des leads et backend**
-Un prospect qui remplit un formulaire ou termine le diagnostic est enregistré côté site, Anne est prévenue, rien n'est perdu ni exposé. **FRs :** FR5, FR6, FR7, FR8, FR9, FR11 ; NFR3, NFR4 ; AD-4 à AD-8, AD-12, AD-14, AD-16, AD-18. **État :** à faire.
+Un prospect qui remplit un formulaire ou termine le diagnostic est enregistré côté site, Anne est prévenue, rien n'est perdu ni exposé. **FRs :** FR5, FR6, FR7, FR8, FR9, FR11 ; NFR3, NFR4 ; AD-4 à AD-8, AD-12, AD-14, AD-16, AD-18. **État :** en cours (au 2026-10-25) ; formulaires, diagnostic, guide, rendez-vous et droits RGPD en production depuis le 2026-10-11 ; restent 10.8 (surveillance et mesure), 10.9 et 10.10 en relecture.
 
 - **Epic 11 : Référencement et visibilité**
-Le site est trouvé par les vendeurs et acheteurs du Chablais qui cherchent sur Google. **NFR2, AD-13.** **État :** à définir ; la story 11.1 est la session de cadrage.
+Le site est trouvé par les vendeurs et acheteurs du Chablais qui cherchent sur Google. **NFR2, AD-13.** **État :** en cours (au 2026-10-25) ; bases techniques et titres faits (11.3, 11.6, 11.7), fiche Google en attente d'Anne (11.2), cadrage (11.1) à faire.
 
 - **Epic 12 : Lancement public**
-Le site est en ligne sur annevialtissot.fr, trouvable, légal, avec des formulaires qui fonctionnent. **AD-9, AD-10, AD-16 ; NFR3.** **État :** à faire.
+Le site est en ligne sur annevialtissot.fr, trouvable, légal, avec des formulaires qui fonctionnent. **AD-9, AD-10, AD-16 ; NFR3.** **État :** en cours (au 2026-10-25) ; site ouvert au public le 2026-10-11 (12.4, 12.5) ; restent DNSSEC (12.1), validation des pages légales (12.2), propriété et transfert (12.3).
 
 - **Epic 13 : Espace de travail d'Anne**
-Anne démarre chaque journée devant ses contacts et sait qui appeler, qui relancer et comment faire avancer chacun ; Modelo ne sert plus qu'à formaliser un mandat. **CAP-12 ; AD-14 (amendée), AD-18, AD-19, AD-20.** **État :** en cours ; spec (13.1) et architecture (13.2) écrites, construction découpée en stories 13.3 à 13.11.
+Anne démarre chaque journée devant ses contacts et sait qui appeler, qui relancer et comment faire avancer chacun ; Modelo ne sert plus qu'à formaliser un mandat. **CAP-12 ; AD-14 (amendée), AD-18, AD-19, AD-20.** **État :** en cours ; spec (13.1, amendée en v7 le 2026-10-21) et architecture (13.2) écrites ; parcours et maquette v2 validés (13.12) ; construction en stories 13.3 à 13.16, dans l'ordre 13.4, 13.7, 13.6, 13.5, 13.13, 13.14, 13.15, 13.16, avec 13.8 et 13.10 en parallèle ; campagnes e-mail depuis l'espace (13.26 à 13.28, AD-21, décision de JB du 2026-10-24) après 13.22 à 13.25.
 
 - **Epic 15 : Portail des vendeurs sous mandat**
 Un vendeur qui a signé un mandat avec Anne suit sa vente sur un espace privé : étape, visites et retours, prochaines actions, informations de marché. **Capacité à écrire (spec v7 ou suivante) ; s'appuie sur CAP-12, AD-19, AD-20.** **État :** à définir ; cadrage (15.1) : réponses de JB du 2026-10-11 notées, capacité à écrire.
@@ -1430,6 +1430,24 @@ afin de ne garder la main que sur les changements qui ont un impact sur le site.
 
 **État :** en relecture (2026-10-10). Décision de JB du 2026-10-10. RUNBOOK § 2 bis.
 
+### Story 9.8: Revue de code avant fusion
+
+En tant que JB,
+je veux que chaque changement du code du site ou de l'espace d'Anne soit relu par une session neuve avant de m'être proposé,
+afin que les bugs et les failles soient attrapés avant la mise en ligne, sur un site public qui recueille des contacts et envoie des e-mails (audit BMAD du 2026-10-25).
+
+**Critères d'acceptation :**
+
+**Étant donné** une PR qui touche `site/src/`, `site/public/`, `site/prive/`, `espace/src/` ou `.github/`
+**Quand** elle est prête à être proposée à JB
+**Alors** le skill `bmad-code-review` a été lancé sur elle dans une session qui n'a pas écrit le code
+**Et** chaque constat est corrigé, ou écarté avec sa raison
+**Et** le résultat est cité dans la story, section « Revue de code »
+**Et** une PR de documents ou de contenu en est dispensée
+**Et** à la clôture d'un epic, une rétrospective `bmad-retrospective` est faite et notée dans le statut de sprint.
+
+**État :** en relecture (2026-10-25). Décision de JB du 2026-10-25. `CLAUDE.md` § 2, RUNBOOK § 2 bis.
+
 ## Epic 10: Capture des leads et backend
 
 Un prospect qui remplit un formulaire ou termine le diagnostic est enregistré côté site, Anne est prévenue, et rien n'est perdu ni exposé (AD-4 « écrire d'abord, diffuser ensuite »). Aujourd'hui tout est simulé dans le navigateur (voir `site/README.md`, section « TODO(backend) ») ; cet epic remplace chaque simulation par le noyau serveur décrit dans le spine, une story à la fois, sans jamais casser le site en ligne.
@@ -1683,6 +1701,8 @@ afin qu'aucun lead ne se perde en silence et que la mesure d'audience se fasse s
 **Alors** il réalise une soumission de test réelle (test synthétique : un faux prospect joué par la machine) parcourant gate → D1 → diffusion avec `is_test = 1`, les adaptateurs routant les e-mails vers la boîte de test, jamais vers Anne ni vers la séquence (AD-12)
 **Et** en fin d'exécution le cron supprime son propre lead de test et alerte s'il n'y parvient pas ; après chaque succès il envoie un battement (signal « je suis vivant ») à Better Stack, qui alerte si le battement manque (AD-12).
 
+**Note du 2026-10-26 :** ce critère (comptage de l'entonnoir) est sorti dans la story 10.12, construite seule à la demande de JB ; la 10.8 garde la surveillance et le test synthétique.
+
 **Étant donné** la migration `migrations/0003-funnel-event.sql` et la route du noyau qui reçoit les événements de l'îlot du parcours
 **Quand** un visiteur démarre le diagnostic, atteint un écran, soumet, ou réserve un rendez-vous
 **Alors** une ligne `funnel_event` (`journey_id`, `event`, `screen`, `lang`, `is_test`, `at`) est écrite sous le `journey_id` aléatoire créé en mémoire de l'îlot, jamais déposé dans le navigateur, sans donnée personnelle et sans référence à `lead` (AD-6, AD-11)
@@ -1694,6 +1714,66 @@ afin qu'aucun lead ne se perde en silence et que la mesure d'audience se fasse s
 **Et** le RUNBOOK décrit la routine mensuelle (admin, rapprochement, export mensuel chiffré des leads déposé dans le coffre partagé, dépendances, erreurs) (AD-10, AD-12).
 
 **État :** à faire ; responsable : Claude, prérequis : 10.4 (gate serveur à tester), 10.7 (admin pour les compteurs), compte Better Stack au nom d'Anne avec JB invité, fichiers concernés : `site/worker.ts`, `site/src/server/adapters/monitoring.ts`, `site/src/server/funnel.ts`, `site/src/pages/api/funnel.ts`, `site/migrations/0003-funnel-event.sql`, `site/src/islands/diagnostic.ts`, `site/src/pages/admin/…`, `RUNBOOK.md`, durée estimée : 1 session (une journée).
+
+### Story 10.12: Entonnoir du diagnostic par campagne
+
+En tant que JB,
+je veux savoir à quelle étape du diagnostic les visiteurs s'arrêtent, campagne par campagne,
+afin de décider s'il faut raccourcir le diagnostic ou déplacer la demande de coordonnées.
+
+**Critères d'acceptation :** chaque étape (arrivée sur /diagnostic, chaque écran, coordonnées, envoi, échec, résultat) est comptée sans cookie ni donnée personnelle, avec les paramètres utm du lien, sous un numéro tiré à chaque ouverture de page et gardé en mémoire seulement (AD-11) ; le Bilan de l'espace d'Anne montre l'entonnoir par campagne et étape par étape ; les comptages de test sont exclus en production ; ils sont purgés après 13 mois ; la page Cookies le dit.
+
+**État :** fait (2026-10-26, PR #205), détail dans `implementation-artifacts/10-12-entonnoir-du-diagnostic-par-campagne.md`.
+
+### Story 10.13: Question 1 touchée, navigateur, appareil et temps d'affichage
+
+En tant que JB,
+je veux savoir pourquoi les visiteurs venus de la publicité s'arrêtent à la question 1 (panne, lenteur ou désintérêt),
+afin de réparer ou de changer la bonne chose.
+
+**Critères d'acceptation :** le premier toucher sur la question 1, le navigateur (intégré d'Instagram ou de Facebook, ou habituel), la famille d'appareil (iPhone, Android, ordinateur) et le temps d'affichage de la question 1 en paliers (moins de 2 s, 2 à 5 s, plus de 5 s, ou page pas à l'écran) sont comptés sans cookie ni donnée personnelle (AD-11) ; le Bilan de l'espace ventile le passage question 1 → question 2 selon chacun.
+
+**État :** fait, en ligne le 2026-10-28 (PR #213), détail dans `implementation-artifacts/10-13-question-1-touchee-navigateur-et-affichage.md`.
+
+### Story 10.14: Test A/B de la publicité, accueil ou question 1
+
+En tant que JB,
+je veux comparer une publicité qui fait arriver sur l'accueil et une publicité qui fait arriver directement sur la question 1,
+afin de garder la version qui amène le plus de visiteurs à la question 2 ou à une demande d'estimation.
+
+**Critères d'acceptation :** l'arrivée sur l'accueil, le clic sur ses deux boutons et le début d'une demande d'estimation sur la page Contact (agenda touché, formulaire commencé, rendez-vous réservé, demande envoyée) sont comptés sans cookie ni donnée personnelle (AD-11) ; la campagne du lien suivi est gardée de l'accueil jusqu'au diagnostic et au contact par l'adresse seulement ; le Bilan de l'espace et le bilan de Claude montrent, campagne par campagne, entrées, objectif (question 2 ou estimation commencée) et taux.
+
+**État :** fait, en ligne le 2026-10-28 (PR #216), détail dans `implementation-artifacts/10-14-test-ab-accueil-ou-question-1.md`.
+
+### Story 10.15: Entrée du diagnostic allégée, prénom et e-mail d'abord
+
+En tant que JB,
+je veux que le visiteur venu de la publicité donne son prénom et son e-mail avant la question 1, et son téléphone seulement s'il souhaite être appelé,
+afin que la page /diagnostic redevienne la destination des publicités sans annoncer la friction des quatre coordonnées.
+
+**Critères d'acceptation :** un écran d'entrée (prénom, e-mail, accord) précède la question 1, ses coordonnées restent en mémoire de la page et jamais dans le navigateur (AD-11) ; à la fin, le téléphone est facultatif avec la phrase « Votre rapport arrive par e-mail. Le téléphone, seulement si vous souhaitez qu'Anne vous appelle. », reprise sous le bouton de /diagnostic ; le nom de famille n'est plus demandé ; le serveur accepte un diagnostic sans nom ni téléphone ; l'écran d'entrée est compté (étape `coordonnees`, précision `entree`) et le Bilan le place avant la question 1 ; dans l'espace, les contacts à qualifier qui ont un téléphone passent en tête, ceux sans téléphone sont à qualifier par e-mail. Consentement et purge inchangés.
+
+**État :** fait, en ligne le 2026-10-30 (PR #218), détail dans `implementation-artifacts/10-15-entree-du-diagnostic-allegee.md`. Le téléphone redevient obligatoire le 2026-10-31 (story 10.16).
+
+### Story 10.16: Téléphone de nouveau obligatoire dans le diagnostic
+
+En tant que JB,
+je veux que le téléphone soit de nouveau exigé à la fin du diagnostic,
+afin qu'Anne puisse rappeler chaque prospect : un e-mail seul ne permet pas de le qualifier.
+
+**Critères d'acceptation :** l'ordre de la story 10.15 est gardé (prénom et e-mail avant la question 1, pas de nom) ; à la fin, le téléphone est obligatoire, vide ou mal saisi il est refusé par la page et par le serveur ; la ligne sous le bouton de /diagnostic et l'aide du champ deviennent « Votre rapport arrive par e-mail. Votre téléphone permet à Anne de vous rappeler pour en parler. »
+
+**État :** fait, en ligne le 2026-10-31 (PR #220), détail dans `implementation-artifacts/10-16-telephone-obligatoire-dans-le-diagnostic.md`.
+
+### Story 10.17: Pas de cadre autour du titre des écrans du diagnostic
+
+En tant que visiteur du diagnostic,
+je veux arriver sur l'écran « À qui envoyer votre rapport ? » sans cadre bleu autour du titre,
+afin que la page paraisse soignée dès le premier écran.
+
+**Critères d'acceptation :** le titre de chaque écran (question, écran d'entrée, écran final, reprise) garde le focus posé par la page, pour que les lecteurs d'écran annoncent le nouvel écran, mais sans cadre visible ; les champs, boutons et liens gardent leur cadre au clavier.
+
+**État :** fait, en ligne le 2026-10-31 (PR #222), détail dans `implementation-artifacts/10-17-pas-de-cadre-autour-du-titre-du-diagnostic.md`.
 
 ### Story 10.9: E-mails du site à la charte
 
@@ -2142,7 +2222,7 @@ afin de les ajuster sans passer par JB ou Claude.
 ## Epic 13: Espace de travail d'Anne
 
 Anne démarre chaque journée devant ses contacts et sait qui appeler, qui relancer et comment faire avancer chacun, quel que soit le canal d'arrivée du contact (téléphone, événement, site). L'espace part de `/gestion` (story 10.7) et devient son outil principal ; Modelo n'est utilisé qu'à la signature d'un mandat.
-**Capacités couvertes :** CAP-12 (spec v6, 2026-10-09). **Décisions :** AD-14 (amendée par CAP-12 : recopie Modelo au mandat seulement), AD-18 (droits RGPD depuis l'espace), AD-4 et AD-6 (un contact n'est jamais créé deux fois), une décision d'architecture à écrire pour Leedflow et la boîte Gmail.
+**Capacités couvertes :** CAP-12 (spec v6, 2026-10-09, amendée en v7 le 2026-10-21). **Décisions :** AD-14 (amendée par CAP-12 : recopie Modelo au mandat seulement), AD-18 (droits RGPD depuis l'espace), AD-4 et AD-6 (un contact n'est jamais créé deux fois), une décision d'architecture à écrire pour Leedflow et la boîte Gmail.
 
 ### Story 13.1: Spécification de l'espace de travail
 
@@ -2181,52 +2261,55 @@ afin qu'une mise en ligne de l'un ne touche jamais l'autre (AD-19).
 **Alors** elle apparaît aussitôt dans l'espace, sans copie (base D1 partagée vérifiée en premier)
 **Et** `/gestion` (liste, fiche, relance, droits RGPD) est déplacé dans l'espace et ses essais (`e2e-gestion`) passent ; le site n'a plus de page privée
 
-### Story 13.4: Contacts et pipeline
+*Découpage du 2026-10-15 :* phase 1, l'espace reprend `/gestion` à l'identique pendant que celui du site reste ouvert ; phase 2, une fois l'espace en ligne et essayé par Anne, le site renvoie `/gestion` vers l'espace et n'a plus de page privée.
+
+### Story 13.4: Contacts, origine précise et étapes
 
 En tant qu'Anne,
-je veux qu'une personne soit un seul contact, avec un parcours, une étape, une prochaine action datée et un historique,
-afin de savoir où en est chacun (CAP-12, AD-20).
+je veux qu'une personne soit un seul contact, avec son origine précise, un parcours, une étape, une prochaine action datée et un historique,
+afin de savoir où en est chacun et d'où il vient (CAP-12 v7, AD-20).
 
 **Critères d'acceptation :**
-**Étant donné** les tables `contact` et `contact_evenement`
+**Étant donné** les tables `contact`, `contact_evenement`, `passage_boitage` et `prescripteur`
 **Quand** une même personne fait deux demandes (même téléphone ou même e-mail)
-**Alors** elles se rangent sur un seul contact, les demandes existantes comprises
+**Alors** elles se rangent sur un seul contact, les demandes existantes comprises, avec le canal d'origine déduit de la source de la demande
 **Et** un contact actif ne peut pas être enregistré sans prochaine action datée ; En sommeil exige une date de réveil ; Perdu exige un motif
+**Et** les réponses de qualification (cinq questions) sont gardées sur le contact
 
 ### Story 13.5: Page « Aujourd'hui »
 
 En tant qu'Anne,
-je veux ouvrir ma journée sur les nouveaux contacts, les actions du jour et en retard, et mes rendez-vous,
-afin de savoir qui appeler et comment le faire avancer.
+je veux ouvrir ma journée sur les nouveaux contacts à rappeler, mes rappels du jour avec une raison d'appeler, et ma prospection de la semaine,
+afin de rappeler vite et de savoir qui appeler (maquette v2, écran 1).
 
 **Critères d'acceptation :**
 **Étant donné** des contacts nouveaux, dus, en retard et en sommeil à réveiller
 **Quand** Anne ouvre l'espace, sur téléphone ou ordinateur
-**Alors** la page les montre dans cet ordre, retards en tête, comme la maquette
-**Et** depuis une ligne elle appelle, note le résultat et fixe la prochaine action sans quitter la page
+**Alors** les nouveaux contacts pas encore qualifiés sont en tête, le plus ancien d'abord, avec le temps écoulé ; puis les rappels dus et en retard ; puis les passages de boîtage à refaire et les prescripteurs à relancer
+**Et** depuis chaque ligne elle appelle en un geste et ouvre la qualification
 
-### Story 13.6: Vue pipeline et fiche contact
-
-En tant qu'Anne,
-je veux voir mes vendeurs et mes acheteurs par étape, et tout l'historique d'un contact,
-afin de piloter l'ensemble et de préparer chaque appel.
-
-**Critères d'acceptation :**
-**Étant donné** des contacts à plusieurs étapes des deux parcours
-**Quand** Anne déplace une carte vers une autre colonne
-**Alors** l'étape change, une prochaine action est demandée et l'événement est noté
-**Et** la fiche montre étape, prochaine action, coordonnées, bien concerné et historique, avec l'export et l'effacement de 10.7
-
-### Story 13.7: Saisie à la main et import d'une liste
+### Story 13.6: Qualifier en deux minutes et fiche contact
 
 En tant qu'Anne,
-je veux créer un contact en moins d'une minute et importer la liste d'un événement,
-afin que les contacts du téléphone et des jeux concours soient suivis comme les autres.
+je veux qualifier un nouveau contact en cinq réponses et une issue, et retrouver tout son historique,
+afin de décider en un appel s'il vaut un rendez-vous (maquette v2, écran 2).
 
 **Critères d'acceptation :**
-**Étant donné** un formulaire de saisie et un import de tableur (.xlsx ou .csv)
-**Quand** la liste contient des personnes déjà connues
-**Alors** elles sont complétées, jamais recréées, et l'aperçu dit combien sont nouvelles
+**Étant donné** un contact nouveau
+**Quand** Anne répond aux cinq questions (une touche chacune) et choisit rendez-vous, en sommeil ou perdu
+**Alors** la date du rendez-vous, la date de réveil ou le motif sont exigés, l'étape et la prochaine action sont fixées et l'événement est noté
+**Et** la fiche montre origine, étape, prochaine action, coordonnées, réponses et historique, avec l'export et l'effacement de 10.7
+
+### Story 13.7: Saisie à la main, passage de boîtage et import d'une liste
+
+En tant qu'Anne,
+je veux créer un contact en moins d'une minute avec son origine, noter un passage de boîtage en moins de 30 secondes et importer la liste d'un événement,
+afin que chaque contact soit suivi et rattaché à ce qui l'a amené (maquette v2, écran 3).
+
+**Critères d'acceptation :**
+**Étant donné** un formulaire de saisie (canal obligatoire ; passage ou prescripteur quand le canal l'appelle) et un import de tableur (.xlsx ou .csv)
+**Quand** le numéro ou l'e-mail est déjà connu, ou la liste contient des personnes déjà connues
+**Alors** la fiche existante est ouverte ou complétée, jamais recréée, et l'aperçu d'import dit combien sont nouvelles
 **Et** sans la case « les participants ont accepté d'être recontactés », les contacts importés sont marqués « rappel individuel seulement »
 
 ### Story 13.8: Demandes des portails d'annonces
@@ -2252,6 +2335,7 @@ afin de ne plus rien saisir dans Modelo avant (AD-14 amendée).
 **Quand** l'étape change
 **Alors** le contact porte « À recopier dans Modelo » avec la fiche prête à copier, qu'Anne marque faite
 **Et** les demandes du site ne créent plus de recopie Modelo d'office
+**Et** si le contact existe déjà dans Modelo (créé par la synchronisation Leedflow ↔ Modelo d'Anne, confirmée par JB le 2026-10-15), la fiche se limite à ce qui manque (mandat, bien) au lieu d'une recopie complète
 
 ### Story 13.10: Résumés d'appels Leedflow
 
@@ -2260,10 +2344,12 @@ je veux que le résumé de chaque appel se range sur la fiche du bon contact,
 afin de ne plus rien noter à la main après un appel.
 
 **Critères d'acceptation :**
-**Étant donné** l'accès que Leedflow aura confirmé (webhook, API ou MCP) et son contrat de sous-traitance
-**Quand** un appel se termine
-**Alors** son résumé est rattaché au contact de même numéro, ou proposé comme nouveau contact sur la page « Aujourd'hui »
-**Et** une proposition d'étape ou de relance tirée du résumé attend l'accord d'Anne. **Bloquée** par la réponse du support Leedflow (action J33)
+**Étant donné** la clé d'API Leedflow d'Anne posée en secret du Worker de l'espace (AD-20, entrée 4)
+**Quand** la relève planifiée passe (toutes les 10 minutes)
+**Alors** chaque nouvel appel, message vocal ou SMS d'un numéro connu est noté dans l'historique du contact avec son résumé, sa durée et son sens, une seule fois, et complété si le résumé arrive après coup
+**Et** un numéro inconnu est proposé sur la page « Aujourd'hui » (créer le contact ou ignorer), jamais créé d'office
+**Et** une tâche détectée par Leedflow est proposée comme prochaine action, qu'Anne accepte ou ignore
+**Et** la transcription complète et l'enregistrement restent dans Leedflow ; l'historique passé est repris une fois pour les numéros déjà connus
 
 ### Story 13.11: E-mails des clients (différée)
 
@@ -2276,12 +2362,260 @@ afin d'avoir toute la relation au même endroit.
 **Quand** un e-mail est échangé avec l'adresse d'un contact
 **Alors** il apparaît dans son historique. **Différée** : l'espace est complet sans (AD-20)
 
+### Story 13.13: Bilan du lundi par canal
+
+En tant qu'Anne,
+je veux voir chaque semaine ce que chaque canal m'a rapporté,
+afin de savoir où mettre mes heures (CAP-12 v7, maquette v2 écran 4).
+
+**Critères d'acceptation :**
+**Étant donné** des contacts d'origines diverses sur la période choisie (semaine, 4 semaines, 3 mois)
+**Quand** Anne ouvre le bilan
+**Alors** il donne par canal les contacts, les qualifiés, les rendez-vous et les mandats, le délai moyen de rappel, le boîtage par secteur (dernier passage, mots, appels reçus) et les motifs de perte
+**Et** les chiffres se recalculent depuis la base, sans saisie
+
+### Story 13.14: Prescripteurs
+
+En tant qu'Anne,
+je veux suivre ceux qui m'envoient des vendeurs et savoir quand les relancer,
+afin de faire grandir mon meilleur canal (maquette v2 écran 5).
+
+**Critères d'acceptation :**
+**Étant donné** des prescripteurs liés aux contacts qu'ils ont recommandés
+**Quand** Anne ouvre la liste
+**Alors** chacun montre ses recommandés sur 12 mois, les mandats qui en sont issus, le dernier contact et une prochaine relance datée avec sa raison
+**Et** une relance due apparaît sur la page « Aujourd'hui »
+
+### Story 13.15: Acheteurs actifs
+
+En tant qu'Anne,
+je veux la liste des acheteurs qualifiés qui cherchent en ce moment,
+afin de dire « j'ai un acheteur » aux propriétaires du même secteur (maquette v2 écran 6).
+
+**Critères d'acceptation :**
+**Étant donné** des contacts acheteurs qualifiés (budget, secteur, type de bien, financement vérifié ou non)
+**Quand** Anne ouvre la liste
+**Alors** elle les voit avec ces critères, ceux qui doivent d'abord vendre étant signalés « aussi vendeur »
+**Et** depuis un secteur, elle retrouve les vendeurs en sommeil du même secteur. L'offre « mandat de recherche » reste à décider à part
+
+### Story 13.16: Vue pipeline
+
+En tant qu'Anne,
+je veux voir mes vendeurs et mes acheteurs par étape,
+afin de piloter l'ensemble (CAP-12).
+
+**Critères d'acceptation :**
+**Étant donné** des contacts à plusieurs étapes des deux parcours
+**Quand** Anne déplace une carte vers une autre colonne
+**Alors** l'étape change, une prochaine action est demandée et l'événement est noté
+
+### Story 13.17: Journal des actions marketing et coût par contact
+
+En tant qu'Anne,
+je veux noter mes actions marketing avec leur canal et leur coût, et voir ce que chacune a rapporté,
+afin de savoir combien me coûte un contact, un rendez-vous et un mandat, canal par canal.
+
+**Critères d'acceptation :**
+**Étant donné** des actions saisies par Anne ou créées par Claude par l'accès privé `/api/claude/…` (jeton de service Cloudflare Access, sans lecture des contacts)
+**Quand** un contact arrive sur un canal où une seule action est en cours, ou qu'Anne choisit l'action à la qualification
+**Alors** le contact est rattaché à l'action et le bilan du lundi montre le coût par canal, par contact, par rendez-vous et par mandat. Demande de JB du 2026-10-21
+
+### Story 13.18: Visibilité des réseaux sociaux dans le bilan
+
+En tant qu'Anne,
+je veux voir l'audience de mes réseaux à côté des contacts qu'ils m'amènent,
+afin de juger si mes publications rapportent.
+
+**Critères d'acceptation :**
+**Étant donné** le relevé Instagram du lundi envoyé à l'espace par l'accès de la story 13.17
+**Quand** Anne ouvre le bilan
+**Alors** abonnés et vues de la période sont affichés à côté des contacts du canal « réseaux » et de leur coût. Demande de JB du 2026-10-21
+
+### Story 13.19: Trier les numéros inconnus
+
+En tant qu'Anne,
+je veux ranger les numéros vus par Leedflow qui ne sont pas des contacts (prospect, privé, pro, démarchage) et les filtrer,
+afin qu'« Aujourd'hui » ne montre que ce qui compte.
+
+**Critères d'acceptation :**
+**Étant donné** des numéros inconnus relevés par Leedflow
+**Quand** Anne ouvre « Aujourd'hui »
+**Alors** une seule ligne indique combien sont à trier et mène à « Numéros à trier », où elle filtre par catégorie, masque les appels manqués sans message et classe ou reclasse chaque numéro. Demande de JB du 2026-10-21
+
+### Story 13.20: Bouton « Un retour ? » dans l'espace
+
+En tant qu'Anne,
+je veux signaler depuis n'importe quelle page de l'espace ce qui cloche ou ce qui me manque,
+afin que JB et Claude le traitent sans que j'aie à l'écrire ailleurs.
+
+**Critères d'acceptation :**
+**Étant donné** Anne connectée à l'espace
+**Quand** elle touche « Un retour ? » et envoie une remarque
+**Alors** un ticket GitHub étiqueté `retour-apercu` est créé à son nom, avec la page (sans ses paramètres), et le formulaire rappelle de ne citer aucun client. Demande de JB du 2026-10-24
+
+### Story 13.22: Noter la suite d'un contact en cours
+
+En tant qu'Anne,
+je veux noter ce qui s'est passé avec un contact déjà qualifié et fixer la prochaine action sans repasser par les cinq questions,
+afin de faire avancer un contact depuis « Aujourd'hui » ou sa fiche sans aller dans le pipeline.
+
+**Critères d'acceptation :**
+**Étant donné** un contact au-delà de « À qualifier »
+**Quand** Anne touche « Noter la suite » et choisit fait, pas joint ou note seule
+**Alors** la prochaine action datée, l'étape si elle la change (mêmes règles que « Déplacer ») et une ligne d'historique sont enregistrées ensemble ; « pas joint » garde l'étape et l'action ; « Requalifier » ne corrige plus que les réponses. Audit 13.21, décision de JB du 2026-10-24
+
+### Story 13.23: Fiche contact modifiable, note, export et effacement
+
+En tant qu'Anne,
+je veux corriger les coordonnées d'un contact, y ajouter une note et répondre à une demande RGPD depuis sa fiche,
+afin de garder des fiches justes, même pour un contact sans adresse e-mail.
+
+**Critères d'acceptation :**
+**Étant donné** la fiche d'un contact
+**Quand** Anne modifie ses coordonnées, ajoute une note, télécharge ou efface ses données
+**Alors** un téléphone ou un e-mail déjà pris est refusé avec le lien vers l'autre fiche, chaque changement est noté dans l'historique sans l'ancienne valeur, et l'export comme l'effacement sont journalisés comme depuis /gestion. Audit 13.21, décision de JB du 2026-10-24
+
+### Story 13.24: Listes et recherche pensées téléphone
+
+En tant qu'Anne,
+je veux parcourir mes contacts et mon pipeline sur mon téléphone et retrouver quelqu'un en tapant un début de numéro ou son prénom et son nom,
+afin de travailler aussi bien sur téléphone que sur ordinateur.
+
+**Critères d'acceptation :**
+**Étant donné** les pages Contacts et Pipeline sur un écran de téléphone
+**Quand** Anne les ouvre ou fait une recherche
+**Alors** chaque contact est une carte (étape, prochaine action, retard en rouge) avec des filtres d'une touche, le pipeline montre une étape à la fois choisie par des pastilles, « 0612 » trouve un numéro rangé en +33, plusieurs mots sont cherchés chacun de leur côté (aussi dans /gestion), et les numéros s'affichent « 06 12 34 56 78 ». Audit 13.21, décision de JB du 2026-10-24
+
+### Story 13.25: Synthèse du contact
+
+En tant qu'Anne,
+je veux retrouver sur la fiche la synthèse que Leedflow écrit de chaque contact, et la corriger,
+afin d'avoir tout le contexte avant de rappeler, sans ouvrir Leedflow.
+
+**Critères d'acceptation :**
+**Étant donné** un contact connu de Leedflow, ou saisi à la main
+**Quand** Anne ouvre sa fiche
+**Alors** la synthèse (qui est ce contact, notre relation, à retenir, situation, échanges récents) s'affiche en tête, mise à jour depuis Leedflow sans écraser ce qu'Anne a modifié, et saisissable à la main sinon. Demande de JB du 2026-10-24
+
+### Story 13.12: Parcours d'Anne pour trouver et qualifier des contacts
+
+En tant que JB,
+je veux revoir les parcours d'Anne centrés sur la recherche et la qualification de contacts vendeurs,
+afin de construire un espace qui l'aide à trouver des mandats, pas seulement à suivre ses contacts.
+
+**Critères d'acceptation :**
+**Étant donné** le document de parcours (story 13.12) et l'entretien mené avec Anne
+**Quand** les parcours sont validés par Anne et JB
+**Alors** la maquette et les stories 13.4 à 13.7 sont mises à jour avant leur construction. Demande de JB du 2026-10-16
+
+
+### Story 13.26: Accord e-mail sur la fiche contact
+
+En tant qu'Anne,
+je veux voir et noter sur chaque fiche si la personne accepte mes e-mails,
+afin de n'envoyer mes campagnes qu'à ceux qui peuvent les recevoir (AD-16, AD-21).
+
+**Critères d'acceptation :**
+**Étant donné** les accords déjà donnés sur le site ou à l'import, les anciens clients et les désinscrits
+**Quand** Anne ouvre une fiche ou coche « D'accord pour recevoir mes e-mails »
+**Alors** l'accord, sa date et son origine sont affichés et gardés, et une désinscription vaut pour tous les envois groupés. Décision de JB du 2026-10-24
+
+### Story 13.27: Écrire et envoyer une campagne e-mail
+
+En tant qu'Anne,
+je veux écrire un e-mail à la charte et l'envoyer à une partie de mes contacts depuis l'espace,
+afin de garder le lien avec eux sans exporter de liste vers un autre outil (AD-21).
+
+**Critères d'acceptation :**
+**Étant donné** des contacts filtrés par parcours, étape, commune ou origine
+**Quand** Anne envoie la campagne après un essai
+**Alors** seuls les contacts d'accord la reçoivent, par paquets, depuis le sous-domaine d'envoi, avec un lien de désinscription, et chaque fiche en garde la trace. Décision de JB du 2026-10-24
+
+### Story 13.28: Bilan d'une campagne
+
+En tant qu'Anne,
+je veux savoir ce qu'une campagne m'a rapporté,
+afin de la comparer à mes autres actions dans le bilan du lundi.
+
+**Critères d'acceptation :**
+**Étant donné** une campagne envoyée
+**Quand** Anne ouvre sa page ou le bilan du lundi
+**Alors** elle voit envoyés, refusés, désinscrits, demandes et rendez-vous venus du message, sans aucun suivi des ouvertures (AD-11). Décision de JB du 2026-10-24
+
+
+
+### Story 13.29: Retours d'Anne du 24/10, libellés et suppression d'un contact
+
+En tant qu'Anne,
+je veux retrouver mes mots dans l'espace (« Prospection », « R1 », « R2 ») et supprimer un contact depuis sa fiche,
+afin de m'y repérer tout de suite et de nettoyer les contacts de test.
+
+**Critères d'acceptation :**
+**Étant donné** l'espace
+**Quand** Anne ouvre le menu, le pipeline ou la fiche d'un contact
+**Alors** l'onglet s'appelle « Prospection », les étapes s'appellent « R1 » et « R2 », et « Supprimer ce contact » demande de taper SUPPRIMER. Tickets #177, #178, #185
+
+### Story 13.30: Critères de recherche d'un acheteur
+
+En tant qu'Anne,
+je veux noter ce que cherche un acheteur (type de bien, pièces, surface, extérieur, stationnement, budget, secteur) et ne voir sur sa fiche que ce qui est rempli,
+afin de lui proposer les bons biens sans relire tout l'historique.
+
+**Critères d'acceptation :**
+**Étant donné** un contact acheteur
+**Quand** Anne le qualifie ou corrige sa qualification
+**Alors** elle coche plusieurs choix par critère, tape la surface et d'autres critères, la fiche montre seulement les critères renseignés et la liste des acheteurs actifs les résume en une ligne. Ticket #176, précision de JB du 2026-10-24 (pas de capture Modelo)
+
+### Story 13.31: En-tête et historique résumé de la fiche contact
+
+En tant qu'Anne,
+je veux voir en tête de fiche la maturité du contact, ses visites, son dernier contact et sa prochaine action, et un historique résumé,
+afin de comprendre un contact d'un coup d'œil.
+
+**Critères d'acceptation :**
+**Étant donné** la fiche d'un contact
+**Quand** Anne l'ouvre
+**Alors** l'en-tête montre maturité, visites, dernier contact et prochaine action, et l'historique ne montre que la date et l'objet, le détail s'ouvrant au toucher. Ticket #182
 
 ## Epic 14: Campagnes promotionnelles temporaires
 
 Anne publie elle-même des offres limitées dans le temps (premier exemple : une séance photo professionnelle de sa maison à gagner) pour attirer du monde sur le site et récupérer des contacts de vendeurs. Chaque offre a sa page, ouverte et fermée par ses dates, et ses inscrits arrivent dans la même base que les autres demandes. Origine : demande de JB du 2026-10-10 (fil « Campagnes promotionnelles »). **À démarrer après le lancement public (story 12.4)**, sans toucher à la PR n° 80.
 
 **Capacités couvertes :** aucune dans la spec v6 : une capacité nouvelle sera ajoutée (story 14.2). **Décisions :** AD-11 (zéro traceur, les paramètres de campagne voyagent dans l'adresse), AD-6 (une seule table `lead`, une source de plus), AD-7 (contrôles anti-robots), AD-18 (droits RGPD), story 5.4 (origine des campagnes gardée), décision de JB du 2026-10-10 : une offre = un tirage au sort parmi les inscrits.
+
+
+### Story 13.32: Maquette v3 de l'espace
+
+En tant que JB,
+je veux une maquette de l'espace à jour de ce qui est en ligne et de ce qui vient,
+afin d'affiner le design et les fonctions avec Anne avant de les construire.
+
+**Critères d'acceptation :**
+- La maquette montre la fiche contact, noter la suite, les contacts, le pipeline, Qualifier avec les critères d'un acheteur et la ligne « Cherche » des acheteurs.
+- Chaque changement retenu devient une story.
+
+
+### Story 13.34: Recopie de l'espace en ligne dans la maquette, sur ordinateur
+
+En tant que JB,
+je veux dans la maquette une copie exacte de l'espace en ligne, en version ordinateur,
+afin de repartir de l'existant pour la refonte.
+
+**Critères d'acceptation :**
+- Chaque page de l'espace a son écran dans la maquette, à la largeur d'un ordinateur, avec des données fictives.
+- La copie se refait par un script, sans retoucher les écrans à la main.
+
+
+### Story 13.35: Pilotage commercial dans l'espace
+
+En tant qu'Anne,
+je veux voir dans l'espace mon objectif de l'année, où j'en suis, et mes actions de la semaine,
+afin de savoir chaque lundi si je suis sur la bonne trajectoire sans tenir un autre outil.
+
+**Critères d'acceptation :**
+- L'objectif d'honoraires est remonté en entonnoir (contacts, rendez-vous, mandats, ventes) et comparé au réalisé compté depuis la base.
+- Les actions de la semaine se cochent d'un geste, avec leur cible.
+- Le journal de la page de pilotage provisoire est repris.
 
 ### Story 14.1: Décision de principe
 
@@ -2444,3 +2778,7 @@ afin de comprendre ce qu'apporte le mandat de recherche.
 **Quand** le visiteur arrive au bloc « Pendant la recherche »
 **Alors** une courte vidéo animée (même moteur et même charte que la story 15.2) montre les étapes d'un achat puis des maquettes de l'espace acheteur (recherche, sélection avec le pour et le contre, visites faites par Anne, point de la semaine), avec la mention « maquette, exemple fictif »
 **Et** le bloc ne s'affiche sur le site public qu'une fois les textes validés par Anne et la décision de JB prise, l'espace n'existant pas encore.
+
+## Epics 18 à 20 : nouvelle version de l'espace d'Anne
+
+Découpage dans un fichier à part : `epics-espace-anne-2026-11-01.md` (refonte BMAD du 2026-11-01 : PRD `prds/prd-espace-anne-2026-11-01/`, architecture `architecture/architecture-espace-anne-2026-11-01/`). Epic 18 : le carnet de contacts ; epic 19 : les séances et les campagnes ; epic 20 : la semaine et le bilan.

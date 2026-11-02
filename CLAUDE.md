@@ -32,6 +32,7 @@ La spec (`_bmad-output/specs/spec-anne-website/SPEC.md`) exige que le site soit 
 - **Tout ce que la v1 simule** (formulaires, gate du diagnostic, envoi du guide) est marqué `TODO(backend)` dans le code et listé dans `site/README.md`. Ne pas en ajouter sans mettre la liste à jour.
 - **Un travail est « fait » quand il est vérifié** : `npm run build`, `npm run check`, liens (`scripts/liens.mjs`), captures (`npm run verif`) pour tout changement visuel. Le résultat de la vérification est cité dans la story.
 - **Fusion automatique (story 9.7, décision de JB du 2026-10-10)** : JB ne valide que les PR qui changent le site. Une PR qui ne touche que des documents (`_bmad-output/`, `_bmad/`, `.claude/`, `maquettes/`, fichiers `.md` hors de `contenu-anne/`, `site/src/`, `site/public/`, `site/prive/`, `design-system/`, `.github/`) ou un enregistrement de l'espace d'édition (branche `cms/…`, `contenu-anne/` seulement) fusionne seul une fois la construction Cloudflare au vert. Le fil qui a ouvert une PR légère la fusionne lui-même (outil `merge_pull_request`, fusion par commit de fusion) dès que la construction Cloudflare est au vert, sans demander à JB ; le programme `.github/workflows/fusion-auto.yml` couvre les enregistrements de l'espace d'édition et sert de filet. Conséquences pour Claude : séparer le suivi (story close, statut de sprint, RUNBOOK) du code dans des PR distinctes quand le suivi peut partir seul ; ouvrir une PR en brouillon tant qu'elle n'est pas prête ; mettre l'étiquette `a-valider` sur une PR de documents que JB doit relire (une décision qu'il n'a pas encore prise, par exemple). Règle complète : RUNBOOK § 2 bis.
+- **Revue de code avant fusion (story 9.8, décision de JB du 2026-10-25)** : toute PR qui touche `site/src/`, `site/public/`, `site/prive/`, `espace/src/` ou `.github/` passe le skill `bmad-code-review` (la relecture adverse de BMAD) **dans une session neuve**, qui n'a pas écrit le code, avant d'être proposée à JB ; d'ici là, la PR reste en brouillon. Chaque constat est corrigé ou écarté avec sa raison, et le résultat est cité dans la story, section « Revue de code » (date, PR et commit relus, une ligne par constat : « corrigé (commit) » ou « écarté : raison »). Les PR de documents et de contenu en sont dispensées. À la clôture d'un epic : rétrospective avec le skill `bmad-retrospective`, la ligne `epic-N-retrospective` du statut de sprint passe à `done`.
 
 ### Tableau de bord de JB
 
@@ -45,7 +46,7 @@ Il lit une petite base de données attachée à l'artefact, que Claude met à jo
 
 ### Retours d'Anne et de JB sur l'aperçu
 
-Le bouton « Un retour ? » de l'aperçu crée des **tickets GitHub étiquetés `retour-apercu`** dans ce dépôt. Règle : **au début de chaque session, lire les tickets ouverts** (outil `list_issues`, étiquette `retour-apercu`), les traiter comme des stories (une correction = une story, vérifiée, commitée), puis **fermer le ticket en citant le commit**, ou répondre en une ligne pourquoi ce n'est pas fait. Le nombre de tickets ouverts est reporté dans `etat/projet.retours_ouverts` du tableau de bord.
+Le bouton « Un retour ? » de l'aperçu, et celui de l'espace d'Anne (titre « [Retour espace] », story 13.20), créent des **tickets GitHub étiquetés `retour-apercu`** dans ce dépôt. Règle : **au début de chaque session, lire les tickets ouverts** (outil `list_issues`, étiquette `retour-apercu`), les traiter comme des stories (une correction = une story, vérifiée, commitée), puis **fermer le ticket en citant le commit**, ou répondre en une ligne pourquoi ce n'est pas fait. Le nombre de tickets ouverts est reporté dans `etat/projet.retours_ouverts` du tableau de bord.
 
 **Règle : à chaque changement d'état** (story terminée ou créée, epic ouvert ou clos, fusion dans `main`, mise en ligne), Claude met à jour les documents concernés **dans la même session**, et `etat/projet.derniere_mise_a_jour` prend la date du jour. Le fichier de statut de sprint dans `_bmad-output/implementation-artifacts/` reste la source ; le tableau de bord en est le reflet. S'ils divergent, corriger le tableau de bord.
 
@@ -57,6 +58,7 @@ Le repère de vérité en cas de contradiction : la **spec v5** pour ce que le s
 |---|---|
 | `RUNBOOK.md` | La notice de secours : comptes, adresse d'aperçu, comment remettre en ligne, bascule en production, pièges irréversibles. |
 | `site/` | Le code du site (Astro 7, sortie statique). `site/README.md` décrit l'état réel, `site/PLAN.md` le plan de construction. |
+| `espace/` | L'espace de travail privé d'Anne (epic 13), une application à part sur la même base que le site, son propre Worker `anne-espace`. `espace/README.md` décrit son état. |
 | `contenu-anne/` | Contenu d'Anne rangé au format du site : stories, avis Immodvisor, photos web, légal, guide. Anne modifie ce contenu par l'espace d'édition du site (`/admin`, Sveltia CMS, story 7.13) : chaque enregistrement est une demande de fusion, qui fusionne seule quand la fiche passe en « En relecture » ou « Prêt » (story 9.7). Le dossier Google Drive « Contenu site Anne », rangé à l'identique, reste l'archive des photos HD et des vidéos (RUNBOOK § 1). Les vidéos et photos HD restent sur Drive, hors Git. |
 | `design-system/` | Charte : couleurs, typographies, logos, composants. `tokens/tokens.css` est copié dans le site. |
 | `maquettes/lot-3-complet/` | Maquette de référence (61 écrans) et `DECISIONS.md` (D-1 → D-26). |
@@ -81,11 +83,18 @@ node scripts/e2e-diagnostic.mjs # diagnostic de bout en bout sur le serveur loca
 node scripts/e2e-rendez-vous.mjs # webhook Cal.com et agenda de /contact sur le serveur local (même préalable)
 node scripts/e2e-guide.mjs     # guide par lien signé, séquence et désabonnement sur le serveur local (même préalable)
 node scripts/e2e-gestion.mjs   # espace de gestion /gestion, droits RGPD et purge, avec une imitation de Cloudflare Access (même préalable)
+node scripts/e2e-migration-0018.mjs # répète la migration 0018 sur une base locale neuve à part : rien de perdu, reprise, relance, garde de construction de l'espace (aucun préalable)
 node scripts/maquette-emails.mjs # fait partir les 12 e-mails aux prospects sur le serveur local, vérifie leur mise en forme et les capture dans site/.verif/emails (même préalable)
 node scripts/email-logo.mjs    # refait le logo joint aux e-mails (site/src/server/email-logo.png) depuis le logo de la charte
 node scripts/rapport-gabarit.mjs  # refait le gabarit du rapport PDF du diagnostic après un changement de ses textes (story 10.10), puis npm run build
 node scripts/e2e-rapport.mjs     # rapport PDF de bout en bout sur le serveur local : bouton, e-mail, PDF lu, liens refusés (même préalable)
 node scripts/guide-pdf.mjs     # refait le PDF du guide (site/prive/guide.pdf) depuis contenu-anne/guide/texte-actuel.md
+
+cd ../espace           # l'espace d'Anne (story 13.3)
+npm install && npm run build && npm run check
+node scripts/e2e-espace.mjs    # site et espace sur la même base locale : accès, relance, Modelo, droits RGPD (préalable en tête du fichier)
+node scripts/maquette-espace.mjs <dossier>  # recopie chaque page de l'espace, sur ordinateur et avec des contacts fictifs, en écrans de la maquette (story 13.34, même préalable)
+node scripts/claude-espace.mjs actions  # accès de Claude à l'espace : actions marketing et bilan, jamais les contacts (réglages : RUNBOOK § 4 sexies)
 ```
 
 ## 5. Règles de contenu et de sécurité

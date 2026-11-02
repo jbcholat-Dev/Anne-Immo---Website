@@ -8,11 +8,11 @@ import ChampPiege from '../components/ChampPiege.astro';
 import { NOMBRE_ETAPES } from '../server/sequence';
 const erreurs = ['Le prix fixé sans comparables', 'Le dossier incomplet au compromis', 'Les diagnostics périmés', 'Les visites non qualifiées', 'Le financement vérifié trop tard'];
 ---
-<Page titre="Le guide — Les 10 erreurs fatales des vendeurs particuliers — Anne VIAL-TISSOT" description="Un guide court pour vendre sans mauvaise surprise, écrit par Anne. Envoyé par e-mail." courante="guide">
+<Page titre="Les 10 erreurs fatales des vendeurs — Anne VIAL-TISSOT" description="Un guide court pour vendre sans mauvaise surprise, écrit par Anne. Envoyé par e-mail." courante="guide">
   <div class="g-corps">
     <img src="/img/guide-couverture.jpg" alt="Couverture du guide « Les 10 erreurs fatales des vendeurs particuliers »" class="g-couv" width="953" height="1348" loading="eager" />
     <div class="g-texte">
-      <div class="g-tete-m seulement-mobile"><img src="/img/guide-couverture.jpg" alt="" class="g-couv-m" width="953" height="1348" /><div><h1>Les 10 erreurs fatales des vendeurs particuliers</h1><p class="g-intro">Un guide court pour vendre sans mauvaise surprise.</p></div></div>
+      <div class="g-tete-m seulement-mobile"><img src="/img/guide-couverture.jpg" alt="" class="g-couv-m" width="953" height="1348" /><div><p class="g-titre-m" role="heading" aria-level="1">Les 10 erreurs fatales des vendeurs particuliers</p><p class="g-intro">Un guide court pour vendre sans mauvaise surprise.</p></div></div>
       <h1 class="seulement-desktop">Les 10 erreurs fatales des vendeurs particuliers</h1>
       <p class="g-intro seulement-desktop">Un guide court pour vendre sans mauvaise surprise, écrit par Anne.</p>
       <ul>{erreurs.map((e) => <li>{e}</li>)}</ul>
@@ -78,7 +78,8 @@ const erreurs = ['Le prix fixé sans comparables', 'Le dossier incomplet au comp
     .g-texte { padding: 0 var(--marge-m); }
     .g-tete-m { display: flex; gap: 18px; align-items: flex-start; margin-bottom: 20px; }
     .g-tete-m :global(.g-couv-m) { width: 110px; height: auto; flex: none; border-radius: 4px; box-shadow: 0 6px 16px rgba(38, 32, 26, .14); }
-    .g-texte h1 { font-size: 30px; line-height: 1.08; margin-bottom: 10px; }
+    /* Titre du téléphone : un paragraphe à l'allure de titre, pour garder un seul h1 dans la page (story 11.7). */
+    .g-texte h1, .g-texte .g-titre-m { font-family: var(--avt-font-display); color: var(--avt-brun); font-size: 30px; line-height: 1.08; margin: 0 0 10px; }
     .g-intro { font-size: 14.5px; margin-bottom: 0; }
     .g-texte ul { margin: 0 0 28px; font-size: 15px; }
     .g-form { margin: 0 16px; border-radius: 14px; padding: 22px 18px; gap: 12px; }

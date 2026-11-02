@@ -16,6 +16,6 @@ Après le diagnostic ou le téléchargement du guide, le site envoie **tout seul
 | J+6 | Arrêter les visites inutiles | qualification des visiteurs, cas Thonon |
 | J+9 | La bombe à retardement | dossier administratif incomplet |
 | J+12 | Où en êtes-vous aujourd'hui ? | point d'étape, accompagnement |
-| J+15 | On fait le point ? | récapitulatif + offre + audit gratuit |
+| J+15 | On fait le point ? | récapitulatif + offre + audit offert |
 
 Le J+0 est l'e-mail de résultats (envoyé immédiatement) ; les six suivants forment la séquence. À revoir ensemble : le nombre d'étapes, les intervalles, les offres citées (les tarifs de 2025 sont périmés). La base de 2025 est déjà rangée dans `sequence-emails/`, un dossier par e-mail (`etape-0` pour le J+0, puis `etape-1` à `etape-6`) : relis et corrige directement dans chaque `fr.md`. Ce qu'il faut vérifier est listé dans `sequence-emails/README.md`.

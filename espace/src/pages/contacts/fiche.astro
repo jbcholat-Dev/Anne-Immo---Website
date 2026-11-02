@@ -1,0 +1,368 @@
+---
+// Fiche d'un contact (story 13.7, première version) : origine, étape, prochaine action, coordonnées, demandes du site
+// et historique ; bouton Qualifier et réponses de la qualification (story 13.6). Story 13.10 : appels relevés par
+// Leedflow dans l'historique avec leur résumé, et tâches proposées par Leedflow, à accepter ou ignorer.
+// Story 13.17 : l'action marketing qui a amené le contact, à choisir ou corriger.
+// Story 13.22 : un contact en cours a pour geste principal « Noter la suite » ; la qualification passe en second.
+// Story 13.23 : coordonnées et origine modifiables (repliées par défaut ; un téléphone ou un e-mail déjà porté par un
+// autre contact est refusé avec le lien vers sa fiche), note libre en un geste, export et effacement de la personne
+// depuis sa fiche (même journal des droits que /gestion), y compris pour un contact sans adresse e-mail.
+// Story 13.25 : en tête, la synthèse du contact (reprise de Leedflow par la relève, ou écrite par Anne), modifiable ;
+// une version plus récente de Leedflow est signalée, jamais imposée.
+// Story 13.26 : « E-mails groupés » : si la personne peut recevoir les campagnes d'Anne, depuis quand et pourquoi ;
+// Anne note un accord dit de vive voix, le retire, ou note un refus (qui vaut désinscription).
+import Espace from '../../layouts/Espace.astro';
+import { ENTETE_COMPTE } from '@site/server/acces';
+import { telLisible } from '@site/server/recherche';
+import { CANAUX_ORIGINE } from '@site/server/contacts';
+import { quand, SOURCES } from '@site/server/gestion-donnees';
+import { effacerContact } from '@site/server/rights';
+import { envEspace, pourSite as env } from '../../server/env';
+import { actionsAuChoix } from '../../server/actions';
+import { lireAccord, noterAccord, noterRefus, type SourceAccord } from '../../server/accord';
+import { champ, ULID } from '../../server/formulaires';
+import { rattacherInconnus, resumeHtml, tachesDuContact } from '../../server/leedflow';
+import {
+  ajouterNote, echeance, enregistrerSynthese, estCanal, MODELE_SYNTHESE, syntheseAffichee, libelleOrigine, lireContact, lirePassage, lirePrescripteur, listerPassages, listerPrescripteurs, modifierCoordonnees, personne,
+  QUESTIONS, rechercheRenseignee, type Reponses, libelleEtape, libelleCanal } from '../../server/pipeline';
+
+export const prerender = false;
+const compte = Astro.request.headers.get(ENTETE_COMPTE);
+if (!compte) return new Response('Accès refusé', { status: 403 });
+
+const id = Astro.url.searchParams.get('id') ?? '';
+if (!ULID.test(id)) return new Response('Contact inconnu', { status: 404 });
+
+let erreur = '', erreurPour = '', conflit = '';
+let saisi: Record<string, string> = {};
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const quoi = champ(f, 'quoi');
+  erreurPour = quoi;
+  if (quoi === 'synthese' || quoi === 'synthese-reprendre') {
+    const texte = quoi === 'synthese' ? champ(f, 'synthese', 8000) : '';
+    if (await enregistrerSynthese(env, id, texte || null, compte)) return Astro.redirect(`/contacts/fiche?id=${id}&m=${quoi}`, 303);
+  } else if (quoi === 'accord') {
+    const oui = champ(f, 'accord') === 'oui';
+    if (await noterAccord(env, id, oui, compte)) return Astro.redirect(`/contacts/fiche?id=${id}&m=${oui ? 'accord' : 'accord-retire'}`, 303);
+    erreur = oui ? 'Impossible de noter cet accord : la personne s\'est désinscrite, ou n\'a pas d\'adresse e-mail.' : 'Cet accord a été donné sur le site : notez plutôt qu\'elle ne veut plus d\'e-mails.';
+  } else if (quoi === 'refus') {
+    if (await noterRefus(env, id, compte)) return Astro.redirect(`/contacts/fiche?id=${id}&m=refus`, 303);
+  } else if (quoi === 'note') {
+    const note = champ(f, 'note', 2000);
+    if (!note) erreur = 'Écrivez la note.';
+    else if (await ajouterNote(env, id, note, compte)) return Astro.redirect(`/contacts/fiche?id=${id}&m=note`, 303);
+  } else if (quoi === 'effacer') {
+    if (!['SUPPRIMER', 'EFFACER'].includes(champ(f, 'confirmation').toUpperCase())) erreur = 'Tapez SUPPRIMER pour confirmer : la suppression est définitive.';
+    else {
+      const fait = await effacerContact(env, id, compte);
+      // Sans LIEN_SECRET, l'opposition n'a pas pu être notée : l'écran le dit (revue de code 18.3).
+      if (fait) return Astro.redirect(`/contacts?m=${fait.opposition ? 'efface' : 'efface-sans-opposition'}`, 303);
+    }
+  } else if (quoi === 'coordonnees') {
+    saisi = Object.fromEntries([...f.entries()].map(([k, v]) => [k, typeof v === 'string' ? v.trim() : '']));
+    const p = personne(saisi);
+    const canal = saisi.canal ?? '';
+    const parcours = saisi.parcours === 'vendeur' || saisi.parcours === 'acheteur' ? saisi.parcours : null;
+    const passage_id = canal === 'boitage' && ULID.test(saisi.passage_id ?? '') && (await lirePassage(env, saisi.passage_id)) ? saisi.passage_id : null;
+    const prescripteur_id = canal === 'recommandation' && ULID.test(saisi.prescripteur_id ?? '') && (await lirePrescripteur(env, saisi.prescripteur_id)) ? saisi.prescripteur_id : null;
+    if (!p) erreur = 'Il faut au moins un téléphone, un e-mail ou un nom.';
+    else if (saisi.telephone && !p.telephone) erreur = 'Le téléphone ne semble pas valable : dix chiffres, ou +41… pour la Suisse.';
+    else if (saisi.email && !p.email) erreur = "L'adresse e-mail ne semble pas valable.";
+    else if (!estCanal(canal)) erreur = "Choisissez d'où vient ce contact.";
+    else if (canal === 'boitage' && !passage_id) erreur = 'Choisissez le passage de boîtage qui a amené ce contact.';
+    else if (canal === 'recommandation' && !prescripteur_id) erreur = 'Choisissez qui l\'a recommandé (ajoutez-le dans Prescripteurs s\'il manque).';
+    else {
+      const r = await modifierCoordonnees(env, id, { ...p, parcours, origine: { canal, origine_detail: (saisi.origine_detail ?? '').slice(0, 200) || null, passage_id, prescripteur_id, parcours } }, compte);
+      if (r && !r.ok) { conflit = r.conflit; erreur = 'Ce téléphone ou cet e-mail appartient déjà à un autre contact : rien n\'a été changé.'; }
+      else if (r) {
+        // Un nouveau numéro peut avoir déjà des appels relevés par Leedflow : ils passent dans l'historique.
+        if (r.changes.includes('telephone') && p.telephone) await rattacherInconnus(envEspace).catch(() => {});
+        return Astro.redirect(`/contacts/fiche?id=${id}&m=${r.changes.length ? 'modifie' : 'inchange'}`, 303);
+      }
+    }
+  }
+}
+
+const fiche = await lireContact(env, id);
+if (!fiche) return new Response('Contact inconnu', { status: 404 });
+const { contact: c, historique, demandes, passage, prescripteur } = fiche;
+const [taches, actions, passages, prescripteurs] = await Promise.all([tachesDuContact(envEspace, c.id).catch(() => []), (c.canal ? actionsAuChoix(env, c.canal) : Promise.resolve([])), listerPassages(env, 30), listerPrescripteurs(env)]);
+// La saisie refusée est remise dans le formulaire ; sinon les valeurs du contact.
+const val = (k: keyof typeof c) => (erreurPour === 'coordonnees' && k in saisi ? saisi[k as string] : (c[k] as string | null) ?? '');
+const canalForm = val('canal');
+const synthese = syntheseAffichee(c);
+const accord = await lireAccord(env, c.id);
+const ORIGINE_ACCORD: Record<SourceAccord, string> = { site: 'sur le site', import: 'à l\'import de la liste', anne: 'à vous', client: '' };
+// Un échange relevé par Leedflow : un titre (« Appel reçu · 4 min »), puis le résumé en Markdown.
+const titreEtResume = (texte: string | null) => { const [titre, ...reste] = (texte ?? '').split('\n'); return { titre, resume: reste.join('\n').trim() }; };
+const m = Astro.url.searchParams.get('m') ?? '';
+const message = m === 'ajoute' ? 'Contact enregistré, à qualifier aujourd\'hui.'
+  : m === 'qualifie' ? 'Qualification enregistrée.'
+  : m === 'qualification-corrigee' ? 'Réponses corrigées ; l\'étape et la prochaine action n\'ont pas changé.'
+  : m === 'suite' ? 'Suite notée dans l\'historique.'
+  : m === 'note' ? 'Note ajoutée à l\'historique.'
+  : m === 'accord' ? 'Accord noté : elle recevra vos campagnes.'
+  : m === 'accord-retire' ? 'Accord retiré : elle ne recevra plus vos campagnes.'
+  : m === 'refus' ? 'Noté : elle ne recevra plus d\'e-mails groupés.'
+  : m === 'synthese' ? 'Synthèse enregistrée.'
+  : m === 'synthese-reprendre' ? 'La synthèse de Leedflow est reprise.'
+  : m === 'modifie' ? 'Coordonnées enregistrées, noté dans l\'historique.'
+  : m === 'inchange' ? 'Rien n\'a changé.'
+  : m === 'tache-acceptee' ? 'Prochaine action mise à jour.'
+  : m === 'tache-ignoree' ? 'Proposition ignorée.'
+  : m === 'action' ? 'Action marketing enregistrée.'
+  : m === 'existant' ? 'Ce contact existait déjà (même téléphone ou même e-mail) : sa fiche est complétée, rien n\'a été créé en double.' : '';
+let reponses: Reponses = {};
+try { reponses = c.qualification ? JSON.parse(c.qualification) : {}; } catch {}
+const recherche = rechercheRenseignee(reponses);
+const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || telLisible(c.telephone) || c.email || 'Contact sans nom';
+---
+<Espace titre={nom} actif="contacts">
+  <div>
+    <div class="e-muet"><a href="/contacts">Contacts</a></div>
+    <h1>{nom}</h1>
+  </div>
+  {message && <p class="e-message" role="status" data-message>{message}</p>}
+  {erreur && <p class="e-message" role="alert" data-erreur>{erreur}{conflit && <> <a href={`/contacts/fiche?id=${conflit}`} data-conflit>Ouvrir sa fiche</a>.</>}</p>}
+  <div style="display:flex;flex-wrap:wrap;gap:8px">
+    <span class="e-tag" data-origine>{libelleOrigine(c, passage, prescripteur)}</span>
+    <span class="e-tag neutre" data-etape>{libelleEtape(c.etape)}</span>
+    {c.parcours && <span class="e-tag neutre">{c.parcours === 'vendeur' ? 'Vendeur' : 'Acheteur'}</span>}
+    {c.rappel_individuel_seul ? <span class="e-tag alerte" data-rappel-seul>Rappel individuel seulement</span> : ''}
+  </div>
+
+  <section class="e-carte fi-synthese" data-synthese>
+    <h2>Synthèse</h2>
+    {synthese ? <>
+      <div class="e-resume" set:html={resumeHtml(synthese.texte)} />
+      <p class="e-muet" style="margin:0" data-synthese-par={synthese.par}>{synthese.par === 'anne' ? 'Modifiée par Anne' : 'Mise à jour par Leedflow'}{synthese.le ? ` le ${quand(synthese.le)}` : ''}</p>
+    </> : <p class="e-muet" style="margin:0">Pas encore de synthèse{c.telephone ? ' : Leedflow l\'écrira après un appel, ou écrivez-la' : ' : écrivez-la'}.</p>}
+    {synthese?.plusRecente && (
+      <form method="post" class="fi-plus-recente" data-plus-recente>
+        <input type="hidden" name="quoi" value="synthese-reprendre" />
+        <span>Leedflow a une version plus récente{c.synthese_leedflow_le ? ` (${quand(c.synthese_leedflow_le)})` : ''}.</span>
+        <button class="e-bouton second" type="submit">La reprendre</button>
+      </form>
+    )}
+    <details data-synthese-modifier>
+      <summary class="fi-resume">{synthese ? 'Modifier la synthèse' : 'Écrire la synthèse'}</summary>
+      <form method="post" class="fi-form">
+        <input type="hidden" name="quoi" value="synthese" />
+        <textarea name="synthese" rows="12" maxlength="8000">{synthese?.texte ?? MODELE_SYNTHESE}</textarea>
+        <p class="e-muet" style="margin:0">Une ligne « ## Titre » fait une rubrique, « - » une puce. Vider le champ reprend la version de Leedflow.</p>
+        <div><button class="e-bouton" type="submit">Enregistrer la synthèse</button></div>
+      </form>
+    </details>
+  </section>
+
+  <section class="e-carte">
+    <h2>Prochaine action</h2>
+    <p data-prochaine>{c.etape === 'en_sommeil' ? `En sommeil, à réveiller le ${echeance(c.reveil_le)}` : c.etape === 'perdu' ? `Perdu : ${c.motif_perte}` : `${c.prochaine_action ?? '—'} · ${echeance(c.prochaine_action_le)}`}</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      {c.telephone && <a class="e-bouton second" href={`tel:${c.telephone}`}>Appeler</a>}
+      {c.etape === 'a_qualifier' ? <a class="e-bouton" href={`/contacts/qualifier?id=${c.id}`} data-qualifier-lien>Qualifier</a> : <>
+        <a class="e-bouton" href={`/contacts/suite?id=${c.id}`} data-suite-lien>Noter la suite</a>
+        <a class="e-bouton second" href={`/contacts/qualifier?id=${c.id}`} data-qualifier-lien>{c.qualifie_le ? 'Requalifier' : 'Qualifier'}</a>
+      </>}
+    </div>
+  </section>
+
+  <form method="post" class="e-carte" data-note>
+    <input type="hidden" name="quoi" value="note" />
+    <label class="e-champ">Ajouter une note
+      <textarea name="note" rows="2" maxlength="2000" placeholder="Après un appel, une rencontre, une idée"></textarea>
+    </label>
+    <div><button class="e-bouton second" type="submit">Ajouter la note</button></div>
+  </form>
+
+  {taches.length > 0 && (
+    <section class="e-carte" data-taches>
+      <h2>Proposé par Leedflow</h2>
+      {taches.map((t) => (
+        <form method="post" action="/api/leedflow/tache" style="display:flex;flex-direction:column;gap:8px" data-tache={t.id}>
+          <p style="margin:0">{t.texte}{t.echeance ? ` · ${echeance(t.echeance)}` : ''}</p>
+          <input type="hidden" name="id" value={t.id} />
+          <input type="hidden" name="retour" value="fiche" />
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="e-bouton" name="choix" value="accepter">En faire la prochaine action</button>
+            <button class="e-bouton second" name="choix" value="ignorer">Ignorer</button>
+          </div>
+        </form>
+      ))}
+    </section>
+  )}
+
+  {c.qualifie_le && (
+    <section class="e-carte" data-reponses>
+      <h2>Qualification</h2>
+      <p class="e-muet">Faite le {quand(c.qualifie_le)}</p>
+      <dl style="display:grid;grid-template-columns:max-content 1fr;gap:6px 18px;margin:0">
+        {QUESTIONS.map((q) => <><dt class="e-muet">{q.titre}</dt><dd style="margin:0">{reponses[q.id] ?? '—'}</dd></>)}
+      </dl>
+    </section>
+  )}
+  {c.parcours === 'acheteur' && (
+    <section class="e-carte" data-recherche>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><h2>Ce qu'il ou elle cherche</h2><a href={`/contacts/qualifier?id=${c.id}`} data-modifier-recherche>Modifier</a></div>
+      {recherche.length ? (
+        <dl style="display:grid;grid-template-columns:max-content 1fr;gap:6px 18px;margin:0">
+          {recherche.map((r) => <><dt class="e-muet">{r.titre}</dt><dd style="margin:0;overflow-wrap:anywhere">{r.valeur}</dd></>)}
+        </dl>
+      ) : <p class="e-muet" style="margin:0">Rien de renseigné : type de bien, pièces, surface, extérieur, budget, secteur.</p>}
+    </section>
+  )}
+
+  <form method="post" action="/api/actions/rattacher" class="e-carte" data-action-contact>
+    <h2>Action marketing</h2>
+    <input type="hidden" name="contact" value={c.id} />
+    <label class="e-champ">Ce qui l'a amené
+      <select name="action">
+        <option value="">Aucune</option>
+        {actions.map((a) => <option value={a.id} selected={c.action_id === a.id}>{a.nom} · {CANAUX_ORIGINE[a.canal]}</option>)}
+      </select>
+    </label>
+    {actions.length === 0 && <p class="e-muet" style="margin:0">Aucune action notée. <a href="/actions">Noter une action</a>.</p>}
+    {actions.length > 0 && <div><button class="e-bouton second" type="submit">Enregistrer</button></div>}
+  </form>
+
+  <section class="e-carte">
+    <h2>Coordonnées</h2>
+    <dl style="display:grid;grid-template-columns:max-content 1fr;gap:6px 18px;margin:0">
+      <dt class="e-muet">Téléphone</dt><dd style="margin:0" data-tel>{telLisible(c.telephone) || '—'}</dd>
+      <dt class="e-muet">E-mail</dt><dd style="margin:0;overflow-wrap:anywhere">{c.email ?? '—'}</dd>
+      <dt class="e-muet">Commune</dt><dd style="margin:0">{c.commune ?? '—'}</dd>
+      <dt class="e-muet">Origine</dt><dd style="margin:0">{libelleCanal(c.canal)}{c.origine_detail ? ` · ${c.origine_detail}` : ''}</dd>
+      <dt class="e-muet">Entré le</dt><dd style="margin:0">{quand(c.created_at)}</dd>
+    </dl>
+    <details open={erreurPour === 'coordonnees'} data-modifier>
+      <summary class="fi-resume">Modifier les coordonnées et l'origine</summary>
+      <form method="post" class="fi-form" data-coordonnees>
+        <input type="hidden" name="quoi" value="coordonnees" />
+        <div class="e-champs">
+          <label class="e-champ">Prénom<input name="prenom" value={val('prenom')} autocomplete="off" /></label>
+          <label class="e-champ">Nom<input name="nom" value={val('nom')} autocomplete="off" /></label>
+          <label class="e-champ">Téléphone<input name="telephone" type="tel" value={erreurPour === 'coordonnees' ? val('telephone') : telLisible(c.telephone)} autocomplete="off" /></label>
+          <label class="e-champ">E-mail<input name="email" type="email" value={val('email')} autocomplete="off" /></label>
+          <label class="e-champ">Commune<input name="commune" value={val('commune')} autocomplete="off" /></label>
+          <label class="e-champ">Il ou elle veut
+            <select name="parcours">
+              <option value="">Je ne sais pas encore</option>
+              <option value="vendeur" selected={val('parcours') === 'vendeur'}>Vendre</option>
+              <option value="acheteur" selected={val('parcours') === 'acheteur'}>Acheter</option>
+            </select>
+          </label>
+          <label class="e-champ">Origine
+            <select name="canal" data-canal>
+              {Object.entries(CANAUX_ORIGINE).map(([k, l]) => <option value={k} selected={canalForm === k}>{l}</option>)}
+            </select>
+          </label>
+          <label class="e-champ">Précision d'origine<input name="origine_detail" value={val('origine_detail')} placeholder="Salon de l'habitat, annonce…" autocomplete="off" /></label>
+          <label class="e-champ" data-si-canal="boitage">Passage de boîtage
+            <select name="passage_id">
+              <option value="">Choisir…</option>
+              {passages.map((pa) => <option value={pa.id} selected={val('passage_id') === pa.id}>{pa.secteur} · {echeance(pa.fait_le)}</option>)}
+            </select>
+          </label>
+          <label class="e-champ" data-si-canal="recommandation">Recommandé par
+            <select name="prescripteur_id">
+              <option value="">Choisir…</option>
+              {prescripteurs.map((pr) => <option value={pr.id} selected={val('prescripteur_id') === pr.id}>{pr.nom}{pr.role ? `, ${pr.role}` : ''}</option>)}
+            </select>
+          </label>
+        </div>
+        <div><button class="e-bouton" type="submit">Enregistrer</button></div>
+      </form>
+    </details>
+  </section>
+
+  {accord && (
+    <section class="e-carte" data-accord-email={accord.statut}>
+      <h2>E-mails groupés</h2>
+      {accord.statut === 'sans_email' && <p style="margin:0">Pas d'adresse e-mail : ajoutez-la dans les coordonnées pour lui envoyer vos campagnes.</p>}
+      {accord.statut === 'accord' && <p style="margin:0"><strong>Reçoit vos campagnes.</strong> Accord donné {ORIGINE_ACCORD[accord.source ?? 'anne']}{accord.le ? ` le ${quand(accord.le)}` : ''}.</p>}
+      {accord.statut === 'client' && <p style="margin:0"><strong>Reçoit vos campagnes</strong> en tant qu'ancien client, tant qu'il ou elle ne les refuse pas.</p>}
+      {accord.statut === 'desinscrit' && <p style="margin:0"><strong>Ne reçoit plus vos campagnes</strong> : désinscrit{accord.le ? ` le ${quand(accord.le)}` : ''}. Seule une nouvelle inscription sur le site peut changer cela.</p>}
+      {accord.statut === 'sans_accord' && <>
+        <p style="margin:0"><strong>Ne reçoit pas vos campagnes</strong> : pas d'accord noté. Notez-le seulement si la personne vous l'a dit.</p>
+        <form method="post" class="fi-form" data-accord-form>
+          <input type="hidden" name="quoi" value="accord" />
+          <label class="fi-case"><input type="checkbox" name="accord" value="oui" required /> D'accord pour recevoir mes e-mails</label>
+          <div><button class="e-bouton second" type="submit">Enregistrer</button></div>
+        </form>
+      </>}
+      {accord.statut === 'accord' && (accord.source === 'anne' || accord.source === 'import') && (
+        <form method="post" data-accord-retirer>
+          <input type="hidden" name="quoi" value="accord" />
+          <input type="hidden" name="accord" value="non" />
+          <button class="e-bouton second" type="submit">Retirer son accord</button>
+        </form>
+      )}
+      {(accord.statut === 'accord' || accord.statut === 'client') && (
+        <details data-refus>
+          <summary class="fi-resume">Elle ou il ne veut plus d'e-mails</summary>
+          <form method="post" class="fi-form">
+            <input type="hidden" name="quoi" value="refus" />
+            <p style="margin:0">Vaut désinscription de toutes vos campagnes. Seule la personne pourra revenir dessus, en s'inscrivant sur le site.</p>
+            <div><button class="e-bouton second" type="submit">Noter son refus</button></div>
+          </form>
+        </details>
+      )}
+    </section>
+  )}
+
+  {demandes.length > 0 && (
+    <section class="e-carte">
+      <h2>Demandes faites sur le site</h2>
+      <ul style="margin:0;padding-left:20px">
+        {demandes.map((d) => <li><a href={`/gestion/lead?id=${d.id}`}>{SOURCES[d.source] ?? d.source}, {quand(d.created_at)}</a></li>)}
+      </ul>
+    </section>
+  )}
+
+  <section class="e-carte">
+    <h2>Historique</h2>
+    <ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px" data-historique>
+      {historique.map((e) => (
+        <li data-source={e.source}><div class="e-muet">{quand(e.a)}{e.par ? ` · ${e.par}` : e.source === 'leedflow' ? ' · Leedflow' : ''}</div>
+          {e.source === 'leedflow' ? (() => { const { titre, resume } = titreEtResume(e.texte); return <><div style="font-weight:500">{titre}</div>{resume && <div class="e-resume" set:html={resumeHtml(resume)} />}</>; })()
+            : <div style="white-space:pre-wrap">{e.texte}</div>}</li>
+      ))}
+    </ol>
+  </section>
+  <section class="e-carte" data-droits>
+    <h2>Données de cette personne</h2>
+    <p class="e-muet" style="margin:0">Si elle demande ce que vous gardez sur elle, ou qu'on l'oublie (RGPD). Chaque demande est notée dans le journal des droits.</p>
+    <div><a class="e-bouton second" href={`/api/contacts/export?id=${c.id}`} data-export>Télécharger ses données</a></div>
+    <details open={erreurPour === 'effacer'} data-effacer>
+      <summary class="fi-resume">Supprimer ce contact</summary>
+      <form method="post" class="fi-form">
+        <input type="hidden" name="quoi" value="effacer" />
+        <p style="margin:0">Supprime définitivement la fiche, son historique, ses demandes faites sur le site et ce que Leedflow a relevé pour son numéro. Impossible à annuler.</p>
+        <label class="e-champ">Tapez SUPPRIMER pour confirmer<input name="confirmation" autocomplete="off" /></label>
+        <div><button class="e-bouton fi-danger" type="submit">Supprimer définitivement</button></div>
+      </form>
+    </details>
+  </section>
+</Espace>
+
+<style>
+  .fi-resume { cursor: pointer; color: var(--avt-klein); min-height: 44px; display: flex; align-items: center; }
+  .fi-form { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+  .fi-plus-recente { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: var(--avt-brume); border-radius: 10px; padding: 10px 12px; }
+  .fi-case { display: flex; gap: 10px; align-items: center; min-height: 44px; }
+  .fi-case input { width: 22px; height: 22px; flex: none; }
+  .fi-danger { background: var(--avt-terra); border-color: var(--avt-terra); }
+  textarea { font: inherit; }
+  .e-resume :global(p) { margin: 4px 0; }
+  .e-resume :global(ul) { margin: 4px 0; padding-left: 20px; }
+  .e-resume { overflow-wrap: anywhere; }
+</style>
+
+<script>
+  // Montre le choix du passage ou du prescripteur selon l'origine ; sans JavaScript, tout reste visible.
+  const canal = document.querySelector<HTMLSelectElement>('[data-canal]');
+  const maj = () => document.querySelectorAll<HTMLElement>('[data-si-canal]').forEach((el) => { el.hidden = el.dataset.siCanal !== canal?.value; });
+  canal?.addEventListener('change', maj);
+  maj();
+</script>

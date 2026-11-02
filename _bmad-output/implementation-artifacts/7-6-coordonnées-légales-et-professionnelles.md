@@ -1,7 +1,7 @@
 ---
 story: 7.6
 epic: 7 — Contenu d'Anne
-statut: in-progress
+statut: done
 date: 2026-10-04
 ---
 
@@ -22,3 +22,6 @@ Que les mentions légales, le pied de page et plus tard la fiche Google portent 
 - JB : relire la ligne de l'hébergeur (c'était sa part de la story).
 - Anne : RSAC et ville du greffe, carte pro eXp, adresse pro, téléphone, e-mail dans `legal/identite.md`.
 - Claude : reporter ses valeurs dans `site.ts`, retirer les pastilles A-13 du pied de page (`copyright` de `fr.json` et `en.json`), puis les données structurées `RealEstateAgent`.
+
+## Revue du suivi (2026-10-25)
+Statut passé à `done` lors de la remise à jour du statut de sprint demandée par JB après l'audit BMAD du 2026-10-25. Coordonnées reportées dans `site/src/config/site.ts` le 2026-10-10 (story 12.5, liste de contrôle « Contenu ») : RSAC, greffe, carte pro, adresse, téléphone, e-mail, assurance, médiateur. Le garde-fou de construction les exige. Seul reste, facultatif : le numéro d'attestation d'habilitation d'Anne (`attestation: null`).

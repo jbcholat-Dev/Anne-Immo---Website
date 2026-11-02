@@ -3,10 +3,11 @@
 // Rendue par le serveur. L'ouverture du lien ne désabonne pas encore : certaines messageries ouvrent les liens toutes seules
 // pour les vérifier, ce qui désabonnerait le prospect à son insu. Le bouton envoie la demande (POST sur cette page).
 // La désinscription en un clic depuis la messagerie (en-tête List-Unsubscribe) passe par POST /api/desabonnement (worker.ts).
+// Story 13.27 : un lien `c=` vient d'une campagne de l'espace d'Anne et désinscrit le contact de tous les e-mails groupés.
 import Page from '../layouts/Page.astro';
 import { envSite } from '../server/env';
 import { journal } from '../server/journal';
-import { abonnement, desabonner, verifierDesabonnement } from '../server/liens';
+import { abonnement, desabonner, desinscrireContact, inscriptionContact, verifierDesabonnement, verifierDesinscriptionContact } from '../server/liens';
 
 export const prerender = false;
 
@@ -14,9 +15,21 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 // « same-origin » et non « no-referrer » : le lien signé ne part pas vers d'autres sites, mais le navigateur garde l'en-tête
 // Origin du bouton, sans lequel Astro refuse l'envoi (403).
 Astro.response.headers.set('Referrer-Policy', 'same-origin');
-const leadId = await verifierDesabonnement(envSite, Astro.url);
-let etat: 'demande' | 'fait' | 'invalide' = leadId ? 'demande' : 'invalide';
+const campagne = Astro.url.searchParams.has('c');
+const contactId = campagne ? await verifierDesinscriptionContact(envSite, Astro.url) : null;
+const leadId = campagne ? null : await verifierDesabonnement(envSite, Astro.url);
+let etat: 'demande' | 'fait' | 'invalide' = leadId || contactId ? 'demande' : 'invalide';
 let lang: 'fr' | 'en' = 'fr';
+if (contactId) {
+  const lu = await inscriptionContact(envSite, contactId);
+  if (!lu) etat = 'invalide';
+  else if (lu.desinscrit) etat = 'fait';
+  else if (Astro.request.method === 'POST') {
+    await desinscrireContact(envSite, contactId);
+    journal('desinscription_campagnes', { contact: contactId, mode: 'page' });
+    etat = 'fait';
+  }
+}
 if (leadId) {
   const lu = await abonnement(envSite, leadId);
   if (!lu) etat = 'invalide';
@@ -43,6 +56,11 @@ const T = {
     invalide: 'This link is not valid. To stop the e-mails, simply reply to one of them and Anne will take care of it.',
   },
 }[lang];
+// Les campagnes ne sont pas une série : le texte le dit (le lien vient toujours d'un e-mail en français).
+if (campagne) Object.assign(T, {
+  demande: 'Vous ne recevrez plus les e-mails d’information d’Anne. Les e-mails déjà partis restent dans votre boîte.',
+  fait: 'C’est fait : vous ne recevrez plus les e-mails d’information d’Anne.',
+});
 ---
 <Page titre={`${T.titre} — Anne VIAL-TISSOT`} lang={lang} noindex>
   <section class="ds">

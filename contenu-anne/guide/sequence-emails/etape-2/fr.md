@@ -53,7 +53,7 @@ L'histoire complète : https://annevialtissot.fr/realisation/essert-romand-chale
 
 ## Votre action cette semaine
 
-1. Ouvrez https://app.dvf.etalab.gouv.fr (gratuit, données publiques).
+1. Ouvrez https://app.dvf.etalab.gouv.fr (en libre accès, données publiques).
 2. Cherchez les ventes récentes dans votre commune et autour.
 3. Notez une dizaine de biens comparables et leur prix au m².
 4. Comparez avec votre prix actuel.

@@ -23,9 +23,22 @@ Deux retours d'Anne du 2026-10-15 sur l'aperçu (bouton « Un retour ? ») :
 - `npm run build` OK (aperçu et site public) ; `npm run check` : 0 erreur ; liens : 29 pages, 2 161 liens, 0 cassé ; `scripts/ecrans.mjs` : aucun signalement ; `npm run verif` sur `/`, `/partenaires`, `/actualites` et un article : aucune erreur console.
 - Avec une fiche d'essai de chaque sorte (retirées avant le commit) : barre sans débordement à 900, 960, 1 100, 1 180 et 1 440 px ; pages lisibles sur ordinateur et téléphone. Captures : `/mnt/project-files/tickets/153-154/`.
 - Construction du site public sans fiche : aucun lien vers `/partenaires` ni `/actualites`, pages marquées non indexées, absentes du plan du site (23 pages indexables).
-- PDF du guide relu page 5 : l'erreur n° 2 tient sur sa page (capture `guide-page-5-erreur-2.png`).
+- PDF du guide relu page 5 (capture `guide-page-5-erreur-2.png`). Correction du 2026-11-02 : l'erreur n° 2 ne tient pas sur sa page ; les items 4 à 8 de la liste des diagnostics passent page 6 (le PDF de cette branche faisait déjà 17 pages, contre 16 sur main). Voir « Ce qui reste ».
+
+## Fusion de main dans la branche (2026-11-02)
+La branche datait du 2026-10-15 ; `origin/main` y a été fusionné (commit de fusion, sans réécriture d'historique), 214 commits de main repris.
+- Conflits résolus en gardant les deux côtés : statut de sprint (8.21 en `review`, puis 8.22 à 8.25 de main), `DECISIONS.md` (D-46 de cette story, puis D-47 terracotta #C4623E, D-48 « offert », D-49 infographies ; main avait réservé 8.21 et D-46 pour cette PR), `site/README.md` (écart « Partenaires et Actualités » et écart « Entonnoir du diagnostic » de main).
+- Fusion automatique sans conflit : barre de navigation et pied de page (main n'y avait changé que le terracotta), textes de l'interface, texte du guide (erreur n° 2 réécrite + sources 8 et 9 ajoutées après les 7 sources de main ; aucun « gratuit »).
+- PDF du guide : conflit sur le fichier binaire, refait depuis le texte fusionné avec le script de main (`node scripts/guide-pdf.mjs`) : terracotta #C4623E, 17 pages, erreur n° 2 et sources 8 et 9 présentes.
+
+## Ce qui est vérifié (2026-11-02, après fusion de main)
+- `npm ci` puis `npm run build` (aperçu) : OK. `npm run check` : 0 erreur, 0 avertissement (76 remarques, 93 fichiers).
+- `node scripts/liens.mjs` : 29 pages, 2 161 liens vérifiés, 0 cassé.
+- `node scripts/ecrans.mjs` (390, 900, 1 024, 1 280, 1 440 px) : aucun signalement ; en plus, à 960, 1 100 et 1 180 px, et avec `/partenaires` et `/actualites` ajoutées à la liste des pages : aucun signalement.
+- Règle D-46 sur le site public (`PUBLIC_INDEXATION=oui npm run build`, sans fiche) : aucune page ne pointe vers `/partenaires` ni `/actualites`, les deux pages portent `noindex, nofollow`, plan du site à 23 pages indexables. Sur l'aperçu, les deux onglets sont dans la barre et le pied de page.
 
 ## Ce qui reste
+- PDF du guide : l'erreur n° 2 déborde sur une page presque vide (items 4 à 8 des diagnostics). Recommandation : demander à Anne de raccourcir son paragraphe, ou retirer le paragraphe « Bon à savoir » de cette erreur, plutôt que de réduire la mise en page de tout le guide. Texte d'Anne non modifié dans cette fusion.
 - JB : valider la demande de fusion (elle change le site) et confirmer la carte de décision.
 - Anne : remplir ses premiers partenaires et articles dans l'espace d'édition.
 - À voir avec Anne : le rapport PDF du diagnostic (`contenu-anne/guide/rapport-diagnostic.md`, q02) et l'e-mail J+9 (`sequence-emails/etape-4`) parlent encore du seul DPE de juillet 2021 ; à aligner si elle le souhaite (fil Back-end pour le rapport).

@@ -1,0 +1,43 @@
+{
+  // Configuration Cloudflare de l'espace de travail d'Anne (story 13.3, AD-19) : un Worker à part du site,
+  // réservé à Anne et à JB par Cloudflare Access, qui lit et écrit la même base des leads que le site.
+  // Aucun secret ici, seulement des identifiants publics. Secret facultatif : LIEN_SECRET (le même que celui du site,
+  // pour afficher le lien du rapport du diagnostic) ; LEEDFLOW_API_KEY, la clé Leedflow d'Anne (story 13.10) ; ACCESS_CLAUDE_ID, l'identifiant du jeton de service de Claude (story 13.17) ; RESEND_API_KEY et BOITE_TEST pour les campagnes (story 13.27). Voir RUNBOOK.md § 4 sexies.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "anne-espace",
+  "main": "./worker.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  // Toutes les adresses passent par worker.ts, feuilles de style comprises : rien n'est servi sans le contrôle Access.
+  "assets": { "binding": "ASSETS", "run_worker_first": true },
+  // Même base que le site (AD-19). Les constructions de main passent sur la base de production `anne-leads` (scripts/base.mjs) ;
+  // toutes les autres restent sur la base d'aperçu. Le schéma ne change que par site/migrations/ (AD-10), appliquées par le site.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "anne-leads-apercu",
+      "database_id": "06a92884-c6f1-4d02-afbe-976d11543385",
+      "migrations_dir": "../site/migrations"
+    }
+  ],
+  "observability": { "enabled": true },
+  // Toutes les 10 minutes : relève Leedflow (story 13.10, AD-20 entrée 4) et envoi étalé des campagnes (story 13.27).
+  // Sans leur clé, chacune ne fait rien.
+  "triggers": { "crons": ["*/10 * * * *"] },
+  "vars": {
+    // « apercu » hors de main ; « production » pour les constructions de main (scripts/base.mjs).
+    "ENVIRONNEMENT": "apercu",
+    // Adresse du site dans les liens que l'espace affiche (rapport du diagnostic).
+    "URL_SITE": "https://apercu-anne-vial-tissot-site.jbcholat.workers.dev",
+    // Équipe Cloudflare Access qui signe les jetons, et identifiant (AUD) de l'application Access « Espace d'Anne ».
+    // Valeurs publiques. Sans AUD, l'espace refuse tout le monde (403). Application « espace » (Public DNS,
+    // espace.annevialtissot.fr, règle « Anne et JB »), créée par JB le 2026-10-15. Voir RUNBOOK.md § 4 sexies.
+    "ACCESS_EQUIPE": "https://dry-truth-5a0d.cloudflareaccess.com",
+    "ACCESS_AUD": "a01520f8a1fa3a113cc347c435471a902a2fadc05cb3c90080671407fd24f5e6",
+    // Campagnes e-mail (story 13.27, AD-21). Expéditeur sur le sous-domaine réservé aux campagnes, une fois vérifié dans
+    // Resend (RUNBOOK § 4 sexies) ; vide, rien ne part en production et l'aperçu garde l'expéditeur du site.
+    "EXPEDITEUR_CAMPAGNES": "",
+    // Les réponses aux campagnes vont dans la Gmail d'Anne, comme pour le site.
+    "BOITE_ANNE": "avialtissot@gmail.com"
+  }
+}

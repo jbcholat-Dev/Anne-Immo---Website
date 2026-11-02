@@ -1,3 +1,8 @@
+---
+story: 12.6
+statut: done
+---
+
 # Story 12.6 : Revue complète du site avant l'ouverture au public
 
 Statut : **terminée** le 2026-10-11 à 20 h 28 (PR n° 125 et n° 126 fusionnées par JB).

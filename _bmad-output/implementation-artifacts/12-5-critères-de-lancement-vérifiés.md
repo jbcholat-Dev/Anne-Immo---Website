@@ -1,3 +1,8 @@
+---
+story: 12.5
+statut: done
+---
+
 # Story 12.5 : Critères de lancement vérifiés (et préparation de la bascule 12.4)
 
 Epic 12, Lancement public. Ouverte le 2026-10-10 à la demande de JB : lancement voulu le **2026-10-11 au soir**.
@@ -64,3 +69,6 @@ Chaque point porte sa preuve et sa date quand il est coché.
 ## Ce qui reste
 
 Tout le contenu d'Anne ci-dessus ; la bascule ; le tableau de bord et `CLAUDE.md` à la mise en ligne (story 12.4).
+
+## Revue du suivi (2026-10-25)
+Statut passé à `done` lors de la remise à jour du statut de sprint demandée par JB après l'audit BMAD du 2026-10-25. Le site est ouvert au public depuis le 2026-10-11 à 22 h 50 (accord de JB à 22 h 49). Les deux cases non cochées (adresse du webhook Cal.com sur `annevialtissot.fr`, essais réels des formulaires) deviennent une action de JB au tableau de bord (« Vérifier le webhook Cal.com et essayer les formulaires en ligne »).
