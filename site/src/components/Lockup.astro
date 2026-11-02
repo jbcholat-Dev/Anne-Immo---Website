@@ -1,5 +1,6 @@
 ---
 // Lockup co-brandé Anne + eXp (AD-17 : consommé tel quel depuis design-system/assets, jamais recoloré).
+// Story 8.25 : les SVG du design system ont 3 unités de marge en haut et en bas (viewBox 0 -3 1206 150), sinon le jambage du « p » d'eXp, qui touche le bas du dessin, était rogné.
 // D-21 : version négative sans le cercle écru → le cercle (liseré) est retiré à l'inclusion. Les ids internes sont rendus uniques.
 // Les SVG sont inclus à la construction (import ?raw), pas lus sur le disque au rendu : la page de résultats du diagnostic
 // est rendue par le serveur (story 10.4), où le dossier design-system n'existe pas.
@@ -17,6 +18,6 @@ svg = svg
   .replace(/<circle cx="78" cy="80" r="56\.5"[^>]*\/>\s*/, '')
   .replace(/id="sym"/g, `id="${uid}"`)
   .replace(/url\(#sym\)/g, `url(#${uid})`)
-  .replace(/<svg xmlns="http:\/\/www.w3.org\/2000\/svg" viewBox="0 0 1206 144"/, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1206 144" class="lockup ${cls}" style="width:${largeur}px;height:${Math.round((largeur * 144) / 1206)}px"`);
+  .replace(/<svg xmlns="http:\/\/www.w3.org\/2000\/svg" viewBox="0 -3 1206 150"/, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -3 1206 150" class="lockup ${cls}" style="width:${largeur}px;height:${Math.ceil((largeur * 150) / 1206)}px"`);
 ---
 <Fragment set:html={svg} />
