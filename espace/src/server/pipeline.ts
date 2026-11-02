@@ -4,7 +4,7 @@
 // e-mail = même contact, qui est complété, jamais recréé. Chaque création est notée dans l'historique avec le compte
 // qui a agi. La règle des prochaines actions est tenue par la base (CHECK de la migration 0007).
 import type { EnvSite } from '@site/server/env';
-import { ACTION_QUALIFIER, CANAUX_ORIGINE, LIBELLES_ETAPES, type Canal, type Etape } from '@site/server/contacts';
+import { ACTION_QUALIFIER, CANAUX_ORIGINE, LIBELLES_ETAPES, trouver, type Canal, type ContactTrouve, type Etape } from '@site/server/contacts';
 import { e164, emailValide } from '@site/server/schema';
 import { filtreRecherche } from '@site/server/recherche';
 import { ulid } from '@site/server/ulid';
@@ -40,24 +40,25 @@ export function personne(d: Record<string, unknown>): Personne | null {
   return p.telephone || p.email || p.nom ? p : null;
 }
 
-/** Le contact qui porte ce téléphone ou cet e-mail ; le téléphone l'emporte. */
-export async function contactConnu(env: EnvSite, telephone: string | null, email: string | null): Promise<{ id: string; etape: Etape | null } | null> {
+/** Le contact qui porte ce téléphone ou cet e-mail, en principal ou dans ses autres coordonnées (story 18.3) ; le
+ * téléphone l'emporte. Même recherche que le rattachement des demandes du site. */
+export async function contactConnu(env: EnvSite, telephone: string | null, email: string | null): Promise<ContactTrouve | null> {
   if (!telephone && !email) return null;
-  return env.DB.prepare(
-    `SELECT id, etape FROM contact WHERE (?1 IS NOT NULL AND telephone = ?1) OR (?2 IS NOT NULL AND email = ?2)
-     ORDER BY (telephone IS ?1) DESC LIMIT 1`,
-  ).bind(telephone, email).first<{ id: string; etape: Etape | null }>();
+  return trouver(env, telephone, email);
 }
 
-/** Complète un contact existant avec ce qui lui manque, sans prendre un téléphone ou un e-mail porté par un autre. */
+/** Complète un contact existant avec ce qui lui manque, sans prendre un téléphone ou un e-mail déjà porté (principal ou
+ * autre coordonnée, story 18.3). */
 function completer(env: EnvSite, id: string, p: Personne, maintenant: string) {
   return env.DB.prepare(
     `UPDATE contact SET
        last_activity_at = ?2,
        prenom = COALESCE(prenom, ?3),
        nom = COALESCE(nom, ?4),
-       telephone = COALESCE(telephone, CASE WHEN ?5 IS NOT NULL AND NOT EXISTS (SELECT 1 FROM contact WHERE telephone = ?5) THEN ?5 END),
-       email = COALESCE(email, CASE WHEN ?6 IS NOT NULL AND NOT EXISTS (SELECT 1 FROM contact WHERE email = ?6) THEN ?6 END),
+       telephone = COALESCE(telephone, CASE WHEN ?5 IS NOT NULL AND NOT EXISTS (SELECT 1 FROM contact WHERE telephone = ?5)
+         AND NOT EXISTS (SELECT 1 FROM contact_coordonnee WHERE valeur = ?5) THEN ?5 END),
+       email = COALESCE(email, CASE WHEN ?6 IS NOT NULL AND NOT EXISTS (SELECT 1 FROM contact WHERE email = ?6)
+         AND NOT EXISTS (SELECT 1 FROM contact_coordonnee WHERE valeur = ?6) THEN ?6 END),
        commune = COALESCE(commune, ?7)
      WHERE id = ?1`,
   ).bind(id, maintenant, p.prenom, p.nom, p.telephone, p.email, p.commune);
@@ -234,8 +235,13 @@ async function connus(env: EnvSite, personnes: Personne[]): Promise<{ parTel: Ma
   const tels = personnes.map((p) => p.telephone).filter(Boolean);
   const mails = personnes.map((p) => p.email).filter(Boolean);
   const { results } = await env.DB.prepare(
-    `SELECT id, telephone, email FROM contact
-     WHERE telephone IN (SELECT value FROM json_each(?1)) OR email IN (SELECT value FROM json_each(?2))`,
+    // Autres coordonnées d'abord (story 18.3) : le principal, lu ensuite, l'emporte dans les tables ci-dessous.
+    `SELECT contact_id AS id, CASE WHEN type = 'telephone' THEN valeur END AS telephone, CASE WHEN type = 'email' THEN valeur END AS email, 1 AS rang
+       FROM contact_coordonnee WHERE type IN ('telephone', 'email') AND valeur IN (SELECT value FROM json_each(?1) UNION SELECT value FROM json_each(?2))
+     UNION ALL
+     SELECT id, telephone, email, 2 FROM contact
+     WHERE telephone IN (SELECT value FROM json_each(?1)) OR email IN (SELECT value FROM json_each(?2))
+     ORDER BY rang`,
   ).bind(JSON.stringify(tels), JSON.stringify(mails)).all<{ id: string; telephone: string | null; email: string | null }>();
   const parTel = new Map<string, string>(), parEmail = new Map<string, string>();
   for (const r of results) { if (r.telephone) parTel.set(r.telephone, r.id); if (r.email) parEmail.set(r.email, r.id); }

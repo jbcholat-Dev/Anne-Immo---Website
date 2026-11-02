@@ -3,7 +3,7 @@
 // Vérifie : accès refusé sans jeton Access valable (absent, mal signé, autre application, périmé, autre équipe, en-tête
 // interne forgé), liste et recherche, fiche, relance d'un envoi en échec, marque Modelo, export des données d'une adresse,
 // effacement (refusé sans confirmation exacte, puis fait), journal des droits exercés, purge des demandes de plus de 3 ans
-// par la tâche planifiée, puis les pages dans un navigateur (ordinateur et téléphone). Captures dans .verif/.
+// par la tâche planifiée (et depuis la story 18.3 : contact importé jamais contacté effacé trois ans après l'import), puis les pages dans un navigateur (ordinateur et téléphone). Captures dans .verif/.
 // Préalable : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local`.
 // Lancer : `node scripts/e2e-gestion.mjs`.
 import { generateKeyPairSync } from 'node:crypto';
@@ -153,8 +153,25 @@ try {
   await pause(500);
   sql(`UPDATE contact SET last_activity_at = '${ilYa(3, -1)}' WHERE email = 'vieux+${ESSAI}@example.com'`);
   sql(`UPDATE contact SET last_activity_at = '${ilYa(3, 1)}' WHERE email = 'recent+${ESSAI}@example.com'`);
+  // Story 18.3 : un contact importé dans le carnet jamais contacté part trois ans après l'import, même classé depuis ;
+  // contacté une fois, importé depuis moins de trois ans ou entré dans le suivi, il reste.
+  const LOT = `LOT${ESSAI}`, IMP = (n) => `IMP${n}${ESSAI}`;
+  sql(`INSERT INTO import_lot (id, fichier, source, a) VALUES ('${LOT}', 'essai.vcf', 'telephone', '${ilYa(3, -2)}')`);
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, nom, categorie_id, verifie_le, dernier_contact_le, etape, prochaine_action, prochaine_action_le) VALUES
+       ('${IMP(1)}', '${ilYa(3, -2)}', '${new Date().toISOString()}', 'Importé jamais contacté', 'proches', '${new Date().toISOString()}', NULL, NULL, NULL, NULL),
+       ('${IMP(2)}', '${ilYa(3, -2)}', '${new Date().toISOString()}', 'Importé contacté', 'proches', NULL, '${ilYa(1, 0)}', NULL, NULL, NULL),
+       ('${IMP(3)}', '${ilYa(2, 0)}', '${new Date().toISOString()}', 'Importé récent', 'proches', NULL, NULL, NULL, NULL, NULL),
+       ('${IMP(4)}', '${ilYa(3, -2)}', '${new Date().toISOString()}', 'Importé suivi', 'proches', NULL, NULL, 'a_qualifier', 'Rappeler', '2026-11-01')`);
+  sql(`INSERT INTO contact_source (contact_id, source, import_lot_id, a) VALUES ('${IMP(1)}', 'telephone', '${LOT}', '${ilYa(3, -2)}'),
+       ('${IMP(2)}', 'telephone', '${LOT}', '${ilYa(3, -2)}'), ('${IMP(3)}', 'telephone', '${LOT}', '${ilYa(2, 0)}'), ('${IMP(4)}', 'telephone', '${LOT}', '${ilYa(3, -2)}')`);
+  sql(`INSERT INTO contact_coordonnee (contact_id, type, valeur, ajoute_le) VALUES ('${IMP(1)}', 'telephone', '+3369${String(ESSAI).replace(/\D/g, '').slice(-7).padStart(7, '0')}', '${ilYa(3, -2)}')`);
   await appeler(`${U}/cdn-cgi/handler/scheduled`);
   await pause(1000);
+  const restants = sql(`SELECT id FROM contact WHERE id IN ('${IMP(1)}', '${IMP(2)}', '${IMP(3)}', '${IMP(4)}')`).map((c) => c.id).sort();
+  constat(JSON.stringify(restants) === JSON.stringify([IMP(2), IMP(3), IMP(4)].sort())
+    && sql(`SELECT count(*) AS n FROM contact_source WHERE contact_id = '${IMP(1)}'`)[0].n === 0 && sql(`SELECT count(*) AS n FROM contact_coordonnee WHERE contact_id = '${IMP(1)}'`)[0].n === 0,
+    '18.3 purge : contact importé jamais contacté effacé trois ans après l\'import (même classé depuis), avec ses coordonnées et sources ; contacté, importé depuis moins de trois ans ou suivi : gardé');
+  sql(`DELETE FROM contact WHERE id IN ('${IMP(2)}', '${IMP(3)}', '${IMP(4)}')`);
   constat(sql(`SELECT count(*) AS n FROM lead WHERE id = '${vieux}'`)[0].n === 0 && sql(`SELECT count(*) AS n FROM lead_delivery WHERE lead_id = '${vieux}'`)[0].n === 0, 'purge : demande sans activité depuis plus de 3 ans supprimée, avec ses envois');
   constat(sql(`SELECT count(*) AS n FROM lead WHERE id = '${recent}'`)[0].n === 1, 'purge : demande ancienne mais active depuis moins de 3 ans gardée');
   constat(sql(`SELECT count(*) AS n FROM contact WHERE email = 'vieux+${ESSAI}@example.com'`)[0].n === 0 && sql(`SELECT count(*) AS n FROM contact WHERE email = 'recent+${ESSAI}@example.com'`)[0].n === 1, 'purge : contact sans activité depuis plus de 3 ans supprimé, contact récent gardé');

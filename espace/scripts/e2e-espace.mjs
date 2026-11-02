@@ -41,11 +41,14 @@
 // projet et température tenus par la base, six catégories, demande du site rangée en « Demandes reçues ».
 // Revue de code 18.2 : tâche Leedflow d'avant suivi_le, numéro principal contre secondaire, « À trier », contact du carnet
 // déplacé dans le pipeline, projet suivant le parcours retenu.
+// Story 18.3 : demande du site retrouvée par un numéro secondaire et entrée dans le suivi (suivi_le), ligne « Nouveaux »,
+// inscription ambassadeur (marque sans changer projet ni catégorie), effacement (opposition, coordonnées vidées, classement
+// Privé gardé), recherche par e-mail secondaire.
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
 // Lancer depuis espace/ : `node scripts/e2e-espace.mjs`.
 import { spawn } from 'node:child_process';
-import { generateKeyPairSync } from 'node:crypto';
+import { createHmac, generateKeyPairSync } from 'node:crypto';
 import fs from 'node:fs';
 import http from 'node:http';
 import os from 'node:os';
@@ -1224,6 +1227,97 @@ try {
   constat(parc.parcours === 'acheteur' && parc.projet === 'acheteur' && parc.temperature === 'avec_anne'
     && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${PARC}' AND type = 'etape'`)[0].n === 1,
     'revue 18.2 : « Ajouter » : le projet suit le parcours retenu (acheteur), une deuxième saisie ne note pas une seconde entrée dans le suivi');
+
+  // Story 18.3 : demandes du site et droits sur le nouveau carnet.
+  // Une demande du site faite avec l'autre numéro d'un contact du carnet : retrouvé, il entre dans le suivi avec suivi_le.
+  const DSEC = `01KFDS${NUM}${'0'.repeat(14)}`, TELD1 = `+33639${NUM}`, TELD2 = `+33638${NUM}`, MAILD = `dora+${ESSAI}@example.com`;
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, categorie_id) VALUES ('${DSEC}', '2026-09-01T08:00:00Z', '2026-09-01T08:00:00Z', 'Dora', 'Dorac${NUM}', '${TELD1}', 'proches')`);
+  sql(`INSERT INTO contact_coordonnee (contact_id, type, valeur, ajoute_le) VALUES ('${DSEC}', 'telephone', '${TELD2}', '2026-09-01T08:00:00Z')`);
+  const sd = sid();
+  await poster('contact', { submission_id: sd, prenom: 'Dora', nom: `Dorac${NUM}`, email: MAILD, telephone: `06 38 ${NUM.slice(0, 2)} ${NUM.slice(2, 4)} ${NUM.slice(4)}`, projet: 'vente', message: 'Je pense vendre.' });
+  const leadD = leadDe(sd);
+  for (let i = 0; i < 24 && !contactDe(leadD); i++) await pause(250);
+  const dora = sql(`SELECT * FROM contact WHERE id = '${DSEC}'`)[0];
+  constat(contactDe(leadD) === DSEC && sql(`SELECT count(*) AS n FROM contact WHERE nom = 'Dorac${NUM}'`)[0].n === 1,
+    '18.3 : une demande du site faite avec l\'autre numéro d\'un contact du carnet (contact_coordonnee) lui est rattachée, sans doublon');
+  constat(dora.etape === 'a_qualifier' && !!dora.suivi_le && !!dora.prochaine_action_le && dora.prochaine_action === 'Rappeler pour qualifier'
+    && dora.parcours === 'vendeur' && dora.projet === 'vendeur' && dora.temperature === 'avec_anne' && dora.categorie_id === 'proches'
+    && dora.canal === 'site' && dora.origine_detail === 'contact' && dora.email === MAILD && dora.telephone === TELD1,
+    '18.3 : il entre dans le suivi (à qualifier, à rappeler, suivi_le posé), projet tiré de la demande, avec Anne, catégorie gardée, origine site, e-mail complété');
+  const nouveauD = sql(`SELECT n.source, n.contact_id, n.vu_le, e.source_id FROM nouveau n LEFT JOIN contact_evenement e ON e.id = n.evenement_id WHERE n.contact_id = '${DSEC}'`);
+  constat(nouveauD.length === 1 && nouveauD[0].source === 'site' && nouveauD[0].source_id === leadD && nouveauD[0].vu_le === null
+    && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${DSEC}' AND type = 'etape' AND texte LIKE 'Carnet → À qualifier%'`)[0].n === 1
+    && sql(`SELECT count(*) AS n FROM contact_source WHERE contact_id = '${DSEC}' AND source = 'site'`)[0].n === 1,
+    '18.3 : une ligne « Nouveaux » de source site, liée à l\'événement de la demande ; entrée dans le suivi notée ; source « site » ajoutée');
+  // Une deuxième demande : une seconde ligne « Nouveaux », pas de seconde entrée dans le suivi.
+  const sd2 = sid();
+  await poster('guide', { submission_id: sd2, prenom: 'Dora', nom: `Dorac${NUM}`, email: MAILD });
+  for (let i = 0; i < 24 && !contactDe(leadDe(sd2)); i++) await pause(250);
+  constat(contactDe(leadDe(sd2)) === DSEC && sql(`SELECT count(*) AS n FROM nouveau WHERE contact_id = '${DSEC}'`)[0].n === 2
+    && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${DSEC}' AND type = 'etape'`)[0].n === 1 && sql(`SELECT suivi_le FROM contact WHERE id = '${DSEC}'`)[0].suivi_le === dora.suivi_le,
+    '18.3 : une deuxième demande (même e-mail) : seconde ligne « Nouveaux », suivi_le et étape inchangés');
+  // Une demande d'une personne inconnue : contact créé en « Demandes reçues » avec sa ligne « Nouveaux » (vérifié sur Paul plus haut pour la catégorie).
+  const ninc = sql(`SELECT count(*) AS n FROM nouveau n JOIN lead l ON l.contact_id = n.contact_id WHERE l.id = 'ORPH${ESSAI}'`)[0].n;
+  constat(ninc === 1, '18.3 : la demande rattachée par la tâche planifiée a aussi sa ligne « Nouveaux »');
+
+  // Inscription au programme ambassadeurs (epic 17) : le type de demande et ses colonnes n'existent pas encore dans `lead` ;
+  // l'essai les imite sur la base locale (colonnes ajoutées puis retirées, contrôle de la source suspendu pour l'insertion).
+  sql(`ALTER TABLE lead ADD COLUMN reglement_version TEXT`);
+  sql(`ALTER TABLE lead ADD COLUMN reglement_accepte_le TEXT`);
+  try {
+    const MAILA = `ambre+${ESSAI}@example.com`;
+    sql(`PRAGMA ignore_check_constraints = 1; INSERT INTO lead (id, submission_id, created_at, last_activity_at, lang, source, email, privacy_accepted_at, is_test, prenom, nom, telephone, reglement_version, reglement_accepte_le) VALUES
+      ('AMB1${ESSAI}', 'amb1-${ESSAI}', '2026-11-01T09:00:00Z', '2026-11-01T09:00:00Z', 'fr', 'ambassadeur', '${MAILD}', '2026-11-01T09:00:00Z', 1, 'Dora', 'Dorac${NUM}', NULL, 'v2026-11', '2026-11-01T09:00:00Z'),
+      ('AMB2${ESSAI}', 'amb2-${ESSAI}', '2026-11-01T09:05:00Z', '2026-11-01T09:05:00Z', 'fr', 'ambassadeur', '${MAILA}', '2026-11-01T09:05:00Z', 1, 'Ambre', 'Nouvelle${NUM}', NULL, NULL, NULL)`);
+    sql(`UPDATE contact SET projet = 'vendeur' WHERE id = '${DSEC}'`);
+    await appeler(`${S}/cdn-cgi/handler/scheduled`);
+    for (let i = 0; i < 24 && !(contactDe(`AMB1${ESSAI}`) && contactDe(`AMB2${ESSAI}`)); i++) await pause(250);
+    const amb = sql(`SELECT etape, projet, categorie_id, temperature, ambassadeur_inscrit_le, ambassadeur_reglement FROM contact WHERE id = '${DSEC}'`)[0];
+    constat(contactDe(`AMB1${ESSAI}`) === DSEC && amb.ambassadeur_inscrit_le === '2026-11-01T09:00:00Z' && amb.ambassadeur_reglement === 'v2026-11'
+      && amb.projet === 'vendeur' && amb.categorie_id === 'proches' && amb.etape === 'a_qualifier' && amb.temperature === 'avec_anne'
+      && sql(`SELECT count(*) AS n FROM nouveau WHERE contact_id = '${DSEC}'`)[0].n === 3,
+      '18.3 : inscription ambassadeur d\'une personne connue : marque posée (date, version du règlement), projet, catégorie et étape inchangés, ligne « Nouveaux »');
+    const nouvelle = sql(`SELECT c.etape, c.projet, c.categorie_id, c.ambassadeur_inscrit_le, c.ambassadeur_reglement, c.canal, (SELECT count(*) FROM nouveau n WHERE n.contact_id = c.id) AS nouveaux
+      FROM contact c JOIN lead l ON l.contact_id = c.id WHERE l.id = 'AMB2${ESSAI}'`)[0];
+    constat(!!nouvelle && nouvelle.etape === null && nouvelle.projet === 'a_qualifier' && nouvelle.categorie_id === 'demandes_recues' && nouvelle.canal === 'site'
+      && nouvelle.ambassadeur_inscrit_le === '2026-11-01T09:05:00Z' && nouvelle.ambassadeur_reglement === null && nouvelle.nouveaux === 1,
+      '18.3 : inscription ambassadeur d\'une inconnue : contact du carnet (hors suivi) en « Demandes reçues », marque posée (version absente : vide), ligne « Nouveaux »');
+  } finally {
+    sql(`DELETE FROM lead WHERE id IN ('AMB1${ESSAI}', 'AMB2${ESSAI}')`);
+    sql(`ALTER TABLE lead DROP COLUMN reglement_version`);
+    sql(`ALTER TABLE lead DROP COLUMN reglement_accepte_le`);
+  }
+
+  // Effacement (AD-31, AD-32) : opposition remplie (empreintes HMAC du téléphone et de l'e-mail), autres coordonnées,
+  // sources et « Nouveaux » vidés ; le numéro classé Privé reste classé, détaché ; le classement « prospect » part.
+  sql(`INSERT INTO leedflow_ecarte (telephone, a, categorie, contact_id) VALUES ('${TELD1}', '2026-10-01T00:00:00Z', 'prive', '${DSEC}'), ('${TELD2}', '2026-10-01T00:00:00Z', 'prospect', '${DSEC}')`);
+  sql(`INSERT INTO leedflow_inconnu (source_id, telephone, a, texte, donnees) VALUES ('appel:d1-${NUM}', '${TELD2}', '${new Date().toISOString()}', 'Appel', '{}')`);
+  r = await surFiche(DSEC, { quoi: 'effacer', confirmation: 'supprimer' });
+  const hmac = (v) => createHmac('sha256', 'essai').update(`opposition:${v}`).digest('hex');
+  const opp = new Set(sql(`SELECT empreinte FROM opposition WHERE empreinte IN ('${[TELD1, TELD2, MAILD].map(hmac).join("', '")}')`).map((o) => o.empreinte));
+  constat(r.headers.get('location') === '/contacts?m=efface' && sql(`SELECT count(*) AS n FROM contact WHERE id = '${DSEC}'`)[0].n === 0
+    && [TELD1, TELD2, MAILD].every((v) => opp.has(hmac(v))),
+    '18.3 : effacement : l\'empreinte HMAC des deux téléphones et de l\'e-mail est ajoutée à « opposition » (aucune valeur en clair)');
+  constat(sql(`SELECT count(*) AS n FROM contact_coordonnee WHERE contact_id = '${DSEC}' OR valeur IN ('${TELD2}')`)[0].n === 0
+    && sql(`SELECT count(*) AS n FROM contact_source WHERE contact_id = '${DSEC}'`)[0].n === 0
+    && sql(`SELECT count(*) AS n FROM nouveau WHERE contact_id = '${DSEC}'`)[0].n === 0
+    && sql(`SELECT count(*) AS n FROM leedflow_inconnu WHERE telephone = '${TELD2}'`)[0].n === 0,
+    '18.3 : effacement : autres coordonnées, sources, lignes « Nouveaux » et échanges Leedflow de l\'autre numéro vidés');
+  const ecartes = Object.fromEntries(sql(`SELECT telephone, categorie, contact_id FROM leedflow_ecarte WHERE telephone IN ('${TELD1}', '${TELD2}')`).map((e) => [e.telephone, e]));
+  constat(ecartes[TELD1]?.categorie === 'prive' && ecartes[TELD1].contact_id === null && !ecartes[TELD2],
+    '18.3 : effacement : le numéro classé Privé reste classé (sans lien vers le contact), le classement « prospect » part');
+  // Recherche par adresse (droits depuis /gestion) : un e-mail secondaire retrouve le contact.
+  const EMS = `01KFEM${NUM}${'0'.repeat(14)}`, MAIL2 = `second+${ESSAI}@example.com`;
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, nom, email, categorie_id) VALUES ('${EMS}', '2026-09-01T08:00:00Z', '2026-09-01T08:00:00Z', 'Emma${NUM}', 'principal+${ESSAI}@example.com', 'proches')`);
+  sql(`INSERT INTO contact_coordonnee (contact_id, type, valeur, ajoute_le) VALUES ('${EMS}', 'email', '${MAIL2}', '2026-09-01T08:00:00Z')`);
+  r = await appeler(`${E}/api/gestion/export?email=${encodeURIComponent(MAIL2)}`, { headers: avecJeton() });
+  const expEms = await r.json();
+  constat(expEms.contacts?.length === 1 && expEms.contacts[0].id === EMS && expEms.contacts[0].autres_coordonnees?.[0]?.valeur === MAIL2,
+    '18.3 : export par adresse : un e-mail secondaire (contact_coordonnee) retrouve le contact, ses autres coordonnées sont dans l\'export');
+  r = await formulaire('effacer', { email: MAIL2, confirmation: MAIL2 });
+  constat(sql(`SELECT count(*) AS n FROM contact WHERE id = '${EMS}'`)[0].n === 0 && sql(`SELECT count(*) AS n FROM contact_coordonnee WHERE valeur = '${MAIL2}'`)[0].n === 0
+    && sql(`SELECT count(*) AS n FROM opposition WHERE empreinte IN ('${hmac(MAIL2)}', '${hmac(`principal+${ESSAI}@example.com`)}')`)[0].n === 2,
+    '18.3 : effacement par adresse : le contact de l\'e-mail secondaire est effacé, ses deux e-mails vont dans « opposition »');
   // Projet et température (AD-24) : la base refuse une température incohérente.
   const T = (projet, temperature, n) => `INSERT INTO contact (id, created_at, last_activity_at, nom, projet, temperature) VALUES ('T${n}${ESSAI}', '2026-11-01', '2026-11-01', 'Essai', '${projet}', '${temperature}')`;
   constat(refuse(T('a_qualifier', 'chaud', 1)) && refuse(T('ambassadeur', 'froid', 2)) && refuse(T('acheteur', 'en_vente', 3)) && refuse(T('vendeur', 'recherche_active', 4))

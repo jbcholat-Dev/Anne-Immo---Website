@@ -4,14 +4,20 @@
 // aussi le contact de l'espace d'Anne qui porte cette adresse ou ces demandes, avec son historique et ses autres demandes
 // (même personne, reconnue par son téléphone), et le prescripteur qui porterait cette adresse.
 // Chaque exercice de droit est noté dans la table droit_exerce (date, type, empreinte de l'adresse, compte qui a agi).
+// Depuis la story 18.3 (AD-31, AD-32) : l'adresse est aussi cherchée dans les autres coordonnées des contacts
+// (`contact_coordonnee`) ; l'effacement couvre `contact_coordonnee`, `contact_source`, `nouveau` et les tables Leedflow
+// de tous les numéros du contact, garde le classement Privé ou Démarchage d'un numéro (simple numéro, sans autre donnée,
+// pour que ses appels ne reviennent pas à trier) et ajoute l'empreinte de chaque téléphone et e-mail à `opposition`.
 // Rien n'est à effacer chez Resend : le site n'y crée aucun contact ni audience (AD-8), il n'envoie que des e-mails.
 // La suppression de la réservation Cal.com et la réponse à la personne suivent la procédure du RUNBOOK (§ 4 quinquies).
 import type { EnvSite } from './env';
 import { empreinte, journal } from './journal';
+import { ecrituresOpposition } from './opposition';
 
 const PARSER = ['answers', 'scores', 'utm'];
 /** Les contacts de l'espace d'Anne liés à une adresse : celui qui la porte, et ceux des demandes faites avec elle. */
-const CONTACTS_DE_L_ADRESSE = 'email = ?1 OR id IN (SELECT contact_id FROM lead WHERE lower(email) = ?1 AND contact_id IS NOT NULL)';
+const CONTACTS_DE_L_ADRESSE = `email = ?1 OR id IN (SELECT contact_id FROM lead WHERE lower(email) = ?1 AND contact_id IS NOT NULL)
+  OR id IN (SELECT contact_id FROM contact_coordonnee WHERE type = 'email' AND valeur = ?1)`;
 const TECHNIQUES = ['token', 'token_browser', 'token_expires_at', 'submission_id'];
 
 /** `cle` : l'adresse e-mail, ou pour un contact de l'espace sans adresse, son téléphone ou son identifiant (story 13.23). */
@@ -63,6 +69,9 @@ async function fichesLisibles(env: EnvSite, contacts: Record<string, unknown>[])
       'SELECT a, type, source, texte, donnees FROM contact_evenement WHERE contact_id = ?1 ORDER BY a, id',
     ).bind(c.id).all<Record<string, unknown>>();
     const { results: taches } = await env.DB.prepare('SELECT a, texte, echeance, statut FROM leedflow_tache WHERE contact_id = ?1 ORDER BY a').bind(c.id).all<Record<string, unknown>>();
+    // Carnet (story 18.3) : autres numéros, e-mails et profils, et d'où vient le contact.
+    const { results: coordonnees } = await env.DB.prepare('SELECT type, reseau, valeur, ajoute_le FROM contact_coordonnee WHERE contact_id = ?1 ORDER BY id').bind(c.id).all<Record<string, unknown>>();
+    const { results: sources } = await env.DB.prepare('SELECT source, a FROM contact_source WHERE contact_id = ?1 ORDER BY a').bind(c.id).all<Record<string, unknown>>();
     const lisible: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(c)) {
       if (v === null || k === 'is_test') continue;
@@ -72,6 +81,8 @@ async function fichesLisibles(env: EnvSite, contacts: Record<string, unknown>[])
       ...lisible,
       historique: historique.map((h) => ({ ...h, donnees: typeof h.donnees === 'string' ? JSON.parse(h.donnees) : undefined })),
       ...(taches.length ? { taches_proposees_par_leedflow: taches } : {}),
+      ...(coordonnees.length ? { autres_coordonnees: coordonnees.map((k) => Object.fromEntries(Object.entries(k).filter(([, v]) => v !== null))) } : {}),
+      ...(sources.length ? { sources } : {}),
     });
   }
   return fiches;
@@ -93,24 +104,57 @@ export async function exporterContact(env: EnvSite, id: string, compte: string) 
   return { responsable: RESPONSABLE, exporte_le: maintenant, contact: fiche, demandes };
 }
 
+/** Téléphones et e-mails de ces contacts, principaux et autres (story 18.3) : pour Leedflow et l'opposition. */
+async function coordonneesDe(env: EnvSite, ids: string[]): Promise<{ telephones: string[]; emails: string[] }> {
+  const { results } = await env.DB.prepare(
+    `SELECT telephone AS v, 'telephone' AS t FROM contact WHERE id IN (SELECT value FROM json_each(?1)) AND telephone IS NOT NULL
+     UNION SELECT email, 'email' FROM contact WHERE id IN (SELECT value FROM json_each(?1)) AND email IS NOT NULL
+     UNION SELECT valeur, type FROM contact_coordonnee WHERE contact_id IN (SELECT value FROM json_each(?1)) AND type IN ('telephone', 'email')`,
+  ).bind(JSON.stringify(ids)).all<{ v: string; t: 'telephone' | 'email' }>();
+  return { telephones: results.filter((r) => r.t === 'telephone').map((r) => r.v), emails: results.filter((r) => r.t === 'email').map((r) => r.v) };
+}
+
+/**
+ * Ce que l'effacement de ces contacts supprime, hors demandes du site : historique, file « Nouveaux », autres coordonnées,
+ * sources, tâches et liens Leedflow, destinataires de campagne, ce que Leedflow a relevé pour leurs numéros, puis les
+ * contacts. Un numéro classé Privé ou Démarchage reste classé (simple numéro, revue de code 18.1, AD-32), détaché du
+ * contact ; un classement Pro ou Prospect part. Écrit en clair plutôt que confié aux ON DELETE CASCADE.
+ */
+function effacementDesContacts(env: EnvSite, ids: string[], telephones: string[]): D1PreparedStatement[] {
+  const I = JSON.stringify(ids), T = JSON.stringify(telephones);
+  const DE = 'IN (SELECT value FROM json_each(?1))';
+  return [
+    env.DB.prepare(`DELETE FROM nouveau WHERE contact_id ${DE}`).bind(I),
+    env.DB.prepare(`DELETE FROM contact_evenement WHERE contact_id ${DE}`).bind(I),
+    env.DB.prepare(`DELETE FROM contact_coordonnee WHERE contact_id ${DE}`).bind(I),
+    env.DB.prepare(`DELETE FROM contact_source WHERE contact_id ${DE}`).bind(I),
+    // Tâches et liens Leedflow (story 13.10, migration 0008), destinataires des campagnes (story 13.27, migration 0014).
+    env.DB.prepare(`DELETE FROM leedflow_tache WHERE contact_id ${DE}`).bind(I),
+    env.DB.prepare(`DELETE FROM leedflow_lien WHERE contact_id ${DE}`).bind(I),
+    env.DB.prepare(`DELETE FROM campagne_destinataire WHERE contact_id ${DE}`).bind(I),
+    env.DB.prepare(`DELETE FROM leedflow_inconnu WHERE telephone ${DE}`).bind(T),
+    env.DB.prepare(`DELETE FROM leedflow_ecarte WHERE categorie NOT IN ('prive', 'demarchage') AND (telephone ${DE} OR contact_id IN (SELECT value FROM json_each(?2)))`).bind(T, I),
+    env.DB.prepare(`UPDATE leedflow_ecarte SET contact_id = NULL WHERE contact_id ${DE}`).bind(I),
+    env.DB.prepare(`DELETE FROM contact WHERE id ${DE}`).bind(I),
+  ];
+}
+
 /**
  * Droit à l'effacement depuis la fiche d'un contact (story 13.23) : le contact, son historique, ses demandes du site
- * et leurs envois, ses tâches et liens Leedflow, et ce que Leedflow a relevé ou classé pour son numéro.
- * Renvoie le nombre de demandes du site effacées, ou null si le contact n'existe pas.
+ * et leurs envois, et tout ce qu'en garde le carnet (voir effacementDesContacts). Renvoie le nombre de demandes du site
+ * effacées, ou null si le contact n'existe pas.
  */
 export async function effacerContact(env: EnvSite, id: string, compte: string): Promise<number | null> {
   const c = await env.DB.prepare('SELECT email, telephone FROM contact WHERE id = ?1').bind(id).first<{ email: string | null; telephone: string | null }>();
   if (!c) return null;
+  const { telephones, emails } = await coordonneesDe(env, [id]);
+  const { results: adresses } = await env.DB.prepare('SELECT DISTINCT lower(email) AS e FROM lead WHERE contact_id = ?1').bind(id).all<{ e: string }>();
+  const maintenant = new Date().toISOString();
   const [, leads] = await env.DB.batch([
     env.DB.prepare('DELETE FROM lead_delivery WHERE lead_id IN (SELECT id FROM lead WHERE contact_id = ?1)').bind(id),
     env.DB.prepare('DELETE FROM lead WHERE contact_id = ?1').bind(id),
-    env.DB.prepare('DELETE FROM contact_evenement WHERE contact_id = ?1').bind(id),
-    env.DB.prepare('DELETE FROM leedflow_tache WHERE contact_id = ?1').bind(id),
-    env.DB.prepare('DELETE FROM leedflow_lien WHERE contact_id = ?1').bind(id),
-    env.DB.prepare('DELETE FROM campagne_destinataire WHERE contact_id = ?1').bind(id),
-    env.DB.prepare('DELETE FROM leedflow_inconnu WHERE telephone = ?1').bind(c.telephone),
-    env.DB.prepare('DELETE FROM leedflow_ecarte WHERE telephone = ?1').bind(c.telephone),
-    env.DB.prepare('DELETE FROM contact WHERE id = ?1').bind(id),
+    ...effacementDesContacts(env, [id], telephones),
+    ...(await ecrituresOpposition(env, [...telephones, ...emails, ...adresses.map((a) => a.e)], maintenant)),
   ]);
   const n = leads.meta.changes ?? 0;
   await noter(env, 'effacement', c.email ?? c.telephone ?? id, n, compte);
@@ -122,19 +166,17 @@ export async function effacer(env: EnvSite, email: string, compte: string): Prom
   const adresse = email.trim().toLowerCase();
   // Les contacts concernés sont relevés d'abord : ils sont retrouvés par les demandes, qu'on efface ensuite.
   const { results: contacts } = await env.DB.prepare(`SELECT id FROM contact WHERE ${CONTACTS_DE_L_ADRESSE}`).bind(adresse).all<{ id: string }>();
-  const ids = JSON.stringify(contacts.map((c) => c.id));
+  const liste = contacts.map((c) => c.id);
+  const ids = JSON.stringify(liste);
+  const { telephones, emails } = await coordonneesDe(env, liste);
+  const maintenant = new Date().toISOString();
   const DE_CES_CONTACTS = 'IN (SELECT value FROM json_each(?2))';
   const [, leads] = await env.DB.batch([
     env.DB.prepare(`DELETE FROM lead_delivery WHERE lead_id IN (SELECT id FROM lead WHERE lower(email) = ?1 OR contact_id ${DE_CES_CONTACTS})`).bind(adresse, ids),
     env.DB.prepare(`DELETE FROM lead WHERE lower(email) = ?1 OR contact_id ${DE_CES_CONTACTS}`).bind(adresse, ids),
-    env.DB.prepare(`DELETE FROM contact_evenement WHERE contact_id ${DE_CES_CONTACTS.replace('?2', '?1')}`).bind(ids),
-    // Tâches et liens Leedflow de ces contacts (story 13.10, migration 0008).
-    env.DB.prepare(`DELETE FROM leedflow_tache WHERE contact_id ${DE_CES_CONTACTS.replace('?2', '?1')}`).bind(ids),
-    env.DB.prepare(`DELETE FROM leedflow_lien WHERE contact_id ${DE_CES_CONTACTS.replace('?2', '?1')}`).bind(ids),
-    // Destinataires des campagnes de l'espace (story 13.27, migration 0014).
-    env.DB.prepare(`DELETE FROM campagne_destinataire WHERE contact_id ${DE_CES_CONTACTS.replace('?2', '?1')}`).bind(ids),
-    env.DB.prepare(`DELETE FROM contact WHERE id ${DE_CES_CONTACTS.replace('?2', '?1')}`).bind(ids),
+    ...effacementDesContacts(env, liste, telephones),
     env.DB.prepare('DELETE FROM prescripteur WHERE email = ?1').bind(adresse),
+    ...(await ecrituresOpposition(env, [adresse, ...telephones, ...emails], maintenant)),
   ]);
   const n = leads.meta.changes ?? 0;
   await noter(env, 'effacement', adresse, n, compte);

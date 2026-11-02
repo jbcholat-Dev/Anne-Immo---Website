@@ -240,7 +240,7 @@ development_status:
   epic-18: in-progress   # le carnet de contacts (livraison 1)
   18-1-leedflow-ne-range-un-appel-que-sur-un-contact-suivi: done   # 2026-11-01, PR #225
   18-2-nouvelle-base-du-carnet-migration-0018: review
-  18-3-demandes-du-site-et-droits-sur-le-nouveau-carnet: backlog
+  18-3-demandes-du-site-et-droits-sur-le-nouveau-carnet: review   # 2026-11-01, avec les corrections de la revue 18.2
   18-4-page-contacts: backlog
   18-5-filtres-et-vues-enregistrees: backlog
   18-6-classer-plusieurs-contacts-et-ecarter: backlog
