@@ -3,36 +3,51 @@
 // grand tableau, une ligne par contact non effacé, du carnet comme du suivi des ventes ; les écartés sont masqués.
 // Le serveur lit tout une fois (`lireTableau`, AD-27) et l'envoie dans la page ; l'îlot ci-dessous trie, cherche et
 // masque des colonnes dans le navigateur (choix des colonnes gardé dans ce navigateur), sans revenir au serveur.
+// Story 18.5 : filtres (FR-2, plus « à rappeler », vocabulaire fermé d'AD-27 dans `server/vues.ts`) dans la barre
+// d'outils, pastilles des filtres actifs au-dessus du tableau, vues enregistrées et catégories dans la colonne de gauche ;
+// les vues s'écrivent par /api/vues. Recherche et filtres lisent un index calculé une fois au chargement.
 // Place laissée aux stories suivantes, dans la mise en page de la maquette : barre « Nouveaux » (18.11) au-dessus de la
-// recherche, filtres et vues enregistrées (18.5) dans la colonne de gauche et la barre d'outils, cases à cocher et actions
-// groupées (18.6) en tête du tableau, « + Nouveau contact » et fiche (18.7) en haut à droite et sur le nom.
+// recherche, cases à cocher et actions groupées (18.6) en tête du tableau, « + Nouveau contact » et fiche (18.7) en haut
+// à droite et sur le nom.
 // L'ancienne page d'accueil « Aujourd'hui » est à /aujourdhui ; ses anciens retours (`/?m=…`) y sont renvoyés.
 import Espace from '../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { pourSite as env } from '../server/env';
-import { lireTableau } from '../server/tableau';
-import { COLONNES } from '../server/tableau-colonnes';
+import { lireCategories, lireTableau } from '../server/tableau';
+import { ACCORDS, COLONNES, PROJETS, TEMPERATURES } from '../server/tableau-colonnes';
+import { DUREES } from '../server/vues';
+import { listerVues } from '../server/vues-base';
 
 export const prerender = false;
 if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
 const m = Astro.url.searchParams.get('m') ?? '';
 if (['suite', 'tache-acceptee', 'tache-ignoree'].includes(m)) return Astro.redirect(`/aujourdhui?m=${m}`, 302);
 
-const lignes = await lireTableau(env);
+const [lignes, vues, categories] = await Promise.all([lireTableau(env), listerVues(env), lireCategories(env)]);
 const total = lignes.filter((l) => !l.ecarte).length;
 const q = (Astro.url.searchParams.get('q') ?? '').trim().slice(0, 100);
 // Dans un <script type="application/json"> : « < » échappé, pour qu'aucun texte saisi ne ferme la balise.
-const donnees = JSON.stringify(lignes).replace(/</g, '\\u003c');
+const enJson = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
+const donnees = enJson(lignes);
+const reglages = enJson({ vues, categories });
 ---
 <Espace titre="Contacts" actif="contacts" large>
   <div class="ct-tete">
     <div><h1>Contacts</h1><div class="e-muet">Tous les contacts d'Anne, toutes sources confondues.</div></div>
   </div>
   <div class="ct-page">
-    <aside class="ct-cote" aria-label="Vues">
+    <aside class="ct-cote" aria-label="Vues et catégories">
       <div class="ct-bloc">
         <h3>Vues</h3>
-        <button type="button" class="ct-vue actif" aria-pressed="true">Tous les contacts <small data-total-vue>{total}</small></button>
+        <div data-vues>
+          <div class="ct-vue-l"><button type="button" class="ct-vue actif" data-vue="tous" aria-pressed="true"><span>Tous les contacts</span><small>{total}</small></button></div>
+          {vues.map((v) => <div class="ct-vue-l"><button type="button" class="ct-vue" data-vue={v.id} aria-pressed="false"><span>{v.nom}</span></button></div>)}
+        </div>
+        <button type="button" class="ct-btn ct-nouvelle" data-nouvelle-vue>+ Nouvelle vue avec ces filtres</button>
+      </div>
+      <div class="ct-bloc">
+        <h3>Catégories</h3>
+        <div data-categories></div>
       </div>
     </aside>
     <div class="ct-principal">
@@ -47,7 +62,22 @@ const donnees = JSON.stringify(lignes).replace(/</g, '\\u003c');
           </div>
         </details>
       </div>
-      <div class="ct-actifs"><span class="ct-total" data-compteur aria-live="polite">{total} contact{total > 1 ? 's' : ''} sur {total}</span></div>
+      <div class="ct-filtres" data-filtres>
+        <select data-filtre="categorie_id" aria-label="Filtrer par catégorie"><option value="">Catégorie</option>{categories.map((c) => <option value={c.id}>{c.nom}</option>)}</select>
+        <select data-filtre="projet" aria-label="Filtrer par projet"><option value="">Projet</option>{Object.entries(PROJETS).map(([k, v]) => <option value={k}>{v}</option>)}</select>
+        <select data-filtre="temperature" aria-label="Filtrer par température"><option value="">Température</option>{Object.entries(TEMPERATURES).map(([k, v]) => <option value={k}>{v}</option>)}</select>
+        <select data-filtre="source" aria-label="Filtrer par source"><option value="">Source</option></select>
+        <select data-filtre="ville" aria-label="Filtrer par ville"><option value="">Ville</option></select>
+        <input type="search" data-filtre-texte="entreprise_contient" placeholder="Entreprise contient…" aria-label="Filtrer par entreprise (contient)" autocomplete="off" />
+        <select data-filtre="dernier_contact" aria-label="Filtrer par dernier contact"><option value="">Dernier contact</option><option value="jamais">Jamais recontacté</option>{DUREES.map((d) => <option value={d.jours}>{d.libelle.charAt(0).toUpperCase() + d.libelle.slice(1)}</option>)}</select>
+        <select data-filtre="etat" aria-label="Filtrer par état"><option value="">État</option><option value="verifie:non">À vérifier</option><option value="verifie:oui">Vérifiés</option><option value="ecarte:oui">Écartés</option></select>
+        <select data-filtre="autres" aria-label="Autres filtres"><option value="">Autres filtres</option>
+          <optgroup label="Accord e-mail">{Object.entries(ACCORDS).map(([k, v]) => <option value={`accord:${k}`}>{v || 'Sans e-mail'}</option>)}</optgroup>
+          <optgroup label="Suivi des ventes"><option value="pipeline:dans">Dans le suivi</option><option value="pipeline:hors">Hors suivi</option></optgroup>
+          <optgroup label="Autres"><option value="ambassadeur:oui">Ambassadeurs</option><option value="a_rappeler:oui">À rappeler</option></optgroup>
+        </select>
+      </div>
+      <div class="ct-actifs"><span class="ct-pastilles" data-pastilles></span><span class="ct-total" data-compteur aria-live="polite">{total} contact{total > 1 ? 's' : ''} sur {total}</span></div>
       <div class="ct-boite">
         <table class="ct-table" data-tableau>
           <thead><tr data-entetes></tr></thead>
@@ -57,22 +87,43 @@ const donnees = JSON.stringify(lignes).replace(/</g, '\\u003c');
       <noscript><p class="e-message">Le tableau a besoin de JavaScript. La liste des contacts suivis reste sur <a href="/contacts">/contacts</a>.</p></noscript>
     </div>
   </div>
+  <dialog class="ct-dialogue" data-dialogue-vue aria-labelledby="ct-dialogue-titre">
+    <form method="dialog" data-form-vue>
+      <h2 id="ct-dialogue-titre" data-dialogue-titre>Nouvelle vue</h2>
+      <p class="e-muet" data-dialogue-aide></p>
+      <label class="ct-champ">Nom de la vue<input name="nom" maxlength="60" autocomplete="off" required /></label>
+      <p class="ct-erreur" data-dialogue-erreur role="alert" hidden></p>
+      <div class="ct-boutons"><button type="button" class="ct-btn" data-dialogue-annuler>Annuler</button><button type="submit" class="ct-btn bleu">Enregistrer</button></div>
+    </form>
+  </dialog>
+  <div class="ct-toast" data-toast role="status" hidden><span data-toast-texte></span><button type="button" data-toast-annuler hidden>Annuler</button></div>
   <script type="application/json" id="ct-donnees" set:html={donnees}></script>
+  <script type="application/json" id="ct-reglages" set:html={reglages}></script>
 </Espace>
 
 <script>
-  // Îlot du tableau (AD-22) : tri, recherche (story 13.24) et colonnes masquées, tout dans le navigateur.
+  // Îlot du tableau (AD-22) : tri, recherche (story 13.24), filtres et vues enregistrées (story 18.5, AD-27) et colonnes
+  // masquées, tout dans le navigateur ; seules les vues s'écrivent, par /api/vues. Tout texte venu des données (noms de
+  // contacts, de vues, de catégories, villes) passe par `esc` avant d'entrer dans le HTML, ou par textContent / value.
   import { telLisible } from '@site/server/recherche';
   import {
-    ACCORDS, CANAUX_CONTACT, COLONNES, PROJETS, TEMPERATURES, libelleSource, preparerRecherche, texteRecherche, valeurTri,
+    ACCORDS, CANAUX_CONTACT, COLONNES, PROJETS, TEMPERATURES, indexer, libelleSource, preparerRecherche, valeurTri,
     type CleColonne, type LigneTableau,
   } from '../server/tableau-colonnes';
+  import { ajouter, pastilles, preparerFiltre, retirer, type CleFiltre, type Filtre, type Vue } from '../server/vues';
 
   const MEMOIRE = 'espace.contacts.colonnes';
+  // Premier paquet de lignes écrit tout de suite, la suite par paquets aux images suivantes : le tableau répond vite même
+  // avec des milliers de lignes (story 18.5 : chaque recherche ou filtre sous 300 ms avec 1 200 contacts).
+  const PREMIER = 120, PAQUET = 400;
   const lignes: LigneTableau[] = JSON.parse(document.getElementById('ct-donnees')?.textContent || '[]');
-  const textes = lignes.map(texteRecherche);
+  const reglages: { vues: Vue[]; categories: { id: string; nom: string }[] } = JSON.parse(document.getElementById('ct-reglages')?.textContent || '{"vues":[],"categories":[]}');
+  // Calculé une seule fois : textes sans accents, numéros réduits aux chiffres, dates en millisecondes.
+  const index = lignes.map(indexer);
   const dates = lignes.map((l) => l.dernier_le ? new Date(l.dernier_le).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' }) : '');
   const total = lignes.filter((l) => !l.ecarte).length;
+  const nomsCategories = new Map(reglages.categories.map((c) => [c.id, c.nom]));
+  let vues: Vue[] = reglages.vues;
   const comparer = new Intl.Collator('fr', { sensitivity: 'base', numeric: true }).compare;
   const $ = <T extends Element>(s: string) => document.querySelector<T>(s)!;
   const recherche = $<HTMLInputElement>('[data-recherche]');
@@ -80,10 +131,23 @@ const donnees = JSON.stringify(lignes).replace(/</g, '\\u003c');
   const corps = $<HTMLTableSectionElement>('[data-lignes]');
   const compteur = $<HTMLElement>('[data-compteur]');
   const menuColonnes = $<HTMLDetailsElement>('[data-colonnes]');
+  const zoneVues = $<HTMLElement>('[data-vues]');
+  const zoneCategories = $<HTMLElement>('[data-categories]');
+  const zonePastilles = $<HTMLElement>('[data-pastilles]');
+  const zoneFiltres = $<HTMLElement>('[data-filtres]');
+  const entreprise = $<HTMLInputElement>('[data-filtre-texte=entreprise_contient]');
+  const dialogue = $<HTMLDialogElement>('[data-dialogue-vue]');
+  const formVue = $<HTMLFormElement>('[data-form-vue]');
+  const erreurVue = $<HTMLElement>('[data-dialogue-erreur]');
+  const toast = $<HTMLElement>('[data-toast]');
+  const toastAnnuler = $<HTMLButtonElement>('[data-toast-annuler]');
 
   let cachees = new Set<CleColonne>();
   try { cachees = new Set(JSON.parse(localStorage.getItem(MEMOIRE) ?? '[]')); } catch {}
   let tri: { cle: CleColonne; sens: 1 | -1 } = { cle: 'nom', sens: 1 };
+  let filtre: Filtre = {};
+  /** La vue choisie (« tous », un identifiant), ou null quand les filtres ont changé depuis. */
+  let vueActive: string | null = 'tous';
   const valeurs = new Map<CleColonne, (string | number | null)[]>();
   const valeursDe = (cle: CleColonne) => {
     let v = valeurs.get(cle);
@@ -107,41 +171,227 @@ const donnees = JSON.stringify(lignes).replace(/</g, '\\u003c');
       case 'entreprise': return `<td class="ct-coupe" title="${esc(l.entreprise)}">${l.entreprise ? esc(l.entreprise) : vide}</td>`;
       case 'categorie': return `<td>${l.categorie ? pastille(l.categorie) : vide}</td>`;
       case 'projet': return `<td>${pastille(PROJETS[l.projet] ?? l.projet, l.projet === 'a_qualifier' ? 'aq' : '')}</td>`;
-      case 'temperature': return `<td>${l.temperature ? pastille(TEMPERATURES[l.temperature] ?? l.temperature, `t-${l.temperature}`) : vide}</td>`;
+      case 'temperature': return `<td>${l.temperature ? pastille(TEMPERATURES[l.temperature] ?? l.temperature, `t-${esc(l.temperature)}`) : vide}</td>`;
       case 'sources': return `<td class="ct-src">${l.sources.length ? esc(l.sources.map(libelleSource).join(' + ')) : vide}</td>`;
       case 'ville': return `<td>${l.ville ? esc(l.ville) : vide}</td>`;
       case 'telephone': return `<td class="ct-num">${l.telephones.length ? esc(telLisible(l.telephones[0])) + plus(l.telephones, telLisible) : vide}</td>`;
       case 'email': return `<td class="ct-coupe ct-mail" title="${esc(l.emails.join(', '))}">${l.emails.length ? esc(l.emails[0]) + plus(l.emails, (e) => e) : vide}</td>`;
       case 'profil': return `<td>${l.profils.length ? l.profils.map((p) => `<a href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">${esc(reseau(p.reseau))}</a>`).join(' ') : vide}</td>`;
       case 'dernier': return `<td class="ct-num">${l.dernier_le ? `${esc(dates[i])}${l.dernier_canal ? ` · ${esc(CANAUX_CONTACT[l.dernier_canal] ?? l.dernier_canal)}` : ''}` : '<span class="ct-vide">jamais</span>'}</td>`;
-      case 'accord': return `<td>${l.accord === 'sans_email' ? vide : `<span class="ct-accord ${l.accord}">${esc(ACCORDS[l.accord])}</span>`}</td>`;
+      case 'accord': return `<td>${l.accord === 'sans_email' ? vide : `<span class="ct-accord ${esc(l.accord)}">${esc(ACCORDS[l.accord])}</span>`}</td>`;
       case 'verifie': return `<td>${l.ecarte ? '<span class="ct-etat">écarté</span>' : l.verifie ? '<span class="ct-etat ok">✓ vérifié</span>' : '<span class="ct-etat av">à vérifier</span>'}</td>`;
       default: return '<td></td>';
     }
   }
 
+  // Le HTML d'une ligne est gardé tant que les colonnes affichées ne changent pas : trier ou filtrer ne le recalcule pas.
+  let html: (string | undefined)[] = [];
+  let colonnes = COLONNES.filter((c) => !cachees.has(c.cle));
+  const ligneHtml = (i: number) => html[i] ??= `<tr data-contact="${esc(lignes[i].id)}">${colonnes.map((c) => cellule(lignes[i], i, c.cle)).join('')}</tr>`;
+
+  /** Les lignes gardées par un filtre et une recherche (indices). */
+  function garder(f: Filtre, q: string): number[] {
+    const passe = preparerFiltre(f), cherche = preparerRecherche(q);
+    const r: number[] = [];
+    for (let i = 0; i < lignes.length; i++) if (passe(lignes[i], index[i]) && cherche(index[i])) r.push(i);
+    return r;
+  }
+
+  let generation = 0;
   function afficher() {
-    const colonnes = COLONNES.filter((c) => !cachees.has(c.cle));
     entetes.innerHTML = colonnes.map((c) => {
       const actif = tri.cle === c.cle;
       return `<th data-cle="${c.cle}" aria-sort="${actif ? (tri.sens === 1 ? 'ascending' : 'descending') : 'none'}"><button type="button" data-trier="${c.cle}">${esc(c.libelle)}<span class="ct-fleche" aria-hidden="true">${actif ? (tri.sens === 1 ? '▲' : '▼') : ''}</span></button></th>`;
     }).join('');
-    // Filtres : les écartés sont masqués (FR-1) ; les filtres de la story 18.5 s'ajouteront ici.
-    const cherche = preparerRecherche(recherche.value);
-    const garder: number[] = [];
-    for (let i = 0; i < lignes.length; i++) if (!lignes[i].ecarte && cherche(lignes[i], textes[i])) garder.push(i);
+    const garde = garder(filtre, recherche.value);
     const v = valeursDe(tri.cle);
-    garder.sort((a, b) => {
+    garde.sort((a, b) => {
       const x = v[a], y = v[b];
       if (x === null || y === null) return x === y ? 0 : x === null ? 1 : -1; // vides en fin de liste, dans les deux sens
       const r = typeof x === 'number' && typeof y === 'number' ? x - y : comparer(String(x), String(y));
       return r * tri.sens;
     });
-    corps.innerHTML = garder.length
-      ? garder.map((i) => `<tr data-contact="${esc(lignes[i].id)}">${colonnes.map((c) => cellule(lignes[i], i, c.cle)).join('')}</tr>`).join('')
-      : `<tr><td class="ct-attente" colspan="${colonnes.length}">${lignes.length ? 'Aucun contact pour cette recherche.' : 'Aucun contact pour l\'instant.'}</td></tr>`;
-    compteur.textContent = `${garder.length} contact${garder.length > 1 ? 's' : ''} sur ${total}`;
+    const g = ++generation;
+    corps.removeAttribute('data-complet');
+    corps.innerHTML = garde.length
+      ? garde.slice(0, PREMIER).map(ligneHtml).join('')
+      : `<tr><td class="ct-attente" colspan="${colonnes.length}">${lignes.length ? 'Aucun contact pour ces filtres ou cette recherche.' : 'Aucun contact pour l\'instant.'}</td></tr>`;
+    let n = PREMIER;
+    const suite = () => {
+      if (g !== generation) return;
+      if (n >= garde.length) { corps.dataset.complet = '1'; return; }
+      corps.insertAdjacentHTML('beforeend', garde.slice(n, n + PAQUET).map(ligneHtml).join(''));
+      n += PAQUET;
+      requestAnimationFrame(() => setTimeout(suite));
+    };
+    if (garde.length <= PREMIER) corps.dataset.complet = '1'; else requestAnimationFrame(() => setTimeout(suite));
+    compteur.textContent = `${garde.length} contact${garde.length > 1 ? 's' : ''} sur ${total}`;
+    afficherPastilles();
+    marquerVue();
   }
+
+  // Pastilles des filtres actifs : un clic en retire une. La recherche garde sa propre case.
+  function afficherPastilles() {
+    const p = pastilles(filtre, nomsCategories);
+    zonePastilles.innerHTML = p.map((x) => `<button type="button" class="ct-chip" data-retirer="${esc(x.cle)}"${x.valeur === null ? '' : ` data-valeur="${esc(x.valeur)}"`} aria-label="Retirer le filtre ${esc(x.libelle)}">${esc(x.libelle)} <span aria-hidden="true">✕</span></button>`).join('')
+      + (p.length > 1 ? '<button type="button" class="ct-chip ct-chip-tout" data-retirer-tout>Tout retirer</button>' : '');
+    if (document.activeElement !== entreprise) entreprise.value = filtre.entreprise_contient ?? '';
+  }
+
+  // Colonne de gauche : « Tous les contacts », les vues (compteur sans la recherche), puis les catégories.
+  let comptes = new Map<string, number>();
+  const compterVues = () => { comptes = new Map(vues.map((v) => [v.id, garder(v.filtre, v.filtre.recherche ?? '').length])); };
+  function afficherVues() {
+    zoneVues.innerHTML = `<div class="ct-vue-l"><button type="button" class="ct-vue" data-vue="tous"><span>Tous les contacts</span><small>${total}</small></button></div>`
+      + vues.map((v) => `<div class="ct-vue-l"><button type="button" class="ct-vue" data-vue="${esc(v.id)}"><span>${esc(v.nom)}</span><small>${comptes.get(v.id) ?? 0}</small></button>`
+        + `<span class="ct-vue-gestes"><button type="button" class="ct-vue-x" data-renommer-vue="${esc(v.id)}" title="Renommer la vue" aria-label="Renommer la vue ${esc(v.nom)}">✎</button>`
+        + `<button type="button" class="ct-vue-x" data-supprimer-vue="${esc(v.id)}" title="Supprimer la vue" aria-label="Supprimer la vue ${esc(v.nom)}">×</button></span></div>`).join('');
+    const parCategorie = new Map<string, number>();
+    for (const l of lignes) if (!l.ecarte && l.categorie_id) parCategorie.set(l.categorie_id, (parCategorie.get(l.categorie_id) ?? 0) + 1);
+    zoneCategories.innerHTML = reglages.categories.map((c) => `<button type="button" class="ct-vue" data-categorie="${esc(c.id)}"><span>${esc(c.nom)}</span><small>${parCategorie.get(c.id) ?? 0}</small></button>`).join('');
+    marquerVue();
+  }
+  function marquerVue() {
+    const sansFiltre = !Object.keys(filtre).length;
+    const seuleCategorie = Object.keys(filtre).length === 1 && filtre.categorie_id?.length === 1 ? filtre.categorie_id[0] : null;
+    for (const b of document.querySelectorAll<HTMLButtonElement>('[data-vue], [data-categorie]')) {
+      const actif = b.dataset.vue ? (b.dataset.vue === 'tous' ? sansFiltre && vueActive !== null : b.dataset.vue === vueActive) : b.dataset.categorie === seuleCategorie && vueActive === null;
+      b.classList.toggle('actif', actif);
+      b.setAttribute('aria-pressed', String(actif));
+    }
+  }
+
+  const changerFiltre = (f: Filtre) => { filtre = f; vueActive = null; afficher(); };
+
+  // Choix des sources et des villes : celles des contacts chargés, dans l'ordre alphabétique.
+  const remplir = (cle: string, valeursChoix: [string, string][]) => {
+    $<HTMLSelectElement>(`[data-filtre=${cle}]`).insertAdjacentHTML('beforeend', valeursChoix.map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join(''));
+  };
+  remplir('source', [...new Set(lignes.flatMap((l) => l.sources))].map((s): [string, string] => [s, libelleSource(s)]).sort((a, b) => comparer(a[1], b[1])));
+  const villes = new Map<string, string>();
+  for (const l of lignes) { const v = l.ville?.trim(); if (v && !villes.has(v.toLowerCase())) villes.set(v.toLowerCase(), v); }
+  remplir('ville', [...villes.values()].sort(comparer).map((v): [string, string] => [v, v]));
+
+  zoneFiltres.addEventListener('change', (e) => {
+    const s = e.target as HTMLSelectElement;
+    if (s.tagName !== 'SELECT' || !s.value) return;
+    const [cle, valeur] = s.dataset.filtre === 'etat' || s.dataset.filtre === 'autres' ? s.value.split(':') : [s.dataset.filtre!, s.value];
+    s.value = '';
+    let f = filtre;
+    if (cle === 'verifie' || cle === 'ecarte') f = retirer(retirer(f, 'verifie', null), 'ecarte', null); // un seul état à la fois
+    changerFiltre(ajouter(f, cle as CleFiltre, cle === 'dernier_contact' && valeur !== 'jamais' ? Number(valeur) : valeur));
+  });
+  let attenteEntreprise: ReturnType<typeof setTimeout> | undefined;
+  entreprise.addEventListener('input', () => {
+    clearTimeout(attenteEntreprise);
+    attenteEntreprise = setTimeout(() => {
+      const v = entreprise.value.trim().slice(0, 80);
+      changerFiltre(v ? ajouter(filtre, 'entreprise_contient', v) : retirer(filtre, 'entreprise_contient', null));
+    }, 120);
+  });
+  zonePastilles.addEventListener('click', (e) => {
+    const b = (e.target as Element).closest<HTMLElement>('[data-retirer], [data-retirer-tout]');
+    if (!b) return;
+    changerFiltre(b.dataset.retirer ? retirer(filtre, b.dataset.retirer as CleFiltre, b.dataset.valeur ?? null) : {});
+  });
+  zoneCategories.addEventListener('click', (e) => {
+    const b = (e.target as Element).closest<HTMLElement>('[data-categorie]');
+    if (b) changerFiltre({ categorie_id: [b.dataset.categorie!] });
+  });
+
+  // Vues : choisir, enregistrer, renommer, supprimer (et annuler la suppression tout de suite).
+  async function appeler(methode: string, corpsJson?: unknown, id?: string): Promise<{ vue?: Vue; erreur?: string }> {
+    try {
+      const r = await fetch(`/api/vues${id ? `?id=${encodeURIComponent(id)}` : ''}`, {
+        method: methode, headers: corpsJson ? { 'Content-Type': 'application/json' } : {}, body: corpsJson ? JSON.stringify(corpsJson) : undefined,
+      });
+      const d = await r.json().catch(() => ({}));
+      return r.ok ? d : { erreur: d.erreur ?? `Erreur ${r.status}` };
+    } catch { return { erreur: 'Pas de connexion : réessayez.' }; }
+  }
+  let finToast: ReturnType<typeof setTimeout> | undefined;
+  let annulation: (() => void) | null = null;
+  function montrer(texte: string, annuler: (() => void) | null = null) {
+    $<HTMLElement>('[data-toast-texte]').textContent = texte;
+    annulation = annuler;
+    toastAnnuler.hidden = !annuler;
+    toast.hidden = false;
+    clearTimeout(finToast);
+    finToast = setTimeout(() => { toast.hidden = true; annulation = null; }, annuler ? 10000 : 4000);
+  }
+  toastAnnuler.addEventListener('click', () => { const a = annulation; annulation = null; toast.hidden = true; a?.(); });
+  const ranger = () => { vues.sort((a, b) => a.ordre - b.ordre || comparer(a.id, b.id)); compterVues(); afficherVues(); };
+
+  let renommer: Vue | null = null;
+  function ouvrirDialogue(titre: string, aide: string, nom: string, vue: Vue | null) {
+    renommer = vue;
+    $<HTMLElement>('[data-dialogue-titre]').textContent = titre;
+    $<HTMLElement>('[data-dialogue-aide]').textContent = aide;
+    formVue.nom.value = nom;
+    erreurVue.hidden = true;
+    dialogue.showModal();
+    formVue.nom.select();
+  }
+  $<HTMLButtonElement>('[data-nouvelle-vue]').addEventListener('click', () => {
+    const { recherche: _r, ...f } = filtre;
+    if (!Object.keys(f).length) { montrer('Choisissez d\'abord des filtres au-dessus du tableau, puis enregistrez-les comme vue.'); return; }
+    ouvrirDialogue('Nouvelle vue', `Filtres : ${pastilles(f, nomsCategories).map((p) => p.libelle).join(' · ')}. La recherche n'est pas enregistrée.`, '', null);
+  });
+  $<HTMLButtonElement>('[data-dialogue-annuler]').addEventListener('click', () => dialogue.close());
+  formVue.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nom = String(formVue.nom.value).trim();
+    if (!nom) return;
+    const { recherche: _r, ...f } = filtre;
+    const r = renommer ? await appeler('PATCH', { id: renommer.id, nom }) : await appeler('POST', { nom, filtre: f });
+    if (!r.vue) { erreurVue.textContent = r.erreur ?? 'Erreur'; erreurVue.hidden = false; return; }
+    dialogue.close();
+    if (renommer) {
+      const v = vues.find((x) => x.id === r.vue!.id);
+      if (v) v.nom = r.vue.nom;
+      afficherVues();
+      montrer(`Vue renommée « ${r.vue.nom} »`);
+    } else {
+      vues.push(r.vue);
+      vueActive = r.vue.id;
+      ranger();
+      montrer(`Vue « ${r.vue.nom} » enregistrée`);
+    }
+  });
+  zoneVues.addEventListener('click', async (e) => {
+    const cible = e.target as Element;
+    const ren = cible.closest<HTMLElement>('[data-renommer-vue]'), sup = cible.closest<HTMLElement>('[data-supprimer-vue]');
+    if (ren) {
+      const v = vues.find((x) => x.id === ren.dataset.renommerVue);
+      if (v) ouvrirDialogue('Renommer la vue', 'Les filtres de la vue ne changent pas.', v.nom, v);
+      return;
+    }
+    if (sup) {
+      const r = await appeler('DELETE', undefined, sup.dataset.supprimerVue);
+      if (!r.vue) { montrer(r.erreur ?? 'Erreur'); return; }
+      const supprimee = r.vue;
+      vues = vues.filter((x) => x.id !== supprimee.id);
+      if (vueActive === supprimee.id) vueActive = null;
+      ranger();
+      afficher();
+      montrer(`Vue « ${supprimee.nom} » supprimée`, async () => {
+        const x = await appeler('POST', { id: supprimee.id, nom: supprimee.nom, ordre: supprimee.ordre, filtre: supprimee.filtre });
+        if (!x.vue) { montrer(x.erreur ?? 'Erreur'); return; }
+        vues.push(x.vue);
+        ranger();
+        montrer(`Vue « ${x.vue.nom} » remise`);
+      });
+      return;
+    }
+    const b = cible.closest<HTMLElement>('[data-vue]');
+    if (!b) return;
+    const v = vues.find((x) => x.id === b.dataset.vue);
+    const { recherche: q, ...f } = v?.filtre ?? {};
+    filtre = f;
+    if (q) recherche.value = q;
+    vueActive = v ? v.id : 'tous';
+    afficher();
+  });
 
   entetes.addEventListener('click', (e) => {
     const cle = (e.target as Element).closest<HTMLElement>('[data-trier]')?.dataset.trier as CleColonne | undefined;
@@ -157,10 +407,14 @@ const donnees = JSON.stringify(lignes).replace(/</g, '\\u003c');
     boite.addEventListener('change', () => {
       if (boite.checked) cachees.delete(boite.value as CleColonne); else cachees.add(boite.value as CleColonne);
       try { localStorage.setItem(MEMOIRE, JSON.stringify([...cachees])); } catch {}
+      colonnes = COLONNES.filter((c) => !cachees.has(c.cle));
+      html = [];
       afficher();
     });
   }
   document.addEventListener('click', (e) => { if (!menuColonnes.contains(e.target as Node)) menuColonnes.open = false; });
+  compterVues();
+  afficherVues();
   afficher();
 </script>
 
@@ -221,4 +475,39 @@ const donnees = JSON.stringify(lignes).replace(/</g, '\\u003c');
   .ct-etat.av { background: #FBF0D9; color: #8A5A00; }
   .ct-etat.ok { color: #2E6B3F; }
   .ct-attente { padding: 24px !important; color: var(--avt-text-muted); white-space: normal !important; }
+  /* Story 18.5 : filtres, pastilles des filtres actifs, vues enregistrées, fenêtre du nom d'une vue, message d'annulation. */
+  .ct-filtres { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .ct-filtres select, .ct-filtres input { min-height: 36px; padding: 6px 12px; border: 1px solid var(--avt-galet); border-radius: 999px; background: #fff; font: inherit; font-size: 13.5px; color: var(--avt-brun); max-width: 190px; }
+  .ct-filtres input { flex: 0 1 180px; min-width: 0; }
+  .ct-filtres select:focus-visible, .ct-filtres input:focus-visible, .ct-chip:focus-visible, .ct-vue:focus-visible, .ct-vue-x:focus-visible, .ct-btn:focus-visible { outline: 2px solid var(--avt-klein); outline-offset: 2px; }
+  .ct-pastilles { display: contents; }
+  .ct-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; border: 1px solid var(--avt-galet); background: #fff; border-radius: 999px; padding: 3px 10px; font: inherit; font-size: 13px; color: var(--avt-brun); cursor: pointer; }
+  .ct-chip:hover { border-color: var(--avt-text-muted); }
+  .ct-chip span { color: var(--avt-text-muted); font-size: 11px; }
+  .ct-chip-tout { border-style: dashed; color: var(--avt-text-muted); }
+  .ct-vue { cursor: pointer; align-items: center; gap: 8px; }
+  .ct-vue span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ct-vue:hover { background: var(--avt-galet); }
+  .ct-vue.actif:hover { background: var(--avt-brume); }
+  .ct-vue-l { position: relative; }
+  .ct-vue-gestes { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); display: flex; gap: 2px; opacity: 0; }
+  .ct-vue-l:hover .ct-vue-gestes, .ct-vue-gestes:focus-within { opacity: 1; }
+  .ct-vue-l:hover .ct-vue small, .ct-vue-l:focus-within .ct-vue small { visibility: hidden; }
+  .ct-vue-x { border: 0; background: #fff; color: var(--avt-text-muted); font: inherit; font-size: 15px; line-height: 1; width: 26px; height: 26px; border-radius: 6px; cursor: pointer; }
+  .ct-vue-x:hover { background: var(--avt-galet); color: var(--avt-brun); }
+  .ct-btn { min-height: 36px; border: 1px solid var(--avt-galet); background: #fff; border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 13.5px; color: var(--avt-brun); cursor: pointer; }
+  .ct-btn:hover { border-color: var(--avt-text-muted); }
+  .ct-btn.bleu { background: var(--avt-klein); border-color: var(--avt-klein); color: #fff; }
+  .ct-nouvelle { width: 100%; margin-top: 8px; }
+  .ct-dialogue { border: 0; border-radius: 14px; padding: 22px; max-width: 460px; width: calc(100% - 32px); box-shadow: 0 16px 48px rgba(0, 0, 0, .2); }
+  .ct-dialogue::backdrop { background: rgba(20, 16, 12, .45); }
+  .ct-dialogue form { display: flex; flex-direction: column; gap: 12px; }
+  .ct-dialogue h2 { margin: 0; font-size: 22px; }
+  .ct-champ { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--avt-text-muted); }
+  .ct-champ input { font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--avt-galet); border-radius: 8px; color: var(--avt-brun); }
+  .ct-erreur { margin: 0; color: var(--avt-terra-deep); font-size: 14px; }
+  .ct-boutons { display: flex; gap: 8px; justify-content: flex-end; }
+  .ct-toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 20px; z-index: 50; background: var(--avt-brun); color: #fff; padding: 10px 18px; border-radius: 999px; display: flex; gap: 14px; align-items: center; font-size: 14px; max-width: calc(100% - 32px); }
+  .ct-toast[hidden] { display: none; }
+  .ct-toast button { background: none; border: 0; color: #f3c3ad; font: inherit; font-weight: 600; cursor: pointer; min-height: 32px; }
 </style>

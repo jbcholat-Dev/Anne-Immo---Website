@@ -1,7 +1,8 @@
 // Page Contacts (story 18.4, FR-1, FR-3, AD-27) : ce que le serveur et l'îlot du navigateur partagent, sans accès à la
 // base. Une ligne du tableau, les colonnes (libellé, tri), les libellés des valeurs fermées (AD-24, AD-25) et la recherche.
 // Le serveur (`tableau.ts`) charge une fois tous les contacts non effacés ; le navigateur trie, cherche et filtre seul.
-// Les filtres et vues de la story 18.5 se brancheront sur `correspond` (même vocabulaire que `vues`, AD-27).
+// Les filtres et vues enregistrées (story 18.5) sont dans `vues.ts` (vocabulaire fermé d'AD-27) et s'appuient sur l'index
+// calculé ici une seule fois par ligne, au chargement (`indexer`).
 import { lireRecherche } from '@site/server/recherche';
 
 export type Accord = 'accord' | 'client' | 'sans_accord' | 'desinscrit' | 'sans_email';
@@ -31,6 +32,10 @@ export interface LigneTableau {
   ecarte: boolean;
   /** Dans le suivi des ventes (étape renseignée), ou au carnet seulement. */
   suivi: boolean;
+  /** Date « à rappeler le » (AAAA-MM-JJ, FR-16), ou null. */
+  a_rappeler_le: string | null;
+  /** Inscrit au programme ambassadeurs (marque à part du projet, glossaire du PRD). */
+  ambassadeur_inscrit: boolean;
 }
 
 export type CleColonne = 'nom' | 'entreprise' | 'categorie' | 'projet' | 'temperature' | 'sources' | 'ville' | 'telephone' | 'email' | 'profil' | 'dernier' | 'accord' | 'verifie';
@@ -74,25 +79,44 @@ export const libelleSource = (s: string) => SOURCES[s] ?? s;
 /** Sans accents ni majuscules : « Hélène » se trouve en tapant « helene » (revue de code 18.4). */
 export const sansAccents = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
-/** Le texte où chercher les mots d'une recherche (story 13.24 : prénom, nom, ville, e-mails ; FR-3 : entreprise), sans accents. */
-export const texteRecherche = (l: LigneTableau) =>
-  sansAccents([l.prenom, l.nom, l.ville, l.entreprise, ...l.emails].filter(Boolean).join(' '));
+/**
+ * Ce que la recherche et les filtres lisent d'une ligne, calculé une seule fois au chargement (revue de code 18.4 : une
+ * recherche par numéro mesurée à 722 ms avec 1 228 contacts) : le texte où chercher les mots (story 13.24 : prénom, nom,
+ * ville, e-mails ; FR-3 : entreprise), sans accents ; les numéros réduits aux chiffres, au format international et au
+ * format français (« 33612345678 0612345678 ») ; la ville et l'entreprise sans accents et la date du dernier contact
+ * (millisecondes), pour les filtres.
+ */
+export interface IndexLigne { texte: string; chiffres: string; ville: string; entreprise: string; dernier: number | null }
+
+export function indexer(l: LigneTableau): IndexLigne {
+  const chiffres = l.telephones.map((t) => {
+    const d = t.replace(/\D/g, '');
+    return t.startsWith('+33') ? `${d} 0${d.slice(2)}` : d;
+  }).join(' ');
+  return {
+    texte: sansAccents([l.prenom, l.nom, l.ville, l.entreprise, ...l.emails].filter(Boolean).join(' ')),
+    chiffres, ville: sansAccents(l.ville ?? '').trim(), entreprise: sansAccents(l.entreprise ?? ''),
+    dernier: l.dernier_le ? Date.parse(l.dernier_le) : null,
+  };
+}
 
 /**
- * La recherche de la story 13.24, dans le navigateur : un morceau de numéro tapé en 0 est cherché au format +33 dans
- * tous les numéros du contact, et aussi tel quel dans le texte (une entreprise ou une adresse avec des chiffres, revue de
- * code 18.4) ; sinon chaque mot doit se trouver dans le texte du contact. Accents ignorés des deux côtés. `texte` est
- * `texteRecherche` calculé une fois par ligne.
+ * La recherche de la story 13.24, dans le navigateur : un morceau de numéro (« 06 12 », « 34 56 », « +33 6 12 ») est
+ * réduit aux chiffres et cherché dans tous les numéros du contact, et aussi tel quel dans le texte (une entreprise ou une
+ * adresse avec des chiffres, revue de code 18.4) ; sinon chaque mot doit se trouver dans le texte du contact. Accents
+ * ignorés des deux côtés. Ne lit que l'index déjà calculé (`indexer`) : aucune normalisation par ligne à chaque frappe.
  */
-export function preparerRecherche(q: string): (l: LigneTableau, texte: string) => boolean {
+export function preparerRecherche(q: string): (x: IndexLigne) => boolean {
   const { telephone, mots } = lireRecherche(sansAccents(q));
   if (telephone) {
-    // « 06 12 » devient « +33612 » ; un morceau du milieu (« 34 56 ») reste « 3456 », cherché tel quel.
     const brut = sansAccents(q.trim());
-    return (l, texte) => l.telephones.some((t) => t.includes(telephone)) || texte.includes(brut);
+    // « +33 6 12 » et « 0033 6 12 » se cherchent au format international, « 06 12 » au format français, « 3456 » dans les deux.
+    const d = brut.replace(/\D/g, '');
+    const cherche = d.startsWith('00') ? d.slice(2) : d;
+    return (x) => x.chiffres.includes(cherche) || x.texte.includes(brut);
   }
   if (!mots.length) return () => true;
-  return (_l, texte) => mots.every((m) => texte.includes(m));
+  return (x) => mots.every((m) => x.texte.includes(m));
 }
 
 /** Ordre de tri des valeurs fermées (dans l'ordre des listes ci-dessus). */
