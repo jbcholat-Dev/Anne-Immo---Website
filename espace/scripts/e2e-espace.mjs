@@ -56,6 +56,9 @@
 // faire revenir, 400 hors vocabulaire, 403 sans jeton ou avec celui de Claude) ; la page (Maj + clic, cases gardées au tri et
 // au filtre, barre d'actions et annulation sans recharger, une seule ligne dans sa cellule, écarté puis revenu, tout cocher) ;
 // un lot de 1 000 contacts.
+// Revue de code 18.5 : vue invalide (catégorie disparue) vide et signalée, valeur disparue retirée d'une liste, jours de
+// Paris, « à rappeler » daté, boutons ✎ et × sans clic hors survol, double clic sur × et sur « Enregistrer », une
+// annulation par vue supprimée, /api/vues (ambassadeur « non », filtre vide, 413, plafond de 100 vues, ordre rétabli).
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
 // Lancer depuis espace/ : `node scripts/e2e-espace.mjs`.
@@ -1594,6 +1597,7 @@ try {
     constat(tous.length === nonEcartes + 3 && memes(await ids(), [F1]) && (await pastillesVues()).length === 2,
       '18.5 : « Tous les contacts » retire les filtres ; un clic sur la vue les retrouve');
     // Renommer.
+    await o.hover(`[data-vue="${enBase.id}"]`); // revue 18.5 : ✎ et × ne reçoivent un clic qu'au survol
     await o.click(`[data-renommer-vue="${enBase.id}"]`);
     await o.fill('[data-form-vue] input[name=nom]', `Essai vue renommée ${NUM}`);
     await o.click('[data-form-vue] button[type=submit]');
@@ -1601,6 +1605,7 @@ try {
     const renommee = sql(`SELECT nom, filtre FROM vue WHERE id = '${enBase.id}'`)[0];
     constat(renommee?.nom === `Essai vue renommée ${NUM}` && renommee.filtre === enBase.filtre, '18.5 : une vue se renomme (filtres inchangés)');
     // Supprimer, puis annuler tout de suite.
+    await o.hover(`[data-vue="${enBase.id}"]`); // revue 18.5 : ✎ et × ne reçoivent un clic qu'au survol
     await o.click(`[data-supprimer-vue="${enBase.id}"]`);
     await o.waitForSelector('[data-toast-annuler]:visible');
     const supprimee = sql(`SELECT count(*) AS n FROM vue WHERE id = '${enBase.id}'`)[0].n === 0 && await o.locator(`[data-vue="${enBase.id}"]`).count() === 0;
@@ -1650,6 +1655,103 @@ try {
   constat(accesVues.every(([, x]) => x.status === 403) && nVues() === n0 + 1, `18.5 : /api/vues réservé à Anne et JB (${accesVues.map(([n, x]) => `${n} ${x.status}`).join(', ')})`);
   r = await vues('DELETE', undefined, { id: creeeApi.id });
   constat(r.status === 200 && nVues() === n0, '18.5 : la vue créée par l\'essai est supprimée');
+  // Revue de code 18.5 : vue invalide, boutons au survol, double clic, jours de Paris, « à rappeler » daté, refus de la route.
+  {
+    const VINV = '01KFR5A0000000000000000001', VMIX = '01KFR5B0000000000000000001';
+    sql(`DELETE FROM vue WHERE id IN ('${VINV}', '${VMIX}')`);
+    sql(`INSERT INTO vue (id, nom, ordre, filtre, created_at, maj_le) VALUES
+         ('${VINV}', 'Essai vue disparue', 900, '{"categorie_id":["disparue_x"],"ville":["${VILLE5}"]}', '2026-11-02T00:00:00Z', '2026-11-02T00:00:00Z'),
+         ('${VMIX}', 'Essai vue en partie', 901, '{"categorie_id":["disparue_y","edb"],"ville":["${VILLE5}"]}', '2026-11-02T00:00:00Z', '2026-11-02T00:00:00Z')`);
+    // Un dernier contact au tout début du jour de Paris d'il y a 90 jours : pas « plus de 3 mois » en jours de Paris.
+    const j90 = jourParis(-90);
+    const decalage = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', hour: '2-digit', hourCycle: 'h23' }).format(new Date(`${j90}T00:00:00Z`)));
+    const tot = new Date(Date.parse(`${j90}T00:30:00Z`) - decalage * 3_600_000).toISOString();
+    const FJ = `01KF5E${NUM}${'0'.repeat(14)}`;
+    sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, commune, dernier_contact_le, dernier_contact_canal, a_rappeler_le) VALUES
+         ('${FJ}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Fabien', 'Filtrejour${NUM}', '${VILLE5}', '${tot}', 'appel', '${jourParis(0)}T23:00:00Z')`);
+    const ctx = await nav.newContext({ viewport: { width: 1440, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
+    const o = await ctx.newPage();
+    await o.goto(`${E}/`);
+    const attendre = () => o.waitForSelector('[data-lignes][data-complet]', { state: 'attached' });
+    await attendre();
+    const ids = () => o.locator('[data-lignes] tr[data-contact]').evaluateAll((t) => t.map((x) => x.dataset.contact));
+    const reg = await o.evaluate(() => JSON.parse(document.getElementById('ct-reglages').textContent));
+    const vinv = reg.vues.find((v) => v.id === VINV), vmix = reg.vues.find((v) => v.id === VMIX);
+    await o.click(`[data-vue="${VINV}"]`); await attendre();
+    const message = await o.textContent('[data-lignes]');
+    constat(vinv?.invalide === 'une catégorie a disparu' && (await ids()).length === 0 && message.includes('Vue à refaire : une catégorie a disparu')
+      && (await o.textContent(`[data-vue="${VINV}"] small`)) === 'à refaire' && vmix && !vmix.invalide && vmix.filtre.categorie_id.join() === 'edb',
+      'revue 18.5 : une vue dont toutes les catégories ont disparu ne garde aucun contact et l\'écran dit « vue à refaire » ; une vue qui en garde une ne perd que la valeur disparue');
+    await o.click('[data-vue=tous]'); await attendre();
+    // Jours de Paris et « à rappeler » avec une heure.
+    await o.selectOption('[data-filtre=ville]', VILLE5); await attendre();
+    await o.selectOption('[data-filtre=dernier_contact]', '90'); await attendre();
+    const vieux = await ids();
+    await o.click('[data-retirer=dernier_contact]'); await attendre();
+    await o.selectOption('[data-filtre=autres]', 'a_rappeler:oui'); await attendre();
+    const rappel = await ids();
+    await o.click('[data-retirer-tout]'); await attendre();
+    constat(!vieux.includes(FJ) && vieux.includes(F1) && rappel.includes(FJ),
+      `revue 18.5 : « plus de 3 mois » compte en jours de Paris (dernier contact le ${tot}, il y a 90 jours de Paris : exclu) ; « à rappeler » lit le jour d'une date avec heure`);
+    // Boutons ✎ et × : invisibles et sans clic hors survol.
+    const style = await o.locator(`.ct-vue-l:has([data-vue="${VMIX}"]) .ct-vue-gestes`).evaluate((x) => getComputedStyle(x).pointerEvents);
+    await o.hover(`[data-vue="${VMIX}"]`);
+    const survol = await o.locator(`.ct-vue-l:has([data-vue="${VMIX}"]) .ct-vue-gestes`).evaluate((x) => getComputedStyle(x).pointerEvents);
+    constat(style === 'none' && survol === 'auto', `revue 18.5 : les boutons ✎ et × ne reçoivent un clic qu'au survol ou au clavier (${style}, puis ${survol})`);
+    // Double clic sur × : une seule suppression ; puis deux vues supprimées, deux annulations.
+    await o.hover(`[data-vue="${VMIX}"]`);
+    await o.dblclick(`[data-supprimer-vue="${VMIX}"]`);
+    await o.waitForSelector('[data-toast-annuler]:visible');
+    const apresDouble = await o.textContent('[data-toast-texte]');
+    await o.hover(`[data-vue="${VINV}"]`);
+    await o.click(`[data-supprimer-vue="${VINV}"]`);
+    await o.waitForFunction(() => document.querySelector('[data-toast-texte]')?.textContent?.includes('disparue'));
+    const deux = sql(`SELECT count(*) AS n FROM vue WHERE id IN ('${VINV}', '${VMIX}')`)[0].n;
+    await o.click('[data-toast-annuler]');
+    await o.waitForFunction(() => document.querySelector('[data-toast-texte]')?.textContent?.includes('en partie'));
+    const premiere = await o.textContent('[data-toast-texte]');
+    await o.click('[data-toast-annuler]');
+    await o.waitForFunction(() => document.querySelector('[data-toast-texte]')?.textContent?.includes('remise'));
+    await o.waitForTimeout(200);
+    const remises = sql(`SELECT id FROM vue WHERE id IN ('${VINV}', '${VMIX}')`).map((x) => x.id);
+    constat(apresDouble.includes('supprimée') && !apresDouble.includes('Erreur') && deux === 0 && premiere.includes('Vue « Essai vue en partie » supprimée') && remises.includes(VMIX),
+      `revue 18.5 : un double clic sur × ne supprime qu'une fois et garde l'annulation ; deux vues supprimées ont chacune leur « Annuler » (${premiere})`);
+    // La vue invalide ne se remet pas (son filtre n'est plus valable) : c'est attendu, la page le dit.
+    // Double clic sur « Enregistrer » : une seule vue.
+    await o.selectOption('[data-filtre=ville]', VILLE5); await attendre();
+    await o.click('[data-nouvelle-vue]');
+    await o.fill('[data-form-vue] input[name=nom]', `Essai vue double ${NUM}`);
+    await o.dblclick('[data-form-vue] button[type=submit]');
+    await o.waitForTimeout(800);
+    constat(sql(`SELECT count(*) AS n FROM vue WHERE nom = 'Essai vue double ${NUM}'`)[0].n === 1, 'revue 18.5 : un double clic sur « Enregistrer » ne crée qu\'une vue');
+    await ctx.close();
+    sql(`DELETE FROM vue WHERE nom LIKE 'Essai vue%' OR id IN ('${VINV}', '${VMIX}')`);
+    sql(`DELETE FROM contact WHERE id = '${FJ}'`);
+  }
+  {
+    const n1 = nVues();
+    const gros = JSON.stringify({ nom: 'Essai vue grosse', filtre: { recherche: 'x' }, rembourrage: 'x'.repeat(9000) });
+    const refus = [
+      ['ambassadeur « non »', await vues('POST', { nom: 'Essai vue refusée', filtre: { ambassadeur: 'non' } })],
+      ['filtre vide', await vues('POST', { nom: 'Essai vue refusée', filtre: {} })],
+    ];
+    // Ordre déjà pris à l'annulation : la vue revient en dernière position.
+    const prise = sql('SELECT ordre FROM vue ORDER BY ordre LIMIT 1')[0]?.ordre ?? 1;
+    const max = sql('SELECT coalesce(max(ordre), 0) AS m FROM vue')[0].m;
+    const rr = await vues('POST', { id: '01KFR5C0000000000000000001', nom: 'Essai vue rétablie', ordre: prise, filtre: { verifie: 'non' } });
+    const retablie = (await rr.json()).vue;
+    // Plafond de 100 vues.
+    const manque = Math.max(0, 100 - nVues());
+    if (manque) sql(`WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < ${manque}) INSERT INTO vue (id, nom, ordre, filtre, created_at, maj_le) SELECT '01KFR5D' || printf('%019d', i), 'Essai vue plafond ' || i, 1000 + i, '{"verifie":"non"}', '2026-11-02T00:00:00Z', '2026-11-02T00:00:00Z' FROM n`);
+    const r101 = await vues('POST', { nom: 'Essai vue de trop', filtre: { verifie: 'oui' } });
+    // En dernier : le serveur local de wrangler perd la requête qui suit un corps refusé sans être lu (pas Cloudflare) ;
+    // une requête jetable vient donc après.
+    const r413 = await vues('POST', gros);
+    await appeler(`${E}/`, { headers: avecJeton() }).catch(() => {});
+    sql(`DELETE FROM vue WHERE nom LIKE 'Essai vue%'`);
+    constat(refus.every(([, x]) => x.status === 400) && r413.status === 413 && retablie?.ordre === max + 1 && r101.status === 400 && nVues() === n1,
+      `revue 18.5 : /api/vues refuse « ambassadeur : non » et un filtre vide (400), un corps annoncé trop grand (${r413.status}), une 101e vue (${r101.status}) ; une vue rétablie sur un ordre pris va en dernier (${retablie?.ordre} = ${max} + 1)`);
+  }
   // Les routes /api/claude/… ne lisent ni les contacts ni les vues : aucune n'importe le tableau ni les vues, et leurs
   // réponses ne contiennent aucun nom de vue.
   const routesClaude = fs.readdirSync(path.join(ICI, 'src', 'pages', 'api', 'claude')).map((f) => fs.readFileSync(path.join(ICI, 'src', 'pages', 'api', 'claude', f), 'utf8'));

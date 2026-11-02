@@ -229,7 +229,8 @@ const reglages = enJson({ vues, categories });
       const actif = tri.cle === c.cle;
       return `<th data-cle="${c.cle}" aria-sort="${actif ? (tri.sens === 1 ? 'ascending' : 'descending') : 'none'}"><button type="button" data-trier="${c.cle}">${esc(c.libelle)}<span class="ct-fleche" aria-hidden="true">${actif ? (tri.sens === 1 ? '▲' : '▼') : ''}</span></button></th>`;
     }).join('');
-    const garde = garder(filtre, recherche.value);
+    // Revue de code 18.5 : une vue invalide (une catégorie a disparu…) ne garde aucun contact, et le dit.
+    const garde = vueInvalide ? [] : garder(filtre, recherche.value);
     const v = valeursDe(tri.cle);
     garde.sort((a, b) => {
       const x = v[a], y = v[b];
@@ -242,7 +243,7 @@ const reglages = enJson({ vues, categories });
     corps.removeAttribute('data-complet');
     corps.innerHTML = garde.length
       ? garde.slice(0, PREMIER).map(ligneHtml).join('')
-      : `<tr><td class="ct-attente" colspan="${colonnes.length + 1}">${lignes.length ? 'Aucun contact pour ces filtres ou cette recherche.' : 'Aucun contact pour l\'instant.'}</td></tr>`;
+      : `<tr><td class="ct-attente${vueInvalide ? ' ct-a-refaire' : ''}" colspan="${colonnes.length + 1}">${vueInvalide ? `Vue à refaire : ${esc(vueInvalide)}. Elle ne montre aucun contact tant que ses filtres ne sont pas choisis à nouveau.` : lignes.length ? 'Aucun contact pour ces filtres ou cette recherche.' : 'Aucun contact pour l\'instant.'}</td></tr>`;
     let n = PREMIER;
     const suite = () => {
       if (g !== generation) return;
@@ -268,10 +269,10 @@ const reglages = enJson({ vues, categories });
 
   // Colonne de gauche : « Tous les contacts », les vues (compteur sans la recherche), puis les catégories.
   let comptes = new Map<string, number>();
-  const compterVues = () => { comptes = new Map(vues.map((v) => [v.id, garder(v.filtre, v.filtre.recherche ?? '').length])); };
+  const compterVues = () => { comptes = new Map(vues.map((v) => [v.id, v.invalide ? 0 : garder(v.filtre, v.filtre.recherche ?? '').length])); };
   function afficherVues() {
     zoneVues.innerHTML = `<div class="ct-vue-l"><button type="button" class="ct-vue" data-vue="tous"><span>Tous les contacts</span><small>${total}</small></button></div>`
-      + vues.map((v) => `<div class="ct-vue-l"><button type="button" class="ct-vue" data-vue="${esc(v.id)}"><span>${esc(v.nom)}</span><small>${comptes.get(v.id) ?? 0}</small></button>`
+      + vues.map((v) => `<div class="ct-vue-l"><button type="button" class="ct-vue${v.invalide ? ' ct-vue-invalide' : ''}" data-vue="${esc(v.id)}"${v.invalide ? ` title="Vue à refaire : ${esc(v.invalide)}"` : ''}><span>${v.invalide ? '<b aria-hidden="true">⚠</b> ' : ''}${esc(v.nom)}</span><small>${v.invalide ? 'à refaire' : comptes.get(v.id) ?? 0}</small></button>`
         + `<span class="ct-vue-gestes"><button type="button" class="ct-vue-x" data-renommer-vue="${esc(v.id)}" title="Renommer la vue" aria-label="Renommer la vue ${esc(v.nom)}">✎</button>`
         + `<button type="button" class="ct-vue-x" data-supprimer-vue="${esc(v.id)}" title="Supprimer la vue" aria-label="Supprimer la vue ${esc(v.nom)}">×</button></span></div>`).join('');
     const parCategorie = new Map<string, number>();
@@ -289,7 +290,9 @@ const reglages = enJson({ vues, categories });
     }
   }
 
-  const changerFiltre = (f: Filtre) => { filtre = f; vueActive = null; afficher(); };
+  /** Le motif de la vue invalide choisie (revue de code 18.5), ou null. */
+  let vueInvalide: string | null = null;
+  const changerFiltre = (f: Filtre) => { filtre = f; vueActive = null; vueInvalide = null; afficher(); };
 
   // Choix des sources et des villes : celles des contacts chargés, dans l'ordre alphabétique.
   const remplir = (cle: string, valeursChoix: [string, string][]) => {
@@ -328,27 +331,40 @@ const reglages = enJson({ vues, categories });
   });
 
   // Vues : choisir, enregistrer, renommer, supprimer (et annuler la suppression tout de suite).
-  async function appeler(methode: string, corpsJson?: unknown, id?: string): Promise<{ vue?: Vue; erreur?: string }> {
+  async function appeler(methode: string, corpsJson?: unknown, id?: string): Promise<{ vue?: Vue; erreur?: string; status?: number }> {
     try {
       const r = await fetch(`/api/vues${id ? `?id=${encodeURIComponent(id)}` : ''}`, {
         method: methode, headers: corpsJson ? { 'Content-Type': 'application/json' } : {}, body: corpsJson ? JSON.stringify(corpsJson) : undefined,
       });
       const d = await r.json().catch(() => ({}));
-      return r.ok ? d : { erreur: d.erreur ?? `Erreur ${r.status}` };
+      return r.ok ? d : { erreur: d.erreur ?? `Erreur ${r.status}`, status: r.status };
     } catch { return { erreur: 'Pas de connexion : réessayez.' }; }
   }
   let finToast: ReturnType<typeof setTimeout> | undefined;
   let annulation: (() => void) | null = null;
   function montrer(texte: string, annuler: (() => void) | null = null) {
+    if (annuler !== annulerVue) supprimees.length = 0; // un autre message : les annulations de vues en attente expirent
     $<HTMLElement>('[data-toast-texte]').textContent = texte;
     annulation = annuler;
     toastAnnuler.hidden = !annuler;
     toast.hidden = false;
     clearTimeout(finToast);
-    finToast = setTimeout(() => { toast.hidden = true; annulation = null; }, annuler ? 10000 : 4000);
+    finToast = setTimeout(() => { toast.hidden = true; annulation = null; supprimees.length = 0; }, annuler ? 10000 : 4000);
+  }
+  // Revue de code 18.5 : une annulation par vue supprimée. « Annuler » remet la dernière supprimée, puis propose la précédente.
+  const supprimees: Vue[] = [];
+  async function annulerVue() {
+    const v = supprimees.pop();
+    if (!v) return;
+    const x = await appeler('POST', { id: v.id, nom: v.nom, ordre: v.ordre, filtre: v.filtre });
+    if (x.vue) { vues.push(x.vue); ranger(); }
+    const suivante = supprimees[supprimees.length - 1];
+    const fait = x.vue ? `Vue « ${x.vue.nom} » remise` : x.erreur ?? 'Erreur';
+    if (suivante) montrer(`${fait}. Vue « ${suivante.nom} » supprimée`, annulerVue); else montrer(fait);
   }
   toastAnnuler.addEventListener('click', () => { const a = annulation; annulation = null; toast.hidden = true; a?.(); });
-  const ranger = () => { vues.sort((a, b) => a.ordre - b.ordre || comparer(a.id, b.id)); compterVues(); afficherVues(); };
+  // Ordres égaux départagés par l'identifiant, en ordre binaire comme la base (revue de code 18.5).
+  const ranger = () => { vues.sort((a, b) => a.ordre - b.ordre || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)); compterVues(); afficherVues(); };
 
   let renommer: Vue | null = null;
   function ouvrirDialogue(titre: string, aide: string, nom: string, vue: Vue | null) {
@@ -371,7 +387,12 @@ const reglages = enJson({ vues, categories });
     const nom = String(formVue.nom.value).trim();
     if (!nom) return;
     const { recherche: _r, ...f } = filtre;
+    // Revue de code 18.5 : « Enregistrer » désactivé pendant l'appel (un double clic ne crée pas deux vues).
+    const bouton = formVue.querySelector<HTMLButtonElement>('button[type=submit]')!;
+    if (bouton.disabled) return;
+    bouton.disabled = true;
     const r = renommer ? await appeler('PATCH', { id: renommer.id, nom }) : await appeler('POST', { nom, filtre: f });
+    bouton.disabled = false;
     if (!r.vue) { erreurVue.textContent = r.erreur ?? 'Erreur'; erreurVue.hidden = false; return; }
     dialogue.close();
     if (renommer) {
@@ -395,29 +416,31 @@ const reglages = enJson({ vues, categories });
       return;
     }
     if (sup) {
-      const r = await appeler('DELETE', undefined, sup.dataset.supprimerVue);
-      if (!r.vue) { montrer(r.erreur ?? 'Erreur'); return; }
-      const supprimee = r.vue;
-      vues = vues.filter((x) => x.id !== supprimee.id);
-      if (vueActive === supprimee.id) vueActive = null;
+      // Revue de code 18.5 : bouton désactivé pendant l'appel ; une vue déjà retirée (404) part sans message d'erreur.
+      if ((sup as HTMLButtonElement).disabled) return;
+      (sup as HTMLButtonElement).disabled = true;
+      const id = sup.dataset.supprimerVue!;
+      const r = await appeler('DELETE', undefined, id);
+      (sup as HTMLButtonElement).disabled = false;
+      if (!r.vue && r.status !== 404) { montrer(r.erreur ?? 'Erreur'); return; }
+      vues = vues.filter((x) => x.id !== id);
+      if (vueActive === id) { vueActive = null; vueInvalide = null; }
       ranger();
       afficher();
-      montrer(`Vue « ${supprimee.nom} » supprimée`, async () => {
-        const x = await appeler('POST', { id: supprimee.id, nom: supprimee.nom, ordre: supprimee.ordre, filtre: supprimee.filtre });
-        if (!x.vue) { montrer(x.erreur ?? 'Erreur'); return; }
-        vues.push(x.vue);
-        ranger();
-        montrer(`Vue « ${x.vue.nom} » remise`);
-      });
+      if (!r.vue) return;
+      supprimees.push(r.vue);
+      montrer(`Vue « ${r.vue.nom} » supprimée`, annulerVue);
       return;
     }
     const b = cible.closest<HTMLElement>('[data-vue]');
     if (!b) return;
     const v = vues.find((x) => x.id === b.dataset.vue);
     const { recherche: q, ...f } = v?.filtre ?? {};
+    clearTimeout(attenteEntreprise); // revue de code 18.5 : une frappe en attente dans « Entreprise contient » ne vient pas changer la vue
     filtre = f;
     if (q) recherche.value = q;
     vueActive = v ? v.id : 'tous';
+    vueInvalide = v?.invalide ?? null;
     afficher();
   });
 
@@ -668,9 +691,16 @@ const reglages = enJson({ vues, categories });
   .ct-vue:hover { background: var(--avt-galet); }
   .ct-vue.actif:hover { background: var(--avt-brume); }
   .ct-vue-l { position: relative; }
-  .ct-vue-gestes { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); display: flex; gap: 2px; opacity: 0; }
-  .ct-vue-l:hover .ct-vue-gestes, .ct-vue-gestes:focus-within { opacity: 1; }
-  .ct-vue-l:hover .ct-vue small, .ct-vue-l:focus-within .ct-vue small { visibility: hidden; }
+  /* Revue de code 18.5 : invisibles, les boutons ✎ et × ne reçoivent pas de clic (ils restent atteignables au clavier) ;
+     sur un écran tactile (pas de survol), toujours visibles, à côté du compteur et non par-dessus. */
+  .ct-vue-gestes { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); display: flex; gap: 2px; opacity: 0; pointer-events: none; }
+  .ct-vue-l:hover .ct-vue-gestes, .ct-vue-gestes:focus-within { opacity: 1; pointer-events: auto; }
+  @media (hover: hover) { .ct-vue-l:hover .ct-vue small, .ct-vue-l:focus-within .ct-vue small { visibility: hidden; } }
+  @media (hover: none) {
+    .ct-vue-l { display: flex; align-items: center; gap: 2px; }
+    .ct-vue-gestes { position: static; transform: none; opacity: 1; pointer-events: auto; }
+  }
+  .ct-vue-invalide, .ct-vue-invalide small, .ct-a-refaire { color: var(--avt-terra-deep) !important; }
   .ct-vue-x { border: 0; background: #fff; color: var(--avt-text-muted); font: inherit; font-size: 15px; line-height: 1; width: 26px; height: 26px; border-radius: 6px; cursor: pointer; }
   .ct-vue-x:hover { background: var(--avt-galet); color: var(--avt-brun); }
   .ct-btn { min-height: 36px; border: 1px solid var(--avt-galet); background: #fff; border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 13.5px; color: var(--avt-brun); cursor: pointer; }

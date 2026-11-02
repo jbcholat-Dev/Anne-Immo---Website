@@ -99,10 +99,14 @@ export const sansAccents = (t: string) => t.normalize('NFD').replace(/[\u0300-\u
  * Ce que la recherche et les filtres lisent d'une ligne, calculé une seule fois au chargement (revue de code 18.4 : une
  * recherche par numéro mesurée à 722 ms avec 1 228 contacts) : le texte où chercher les mots (story 13.24 : prénom, nom,
  * ville, e-mails ; FR-3 : entreprise), sans accents ; les numéros réduits aux chiffres, au format international et au
- * format français (« 33612345678 0612345678 ») ; la ville et l'entreprise sans accents et la date du dernier contact
- * (millisecondes), pour les filtres.
+ * format français (« 33612345678 0612345678 ») ; la ville et l'entreprise sans accents et le jour de Paris du dernier
+ * contact (AAAA-MM-JJ), pour les filtres.
  */
-export interface IndexLigne { texte: string; chiffres: string; ville: string; entreprise: string; dernier: number | null }
+export interface IndexLigne { texte: string; chiffres: string; ville: string; entreprise: string; dernier: string | null }
+
+/** Le jour de Paris (AAAA-MM-JJ) d'un instant ISO (revue de code 18.5 : les durées se comptent en jours de Paris, AD-29). */
+const JOUR_PARIS = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' });
+export const jourParis = (iso: string) => { const t = Date.parse(iso); return Number.isNaN(t) ? iso.slice(0, 10) : JOUR_PARIS.format(t); };
 
 export function indexer(l: LigneTableau): IndexLigne {
   const chiffres = l.telephones.map((t) => {
@@ -112,7 +116,7 @@ export function indexer(l: LigneTableau): IndexLigne {
   return {
     texte: sansAccents([l.prenom, l.nom, l.ville, l.entreprise, ...l.emails].filter(Boolean).join(' ')),
     chiffres, ville: sansAccents(l.ville ?? '').trim(), entreprise: sansAccents(l.entreprise ?? ''),
-    dernier: l.dernier_le ? Date.parse(l.dernier_le) : null,
+    dernier: l.dernier_le ? jourParis(l.dernier_le) : null,
   };
 }
 

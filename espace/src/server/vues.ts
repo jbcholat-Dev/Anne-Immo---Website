@@ -24,8 +24,8 @@ export interface Filtre {
   dernier_contact?: 'jamais' | number;
   pipeline?: 'dans' | 'hors';
   recherche?: string;
-  /** Inscrit au programme ou de projet ambassadeur (AD-22). */
-  ambassadeur?: 'oui' | 'non';
+  /** Inscrit au programme ou de projet ambassadeur (AD-22) ; « oui » seulement (AD-27 amendé, revue de code 18.5). */
+  ambassadeur?: 'oui';
   /** La date « à rappeler le » est arrivée (aujourd'hui ou avant, heure de Paris). */
   a_rappeler?: 'oui';
 }
@@ -57,7 +57,7 @@ export const VOCABULAIRE: Record<CleFiltre, Regle> = {
   dernier_contact: { dernier: true },
   pipeline: { choix: ['dans', 'hors'] },
   recherche: { texte: 100 },
-  ambassadeur: { choix: ['oui', 'non'] },
+  ambassadeur: { choix: ['oui'] },
   a_rappeler: { choix: ['oui'] },
 };
 
@@ -98,8 +98,16 @@ export function nomVue(brut: unknown): string | null {
   return nom && nom.length <= 60 && !/[\u0000-\u001f\u007f]/.test(nom) ? nom : null;
 }
 
-/** Une vue enregistrée, telle que la page la reçoit. */
-export interface Vue { id: string; nom: string; ordre: number; filtre: Filtre }
+/**
+ * Une vue enregistrée, telle que la page la reçoit. `invalide` (revue de code 18.5) : la vue ne se relit plus en entier
+ * (par exemple toutes ses catégories ont disparu) ; elle ne garde alors AUCUN contact, et la page dit pourquoi. Tout
+ * usage d'une vue (tableau, campagnes de FR-17) doit tester `invalide` avant `preparerFiltre` : une vue élargie en
+ * silence choisirait trop de destinataires.
+ */
+export interface Vue { id: string; nom: string; ordre: number; filtre: Filtre; invalide?: string }
+
+/** Un jour AAAA-MM-JJ moins n jours (calendrier, sans heure). */
+export const moinsJours = (jour: string, n: number) => new Date(Date.parse(`${jour}T00:00:00Z`) - n * 86_400_000).toISOString().slice(0, 10);
 
 /** « Aujourd'hui » à Paris, AAAA-MM-JJ (AD-29 : les jours se comptent en heure de Paris). */
 export const aujourdhuiParis = (maintenant = new Date()) =>
@@ -115,8 +123,10 @@ export function preparerFiltre(f: Filtre, maintenant = new Date()): (l: LigneTab
   const acc = ensemble(f.accord), villes = f.ville?.length ? new Set(f.ville.map((v) => sansAccents(v).trim())) : null;
   const ent = f.entreprise_contient ? sansAccents(f.entreprise_contient) : '';
   const ecartes = f.ecarte === 'oui';
-  const limite = typeof f.dernier_contact === 'number' ? maintenant.getTime() - f.dernier_contact * 86_400_000 : null;
   const jour = aujourdhuiParis(maintenant);
+  // Revue de code 18.5 : « plus ancien que N jours » se compte en jours de Paris : le jour de Paris du dernier contact
+  // est avant (aujourd'hui à Paris − N jours).
+  const limite = typeof f.dernier_contact === 'number' ? moinsJours(jour, f.dernier_contact) : null;
   return (l, x) => {
     if (l.ecarte !== ecartes) return false;
     if (cat && !(l.categorie_id && cat.has(l.categorie_id))) return false;
@@ -128,10 +138,10 @@ export function preparerFiltre(f: Filtre, maintenant = new Date()): (l: LigneTab
     if (f.verifie && l.verifie !== (f.verifie === 'oui')) return false;
     if (acc && !acc.has(l.accord)) return false;
     if (f.dernier_contact === 'jamais' && l.dernier_le) return false;
-    if (limite !== null && x.dernier !== null && x.dernier >= limite) return false;
+    if (limite !== null && x.dernier !== null && x.dernier >= limite) return false; // jours AAAA-MM-JJ : l'ordre du texte est celui des dates
     if (f.pipeline && l.suivi !== (f.pipeline === 'dans')) return false;
-    if (f.ambassadeur && (l.ambassadeur_inscrit || l.projet === 'ambassadeur') !== (f.ambassadeur === 'oui')) return false;
-    if (f.a_rappeler && !(l.a_rappeler_le && l.a_rappeler_le <= jour)) return false;
+    if (f.ambassadeur && !(l.ambassadeur_inscrit || l.projet === 'ambassadeur')) return false;
+    if (f.a_rappeler && !(l.a_rappeler_le && l.a_rappeler_le.slice(0, 10) <= jour)) return false;
     return true;
   };
 }
@@ -166,7 +176,7 @@ export function pastilles(f: Filtre, categories: ReadonlyMap<string, string>): P
       : `Dernier contact : ${DUREES.find((x) => x.jours === d)?.libelle ?? `plus de ${d} jours`}` });
   }
   if (f.pipeline) p.push({ cle: 'pipeline', valeur: null, libelle: f.pipeline === 'dans' ? 'Dans le suivi des ventes' : 'Hors suivi des ventes' });
-  if (f.ambassadeur) p.push({ cle: 'ambassadeur', valeur: null, libelle: f.ambassadeur === 'oui' ? 'Ambassadeurs' : 'Sauf ambassadeurs' });
+  if (f.ambassadeur) p.push({ cle: 'ambassadeur', valeur: null, libelle: 'Ambassadeurs' });
   if (f.a_rappeler) p.push({ cle: 'a_rappeler', valeur: null, libelle: 'À rappeler' });
   return p;
 }

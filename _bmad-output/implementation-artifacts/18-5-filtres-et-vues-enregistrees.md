@@ -1,7 +1,7 @@
 ---
 story: 18.5
 epic: 18 — Espace d'Anne : le carnet de contacts
-statut: review
+statut: done
 date: 2026-11-02
 maj: 2026-11-02
 ---
@@ -62,9 +62,23 @@ Qu'Anne combine des filtres sans écrire de formule et les retrouve d'un clic so
 - **Filtres non gardés au rechargement** de la page (ni dans l'adresse) : une vue sert à cela.
 
 ## Ce qui reste
-- Revue de code en session neuve (`bmad-code-review`), puis passage à `done`.
+- Fait : revue de code en session neuve (02/11), constats corrigés ci-dessous ; story passée à `done`.
 - Fait : amendement d'AD-27 journalisé dans le spine d'architecture (02/11).
 - Story 18.6 : cases à cocher, actions groupées ; FR-17 : choix des destinataires d'une campagne par une vue (le filtre se relit avec `verifierFiltre` et `preparerFiltre`).
 - Ordre des vues : pas de glisser-déposer (nouvelle vue en dernier) ; à proposer si Anne le demande.
 
 ## Revue de code
+
+2026-11-02 — PR #227, commit relu af04d38 (relecture adverse `bmad-code-review` en session neuve). Corrections dans le commit « correction de la revue 18.5 » qui suit le commit de la story 18.6 sur la même branche.
+1. `vues-base.ts` (`lire`) retirait toute une clé refusée, ce qui élargissait la vue en silence : corrigé (commit de correction) : seules les valeurs refusées d'une liste partent ; une liste vidée ou une clé à valeur unique refusée rend la vue `invalide`, qui ne garde aucun contact ; la page affiche « Vue à refaire : une catégorie a disparu » dans le tableau et « à refaire » dans la colonne de gauche ; essai ajouté.
+2. `index.astro` : ✎ et × invisibles mais cliquables : corrigé (commit de correction) : `pointer-events: none` hors survol et hors focus (toujours atteignables au clavier) ; sous `@media (hover: none)`, visibles en permanence, à côté du compteur ; essai ajouté.
+3. `index.astro` : double clic sur × qui perdait l'annulation : corrigé (commit de correction) : bouton désactivé pendant l'appel, 404 d'une vue déjà retirée ignoré, une annulation par vue supprimée (« Annuler » remet la dernière, puis propose la précédente) ; essai ajouté.
+4. `index.astro` : double clic sur « Enregistrer » : corrigé (commit de correction) : bouton désactivé pendant l'appel ; essai ajouté.
+5. `vues.ts` : « dernier contact plus ancien que N jours » compté en millisecondes : corrigé (commit de correction) : jour de Paris du dernier contact (calculé une fois dans `indexer`) comparé à aujourd'hui à Paris moins N jours ; essai ajouté (contact du tout début du jour d'il y a 90 jours, exclu de « plus de 3 mois »).
+6. `vues.ts` : `a_rappeler_le` comparé entier : corrigé (commit de correction) : `slice(0, 10)` ; essai ajouté (date avec heure).
+7. `vues.ts` : `ambassadeur` acceptait « non » : corrigé (commit de correction) : « oui » seulement, comme AD-27 amendé ; essai ajouté (400).
+8. `index.astro` : attente de « Entreprise contient » non annulée au choix d'une vue : corrigé (commit de correction) : `clearTimeout` au choix d'une vue.
+9. `api/vues.ts` : corrigé (commit de correction) : 413 sur `Content-Length` au-delà de 8 000 octets avant toute lecture, 100 vues au plus (400 au-delà), filtre vide refusé (400) ; essais ajoutés. Note : le serveur local de wrangler perd la requête qui suit un corps refusé sans être lu ; l'essai fait cette demande en dernier, suivie d'une requête jetable (pas de souci attendu chez Cloudflare).
+10. Ordre ambigu après une annulation : corrigé (commit de correction) : une vue rétablie sur un ordre déjà pris va en dernière position (max + 1) ; la base départage les ordres égaux par identifiant (`ORDER BY ordre, id`) et le navigateur aussi, en ordre binaire comme la base ; essai ajouté.
+
+Vérification des corrections (2026-11-02) : `espace` `npm run build`, `npm run check` (0 erreur, 0 avertissement) ; `node scripts/e2e-espace.mjs` : **tout est bon, 403 constats** (397 après la 18.6), dont 6 nouveaux pour cette revue ; les essais 18.5 qui cliquent ✎ et × survolent d'abord la vue.
