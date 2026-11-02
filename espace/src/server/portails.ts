@@ -171,6 +171,9 @@ export async function recevoirCourriel(envE: EnvEspace, brut: string, taille: nu
   };
   if (c.de === GMAIL_CONFIRMATION) return garder('confirmation');
   if (gros) return garder('taille', false);
+  // Revue externe 18.12 : l'enveloppe se falsifie ; sans SPF « pass » pour gmail.com en tête de message (écrit par Cloudflare),
+  // ni contact ni carte de contact : l'e-mail reste à lire à la main, pour qu'aucune vraie demande ne soit perdue.
+  if (!c.spfGmail) { journal('portail_spf', { portail }); return garder('spf'); }
   const d = lireDemande(c.de, c.sujet, c.texte);
   if (!d) return garder('champs');
   const opp = await enOpposition(env, [d.telephone, d.email]);

@@ -154,15 +154,16 @@ type Champ = 'prenom' | 'nom' | 'nomComplet' | 'telephones' | 'emails' | 'profil
 export function champDe(titre: string): Champ | null {
   const s = sansAccents(titre).toLowerCase().replace(/[^a-z0-9]/g, '');
   if (!s || /(type|label|libelle)/.test(s)) return null;
-  if (/(mail|courriel)/.test(s)) return 'emails';
+  // « gmail », « hotmail » : un domaine pris dans une première ligne de données n'est pas un titre (revue de code 18.9).
+  if (/(courriel|(?<![gt])mail)/.test(s)) return 'emails';
   // Jamais : adresse, naissance, notes du téléphone, photo, code postal (fiche légale, règle 1).
   if (/(adresse|address|rue|street|naissance|birth|anniv|note|photo|postal|zip|cedex)/.test(s)) return null;
   if (/^(prenom|firstname|givenname|first)$/.test(s)) return 'prenom';
   if (/^(nom|lastname|familyname|nomdefamille|last|surname|nomdenaissance)$/.test(s)) return 'nom';
   if (/^(nomcomplet|name|fullname|displayname|contact|nometprenom|prenometnom)$/.test(s)) return 'nomComplet';
-  if (/(tel|phone|portable|mobile|gsm)/.test(s)) return 'telephones';
+  if (/(^tel($|[0-9]|ephone|fixe|perso|pro|mobile|portable|dom|trav|bur)|phone|portable|mobile|gsm)/.test(s)) return 'telephones';
   if (/(url|profil|profile|linkedin)/.test(s)) return 'profils';
-  if (/(ville|city|commune|localite)/.test(s)) return 'ville';
+  if (/^(ville|city|commune|localite)([0-9]|domicile|perso|pro|value)*$/.test(s)) return 'ville';
   if (/(entreprise|societe|company|organisation|organization|employeur)/.test(s)) return 'entreprise';
   if (/projet.*vente/.test(s)) return 'vente';
   if (/projet.*achat/.test(s)) return 'achat';
@@ -171,19 +172,32 @@ export function champDe(titre: string): Champ | null {
   return null;
 }
 
+/** Titres de colonnes ignorés que l'aperçu peut nommer (liste fermée, sans accent ni ponctuation) : tout autre titre est seulement compté. */
+const TITRES_CONNUS = new Set([
+  'adresse', 'adresse1', 'adresse2', 'rue', 'codepostal', 'cp', 'pays', 'region', 'departement', 'naissance', 'datedenaissance',
+  'anniversaire', 'note', 'notes', 'commentaire', 'commentaires', 'remarque', 'remarques', 'type', 'civilite', 'titre', 'photo',
+  'siteweb', 'site', 'fax', 'categorie', 'categories', 'groupe', 'groupes', 'etiquettes', 'fonction', 'poste', 'service',
+]);
+
 function lireGrille(grille: string[][], nomOnglet: string, genre: Genre, io: number, c: Compteurs, ignores: Set<string>): Ligne[] {
   const [entetes = [], ...corps] = grille;
   const champs = entetes.map((t) => champDe(String(t ?? '')));
-  // Revue de code 18.9 : un fichier sans ligne de titres fait prendre sa première ligne de données pour des titres. Un titre
-  // ignoré n'est renvoyé que s'il ne ressemble pas à une donnée (ni chiffre ni « @ ») ; sinon il est seulement compté.
+  // Revue de code 18.9 : un fichier sans ligne de titres fait prendre sa première ligne de données pour des titres.
+  // 1. Une première ligne qui ressemble à des données (« @ » ou six chiffres ou plus dans une cellule) refuse l'import,
+  //    sans rien en dire. 2. Un titre ignoré n'est nommé que s'il figure dans la courte liste fermée TITRES_CONNUS ; tous
+  //    les autres sont seulement comptés.
+  if (entetes.some((t) => { const x = String(t ?? ''); return x.includes('@') || (x.match(/[0-9]/g)?.length ?? 0) >= 6; })) {
+    throw new ErreurImport('colonnes', `La première ligne doit être une ligne de titres${nomOnglet ? ` (onglet « ${nomOnglet.slice(0, 40)} »)` : ''} : le fichier semble commencer directement par des contacts.`);
+  }
   let masques = 0;
   entetes.forEach((t, i) => {
     const titre = String(t ?? '').trim();
     if (champs[i] || !titre) return;
-    if (/[0-9@]/.test(titre)) { masques++; return; }
-    ignores.add(`colonne « ${titre.slice(0, 40)} »${nomOnglet ? ` (${nomOnglet.slice(0, 40)})` : ''}`);
+    const cle = sansAccents(titre).toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (TITRES_CONNUS.has(cle)) ignores.add(`colonne « ${titre.slice(0, 40)} »${nomOnglet ? ` (${nomOnglet.slice(0, 40)})` : ''}`);
+    else masques++;
   });
-  if (masques) ignores.add(`colonnes au titre non affiché (chiffre ou @)${nomOnglet ? ` (${nomOnglet.slice(0, 40)})` : ''} : ${masques}`);
+  if (masques) ignores.add(`colonnes au titre non affiché${nomOnglet ? ` (${nomOnglet.slice(0, 40)})` : ''} : ${masques}`);
   if (!champs.some((x) => x === 'telephones' || x === 'emails' || x === 'nom' || x === 'nomComplet' || x === 'prenom')) {
     throw new ErreurImport('colonnes', `Aucune colonne reconnue${nomOnglet ? ` dans l'onglet « ${nomOnglet.slice(0, 40)} »` : ''} : la première ligne doit porter les titres (Prénom, Nom, Téléphone, E-mail…).`);
   }

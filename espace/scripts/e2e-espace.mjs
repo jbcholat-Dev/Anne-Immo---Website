@@ -1380,10 +1380,21 @@ try {
       // 2. CSV sans ligne de titres (adresses gmail) : la première ligne n'est pas renvoyée dans les colonnes ignorées.
       const csvSans = `Jean,Sanstitre,jean.sanstitre${NUM}@gmail.com,${l65(2)}\nMarie,Sanstitre,marie.sanstitre${NUM}@gmail.com,${l65(3)}\n`;
       r = await IMP({ action: 'apercu', fichier: { format: 'csv', nom: 'sans-titres.csv', genre: 'telephone', contenu: csvSans } });
-      const apS = (await r.json()).apercu;
-      const igS = JSON.stringify(apS?.champs_ignores ?? []);
-      constat(r.status === 200 && !/@gmail|sanstitre\d|jean\./i.test(igS) && !igS.includes(NUM.slice(2, 4)) && !/\d{2} \d{2}/.test(igS) && igS.includes('colonnes au titre non affiché (chiffre ou @) : 1'),
-        `revue 18.9 : CSV sans ligne de titres : ni adresse gmail ni numéro dans les colonnes ignorées, seulement compté (${igS})`);
+      const dS = await r.json().catch(() => ({}));
+      const brutS = JSON.stringify(dS);
+      constat(r.status >= 400 && !dS.apercu && /ligne de titres/.test(brutS) && !/Jean|Sanstitre|Estelle|Villeneuve|@gmail|\d{6}/.test(brutS) && !brutS.includes(NUM),
+        `revue 18.9 : CSV sans ligne de titres (une cellule avec « @ ») : refusé « la première ligne doit être une ligne de titres », rien de son contenu renvoyé (${r.status} ${brutS.slice(0, 160)})`);
+      // Sans « @ » ni chiffres : « Estelle » et « Villeneuve » ne sont pas reconnus comme téléphone et ville ; les titres inconnus sont comptés, jamais nommés.
+      const csvSans2 = `Jean,Sanstitre,Villeneuve,Estelle\nMarie,Autre,Evian,Zoe\n`;
+      r = await IMP({ action: 'apercu', fichier: { format: 'csv', nom: 'sans-titres2.csv', genre: 'telephone', contenu: csvSans2 } });
+      const dS2 = await r.json().catch(() => ({}));
+      const brutS2 = JSON.stringify(dS2);
+      constat(!/Jean|Sanstitre|Estelle|Villeneuve/.test(brutS2), `revue 18.9 : CSV sans titres ni « @ » : aucun de ses mots ne ressort (${r.status} ${brutS2.slice(0, 160)})`);
+      // Un vrai fichier à titres : colonnes inconnues comptées, titre connu (« Adresse ») nommé.
+      const csvTitres = `Prénom,Nom,Téléphone,Adresse,Rubrique secrète\nZoé,Titres${NUM},${l65(4)},1 rue X,a\n`;
+      r = await IMP({ action: 'apercu', fichier: { format: 'csv', nom: 'titres.csv', genre: 'telephone', contenu: csvTitres } });
+      const igT = JSON.stringify((await r.json().catch(() => ({}))).apercu?.champs_ignores ?? []);
+      constat(r.status === 200 && igT.includes('Adresse') && !igT.includes('Rubrique') && /titre non affiché[^"]*: 1/.test(igT), `revue 18.9 : titre connu nommé, titre inconnu seulement compté (${igT})`);
 
       // 3. Fusion CONTACTS + EDB avec deux adresses différentes : l'accord ne va qu'à l'adresse de l'onglet EDB.
       const KF = sid();
@@ -3114,7 +3125,9 @@ try {
       const t = await r.text();
       return { status: r.status, outcome: r.ok ? 'ok' : 'rejete', raison: t };
     };
-    const enTete = (de, sujet, id, type, enc) => [`From: ${de}`, `To: ${A}`, `Subject: ${sujet}`, `Message-ID: <${id}@essai.example>`, 'Date: Mon, 02 Nov 2026 09:12:00 +0100', 'MIME-Version: 1.0',
+    // Revue externe 18.12 : en tête, le contrôle SPF que Cloudflare ajoute pour l'expéditeur d'enveloppe (gmail.com).
+    const SPF_PASS = 'Authentication-Results: mx.cloudflare.net; spf=pass smtp.mailfrom=gmail.com; dkim=pass';
+    const enTete = (de, sujet, id, type, enc, spf = SPF_PASS) => [...(spf ? [spf] : []), `From: ${de}`, `To: ${A}`, `Subject: ${sujet}`, `Message-ID: <${id}@essai.example>`, 'Date: Mon, 02 Nov 2026 09:12:00 +0100', 'MIME-Version: 1.0',
       ...(type ? [`Content-Type: ${type}`] : []), ...(enc ? [`Content-Transfer-Encoding: ${enc}`] : [])].join('\r\n');
     const nvP = async () => {
       const rr = await appeler(`${E}/api/nouveaux`, { headers: avecJeton() });
@@ -3251,6 +3264,27 @@ try {
     r = await recevoir('inbound@nettymail.com', `${enTete('"Netty - Contacts passerelles" <inbound@nettymail.com>', 'Nouveau contact Leboncoin', MID_EXACT, 'text/plain; charset=utf-8')}\r\n\r\nPrénom : Exacte\r\nNom : Portail${NUM}\r\nTéléphone : ${lisible(TEL_EXACT)}\r\n`, 'Anne.Essai@example.com');
     constat(r.outcome === 'ok' && courrielDe(MID_EXACT)?.etat === 'lu' && sql(`SELECT count(*) AS n FROM contact WHERE telephone = '${TEL_EXACT}'`)[0].n === 1,
       'revue 18.12 : enveloppe égale au réglage (casse comprise) : la demande est lue');
+    // Revue externe 18.12 : sans SPF « pass » pour gmail.com en tête, ou avec un « pass » placé sous un « fail », l'e-mail
+    // est gardé « à lire à la main » (carte), sans contact. Un « pass » en tête (Received-SPF ou ARC) est lu.
+    const corpsSpf = (q, tel) => `Prénom : Spf${q}\r\nNom : Portail${NUM}\r\nTéléphone : ${lisible(tel)}\r\n`;
+    const FROM_SPF = '"Netty - Contacts passerelles" <inbound@nettymail.com>';
+    const cas = [
+      ['SPF absent', 'absent', undefined, '+33776', false],
+      ['SPF pass placé sous un fail', 'bas', 'Authentication-Results: mx.cloudflare.net; spf=fail smtp.mailfrom=gmail.com\r\nAuthentication-Results: mx.cloudflare.net; spf=pass smtp.mailfrom=gmail.com', '+33777', false],
+      ['SPF pass pour un autre domaine', 'autre', 'Authentication-Results: mx.cloudflare.net; spf=pass smtp.mailfrom=evilgmail.com', '+33778', false],
+      ['SPF pass fourni par l\'expéditeur sous un en-tête sans SPF', 'sous', 'Authentication-Results: mx.cloudflare.net; dkim=pass\r\nReceived-SPF: pass envelope-from=a@gmail.com', '+33779', false],
+      ['Received-SPF pass en tête', 'rspf', 'Received-SPF: pass (cloudflare: domain of a@gmail.com designates 209.85.0.1 as permitted sender) client-ip=209.85.0.1; envelope-from=a@gmail.com; helo=mail-x.google.com', '+33780', true],
+      ['ARC-Authentication-Results pass en tête', 'arc', 'ARC-Authentication-Results: i=1; mx.google.com; spf=pass smtp.mailfrom=anne+caf_=x@gmail.com', '+33781', true],
+    ];
+    for (const [quoi, k, spf, pref, lu] of cas) {
+      const mid = `spf-${k}-${NUM}`, tel = `${pref}${NUM}`;
+      const brut = `${spf ? spf + '\r\n' : ''}${enTete(FROM_SPF, 'Nouveau contact Leboncoin', mid, 'text/plain; charset=utf-8', undefined, '')}\r\n\r\n${corpsSpf(k, tel)}`;
+      r = await recevoir('inbound@nettymail.com', brut);
+      const pcS = courrielDe(mid);
+      const nContact = sql(`SELECT count(*) AS n FROM contact WHERE telephone = '${tel}'`)[0].n;
+      constat(r.outcome === 'ok' && (lu ? pcS?.etat === 'lu' && nContact === 1 : pcS?.etat === 'illisible' && pcS.motif === 'spf' && !!nouveauDe(pcS.id) && nContact === 0),
+        `revue externe 18.12 : ${quoi} : ${lu ? 'demande lue, contact créé' : 'gardé « à lire à la main », aucun contact'} (${pcS?.etat}/${pcS?.motif}/${nContact})`);
+    }
     // Un e-mail trop gros n'est pas lu, mais gardé et signalé.
     const MID_G = `gros-${NUM}`;
     r = await recevoir('inbound@nettymail.com', `${enTete('"Netty" <inbound@nettymail.com>', 'Pièce jointe', MID_G, 'text/plain; charset=utf-8')}\r\n\r\nTéléphone : ${lisible(TEL_LBC)}\r\n${'x'.repeat(1_100_000)}\r\n`);

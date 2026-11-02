@@ -12,6 +12,31 @@ export interface Courriel {
   messageId: string | null;
   /** Corps en texte simple, lignes conservées. */
   texte: string;
+  /** Le contrôle SPF de l'expéditeur d'enveloppe, tel que Cloudflare l'a écrit en tête du message, est « pass » pour gmail.com. */
+  spfGmail: boolean;
+}
+
+/**
+ * Revue externe 18.12 : l'expéditeur d'enveloppe (MAIL FROM) se falsifie ; seul le contrôle SPF écrit par Cloudflare fait foi.
+ * On ne lit que l'en-tête de contrôle le PLUS HAUT (le premier rencontré, Received-SPF, Authentication-Results ou
+ * ARC-Authentication-Results) : un en-tête plus bas peut venir de l'expéditeur. À vérifier sur le premier vrai e-mail transféré.
+ */
+export function spfGmailPasse(brut: string): boolean {
+  const fin = brut.search(/\r?\n\r?\n/);
+  const tete = (fin < 0 ? brut : brut.slice(0, fin)).replace(/\r?\n[ \t]+/g, ' ');
+  for (const ligne of tete.split(/\r?\n/)) {
+    const i = ligne.indexOf(':');
+    if (i <= 0) continue;
+    const nom = ligne.slice(0, i).trim().toLowerCase();
+    const v = ligne.slice(i + 1).trim();
+    if (nom === 'received-spf') {
+      return /^pass\b/i.test(v) && /envelope-from\s*=\s*"?(?:[^\s;"]*@)?gmail\.com(?![\w.-])/i.test(v);
+    }
+    if (nom === 'authentication-results' || nom === 'arc-authentication-results') {
+      return /\bspf\s*=\s*pass\b/i.test(v) && /smtp\.mailfrom\s*=\s*"?(?:[^\s;"]*@)?gmail\.com(?![\w.-])/i.test(v);
+    }
+  }
+  return false;
 }
 
 const WINDOWS_1252: Record<number, number> = {
@@ -147,5 +172,6 @@ export function lireCourriel(brut: string): Courriel {
     sujet: entete(entetes.get('subject')).trim(),
     messageId: (entetes.get('message-id') ?? '').trim().slice(0, 300) || null,
     texte: corps.replace(/\r\n/g, '\n'),
+    spfGmail: spfGmailPasse(brut),
   };
 }
