@@ -4,7 +4,7 @@
 // e-mail = même contact, qui est complété, jamais recréé. Chaque création est notée dans l'historique avec le compte
 // qui a agi. La règle des prochaines actions est tenue par la base (CHECK de la migration 0007).
 import type { EnvSite } from '@site/server/env';
-import { ACTION_QUALIFIER, CANAUX_ORIGINE, LIBELLES_ETAPES, type Canal, type Etape } from '@site/server/contacts';
+import { ACTION_QUALIFIER, CANAUX_ORIGINE, LIBELLES_ETAPES, trouver, type Canal, type ContactTrouve, type Etape } from '@site/server/contacts';
 import { e164, emailValide } from '@site/server/schema';
 import { filtreRecherche } from '@site/server/recherche';
 import { ulid } from '@site/server/ulid';
@@ -40,24 +40,25 @@ export function personne(d: Record<string, unknown>): Personne | null {
   return p.telephone || p.email || p.nom ? p : null;
 }
 
-/** Le contact qui porte ce téléphone ou cet e-mail ; le téléphone l'emporte. */
-export async function contactConnu(env: EnvSite, telephone: string | null, email: string | null): Promise<{ id: string; etape: Etape } | null> {
+/** Le contact qui porte ce téléphone ou cet e-mail, en principal ou dans ses autres coordonnées (story 18.3) ; le
+ * téléphone l'emporte. Même recherche que le rattachement des demandes du site. */
+export async function contactConnu(env: EnvSite, telephone: string | null, email: string | null): Promise<ContactTrouve | null> {
   if (!telephone && !email) return null;
-  return env.DB.prepare(
-    `SELECT id, etape FROM contact WHERE (?1 IS NOT NULL AND telephone = ?1) OR (?2 IS NOT NULL AND email = ?2)
-     ORDER BY (telephone IS ?1) DESC LIMIT 1`,
-  ).bind(telephone, email).first<{ id: string; etape: Etape }>();
+  return trouver(env, telephone, email);
 }
 
-/** Complète un contact existant avec ce qui lui manque, sans prendre un téléphone ou un e-mail porté par un autre. */
+/** Complète un contact existant avec ce qui lui manque, sans prendre un téléphone ou un e-mail déjà porté (principal ou
+ * autre coordonnée, story 18.3). */
 function completer(env: EnvSite, id: string, p: Personne, maintenant: string) {
   return env.DB.prepare(
     `UPDATE contact SET
        last_activity_at = ?2,
        prenom = COALESCE(prenom, ?3),
        nom = COALESCE(nom, ?4),
-       telephone = COALESCE(telephone, CASE WHEN ?5 IS NOT NULL AND NOT EXISTS (SELECT 1 FROM contact WHERE telephone = ?5) THEN ?5 END),
-       email = COALESCE(email, CASE WHEN ?6 IS NOT NULL AND NOT EXISTS (SELECT 1 FROM contact WHERE email = ?6) THEN ?6 END),
+       telephone = COALESCE(telephone, CASE WHEN ?5 IS NOT NULL AND NOT EXISTS (SELECT 1 FROM contact WHERE telephone = ?5)
+         AND NOT EXISTS (SELECT 1 FROM contact_coordonnee WHERE valeur = ?5) THEN ?5 END),
+       email = COALESCE(email, CASE WHEN ?6 IS NOT NULL AND NOT EXISTS (SELECT 1 FROM contact WHERE email = ?6)
+         AND NOT EXISTS (SELECT 1 FROM contact_coordonnee WHERE valeur = ?6) THEN ?6 END),
        commune = COALESCE(commune, ?7)
      WHERE id = ?1`,
   ).bind(id, maintenant, p.prenom, p.nom, p.telephone, p.email, p.commune);
@@ -72,13 +73,45 @@ export interface Origine {
   rappel_individuel_seul?: boolean;
 }
 
+/**
+ * Un contact créé ici entre dans le suivi (à qualifier). Carnet (story 18.2, AD-22, AD-24) : catégorie « Demandes
+ * reçues », vérifiée (c'est Anne qui l'ajoute) ; projet tiré du parcours, et température « avec Anne » quand il est connu.
+ */
 function inserer(env: EnvSite, id: string, p: Personne, o: Origine, maintenant: string, is_test: number) {
   return env.DB.prepare(
     `INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, email, commune, parcours, etape,
-       prochaine_action, prochaine_action_le, canal, origine_detail, passage_id, prescripteur_id, rappel_individuel_seul, is_test)
-     VALUES (?1, ?2, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 'a_qualifier', ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)`,
+       prochaine_action, prochaine_action_le, canal, origine_detail, passage_id, prescripteur_id, rappel_individuel_seul, is_test,
+       categorie_id, verifie_le, projet, temperature)
+     VALUES (?1, ?2, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 'a_qualifier', ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16,
+       'demandes_recues', ?2, coalesce(?8, 'a_qualifier'), CASE WHEN ?8 IS NOT NULL THEN 'avec_anne' END)`,
   ).bind(id, maintenant, p.prenom, p.nom, p.telephone, p.email, p.commune, o.parcours, ACTION_QUALIFIER, aujourdhui(),
     o.canal, o.origine_detail, o.passage_id, o.prescripteur_id, o.rappel_individuel_seul ? 1 : 0, is_test);
+}
+
+/** Le projet qu'aura un contact « à qualifier » une fois son parcours connu (expression SQL sur les valeurs d'avant). */
+const PROJET_SUIVI = (parcoursSql: string) => `CASE WHEN projet = 'a_qualifier' THEN coalesce(parcours, ${parcoursSql}, 'a_qualifier') ELSE projet END`;
+/** La température d'un contact qui entre dans le suivi (AD-24) : « avec Anne » si son projet est vendeur ou acheteur, aucune sinon. */
+const TEMPERATURE_SUIVI = (projetSql: string) => `CASE WHEN ${projetSql} IN ('vendeur', 'acheteur', 'vendeur_acheteur') THEN 'avec_anne' END`;
+
+/**
+ * Un contact du carnet (étape NULL) qu'Anne ajoute à la main entre dans le suivi, à qualifier aujourd'hui (règle
+ * d'AD-20). C'est sa décision : `suivi_le` reste NULL, et la relève Leedflow reprend l'historique de son numéro
+ * (revue de la story 18.1, AD-32). Le parcours retenu est celui du contact, sinon celui choisi ; le projet suit ce
+ * parcours s'il était à qualifier, et la température passe à « avec Anne » si le projet est connu (AD-24), en une seule
+ * écriture pour que la base vérifie la cohérence sur le résultat. L'origine choisie est notée si le contact n'en avait
+ * pas (contact importé). Sans effet sur un contact déjà suivi (garde `etape IS NULL`).
+ */
+function entrerDansLeSuivi(env: EnvSite, id: string, o: Origine, maintenant: string) {
+  const projet = PROJET_SUIVI('?5');
+  return env.DB.prepare(
+    `UPDATE contact SET etape = 'a_qualifier', prochaine_action = ?3, prochaine_action_le = ?4, reveil_le = NULL, motif_perte = NULL,
+       parcours = coalesce(parcours, ?5),
+       projet = ${projet}, temperature = ${TEMPERATURE_SUIVI(projet)},
+       canal = coalesce(canal, ?6), origine_detail = coalesce(origine_detail, ?7),
+       passage_id = coalesce(passage_id, ?8), prescripteur_id = coalesce(prescripteur_id, ?9),
+       last_activity_at = ?2
+     WHERE id = ?1 AND etape IS NULL`,
+  ).bind(id, maintenant, ACTION_QUALIFIER, aujourdhui(), o.parcours, o.canal, o.origine_detail, o.passage_id, o.prescripteur_id);
 }
 
 function evenement(env: EnvSite, contactId: string, a: string, type: 'creation' | 'note' | 'qualification', source: 'anne' | 'import', texteEv: string, par: string, donnees?: unknown) {
@@ -86,8 +119,8 @@ function evenement(env: EnvSite, contactId: string, a: string, type: 'creation' 
     .bind(contactId, a, type, source, texteEv, donnees === undefined ? null : JSON.stringify(donnees), par);
 }
 
-export function libelleOrigine(o: Pick<Origine, 'canal' | 'origine_detail'>, passage?: Passage | null, prescripteur?: Prescripteur | null): string {
-  const base = CANAUX_ORIGINE[o.canal];
+export function libelleOrigine(o: { canal: Canal | null; origine_detail: string | null }, passage?: Passage | null, prescripteur?: Prescripteur | null): string {
+  const base = o.canal ? CANAUX_ORIGINE[o.canal] : 'Sans origine';
   if (passage) return `${base} ${passage.secteur}, ${passage.fait_le}`;
   if (prescripteur) return `${base} de ${prescripteur.nom}`;
   return o.origine_detail ? `${base} : ${o.origine_detail}` : base;
@@ -103,6 +136,14 @@ export async function saisirContact(env: EnvSite, p: Personne, o: Origine, note:
   const connu = await contactConnu(env, p.telephone, p.email);
   if (connu) {
     const lot = [completer(env, connu.id, p, maintenant)];
+    if (connu.etape === null) {
+      // L'événement d'abord, écrit seulement si le contact est encore hors suivi au moment de l'écriture (même lot).
+      lot.push(
+        env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees, par)
+          SELECT ?1, ?2, 'etape', 'anne', ?3, ?4, ?5 WHERE EXISTS (SELECT 1 FROM contact WHERE id = ?1 AND etape IS NULL)`)
+          .bind(connu.id, maintenant, `Carnet → ${LIBELLES_ETAPES.a_qualifier} : ajouté au suivi à la main`, JSON.stringify({ de: null, vers: 'a_qualifier' }), par),
+        entrerDansLeSuivi(env, connu.id, o, maintenant));
+    }
     if (note) lot.push(evenement(env, connu.id, maintenant, 'note', 'anne', note, par));
     await env.DB.batch(lot);
     return { id: connu.id, existant: true };
@@ -194,8 +235,13 @@ async function connus(env: EnvSite, personnes: Personne[]): Promise<{ parTel: Ma
   const tels = personnes.map((p) => p.telephone).filter(Boolean);
   const mails = personnes.map((p) => p.email).filter(Boolean);
   const { results } = await env.DB.prepare(
-    `SELECT id, telephone, email FROM contact
-     WHERE telephone IN (SELECT value FROM json_each(?1)) OR email IN (SELECT value FROM json_each(?2))`,
+    // Autres coordonnées d'abord (story 18.3) : le principal, lu ensuite, l'emporte dans les tables ci-dessous.
+    `SELECT contact_id AS id, CASE WHEN type = 'telephone' THEN valeur END AS telephone, CASE WHEN type = 'email' THEN valeur END AS email, 1 AS rang
+       FROM contact_coordonnee WHERE type IN ('telephone', 'email') AND valeur IN (SELECT value FROM json_each(?1) UNION SELECT value FROM json_each(?2))
+     UNION ALL
+     SELECT id, telephone, email, 2 FROM contact
+     WHERE telephone IN (SELECT value FROM json_each(?1)) OR email IN (SELECT value FROM json_each(?2))
+     ORDER BY rang`,
   ).bind(JSON.stringify(tels), JSON.stringify(mails)).all<{ id: string; telephone: string | null; email: string | null }>();
   const parTel = new Map<string, string>(), parEmail = new Map<string, string>();
   for (const r of results) { if (r.telephone) parTel.set(r.telephone, r.id); if (r.email) parEmail.set(r.email, r.id); }
@@ -267,10 +313,10 @@ export interface ResumeContact {
   email: string | null;
   commune: string | null;
   parcours: string | null;
-  etape: Etape;
+  etape: Etape | null;
   prochaine_action: string | null;
   prochaine_action_le: string | null;
-  canal: Canal;
+  canal: Canal | null;
   origine_detail: string | null;
   last_activity_at: string;
   is_test: number;
@@ -286,7 +332,8 @@ export type FiltreContacts = keyof typeof FILTRES_CONTACTS;
  */
 export async function listerContacts(env: EnvSite, q = '', limite = 200, filtre: FiltreContacts | null = null): Promise<ResumeContact[]> {
   const champs = 'id, prenom, nom, telephone, email, commune, parcours, etape, prochaine_action, prochaine_action_le, canal, origine_detail, last_activity_at, is_test';
-  const conditions: string[] = [];
+  // Seuls les contacts suivis (étape renseignée) ; ceux du carnet seront montrés par la page Contacts (story 18.4).
+  const conditions: string[] = ['etape IS NOT NULL'];
   const valeurs: (string | number)[] = [limite];
   const f = filtreRecherche(q, ['prenom', 'nom', 'commune', 'email'], 'telephone', 2);
   if (f) { conditions.push(`(${f.sql})`); valeurs.push(...f.valeurs); }
@@ -302,7 +349,7 @@ export async function listerContacts(env: EnvSite, q = '', limite = 200, filtre:
     valeurs.push(aujourdhui(), parisVersUtc(`${aujourdhui()}T00:00`) ?? '');
   }
   const ordre = filtre === 'retard' ? 'prochaine_action_le ASC' : 'last_activity_at DESC';
-  const { results } = await env.DB.prepare(`SELECT ${champs} FROM contact ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''} ORDER BY ${ordre} LIMIT ?1`)
+  const { results } = await env.DB.prepare(`SELECT ${champs} FROM contact WHERE ${conditions.join(' AND ')} ORDER BY ${ordre} LIMIT ?1`)
     .bind(...valeurs).all<ResumeContact>();
   return results;
 }
@@ -561,13 +608,13 @@ export async function bilan(env: EnvSite, periode: Periode) {
   const [canaux, delai, secteurs, perdus] = await env.DB.batch([
     env.DB.prepare(`SELECT c.canal, count(*) AS contacts, sum(c.qualifie_le IS NOT NULL) AS qualifies,
         sum(${aAtteint(ETAPES_RDV)}) AS rdv, sum(${aAtteint(ETAPES_MANDAT)}) AS mandats
-      FROM contact c WHERE c.created_at >= ?1 GROUP BY c.canal`).bind(debut),
+      FROM contact c WHERE c.created_at >= ?1 AND c.etape IS NOT NULL GROUP BY c.canal`).bind(debut),
     // Délai de rappel : de l'arrivée du contact à la première tentative d'Anne (qualification, même « pas joint », ou appel
     // qu'elle a passé, relevé par Leedflow ; un appel ou un SMS reçu ne compte pas).
     env.DB.prepare(`SELECT avg((julianday(premier) - julianday(created_at)) * 24) AS heures, count(*) AS n FROM (
         SELECT c.created_at, (SELECT min(e.a) FROM contact_evenement e WHERE e.contact_id = c.id
           AND (e.type = 'qualification' OR (e.type = 'appel' AND json_extract(e.donnees, '$.sens') = 'sortant' AND json_extract(e.donnees, '$.genre') = 'appel'))) AS premier
-        FROM contact c WHERE c.created_at >= ?1) WHERE premier IS NOT NULL`).bind(debut),
+        FROM contact c WHERE c.created_at >= ?1 AND c.etape IS NOT NULL) WHERE premier IS NOT NULL`).bind(debut),
     env.DB.prepare(`SELECT p.secteur, p.fait_le AS dernier, p.mots, (SELECT count(*) FROM contact c WHERE c.passage_id = p.id) AS contacts
       FROM passage_boitage p WHERE p.id = (SELECT p2.id FROM passage_boitage p2 WHERE p2.secteur = p.secteur ORDER BY p2.fait_le DESC, p2.created_at DESC LIMIT 1)
       ORDER BY p.fait_le DESC LIMIT 30`),
@@ -714,7 +761,7 @@ export async function contactsDuPipeline(env: EnvSite, parcours: 'vendeur' | 'ac
   const depuis90 = new Date(Date.now() - 90 * 86_400_000).toISOString();
   const { results } = await env.DB.prepare(
     `SELECT id, prenom, nom, telephone, email, commune, parcours, etape, prochaine_action, prochaine_action_le, canal, origine_detail, last_activity_at, is_test
-     FROM contact WHERE (parcours = ?1 OR (?1 = 'vendeur' AND parcours IS NULL))
+     FROM contact WHERE (parcours = ?1 OR (?1 = 'vendeur' AND parcours IS NULL)) AND etape IS NOT NULL
        AND (etape <> 'perdu' OR last_activity_at >= ?2)
      ORDER BY coalesce(prochaine_action_le, '9999') ASC LIMIT 500`,
   ).bind(parcours, depuis90).all<ResumeContact>();
@@ -725,15 +772,37 @@ export type Changement = { etape: Etape; action: string | null; le: string | nul
 
 /** Change l'étape d'un contact, avec la prochaine action exigée par la règle d'AD-20, et note le changement. */
 export async function changerEtape(env: EnvSite, id: string, ch: Changement, par: string): Promise<boolean> {
-  const c = await env.DB.prepare('SELECT etape FROM contact WHERE id = ?1').bind(id).first<{ etape: Etape }>();
+  const c = await env.DB.prepare('SELECT etape FROM contact WHERE id = ?1').bind(id).first<{ etape: Etape | null }>();
   if (!c) return false;
   const maintenant = new Date().toISOString();
-  await env.DB.batch([majEtape(env, id, maintenant, ch), evenementEtape(env, id, maintenant, c.etape, ch.etape, resumeChangement(ch), par)]);
+  const lot = [majEtape(env, id, maintenant, ch), evenementEtape(env, id, maintenant, c.etape, ch.etape, resumeChangement(ch), par)];
+  if (c.etape === null) lot.unshift(temperatureEntree(env, id, ch.etape));
+  await env.DB.batch(lot);
   return true;
 }
 
 const resumeChangement = (ch: Changement) =>
   ch.etape === 'perdu' ? `motif : ${ch.motif}` : ch.etape === 'en_sommeil' ? `réveil le ${echeance(ch.reveil)}` : ch.le ? `${ch.action} · ${echeance(ch.le)}` : '';
+
+/**
+ * Un contact du carnet qui entre dans le suivi par un changement d'étape (geste d'Anne, donc `suivi_le` reste NULL,
+ * AD-32) : projet tiré du parcours s'il était à qualifier, température selon AD-24 (« terminé » pour une vente ou un achat
+ * conclu, inchangée pour perdu ou en sommeil, « avec Anne » sinon), pour un projet connu. Écrit avant `majEtape`, dans le
+ * même lot, avec la garde `etape IS NULL`.
+ */
+function temperatureEntree(env: EnvSite, id: string, vers: Etape) {
+  const projet = PROJET_SUIVI('NULL');
+  return env.DB.prepare(
+    `UPDATE contact SET projet = ${projet}, temperature = CASE WHEN ${projet} IN ('vendeur', 'acheteur', 'vendeur_acheteur') THEN
+       CASE WHEN ?2 IN ('vendu', 'acte_signe') THEN 'termine' WHEN ?2 IN ('perdu', 'en_sommeil') THEN temperature ELSE 'avec_anne' END END
+     WHERE id = ?1 AND etape IS NULL`,
+  ).bind(id, vers);
+}
+
+/** Libellé d'une étape, « Carnet » pour un contact hors suivi (étape NULL). */
+export const libelleEtape = (e: Etape | null) => (e ? LIBELLES_ETAPES[e] : 'Carnet');
+/** Libellé d'une origine, « Sans origine » pour un contact importé (canal NULL). */
+export const libelleCanal = (c: Canal | null) => (c ? CANAUX_ORIGINE[c] : 'Sans origine');
 
 /** Écrit l'étape et ce que la règle d'AD-20 exige avec elle. En sommeil, la prochaine action tombe le jour du réveil. */
 function majEtape(env: EnvSite, id: string, maintenant: string, ch: Changement) {
@@ -746,9 +815,9 @@ function majEtape(env: EnvSite, id: string, maintenant: string, ch: Changement) 
  * Tous les changements d'étape passent ici (pipeline, qualification, suite) : c'est l'endroit où brancher ce qu'un
  * mandat signé déclenche (story 13.9, Modelo).
  */
-function evenementEtape(env: EnvSite, id: string, maintenant: string, de: Etape, vers: Etape, suite: string, par: string) {
+function evenementEtape(env: EnvSite, id: string, maintenant: string, de: Etape | null, vers: Etape, suite: string, par: string) {
   return env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees, par) VALUES (?1, ?2, 'etape', 'anne', ?3, ?4, ?5)`)
-    .bind(id, maintenant, `${LIBELLES_ETAPES[de]} → ${LIBELLES_ETAPES[vers]}${suite ? ` (${suite})` : ''}`, JSON.stringify({ de, vers }), par);
+    .bind(id, maintenant, `${libelleEtape(de)} → ${LIBELLES_ETAPES[vers]}${suite ? ` (${suite})` : ''}`, JSON.stringify({ de, vers }), par);
 }
 
 // ——— Noter la suite d'un contact en cours (story 13.22) ———
@@ -780,7 +849,7 @@ export type Suite = { resultat: 'pas_joint'; le: string; note: string | null } |
  */
 export async function noterSuite(env: EnvSite, id: string, s: Suite, par: string): Promise<boolean> {
   const c = await env.DB.prepare('SELECT etape, prochaine_action, prochaine_action_le FROM contact WHERE id = ?1').bind(id)
-    .first<{ etape: Etape; prochaine_action: string | null; prochaine_action_le: string | null }>();
+    .first<{ etape: Etape | null; prochaine_action: string | null; prochaine_action_le: string | null }>();
   if (!c) return false;
   const maintenant = new Date().toISOString();
   const lignes: string[] = [];
@@ -792,6 +861,7 @@ export async function noterSuite(env: EnvSite, id: string, s: Suite, par: string
     if (s.resultat === 'fait') lignes.push(`Fait : ${c.prochaine_action ?? 'action prévue'}`);
     lot.push(majEtape(env, id, maintenant, s.ch));
     const suite = resumeChangement(s.ch);
+    if (c.etape === null) lot.unshift(temperatureEntree(env, id, s.ch.etape));
     if (s.ch.etape !== c.etape) lot.push(evenementEtape(env, id, maintenant, c.etape, s.ch.etape, suite, par));
     else if (s.ch.le && s.ch.etape !== 'en_sommeil' && (s.ch.action !== c.prochaine_action || s.ch.le !== c.prochaine_action_le)) lignes.push(`Prochaine action : ${suite}`);
   }

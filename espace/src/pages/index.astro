@@ -1,153 +1,224 @@
 ---
-// Aujourd'hui (story 13.5, maquette v2 écran 1) : la page d'ouverture de l'espace. En tête, les nouveaux contacts pas
-// encore qualifiés, ceux qui ont laissé un téléphone d'abord (story 10.15), puis le plus ancien, avec le temps écoulé ; puis les rappels dus et en retard (et les contacts
-// en sommeil à réveiller) ; puis les prescripteurs à relancer, les lettres « j'ai un acheteur » et les secteurs de boîtage à refaire. Depuis chaque carte,
-// Anne appelle en un geste et ouvre la qualification. Story 13.10 : sous les nouveaux contacts, ce que Leedflow a vu
-// (tâches proposées comme prochaine action) ; story 13.19 : les numéros inconnus
-// ne sont plus qu'une ligne vers « Numéros à trier », et l'état de la relève en bas de page. Story 13.22 : « Noter la
-// suite » d'un rappel ouvre le formulaire de suite (fait, pas joint, prochaine action), plus la qualification.
+// Contacts (story 18.4, FR-1, FR-3, FR-14 ; maquette `ux-espace-anne-2026-11-01`) : la page d'accueil de l'espace. Un
+// grand tableau, une ligne par contact non effacé, du carnet comme du suivi des ventes ; les écartés sont masqués.
+// Le serveur lit tout une fois (`lireTableau`, AD-27) et l'envoie dans la page ; l'îlot ci-dessous trie, cherche et
+// masque des colonnes dans le navigateur (choix des colonnes gardé dans ce navigateur), sans revenir au serveur.
+// Place laissée aux stories suivantes, dans la mise en page de la maquette : barre « Nouveaux » (18.11) au-dessus de la
+// recherche, filtres et vues enregistrées (18.5) dans la colonne de gauche et la barre d'outils, cases à cocher et actions
+// groupées (18.6) en tête du tableau, « + Nouveau contact » et fiche (18.7) en haut à droite et sur le nom.
+// L'ancienne page d'accueil « Aujourd'hui » est à /aujourdhui ; ses anciens retours (`/?m=…`) y sont renvoyés.
 import Espace from '../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
-import { telLisible } from '@site/server/recherche';
-import { LIBELLES_ETAPES } from '@site/server/contacts';
-import { envEspace, pourSite as env } from '../server/env';
-import { etatReleve, extrait, propositions } from '../server/leedflow';
-import { acheteursActifs, BOITAGE_A_REFAIRE_JOURS, depuis, echeance, enRetard, journee, libelleOrigine, type ContactDuJour } from '../server/pipeline';
+import { pourSite as env } from '../server/env';
+import { lireTableau } from '../server/tableau';
+import { COLONNES } from '../server/tableau-colonnes';
 
 export const prerender = false;
 if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
-
-const [{ nouveaux, rappels, prescripteurs, secteurs }, acheteurs, leedflow, releve] = await Promise.all([journee(env), acheteursActifs(env), 
-  // Tant que la migration 0008 n'est pas appliquée (quelques minutes lors d'une mise en ligne), la page s'affiche sans Leedflow.
-  propositions(envEspace).catch(() => ({ taches: [], aTrier: { total: 0, silencieux: 0 } })),
-  etatReleve(envEspace).catch(() => ({ branche: !!envEspace.LEEDFLOW_API_KEY, passe_le: null, erreur: null })),
-]);
 const m = Astro.url.searchParams.get('m') ?? '';
-const message = m === 'suite' ? 'Suite notée.' : m === 'tache-acceptee' ? 'Prochaine action mise à jour.' : m === 'tache-ignoree' ? 'Proposition ignorée.' : '';
-const etatLeedflow = !releve.branche ? 'Leedflow n\'est pas encore branché : la clé d\'accès reste à poser (RUNBOOK § 4 sexies).'
-  : releve.erreur ? `Leedflow : la dernière relève a échoué (${releve.erreur}). Si cela dure, la clé a peut-être été révoquée.`
-  : releve.passe_le ? `Leedflow : appels relevés ${depuis(releve.passe_le)}.` : 'Leedflow : première relève dans les 10 minutes.';
-// « J'ai un acheteur » (story 13.15) : les communes cherchées par au moins deux acheteurs actifs.
-const parCommune = new Map<string, number>();
-for (const a of acheteurs) for (const c of a.communes) parCommune.set(c, (parCommune.get(c) ?? 0) + 1);
-const lettres = [...parCommune.entries()].filter(([, n]) => n >= 2).sort((a, b) => b[1] - a[1]).slice(0, 2);
-const date = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Paris' });
-const nom = (c: ContactDuJour) => [c.prenom, c.nom].filter(Boolean).join(' ') || telLisible(c.telephone) || c.email || 'Sans nom';
-const origine = (c: ContactDuJour) => libelleOrigine(c,
-  c.passage_secteur ? { id: '', secteur: c.passage_secteur, fait_le: c.passage_le ?? '', mots: null, contacts: 0 } : null,
-  c.prescripteur_nom ? { id: '', nom: c.prescripteur_nom, role: null, commune: null } : null);
-const rien = nouveaux.length + leedflow.taches.length + leedflow.aTrier.total + rappels.length + prescripteurs.length + secteurs.length + lettres.length === 0;
+if (['suite', 'tache-acceptee', 'tache-ignoree'].includes(m)) return Astro.redirect(`/aujourdhui?m=${m}`, 302);
+
+const lignes = await lireTableau(env);
+const total = lignes.filter((l) => !l.ecarte).length;
+const q = (Astro.url.searchParams.get('q') ?? '').trim().slice(0, 100);
+// Dans un <script type="application/json"> : « < » échappé, pour qu'aucun texte saisi ne ferme la balise.
+const donnees = JSON.stringify(lignes).replace(/</g, '\\u003c');
 ---
-<Espace titre="Aujourd'hui" actif="aujourdhui">
-  <div>
-    <div class="e-muet" data-date>{date}</div>
-    <h1>Bonjour Anne</h1>
+<Espace titre="Contacts" actif="contacts" large>
+  <div class="ct-tete">
+    <div><h1>Contacts</h1><div class="e-muet">Tous les contacts d'Anne, toutes sources confondues.</div></div>
   </div>
-  {message && <p class="e-message" role="status" data-message>{message}</p>}
-
-  <section class="e-jour" aria-label="À rappeler maintenant" data-nouveaux>
-    <div class="e-jour-tete"><h2>À rappeler maintenant</h2>{nouveaux.length > 0 && <span class="e-alerte">{nouveaux.length} à qualifier</span>}</div>
-    {nouveaux.length === 0 ? <p class="e-muet">Aucun nouveau contact à rappeler. Bien joué.</p> : nouveaux.map((c, i) => (
-      <article class={i === 0 ? 'e-carte e-carte-forte' : 'e-carte'} data-contact={c.id}>
-        <div class="e-ligne"><a href={`/contacts/fiche?id=${c.id}`} class="e-nom">{nom(c)}{c.commune ? ` · ${c.commune}` : ''}</a><span class={i === 0 ? 'e-quand fort' : 'e-quand'}>{depuis(c.created_at)}</span></div>
-        <div class="e-tags"><span class="e-tag">{origine(c)}</span>{c.parcours && <span class="e-tag neutre">{c.parcours === 'vendeur' ? 'Vendeur' : 'Acheteur'}</span>}{c.prochaine_action !== 'Rappeler pour qualifier' && c.prochaine_action && <span class="e-tag neutre">{c.prochaine_action}</span>}</div>
-        {c.dernier_texte && <p class="e-muet e-extrait">{extrait(c.dernier_texte)}</p>}
-        <div class="e-gestes">
-          {c.telephone ? <a class="e-bouton second" href={`tel:${c.telephone}`}>Appeler</a> : c.email ? <a class="e-bouton second" href={`mailto:${c.email}`}>Écrire</a> : null}
-          <a class="e-bouton" href={`/contacts/qualifier?id=${c.id}`}>Qualifier</a>
-        </div>
-      </article>
-    ))}
-  </section>
-
-  {(leedflow.taches.length > 0 || leedflow.aTrier.total > 0) && (
-    <section class="e-jour" aria-label="Vu par Leedflow" data-leedflow>
-      <h2>Vu par Leedflow</h2>
-      {leedflow.taches.map((t) => (
-        <article class="e-carte" data-tache={t.id}>
-          <div class="e-ligne"><a href={`/contacts/fiche?id=${t.contact_id}`} class="e-nom">{[t.prenom, t.nom].filter(Boolean).join(' ') || telLisible(t.telephone) || 'Contact'}</a><span class="e-quand">{depuis(t.a)}</span></div>
-          <p class="e-raison">Prochaine action proposée : {t.texte}{t.echeance ? ` · ${echeance(t.echeance)}` : ''}</p>
-          <form method="post" action="/api/leedflow/tache" class="e-gestes">
-            <input type="hidden" name="id" value={t.id} />
-            <button class="e-bouton" name="choix" value="accepter">Accepter</button>
-            <button class="e-bouton second" name="choix" value="ignorer">Ignorer</button>
-          </form>
-        </article>
-      ))}
-      {leedflow.aTrier.total > 0 && (
-        <a class="e-carte e-a-trier" href="/a-trier" data-a-trier>
-          <span class="e-nom">{leedflow.aTrier.total} numéro(s) à trier</span>
-          <span class="e-muet">{leedflow.aTrier.total - leedflow.aTrier.silencieux > 0 ? `${leedflow.aTrier.total - leedflow.aTrier.silencieux} avec un message ou un résumé` : 'Seulement des appels manqués sans message'}{leedflow.aTrier.silencieux > 0 && leedflow.aTrier.total > leedflow.aTrier.silencieux ? `, ${leedflow.aTrier.silencieux} appel(s) manqué(s) sans message` : ''} · Prospect, privé, pro ou démarchage</span>
-        </a>
-      )}
-    </section>
-  )}
-
-  {rappels.length > 0 && (
-    <section class="e-jour" aria-label="Rappels prévus" data-rappels>
-      <h2>Rappels prévus</h2>
-      {rappels.map((c) => (
-        <article class="e-carte" id={`c-${c.id}`} data-contact={c.id}>
-          <div class="e-ligne"><a href={`/contacts/fiche?id=${c.id}`} class="e-nom">{nom(c)}{c.commune ? ` · ${c.commune}` : ''}</a>
-            {enRetard(c.prochaine_action_le) ? <span class="e-quand fort" data-retard>En retard · {echeance(c.prochaine_action_le)}</span> : <span class="e-quand">{echeance(c.prochaine_action_le)}</span>}</div>
-          <div class="e-muet">{c.etape === 'en_sommeil' ? 'En sommeil : à réveiller' : LIBELLES_ETAPES[c.etape]} · {c.prochaine_action}</div>
-          {c.dernier_texte && <p class="e-raison e-extrait">{extrait(c.dernier_texte)}</p>}
-          <div class="e-gestes">
-            {c.telephone && <a class="e-bouton second" href={`tel:${c.telephone}`}>Appeler</a>}
-            <a class="e-bouton" href={`/contacts/suite?id=${c.id}&retour=jour`} data-suite-lien>Noter la suite</a>
+  <div class="ct-page">
+    <aside class="ct-cote" aria-label="Vues">
+      <div class="ct-bloc">
+        <h3>Vues</h3>
+        <button type="button" class="ct-vue actif" aria-pressed="true">Tous les contacts <small data-total-vue>{total}</small></button>
+      </div>
+    </aside>
+    <div class="ct-principal">
+      <div class="ct-outils">
+        <input type="search" data-recherche value={q} placeholder="Nom, numéro, e-mail, entreprise…" aria-label="Rechercher un contact" autocomplete="off" />
+        <details class="ct-menu" data-colonnes>
+          <summary>Colonnes</summary>
+          <div class="ct-menu-liste">
+            {COLONNES.filter((c) => c.masquable).map((c) => (
+              <label><input type="checkbox" value={c.cle} checked /> {c.libelle}</label>
+            ))}
           </div>
-        </article>
-      ))}
-    </section>
-  )}
-
-  {(prescripteurs.length > 0 || secteurs.length > 0 || lettres.length > 0) && (
-    <section class="e-jour" aria-label="Trouver des vendeurs cette semaine" data-prospection>
-      <h2>Trouver des vendeurs cette semaine</h2>
-      {prescripteurs.map((p) => (
-        <div class="e-pousse" data-prescripteur={p.id}>
-          <strong><a href={`/prescripteurs/fiche?id=${p.id}`}>Relancer {p.nom}{p.role ? `, ${p.role}` : ''}</a></strong>
-          <div>{p.relance_raison ?? 'Relance prévue'}{p.dernier_contact_le ? ` · dernier contact le ${echeance(p.dernier_contact_le)}` : ''}</div>
-        </div>
-      ))}
-      {lettres.map(([commune, n]) => (
-        <div class="e-pousse" data-lettre={commune}>
-          <strong><a href={`/acheteurs?secteur=${encodeURIComponent(commune)}#sommeil`}>Lettre « j'ai un acheteur » à {commune.charAt(0).toUpperCase() + commune.slice(1)}</a></strong>
-          <div>{n} acheteurs actifs cherchent dans cette commune.</div>
-        </div>
-      ))}
-      {secteurs.map((s) => (
-        <div class="e-pousse" data-secteur={s.secteur}>
-          <strong>Repasser à {s.secteur}</strong>
-          <div>Dernier passage il y a {Math.round(s.jours / 7)} semaines{s.mots ? ` : ${s.mots} mots` : ''}, {s.contacts} contact(s).</div>
-        </div>
-      ))}
-    </section>
-  )}
-
-  {rien && <p class="e-muet">Rien d'autre de prévu aujourd'hui. <a href="/ajouter">Ajouter un contact ou un passage de boîtage</a>.</p>}
-  <p class="e-muet">Un secteur de boîtage revient ici {BOITAGE_A_REFAIRE_JOURS / 7} semaines après son dernier passage.</p>
-  <p class="e-muet" data-etat-leedflow>{etatLeedflow}</p>
+        </details>
+      </div>
+      <div class="ct-actifs"><span class="ct-total" data-compteur aria-live="polite">{total} contact{total > 1 ? 's' : ''} sur {total}</span></div>
+      <div class="ct-boite">
+        <table class="ct-table" data-tableau>
+          <thead><tr data-entetes></tr></thead>
+          <tbody data-lignes><tr><td class="ct-attente">Chargement des contacts…</td></tr></tbody>
+        </table>
+      </div>
+      <noscript><p class="e-message">Le tableau a besoin de JavaScript. La liste des contacts suivis reste sur <a href="/contacts">/contacts</a>.</p></noscript>
+    </div>
+  </div>
+  <script type="application/json" id="ct-donnees" set:html={donnees}></script>
 </Espace>
 
-<style>
-  .e-jour { display: flex; flex-direction: column; gap: 10px; }
-  .e-jour-tete { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-  .e-alerte { font-size: 13px; color: var(--avt-terra); font-weight: 500; }
-  .e-carte-forte { border-color: var(--avt-terra); }
-  .e-ligne { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
-  .e-nom { font-weight: 500; font-size: 16px; color: var(--avt-brun); overflow-wrap: anywhere; }
-  .e-quand { font-size: 13px; color: var(--avt-text-muted); white-space: nowrap; }
-  .e-quand.fort { color: var(--avt-terra); font-weight: 500; }
-  .e-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-  .e-extrait { margin: 0; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .e-une-ligne { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .e-raison { margin: 0; font-size: 14px; color: var(--avt-klein); overflow-wrap: anywhere; }
-  .e-a-trier { gap: 4px; text-decoration: none; }
-  .e-gestes { display: flex; gap: 8px; }
-  .e-gestes button { cursor: pointer; }
-  .e-gestes .e-bouton { flex: 1; min-height: 44px; padding: 8px 12px; font-size: 15px; }
-  .e-pousse { background: var(--avt-brume); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
-  .e-pousse strong { font-weight: 500; font-size: 15px; }
-  @media (min-width: 900px) { .e-gestes { max-width: 420px; } }
+<script>
+  // Îlot du tableau (AD-22) : tri, recherche (story 13.24) et colonnes masquées, tout dans le navigateur.
+  import { telLisible } from '@site/server/recherche';
+  import {
+    ACCORDS, CANAUX_CONTACT, COLONNES, PROJETS, TEMPERATURES, libelleSource, preparerRecherche, texteRecherche, valeurTri,
+    type CleColonne, type LigneTableau,
+  } from '../server/tableau-colonnes';
+
+  const MEMOIRE = 'espace.contacts.colonnes';
+  const lignes: LigneTableau[] = JSON.parse(document.getElementById('ct-donnees')?.textContent || '[]');
+  const textes = lignes.map(texteRecherche);
+  const dates = lignes.map((l) => l.dernier_le ? new Date(l.dernier_le).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' }) : '');
+  const total = lignes.filter((l) => !l.ecarte).length;
+  const comparer = new Intl.Collator('fr', { sensitivity: 'base', numeric: true }).compare;
+  const $ = <T extends Element>(s: string) => document.querySelector<T>(s)!;
+  const recherche = $<HTMLInputElement>('[data-recherche]');
+  const entetes = $<HTMLTableRowElement>('[data-entetes]');
+  const corps = $<HTMLTableSectionElement>('[data-lignes]');
+  const compteur = $<HTMLElement>('[data-compteur]');
+  const menuColonnes = $<HTMLDetailsElement>('[data-colonnes]');
+
+  let cachees = new Set<CleColonne>();
+  try { cachees = new Set(JSON.parse(localStorage.getItem(MEMOIRE) ?? '[]')); } catch {}
+  let tri: { cle: CleColonne; sens: 1 | -1 } = { cle: 'nom', sens: 1 };
+  const valeurs = new Map<CleColonne, (string | number | null)[]>();
+  const valeursDe = (cle: CleColonne) => {
+    let v = valeurs.get(cle);
+    if (!v) { v = lignes.map((l) => valeurTri(l, cle)); valeurs.set(cle, v); }
+    return v;
+  };
+
+  const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+  const vide = '<span class="ct-vide">—</span>';
+  const plus = (liste: string[], montrer: (v: string) => string) => liste.length > 1
+    ? ` <span class="ct-plus" title="${esc(liste.slice(1).map(montrer).join(', '))}">+${liste.length - 1}</span>` : '';
+  const pastille = (texte: string, classe = '') => `<span class="ct-pastille ${classe}">${esc(texte)}</span>`;
+  const reseau = (r: string | null) => r ? ({ linkedin: 'LinkedIn', instagram: 'Instagram', facebook: 'Facebook' } as Record<string, string>)[r.toLowerCase()] ?? r : 'Profil';
+
+  function cellule(l: LigneTableau, i: number, cle: CleColonne): string {
+    switch (cle) {
+      case 'nom': {
+        const nom = [l.prenom, l.nom].filter(Boolean).join(' ') || telLisible(l.telephones[0]) || l.emails[0] || 'Sans nom';
+        return `<td class="ct-nom"><a href="/contacts/fiche?id=${esc(l.id)}">${esc(nom)}</a></td>`;
+      }
+      case 'entreprise': return `<td class="ct-coupe" title="${esc(l.entreprise)}">${l.entreprise ? esc(l.entreprise) : vide}</td>`;
+      case 'categorie': return `<td>${l.categorie ? pastille(l.categorie) : vide}</td>`;
+      case 'projet': return `<td>${pastille(PROJETS[l.projet] ?? l.projet, l.projet === 'a_qualifier' ? 'aq' : '')}</td>`;
+      case 'temperature': return `<td>${l.temperature ? pastille(TEMPERATURES[l.temperature] ?? l.temperature, `t-${l.temperature}`) : vide}</td>`;
+      case 'sources': return `<td class="ct-src">${l.sources.length ? esc(l.sources.map(libelleSource).join(' + ')) : vide}</td>`;
+      case 'ville': return `<td>${l.ville ? esc(l.ville) : vide}</td>`;
+      case 'telephone': return `<td class="ct-num">${l.telephones.length ? esc(telLisible(l.telephones[0])) + plus(l.telephones, telLisible) : vide}</td>`;
+      case 'email': return `<td class="ct-coupe ct-mail" title="${esc(l.emails.join(', '))}">${l.emails.length ? esc(l.emails[0]) + plus(l.emails, (e) => e) : vide}</td>`;
+      case 'profil': return `<td>${l.profils.length ? l.profils.map((p) => `<a href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">${esc(reseau(p.reseau))}</a>`).join(' ') : vide}</td>`;
+      case 'dernier': return `<td class="ct-num">${l.dernier_le ? `${esc(dates[i])}${l.dernier_canal ? ` · ${esc(CANAUX_CONTACT[l.dernier_canal] ?? l.dernier_canal)}` : ''}` : '<span class="ct-vide">jamais</span>'}</td>`;
+      case 'accord': return `<td>${l.accord === 'sans_email' ? vide : `<span class="ct-accord ${l.accord}">${esc(ACCORDS[l.accord])}</span>`}</td>`;
+      case 'verifie': return `<td>${l.ecarte ? '<span class="ct-etat">écarté</span>' : l.verifie ? '<span class="ct-etat ok">✓ vérifié</span>' : '<span class="ct-etat av">à vérifier</span>'}</td>`;
+      default: return '<td></td>';
+    }
+  }
+
+  function afficher() {
+    const colonnes = COLONNES.filter((c) => !cachees.has(c.cle));
+    entetes.innerHTML = colonnes.map((c) => {
+      const actif = tri.cle === c.cle;
+      return `<th data-cle="${c.cle}" aria-sort="${actif ? (tri.sens === 1 ? 'ascending' : 'descending') : 'none'}"><button type="button" data-trier="${c.cle}">${esc(c.libelle)}<span class="ct-fleche" aria-hidden="true">${actif ? (tri.sens === 1 ? '▲' : '▼') : ''}</span></button></th>`;
+    }).join('');
+    // Filtres : les écartés sont masqués (FR-1) ; les filtres de la story 18.5 s'ajouteront ici.
+    const cherche = preparerRecherche(recherche.value);
+    const garder: number[] = [];
+    for (let i = 0; i < lignes.length; i++) if (!lignes[i].ecarte && cherche(lignes[i], textes[i])) garder.push(i);
+    const v = valeursDe(tri.cle);
+    garder.sort((a, b) => {
+      const x = v[a], y = v[b];
+      if (x === null || y === null) return x === y ? 0 : x === null ? 1 : -1; // vides en fin de liste, dans les deux sens
+      const r = typeof x === 'number' && typeof y === 'number' ? x - y : comparer(String(x), String(y));
+      return r * tri.sens;
+    });
+    corps.innerHTML = garder.length
+      ? garder.map((i) => `<tr data-contact="${esc(lignes[i].id)}">${colonnes.map((c) => cellule(lignes[i], i, c.cle)).join('')}</tr>`).join('')
+      : `<tr><td class="ct-attente" colspan="${colonnes.length}">${lignes.length ? 'Aucun contact pour cette recherche.' : 'Aucun contact pour l\'instant.'}</td></tr>`;
+    compteur.textContent = `${garder.length} contact${garder.length > 1 ? 's' : ''} sur ${total}`;
+  }
+
+  entetes.addEventListener('click', (e) => {
+    const cle = (e.target as Element).closest<HTMLElement>('[data-trier]')?.dataset.trier as CleColonne | undefined;
+    if (!cle) return;
+    tri = tri.cle === cle ? { cle, sens: tri.sens === 1 ? -1 : 1 } : { cle, sens: 1 };
+    afficher();
+  });
+  // Le tableau se recalcule 120 ms après la dernière frappe, pas à chaque lettre (revue de code 18.4).
+  let attente: ReturnType<typeof setTimeout> | undefined;
+  recherche.addEventListener('input', () => { clearTimeout(attente); attente = setTimeout(afficher, 120); });
+  for (const boite of menuColonnes.querySelectorAll<HTMLInputElement>('input[type=checkbox]')) {
+    boite.checked = !cachees.has(boite.value as CleColonne);
+    boite.addEventListener('change', () => {
+      if (boite.checked) cachees.delete(boite.value as CleColonne); else cachees.add(boite.value as CleColonne);
+      try { localStorage.setItem(MEMOIRE, JSON.stringify([...cachees])); } catch {}
+      afficher();
+    });
+  }
+  document.addEventListener('click', (e) => { if (!menuColonnes.contains(e.target as Node)) menuColonnes.open = false; });
+  afficher();
+</script>
+
+<style is:global>
+  /* Mise en page de la maquette : colonne des vues à gauche, tableau sur toute la largeur restante. Classes globales :
+     les lignes du tableau sont écrites par l'îlot, hors du gabarit. */
+  .ct-tete { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+  .ct-tete h1 { font-size: 28px; margin: 0; }
+  .ct-page { display: grid; grid-template-columns: 1fr; gap: 20px; align-items: start; }
+  @media (min-width: 900px) { .ct-page { grid-template-columns: 210px minmax(0, 1fr); } }
+  .ct-cote { display: flex; flex-direction: column; gap: 18px; }
+  .ct-bloc { background: #fff; border: 1px solid var(--avt-galet); border-radius: 12px; padding: 14px; }
+  .ct-bloc h3 { margin: 0 0 8px; font-family: var(--avt-font-text); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--avt-text-muted); font-weight: 500; }
+  .ct-vue { display: flex; justify-content: space-between; width: 100%; background: none; border: 0; padding: 6px 8px; border-radius: 8px; text-align: left; font: inherit; font-size: 14px; color: inherit; cursor: default; }
+  .ct-vue.actif { background: var(--avt-brume); color: var(--avt-klein); font-weight: 500; }
+  .ct-vue small { color: var(--avt-text-muted); font-variant-numeric: tabular-nums; font-size: 13px; }
+  .ct-principal { min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+  .ct-outils { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .ct-outils input[type=search] { flex: 1 1 260px; min-width: 0; min-height: 40px; padding: 8px 14px; border: 1px solid var(--avt-galet); border-radius: 999px; background: #fff; font: inherit; font-size: 15px; color: var(--avt-brun); }
+  .ct-outils input[type=search]:focus-visible, .ct-menu summary:focus-visible, .ct-table th button:focus-visible { outline: 2px solid var(--avt-klein); outline-offset: 2px; }
+  .ct-menu { position: relative; }
+  .ct-menu summary { list-style: none; min-height: 40px; display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: 1px solid var(--avt-galet); border-radius: 999px; background: #fff; cursor: pointer; font-size: 14px; }
+  .ct-menu summary::-webkit-details-marker { display: none; }
+  .ct-menu summary::after { content: '▾'; font-size: 12px; }
+  .ct-menu-liste { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; background: #fff; border: 1px solid var(--avt-galet); border-radius: 10px; padding: 8px; min-width: 210px; box-shadow: 0 8px 24px rgba(0, 0, 0, .12); display: flex; flex-direction: column; }
+  .ct-menu-liste label { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 6px; font-size: 14px; cursor: pointer; }
+  .ct-menu-liste label:hover { background: var(--avt-galet); }
+  .ct-menu-liste input { width: 16px; height: 16px; accent-color: var(--avt-klein); }
+  .ct-actifs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; min-height: 24px; }
+  .ct-total { color: var(--avt-text-muted); font-variant-numeric: tabular-nums; margin-left: auto; font-size: 14px; }
+  .ct-boite { overflow: auto; max-height: calc(100vh - 230px); min-height: 240px; background: #fff; border: 1px solid var(--avt-galet); border-radius: 12px; }
+  .ct-table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  .ct-table th, .ct-table td { padding: 8px 8px; border-bottom: 1px solid var(--avt-galet); text-align: left; white-space: nowrap; vertical-align: middle; }
+  .ct-table th { position: sticky; top: 0; z-index: 1; background: #fff; padding: 0; }
+  .ct-table th button { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 4px; width: 100%; padding: 10px 8px; font-family: var(--avt-font-text); font-weight: 500; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--avt-text-muted); cursor: pointer; }
+  .ct-table th[aria-sort=ascending] button, .ct-table th[aria-sort=descending] button { color: var(--avt-brun); }
+  .ct-fleche { font-size: 10px; }
+  .ct-table tbody tr:hover td { background: var(--avt-ecru); }
+  .ct-nom a { font-weight: 500; color: var(--avt-brun); }
+  .ct-num { font-variant-numeric: tabular-nums; color: var(--avt-text-muted); }
+  .ct-src { font-size: 12.5px; color: var(--avt-text-muted); }
+  .ct-coupe { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+  .ct-mail { max-width: 220px; }
+  .ct-vide { color: var(--avt-disabled); }
+  .ct-plus { font-size: 11.5px; color: var(--avt-klein); background: var(--avt-brume); border-radius: 6px; padding: 0 5px; }
+  .ct-pastille { display: inline-block; background: var(--avt-galet); border-radius: 999px; padding: 2px 9px; font-size: 12.5px; }
+  .ct-pastille.aq { background: transparent; border: 1px dashed var(--avt-galet); color: var(--avt-text-muted); }
+  .ct-pastille.t-chaud, .ct-pastille.t-en_vente, .ct-pastille.t-recherche_active { background: var(--avt-terra-deep); color: #fff; }
+  .ct-pastille.t-tiede { background: #e9cdb8; color: var(--avt-brun); }
+  .ct-pastille.t-froid { background: #dfe3ea; color: var(--avt-brun); }
+  .ct-pastille.t-avec_anne { background: var(--avt-klein); color: #fff; }
+  .ct-pastille.t-termine { background: transparent; border: 1px solid var(--avt-galet); color: var(--avt-text-muted); }
+  .ct-accord { font-size: 12.5px; }
+  .ct-accord.accord, .ct-accord.client { color: #2E6B3F; }
+  .ct-accord.desinscrit { color: var(--avt-terra-deep); }
+  .ct-accord.sans_accord { color: var(--avt-text-muted); }
+  .ct-etat { font-size: 12px; border-radius: 999px; padding: 2px 8px; }
+  .ct-etat.av { background: #FBF0D9; color: #8A5A00; }
+  .ct-etat.ok { color: #2E6B3F; }
+  .ct-attente { padding: 24px !important; color: var(--avt-text-muted); white-space: normal !important; }
 </style>

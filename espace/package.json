@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "node scripts/partage.mjs && astro dev",
-    "build": "node scripts/partage.mjs && node scripts/base.mjs && astro build",
+    "build": "node scripts/partage.mjs && node scripts/base.mjs && node scripts/migrations-a-jour.mjs && astro build",
     "check": "wrangler types && astro check && tsc -p tsconfig.worker.json",
     "types": "wrangler types",
     "base:local": "wrangler d1 migrations apply DB --local"

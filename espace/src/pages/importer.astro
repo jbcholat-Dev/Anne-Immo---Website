@@ -54,7 +54,7 @@ if (Astro.request.method === 'POST') {
 const nouveaux = apercu?.lignes.filter((l) => !l.connu).length ?? 0;
 const canaux = Object.entries(CANAUX_ORIGINE).filter(([v]) => v !== 'boitage' && v !== 'recommandation');
 ---
-<Espace titre="Importer une liste" actif="ajouter">
+<Espace titre="Importer une liste" actif="importer">
   <div>
     <div class="e-muet"><a href="/ajouter">Ajouter</a></div>
     <h1>Importer une liste</h1>

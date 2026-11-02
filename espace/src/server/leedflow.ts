@@ -138,14 +138,24 @@ async function page(env: EnvEspace, genre: Genre, apres: number, n: number) {
   return { elements: elements(j), pages: nombreDePages(j) };
 }
 
-/** Téléphone → contact suivi (étape renseignée), en une requête. Un contact du carnet hors suivi n'est jamais trouvé :
- * ses appels restent des numéros inconnus, pour ne pas ranger les appels privés d'Anne sur ses proches (AD-32, story 18.1). */
-async function contactsParTelephone(env: EnvEspace, tels: string[]): Promise<Map<string, string>> {
+/** Téléphone → contact suivi (étape renseignée), en une requête : son numéro principal ou un autre de ses numéros
+ * (`contact_coordonnee`, story 18.2). Un contact du carnet hors suivi n'est jamais trouvé : ses appels restent des numéros
+ * inconnus, pour ne pas ranger les appels privés d'Anne sur ses proches (AD-32, story 18.1). Le numéro principal l'emporte.
+ * `suivi_le` : entrée seule dans le suivi d'un contact du carnet ; ce qui est plus ancien reste inconnu (`pourLeContact`). */
+type Suivi = { id: string; suivi_le: string | null };
+async function contactsParTelephone(env: EnvEspace, tels: string[]): Promise<Map<string, Suivi>> {
   if (!tels.length) return new Map();
-  const { results } = await env.DB.prepare('SELECT id, telephone FROM contact WHERE etape IS NOT NULL AND telephone IN (SELECT value FROM json_each(?1))')
-    .bind(JSON.stringify([...new Set(tels)])).all<{ id: string; telephone: string }>();
-  return new Map(results.map((r) => [r.telephone, r.id]));
+  const { results } = await env.DB.prepare(
+    `SELECT c.id, c.suivi_le, k.valeur AS telephone, 1 AS rang FROM contact_coordonnee k JOIN contact c ON c.id = k.contact_id
+       WHERE k.type = 'telephone' AND c.etape IS NOT NULL AND k.valeur IN (SELECT value FROM json_each(?1))
+     UNION ALL
+     SELECT id, suivi_le, telephone, 2 FROM contact WHERE etape IS NOT NULL AND telephone IN (SELECT value FROM json_each(?1))
+     ORDER BY rang`,
+  ).bind(JSON.stringify([...new Set(tels)])).all<Suivi & { telephone: string }>();
+  return new Map(results.map((r) => [r.telephone, { id: r.id, suivi_le: r.suivi_le }]));
 }
+/** Le contact qui reçoit un élément daté `a` (ISO) : aucun si l'élément précède son entrée seule dans le suivi (story 18.2). */
+const pourLeContact = (c: Suivi | undefined, a: string): string | undefined => (c && (!c.suivi_le || a >= c.suivi_le) ? c.id : undefined);
 
 async function lotParPaquets(env: EnvEspace, lot: D1PreparedStatement[]) {
   for (let i = 0; i < lot.length; i += 50) await env.DB.batch(lot.slice(i, i + 50));
@@ -167,7 +177,7 @@ async function rangerEchanges(env: EnvEspace, genre: Exclude<Genre, 'tache'>, el
     const sourceId = `${genre}:${e.id}`;
     const a = new Date(e.created).toISOString();
     const { texte, donnees } = decrire(genre, e);
-    const contact = connus.get(tel);
+    const contact = pourLeContact(connus.get(tel), a);
     if (contact) {
       notes++;
       // Une seule ligne par élément Leedflow ; le texte est remplacé s'il a changé (résumé arrivé après coup).
@@ -192,9 +202,13 @@ async function rangerEchanges(env: EnvEspace, genre: Exclude<Genre, 'tache'>, el
 async function rangerTaches(env: EnvEspace, els: Element[], fiches: { reste: number }): Promise<number> {
   const limite = Date.now() - TACHES_JOURS * JOUR_MS;
   const ids = [...new Set(els.map((e) => e.id_contact).filter((x): x is string => !!x))];
-  const { results } = await env.DB.prepare('SELECT leedflow_contact, contact_id FROM leedflow_lien WHERE leedflow_contact IN (SELECT value FROM json_each(?1))')
-    .bind(JSON.stringify(ids)).all<{ leedflow_contact: string; contact_id: string }>();
-  const liens = new Map(results.map((r) => [r.leedflow_contact, r.contact_id]));
+  // Seuls les liens vers un contact suivi comptent (AD-32) : un contact repassé au carnet ne reçoit plus de tâche. Une
+  // tâche antérieure à son entrée seule dans le suivi (`suivi_le`) ne lui est pas proposée non plus (revue de code 18.2).
+  const { results } = await env.DB.prepare(
+    `SELECT l.leedflow_contact, l.contact_id, c.suivi_le FROM leedflow_lien l JOIN contact c ON c.id = l.contact_id AND c.etape IS NOT NULL
+     WHERE l.leedflow_contact IN (SELECT value FROM json_each(?1))`,
+  ).bind(JSON.stringify(ids)).all<{ leedflow_contact: string; contact_id: string; suivi_le: string | null }>();
+  const liens = new Map(results.map((r) => [r.leedflow_contact, { id: r.contact_id, suivi_le: r.suivi_le }]));
   // Numéros déjà vus pour ces contacts Leedflow, dans les appels de numéros inconnus.
   const { results: vus } = await env.DB.prepare(
     `SELECT json_extract(donnees, '$.leedflow_contact') AS lc, telephone FROM leedflow_inconnu
@@ -211,18 +225,20 @@ async function rangerTaches(env: EnvEspace, els: Element[], fiches: { reste: num
       continue;
     }
     if (!e.task?.trim() || !e.id_contact || e.created < limite) continue;
-    let contact = liens.get(e.id_contact);
+    let contact = pourLeContact(liens.get(e.id_contact), new Date(e.created).toISOString());
+    const lie = liens.has(e.id_contact);
     // Contact Leedflow pas encore vu dans un appel : sa fiche donne son numéro (quelques fiches par passage).
     let tel = numeros.get(e.id_contact) ?? null;
-    if (!contact && !tel && fiches.reste > 0) {
+    if (!contact && !lie && !tel && fiches.reste > 0) {
       fiches.reste--;
       tel = (await ficheLeedflow(env, e.id_contact))?.telephone ?? null;
       if (tel) numeros.set(e.id_contact, tel);
     }
-    if (!contact && tel) {
-      contact = (await contactsParTelephone(env, [tel])).get(tel);
-      if (contact) {
-        liens.set(e.id_contact, contact);
+    if (!contact && !lie && tel) {
+      const suivi = (await contactsParTelephone(env, [tel])).get(tel);
+      contact = pourLeContact(suivi, new Date(e.created).toISOString());
+      if (contact && suivi) {
+        liens.set(e.id_contact, suivi);
         lot.push(env.DB.prepare('INSERT OR IGNORE INTO leedflow_lien (leedflow_contact, contact_id) VALUES (?1, ?2)').bind(e.id_contact, contact));
       }
     }
@@ -245,28 +261,53 @@ async function rangerTaches(env: EnvEspace, els: Element[], fiches: { reste: num
   return proposees;
 }
 
+/** Les numéros des contacts suivis (principal et autres numéros), avec leur date d'entrée dans le suivi : pour
+ * `rattacherInconnus` et « À trier ». Un numéro principal d'un contact et secondaire d'un autre va au premier, comme
+ * dans `contactsParTelephone` (revue de code 18.2) : une seule ligne par numéro. */
+const NUMEROS_SUIVIS = `numeros AS (
+  SELECT id, telephone, suivi_le FROM (
+    SELECT id, telephone, suivi_le, row_number() OVER (PARTITION BY telephone ORDER BY rang, id) AS r FROM (
+      SELECT id, telephone, suivi_le, 0 AS rang FROM contact WHERE etape IS NOT NULL AND telephone IS NOT NULL
+      UNION ALL
+      SELECT c.id, k.valeur, c.suivi_le, 1 FROM contact_coordonnee k JOIN contact c ON c.id = k.contact_id WHERE k.type = 'telephone' AND c.etape IS NOT NULL
+    )
+  ) WHERE r = 1
+)`;
+/** Un élément gardé passe au contact s'il date de son entrée dans le suivi ou après (story 18.2) ; `suivi_le` NULL =
+ * contact créé dans le suivi ou entré par décision d'Anne : tout l'historique du numéro est repris. */
+const REPRIS = '(n.suivi_le IS NULL OR i.a >= n.suivi_le)';
+
 /** Les éléments venus d'un numéro inconnu qui est désormais celui d'un contact suivi passent dans son historique.
- * Un contact hors suivi (étape NULL) ne les reçoit jamais tout seul (AD-32, story 18.1). */
+ * Un contact hors suivi (étape NULL) ne les reçoit jamais tout seul (AD-32, story 18.1) ; un contact entré seul dans
+ * le suivi (demande du site, `suivi_le` posé) ne reçoit pas ses échanges d'avant, qui peuvent être des appels privés. */
 export async function rattacherInconnus(env: EnvEspace): Promise<void> {
   await env.DB.batch([
     env.DB.prepare(
-      `INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, donnees)
-       SELECT c.id, i.a, 'appel', 'leedflow', i.source_id, i.texte, i.donnees FROM leedflow_inconnu i JOIN contact c ON c.telephone = i.telephone AND c.etape IS NOT NULL
-       WHERE i.source_id NOT LIKE 'tache:%' ON CONFLICT (source, source_id) WHERE source_id IS NOT NULL DO NOTHING`,
+      `WITH ${NUMEROS_SUIVIS}
+       INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, donnees)
+       SELECT n.id, i.a, 'appel', 'leedflow', i.source_id, i.texte, i.donnees FROM leedflow_inconnu i JOIN numeros n ON n.telephone = i.telephone
+       WHERE i.source_id NOT LIKE 'tache:%' AND ${REPRIS} ON CONFLICT (source, source_id) WHERE source_id IS NOT NULL DO NOTHING`,
     ),
     // Les tâches gardées avec le numéro deviennent des propositions sur le contact.
     env.DB.prepare(
-      `INSERT INTO leedflow_tache (id, contact_id, a, texte, echeance)
-       SELECT substr(i.source_id, 7), c.id, i.a, json_extract(i.donnees, '$.tache'), json_extract(i.donnees, '$.echeance')
-       FROM leedflow_inconnu i JOIN contact c ON c.telephone = i.telephone AND c.etape IS NOT NULL
-       WHERE i.source_id LIKE 'tache:%' AND json_extract(i.donnees, '$.tache') IS NOT NULL ON CONFLICT (id) DO NOTHING`,
+      `WITH ${NUMEROS_SUIVIS}
+       INSERT INTO leedflow_tache (id, contact_id, a, texte, echeance)
+       SELECT substr(i.source_id, 7), n.id, i.a, json_extract(i.donnees, '$.tache'), json_extract(i.donnees, '$.echeance')
+       FROM leedflow_inconnu i JOIN numeros n ON n.telephone = i.telephone
+       WHERE i.source_id LIKE 'tache:%' AND json_extract(i.donnees, '$.tache') IS NOT NULL AND ${REPRIS} ON CONFLICT (id) DO NOTHING`,
     ),
     env.DB.prepare(
-      `INSERT OR IGNORE INTO leedflow_lien (leedflow_contact, contact_id)
-       SELECT json_extract(i.donnees, '$.leedflow_contact'), c.id FROM leedflow_inconnu i JOIN contact c ON c.telephone = i.telephone AND c.etape IS NOT NULL
-       WHERE json_extract(i.donnees, '$.leedflow_contact') IS NOT NULL`,
+      `WITH ${NUMEROS_SUIVIS}
+       INSERT OR IGNORE INTO leedflow_lien (leedflow_contact, contact_id)
+       SELECT json_extract(i.donnees, '$.leedflow_contact'), n.id FROM leedflow_inconnu i JOIN numeros n ON n.telephone = i.telephone
+       WHERE json_extract(i.donnees, '$.leedflow_contact') IS NOT NULL AND ${REPRIS}`,
     ),
-    env.DB.prepare('DELETE FROM leedflow_inconnu WHERE telephone IN (SELECT telephone FROM contact WHERE telephone IS NOT NULL AND etape IS NOT NULL)'),
+    // Seul ce qui vient d'être rattaché quitte la liste des inconnus (le reste part avec la purge des 90 jours).
+    env.DB.prepare(
+      `WITH ${NUMEROS_SUIVIS}
+       DELETE FROM leedflow_inconnu WHERE source_id IN (
+         SELECT i.source_id FROM leedflow_inconnu i JOIN numeros n ON n.telephone = i.telephone WHERE ${REPRIS})`,
+    ),
   ]);
 }
 
@@ -363,7 +404,7 @@ async function lireSyntheses(env: EnvEspace, fiches: { reste: number }): Promise
   const maintenant = new Date().toISOString();
   const veille = new Date(Date.now() - SYNTHESE_RELUE_H * 3_600_000).toISOString();
   const { results } = await env.DB.prepare(
-    `SELECT c.id, min(l.leedflow_contact) AS lc FROM contact c JOIN leedflow_lien l ON l.contact_id = c.id
+    `SELECT c.id, min(l.leedflow_contact) AS lc FROM contact c JOIN leedflow_lien l ON l.contact_id = c.id AND c.etape IS NOT NULL
      WHERE c.synthese_lue_le IS NULL OR c.synthese_lue_le < ?1
         OR c.synthese_lue_le < strftime('%Y-%m-%dT%H:%M:%fZ', (SELECT max(e.a) FROM contact_evenement e WHERE e.contact_id = c.id AND e.source = 'leedflow'), '+1 hour')
      GROUP BY c.id ORDER BY c.synthese_lue_le IS NOT NULL, c.synthese_lue_le LIMIT ?2`,
@@ -438,11 +479,13 @@ function grouper(lignes: LigneInconnu[], categories: Map<string, Categorie> = ne
 const sansEchange = (r: { telephone: string; a: string; categorie: Categorie }): NumeroInconnu =>
   ({ telephone: r.telephone, prenom: '', nom: '', email: '', dernier: r.a, echanges: [], taches: [], categorie: r.categorie, silencieux: false });
 
-/** Les numéros vus par Leedflow pour la page « À trier », selon le filtre choisi. */
+/** Les numéros vus par Leedflow pour la page « À trier », selon le filtre choisi. Les échanges d'un numéro devenu celui d'un
+ * contact suivi n'y sont plus (ceux d'avant son entrée seule dans le suivi restent gardés, jusqu'à la purge des 90 jours,
+ * mais il n'y a plus rien à trier : revue de code 18.2). */
 export async function numerosLeedflow(env: EnvEspace, filtre: Filtre): Promise<NumeroInconnu[]> {
   const [lignes, classes] = await env.DB.batch([
-    env.DB.prepare(`SELECT source_id, telephone, a, texte, donnees FROM leedflow_inconnu
-      WHERE ${filtre === 'a_trier' ? 'telephone NOT IN (SELECT telephone FROM leedflow_ecarte)' : filtre === 'pro' ? `telephone IN (SELECT telephone FROM leedflow_ecarte WHERE categorie = 'pro')` : filtre === 'tous' ? '1' : '0'}
+    env.DB.prepare(`WITH ${NUMEROS_SUIVIS} SELECT source_id, telephone, a, texte, donnees FROM leedflow_inconnu
+      WHERE telephone NOT IN (SELECT telephone FROM numeros) AND ${filtre === 'a_trier' ? 'telephone NOT IN (SELECT telephone FROM leedflow_ecarte)' : filtre === 'pro' ? `telephone IN (SELECT telephone FROM leedflow_ecarte WHERE categorie = 'pro')` : filtre === 'tous' ? '1' : '0'}
       ORDER BY a DESC LIMIT 600`),
     env.DB.prepare(`SELECT telephone, a, categorie FROM leedflow_ecarte WHERE ?1 = 'tous' OR categorie = ?1 ORDER BY a DESC LIMIT 300`).bind(filtre),
   ]);

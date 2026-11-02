@@ -5,23 +5,34 @@
 // les actions marketing (story 13.17) depuis le Bilan.
 // Les pages reprises de /gestion gardent le gabarit Gestion du site jusqu'à la phase 2 de la story 13.3.
 // Bouton « Un retour ? » (story 13.20) : le même que celui de l'aperçu du site ; chaque remarque devient un ticket GitHub.
+// Story 18.4 (FR-14, livraison 1) : la barre du haut ne montre plus que « Contacts » (la page d'accueil) et le menu
+// « Autres outils », qui mène à toutes les pages actuelles ; elle est visible à toutes les largeurs. Le menu du bas du
+// téléphone reste (Aujourd'hui, Contacts, Ajouter, Bilan) ; son « Contacts » mène à la liste en cartes `/contacts`, avec
+// l'appel en un geste (revue de code 18.4) : le grand tableau est l'accueil sur ordinateur. `large` : page sur toute la largeur (tableau des contacts).
 import '@site/styles/global.css';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import RetourApercu from '@site/components/RetourApercu.astro';
-interface Props { titre: string; actif?: 'aujourdhui' | 'contacts' | 'bilan' | 'prescripteurs' | 'acheteurs' | 'pipeline' | 'ajouter' | 'demandes' | 'actions' | 'campagnes' }
-const { titre, actif } = Astro.props;
+type Actif = 'contacts' | 'aujourdhui' | 'suivis' | 'bilan' | 'prescripteurs' | 'acheteurs' | 'pipeline' | 'ajouter' | 'importer' | 'a-trier' | 'demandes' | 'actions' | 'campagnes';
+interface Props { titre: string; actif?: Actif; large?: boolean }
+const { titre, actif, large = false } = Astro.props;
 const compte = Astro.request.headers.get(ENTETE_COMPTE) ?? '';
-const liens = [
-  { cle: 'aujourdhui', href: '/', texte: "Aujourd'hui" },
-  { cle: 'contacts', href: '/contacts', texte: 'Contacts' },
+/** Toutes les pages d'avant la page Contacts (PRD FR-14), dans le menu « Autres outils ». */
+const OUTILS: { cle: Actif | 'qualifier'; href: string; texte: string }[] = [
+  { cle: 'aujourdhui', href: '/aujourdhui', texte: "Aujourd'hui" },
   { cle: 'pipeline', href: '/pipeline', texte: 'Pipeline' },
-  { cle: 'bilan', href: '/bilan', texte: 'Bilan' },
-  { cle: 'actions', href: '/actions', texte: 'Prospection' },
-  { cle: 'campagnes', href: '/campagnes', texte: 'Campagnes' },
+  { cle: 'suivis', href: '/contacts', texte: 'Contacts suivis' },
+  { cle: 'qualifier', href: '/contacts?f=a_qualifier', texte: 'À qualifier' },
+  { cle: 'ajouter', href: '/ajouter', texte: 'Ajouter' },
+  { cle: 'importer', href: '/importer', texte: 'Importer une liste' },
   { cle: 'prescripteurs', href: '/prescripteurs', texte: 'Prescripteurs' },
   { cle: 'acheteurs', href: '/acheteurs', texte: 'Acheteurs' },
-  { cle: 'demandes', href: '/gestion', texte: 'Demandes du site' },
-] as const;
+  { cle: 'actions', href: '/actions', texte: 'Prospection' },
+  { cle: 'campagnes', href: '/campagnes', texte: 'Campagnes' },
+  { cle: 'bilan', href: '/bilan', texte: 'Bilan' },
+  { cle: 'a-trier', href: '/a-trier', texte: 'Numéros à trier' },
+  { cle: 'demandes', href: '/gestion', texte: 'Demandes du site (gestion)' },
+];
+const dansOutils = !!actif && actif !== 'contacts';
 ---
 <!doctype html>
 <html lang="fr">
@@ -37,19 +48,30 @@ const liens = [
     <header class="e-tete">
       <a href="/" class="e-marque">L'espace d'Anne</a>
       <nav class="e-menu-haut" aria-label="Menu">
-        {liens.map((l) => <a href={l.href} aria-current={actif === l.cle ? 'page' : undefined}>{l.texte}</a>)}
-        <a href="/ajouter" class="e-ajouter-haut" aria-current={actif === 'ajouter' ? 'page' : undefined}>Ajouter</a>
+        <a href="/" aria-current={actif === 'contacts' ? 'page' : undefined}>Contacts</a>
+        <details class="e-outils" data-outils>
+          <summary class:list={{ actif: dansOutils }}>Autres outils</summary>
+          <div class="e-outils-liste">
+            {OUTILS.map((o) => <a href={o.href} aria-current={actif === o.cle ? 'page' : undefined} data-outil={o.cle}>{o.texte}</a>)}
+          </div>
+        </details>
       </nav>
       <span class="e-compte">{compte}</span>
     </header>
-    <main class="e-page"><slot /></main>
+    <main class:list={['e-page', { 'e-page-large': large }]}><slot /></main>
     <nav class="e-menu-bas" aria-label="Menu">
-      <a href="/" aria-current={actif === 'aujourdhui' ? 'page' : undefined}>Aujourd'hui</a>
-      <a href="/contacts" aria-current={actif === 'contacts' ? 'page' : undefined}>Contacts</a>
+      <a href="/aujourdhui" aria-current={actif === 'aujourdhui' ? 'page' : undefined}>Aujourd'hui</a>
+      <a href="/contacts" aria-current={actif === 'contacts' || actif === 'suivis' ? 'page' : undefined}>Contacts</a>
       <a href="/ajouter" class="e-plus" aria-label="Ajouter"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg></a>
       <a href="/bilan" aria-current={actif === 'bilan' || actif === 'actions' || actif === 'campagnes' ? 'page' : undefined}>Bilan</a>
     </nav>
     <RetourApercu espace />
+    <script>
+      // Le menu « Autres outils » se referme d'un clic ailleurs ou avec Échap.
+      const outils = document.querySelector<HTMLDetailsElement>('[data-outils]');
+      document.addEventListener('click', (e) => { if (outils && !outils.contains(e.target as Node)) outils.open = false; });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && outils?.open) { outils.open = false; outils.querySelector('summary')?.focus(); } });
+    </script>
   </body>
 </html>
 <style is:global>
@@ -57,13 +79,22 @@ const liens = [
   .e-corps { min-height: 100vh; padding-bottom: 76px; }
   .e-tete { display: flex; align-items: center; gap: 24px; padding: 14px 20px; border-bottom: 1px solid var(--avt-galet); background: #fff; flex-wrap: wrap; }
   .e-marque { font-family: var(--avt-font-display); font-size: 22px; color: var(--avt-brun); }
-  .e-menu-haut { display: none; gap: 8px 20px; align-items: center; flex-wrap: wrap; }
-  .e-menu-haut a { color: var(--avt-brun); padding: 6px 0; }
-  .e-menu-haut a[aria-current=page] { font-weight: 500; border-bottom: 2px solid var(--avt-terra); }
-  .e-menu-haut .e-ajouter-haut { padding: 8px 18px; border-radius: 999px; background: var(--avt-terra); color: #fff; }
-  .e-menu-haut .e-ajouter-haut[aria-current=page] { border-bottom: 0; }
+  .e-menu-haut { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .e-menu-haut > a, .e-outils summary { color: var(--avt-text-muted); padding: 8px 14px; border-radius: 999px; font-size: 15px; }
+  .e-menu-haut > a[aria-current=page] { background: var(--avt-brun); color: var(--avt-ecru); }
+  .e-outils { position: relative; }
+  .e-outils summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .e-outils summary::-webkit-details-marker { display: none; }
+  .e-outils summary::after { content: '▾'; font-size: 12px; }
+  .e-outils summary.actif { color: var(--avt-brun); font-weight: 500; }
+  .e-outils summary:focus-visible, .e-menu-haut > a:focus-visible { outline: 2px solid var(--avt-klein); outline-offset: 2px; }
+  .e-outils-liste { position: absolute; top: calc(100% + 4px); left: 0; z-index: 30; background: #fff; border: 1px solid var(--avt-galet); border-radius: 10px; padding: 6px; min-width: 240px; box-shadow: 0 8px 24px rgba(0, 0, 0, .12); display: flex; flex-direction: column; }
+  .e-outils-liste a { padding: 8px 10px; border-radius: 6px; color: var(--avt-brun); font-size: 15px; }
+  .e-outils-liste a:hover { background: var(--avt-galet); }
+  .e-outils-liste a[aria-current=page] { font-weight: 500; color: var(--avt-klein); }
   .e-compte { margin-left: auto; font-size: 13px; color: var(--avt-text-muted); overflow-wrap: anywhere; }
   .e-page { max-width: 1000px; margin: 0 auto; padding: 24px 16px 40px; display: flex; flex-direction: column; gap: 22px; }
+  .e-page-large { max-width: none; }
   .e-page h1 { font-size: 30px; line-height: 1.2; }
   .e-page h2 { font-size: 22px; }
   .e-menu-bas { position: fixed; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-around; align-items: center; background: #fff; border-top: 1px solid var(--avt-galet); padding: 6px 8px 10px; z-index: 10; }
@@ -72,7 +103,6 @@ const liens = [
   .e-menu-bas .e-plus { min-width: 48px; width: 48px; height: 48px; border-radius: 50%; background: var(--avt-terra); color: #fff; }
   @media (min-width: 900px) {
     .e-corps { padding-bottom: 0; }
-    .e-menu-haut { display: flex; }
     .e-menu-bas { display: none; }
     .e-page { padding: 32px 32px 64px; }
   }

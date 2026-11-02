@@ -83,6 +83,7 @@ node scripts/e2e-diagnostic.mjs # diagnostic de bout en bout sur le serveur loca
 node scripts/e2e-rendez-vous.mjs # webhook Cal.com et agenda de /contact sur le serveur local (même préalable)
 node scripts/e2e-guide.mjs     # guide par lien signé, séquence et désabonnement sur le serveur local (même préalable)
 node scripts/e2e-gestion.mjs   # espace de gestion /gestion, droits RGPD et purge, avec une imitation de Cloudflare Access (même préalable)
+node scripts/e2e-migration-0018.mjs # répète la migration 0018 sur une base locale neuve à part : rien de perdu, reprise, relance, garde de construction de l'espace (aucun préalable)
 node scripts/maquette-emails.mjs # fait partir les 12 e-mails aux prospects sur le serveur local, vérifie leur mise en forme et les capture dans site/.verif/emails (même préalable)
 node scripts/email-logo.mjs    # refait le logo joint aux e-mails (site/src/server/email-logo.png) depuis le logo de la charte
 node scripts/rapport-gabarit.mjs  # refait le gabarit du rapport PDF du diagnostic après un changement de ses textes (story 10.10), puis npm run build

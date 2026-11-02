@@ -14,7 +14,7 @@
 import Espace from '../../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { telLisible } from '@site/server/recherche';
-import { CANAUX_ORIGINE, LIBELLES_ETAPES } from '@site/server/contacts';
+import { CANAUX_ORIGINE } from '@site/server/contacts';
 import { quand, SOURCES } from '@site/server/gestion-donnees';
 import { effacerContact } from '@site/server/rights';
 import { envEspace, pourSite as env } from '../../server/env';
@@ -24,8 +24,7 @@ import { champ, ULID } from '../../server/formulaires';
 import { rattacherInconnus, resumeHtml, tachesDuContact } from '../../server/leedflow';
 import {
   ajouterNote, echeance, enregistrerSynthese, estCanal, MODELE_SYNTHESE, syntheseAffichee, libelleOrigine, lireContact, lirePassage, lirePrescripteur, listerPassages, listerPrescripteurs, modifierCoordonnees, personne,
-  QUESTIONS, rechercheRenseignee, type Reponses,
-} from '../../server/pipeline';
+  QUESTIONS, rechercheRenseignee, type Reponses, libelleEtape, libelleCanal } from '../../server/pipeline';
 
 export const prerender = false;
 const compte = Astro.request.headers.get(ENTETE_COMPTE);
@@ -55,7 +54,11 @@ if (Astro.request.method === 'POST') {
     else if (await ajouterNote(env, id, note, compte)) return Astro.redirect(`/contacts/fiche?id=${id}&m=note`, 303);
   } else if (quoi === 'effacer') {
     if (!['SUPPRIMER', 'EFFACER'].includes(champ(f, 'confirmation').toUpperCase())) erreur = 'Tapez SUPPRIMER pour confirmer : la suppression est définitive.';
-    else if ((await effacerContact(env, id, compte)) !== null) return Astro.redirect('/contacts?m=efface', 303);
+    else {
+      const fait = await effacerContact(env, id, compte);
+      // Sans LIEN_SECRET, l'opposition n'a pas pu être notée : l'écran le dit (revue de code 18.3).
+      if (fait) return Astro.redirect(`/contacts?m=${fait.opposition ? 'efface' : 'efface-sans-opposition'}`, 303);
+    }
   } else if (quoi === 'coordonnees') {
     saisi = Object.fromEntries([...f.entries()].map(([k, v]) => [k, typeof v === 'string' ? v.trim() : '']));
     const p = personne(saisi);
@@ -84,7 +87,7 @@ if (Astro.request.method === 'POST') {
 const fiche = await lireContact(env, id);
 if (!fiche) return new Response('Contact inconnu', { status: 404 });
 const { contact: c, historique, demandes, passage, prescripteur } = fiche;
-const [taches, actions, passages, prescripteurs] = await Promise.all([tachesDuContact(envEspace, c.id).catch(() => []), actionsAuChoix(env, c.canal), listerPassages(env, 30), listerPrescripteurs(env)]);
+const [taches, actions, passages, prescripteurs] = await Promise.all([tachesDuContact(envEspace, c.id).catch(() => []), (c.canal ? actionsAuChoix(env, c.canal) : Promise.resolve([])), listerPassages(env, 30), listerPrescripteurs(env)]);
 // La saisie refusée est remise dans le formulaire ; sinon les valeurs du contact.
 const val = (k: keyof typeof c) => (erreurPour === 'coordonnees' && k in saisi ? saisi[k as string] : (c[k] as string | null) ?? '');
 const canalForm = val('canal');
@@ -124,7 +127,7 @@ const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || telLisible(c.telephon
   {erreur && <p class="e-message" role="alert" data-erreur>{erreur}{conflit && <> <a href={`/contacts/fiche?id=${conflit}`} data-conflit>Ouvrir sa fiche</a>.</>}</p>}
   <div style="display:flex;flex-wrap:wrap;gap:8px">
     <span class="e-tag" data-origine>{libelleOrigine(c, passage, prescripteur)}</span>
-    <span class="e-tag neutre" data-etape>{LIBELLES_ETAPES[c.etape]}</span>
+    <span class="e-tag neutre" data-etape>{libelleEtape(c.etape)}</span>
     {c.parcours && <span class="e-tag neutre">{c.parcours === 'vendeur' ? 'Vendeur' : 'Acheteur'}</span>}
     {c.rappel_individuel_seul ? <span class="e-tag alerte" data-rappel-seul>Rappel individuel seulement</span> : ''}
   </div>
@@ -229,7 +232,7 @@ const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || telLisible(c.telephon
       <dt class="e-muet">Téléphone</dt><dd style="margin:0" data-tel>{telLisible(c.telephone) || '—'}</dd>
       <dt class="e-muet">E-mail</dt><dd style="margin:0;overflow-wrap:anywhere">{c.email ?? '—'}</dd>
       <dt class="e-muet">Commune</dt><dd style="margin:0">{c.commune ?? '—'}</dd>
-      <dt class="e-muet">Origine</dt><dd style="margin:0">{CANAUX_ORIGINE[c.canal]}{c.origine_detail ? ` · ${c.origine_detail}` : ''}</dd>
+      <dt class="e-muet">Origine</dt><dd style="margin:0">{libelleCanal(c.canal)}{c.origine_detail ? ` · ${c.origine_detail}` : ''}</dd>
       <dt class="e-muet">Entré le</dt><dd style="margin:0">{quand(c.created_at)}</dd>
     </dl>
     <details open={erreurPour === 'coordonnees'} data-modifier>
