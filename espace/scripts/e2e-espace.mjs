@@ -75,7 +75,7 @@
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
 // Lancer depuis espace/ : `node scripts/e2e-espace.mjs`.
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { createHmac, generateKeyPairSync } from 'node:crypto';
 import fs from 'node:fs';
 import http from 'node:http';
@@ -301,64 +301,21 @@ try {
   r = await appeler(`${E}/contacts?q=${encodeURIComponent(TEL)}`, { headers: avecJeton() });
   constat((await r.text()).includes(`data-contact="${saisie.id}"`), 'liste des contacts : recherche par numéro au format « 06 … »');
 
-  // Import d'un .csv (Excel français : point-virgule) : une personne connue, deux nouvelles, une ligne en double.
-  const decode = (v) => v.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
-  const importerFichier = async (nom, contenu, type, champs) => {
-    const corps = new FormData();
-    corps.set('quoi', 'apercu');
-    for (const [k, v] of Object.entries(champs)) corps.set(k, v);
-    corps.set('fichier', new Blob([contenu], { type }), nom);
-    const rep = await appeler(`${E}/importer`, { method: 'POST', headers: avecJeton(JETON, { Origin: E }), body: corps });
-    return rep.text();
-  };
-  const enregistrer = (apercu) => {
-    const champs = Object.fromEntries([...apercu.matchAll(/<input type="hidden" name="([a-z_]+)" value="([^"]*)"/g)].map((m) => [m[1], decode(m[2])]));
-    return page('/importer', champs);
-  };
-  const csv = `Prénom;Nom;Portable;E-mail;Ville\nBea;Boitage${ESSAI};${TEL};;Sciez\nCarla;Forum${ESSAI};;carla+${ESSAI}@example.com;Anthy\nDidier;Forum${ESSAI};601${NUM};;Margencel\nCarla;Forum${ESSAI};;CARLA+${ESSAI}@example.com;Anthy\n`;
-  let apercu = await importerFichier('forum.csv', csv, 'text/csv', { canal: 'evenement', origine_detail: `Forum ${ESSAI}`, parcours: '' });
-  constat(apercu.includes('3 personne(s) : 2 nouvelle(s), 1 déjà connue(s)') && apercu.includes('1 ligne(s) ignorée(s)') && apercu.includes('rappel individuel seulement'),
-    'import .csv, aperçu : 2 nouvelles, 1 déjà connue, le doublon du fichier écarté, avertissement « rappel individuel »');
-  constat(sql(`SELECT count(*) AS n FROM contact WHERE nom = 'Forum${ESSAI}'`)[0].n === 0, 'import : rien enregistré à l\'aperçu');
-  r = await enregistrer(apercu);
-  const forum = sql(`SELECT telephone, canal, origine_detail, rappel_individuel_seul FROM contact WHERE nom = 'Forum${ESSAI}' ORDER BY prenom`);
-  constat(r.headers.get('location') === '/contacts?m=import-2-1' && forum.length === 2 && forum.every((c) => c.canal === 'evenement' && c.origine_detail === `Forum ${ESSAI}` && c.rappel_individuel_seul === 1)
-    && forum[1].telephone === `+33601${NUM}`,
-    'import enregistré : 2 contacts créés (origine événement, rappel individuel seulement, 0 rendu au numéro), 1 complété');
-  constat(sql(`SELECT count(*) AS n FROM contact WHERE telephone = '${TEL164}'`)[0].n === 1 && sql(`SELECT commune FROM contact WHERE id = '${saisie.id}'`)[0].commune === 'Sciez'
-    && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${saisie.id}' AND source = 'import'`)[0].n === 1,
-    'import : la personne déjà connue est complétée (commune) et notée, pas recréée');
-
-  // Import d'un .xlsx (fabriqué ici : une archive zip de trois fichiers XML), avec la case de consentement cochée.
-  const zlib = await import('node:zlib');
-  const zip = (fichiers) => {
-    const locaux = [], centraux = []; let decalage = 0;
-    for (const [nom, texte] of Object.entries(fichiers)) {
-      const brut = Buffer.from(texte), comp = zlib.deflateRawSync(brut), n = Buffer.from(nom);
-      const local = Buffer.alloc(30); local.writeUInt32LE(0x04034b50, 0); local.writeUInt16LE(20, 4); local.writeUInt16LE(8, 8);
-      local.writeUInt32LE(comp.length, 18); local.writeUInt32LE(brut.length, 22); local.writeUInt16LE(n.length, 26);
-      const central = Buffer.alloc(46); central.writeUInt32LE(0x02014b50, 0); central.writeUInt16LE(20, 4); central.writeUInt16LE(20, 6); central.writeUInt16LE(8, 10);
-      central.writeUInt32LE(comp.length, 20); central.writeUInt32LE(brut.length, 24); central.writeUInt16LE(n.length, 28); central.writeUInt32LE(decalage, 42);
-      locaux.push(local, n, comp); centraux.push(central, n); decalage += 30 + n.length + comp.length;
-    }
-    const tailleCentrale = centraux.reduce((t, b) => t + b.length, 0);
-    const fin = Buffer.alloc(22); fin.writeUInt32LE(0x06054b50, 0); fin.writeUInt16LE(Object.keys(fichiers).length, 8); fin.writeUInt16LE(Object.keys(fichiers).length, 10);
-    fin.writeUInt32LE(tailleCentrale, 12); fin.writeUInt32LE(decalage, 16);
-    return Buffer.concat([...locaux, ...centraux, fin]);
-  };
-  const xlsx = zip({
-    'xl/sharedStrings.xml': `<sst><si><t>Prénom</t></si><si><t>Nom</t></si><si><t>Téléphone</t></si><si><t>Emma</t></si><si><t>Xlsx${ESSAI} &amp; fils</t></si></sst>`,
-    'xl/worksheets/sheet1.xml': `<worksheet><sheetData><row r="1"><c r="A1" t="s"><v>0</v></c><c r="B1" t="s"><v>1</v></c><c r="C1" t="s"><v>2</v></c></row>`
-      + `<row r="2"><c r="A2" t="s"><v>3</v></c><c r="B2" t="s"><v>4</v></c><c r="C2"><v>699${NUM}</v></c></row></sheetData></worksheet>`,
-    '[Content_Types].xml': '<Types/>',
-  });
-  apercu = await importerFichier('salon.xlsx', xlsx, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', { canal: 'evenement', origine_detail: 'Salon', consentement: 'oui' });
-  r = await enregistrer(apercu);
-  const emma = sql(`SELECT telephone, rappel_individuel_seul FROM contact WHERE nom = 'Xlsx${ESSAI} & fils'`)[0];
-  constat(apercu.includes('1 personne(s) : 1 nouvelle(s)') && emma?.telephone === `+33699${NUM}` && emma.rappel_individuel_seul === 0,
-    'import .xlsx : lu (textes partagés, numéro rangé comme un nombre), consentement coché donc pas de « rappel individuel seulement »');
-  apercu = await importerFichier('vide.csv', 'Colonne A;Colonne B\nx;y\n', 'text/csv', { canal: 'evenement' });
-  constat(apercu.includes('Aucune colonne reconnue'), 'import : un fichier sans titres reconnus est refusé avec une explication');
+  // Story 18.9 : l'ancien import de la page /importer est retiré (l'import passe par Claude, essais plus bas). Les trois
+  // contacts que cet import créait, et que les essais suivants utilisent (qualifier, Aujourd'hui, accord e-mail, migration
+  // 0013), sont posés tels qu'il les laissait : suivis « à qualifier », origine événement, événement de création « import ».
+  const [idCarla, idDidier, idEmma] = [sid(), sid(), sid()];
+  const maint = new Date().toISOString();
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, email, commune, etape, prochaine_action, prochaine_action_le, canal, origine_detail, rappel_individuel_seul, categorie_id, verifie_le, email_accord_le, email_accord_source) VALUES
+    ('${idCarla}', '${maint}', '${maint}', 'Carla', 'Forum${ESSAI}', NULL, 'carla+${ESSAI}@example.com', 'Anthy', 'a_qualifier', 'Rappeler pour qualifier', '${auj}', 'evenement', 'Forum ${ESSAI}', 1, 'demandes_recues', '${maint}', NULL, NULL),
+    ('${idDidier}', '${maint}', '${maint}', 'Didier', 'Forum${ESSAI}', '+33601${NUM}', NULL, 'Margencel', 'a_qualifier', 'Rappeler pour qualifier', '${auj}', 'evenement', 'Forum ${ESSAI}', 1, 'demandes_recues', '${maint}', NULL, NULL),
+    ('${idEmma}', '${maint}', '${maint}', 'Emma', 'Xlsx${ESSAI} & fils', '+33699${NUM}', NULL, NULL, 'a_qualifier', 'Rappeler pour qualifier', '${auj}', 'evenement', 'Salon', 0, 'demandes_recues', '${maint}', '${maint}', 'import');
+    INSERT INTO contact_evenement (contact_id, a, type, source, texte, par) VALUES
+    ('${idCarla}', '${maint}', 'creation', 'import', 'Contact importé · Événement : Forum ${ESSAI}', 'anne@example.com'),
+    ('${idDidier}', '${maint}', 'creation', 'import', 'Contact importé · Événement : Forum ${ESSAI}', 'anne@example.com'),
+    ('${idEmma}', '${maint}', 'creation', 'import', 'Contact importé · Événement : Salon', 'anne@example.com')`);
+  r = await appeler(`${E}/importer`, { headers: avecJeton() });
+  constat(r.status === 404, `18.9 : l'ancienne page /importer est retirée (${r.status})`);
 
   // 5 ter. Qualifier en deux minutes (story 13.6).
   r = await appeler(`${E}/contacts/qualifier?id=${saisie.id}`, { headers: avecJeton() });
@@ -1151,6 +1108,272 @@ try {
   ];
   for (const [quoi, rep] of refusClaude) constat(rep.status === 403, `refusé (403) : ${quoi}`);
 
+  // ——— Story 18.9 : l'import par Claude (/api/claude/import), avec des fichiers FICTIFS de même forme que les vrais ———
+  {
+    const IMP = (corps, jeton = JETON_CLAUDE, autres = {}) => appeler(`${E}/api/claude/import`, { method: 'POST', redirect: 'manual',
+      headers: { ...(jeton ? { 'cf-access-jwt-assertion': jeton } : {}), 'Content-Type': 'application/json', ...autres }, body: typeof corps === 'string' ? corps : JSON.stringify(corps) });
+    const tel = (k) => `06 3${k} ${NUM.slice(0, 2)} ${NUM.slice(2, 4)} ${NUM.slice(4)}`;
+    const t164 = (k) => `+3363${k}${NUM}`;
+    const hmacOpp = (v) => createHmac('sha256', 'essai').update(`opposition:${v}`).digest('hex');
+    const compte = () => sql(`SELECT (SELECT count(*) FROM contact) AS c, (SELECT count(*) FROM contact_source) AS s, (SELECT count(*) FROM contact_coordonnee) AS k,
+      (SELECT count(*) FROM import_lot) AS l, (SELECT count(*) FROM contact_evenement) AS e`)[0];
+    // Contacts déjà là : un vérifié, un écarté, un non vérifié complétable, un homonyme ; une personne en opposition.
+    const [V, X, S, P] = [sid(), sid(), sid(), sid()];
+    const ilYa = '2026-06-01T08:00:00.000Z';
+    sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, email, categorie_id, verifie_le, ecarte_le) VALUES
+      ('${V}', '${ilYa}', '${ilYa}', 'Vera', 'Verif${ESSAI}', '${t164(1)}', NULL, 'anciens_clients', '${ilYa}', NULL),
+      ('${X}', '${ilYa}', '${ilYa}', 'Xavier', 'Ecarte${ESSAI}', '${t164(2)}', NULL, 'proches', NULL, '${ilYa}'),
+      ('${S}', '${ilYa}', '${ilYa}', 'Sam', 'Sur${ESSAI}', NULL, 'sur+${ESSAI.toLowerCase()}@example.com', 'lointains', NULL, NULL),
+      ('${P}', '${ilYa}', '${ilYa}', 'Paula', 'Homonyme${ESSAI}', '${t164(3)}', NULL, 'proches', NULL, NULL);
+      INSERT INTO contact_source (contact_id, source, a) VALUES ('${P}', 'telephone', '${ilYa}');
+      INSERT INTO opposition (empreinte, le) VALUES ('${hmacOpp(t164(4))}', '${ilYa}') ON CONFLICT DO NOTHING`);
+    const MJ = `jerome+${ESSAI.toLowerCase()}@example.com`, MJP = `jerome.pro+${ESSAI.toLowerCase()}@example.com`;
+    // Export Samsung (vCard 2.1) : QUOTED-PRINTABLE en UTF-8 avec saut doux, ligne repliée, plusieurs TEL et EMAIL, et des
+    // propriétés jamais importées (adresse, anniversaire, note, photo, site).
+    const vcf = [
+      'BEGIN:VCARD', 'VERSION:2.1',
+      `N;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:Nouv=C3=A9au=`, `${ESSAI};J=C3=A9r=C3=B4me;;;`,
+      'FN;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:J=C3=A9r=C3=B4me Nouv=C3=A9au', `TEL;CELL:${tel(0)}`, 'TEL;HOME:+41 79 123 45 67', `TEL;WORK;PREF:${tel(5)}`,
+      `EMAIL;HOME:${MJ}`, `EMAIL;WORK:${MJP.toUpperCase().slice(0, 12)}`, ` ${MJP.toUpperCase().slice(12)}`,
+      'ADR;HOME:;;12 rue des Fleurs;Thonon;;74200;France', 'BDAY:1980-05-04', 'NOTE;ENCODING=QUOTED-PRINTABLE:Code porte 1234 =', 'suite secr=C3=A8te',
+      'PHOTO;ENCODING=BASE64;JPEG:/9j/4AAQ', ' SkZJRgABAQ==', '', 'item1.URL:https://example.com/perso', 'ORG:Entreprise Fictive', 'END:VCARD',
+      'BEGIN:VCARD', 'VERSION:2.1', 'N:Nom;Autre;;;', `TEL;CELL:${tel(1)}`, `TEL;CELL:${tel(6)}`, 'END:VCARD',
+      'BEGIN:VCARD', 'VERSION:2.1', 'N:Revient;Xavier;;;', `TEL;CELL:${tel(2)}`, 'END:VCARD',
+      'BEGIN:VCARD', 'VERSION:3.0', `N:Sur${ESSAI};Sam;;;`, `TEL;TYPE=CELL:${tel(7)}`, `EMAIL;TYPE=INTERNET:SUR+${ESSAI}@example.com`, 'ORG:Boulangerie;Vente', 'END:VCARD',
+      'BEGIN:VCARD', 'VERSION:4.0', `N:Homonyme${ESSAI};Paula;;;`, `TEL;VALUE=uri;TYPE=cell:tel:${t164(8)}`, 'END:VCARD',
+      'BEGIN:VCARD', 'VERSION:2.1', 'N:Oppose;Olga;;;', `TEL;CELL:${tel(4)}`, 'END:VCARD',
+      'BEGIN:VCARD', 'VERSION:2.1', 'NOTE:fiche sans nom ni numéro', 'END:VCARD',
+      'BEGIN:VCARD', 'VERSION:2.1', 'FN:Jerome bis', `TEL;CELL:${tel(9)}`, `EMAIL:${MJ}`, 'END:VCARD',
+    ].join('\r\n');
+    const fVcf = { format: 'vcard', nom: 'C:\\Users\\anne\\Téléphone\\contacts.vcf', genre: 'telephone', contenu: vcf };
+    const avant = compte();
+    r = await IMP({ action: 'apercu', fichier: fVcf });
+    const ap = (await r.json()).apercu;
+    const texteAp = JSON.stringify(ap);
+    constat(r.status === 200 && ap?.lignes === 8 && ap.nouveaux === 1 && ap.complements === 2 && ap.complements_verifies === 1 && ap.doublons_probables === 1
+      && ap.rejetes === 3 && ap.raisons.ecarte === 1 && ap.raisons.opposition === 1 && ap.raisons.vide === 1 && ap.fusionnees_dans_le_fichier === 1 && ap.categories.proches === 1 && /^[0-9a-f]{64}$/.test(ap.empreinte),
+      `18.9 : aperçu vCard (8 fiches) : 1 nouveau, 2 compléments dont 1 vérifié, 1 doublon probable, 3 rejetés (écarté, opposition, vide), 1 fusionnée dans le fichier, empreinte (${JSON.stringify({ n: ap?.nouveaux, c: ap?.complements, d: ap?.doublons_probables, r: ap?.raisons })})`);
+    constat(['ADR', 'BDAY', 'NOTE', 'PHOTO', 'URL'].every((p) => ap?.champs_ignores.includes(`propriété vCard ${p}`)), `18.9 : aperçu : adresse, anniversaire, note, photo et site signalés comme ignorés (${ap?.champs_ignores.join(' | ')})`);
+    const dP = ap?.doublons?.[0];
+    constat(dP?.ligne === '0:5' && dP.existants.length === 1 && dP.existants[0].id === P && dP.existants[0].nom === `Paula Homonyme${ESSAI}` && JSON.stringify(dP.existants[0].sources) === '["telephone"]',
+      '18.9 : doublon probable (même nom, aucune coordonnée commune) : repère de la ligne, et du contact existant seulement son nom et ses sources');
+    constat(!texteAp.includes(t164(3)) && !texteAp.includes(`Verif${ESSAI}`) && !texteAp.includes(`Ecarte${ESSAI}`) && !texteAp.includes('Vera') && !texteAp.includes('Fleurs') && !texteAp.includes('1234'),
+      '18.9 : l\'aperçu ne renvoie aucune donnée d\'un autre contact de la base (ni numéro de l\'homonyme, ni nom du vérifié ou de l\'écarté), ni champ interdit');
+    constat(JSON.stringify(compte()) === JSON.stringify(avant), '18.9 : l\'aperçu n\'écrit rien (contacts, sources, coordonnées, lots, historique inchangés)');
+    r = await IMP({ action: 'importer', fichier: fVcf });
+    const r2 = await IMP({ action: 'importer', fichier: fVcf, empreinte: ap.empreinte.replace(/^./, (c) => (c === 'a' ? 'b' : 'a')) });
+    const r3 = await IMP({ action: 'importer', fichier: { ...fVcf, contenu: vcf.replace('Entreprise Fictive', 'Autre') }, empreinte: ap.empreinte });
+    constat(r.status === 409 && r2.status === 409 && r3.status === 409 && (await r.json()).error?.code === 'empreinte' && JSON.stringify(compte()) === JSON.stringify(avant),
+      `18.9 : import refusé sans l'empreinte, avec une autre, ou pour un fichier changé depuis l'aperçu (${r.status}, ${r2.status}, ${r3.status}), rien d'écrit`);
+    const actSAvant = sql(`SELECT last_activity_at FROM contact WHERE id = '${S}'`)[0].last_activity_at;
+    let t0 = performance.now();
+    r = await IMP({ action: 'importer', fichier: fVcf, empreinte: ap.empreinte });
+    const imp = (await r.json()).import;
+    const msVcf = Math.round(performance.now() - t0);
+    constat(r.status === 201 && imp?.nouveaux === 1 && imp.complements === 2 && imp.doublons_laisses === 1 && imp.rejetes === 3 && /^[0-9A-Z]{26}$/.test(imp.lot),
+      `18.9 : import réel avec l'empreinte : 1 créé, 2 complétés, le doublon sans décision laissé de côté (${msVcf} ms)`);
+    const lotV = sql(`SELECT * FROM import_lot WHERE id = '${imp?.lot}'`)[0];
+    constat(lotV?.fichier === 'contacts.vcf' && lotV.empreinte === ap.empreinte && lotV.source === 'telephone' && lotV.nouveaux === 1 && lotV.completes === 2 && lotV.doublons === 1 && lotV.rejetes === 3 && lotV.par === 'claude',
+      '18.9 : import_lot : nom du fichier seulement (sans chemin), empreinte, source, compteurs, par Claude');
+    const jer = sql(`SELECT * FROM contact WHERE email = '${MJ}'`)[0];
+    const coordJ = jer ? sql(`SELECT type, valeur FROM contact_coordonnee WHERE contact_id = '${jer.id}' ORDER BY valeur`).map((x) => x.valeur) : [];
+    constat(jer?.prenom === 'Jérôme' && jer.nom === `Nouvéau${ESSAI}` && jer.telephone === t164(0) && jer.entreprise === 'Entreprise Fictive' && jer.categorie_id === 'proches'
+      && jer.verifie_le === null && jer.canal === null && jer.etape === null && jer.action_id === null && jer.commune === null && jer.projet === 'a_qualifier',
+      '18.9 : nouveau contact : nom décodé (QUOTED-PRINTABLE UTF-8, saut doux), téléphone E.164, catégorie proposée « proches », à vérifier, canal NULL, hors suivi, sans adresse');
+    constat(JSON.stringify(coordJ) === JSON.stringify(['+41791234567', t164(5), t164(9), MJP].sort()),
+      `18.9 : plusieurs TEL et EMAIL (ligne repliée, fiche en double fusionnée) : premier sur le contact, les autres en coordonnées, en E.164 et en minuscules (${coordJ.join(', ')})`);
+    const evJ = jer ? sql(`SELECT type, source, source_id, texte, donnees FROM contact_evenement WHERE contact_id = '${jer.id}'`) : [];
+    const srcJ = jer ? sql(`SELECT source, import_lot_id FROM contact_source WHERE contact_id = '${jer.id}'`) : [];
+    constat(evJ.length === 1 && evJ[0].type === 'import' && evJ[0].source === 'claude' && evJ[0].source_id === `${imp.lot}.${jer.id}` && JSON.parse(evJ[0].donnees).creation === true
+      && JSON.stringify(JSON.parse(evJ[0].donnees).avant) === '{}' && srcJ.length === 1 && srcJ[0].source === 'telephone' && srcJ[0].import_lot_id === imp.lot,
+      '18.9 : source « telephone » liée au lot, événement d\'import avec son avant-image (vide pour une création)');
+    const interdits = sql(`SELECT count(*) AS n FROM contact_evenement WHERE texte LIKE '%Fleurs%' OR texte LIKE '%1234%' OR donnees LIKE '%Fleurs%' OR donnees LIKE '%1980-05-04%' OR donnees LIKE '%example.com/perso%'`)[0].n
+      + sql(`SELECT count(*) AS n FROM contact_coordonnee WHERE valeur LIKE '%example.com/perso%'`)[0].n;
+    constat(interdits === 0, '18.9 : champs interdits ignorés : ni adresse, ni anniversaire, ni note du téléphone, ni site, nulle part en base');
+    const v = sql(`SELECT prenom, nom, telephone, categorie_id, verifie_le, (SELECT group_concat(valeur) FROM contact_coordonnee WHERE contact_id = '${V}') AS k,
+      (SELECT group_concat(source) FROM contact_source WHERE contact_id = '${V}') AS s, (SELECT donnees FROM contact_evenement WHERE contact_id = '${V}' AND source = 'claude') AS d FROM contact WHERE id = '${V}'`)[0];
+    constat(v.prenom === 'Vera' && v.nom === `Verif${ESSAI}` && v.telephone === t164(1) && v.categorie_id === 'anciens_clients' && v.verifie_le === ilYa && v.k === t164(6) && v.s === 'telephone'
+      && JSON.stringify(JSON.parse(v.d).apres) === '{}', '18.9 : contact vérifié non modifié (nom, catégorie, vérifié gardés) : seulement une source et le numéro manquant ajoutés');
+    const x = sql(`SELECT ecarte_le, (SELECT count(*) FROM contact_source WHERE contact_id = '${X}') AS s, (SELECT count(*) FROM contact_evenement WHERE contact_id = '${X}') AS e FROM contact WHERE id = '${X}'`)[0];
+    constat(x.ecarte_le === ilYa && x.s === 0 && x.e === 0, '18.9 : contact écarté non ressuscité : toujours écarté, ni source ni événement');
+    const s = sql(`SELECT telephone, entreprise, categorie_id, verifie_le, last_activity_at FROM contact WHERE id = '${S}'`)[0];
+    constat(s.telephone === t164(7) && s.entreprise === 'Boulangerie' && s.categorie_id === 'proches' && s.verifie_le === null && s.last_activity_at === actSAvant,
+      '18.9 : doublon sûr (même e-mail, à la casse près) complété : téléphone manquant, entreprise, catégorie proposée plus haute (proches > relations lointaines), date d\'activité inchangée');
+    constat(sql(`SELECT count(*) AS n FROM contact WHERE telephone = '${t164(4)}'`)[0].n === 0 && sql(`SELECT count(*) AS n FROM contact_coordonnee WHERE valeur = '${t164(4)}'`)[0].n === 0,
+      '18.9 : personne de la liste d\'opposition rejetée, jamais recréée');
+    constat(sql(`SELECT count(*) AS n FROM contact WHERE telephone = '${t164(8)}'`)[0].n === 0, '18.9 : doublon probable sans décision : pas créé');
+    r = await IMP({ action: 'importer', fichier: fVcf, empreinte: ap.empreinte });
+    constat(r.status === 409 && (await r.json()).error?.code === 'deja_importe', `18.9 : le même fichier ne s'importe pas deux fois tant que son lot n'est pas annulé (${r.status})`);
+
+    // Décisions de JB sur un doublon probable : fusionner avec le contact proposé ; une fusion vers un autre contact est refusée.
+    const fDoublon = { format: 'csv', nom: 'homonyme.csv', genre: 'telephone', contenu: `Prénom;Nom;Téléphone\nPaula;Homonyme${ESSAI};${tel(8)}\n` };
+    r = await IMP({ action: 'apercu', fichier: fDoublon, doublons: { '0:2': `fusionner:${V}` } });
+    const apF = (await r.json()).apercu;
+    r = await IMP({ action: 'apercu', fichier: fDoublon, doublons: { '0:2': `fusionner:${P}` } });
+    const apD = (await r.json()).apercu;
+    r = await IMP({ action: 'importer', fichier: fDoublon, empreinte: apD.empreinte, doublons: { '0:2': `fusionner:${P}` } });
+    const impD = (await r.json()).import;
+    constat(apF?.raisons?.fusion_invalide === 1 && apD?.complements === 1 && apD.doublons_probables === 0 && impD?.complements === 1
+      && sql(`SELECT count(*) AS n FROM contact_coordonnee WHERE contact_id = '${P}' AND valeur = '${t164(8)}'`)[0].n === 1,
+      '18.9 : doublon probable confirmé par JB (« fusionner ») : le numéro rejoint le contact existant ; une fusion vers un contact non proposé est refusée');
+
+    // Export LinkedIn (CSV, virgules) : profil, entreprise ; colonnes interdites ou inutiles ignorées ; un contact déjà importé
+    // retrouvé par son e-mail secondaire garde ses deux sources et sa catégorie la plus haute.
+    const csvLi = `First Name,Last Name,URL,Email Address,Company,Position,Connected On,Adresse,Date de naissance,Notes\n`
+      + `Lina,Csv${ESSAI},https://www.linkedin.com/in/lina-csv-${ESSAI}/,lina+${ESSAI}@example.com,Fictive SA,Directrice,01 Jan 2024,3 rue Imaginaire,1990-01-01,note perso\n`
+      + `Jérôme,Nouvéau${ESSAI},,${MJP},,,,,,\n`;
+    r = await IMP({ action: 'apercu', fichier: { format: 'csv', nom: 'Connections.csv', genre: 'linkedin', contenu: csvLi } });
+    const apL = (await r.json()).apercu;
+    r = await IMP({ action: 'importer', fichier: { format: 'csv', nom: 'Connections.csv', genre: 'linkedin', contenu: csvLi }, empreinte: apL?.empreinte });
+    const lina = sql(`SELECT id, entreprise, categorie_id, commune FROM contact WHERE email = 'lina+${ESSAI.toLowerCase()}@example.com'`)[0];
+    const profilLina = lina ? sql(`SELECT reseau, valeur FROM contact_coordonnee WHERE contact_id = '${lina.id}'`)[0] : null;
+    const jer2 = sql(`SELECT categorie_id, (SELECT group_concat(source, ',') FROM (SELECT source FROM contact_source WHERE contact_id = '${jer.id}' ORDER BY source)) AS s FROM contact WHERE id = '${jer.id}'`)[0];
+    constat(r.status === 201 && apL.nouveaux === 1 && apL.complements === 1 && ['Position', 'Connected On', 'Adresse', 'Date de naissance', 'Notes'].every((c) => apL.champs_ignores.includes(`colonne « ${c} »`))
+      && lina?.entreprise === 'Fictive SA' && lina.categorie_id === 'lointains' && lina.commune === null && profilLina?.reseau === 'linkedin' && profilLina.valeur === `https://linkedin.com/in/lina-csv-${ESSAI}`
+      && jer2.categorie_id === 'proches' && jer2.s === 'linkedin,telephone'
+      && sql(`SELECT count(*) AS n FROM contact_evenement WHERE donnees LIKE '%Imaginaire%' OR donnees LIKE '%note perso%' OR donnees LIKE '%Directrice%'`)[0].n === 0,
+      '18.9 : CSV LinkedIn : relations lointaines, lien de profil gardé, colonnes interdites ignorées ; un contact des deux fichiers garde ses deux sources et « proches »');
+
+    // Classeur d'Anne (onglets lus par le script et envoyés en cellules) : EDB avec projet, commentaire et accord e-mail,
+    // Feuil1 qui complète sans créer, PARTENAIRES (règle la plus haute de FR-9), numéros rangés comme des nombres.
+    const onglets = [
+      { nom: 'EDB', genre: 'edb', detail: 'EDB Thonon, mars 2026', lignes: [
+        ['Prénom', 'Nom', 'Téléphone', 'Mail', 'Ville', 'Projet vente OUI', 'Projet achat OUI', 'Commentaire', 'Adresse', 'Date de naissance'],
+        ['Eva', `Edb${ESSAI}`, `640${NUM}`, `eva+${ESSAI}@example.com`, 'Sciez', 'OUI', 'oui', 'Rappeler en juin', '5 chemin Inventé', '1975-02-02'],
+        ['Félix', `Edb${ESSAI}`, `641${NUM}`, '', 'Anthy', '', 'OUI', '', '', ''],
+      ] },
+      { nom: 'Feuil1', genre: 'complement', lignes: [['Nom', 'Téléphone', 'Commentaire'], [`Edb${ESSAI}`, `641${NUM}`, 'Complément Feuil1'], ['Inconnu', `649${NUM}`, 'rien']] },
+      { nom: 'PARTENAIRES', genre: 'partenaires', lignes: [['Prénom', 'Nom', 'Portable', 'Société', 'E-mail'], ['Paul', `Notaire${ESSAI}`, `642${NUM}`, 'Étude fictive', ''], ['Sam', `Sur${ESSAI}`, '', '', `sur+${ESSAI}@example.com`]] },
+    ];
+    const fXl = { format: 'tableur', nom: 'SUIVI PROSPECTION.xlsx', onglets };
+    r = await IMP({ action: 'apercu', fichier: fXl });
+    const apX = (await r.json()).apercu;
+    t0 = performance.now();
+    r = await IMP({ action: 'importer', fichier: fXl, empreinte: apX?.empreinte });
+    const impX = (await r.json()).import;
+    const eva = sql(`SELECT id, telephone, commune, projet, categorie_id, email_accord_source, email_accord_le FROM contact WHERE email = 'eva+${ESSAI.toLowerCase()}@example.com'`)[0];
+    const felix = sql(`SELECT id, projet, categorie_id, email_accord_le FROM contact WHERE telephone = '+33641${NUM}'`)[0];
+    const paul = sql(`SELECT id, categorie_id, entreprise FROM contact WHERE telephone = '+33642${NUM}'`)[0];
+    const notes = (id) => sql(`SELECT texte FROM contact_evenement WHERE contact_id = '${id}' AND type = 'note'`).map((n) => n.texte);
+    constat(apX?.nouveaux === 3 && apX.complements === 1 && apX.raisons.complement_sans_contact === 1 && apX.accords === 1 && apX.champs_ignores.includes('colonne « Adresse » (EDB)') && impX?.accords === 1,
+      `18.9 : classeur : 3 nouveaux, 1 complément, la ligne de Feuil1 sans contact rejetée, 1 accord EDB, colonne Adresse ignorée (${JSON.stringify(apX?.raisons)})`);
+    constat(eva?.telephone === `+33640${NUM}` && eva.commune === 'Sciez' && eva.projet === 'vendeur_acheteur' && eva.categorie_id === 'edb' && eva.email_accord_source === 'import' && !!eva.email_accord_le
+      && JSON.stringify(notes(eva.id)) === JSON.stringify(['Note du fichier (EDB Thonon, mars 2026) : Rappeler en juin'])
+      && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${eva.id}' AND (donnees LIKE '%Inventé%' OR donnees LIKE '%1975%' OR texte LIKE '%Inventé%')`)[0].n === 0,
+      '18.9 : onglet EDB : numéro rangé comme un nombre remis en E.164, « rencontrés à l\'EDB », projet vendeur et acheteur, commentaire en note, accord e-mail « import » (FR-10), adresse ignorée');
+    constat(felix?.projet === 'acheteur' && felix.categorie_id === 'edb' && felix.email_accord_le === null && JSON.stringify(notes(felix.id)) === JSON.stringify(['Note du fichier (EDB Thonon, mars 2026) : Complément Feuil1'])
+      && paul?.categorie_id === 'partenaires' && paul.entreprise === 'Étude fictive' && sql(`SELECT categorie_id FROM contact WHERE id = '${S}'`)[0].categorie_id === 'partenaires'
+      && sql(`SELECT count(*) AS n FROM contact WHERE telephone = '+33649${NUM}'`)[0].n === 0,
+      '18.9 : Feuil1 complète la note sans créer personne ; PARTENAIRES → partenaires pros, et la règle la plus haute l\'emporte pour un contact non vérifié (proches → partenaires)');
+
+    // Annulation : Eva a été modifiée depuis (une note d'Anne) et reste, listée par son repère de ligne ; les autres
+    // contacts créés sont supprimés ; le contact complété retrouve sa catégorie, sa source de ce lot disparaît.
+    sql(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, par) VALUES ('${eva.id}', '${new Date().toISOString()}', 'note', 'anne', 'Appelée', 'anne@example.com')`);
+    r = await IMP({ action: 'annuler', lot: impX.lot });
+    const ann = (await r.json()).annulation;
+    constat(r.status === 200 && ann?.supprimes === 2 && ann.rendus === 1 && ann.gardes.length === 1 && ann.gardes[0].ligne === '0:2' && ann.gardes[0].raison === 'modifie_depuis'
+      && !JSON.stringify(ann).includes('Eva') && !JSON.stringify(ann).includes('@'),
+      `18.9 : annulation d'un lot : 2 contacts créés supprimés, 1 complété rendu, le contact modifié depuis gardé et listé par sa ligne, sans ses données (${JSON.stringify(ann)})`);
+    const s2 = sql(`SELECT categorie_id, (SELECT count(*) FROM contact_source WHERE contact_id = '${S}' AND import_lot_id = '${impX.lot}') AS src FROM contact WHERE id = '${S}'`)[0];
+    constat(sql(`SELECT count(*) AS n FROM contact WHERE id IN ('${felix.id}', '${paul.id}')`)[0].n === 0 && s2.categorie_id === 'proches' && s2.src === 0
+      && sql(`SELECT count(*) AS n FROM contact WHERE id = '${eva.id}'`)[0].n === 1 && !!sql(`SELECT annule_le FROM import_lot WHERE id = '${impX.lot}'`)[0].annule_le,
+      '18.9 : après annulation : contacts créés effacés (avec leurs coordonnées, sources, notes), avant-image rejouée, lot marqué annulé');
+    r = await IMP({ action: 'annuler', lot: impX.lot });
+    const r404 = await IMP({ action: 'annuler', lot: sid() });
+    constat(r.status === 409 && r404.status === 404, `18.9 : un lot déjà annulé (${r.status}) ou inconnu (${r404.status}) n'annule rien`);
+
+    // Accès : le jeton d'Anne ou de JB, l'absence de jeton, un autre jeton de service sont refusés ; JSON seulement, plafond.
+    const refusImport = [
+      ['Anne connectée', await IMP({ action: 'apercu', fichier: fVcf }, JETON), 403],
+      ['sans jeton', await IMP({ action: 'apercu', fichier: fVcf }, null), 403],
+      ['autre jeton de service', await IMP({ action: 'apercu', fichier: fVcf }, jetonAcces({ email: undefined, common_name: 'pirate.access' })), 403],
+      ['corps qui n\'est pas du JSON', await IMP('format=vcard', JETON_CLAUDE, { 'Content-Type': 'application/x-www-form-urlencoded' }), 415],
+      ['corps trop grand', await IMP({ action: 'apercu', fichier: { ...fVcf, contenu: 'x'.repeat(4_100_000) } }), 413],
+      ['action inconnue', await IMP({ action: 'lire' }), 400],
+      ['genre inconnu', await IMP({ action: 'apercu', fichier: { ...fVcf, genre: 'pige' } }), 400],
+      ['champ inconnu', await IMP({ action: 'apercu', fichier: fVcf, contacts: true }), 400],
+      ['CSV sans titres reconnus', await IMP({ action: 'apercu', fichier: { format: 'csv', nom: 'x.csv', genre: 'telephone', contenu: 'A;B\nx;y\n' } }), 400],
+    ];
+    for (const [quoi, rep, attendu] of refusImport) constat(rep.status === attendu, `18.9 : /api/claude/import refuse (${attendu}) : ${quoi} (${rep.status})`);
+    // Seule la route d'import touche aux contacts : les autres routes /api/claude/… n'importent ni le carnet ni l'import.
+    const dossierClaude = path.join(ICI, 'src', 'pages', 'api', 'claude');
+    const autres = fs.readdirSync(dossierClaude).filter((f) => f !== 'import.ts').map((f) => fs.readFileSync(path.join(dossierClaude, f), 'utf8'));
+    const routeImport = fs.readFileSync(path.join(dossierClaude, 'import.ts'), 'utf8');
+    constat(autres.length >= 2 && autres.every((t) => !/server\/(import|carnet|tableau|vues|fiche)['"]/.test(t)) && !/server\/(tableau|vues|fiche|carnet)['"]/.test(routeImport),
+      '18.9 : seule /api/claude/import ouvre les contacts au jeton de Claude, et seulement par server/import (ni tableau, ni vues, ni fiche)');
+
+    // Le script de Claude, sur un vrai .xlsx fictif : n'affiche que des nombres, n'importe qu'avec --oui et l'empreinte.
+    const zlib = await import('node:zlib');
+    const zip = (fichiers) => {
+      const locaux = [], centraux = []; let decalage = 0;
+      for (const [nom, texte] of Object.entries(fichiers)) {
+        const brut = Buffer.from(texte), comp = zlib.deflateRawSync(brut), n = Buffer.from(nom);
+        const local = Buffer.alloc(30); local.writeUInt32LE(0x04034b50, 0); local.writeUInt16LE(20, 4); local.writeUInt16LE(8, 8);
+        local.writeUInt32LE(comp.length, 18); local.writeUInt32LE(brut.length, 22); local.writeUInt16LE(n.length, 26);
+        const central = Buffer.alloc(46); central.writeUInt32LE(0x02014b50, 0); central.writeUInt16LE(20, 4); central.writeUInt16LE(20, 6); central.writeUInt16LE(8, 10);
+        central.writeUInt32LE(comp.length, 20); central.writeUInt32LE(brut.length, 24); central.writeUInt16LE(n.length, 28); central.writeUInt32LE(decalage, 42);
+        locaux.push(local, n, comp); centraux.push(central, n); decalage += 30 + n.length + comp.length;
+      }
+      const tailleCentrale = centraux.reduce((t, b) => t + b.length, 0);
+      const fin = Buffer.alloc(22); fin.writeUInt32LE(0x06054b50, 0); fin.writeUInt16LE(Object.keys(fichiers).length, 8); fin.writeUInt16LE(Object.keys(fichiers).length, 10);
+      fin.writeUInt32LE(tailleCentrale, 12); fin.writeUInt32LE(decalage, 16);
+      return Buffer.concat([...locaux, ...centraux, fin]);
+    };
+    const dossierXl = fs.mkdtempSync(path.join(os.tmpdir(), 'essai-import-'));
+    const cheminXl = path.join(dossierXl, 'clients.xlsx');
+    fs.writeFileSync(cheminXl, zip({
+      'xl/workbook.xml': '<workbook><sheets><sheet name="PIGE" sheetId="1" r:id="rId1"/><sheet name="Clients &amp; amis" sheetId="2" r:id="rId2"/></sheets></workbook>',
+      'xl/_rels/workbook.xml.rels': '<Relationships><Relationship Id="rId1" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Target="worksheets/sheet2.xml"/></Relationships>',
+      'xl/sharedStrings.xml': `<sst><si><t>Prénom</t></si><si><t>Nom</t></si><si><t>Téléphone</t></si><si><t>Claire</t></si><si><t>Client${ESSAI}</t></si><si><t>Inconnu PIGE</t></si></sst>`,
+      'xl/worksheets/sheet1.xml': `<worksheet><sheetData><row r="1"><c r="A1" t="s"><v>1</v></c><c r="B1" t="s"><v>2</v></c></row><row r="2"><c r="A2" t="s"><v>5</v></c><c r="B2"><v>643${NUM}</v></c></row></sheetData></worksheet>`,
+      'xl/worksheets/sheet2.xml': `<worksheet><sheetData><row r="1"><c r="A1" t="s"><v>0</v></c><c r="B1" t="s"><v>1</v></c><c r="C1" t="s"><v>2</v></c></row>`
+        + `<row r="2"><c r="A2" t="s"><v>3</v></c><c r="B2" t="s"><v>4</v></c><c r="C2"><v>644${NUM}</v></c></row></sheetData></worksheet>`,
+    }));
+    const script = (args) => spawnSync('node', [path.join(ICI, 'scripts', 'claude-import.mjs'), ...args],
+      { encoding: 'utf8', env: { ...sansProxy, ESPACE_URL: E, ESPACE_JETON_ESSAI: JETON_CLAUDE } });
+    const onglet = ['--onglet', 'Clients & amis=anciens_clients'];
+    let sortie = script(['apercu', cheminXl, ...onglet]);
+    const empreinteXl = /Empreinte : ([0-9a-f]{64})/.exec(sortie.stdout)?.[1];
+    constat(sortie.status === 0 && /Nouveaux\s+1/.test(sortie.stdout) && /anciens_clients 1/.test(sortie.stdout) && !!empreinteXl
+      && !/Claire|Client|PIGE|\+33|0644|644/.test(sortie.stdout.replace(empreinteXl ?? '-', '')),
+      '18.9 : script : aperçu d\'un .xlsx lu localement (onglet choisi, PIGE non envoyé), seulement des nombres à l\'écran');
+    sortie = script(['importer', cheminXl, ...onglet, '--empreinte', empreinteXl ?? '']);
+    const pasEncore = sql(`SELECT count(*) AS n FROM contact WHERE telephone = '+33644${NUM}'`)[0].n;
+    const sortie2 = script(['importer', cheminXl, ...onglet, '--empreinte', empreinteXl ?? '', '--oui']);
+    const lotXl = /lot ([0-9A-Z]{26})/.exec(sortie2.stdout)?.[1];
+    const claire = sql(`SELECT categorie_id, prenom FROM contact WHERE telephone = '+33644${NUM}'`)[0];
+    constat(sortie.status === 2 && pasEncore === 0 && sortie2.status === 0 && !!lotXl && claire?.categorie_id === 'anciens_clients' && claire.prenom === 'Claire'
+      && sql(`SELECT count(*) AS n FROM contact WHERE telephone = '+33643${NUM}'`)[0].n === 0,
+      '18.9 : script : pas d\'import sans --oui ; avec --oui et l\'empreinte, le contact est créé en « anciens clients », l\'onglet PIGE jamais importé');
+    sortie = script(['annuler', lotXl ?? '', '--oui']);
+    constat(sortie.status === 0 && /Contacts créés supprimés\s+1/.test(sortie.stdout) && sql(`SELECT count(*) AS n FROM contact WHERE telephone = '+33644${NUM}'`)[0].n === 0,
+      '18.9 : script : annulation du lot');
+    fs.rmSync(dossierXl, { recursive: true, force: true });
+
+    // Vitesse : un fichier de 900 fiches (comme les 882 du téléphone d'Anne), aperçu, import, annulation.
+    const lignes900 = Array.from({ length: 900 }, (_, i) => `Prénom${i};Masse${ESSAI};+44 70${NUM}${String(i).padStart(3, '0')};masse${i}+${ESSAI}@example.com;+44 71${NUM}${String(i).padStart(3, '0')}`);
+    const f900 = { format: 'csv', nom: 'masse.csv', genre: 'telephone', contenu: `Prénom;Nom;Mobile;E-mail;Téléphone 2\n${lignes900.join('\n')}\n` };
+    t0 = performance.now();
+    r = await IMP({ action: 'apercu', fichier: f900 });
+    const ap900 = (await r.json()).apercu;
+    const msAp = Math.round(performance.now() - t0);
+    t0 = performance.now();
+    r = await IMP({ action: 'importer', fichier: f900, empreinte: ap900?.empreinte });
+    const imp900 = (await r.json()).import;
+    const msImp = Math.round(performance.now() - t0);
+    const n900 = sql(`SELECT count(*) AS n, count(DISTINCT k.contact_id) AS k FROM contact c LEFT JOIN contact_coordonnee k ON k.contact_id = c.id WHERE c.nom = 'Masse${ESSAI}'`)[0];
+    t0 = performance.now();
+    r = await IMP({ action: 'annuler', lot: imp900?.lot });
+    const ann900 = (await r.json()).annulation;
+    const msAnn = Math.round(performance.now() - t0);
+    constat(ap900?.nouveaux === 900 && imp900?.nouveaux === 900 && n900.n === 900 && n900.k === 900 && ann900?.supprimes === 900
+      && sql(`SELECT count(*) AS n FROM contact WHERE nom = 'Masse${ESSAI}'`)[0].n === 0 && msAp < 5000 && msImp < 15000 && msAnn < 10000,
+      `18.9 : 900 fiches : aperçu ${msAp} ms, import ${msImp} ms (900 créés, chacun avec son second numéro), annulation ${msAnn} ms`);
+    console.log(`  mesures 18.9 : vCard ${msVcf} ms ; 900 fiches : aperçu ${msAp} ms, import ${msImp} ms, annulation ${msAnn} ms`);
+    // Les fixtures de cet essai sont retirées (les contacts importés restants et ceux posés pour l'essai).
+    sql(`DELETE FROM contact WHERE id IN ('${V}', '${X}', '${S}', '${P}', '${eva.id}', '${jer.id}', '${lina?.id ?? ''}')`);
+  }
+
   // Bouton « Un retour ? » (story 13.20) : la remarque devient un ticket GitHub étiqueté retour-apercu.
   const retour = (corps, jeton = JETON) => appeler(`${E}/api/retour`, { method: 'POST', headers: avecJeton(jeton, { 'Content-Type': 'application/json' }), body: JSON.stringify(corps) });
   r = await retour({ page: '/inconnu?tel=+33612345678', texte: 'Le bouton Pro est mal placé\nDétail sur deux lignes', ecran: '390×844' });
@@ -1453,7 +1676,7 @@ try {
     '18.4 : l\'ancienne page d\'accueil « Aujourd\'hui » reste joignable à /aujourdhui, ses anciens retours (/?m=…) y sont renvoyés');
   const outils = [...html.matchAll(/<a href="([^"]+)"[^>]*data-outil="([^"]+)"/g)].map((m) => [m[2], m[1].replace(/&amp;/g, '&')]);
   const reponses = await Promise.all(outils.map(([, h]) => appeler(`${E}${h}`, { headers: avecJeton() }).then((x) => x.status)));
-  const attendus = ['aujourdhui', 'pipeline', 'suivis', 'qualifier', 'ajouter', 'importer', 'prescripteurs', 'acheteurs', 'actions', 'campagnes', 'bilan', 'a-trier', 'demandes'];
+  const attendus = ['aujourdhui', 'pipeline', 'suivis', 'qualifier', 'ajouter', 'prescripteurs', 'acheteurs', 'actions', 'campagnes', 'bilan', 'a-trier', 'demandes'];
   constat(attendus.every((k) => outils.some(([o]) => o === k)) && reponses.every((x) => x === 200) && html.includes('>Autres outils</summary>'),
     `18.4 : le menu « Autres outils » mène à toutes les pages actuelles, chacune répond (${outils.length} entrées : ${reponses.join(', ')})`);
   constat((await appeler(`${E}/contacts/fiche?id=${C4}`, { headers: avecJeton() })).status === 200,
@@ -1774,8 +1997,9 @@ try {
     constat(rRemise2.status === 400, `revue 18.7 : une remise en place au-delà de 101 vues est refusée (${rRemise2.status})`);
   }
   // Les routes /api/claude/… ne lisent ni les contacts ni les vues : aucune n'importe le tableau ni les vues, et leurs
+  // (story 18.9 : sauf /api/claude/import, vérifiée à part : elle n'ouvre que l'import, jamais la lecture)
   // réponses ne contiennent aucun nom de vue.
-  const routesClaude = fs.readdirSync(path.join(ICI, 'src', 'pages', 'api', 'claude')).map((f) => fs.readFileSync(path.join(ICI, 'src', 'pages', 'api', 'claude', f), 'utf8'));
+  const routesClaude = fs.readdirSync(path.join(ICI, 'src', 'pages', 'api', 'claude')).filter((f) => f !== 'import.ts').map((f) => fs.readFileSync(path.join(ICI, 'src', 'pages', 'api', 'claude', f), 'utf8'));
   const repClaude = (await (await claude('/api/claude/actions')).text()) + (await (await claude('/api/claude/bilan?p=semaine')).text());
   constat(routesClaude.length >= 2 && routesClaude.every((t) => !/vues|tableau|carnet|FROM vue\b/.test(t)) && !repClaude.includes('Vendeurs chauds') && !repClaude.includes(`Filtreun${NUM}`),
     '18.5 : les routes /api/claude/… ne lisent ni les contacts du tableau ni les vues');
@@ -2631,7 +2855,7 @@ try {
   for (const [nom, viewport] of [['ordinateur', { width: 1280, height: 900 }], ['telephone', { width: 390, height: 844 }]]) {
     const ctx = await nav.newContext({ viewport, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
     const onglet = await ctx.newPage();
-    for (const [nomPage, chemin] of [['accueil-contacts', '/'], ['aujourdhui', '/aujourdhui'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['suite', `/contacts/suite?id=${SUITE}`], ['bilan', '/bilan'], ['prescripteurs', '/prescripteurs'], ['prescripteur', `/prescripteurs/fiche?id=${durand}`], ['acheteurs', `/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`], ['qualifier-acheteur', `/contacts/qualifier?id=${ach1}`], ['pipeline', '/pipeline'], ['importer', '/importer'], ['fiche-leedflow', `/contacts/fiche?id=${KLF}`], ['fiche-accord-site', `/contacts/fiche?id=${SITEACC}`], ['fiche-sans-accord', `/contacts/fiche?id=${saisie.id}`], ['qualifier-leedflow', `/contacts/qualifier?id=${KLF}`], ['inconnu', `/inconnu?tel=${encodeURIComponent(CAPTURE)}`], ['a-trier', '/a-trier'], ['actions', '/actions'], ['action', `/actions?id=${salon.id}`], ['campagnes', '/campagnes'], ['campagne', `/campagnes?id=${kbrouillon}`], ['campagne-envoyee', `/campagnes?id=${kid}`]]) {
+    for (const [nomPage, chemin] of [['accueil-contacts', '/'], ['aujourdhui', '/aujourdhui'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['suite', `/contacts/suite?id=${SUITE}`], ['bilan', '/bilan'], ['prescripteurs', '/prescripteurs'], ['prescripteur', `/prescripteurs/fiche?id=${durand}`], ['acheteurs', `/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`], ['qualifier-acheteur', `/contacts/qualifier?id=${ach1}`], ['pipeline', '/pipeline'], ['fiche-leedflow', `/contacts/fiche?id=${KLF}`], ['fiche-accord-site', `/contacts/fiche?id=${SITEACC}`], ['fiche-sans-accord', `/contacts/fiche?id=${saisie.id}`], ['qualifier-leedflow', `/contacts/qualifier?id=${KLF}`], ['inconnu', `/inconnu?tel=${encodeURIComponent(CAPTURE)}`], ['a-trier', '/a-trier'], ['actions', '/actions'], ['action', `/actions?id=${salon.id}`], ['campagnes', '/campagnes'], ['campagne', `/campagnes?id=${kbrouillon}`], ['campagne-envoyee', `/campagnes?id=${kid}`]]) {
       await onglet.goto(`${E}${chemin}`);
       if (nomPage === 'ajouter') {
         await onglet.click('[data-canaux] label:has(input[value=boitage]) span');

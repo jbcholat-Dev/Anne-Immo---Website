@@ -246,7 +246,7 @@ development_status:
   18-6-classer-plusieurs-contacts-et-ecarter: done   # 2026-11-02, PR #227, revue de code faite et corrigée
   18-7-fiche-contact-et-creation-a-la-main: done   # 2026-11-02, PR #227, revue de code faite et corrigée
   18-8-categories-et-methodes: review   # 2026-11-02, en attente de la revue de code (session neuve)
-  18-9-import-par-claude: backlog
+  18-9-import-par-claude: review   # 2026-11-02, en attente de la revue de code (session neuve)
   18-10-premier-import-et-classement-de-depart: backlog
   18-11-barre-nouveaux-site-et-leedflow: backlog
   18-12-demandes-des-portails-par-e-mail: backlog

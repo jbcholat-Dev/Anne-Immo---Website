@@ -15,14 +15,16 @@
 // viennent du suivi des ventes) ; un contact suivi (étape autre que perdu ou en sommeil) garde la température que le suivi
 // lui donne, et reçoit « avec Anne » (« terminé » s'il est vendu ou acté) quand son projet devient connu.
 // Les CHECK de la migration 0018 restent le dernier filet : une combinaison refusée fait échouer tout le lot.
-// Jamais appelé par les routes /api/claude/… (Claude ne lit ni n'écrit les contacts, AD-26).
+// Jamais appelé par les routes /api/claude/… (Claude ne lit ni n'écrit les contacts, AD-26), à une exception près : les
+// écritures d'un import (`ecrireImport`, `annulerImport`, story 18.9), appelées seulement par `server/import`, lui-même
+// appelé seulement par /api/claude/import, et qui ne renvoient que des compteurs et des repères de lignes du fichier.
 import type { EnvSite } from '@site/server/env';
 import { ulid } from '@site/server/ulid';
 import { trouver } from '@site/server/contacts';
 import { empreinteOpposition } from '@site/server/opposition';
 import { e164, emailValide } from '@site/server/schema';
 import { journal } from '@site/server/journal';
-import { noterAccord, retraitAccordNote } from './accord';
+import { accordImport, noterAccord, retraitAccordImport, retraitAccordNote } from './accord';
 import { PROJETS, PROJETS_AVEC_TEMPERATURE, TEMPERATURES_CHOIX, suiviEnCours, temperaturePermise } from './tableau-colonnes';
 
 /** Au plus 2 000 contacts par lot (le classement de départ se fait par vues de quelques centaines). */
@@ -667,4 +669,160 @@ export async function creerContact(env: EnvSite, s: Saisie, par: string): Promis
     await noterAccord(env, id, true, par);
   }
   return { ok: true, id };
+}
+
+// ——— Import par Claude (story 18.9, AD-22, AD-26, AD-29) ———
+// `server/import` lit le fichier et décide ; ce module écrit. Un contact créé par l'import est hors suivi (`etape` NULL),
+// sans origine marketing (`canal` NULL : le déclencheur `contact_action_auto` ne fait rien), « à vérifier » (`verifie_le`
+// NULL), avec la catégorie proposée par FR-9. Un contact existant reçoit seulement ce que `import` a décidé (coordonnées
+// manquantes, et pour un contact non vérifié : nom, ville, entreprise vides, catégorie proposée plus haute, projet). Un
+// import n'est pas un échange avec la personne : `last_activity_at` d'un contact complété ne bouge pas.
+// Chaque contact touché reçoit un `contact_evenement` de type `import`, source `claude`, `source_id` = « lot.contact »,
+// `donnees` = { avant, apres, lot, ligne, creation, coordonnees, sources, accord } (AD-29) ; ses notes ont un `source_id`
+// « lot.contact.nK », pour qu'elles ne comptent pas comme une modification faite depuis le lot.
+
+/** Une écriture décidée par `server/import` pour un contact. */
+export interface EcritureImport {
+  id: string; nouveau: boolean; ligne: string;
+  avant: Record<string, string | null>; apres: Record<string, string | null>; garde: Record<string, string | null>;
+  secondaires: { type: string; valeur: string; reseau?: string | null }[];
+  sources: string[]; notes: string[]; accord: boolean; detail: string | null;
+}
+
+const COLONNES_IMPORT = ['prenom', 'nom', 'telephone', 'email', 'commune', 'entreprise', 'categorie_id', 'projet'] as const;
+const GARDE_IMPORT = [...COLONNES_IMPORT, 'temperature', 'verifie_le', 'ecarte_le', 'etape', 'email_accord_le'] as const;
+const jx = (chemin: string) => `json_extract(j.value, '${chemin}')`;
+/** La valeur n'est portée par aucun contact (principal) ni aucune coordonnée, sauf par `soi` (expression SQL) ; NULL passe. */
+const libre = (valeur: string, soi = 'NULL') => `(${valeur} IS NULL OR (NOT EXISTS (SELECT 1 FROM contact o WHERE (o.telephone = ${valeur} OR o.email = ${valeur}) AND o.id IS NOT ${soi})
+  AND NOT EXISTS (SELECT 1 FROM contact_coordonnee k WHERE k.valeur = ${valeur})))`;
+
+/**
+ * Écrit un morceau d'import en une exécution D1 (une transaction). Nouveaux contacts d'abord (seulement si leurs
+ * coordonnées sont toujours libres), puis un événement par contact complété encore tel que l'aperçu l'a lu (`garde`) et
+ * dont le nouveau téléphone ou e-mail principal est libre ; ensuite colonnes, coordonnées, sources, notes et accord, pour
+ * les seuls contacts dont l'événement est écrit. Rien ne peut faire échouer le morceau pour un contact changé entre-temps.
+ */
+export async function ecrireImport(env: EnvSite, lot: string, ecritures: EcritureImport[], maintenant: string, par: string): Promise<{ nouveaux: number; complements: number; accords: number }> {
+  if (!ecritures.length) return { nouveaux: 0, complements: 0, accords: 0 };
+  const charge = JSON.stringify(ecritures.map((x) => {
+    const origine = [x.sources.join(', ') || 'complément', x.detail].filter(Boolean).join(', ');
+    return {
+      ...x, texte: x.nouveau ? `Contact importé par Claude (${origine})` : `Complété par un import de Claude (${origine})`,
+      donnees: JSON.stringify({ avant: x.avant, apres: x.apres, lot, ligne: x.ligne, creation: x.nouveau, coordonnees: x.secondaires.map((s) => s.valeur), sources: x.sources, accord: x.accord }),
+    };
+  }));
+  const ecrit = (id: string) => `EXISTS (SELECT 1 FROM contact_evenement e WHERE e.source = 'claude' AND e.source_id = ?2 || '.' || ${id})`;
+  const garde = GARDE_IMPORT.map((c) => `c.${c} IS ${jx(`$.garde.${c}`)}`).join(' AND ');
+  const set = COLONNES_IMPORT.map((c) => `${c} = CASE WHEN json_type(j.value, '$.apres.${c}') IS NULL THEN contact.${c} ELSE ${jx(`$.apres.${c}`)} END`).join(', ');
+  await env.DB.batch([
+    env.DB.prepare(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, email, commune, entreprise, categorie_id, projet)
+       SELECT ${jx('$.id')}, ?2, ?2, ${COLONNES_IMPORT.map((c) => jx(`$.apres.${c}`)).join(', ')}
+       FROM json_each(?1) AS j WHERE ${jx('$.nouveau')} = 1 AND ${libre(jx('$.apres.telephone'))} AND ${libre(jx('$.apres.email'))}`)
+      .bind(charge, maintenant),
+    env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, donnees, par)
+       SELECT c.id, ?3, 'import', 'claude', ?2 || '.' || c.id, ${jx('$.texte')}, ${jx('$.donnees')}, ?4
+       FROM json_each(?1) AS j JOIN contact c ON c.id = ${jx('$.id')}
+       WHERE (${jx('$.nouveau')} = 1) OR (${garde} AND ${libre(jx('$.apres.telephone'), 'c.id')} AND ${libre(jx('$.apres.email'), 'c.id')})`)
+      .bind(charge, lot, maintenant, par),
+    env.DB.prepare(`UPDATE contact SET ${set} FROM json_each(?1) AS j
+       WHERE contact.id = ${jx('$.id')} AND ${jx('$.nouveau')} = 0 AND ${ecrit('contact.id')}`).bind(charge, lot),
+    env.DB.prepare(`INSERT INTO contact_coordonnee (contact_id, type, reseau, valeur, ajoute_le)
+       SELECT ${jx('$.id')}, json_extract(s.value, '$.type'), json_extract(s.value, '$.reseau'), json_extract(s.value, '$.valeur'), ?3
+       FROM json_each(?1) AS j, json_each(j.value, '$.secondaires') AS s
+       WHERE ${ecrit(jx('$.id'))} AND ${libre("json_extract(s.value, '$.valeur')")}`).bind(charge, lot, maintenant),
+    env.DB.prepare(`INSERT INTO contact_source (contact_id, source, import_lot_id, a)
+       SELECT ${jx('$.id')}, s.value, ?2, ?3 FROM json_each(?1) AS j, json_each(j.value, '$.sources') AS s WHERE ${ecrit(jx('$.id'))}`)
+      .bind(charge, lot, maintenant),
+    env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, par)
+       SELECT ${jx('$.id')}, ?3, 'note', 'claude', ?2 || '.' || ${jx('$.id')} || '.n' || s.key, s.value, ?4
+       FROM json_each(?1) AS j, json_each(j.value, '$.notes') AS s WHERE ${ecrit(jx('$.id'))}`).bind(charge, lot, maintenant, par),
+    accordImport(env, charge, lot, maintenant),
+  ]);
+  const ids = JSON.stringify(ecritures.map((x) => `${lot}.${x.id}`));
+  const [faits, accords] = await env.DB.batch([
+    env.DB.prepare(`SELECT json_extract(donnees, '$.creation') AS creation, count(*) AS n FROM contact_evenement
+       WHERE source = 'claude' AND source_id IN (SELECT value FROM json_each(?1)) GROUP BY 1`).bind(ids),
+    env.DB.prepare(`SELECT count(*) AS n FROM contact WHERE id IN (SELECT value FROM json_each(?1)) AND email_accord_source = 'import' AND email_accord_le = ?2`)
+      .bind(JSON.stringify(ecritures.map((x) => x.id)), maintenant),
+  ]) as [D1Result<{ creation: number; n: number }>, D1Result<{ n: number }>];
+  return {
+    nouveaux: faits.results.find((x) => x.creation === 1)?.n ?? 0,
+    complements: faits.results.find((x) => x.creation === 0)?.n ?? 0,
+    accords: accords.results[0]?.n ?? 0,
+  };
+}
+
+export type RaisonGarde = 'modifie_depuis' | 'dans_le_suivi' | 'demande_du_site' | 'modifie_entre_temps';
+export interface ResultatAnnulationImport { supprimes: number; rendus: number; gardes: { ligne: string; raison: RaisonGarde }[] }
+
+/**
+ * Annule un lot d'import (AD-26, AD-29). Supprime les contacts qu'il a créés et rejoue l'avant-image de ceux qu'il a
+ * complétés (colonnes, coordonnées ajoutées, sources, notes, accord), sauf les contacts modifiés depuis : un événement
+ * postérieur à celui du lot et qui n'est pas de ce lot (Anne, JB, une séance, un autre import, une demande du site), un
+ * contact entré dans le suivi ou rattaché à une demande. Ceux-là restent, et sont listés par leur repère de ligne dans le
+ * fichier (jamais par leurs données). L'annulation est elle-même écrite comme un lot, avec ses événements (`annule`).
+ */
+export async function annulerImport(env: EnvSite, lot: string, par: string): Promise<ResultatAnnulationImport> {
+  const info = await env.DB.prepare('SELECT a FROM import_lot WHERE id = ?1').bind(lot).first<{ a: string }>();
+  const debut = `${lot}.`, fin = `${lot}/`;
+  const hors = `NOT (x.source = 'claude' AND x.source_id > ?2 AND x.source_id < ?3)`;
+  const evs = (await env.DB.prepare(
+    `SELECT e.id AS ev, e.contact_id AS id, e.donnees, c.etape,
+       EXISTS (SELECT 1 FROM contact_evenement x WHERE x.contact_id = e.contact_id AND x.id > e.id AND ${hors}) AS modifie,
+       EXISTS (SELECT 1 FROM lead l WHERE l.contact_id = e.contact_id) AS demande
+     FROM contact_evenement e JOIN contact c ON c.id = e.contact_id
+     WHERE e.source = 'claude' AND e.type = 'import' AND e.source_id > ?2 AND e.source_id < ?3 AND e.source_id = ?1 || e.contact_id`,
+  ).bind(debut, debut, fin).all<{ ev: number; id: string; donnees: string; etape: string | null; modifie: number; demande: number }>()).results;
+  const gardes: ResultatAnnulationImport['gardes'] = [];
+  const aSupprimer: { id: string; ev: number; ligne: string }[] = [];
+  const aRendre: { id: string; ev: number; ligne: string; avant: Record<string, string | null>; apres: Record<string, string | null>; coordonnees: string[]; accord: boolean }[] = [];
+  for (const e of evs) {
+    let d: { avant: Record<string, string | null>; apres: Record<string, string | null>; ligne: string; creation: boolean; coordonnees: string[]; accord: boolean };
+    try { d = JSON.parse(e.donnees); } catch { continue; }
+    const raison: RaisonGarde | null = e.modifie ? 'modifie_depuis' : e.demande ? 'demande_du_site' : e.etape !== null && d.creation ? 'dans_le_suivi' : null;
+    if (raison) { gardes.push({ ligne: d.ligne, raison }); continue; }
+    if (d.creation) aSupprimer.push({ id: e.id, ev: e.ev, ligne: d.ligne });
+    else aRendre.push({ id: e.id, ev: e.ev, ligne: d.ligne, avant: d.avant, apres: d.apres, coordonnees: d.coordonnees ?? [], accord: !!d.accord });
+  }
+  const ann = ulid(), maintenant = new Date().toISOString();
+  const sansSuite = (idSql: string, evSql: string) => `NOT EXISTS (SELECT 1 FROM contact_evenement x WHERE x.contact_id = ${idSql} AND x.id > ${evSql} AND ${hors})`;
+  const ecritures: D1PreparedStatement[] = [];
+  if (aSupprimer.length) {
+    // Les tables filles (coordonnées, sources, événements, Nouveaux…) suivent par ON DELETE CASCADE (AD-31).
+    ecritures.push(env.DB.prepare(`DELETE FROM contact WHERE etape IS NULL AND NOT EXISTS (SELECT 1 FROM lead l WHERE l.contact_id = contact.id)
+       AND id IN (SELECT ${jx('$.id')} FROM json_each(?1) AS j WHERE ${sansSuite(jx('$.id'), jx('$.ev'))})`).bind(JSON.stringify(aSupprimer), debut, fin));
+  }
+  if (aRendre.length) {
+    const charge = JSON.stringify(aRendre.map((x) => ({ ...x, donnees: JSON.stringify({ avant: x.apres, apres: x.avant, lot: ann, annule: lot, ligne: x.ligne }) })));
+    const garde = COLONNES_IMPORT.map((c) => `(json_type(j.value, '$.apres.${c}') IS NULL OR c.${c} IS ${jx(`$.apres.${c}`)})`).join(' AND ');
+    const rendu = (id: string) => `EXISTS (SELECT 1 FROM contact_evenement r WHERE r.source = 'claude' AND r.source_id = ?4 || '.' || ${id})`;
+    const set = COLONNES_IMPORT.map((c) => `${c} = CASE WHEN json_type(j.value, '$.avant.${c}') IS NULL THEN contact.${c} ELSE ${jx(`$.avant.${c}`)} END`).join(', ');
+    ecritures.push(
+      env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, donnees, par)
+         SELECT c.id, ?5, 'import', 'claude', ?4 || '.' || c.id, 'Import annulé', ${jx('$.donnees')}, ?6
+         FROM json_each(?1) AS j JOIN contact c ON c.id = ${jx('$.id')} WHERE ${garde} AND ${sansSuite('c.id', jx('$.ev'))}`)
+        .bind(charge, debut, fin, ann, maintenant, par),
+      env.DB.prepare(`UPDATE contact SET ${set} FROM json_each(?1) AS j WHERE contact.id = ${jx('$.id')} AND ${rendu('contact.id')}`)
+        .bind(charge, debut, fin, ann),
+      env.DB.prepare(`DELETE FROM contact_coordonnee WHERE id IN (SELECT k.id FROM json_each(?1) AS j, json_each(j.value, '$.coordonnees') AS v
+         JOIN contact_coordonnee k ON k.contact_id = ${jx('$.id')} AND k.valeur = v.value WHERE ${rendu(jx('$.id'))})`).bind(charge, debut, fin, ann),
+      env.DB.prepare(`DELETE FROM contact_source WHERE import_lot_id = ?2 AND contact_id IN (SELECT ${jx('$.id')} FROM json_each(?1) AS j WHERE ${rendu(jx('$.id'))})`)
+        .bind(charge, lot, fin, ann),
+      env.DB.prepare(`DELETE FROM contact_evenement WHERE source = 'claude' AND type = 'note' AND source_id > ?2 AND source_id < ?3
+         AND contact_id IN (SELECT ${jx('$.id')} FROM json_each(?1) AS j WHERE ${rendu(jx('$.id'))})`).bind(charge, debut, fin, ann),
+    );
+    if (info) {
+      ecritures.push(retraitAccordImport(env, JSON.stringify(aRendre.filter((x) => x.accord).map((x) => x.id)), info.a,
+        `EXISTS (SELECT 1 FROM contact_evenement r WHERE r.source = 'claude' AND r.source_id = ?3 || '.' || contact.id)`, ann));
+    }
+  }
+  if (ecritures.length) await env.DB.batch(ecritures);
+  const [restants, rendus] = await env.DB.batch([
+    env.DB.prepare('SELECT id FROM contact WHERE id IN (SELECT value FROM json_each(?1))').bind(JSON.stringify(aSupprimer.map((x) => x.id))),
+    env.DB.prepare(`SELECT contact_id AS id FROM contact_evenement WHERE source = 'claude' AND source_id > ?1 AND source_id < ?2`).bind(`${ann}.`, `${ann}/`),
+  ]) as [D1Result<{ id: string }>, D1Result<{ id: string }>];
+  const reste = new Set(restants.results.map((x) => x.id)), faits = new Set(rendus.results.map((x) => x.id));
+  for (const x of aSupprimer) if (reste.has(x.id)) gardes.push({ ligne: x.ligne, raison: 'modifie_entre_temps' });
+  for (const x of aRendre) if (!faits.has(x.id)) gardes.push({ ligne: x.ligne, raison: 'modifie_entre_temps' });
+  return { supprimes: aSupprimer.length - reste.size, rendus: faits.size, gardes };
 }

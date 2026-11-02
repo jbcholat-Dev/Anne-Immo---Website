@@ -114,3 +114,21 @@ export async function noterRefus(env: EnvSite, contactId: string, par: string): 
   await noter(env, contactId, maintenant, 'Ne veut plus recevoir les e-mails groupés d\'Anne', par).run();
   return true;
 }
+
+/**
+ * Story 18.9 (FR-10) : l'accord des personnes rencontrées aux animations EDB (case cochée sur le bulletin), posé par
+ * l'import pour les contacts du lot marqués `accord` (charge JSON de `carnet.ecrireImport`), seulement si le contact a
+ * une adresse, n'a pas déjà d'accord et ne s'est jamais désinscrit, et si son événement d'import est écrit.
+ */
+export const accordImport = (env: EnvSite, charge: string, lot: string, le: string) =>
+  env.DB.prepare(`UPDATE contact SET email_accord_le = ?3, email_accord_source = 'import' FROM json_each(?1) AS j
+     WHERE contact.id = json_extract(j.value, '$.id') AND json_extract(j.value, '$.accord') = 1
+       AND contact.email IS NOT NULL AND contact.email_accord_le IS NULL AND contact.email_desinscrit_le IS NULL
+       AND EXISTS (SELECT 1 FROM contact_evenement e WHERE e.source = 'claude' AND e.source_id = ?2 || '.' || contact.id)`)
+    .bind(charge, lot, le);
+
+/** Annulation d'un lot (story 18.9) : retire l'accord que ce lot avait posé (même date, source `import`), si `condition` tient. */
+export const retraitAccordImport = (env: EnvSite, ids: string, le: string, condition: string, ...liens: unknown[]) =>
+  env.DB.prepare(`UPDATE contact SET email_accord_le = NULL, email_accord_source = NULL
+     WHERE id IN (SELECT value FROM json_each(?1)) AND email_accord_source = 'import' AND email_accord_le = ?2 AND ${condition}`)
+    .bind(ids, le, ...liens);

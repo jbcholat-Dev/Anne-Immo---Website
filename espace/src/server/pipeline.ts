@@ -1,6 +1,6 @@
 // Écrivain des contacts de l'espace d'Anne (AD-20, CAP-12 v7). Le site n'écrit dans ces tables que par le rattachement
 // d'une demande (site/src/server/contacts.ts) ; tout le reste passe ici : saisie à la main, passages de boîtage,
-// prescripteurs et import d'une liste (story 13.7). Une personne n'existe qu'une fois : même téléphone E.164 ou même
+// prescripteurs (story 13.7 ; l'import d'une liste est passé à server/import, story 18.9). Une personne n'existe qu'une fois : même téléphone E.164 ou même
 // e-mail = même contact, qui est complété, jamais recréé. Chaque création est notée dans l'historique avec le compte
 // qui a agi. La règle des prochaines actions est tenue par la base (CHECK de la migration 0007).
 import type { EnvSite } from '@site/server/env';
@@ -126,10 +126,6 @@ export function libelleOrigine(o: { canal: Canal | null; origine_detail: string 
   return o.origine_detail ? `${base} : ${o.origine_detail}` : base;
 }
 
-function accordImport(env: EnvSite, id: string, maintenant: string) {
-  return env.DB.prepare(`UPDATE contact SET email_accord_le = ?2, email_accord_source = 'import' WHERE id = ?1 AND email_accord_le IS NULL`).bind(id, maintenant);
-}
-
 /** Saisie à la main : crée le contact, ou complète celui qui a déjà ce téléphone ou cet e-mail. */
 export async function saisirContact(env: EnvSite, p: Personne, o: Origine, note: string, par: string): Promise<{ id: string; existant: boolean }> {
   const maintenant = new Date().toISOString();
@@ -204,103 +200,6 @@ export async function creerPrescripteur(env: EnvSite, nom: string, role: string 
   await env.DB.prepare('INSERT INTO prescripteur (id, created_at, last_activity_at, nom, role, dernier_contact_le) VALUES (?1, ?2, ?2, ?3, ?4, ?5)')
     .bind(id, maintenant, nom, role, aujourdhui()).run();
   return id;
-}
-
-// ——— Import d'une liste (événement, ancien fichier) ———
-
-export const IMPORT_MAX = 500;
-
-/** Reconnaît les colonnes d'un tableur par leur titre (Prénom, Nom, Téléphone, E-mail, Commune et variantes). */
-export function colonnes(entetes: string[]): Partial<Record<keyof Personne, number>> {
-  const sansAccents = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z]/g, '');
-  const reperes: [keyof Personne, RegExp][] = [
-    ['prenom', /^(prenom|firstname|first)$/],
-    ['nom', /^(nom|name|lastname|nomdefamille|last)$/],
-    ['telephone', /(tel|telephone|portable|mobile|phone|gsm)/],
-    ['email', /(mail|courriel)/],
-    ['commune', /^(commune|ville|city|localite)$/],
-  ];
-  const trouve: Partial<Record<keyof Personne, number>> = {};
-  entetes.forEach((e, i) => {
-    const s = sansAccents(e);
-    for (const [cle, re] of reperes) if (trouve[cle] === undefined && re.test(s)) { trouve[cle] = i; break; }
-  });
-  return trouve;
-}
-
-export interface Ligne extends Personne { connu: boolean }
-
-/** Les contacts déjà connus parmi ces personnes, en une seule requête : téléphone ou e-mail → id du contact. */
-async function connus(env: EnvSite, personnes: Personne[]): Promise<{ parTel: Map<string, string>; parEmail: Map<string, string> }> {
-  const tels = personnes.map((p) => p.telephone).filter(Boolean);
-  const mails = personnes.map((p) => p.email).filter(Boolean);
-  const { results } = await env.DB.prepare(
-    // Autres coordonnées d'abord (story 18.3) : le principal, lu ensuite, l'emporte dans les tables ci-dessous.
-    `SELECT contact_id AS id, CASE WHEN type = 'telephone' THEN valeur END AS telephone, CASE WHEN type = 'email' THEN valeur END AS email, 1 AS rang
-       FROM contact_coordonnee WHERE type IN ('telephone', 'email') AND valeur IN (SELECT value FROM json_each(?1) UNION SELECT value FROM json_each(?2))
-     UNION ALL
-     SELECT id, telephone, email, 2 FROM contact
-     WHERE telephone IN (SELECT value FROM json_each(?1)) OR email IN (SELECT value FROM json_each(?2))
-     ORDER BY rang`,
-  ).bind(JSON.stringify(tels), JSON.stringify(mails)).all<{ id: string; telephone: string | null; email: string | null }>();
-  const parTel = new Map<string, string>(), parEmail = new Map<string, string>();
-  for (const r of results) { if (r.telephone) parTel.set(r.telephone, r.id); if (r.email) parEmail.set(r.email, r.id); }
-  return { parTel, parEmail };
-}
-const idConnu = (c: Awaited<ReturnType<typeof connus>>, p: Personne) =>
-  (p.telephone && c.parTel.get(p.telephone)) || (p.email && c.parEmail.get(p.email)) || null;
-
-/** Lit les lignes d'un tableur : chaque personne, et si elle est déjà connue. Les doublons du fichier sont écartés. */
-export async function preparerImport(env: EnvSite, lignes: string[][]): Promise<{ lignes: Ligne[]; ignorees: number; colonnesVues: string[] }> {
-  const [entetes = [], ...corps] = lignes;
-  const cols = colonnes(entetes);
-  const valeur = (l: string[], c?: number) => (c === undefined ? '' : (l[c] ?? ''));
-  const vues = new Set<string>();
-  const personnes: Personne[] = [];
-  let ignorees = Math.max(0, corps.length - IMPORT_MAX);
-  for (const l of corps.slice(0, IMPORT_MAX)) {
-    const p = personne({ prenom: valeur(l, cols.prenom), nom: valeur(l, cols.nom), telephone: valeur(l, cols.telephone), email: valeur(l, cols.email), commune: valeur(l, cols.commune) });
-    if (!p) { if (l.some((v) => v.trim())) ignorees++; continue; }
-    const cles = [p.telephone, p.email, !p.telephone && !p.email ? `nom:${p.prenom ?? ''} ${p.nom ?? ''}`.toLowerCase() : null].filter((k): k is string => !!k);
-    if (cles.some((k) => vues.has(k))) { ignorees++; continue; }
-    cles.forEach((k) => vues.add(k));
-    personnes.push(p);
-  }
-  const c = await connus(env, personnes);
-  return { lignes: personnes.map((p) => ({ ...p, connu: !!idConnu(c, p) })), ignorees, colonnesVues: Object.keys(cols) };
-}
-
-/** Enregistre l'import : nouveaux contacts créés, contacts connus complétés. Écrit par lots de 40 personnes. */
-export async function importer(env: EnvSite, lignes: Personne[], o: Origine, par: string): Promise<{ nouveaux: number; completes: number }> {
-  const maintenant = new Date().toISOString();
-  const personnes = lignes.slice(0, IMPORT_MAX).map((b) => personne(b as unknown as Record<string, unknown>)).filter((p): p is Personne => !!p);
-  const c = await connus(env, personnes);
-  let nouveaux = 0, completes = 0;
-  for (let i = 0; i < personnes.length; i += 40) {
-    const morceau = personnes.slice(i, i + 40).map((p) => {
-      const existant = idConnu(c, p);
-      const id = existant ?? ulid();
-      const ecritures = existant
-        ? [completer(env, id, p, maintenant), evenement(env, id, maintenant, 'note', 'import', `Présent dans la liste importée : ${libelleOrigine(o)}`, par)]
-        : [inserer(env, id, p, o, maintenant, 0), evenement(env, id, maintenant, 'creation', 'import', `Contact importé · ${libelleOrigine(o)}`, par, o)];
-      // Les participants ont accepté d'être recontactés : c'est leur accord pour les e-mails d'Anne (story 13.26).
-      if (!o.rappel_individuel_seul) ecritures.push(accordImport(env, id, maintenant));
-      return { p, existant: !!existant, ecritures };
-    });
-    try {
-      await env.DB.batch(morceau.flatMap((m) => m.ecritures));
-      for (const m of morceau) m.existant ? completes++ : nouveaux++;
-    } catch {
-      // Une personne du lot a été créée entre-temps par une autre écriture : on reprend ce lot une personne à la fois.
-      for (const m of morceau) {
-        if (m.existant) { await env.DB.batch(m.ecritures); completes++; continue; }
-        const r = await saisirContact(env, m.p, o, '', par);
-        if (!o.rappel_individuel_seul) await accordImport(env, r.id, maintenant).run();
-        r.existant ? completes++ : nouveaux++;
-      }
-    }
-  }
-  return { nouveaux, completes };
 }
 
 // ——— Lecture pour la liste et la fiche ———

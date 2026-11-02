@@ -83,7 +83,7 @@ const PAGES = [
   ['Fiche-acheteur', '/contacts/fiche?id=01K800000000000000000000A1', 'Fiche d\'un acheteur'], ['Qualifier', '/contacts/qualifier?id=01K800000000000000000000N1', 'Qualifier'], ['Suite', '/contacts/suite?id=01K800000000000000000000V1', 'Noter la suite'],
   ['Pipeline', '/pipeline', 'Pipeline'], ['Ajouter', '/ajouter', 'Ajouter un contact'], ['Bilan', '/bilan', 'Bilan'], ['Prospection', '/actions', 'Prospection'],
   ['Campagnes', '/campagnes', 'Campagnes'], ['Prescripteurs', '/prescripteurs', 'Prescripteurs'], ['Prescripteur', '/prescripteurs/fiche?id=01K80000000000000000000PR1', 'Fiche d\'un prescripteur'],
-  ['Acheteurs', '/acheteurs', 'Acheteurs'], ['A-trier', '/a-trier', 'À trier'], ['Importer', '/importer', 'Importer'], ['Demandes', '/gestion', 'Demandes du site'],
+  ['Acheteurs', '/acheteurs', 'Acheteurs'], ['A-trier', '/a-trier', 'À trier'], ['Demandes', '/gestion', 'Demandes du site'],
 ];
 const VERS = Object.fromEntries(PAGES.map(([f, c]) => [c, `${f}.dc.html`]));
 for (const [f, c] of PAGES) VERS[c.split('?')[0]] ??= `${f}.dc.html`;
