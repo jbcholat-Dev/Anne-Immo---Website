@@ -176,7 +176,7 @@ export function champDe(titre: string): Champ | null {
 const TITRES_CONNUS = new Set([
   'adresse', 'adresse1', 'adresse2', 'rue', 'codepostal', 'cp', 'pays', 'region', 'departement', 'naissance', 'datedenaissance',
   'anniversaire', 'note', 'notes', 'commentaire', 'commentaires', 'remarque', 'remarques', 'type', 'civilite', 'titre', 'photo',
-  'siteweb', 'site', 'fax', 'categorie', 'categories', 'groupe', 'groupes', 'etiquettes', 'fonction', 'poste', 'service',
+  'siteweb', 'site', 'fax', 'position', 'connectedon', 'jobtitle', 'dateajoutee', 'categorie', 'categories', 'groupe', 'groupes', 'etiquettes', 'fonction', 'poste', 'service',
 ]);
 
 function lireGrille(grille: string[][], nomOnglet: string, genre: Genre, io: number, c: Compteurs, ignores: Set<string>): Ligne[] {
