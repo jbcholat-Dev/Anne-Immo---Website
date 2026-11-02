@@ -59,6 +59,10 @@
 // Revue de code 18.5 : vue invalide (catégorie disparue) vide et signalée, valeur disparue retirée d'une liste, jours de
 // Paris, « à rappeler » daté, boutons ✎ et × sans clic hors survol, double clic sur × et sur « Enregistrer », une
 // annulation par vue supprimée, /api/vues (ambassadeur « non », filtre vide, 413, plafond de 100 vues, ordre rétabli).
+// Story 18.7 : /api/fiche (lecture, chaque champ corrigé avec son avant-image sans toucher la date d'activité, téléphones et
+// e-mails multiples, conflit avec un autre contact, écarter, note, contact hors séance qui met à jour le dernier contact,
+// contact du suivi, accord), création à la main (vérifiée, source « saisie », doublon proposé, opposition), 400 et 403 ;
+// le panneau dans la page (correction, note, contact, conflit, « + Nouveau contact », lien direct ?fiche=).
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
 // Lancer depuis espace/ : `node scripts/e2e-espace.mjs`.
@@ -1946,6 +1950,233 @@ try {
       await o.screenshot({ path: path.join(OUT, `espace-contacts-lot-${largeur}.png`) });
     }
     constat(!(await o.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)), `18.6 : page Contacts avec la barre d'actions à ${largeur} px : pas de débordement horizontal`);
+    await ctx.close();
+  }
+  // Story 18.7 : fiche d'un contact (lecture, correction de chaque champ avec avant-image, note, contact hors séance) et
+  // création à la main (doublon proposé, opposition), par /api/fiche ; puis le panneau et la fenêtre dans la page.
+  const KVILLE7 = `Ficheville${NUM}`;
+  const K1 = `01KF7A${NUM}${'0'.repeat(14)}`, KX = `01KF7B${NUM}${'0'.repeat(14)}`, KP = `01KF7C${NUM}${'0'.repeat(14)}`;
+  const KT1 = `+33671${NUM}`, KTX = `+33672${NUM}`, KTP = `+33673${NUM}`, KEX2 = `secondaire${NUM}@example.com`;
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, commune, categorie_id, projet, temperature, telephone, email) VALUES
+       ('${K1}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Fanny <b>x</b>', 'Ficheun${NUM}', '${KVILLE7}', 'lointains', 'vendeur', 'froid', '${KT1}', 'fanny${NUM}@example.com')`);
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, commune, telephone) VALUES
+       ('${KX}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Xavier', 'Fichedeux${NUM}', '${KVILLE7}', '${KTX}')`);
+  sql(`INSERT INTO contact_coordonnee (contact_id, type, valeur, ajoute_le) VALUES ('${KX}', 'email', '${KEX2}', '2026-10-01T08:00:00Z')`);
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, commune, categorie_id, projet, temperature, telephone, etape, parcours, prochaine_action, prochaine_action_le) VALUES
+       ('${KP}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Paul', 'Fichesuivi${NUM}', '${KVILLE7}', 'demandes_recues', 'vendeur', 'avec_anne', '${KTP}', 'premier_rdv', 'vendeur', 'Rappeler', '2026-12-01')`);
+  const apiFiche = async (corps, { jeton = JETON, type = 'application/json', methode = 'POST', id = null } = {}) => {
+    const x = await appeler(`${E}/api/fiche${id ? `?id=${id}` : ''}`, { method: methode, redirect: 'manual', headers: { 'cf-access-jwt-assertion': jeton, ...(methode === 'POST' ? { 'Content-Type': type } : {}), Origin: E }, body: methode === 'POST' ? (typeof corps === 'string' ? corps : JSON.stringify(corps)) : undefined });
+    let d = null; try { d = await x.json(); } catch {}
+    return { status: x.status, d };
+  };
+  const c7 = (id) => sql(`SELECT * FROM contact WHERE id = '${id}'`)[0];
+  const dernierEv = (id) => { const e = sql(`SELECT type, source, texte, donnees, par FROM contact_evenement WHERE contact_id = '${id}' ORDER BY id DESC LIMIT 1`)[0]; return e ? { ...e, d: e.donnees ? JSON.parse(e.donnees) : null } : null; };
+  const nEv7 = () => sql(`SELECT count(*) AS n FROM contact_evenement`)[0].n;
+  {
+    let x = await apiFiche(null, { methode: 'GET', id: K1 });
+    constat(x.status === 200 && x.d.fiche.nom === `Ficheun${NUM}` && x.d.fiche.telephones[0] === KT1 && x.d.fiche.categorie === 'Relations lointaines' && x.d.fiche.appel_permis_categorie === false
+      && Array.isArray(x.d.fiche.seances) && x.d.fiche.seances.length === 0 && x.d.fiche.etape === null,
+      '18.7 : GET /api/fiche lit la fiche (coordonnées, catégorie et sa règle d\'appel, séances vides, hors suivi)');
+    // Chaque champ corrigé, avec son avant-image (AD-29) ; une correction ne fait pas avancer last_activity_at.
+    const champs = [
+      ['prenom', 'Fanny', `Fanny <b>x</b>`, (c) => c.prenom === 'Fanny'],
+      ['nom', `Fichecorrige${NUM}`, `Ficheun${NUM}`, (c) => c.nom === `Fichecorrige${NUM}`],
+      ['entreprise', 'Boulangerie Essai', null, (c) => c.entreprise === 'Boulangerie Essai'],
+      ['commune', `${KVILLE7}-sur-Léman`, KVILLE7, (c) => c.commune === `${KVILLE7}-sur-Léman`],
+      ['categorie_id', 'proches', 'lointains', (c) => c.categorie_id === 'proches' && !!c.verifie_le],
+      ['projet', 'vendeur_acheteur', 'vendeur', (c) => c.projet === 'vendeur_acheteur' && c.temperature === 'froid'],
+      ['temperature', 'chaud', 'froid', (c) => c.temperature === 'chaud'],
+      ['appel_autorise', false, null, (c) => c.appel_autorise === 0],
+      ['a_rappeler_le', '2026-12-15', null, (c) => c.a_rappeler_le === '2026-12-15'],
+    ];
+    const bilan = [];
+    for (const [cle, valeur, avant, verifier] of champs) {
+      x = await apiFiche({ id: K1, corriger: { [cle]: valeur } });
+      const ev = dernierEv(K1);
+      const attenduAvant = cle === 'appel_autorise' ? null : avant;
+      const ok = x.status === 200 && x.d.changes.includes(cle) && verifier(c7(K1)) && ev.type === 'classement' && ev.source === 'anne' && !!ev.par
+        && JSON.stringify(ev.d.avant[cle]) === JSON.stringify(attenduAvant) && ev.d.apres[cle] !== undefined && !!ev.d.lot && x.d.ligne?.id === K1;
+      bilan.push(`${cle} ${ok ? 'ok' : 'NON'}`);
+    }
+    constat(bilan.every((b) => b.endsWith('ok')) && c7(K1).last_activity_at === '2026-10-01T08:00:00Z',
+      `18.7 : chaque champ de la fiche se corrige par /api/fiche avec son avant-image, sans toucher la date d'activité (${bilan.join(', ')})`);
+    // Téléphones et e-mails multiples : le premier sur contact, les autres dans contact_coordonnee ; retrait d'un secondaire.
+    const T1b = `06 74 ${NUM.slice(0, 2)} ${NUM.slice(2, 4)} ${NUM.slice(4, 6)}`;
+    x = await apiFiche({ id: K1, corriger: { telephones: [KT1, T1b], emails: [`fanny${NUM}@example.com`, `Autre${NUM}@Example.com`] } });
+    const sec = sql(`SELECT type, valeur FROM contact_coordonnee WHERE contact_id = '${K1}' ORDER BY type, valeur`);
+    const ev1 = dernierEv(K1);
+    constat(x.status === 200 && sec.length === 2 && sec.some((s) => s.valeur === `+33674${NUM}`) && sec.some((s) => s.valeur === `autre${NUM}@example.com`)
+      && JSON.stringify(ev1.d.avant.telephones) === JSON.stringify([KT1]) && ev1.d.apres.telephones.length === 2 && x.d.fiche.telephones.length === 2,
+      '18.7 : plusieurs téléphones et e-mails (normalisés E.164 et en minuscules) : le premier sur la fiche, les autres en coordonnées, avant-image gardée');
+    x = await apiFiche({ id: K1, corriger: { telephones: [`+33674${NUM}`] } });
+    constat(x.status === 200 && c7(K1).telephone === `+33674${NUM}` && sql(`SELECT count(*) AS n FROM contact_coordonnee WHERE contact_id = '${K1}' AND type = 'telephone'`)[0].n === 0,
+      '18.7 : un numéro secondaire devenu principal quitte les coordonnées secondaires, l\'ancien principal retiré disparaît');
+    // Conflit : téléphone principal ou e-mail secondaire d'un autre contact → 409 avec ce contact, rien n'est écrit.
+    const e0 = nEv7(), avantConflit = JSON.stringify(c7(K1));
+    const k1 = await apiFiche({ id: K1, corriger: { telephones: [`+33674${NUM}`, KTX] } });
+    const k2 = await apiFiche({ id: K1, corriger: { emails: [KEX2] } });
+    constat(k1.status === 409 && k1.d.existant?.id === KX && k2.status === 409 && k2.d.existant?.id === KX && nEv7() === e0 && JSON.stringify(c7(K1)) === avantConflit,
+      '18.7 : un téléphone ou un e-mail (même secondaire) d\'un autre contact est refusé avec ce contact (409), rien n\'est écrit');
+    // Écarter et faire revenir depuis la fiche.
+    x = await apiFiche({ id: K1, corriger: { ecarte: true } });
+    const ecarte7 = !!c7(K1).ecarte_le;
+    x = await apiFiche({ id: K1, corriger: { ecarte: false } });
+    constat(ecarte7 && c7(K1).ecarte_le === null, '18.7 : la fiche écarte le contact et le fait revenir');
+    // Note : un échange, la date d'activité avance.
+    x = await apiFiche({ id: K1, note: 'Rappeler après les vacances <script>' });
+    const evN = dernierEv(K1);
+    constat(x.status === 200 && evN.type === 'note' && evN.texte === 'Rappeler après les vacances <script>' && c7(K1).last_activity_at > '2026-10-01T08:00:00Z' && evN.d.avant.last_activity_at === '2026-10-01T08:00:00Z',
+      '18.7 : une note s\'ajoute à l\'historique (avant-image de la date d\'activité gardée)');
+    // Contact hors séance : met à jour le dernier contact ; un contact plus ancien ne le remplace pas ; date future refusée.
+    const auj7 = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(new Date());
+    x = await apiFiche({ id: K1, contact: { jour: auj7, canal: 'rencontre', note: 'Croisée au marché' } });
+    const apresContact = c7(K1), evC = dernierEv(K1);
+    constat(x.status === 200 && x.d.remplace === true && apresContact.dernier_contact_canal === 'rencontre' && !!apresContact.dernier_contact_le && x.d.ligne.dernier_canal === 'rencontre'
+      && evC.d.avant.dernier_contact_le === null && evC.d.apres.dernier_contact_canal === 'rencontre' && evC.texte.includes('Croisée au marché'),
+      '18.7 : un contact fait hors séance (date, canal) met à jour le dernier contact, avec son avant-image');
+    x = await apiFiche({ id: K1, contact: { jour: '2026-09-01', canal: 'appel' } });
+    const futur = await apiFiche({ id: K1, contact: { jour: '2099-01-01', canal: 'appel' } });
+    constat(x.status === 200 && x.d.remplace === false && c7(K1).dernier_contact_canal === 'rencontre' && dernierEv(K1).texte.includes('1 septembre 2026') && futur.status === 400,
+      '18.7 : un contact plus ancien que le dernier connu est noté sans le remplacer ; une date future est refusée');
+    // Contact du suivi : classé sans que l'étape bouge, température du suivi gardée, lien vers la fiche de suivi.
+    x = await apiFiche({ id: KP, corriger: { projet: 'vendeur_acheteur', temperature: 'froid', appel_autorise: true } });
+    const fp = c7(KP);
+    constat(x.status === 200 && x.d.ignore === true && fp.etape === 'premier_rdv' && fp.prochaine_action_le === '2026-12-01' && fp.temperature === 'avec_anne' && fp.projet === 'vendeur_acheteur'
+      && fp.appel_autorise === 1 && x.d.fiche.etape_libelle && x.d.fiche.en_cours === true,
+      '18.7 : un contact du suivi des ventes se corrige sans que son étape ni sa température (« avec Anne ») bougent');
+    // Accord e-mail par la fiche (module accord).
+    x = await apiFiche({ id: K1, accord: 'oui' });
+    const accordOk = x.status === 200 && x.d.fiche.accord.statut === 'accord' && !!c7(K1).email_accord_le;
+    x = await apiFiche({ id: K1, accord: 'retirer' });
+    constat(accordOk && x.d.fiche.accord.statut === 'sans_accord', '18.7 : l\'accord e-mail se note et se retire depuis la fiche');
+    // Création à la main.
+    const nomC = `Fichenouveau${NUM}`;
+    x = await apiFiche({ creer: { prenom: 'Nina', nom: nomC, commune: KVILLE7, categorie_id: 'partenaires', projet: 'vendeur', temperature: 'tiede', note: 'Rencontrée au salon' } });
+    const nc = x.d?.id ? c7(x.d.id) : null;
+    constat(x.status === 201 && nc && !!nc.verifie_le && nc.etape === null && nc.canal === null && nc.categorie_id === 'partenaires' && nc.temperature === 'tiede'
+      && sql(`SELECT source FROM contact_source WHERE contact_id = '${x.d.id}'`).map((s) => s.source).join() === 'saisie'
+      && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${x.d.id}' AND type IN ('creation', 'note')`)[0].n === 2 && x.d.ligne.sources.includes('saisie'),
+      '18.7 : « + Nouveau contact » crée un contact vérifié, hors suivi, source « saisie à la main », avec sa note');
+    const d1 = await apiFiche({ creer: { nom: 'Doublon', telephone: `07 74 ${NUM.slice(0, 2)} ${NUM.slice(2, 4)} ${NUM.slice(4, 6)}`.replace(/^07/, '06'), categorie_id: 'proches' } });
+    const d2 = await apiFiche({ creer: { nom: 'Doublon', email: KEX2.toUpperCase(), categorie_id: 'proches' } });
+    constat(d1.status === 409 && d1.d.error.code === 'existant' && d1.d.existant.id === K1 && d2.status === 409 && d2.d.existant.id === KX && d2.d.existant.nom === `Xavier Fichedeux${NUM}`,
+      '18.7 : un téléphone (saisi en 06…) ou un e-mail (même secondaire, en majuscules) déjà connu propose d\'ouvrir le contact existant (409)');
+    const TO = `+33675${NUM}`;
+    const empreinte = createHmac('sha256', 'essai').update(`opposition:${TO}`).digest('hex');
+    sql(`INSERT INTO opposition (empreinte, le) VALUES ('${empreinte}', '2026-10-01T08:00:00Z') ON CONFLICT DO NOTHING`);
+    const n0 = sql(`SELECT count(*) AS n FROM contact`)[0].n;
+    const op = await apiFiche({ creer: { nom: 'Opposée', telephone: TO, categorie_id: 'proches' } });
+    constat(op.status === 409 && op.d.error.code === 'opposition' && sql(`SELECT count(*) AS n FROM contact`)[0].n === n0,
+      '18.7 : une personne qui a demandé l\'effacement (liste d\'opposition) n\'est pas recréée à la main (409)');
+    // Refus : 400 hors vocabulaire, rien n'est écrit ; 403 sans jeton ou avec celui de Claude.
+    const e1 = nEv7(), s1 = JSON.stringify(c7(K1));
+    const refus = [
+      ['champ inconnu', await apiFiche({ id: K1, corriger: { etape: 'vendu' } })],
+      ['dernier contact', await apiFiche({ id: K1, corriger: { dernier_contact_le: '2026-10-01' } })],
+      ['catégorie inconnue', await apiFiche({ id: K1, corriger: { categorie_id: 'rois' } })],
+      ['température avec Anne', await apiFiche({ id: K1, corriger: { temperature: 'avec_anne' } })],
+      ['date à rappeler invalide', await apiFiche({ id: K1, corriger: { a_rappeler_le: '2026-13-40' } })],
+      ['téléphone invalide', await apiFiche({ id: K1, corriger: { telephones: ['12'] } })],
+      ['11 téléphones', await apiFiche({ id: K1, corriger: { telephones: Array.from({ length: 11 }, (_, i) => `+3360000000${i}`) } })],
+      ['tout vidé', await apiFiche({ id: K1, corriger: { nom: null, telephones: [], emails: [] } })],
+      ['deux gestes', await apiFiche({ id: K1, note: 'a', contact: { jour: '2026-10-01', canal: 'appel' } })],
+      ['canal inconnu', await apiFiche({ id: K1, contact: { jour: '2026-10-01', canal: 'pigeon' } })],
+      ['note vide', await apiFiche({ id: K1, note: '  ' })],
+      ['identifiant mal formé', await apiFiche({ id: "x' OR 1=1", note: 'a' })],
+      ['création sans nom ni téléphone', await apiFiche({ creer: { prenom: 'Seul', email: `seul${NUM}@example.com`, categorie_id: 'proches' } })],
+      ['création sans catégorie', await apiFiche({ creer: { nom: 'Sanscat' } })],
+      ['création température sans objet', await apiFiche({ creer: { nom: 'Amb', categorie_id: 'proches', projet: 'ambassadeur', temperature: 'chaud' } })],
+      ['corps qui n\'est pas du JSON', await apiFiche('id=x', { type: 'application/x-www-form-urlencoded' })],
+    ];
+    constat(refus.every(([, r]) => r.status === 400 && r.d?.ok === false) && nEv7() === e1 && JSON.stringify(c7(K1)) === s1,
+      `18.7 : /api/fiche refuse toute valeur hors vocabulaire (400 : ${refus.map(([n, r]) => `${n} ${r.status}`).join(', ')}), rien n'est écrit`);
+    const acces = [
+      ['lecture sans jeton', await appeler(`${E}/api/fiche?id=${K1}`, { redirect: 'manual' })],
+      ['écriture sans jeton', await appeler(`${E}/api/fiche`, { method: 'POST', redirect: 'manual', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: K1, note: 'x' }) })],
+      ['lecture avec le jeton de Claude', await apiFiche(null, { methode: 'GET', id: K1, jeton: JETON_CLAUDE })],
+      ['note avec le jeton de Claude', await apiFiche({ id: K1, note: 'x' }, { jeton: JETON_CLAUDE })],
+      ['création avec le jeton de Claude', await apiFiche({ creer: { nom: 'Pirate', categorie_id: 'proches' } }, { jeton: JETON_CLAUDE })],
+    ];
+    const inconnu7 = await apiFiche(null, { methode: 'GET', id: '01ARZ3NDEKTSV4RRFFQ69G5FAV' });
+    constat(acces.every(([, r]) => r.status === 403) && inconnu7.status === 404 && nEv7() === e1,
+      `18.7 : /api/fiche réservé à Anne et JB (${acces.map(([n, r]) => `${n} ${r.status}`).join(', ')}) ; contact inconnu 404`);
+  }
+  // La page : le nom ouvre le panneau ; corriger, noter, contact hors séance ; « + Nouveau contact » et doublon proposé.
+  for (const largeur of [1440, 1280]) {
+    const ctx = await nav.newContext({ viewport: { width: largeur, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
+    const o = await ctx.newPage();
+    await o.goto(`${E}/`);
+    const attendre = () => o.waitForSelector('[data-lignes][data-complet]', { state: 'attached' });
+    await attendre();
+    await o.fill('[data-recherche]', `fichedeux${NUM}`); await o.waitForTimeout(300); await attendre();
+    await o.evaluate(() => { window.__marque = 'meme-page'; });
+    await o.click(`tr[data-contact="${KX}"] [data-ouvrir-fiche]`);
+    await o.waitForSelector('[data-fiche-form]');
+    const titre = await o.textContent('#fc-titre');
+    const url7 = new URL(o.url()).searchParams.get('fiche');
+    if (largeur === 1440) {
+      await o.fill('[data-fiche-form] input[name=commune]', `${KVILLE7}-Plage`);
+      await o.click('[data-fiche-enregistrer]');
+      await o.waitForSelector('[data-fiche-message]');
+      const msg = await o.textContent('[data-fiche-message]');
+      const ligneTxt = await o.locator(`tr[data-contact="${KX}"]`).innerText();
+      constat(titre === `Xavier Fichedeux${NUM}` && url7 === KX && msg.startsWith('Fiche enregistrée') && c7(KX).commune === `${KVILLE7}-Plage` && ligneTxt.includes(`${KVILLE7}-Plage`)
+        && (await o.evaluate(() => window.__marque)) === 'meme-page',
+        '18.7 : un clic sur le nom ouvre la fiche dans un panneau (adresse « ?fiche= »), une correction s\'enregistre et la ligne du tableau suit sans recharger');
+      await o.fill('[data-fiche-note] textarea', 'Note depuis le panneau');
+      await o.click('[data-fiche-note] button[type=submit]');
+      await o.waitForFunction(() => document.querySelector('[data-fiche-historique]')?.textContent?.includes('Note depuis le panneau'));
+      await o.selectOption('[data-fiche-contact] select[name=canal]', 'whatsapp');
+      await o.click('[data-fiche-contact] button[type=submit]');
+      await o.waitForFunction(() => document.querySelector('[data-fiche-dernier-texte]')?.textContent?.includes('WhatsApp'));
+      const ligne2 = await o.locator(`tr[data-contact="${KX}"]`).innerText();
+      constat(c7(KX).dernier_contact_canal === 'whatsapp' && ligne2.includes('WhatsApp'), '18.7 : dans le panneau, une note et un contact hors séance s\'enregistrent ; le dernier contact du tableau suit');
+      // Téléphone pris par un autre contact : message et lien vers sa fiche.
+      await o.fill('[data-fiche-form] [data-liste-telephone] input', telLisible(`+33674${NUM}`));
+      await o.click('[data-fiche-enregistrer]');
+      await o.waitForSelector('[data-fiche-message] [data-ouvrir]');
+      await o.screenshot({ path: path.join(OUT, 'espace-fiche-panneau-conflit-1440.png') });
+      await o.click('[data-fiche-message] [data-ouvrir]');
+      await o.waitForFunction((n) => document.querySelector('#fc-titre')?.textContent === n, `Fanny Fichecorrige${NUM}`);
+      constat(c7(KX).telephone === KTX && await o.locator('[data-fiche-historique] script').count() === 0 && (await o.textContent('[data-fiche-historique]')).includes('<script>'),
+        '18.7 : un numéro déjà pris est refusé dans le panneau avec « Ouvrir la fiche de … » ; le texte d\'une note reste du texte');
+      await o.screenshot({ path: path.join(OUT, 'espace-fiche-panneau-1440.png') });
+      await o.click('[data-fiche-fermer]');
+      // « + Nouveau contact » : doublon proposé, puis création.
+      await o.click('[data-nouveau-contact]');
+      await o.fill('[data-creation] input[name=nom]', 'Essai doublon');
+      await o.fill('[data-creation] input[name=telephone]', telLisible(KTX));
+      await o.screenshot({ path: path.join(OUT, 'espace-nouveau-contact-1440.png') });
+      await o.click('[data-creation] button[type=submit]');
+      await o.waitForSelector('[data-ouvrir-existant]');
+      await o.click('[data-ouvrir-existant]');
+      await o.waitForFunction((n) => document.querySelector('#fc-titre')?.textContent === n, `Xavier Fichedeux${NUM}`);
+      await o.click('[data-fiche-fermer]');
+      await o.click('[data-nouveau-contact]');
+      await o.fill('[data-creation] input[name=prenom]', 'Noé');
+      await o.fill('[data-creation] input[name=nom]', `Fichepage${NUM}`);
+      await o.fill('[data-creation] input[name=commune]', KVILLE7);
+      await o.click('[data-creation] button[type=submit]');
+      await o.waitForFunction(() => document.querySelector('[data-toast-texte]')?.textContent?.includes('ajouté aux contacts'));
+      await o.fill('[data-recherche]', `fichepage${NUM}`); await o.waitForTimeout(300); await attendre();
+      constat(await o.locator('[data-lignes] tr[data-contact]').count() === 1 && sql(`SELECT count(*) AS n FROM contact WHERE nom = 'Fichepage${NUM}' AND verifie_le IS NOT NULL`)[0].n === 1,
+        '18.7 : « + Nouveau contact » propose la fiche existante pour un numéro connu, puis crée un contact qui apparaît dans le tableau sans recharger');
+    } else {
+      await o.screenshot({ path: path.join(OUT, `espace-fiche-panneau-${largeur}.png`) });
+      constat(titre === `Xavier Fichedeux${NUM}`, `18.7 : fiche ouverte à ${largeur} px`);
+    }
+    constat(!(await o.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)), `18.7 : page Contacts avec le panneau à ${largeur} px : pas de débordement horizontal`);
+    await ctx.close();
+  }
+  // Lien direct : /?fiche=<id> ouvre la page avec la fiche ouverte.
+  {
+    const ctx = await nav.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
+    const o = await ctx.newPage();
+    await o.goto(`${E}/?fiche=${KP}`);
+    await o.waitForSelector('[data-fiche-suivi-lien]');
+    constat((await o.getAttribute('[data-fiche-suivi-lien]', 'href')) === `/contacts/fiche?id=${KP}` && await o.isDisabled('[data-fiche-form] input[disabled]'),
+      '18.7 : /?fiche=… ouvre la fiche ; un contact du suivi garde le lien vers sa fiche de suivi, sa température n\'est pas modifiable');
+    await o.screenshot({ path: path.join(OUT, 'espace-fiche-suivi-1280.png') });
     await ctx.close();
   }
   // 1 150 contacts fictifs (environ 1 230 en tout, story 18.5) : tri, recherche et filtres dans le navigateur.

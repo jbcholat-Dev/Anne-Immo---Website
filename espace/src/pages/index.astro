@@ -10,8 +10,10 @@
 // barre d'actions groupées (catégorie, projet, température, vérifié, écarter ou faire revenir) et classement d'une seule
 // ligne dans ses cellules ; tout s'écrit par /api/carnet (`server/carnet`, avant-image gardée, AD-29) et s'annule depuis
 // le message qui suit. Le tableau se met à jour sans recharger.
-// Place laissée aux stories suivantes, dans la mise en page de la maquette : barre « Nouveaux » (18.11) au-dessus de la
-// recherche, « + Nouveau contact » et fiche (18.7) en haut à droite et sur le nom.
+// Story 18.7 : un clic sur le nom ouvre la fiche du contact dans un panneau à droite (`islands/fiche-contact`, /api/fiche) ;
+// « + Nouveau contact » en haut à droite ouvre la saisie de la maquette. La ligne écrite revient dans le tableau sans
+// recharger ; `/?fiche=<id>` ouvre la page avec la fiche ouverte.
+// Place laissée à la story 18.11 : barre « Nouveaux » au-dessus de la recherche.
 // L'ancienne page d'accueil « Aujourd'hui » est à /aujourdhui ; ses anciens retours (`/?m=…`) y sont renvoyés.
 import Espace from '../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
@@ -37,6 +39,7 @@ const reglages = enJson({ vues, categories });
 <Espace titre="Contacts" actif="contacts" large>
   <div class="ct-tete">
     <div><h1>Contacts</h1><div class="e-muet">Tous les contacts d'Anne, toutes sources confondues.</div></div>
+    <button type="button" class="ct-btn bleu ct-nouveau" data-nouveau-contact>+ Nouveau contact</button>
   </div>
   <div class="ct-page">
     <aside class="ct-cote" aria-label="Vues et catégories">
@@ -108,6 +111,28 @@ const reglages = enJson({ vues, categories });
       <div class="ct-boutons"><button type="button" class="ct-btn" data-dialogue-annuler>Annuler</button><button type="submit" class="ct-btn bleu">Enregistrer</button></div>
     </form>
   </dialog>
+  <dialog class="fc-panneau" data-fiche aria-labelledby="fc-titre"><div class="fc-corps" data-fiche-corps></div></dialog>
+  <dialog class="ct-dialogue ct-creation" data-creation aria-labelledby="ct-creation-titre">
+    <form data-form-creation novalidate>
+      <h2 id="ct-creation-titre">Nouveau contact</h2>
+      <p class="e-muet">Au moins un nom ou un téléphone. Le contact est créé vérifié, source « saisie à la main ».</p>
+      <div class="fc-grille">
+        <label class="ct-champ">Prénom<input name="prenom" maxlength="80" autocomplete="off" /></label>
+        <label class="ct-champ">Nom<input name="nom" maxlength="80" autocomplete="off" /></label>
+        <label class="ct-champ">Téléphone<input name="telephone" type="tel" maxlength="40" autocomplete="off" /></label>
+        <label class="ct-champ">E-mail<input name="email" type="email" maxlength="254" autocomplete="off" /></label>
+        <label class="ct-champ">Ville<input name="commune" maxlength="80" autocomplete="off" /></label>
+        <label class="ct-champ">Entreprise<input name="entreprise" maxlength="120" autocomplete="off" /></label>
+        <label class="ct-champ">Catégorie<select name="categorie_id">{categories.map((c) => <option value={c.id} selected={c.id === 'proches'}>{c.nom}</option>)}</select></label>
+        <label class="ct-champ">Projet<select name="projet">{Object.entries(PROJETS).map(([k, v]) => <option value={k}>{v}</option>)}</select></label>
+        <label class="ct-champ">Température<select name="temperature"></select></label>
+      </div>
+      <label class="ct-champ">Note<textarea name="note" rows="2" maxlength="2000"></textarea></label>
+      <label class="fc-case"><input type="checkbox" name="accord" /> A accepté de recevoir les e-mails d'Anne</label>
+      <p class="ct-erreur" data-creation-erreur role="alert" hidden></p>
+      <div class="ct-boutons"><button type="button" class="ct-btn" data-creation-annuler>Annuler</button><button type="submit" class="ct-btn bleu">Enregistrer</button></div>
+    </form>
+  </dialog>
   <div class="ct-toast" data-toast role="status" hidden><span data-toast-texte></span><button type="button" data-toast-annuler hidden>Annuler</button></div>
   <script type="application/json" id="ct-donnees" set:html={donnees}></script>
   <script type="application/json" id="ct-reglages" set:html={reglages}></script>
@@ -123,6 +148,7 @@ const reglages = enJson({ vues, categories });
     libelleSource, preparerRecherche, temperaturePermise, valeurTri, type CleColonne, type LigneTableau,
   } from '../server/tableau-colonnes';
   import { ajouter, pastilles, preparerFiltre, retirer, type CleFiltre, type Filtre, type Vue } from '../server/vues';
+  import { brancherFiche } from '../islands/fiche-contact';
 
   const MEMOIRE = 'espace.contacts.colonnes';
   // Premier paquet de lignes écrit tout de suite, la suite par paquets aux images suivantes : le tableau répond vite même
@@ -132,7 +158,8 @@ const reglages = enJson({ vues, categories });
   const reglages: { vues: Vue[]; categories: { id: string; nom: string }[] } = JSON.parse(document.getElementById('ct-reglages')?.textContent || '{"vues":[],"categories":[]}');
   // Calculé une seule fois : textes sans accents, numéros réduits aux chiffres, dates en millisecondes.
   const index = lignes.map(indexer);
-  const dates = lignes.map((l) => l.dernier_le ? new Date(l.dernier_le).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' }) : '');
+  const dateDe = (l: LigneTableau) => l.dernier_le ? new Date(l.dernier_le).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' }) : '';
+  const dates = lignes.map(dateDe);
   let total = lignes.filter((l) => !l.ecarte).length;
   const parId = new Map(lignes.map((l, i) => [l.id, i]));
   const nomsCategories = new Map(reglages.categories.map((c) => [c.id, c.nom]));
@@ -181,7 +208,7 @@ const reglages = enJson({ vues, categories });
 
   function cellule(l: LigneTableau, i: number, cle: CleColonne): string {
     switch (cle) {
-      case 'nom': return `<td class="ct-nom"><a href="/contacts/fiche?id=${esc(l.id)}">${esc(nomDe(l))}</a></td>`;
+      case 'nom': return `<td class="ct-nom"><a href="/?fiche=${esc(l.id)}" data-ouvrir-fiche>${esc(nomDe(l))}</a></td>`;
       case 'entreprise': return `<td class="ct-coupe" title="${esc(l.entreprise)}">${l.entreprise ? esc(l.entreprise) : vide}</td>`;
       case 'categorie': return `<td>${classer('categorie_id', l.categorie ? pastille(l.categorie) : pastille('à ranger', 'aq'), 'Changer la catégorie')}</td>`;
       case 'projet': return `<td>${classer('projet', pastille(PROJETS[l.projet] ?? l.projet, l.projet === 'a_qualifier' ? 'aq' : ''), 'Changer le projet')}</td>`;
@@ -611,8 +638,27 @@ const reglages = enJson({ vues, categories });
       return;
     }
     const b = cible.closest<HTMLElement>('[data-classer]');
-    if (b) ouvrirListe(b, i);
+    if (b) { ouvrirListe(b, i); return; }
+    // Story 18.7 : le nom ouvre la fiche dans le panneau (Ctrl ou Cmd + clic : dans un nouvel onglet, fiche ouverte).
+    const a = cible.closest<HTMLAnchorElement>('[data-ouvrir-fiche]');
+    if (a && !e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) { e.preventDefault(); void fiches.ouvrirFiche(lignes[i].id); }
   });
+  /** Une ligne écrite par la fiche ou la création (story 18.7) : remplacée, ou ajoutée au tableau, sans recharger. */
+  function remettreLigne(l: LigneTableau) {
+    let i = parId.get(l.id);
+    if (i === undefined) { i = lignes.length; lignes.push(l); index.push(indexer(l)); dates.push(dateDe(l)); parId.set(l.id, i); }
+    else { lignes[i] = l; index[i] = indexer(l); dates[i] = dateDe(l); }
+    html[i] = undefined;
+    valeurs.clear();
+    total = lignes.filter((x) => !x.ecarte).length;
+    compterVues();
+    afficherVues();
+    afficher();
+  }
+  const fiches = brancherFiche({ categories: reglages.categories, surLigne: remettreLigne, annoncer: (t) => montrer(t) });
+  $<HTMLButtonElement>('[data-nouveau-contact]').addEventListener('click', () => fiches.ouvrirCreation());
+  const ficheDemandee = new URL(location.href).searchParams.get('fiche');
+  if (ficheDemandee && /^[0-9A-HJKMNP-TV-Z]{26}$/.test(ficheDemandee)) void fiches.ouvrirFiche(ficheDemandee);
   document.addEventListener('click', (e) => { if (!menuColonnes.contains(e.target as Node)) menuColonnes.open = false; });
   compterVues();
   afficherVues();
@@ -737,4 +783,44 @@ const reglages = enJson({ vues, categories });
   tr:hover .ct-chevron, .ct-classer:focus-visible .ct-chevron { opacity: 1; }
   .ct-liste { font: inherit; font-size: 13px; padding: 3px 6px; border: 1px solid var(--avt-klein); border-radius: 8px; background: #fff; color: var(--avt-brun); max-width: 190px; }
   @media (hover: none) { .ct-chevron { opacity: 1; } }
+  /* Story 18.7 : panneau de la fiche, à droite, sur toute la hauteur ; fenêtre « Nouveau contact ». */
+  .ct-nouveau { min-height: 40px; padding: 8px 18px; font-size: 14.5px; }
+  .ct-creation { max-width: 560px; }
+  .ct-creation textarea, .fc-panneau textarea { font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--avt-galet); border-radius: 8px; color: var(--avt-brun); width: 100%; box-sizing: border-box; }
+  .ct-champ select { font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--avt-galet); border-radius: 8px; color: var(--avt-brun); background: #fff; }
+  .ct-champ select:disabled, .ct-champ input:disabled { background: var(--avt-ecru); color: var(--avt-text-muted); }
+  .fc-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px 14px; align-items: start; }
+  .fc-case { display: flex; gap: 8px; align-items: center; min-height: 40px; font-size: 14px; }
+  .fc-case input { width: 18px; height: 18px; accent-color: var(--avt-klein); }
+  .fc-panneau { margin: 0 0 0 auto; height: 100vh; max-height: 100vh; width: min(620px, 100vw); max-width: 100vw; border: 0; padding: 0; box-shadow: -12px 0 40px rgba(0, 0, 0, .18); background: var(--avt-ecru, #faf7f2); box-sizing: border-box; }
+  .fc-panneau::backdrop { background: rgba(20, 16, 12, .35); }
+  .fc-corps { display: flex; flex-direction: column; gap: 14px; padding: 20px 22px 28px; }
+  .fc-tete { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .fc-tete h2 { margin: 0 0 6px; font-size: 26px; overflow-wrap: anywhere; }
+  .fc-tete h2:focus { outline: none; }
+  .fc-pastilles { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .fc-fermer { border: 0; background: #fff; font-size: 26px; line-height: 1; width: 40px; height: 40px; border-radius: 999px; cursor: pointer; color: var(--avt-brun); flex: none; }
+  .fc-fermer:focus-visible, .fc-lien:focus-visible { outline: 2px solid var(--avt-klein); outline-offset: 2px; }
+  .fc-bloc { background: #fff; border: 1px solid var(--avt-galet); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .fc-bloc h3 { margin: 0; font-family: var(--avt-font-text); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--avt-text-muted); font-weight: 500; }
+  .fc-bloc p { margin: 0; }
+  .fc-suivi { flex-direction: row; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; background: var(--avt-brume); border-color: var(--avt-brume); }
+  .fc-liste { display: flex; flex-direction: column; gap: 6px; }
+  .fc-liste input { font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--avt-galet); border-radius: 8px; color: var(--avt-brun); }
+  .fc-lien { all: unset; cursor: pointer; color: var(--avt-klein); font-size: 13.5px; min-height: 28px; display: inline-flex; align-items: center; }
+  .fc-boutons { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .fc-boutons.gauche { justify-content: flex-start; }
+  .fc-ligne { display: flex; gap: 8px 10px; flex-wrap: wrap; align-items: flex-end; }
+  .fc-ligne .ct-champ { flex: 0 1 150px; }
+  .fc-ligne .fc-large { flex: 1 1 200px; }
+  .fc-muet { color: var(--avt-text-muted); font-size: 13px; }
+  .fc-message { margin: 0; padding: 10px 12px; border-radius: 10px; background: #E6F0E8; color: #1F4D2C; font-size: 14px; }
+  .fc-message.erreur { background: #FBE9E2; color: var(--avt-terra-deep); }
+  .fc-deux { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .fc-simple { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+  .fc-demande { border-left: 3px solid var(--avt-galet); padding-left: 10px; }
+  .fc-texte { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; }
+  .fc-historique { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .fc-historique li.fc-note .fc-texte { background: var(--avt-ecru); border-radius: 8px; padding: 6px 10px; }
+  .fc-pied { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: space-between; }
 </style>

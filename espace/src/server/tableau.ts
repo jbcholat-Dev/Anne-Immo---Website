@@ -16,15 +16,18 @@ interface LigneContact extends DonneesAccord {
 /** Une adresse de profil n'est gardée que si elle commence par http(s) : jamais de lien « javascript: » dans la page. */
 const LIEN_WEB = /^https?:\/\/[^\s"'<>]+$/i;
 
-export async function lireTableau(env: EnvSite): Promise<LigneTableau[]> {
+/** Tous les contacts, ou un seul (`id` : la ligne à remettre dans le tableau après une écriture de la fiche, story 18.7). */
+export async function lireTableau(env: EnvSite, id?: string): Promise<LigneTableau[]> {
+  const seul = id ? ' WHERE c.id = ?1' : '', seulFille = id ? ' WHERE contact_id = ?1' : '';
+  const lier = (p: D1PreparedStatement) => (id ? p.bind(id) : p);
   const [contacts, coordonnees, sources] = await env.DB.batch([
-    env.DB.prepare(
+    lier(env.DB.prepare(
       `SELECT c.id, c.prenom, c.nom, c.telephone, c.entreprise, c.categorie_id, k.nom AS categorie, c.projet, c.temperature, c.commune,
          c.dernier_contact_le, c.dernier_contact_canal, c.verifie_le, c.ecarte_le, c.a_rappeler_le, c.ambassadeur_inscrit_le, ${SQL_ACCORD}
-       FROM contact c LEFT JOIN categorie k ON k.id = c.categorie_id`,
-    ),
-    env.DB.prepare('SELECT contact_id, type, reseau, valeur FROM contact_coordonnee ORDER BY id'),
-    env.DB.prepare('SELECT contact_id, source FROM contact_source ORDER BY a, id'),
+       FROM contact c LEFT JOIN categorie k ON k.id = c.categorie_id${seul}`,
+    )),
+    lier(env.DB.prepare(`SELECT contact_id, type, reseau, valeur FROM contact_coordonnee${seulFille} ORDER BY id`)),
+    lier(env.DB.prepare(`SELECT contact_id, source FROM contact_source${seulFille} ORDER BY a, id`)),
   ]) as [D1Result<LigneContact>, D1Result<{ contact_id: string; type: string; reseau: string | null; valeur: string }>, D1Result<{ contact_id: string; source: string }>];
 
   const autres = new Map<string, { telephones: string[]; emails: string[]; profils: { reseau: string | null; url: string }[] }>();

@@ -330,7 +330,7 @@ const nom = [c.prenom, c.nom].filter(Boolean).join(' ') || telLisible(c.telephon
       ))}
     </ol>
   </section>
-  <section class="e-carte" data-droits>
+  <section class="e-carte" data-droits id="donnees">
     <h2>Données de cette personne</h2>
     <p class="e-muet" style="margin:0">Si elle demande ce que vous gardez sur elle, ou qu'on l'oublie (RGPD). Chaque demande est notée dans le journal des droits.</p>
     <div><a class="e-bouton second" href={`/api/contacts/export?id=${c.id}`} data-export>Télécharger ses données</a></div>

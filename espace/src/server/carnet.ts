@@ -1,7 +1,8 @@
 // Le carnet (story 18.6, FR-4, FR-5, AD-22, AD-24, AD-29, AD-31) : seul module qui écrit le classement d'un contact,
 // c'est-à-dire sa catégorie, son projet, sa température, « vérifié » (`verifie_le`) et « écarté » (`ecarte_le`).
-// Il ne touche jamais aux colonnes du suivi des ventes (`etape`, `prochaine_action*`, `parcours`… : `pipeline`), ni au
-// dernier contact (`dernier_contact_*` : la coche d'une séance, AD-28), ni à l'accord e-mail (`accord`).
+// Il ne touche jamais aux colonnes du suivi des ventes (`etape`, `prochaine_action*`, `parcours`… : `pipeline`), ni à
+// l'accord e-mail (`accord`). Story 18.7 : la fiche d'un contact (coordonnées, appel autorisé, à rappeler le), la note, la
+// création à la main, et le dernier contact (`dernier_contact_*`), écrit seulement par `noterContact` (AD-28 amendé).
 // Chaque écriture est un lot : toutes les lignes changent en une seule exécution D1 (`batch`, une transaction), et chaque
 // contact touché reçoit un `contact_evenement` de type `classement` qui garde son avant-image :
 // `donnees` = { avant: {colonne: valeur}, apres: {colonne: valeur}, lot } (AD-29), `source_id` = « lot.contact » (index
@@ -15,6 +16,10 @@
 // Jamais appelé par les routes /api/claude/… (Claude ne lit ni n'écrit les contacts, AD-26).
 import type { EnvSite } from '@site/server/env';
 import { ulid } from '@site/server/ulid';
+import { trouver } from '@site/server/contacts';
+import { empreinteOpposition } from '@site/server/opposition';
+import { e164, emailValide } from '@site/server/schema';
+import { noterAccord } from './accord';
 import { PROJETS, PROJETS_AVEC_TEMPERATURE, TEMPERATURES_CHOIX, suiviEnCours, temperaturePermise } from './tableau-colonnes';
 
 /** Au plus 2 000 contacts par lot (le classement de départ se fait par vues de quelques centaines). */
@@ -203,4 +208,376 @@ export async function annulerLot(env: EnvSite, lot: string, par: string): Promis
   const nouveau = ulid();
   await ecrire(env, ecritures, nouveau, par, 'Classement annulé', lot);
   return { lot: ecritures.length ? nouveau : null, rendus: ecritures.length, gardes: parContact.size - ecritures.length, lignes: await lignes(env, ecritures.map((x) => x.id)) };
+}
+
+// ——— Fiche d'un contact et création à la main (story 18.7, FR-26, FR-28, AD-22, AD-28, AD-29, AD-34) ———
+// Écritures d'un seul contact depuis sa fiche. Corriger : prénom, nom, entreprise, ville, téléphones et e-mails (le
+// premier sur `contact`, les autres dans `contact_coordonnee`), classement (mêmes règles que `appliquer`), « appel
+// autorisé » et « à rappeler le ». Une correction n'est pas un échange avec la personne : `last_activity_at` ne bouge pas
+// (la purge des trois ans et les « récents » du suivi comptent les échanges). Une note et un contact noté hors séance,
+// eux, sont des échanges. Chaque écriture garde son avant-image (AD-29). Le dernier contact (`dernier_contact_*`) ne
+// s'écrit que par `noterContact`, la fonction que la coche d'une séance appellera aussi (AD-28 amendé le 2026-11-02).
+
+/** Au plus 10 téléphones et 10 e-mails par contact. */
+export const MAX_COORDONNEES = 10;
+export const CANAUX_DERNIER = ['whatsapp', 'sms', 'email', 'appel', 'rencontre', 'autre'] as const;
+const JOUR = /^\d{4}-\d{2}-\d{2}$/;
+const jourParisDe = (t = Date.now()) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).format(t);
+const jourValide = (v: string) => JOUR.test(v) && !Number.isNaN(Date.parse(`${v}T12:00:00Z`)) && new Date(`${v}T12:00:00Z`).toISOString().slice(0, 10) === v;
+
+/** Ce qu'une correction de fiche change ; une clé absente ne change rien. */
+export interface Correction extends Changements {
+  prenom?: string | null; nom?: string | null; entreprise?: string | null; commune?: string | null;
+  telephones?: string[]; emails?: string[];
+  /** null : la règle de la catégorie ; true / false : décidé pour cette personne (AD-25). */
+  appel_autorise?: boolean | null;
+  /** AAAA-MM-JJ, ou null pour l'effacer. */
+  a_rappeler_le?: string | null;
+}
+
+const TEXTES: Record<string, number> = { prenom: 80, nom: 80, entreprise: 120, commune: 80 };
+
+/** Un téléphone saisi, en E.164 (un numéro de tableur sans son 0 est repris, comme `pipeline.personne`) ; null si non valable. */
+export function telephoneSaisi(v: string): string | null {
+  let t = v.trim();
+  if (/^[1-9]\d{8}$/.test(t.replace(/[\s.]/g, ''))) t = `0${t.replace(/[\s.]/g, '')}`;
+  return e164(t);
+}
+
+function lireListe(brut: unknown, type: 'telephone' | 'email'): string[] | string {
+  if (!Array.isArray(brut) || brut.length > MAX_COORDONNEES || !brut.every((x) => typeof x === 'string' && x.length <= 254)) {
+    return `${type === 'telephone' ? 'Téléphones' : 'E-mails'} : au plus ${MAX_COORDONNEES}.`;
+  }
+  const r: string[] = [];
+  for (const brute of brut as string[]) {
+    if (!brute.trim()) continue;
+    const v = type === 'telephone' ? telephoneSaisi(brute) : brute.trim().toLowerCase();
+    if (!v || (type === 'email' && !emailValide(v))) {
+      return type === 'telephone' ? `Le téléphone « ${brute.trim().slice(0, 30)} » ne semble pas valable : dix chiffres, ou +41… pour la Suisse.` : `L'adresse « ${brute.trim().slice(0, 60)} » ne semble pas valable.`;
+    }
+    if (!r.includes(v)) r.push(v);
+  }
+  return r;
+}
+
+/** Lit une correction de fiche (vocabulaire fermé) ; ou le message d'erreur (400). */
+export function lireCorrection(brut: unknown, categories: ReadonlySet<string>): Correction | string {
+  if (!brut || typeof brut !== 'object' || Array.isArray(brut)) return 'Correction attendue.';
+  const classement: Record<string, unknown> = {};
+  const c: Correction = {};
+  for (const [cle, v] of Object.entries(brut as Record<string, unknown>)) {
+    if (cle in TEXTES) {
+      if (v !== null && typeof v !== 'string') return `${cle} : texte attendu.`;
+      const t = typeof v === 'string' ? v.trim() : '';
+      if (t.length > TEXTES[cle]) return `${cle} : ${TEXTES[cle]} caractères au plus.`;
+      (c as Record<string, unknown>)[cle] = t || null;
+    } else if (cle === 'telephones' || cle === 'emails') {
+      const l = lireListe(v, cle === 'telephones' ? 'telephone' : 'email');
+      if (typeof l === 'string') return l;
+      c[cle] = l;
+    } else if (cle === 'appel_autorise') {
+      if (v !== null && typeof v !== 'boolean') return 'Appel autorisé : oui, non ou selon la catégorie.';
+      c.appel_autorise = v as boolean | null;
+    } else if (cle === 'a_rappeler_le') {
+      if (v !== null && !(typeof v === 'string' && jourValide(v))) return 'Date « à rappeler le » invalide.';
+      c.a_rappeler_le = v as string | null;
+    } else if (['categorie_id', 'projet', 'temperature', 'verifie', 'ecarte'].includes(cle)) {
+      classement[cle] = v;
+    } else return `Champ inconnu : ${cle.slice(0, 40)}`;
+  }
+  if (Object.keys(classement).length) {
+    const ch = lireChangements(classement, categories);
+    if (typeof ch === 'string') return ch;
+    Object.assign(c, ch);
+  }
+  if (!Object.keys(c).length) return 'Aucun changement demandé.';
+  return c;
+}
+
+/** L'état d'un contact tel que la fiche le corrige. */
+interface EtatFiche extends Etat {
+  prenom: string | null; nom: string | null; entreprise: string | null; commune: string | null;
+  telephone: string | null; email: string | null; appel_autorise: number | null; a_rappeler_le: string | null;
+}
+type Valeur = string | number | null | string[];
+
+export type ResultatCorrection =
+  | { ok: true; changes: string[]; ignore: boolean; telephoneChange: boolean }
+  | { ok: false; conflit: { id: string; nom: string } }
+  | { ok: false; refus: string };
+
+const nomCourt = (c: { prenom: string | null; nom: string | null; telephone?: string | null; email?: string | null }) =>
+  [c.prenom, c.nom].filter(Boolean).join(' ') || c.telephone || c.email || 'Sans nom';
+
+/** Le contact (autre que `id`) qui porte déjà l'un de ces téléphones ou e-mails, principal ou secondaire. */
+async function conflitCoordonnees(env: EnvSite, id: string, valeurs: string[]): Promise<{ id: string; nom: string } | null> {
+  if (!valeurs.length) return null;
+  const r = await env.DB.prepare(
+    `SELECT c.id, c.prenom, c.nom, c.telephone, c.email FROM contact c WHERE c.id <> ?1 AND (
+       c.telephone IN (SELECT value FROM json_each(?2)) OR c.email IN (SELECT value FROM json_each(?2))
+       OR c.id IN (SELECT contact_id FROM contact_coordonnee WHERE valeur IN (SELECT value FROM json_each(?2))))
+     LIMIT 1`,
+  ).bind(id, JSON.stringify(valeurs)).first<{ id: string; prenom: string | null; nom: string | null; telephone: string | null; email: string | null }>();
+  return r ? { id: r.id, nom: nomCourt(r) } : null;
+}
+
+const LIBELLES_FICHE: Record<string, string> = {
+  prenom: 'prénom', nom: 'nom', entreprise: 'entreprise', commune: 'ville', telephones: 'téléphones', emails: 'e-mails',
+  categorie_id: 'catégorie', projet: 'projet', temperature: 'température', verifie_le: 'vérifié', ecarte_le: 'écarté',
+  appel_autorise: 'appel autorisé', a_rappeler_le: 'à rappeler le',
+};
+
+/**
+ * Corrige la fiche d'un contact, en une seule exécution D1 : coordonnées secondaires retirées, colonnes de `contact`,
+ * coordonnées secondaires ajoutées, puis un événement `classement` avec l'avant-image des seuls champs changés. L'écriture
+ * n'a lieu que si le contact est encore tel qu'il a été lu (sinon, refus « modifié entre-temps »). Un téléphone ou un
+ * e-mail déjà porté par un autre contact est refusé avec ce contact (jamais de fusion silencieuse). null : contact inconnu.
+ */
+export async function corrigerFiche(env: EnvSite, id: string, corr: Correction, par: string): Promise<ResultatCorrection | null> {
+  const [e, sec] = await env.DB.batch([
+    env.DB.prepare(`SELECT id, prenom, nom, entreprise, commune, telephone, email, categorie_id, projet, temperature, verifie_le, ecarte_le,
+      appel_autorise, a_rappeler_le, etape FROM contact WHERE id = ?1`).bind(id),
+    env.DB.prepare(`SELECT type, valeur FROM contact_coordonnee WHERE contact_id = ?1 AND type IN ('telephone', 'email') ORDER BY id`).bind(id),
+  ]) as [D1Result<EtatFiche>, D1Result<{ type: string; valeur: string }>];
+  const etat = e.results[0];
+  if (!etat) return null;
+  const maintenant = new Date().toISOString();
+  const { apres: cl, ignore } = appliquer(etat, corr, maintenant);
+  const avantListes = {
+    telephones: [etat.telephone, ...sec.results.filter((x) => x.type === 'telephone').map((x) => x.valeur)].filter((x): x is string => !!x),
+    emails: [etat.email, ...sec.results.filter((x) => x.type === 'email').map((x) => x.valeur)].filter((x): x is string => !!x),
+  };
+  const avantTout: Record<string, Valeur> = {
+    prenom: etat.prenom, nom: etat.nom, entreprise: etat.entreprise, commune: etat.commune, ...avantListes,
+    categorie_id: etat.categorie_id, projet: etat.projet, temperature: etat.temperature, verifie_le: etat.verifie_le, ecarte_le: etat.ecarte_le,
+    appel_autorise: etat.appel_autorise, a_rappeler_le: etat.a_rappeler_le,
+  };
+  const apresTout: Record<string, Valeur> = {
+    ...avantTout, ...cl,
+    ...(corr.prenom !== undefined ? { prenom: corr.prenom } : {}), ...(corr.nom !== undefined ? { nom: corr.nom } : {}),
+    ...(corr.entreprise !== undefined ? { entreprise: corr.entreprise } : {}), ...(corr.commune !== undefined ? { commune: corr.commune } : {}),
+    ...(corr.telephones !== undefined ? { telephones: corr.telephones } : {}), ...(corr.emails !== undefined ? { emails: corr.emails } : {}),
+    ...(corr.appel_autorise !== undefined ? { appel_autorise: corr.appel_autorise === null ? null : corr.appel_autorise ? 1 : 0 } : {}),
+    ...(corr.a_rappeler_le !== undefined ? { a_rappeler_le: corr.a_rappeler_le } : {}),
+  };
+  const meme = (a: Valeur, b: Valeur) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+  const changes = Object.keys(apresTout).filter((k) => !meme(avantTout[k], apresTout[k]));
+  if (!changes.length) return { ok: true, changes, ignore, telephoneChange: false };
+  const tels = apresTout.telephones as string[], mails = apresTout.emails as string[];
+  // La base exige un nom, un téléphone ou un e-mail (CHECK de 0018).
+  if (!apresTout.nom && !tels.length && !mails.length) return { ok: false, refus: 'Il faut garder au moins un nom, un téléphone ou un e-mail.' };
+  const coords = changes.includes('telephones') || changes.includes('emails');
+  if (coords) {
+    const nouvelles = [...tels, ...mails].filter((v) => !avantListes.telephones.includes(v) && !avantListes.emails.includes(v));
+    const autre = await conflitCoordonnees(env, id, nouvelles);
+    if (autre) return { ok: false, conflit: autre };
+  }
+  const avant: Record<string, Valeur> = {}, apres: Record<string, Valeur> = {};
+  for (const k of changes) { avant[k] = avantTout[k]; apres[k] = apresTout[k]; }
+  // Colonnes de `contact` à écrire (noms tirés du code, valeurs liées) ; la garde compare chaque colonne à ce qui a été lu.
+  const colonnes: [string, Valeur][] = changes.filter((k) => k !== 'telephones' && k !== 'emails').map((k) => [k, apresTout[k]]);
+  if (changes.includes('telephones')) colonnes.push(['telephone', tels[0] ?? null]);
+  if (changes.includes('emails')) colonnes.push(['email', mails[0] ?? null]);
+  const lus: [string, Valeur][] = (['prenom', 'nom', 'entreprise', 'commune', 'telephone', 'email', 'categorie_id', 'projet', 'temperature', 'verifie_le', 'ecarte_le', 'appel_autorise', 'a_rappeler_le', 'etape'] as const)
+    .map((k) => [k, etat[k] as Valeur]);
+  const garde = JSON.stringify(Object.fromEntries(lus));
+  const gardeSql = lus.map(([k]) => `${k} IS json_extract(?2, '$.${k}')`).join(' AND ');
+  const secondaires = JSON.stringify([...tels.slice(1).map((v) => ({ type: 'telephone', valeur: v })), ...mails.slice(1).map((v) => ({ type: 'email', valeur: v }))]);
+  const lot = ulid();
+  const texte = `Fiche corrigée : ${changes.map((k) => LIBELLES_FICHE[k] ?? k).join(', ')}`;
+  const ecritures: D1PreparedStatement[] = [
+    // L'événement d'abord, et seulement si le contact est encore tel qu'il a été lu : le reste du lot suit la même garde.
+    env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, donnees, par)
+       SELECT ?1, ?3, 'classement', 'anne', ?4, ?5, ?6, ?7 WHERE EXISTS (SELECT 1 FROM contact WHERE id = ?1 AND ${gardeSql})`)
+      .bind(id, garde, maintenant, `${lot}.${id}`, texte, JSON.stringify({ avant, apres, lot }), par),
+  ];
+  const evenementEcrit = `EXISTS (SELECT 1 FROM contact_evenement WHERE source = 'anne' AND source_id = ?9)`;
+  if (coords) {
+    ecritures.push(env.DB.prepare(`DELETE FROM contact_coordonnee WHERE contact_id = ?1 AND type IN ('telephone', 'email')
+       AND valeur NOT IN (SELECT json_extract(value, '$.valeur') FROM json_each(?2)) AND ${evenementEcrit.replace('?9', '?3')}`)
+      .bind(id, secondaires, `${lot}.${id}`));
+  }
+  const set = colonnes.map(([k], i) => `${k} = ?${i + 3}`).join(', ');
+  ecritures.push(env.DB.prepare(`UPDATE contact SET ${set} WHERE id = ?1 AND ${evenementEcrit.replace('?9', '?2')}`)
+    .bind(id, `${lot}.${id}`, ...colonnes.map(([, v]) => v)));
+  if (coords) {
+    ecritures.push(env.DB.prepare(`INSERT INTO contact_coordonnee (contact_id, type, valeur, ajoute_le)
+       SELECT ?1, json_extract(j.value, '$.type'), json_extract(j.value, '$.valeur'), ?3 FROM json_each(?2) j
+       WHERE NOT EXISTS (SELECT 1 FROM contact_coordonnee k WHERE k.valeur = json_extract(j.value, '$.valeur'))
+         AND ${evenementEcrit.replace('?9', '?4')}`).bind(id, secondaires, maintenant, `${lot}.${id}`));
+  }
+  try {
+    const r = await env.DB.batch(ecritures);
+    if (!r[0].meta.changes) return { ok: false, refus: 'Ce contact vient d\'être modifié ailleurs : la fiche est rechargée, recommencez.' };
+  } catch (err) {
+    // Un autre contact a pris ce téléphone ou cet e-mail entre-temps : tout le lot est annulé par D1.
+    const autre = coords ? await conflitCoordonnees(env, id, [...tels, ...mails]) : null;
+    if (autre) return { ok: false, conflit: autre };
+    throw err;
+  }
+  return { ok: true, changes, ignore, telephoneChange: changes.includes('telephones') && tels[0] !== avantListes.telephones[0] };
+}
+
+/** Une note de la fiche : un échange, donc `last_activity_at` avance ; avant-image gardée (AD-29). false : contact inconnu. */
+export async function ajouterNote(env: EnvSite, id: string, texte: string, par: string): Promise<boolean> {
+  const maintenant = new Date().toISOString();
+  const lot = ulid();
+  const [ev] = await env.DB.batch([
+    env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, donnees, par)
+       SELECT id, ?2, 'note', 'anne', ?3, ?4, json_object('avant', json_object('last_activity_at', last_activity_at), 'apres', json_object('last_activity_at', ?2), 'lot', ?5), ?6
+       FROM contact WHERE id = ?1`).bind(id, maintenant, `${lot}.${id}`, texte, lot, par),
+    env.DB.prepare('UPDATE contact SET last_activity_at = ?2 WHERE id = ?1').bind(id, maintenant),
+  ]);
+  return !!ev.meta.changes;
+}
+
+export interface ContactNote { jour: string; canal: (typeof CANAUX_DERNIER)[number]; note: string | null }
+
+/** Lit un contact fait (date AAAA-MM-JJ passée ou du jour, en jours de Paris ; canal fermé ; note facultative) ; ou l'erreur. */
+export function lireContactNote(brut: unknown): ContactNote | string {
+  if (!brut || typeof brut !== 'object' || Array.isArray(brut)) return 'Contact attendu.';
+  const d = brut as Record<string, unknown>;
+  if (Object.keys(d).some((k) => !['jour', 'canal', 'note'].includes(k))) return 'Champ inconnu.';
+  if (typeof d.jour !== 'string' || !jourValide(d.jour) || d.jour < '2000-01-01') return 'Date invalide.';
+  if (d.jour > jourParisDe()) return 'La date est dans le futur : notez un contact déjà fait.';
+  if (typeof d.canal !== 'string' || !(CANAUX_DERNIER as readonly string[]).includes(d.canal)) return 'Canal inconnu.';
+  if (d.note !== undefined && d.note !== null && typeof d.note !== 'string') return 'Note : texte attendu.';
+  const note = typeof d.note === 'string' ? d.note.trim().slice(0, 2000) : '';
+  return { jour: d.jour, canal: d.canal as ContactNote['canal'], note: note || null };
+}
+
+const CANAUX_LISIBLES: Record<string, string> = { whatsapp: 'WhatsApp', sms: 'SMS', email: 'E-mail', appel: 'Appel', rencontre: 'Rencontre', autre: 'Autre' };
+
+/**
+ * Le seul écrivain du dernier contact (`dernier_contact_le`, `dernier_contact_canal`, AD-28 amendé) : aujourd'hui pour un
+ * contact noté hors séance depuis la fiche (FR-28), demain pour la coche « contacté » d'une séance (`seance`, epic 19).
+ * Un contact du jour prend l'heure présente ; un jour passé, midi UTC. Un contact plus ancien que le dernier connu est
+ * gardé dans l'historique sans remplacer le dernier contact. C'est un échange : `last_activity_at` avance. Un événement
+ * garde l'avant-image (AD-29). Renvoie le dernier contact après écriture, ou null pour un contact inconnu.
+ */
+export async function noterContact(env: EnvSite, id: string, c: ContactNote, par: string, origine: 'hors_seance' = 'hors_seance'): Promise<{ remplace: boolean; le: string | null; canal: string | null } | null> {
+  const etat = await env.DB.prepare('SELECT dernier_contact_le, dernier_contact_canal, last_activity_at FROM contact WHERE id = ?1').bind(id)
+    .first<{ dernier_contact_le: string | null; dernier_contact_canal: string | null; last_activity_at: string }>();
+  if (!etat) return null;
+  const maintenant = new Date().toISOString();
+  const le = c.jour === jourParisDe() ? maintenant : `${c.jour}T12:00:00.000Z`;
+  const remplace = !etat.dernier_contact_le || le >= etat.dernier_contact_le;
+  const avant: Record<string, string | null> = { last_activity_at: etat.last_activity_at }, apres: Record<string, string | null> = { last_activity_at: maintenant };
+  if (remplace) {
+    Object.assign(avant, { dernier_contact_le: etat.dernier_contact_le, dernier_contact_canal: etat.dernier_contact_canal });
+    Object.assign(apres, { dernier_contact_le: le, dernier_contact_canal: c.canal });
+  }
+  const lot = ulid();
+  const jourLisible = new Date(`${c.jour}T12:00:00Z`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+  const texte = `Contact hors séance · ${CANAUX_LISIBLES[c.canal]} · ${jourLisible}${c.note ? `\n${c.note}` : ''}`;
+  await env.DB.batch([
+    env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, donnees, par) VALUES (?1, ?2, 'note', 'anne', ?3, ?4, ?5, ?6)`)
+      .bind(id, maintenant, `${lot}.${id}`, texte, JSON.stringify({ avant, apres, lot, [origine]: { jour: c.jour, canal: c.canal } }), par),
+    remplace
+      // Garde : un contact plus récent noté entre-temps (une autre fiche, une séance) l'emporte.
+      ? env.DB.prepare(`UPDATE contact SET dernier_contact_le = ?2, dernier_contact_canal = ?3, last_activity_at = ?4
+          WHERE id = ?1 AND (dernier_contact_le IS NULL OR dernier_contact_le <= ?2)`).bind(id, le, c.canal, maintenant)
+      : env.DB.prepare('UPDATE contact SET last_activity_at = ?2 WHERE id = ?1').bind(id, maintenant),
+  ]);
+  return remplace ? { remplace, le, canal: c.canal } : { remplace, le: etat.dernier_contact_le, canal: etat.dernier_contact_canal };
+}
+
+/** Une saisie de « + Nouveau contact » (FR-26), nettoyée. */
+export interface Saisie {
+  prenom: string | null; nom: string | null; telephone: string | null; email: string | null; commune: string | null; entreprise: string | null;
+  categorie_id: string; projet: string; temperature: string | null; note: string | null; accord: boolean;
+}
+
+/** Lit la saisie d'un nouveau contact ; ou le message d'erreur (400). */
+export function lireSaisie(brut: unknown, categories: ReadonlySet<string>): Saisie | string {
+  if (!brut || typeof brut !== 'object' || Array.isArray(brut)) return 'Saisie attendue.';
+  const d = brut as Record<string, unknown>;
+  const permis = ['prenom', 'nom', 'telephone', 'email', 'commune', 'entreprise', 'categorie_id', 'projet', 'temperature', 'note', 'accord'];
+  const inconnu = Object.keys(d).find((k) => !permis.includes(k));
+  if (inconnu) return `Champ inconnu : ${inconnu.slice(0, 40)}`;
+  const txt = (k: string, max: number): string | null | false => {
+    const v = d[k];
+    if (v === undefined || v === null) return null;
+    if (typeof v !== 'string' || v.trim().length > max) return false;
+    return v.trim() || null;
+  };
+  const champs: Record<string, string | null> = {};
+  for (const [k, max] of [['prenom', 80], ['nom', 80], ['commune', 80], ['entreprise', 120], ['telephone', 40], ['email', 254], ['note', 2000]] as const) {
+    const v = txt(k, max);
+    if (v === false) return `${k} : texte de ${max} caractères au plus attendu.`;
+    champs[k] = v;
+  }
+  const telephone = champs.telephone ? telephoneSaisi(champs.telephone) : null;
+  if (champs.telephone && !telephone) return 'Le téléphone ne semble pas valable : dix chiffres, ou +41… pour la Suisse.';
+  const email = champs.email ? champs.email.toLowerCase() : null;
+  if (email && !emailValide(email)) return 'L\'adresse e-mail ne semble pas valable.';
+  if (!champs.nom && !telephone) return 'Il faut au moins un nom ou un téléphone.';
+  if (typeof d.categorie_id !== 'string' || !categories.has(d.categorie_id)) return 'Choisissez une catégorie.';
+  const projet = d.projet === undefined ? 'a_qualifier' : d.projet;
+  if (typeof projet !== 'string' || !Object.prototype.hasOwnProperty.call(PROJETS, projet)) return 'Projet inconnu.';
+  const temperature = d.temperature === undefined || d.temperature === null || d.temperature === '' ? null : d.temperature;
+  if (temperature !== null && !(typeof temperature === 'string' && (TEMPERATURES_CHOIX as readonly string[]).includes(temperature) && temperaturePermise(temperature, projet))) {
+    return 'Température inconnue, ou sans objet pour ce projet.';
+  }
+  if (d.accord !== undefined && typeof d.accord !== 'boolean') return 'Accord : vrai ou faux attendu.';
+  if (d.accord === true && !email) return 'L\'accord pour les e-mails demande une adresse e-mail.';
+  return { prenom: champs.prenom, nom: champs.nom, telephone, email, commune: champs.commune, entreprise: champs.entreprise,
+    categorie_id: d.categorie_id, projet, temperature: temperature as string | null, note: champs.note, accord: d.accord === true };
+}
+
+export type ResultatCreation =
+  | { ok: true; id: string }
+  | { ok: false; existant: { id: string; nom: string } }
+  | { ok: false; opposition: true };
+
+async function existant(env: EnvSite, telephone: string | null, email: string | null): Promise<{ id: string; nom: string } | null> {
+  const t = await trouver(env, telephone, email);
+  if (!t) return null;
+  const c = await env.DB.prepare('SELECT id, prenom, nom, telephone, email FROM contact WHERE id = ?1').bind(t.id)
+    .first<{ id: string; prenom: string | null; nom: string | null; telephone: string | null; email: string | null }>();
+  return c ? { id: c.id, nom: nomCourt(c) } : null;
+}
+
+/** La personne a-t-elle demandé l'effacement (table `opposition`, AD-31) ? false sans LIEN_SECRET (rien à comparer). */
+async function enOpposition(env: EnvSite, valeurs: (string | null)[]): Promise<boolean> {
+  const v = valeurs.filter((x): x is string => !!x);
+  if (!v.length || !env.LIEN_SECRET) return false;
+  const empreintes = await Promise.all(v.map((x) => empreinteOpposition(env.LIEN_SECRET!, x)));
+  return !!(await env.DB.prepare('SELECT 1 AS n FROM opposition WHERE empreinte IN (SELECT value FROM json_each(?1)) LIMIT 1').bind(JSON.stringify(empreintes)).first());
+}
+
+/**
+ * Crée un contact à la main (FR-26, AD-34) : vérifié (catégorie choisie par Anne), hors suivi des ventes (`etape` NULL),
+ * sans origine marketing (`canal` NULL), source « saisie » (`contact_source`). Un téléphone ou un e-mail déjà connu
+ * (`contact` ou `contact_coordonnee`) ne crée rien : le contact existant est renvoyé pour être ouvert. Une personne qui a
+ * demandé l'effacement (opposition) n'est pas recréée. L'accord e-mail, s'il est coché, est noté par `accord` (AD-21).
+ */
+export async function creerContact(env: EnvSite, s: Saisie, par: string): Promise<ResultatCreation> {
+  const deja = await existant(env, s.telephone, s.email);
+  if (deja) return { ok: false, existant: deja };
+  if (await enOpposition(env, [s.telephone, s.email])) return { ok: false, opposition: true };
+  const id = ulid(), lot = ulid(), maintenant = new Date().toISOString();
+  const colonnes = { prenom: s.prenom, nom: s.nom, telephone: s.telephone, email: s.email, commune: s.commune, entreprise: s.entreprise,
+    categorie_id: s.categorie_id, projet: s.projet, temperature: s.temperature, verifie_le: maintenant };
+  const ecritures = [
+    env.DB.prepare(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, email, commune, entreprise, categorie_id, projet, temperature, verifie_le)
+       VALUES (?1, ?2, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?2)`)
+      .bind(id, maintenant, s.prenom, s.nom, s.telephone, s.email, s.commune, s.entreprise, s.categorie_id, s.projet, s.temperature),
+    env.DB.prepare(`INSERT INTO contact_source (contact_id, source, a) VALUES (?1, 'saisie', ?2)`).bind(id, maintenant),
+    env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, donnees, par) VALUES (?1, ?2, 'creation', 'anne', ?3, 'Contact créé à la main', ?4, ?5)`)
+      .bind(id, maintenant, `${lot}.${id}`, JSON.stringify({ avant: {}, apres: colonnes, lot }), par),
+  ];
+  if (s.note) ecritures.push(env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, par) VALUES (?1, ?2, 'note', 'anne', ?3, ?4)`).bind(id, maintenant, s.note, par));
+  try {
+    await env.DB.batch(ecritures);
+  } catch (err) {
+    // Une autre saisie a pris ce téléphone ou cet e-mail entre-temps : on propose la sienne.
+    const autre = await existant(env, s.telephone, s.email);
+    if (autre) return { ok: false, existant: autre };
+    throw err;
+  }
+  if (s.accord) {
+    await noterAccord(env, id, true, par);
+  }
+  return { ok: true, id };
 }
