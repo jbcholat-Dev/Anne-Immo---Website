@@ -13,6 +13,8 @@
 //   POST /api/fiche { creer: { prenom?, nom?, telephone?, email?, commune?, entreprise?, categorie_id, projet?, temperature?,
 //                     note?, accord? } }
 //        → 201 { ok, id, ligne } ; 409 'existant' (proposer d'ouvrir le contact existant) ; 409 'opposition'
+// Revue de code 18.7 : une correction qui ajoute un téléphone ou un e-mail d'une personne en opposition → 409 'opposition' ;
+// sans LIEN_SECRET et avec une liste d'opposition non vide, création et ajout de coordonnée → 503 'opposition_indisponible'.
 // 400 pour toute valeur hors vocabulaire. Réponses `{ ok, ... }` ou `{ ok: false, error: { code, message } }`.
 import type { APIRoute } from 'astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
@@ -29,6 +31,8 @@ export const prerender = false;
 const json = (corps: unknown, status = 200) => new Response(JSON.stringify(corps), { status, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' } });
 const erreur = (status: number, code: string, message: string, plus: Record<string, unknown> = {}) => json({ ok: false, error: { code, message }, ...plus }, status);
 const MAX_CORPS = 20_000;
+/** Revue de code 18.7 : sans LIEN_SECRET, la liste d'opposition ne peut pas être lue ; si elle n'est pas vide, on refuse. */
+const INDISPONIBLE = 'La liste des personnes qui ont demandé l\'effacement ne peut pas être vérifiée (réglage LIEN_SECRET absent) : ajout refusé, prévenez JB.';
 const compteDe = (request: Request) => { const c = request.headers.get(ENTETE_COMPTE); return !c || c === COMPTE_CLAUDE ? null : c; };
 
 /** La fiche et la ligne du tableau d'un contact, après une écriture. */
@@ -67,6 +71,7 @@ export const POST: APIRoute = async ({ request }) => {
     const r = await creerContact(env, s, compte);
     if (r.ok) return etat(r.id, { id: r.id }, 201);
     if ('existant' in r) return erreur(409, 'existant', `Ce téléphone ou cet e-mail est déjà celui de ${r.existant.nom} : ouvrez sa fiche plutôt que d'en créer une seconde.`, { existant: r.existant });
+    if ('indisponible' in r) return erreur(503, 'opposition_indisponible', INDISPONIBLE);
     return erreur(409, 'opposition', 'Cette personne a demandé l\'effacement de ses données : elle ne peut pas être ajoutée au carnet.');
   }
 
@@ -83,6 +88,8 @@ export const POST: APIRoute = async ({ request }) => {
     if (!r) return erreur(404, 'contact', 'Contact inconnu');
     if (!r.ok) {
       if ('conflit' in r) return erreur(409, 'existant', `Ce téléphone ou cet e-mail est déjà celui de ${r.conflit.nom} : rien n'a été changé.`, { existant: r.conflit });
+      if ('opposition' in r) return erreur(409, 'opposition', 'Ce téléphone ou cet e-mail est celui d\'une personne qui a demandé l\'effacement de ses données : rien n\'a été changé.');
+      if ('indisponible' in r) return erreur(503, 'opposition_indisponible', INDISPONIBLE);
       return erreur(r.refus.startsWith('Il faut') ? 400 : 409, r.refus.startsWith('Il faut') ? 'correction' : 'modifie', r.refus);
     }
     // Un nouveau numéro principal peut avoir des appels déjà relevés par Leedflow (contact du suivi seulement, AD-32).

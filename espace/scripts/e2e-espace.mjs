@@ -70,6 +70,8 @@
 // ni l'historique, méthode et messages types, identifiant d'un message gardé, envoi groupé hors règle refusé, retrait refusé
 // tant qu'il reste un contact ou pour une catégorie de départ puis accepté, vue « à refaire », ordre, 400 et 403) ; la page
 // (menu, liste, aperçu avec un prénom d'exemple, enregistrement, renommage, retrait refusé puis accepté, flèches).
+// Revue de code 18.7 : premier e-mail changé (accord noté retiré, accord du site « à reconfirmer »), coordonnée d'une
+// personne en opposition refusée à la correction, remise en place d'une vue plafonnée.
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
 // Lancer depuis espace/ : `node scripts/e2e-espace.mjs`.
@@ -1759,6 +1761,8 @@ try {
     // Revue de code 18.6 : une remise en place (annulation d'une suppression) n'est pas soumise au plafond.
     const rRemise = await vues('POST', { id: '01KFR5C0000000000000000002', nom: 'Essai vue remise au plafond', ordre: 5000, filtre: { verifie: 'oui' } });
     const nPlafond = nVues();
+    // Revue de code 18.7 : une remise en place reste plafonnée (moins de 101 vues).
+    const rRemise2 = await vues('POST', { id: '01KFR5C0000000000000000003', nom: 'Essai vue remise de trop', ordre: 5001, filtre: { verifie: 'oui' } });
     // En dernier : le serveur local de wrangler perd la requête qui suit un corps refusé sans être lu (pas Cloudflare) ;
     // une requête jetable vient donc après.
     const r413 = await vues('POST', gros);
@@ -1767,6 +1771,7 @@ try {
     constat(refus.every(([, x]) => x.status === 400) && r413.status === 413 && retablie?.ordre === max + 1 && r101.status === 400 && nVues() === n1,
       `revue 18.5 : /api/vues refuse « ambassadeur : non » et un filtre vide (400), un corps annoncé trop grand (${r413.status}), une 101e vue (${r101.status}) ; une vue rétablie sur un ordre pris va en dernier (${retablie?.ordre} = ${max} + 1)`);
     constat(r101.status === 400 && rRemise.status === 201 && nPlafond === 101, `revue 18.6 : plafond de 100 vues vérifié dans l'insertion (101e refusée, ${r101.status}) ; une remise en place après suppression passe (${rRemise.status})`);
+    constat(rRemise2.status === 400, `revue 18.7 : une remise en place au-delà de 101 vues est refusée (${rRemise2.status})`);
   }
   // Les routes /api/claude/… ne lisent ni les contacts ni les vues : aucune n'importe le tableau ni les vues, et leurs
   // réponses ne contiennent aucun nom de vue.
@@ -2170,6 +2175,47 @@ try {
     const inconnu7 = await apiFiche(null, { methode: 'GET', id: '01ARZ3NDEKTSV4RRFFQ69G5FAV' });
     constat(acces.every(([, r]) => r.status === 403) && inconnu7.status === 404 && nEv7() === e1,
       `18.7 : /api/fiche réservé à Anne et JB (${acces.map(([n, r]) => `${n} ${r.status}`).join(', ')}) ; contact inconnu 404`);
+  }
+  // Revue de code 18.7 : un accord vaut pour une adresse (accord noté retiré, accord du site « à reconfirmer ») ; une
+  // coordonnée d'une personne en opposition est refusée à la correction (409).
+  {
+    const KA = `01KF7D${NUM}${'0'.repeat(14)}`, KB = `01KF7E${NUM}${'0'.repeat(14)}`, KO = `01KF7F${NUM}${'0'.repeat(14)}`;
+    const MA = `accorda${NUM}@example.com`, MS = `accords${NUM}@example.com`, MB = `accordb${NUM}@example.com`, MB2 = `accordb2${NUM}@example.com`;
+    sql(`INSERT INTO contact (id, created_at, last_activity_at, nom, email, email_accord_le, email_accord_source, categorie_id) VALUES
+         ('${KA}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Accordun${NUM}', '${MA}', '2026-10-01T08:00:00Z', 'anne', 'proches'),
+         ('${KB}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Accorddeux${NUM}', '${MB}', NULL, NULL, 'proches'),
+         ('${KO}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Opposun${NUM}', NULL, NULL, NULL, 'proches')`);
+    sql(`INSERT INTO contact_coordonnee (contact_id, type, valeur, ajoute_le) VALUES ('${KA}', 'email', '${MS}', '2026-10-01T08:00:00Z')`);
+    sql(`INSERT INTO lead (id, submission_id, created_at, last_activity_at, lang, source, email, privacy_accepted_at, newsletter_opt_in_at, is_test, contact_id)
+         VALUES ('LACC${NUM}', 'acc-r-${NUM}', '2026-10-02T08:00:00Z', '2026-10-02T08:00:00Z', 'fr', 'guide', '${MB}', '2026-10-02T08:00:00Z', '2026-10-02T08:00:00Z', 1, '${KB}')`);
+    let a = await apiFiche(null, { methode: 'GET', id: KA }), b = await apiFiche(null, { methode: 'GET', id: KB });
+    const avantA = a.d.fiche.accord.statut, avantB = b.d.fiche.accord.statut;
+    // Le secondaire devient premier : l'accord noté par Anne ne suit pas.
+    a = await apiFiche({ id: KA, corriger: { emails: [MS, MA] } });
+    const evA = dernierEv(KA);
+    // Nouvelle adresse sur un contact dont l'accord vient du site : à reconfirmer.
+    b = await apiFiche({ id: KB, corriger: { emails: [MB2] } });
+    const evB = dernierEv(KB);
+    const tableauB = b.d?.ligne?.accord;
+    constat(avantA === 'accord' && a.status === 200 && c7(KA).email === MS && c7(KA).email_accord_le === null && c7(KA).email_accord_source === null
+      && a.d.fiche.accord.statut === 'sans_accord' && evA.d.email_change?.accord_note_retire === true && evA.d.email_change.avant === MA && evA.d.email_change.apres === MS
+      && evA.texte.includes('à reconfirmer'),
+      'revue 18.7 : le premier e-mail changé (un secondaire passé premier) retire l\'accord noté, par `accord`, et l\'événement le dit');
+    constat(avantB === 'accord' && b.status === 200 && b.d.fiche.accord.statut === 'sans_accord' && b.d.fiche.accord.a_reconfirmer === true
+      && evB.d.email_change?.accord_site_a_reconfirmer === true && tableauB === 'sans_accord',
+      'revue 18.7 : l\'accord donné sur le site pour l\'ancienne adresse ne suit pas la nouvelle : la fiche dit « accord à reconfirmer », le tableau « sans accord »');
+    // Opposition : un téléphone ou un e-mail d'une personne effacée est refusé à la correction.
+    const TELO = `+33679${NUM}`, MAILO2 = `opposee${NUM}@example.com`;
+    const hmacO = (v) => createHmac('sha256', 'essai').update(`opposition:${v}`).digest('hex');
+    sql(`INSERT INTO opposition (empreinte, le) VALUES ('${hmacO(TELO)}', '2026-10-01T08:00:00Z'), ('${hmacO(MAILO2)}', '2026-10-01T08:00:00Z') ON CONFLICT DO NOTHING`);
+    const e0 = nEv7();
+    const o1 = await apiFiche({ id: KO, corriger: { telephones: [TELO] } });
+    const o2 = await apiFiche({ id: KO, corriger: { emails: [MAILO2.toUpperCase()] } });
+    constat(o1.status === 409 && o1.d?.error?.code === 'opposition' && o2.status === 409 && o2.d?.error?.code === 'opposition' && c7(KO).telephone === null && c7(KO).email === null && nEv7() === e0,
+      'revue 18.7 : à la correction d\'une fiche, un téléphone ou un e-mail d\'une personne en opposition est refusé (409 « opposition »), rien n\'est écrit');
+    sql(`DELETE FROM opposition WHERE empreinte IN ('${hmacO(TELO)}', '${hmacO(MAILO2)}')`);
+    sql(`DELETE FROM lead WHERE id = 'LACC${NUM}'`);
+    sql(`DELETE FROM contact WHERE id IN ('${KA}', '${KB}', '${KO}')`);
   }
   // La page : le nom ouvre le panneau ; corriger, noter, contact hors séance ; « + Nouveau contact » et doublon proposé.
   for (const largeur of [1440, 1280]) {

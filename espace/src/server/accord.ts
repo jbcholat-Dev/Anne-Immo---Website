@@ -5,6 +5,11 @@
 // l'import d'une liste dont les participants ont accepté d'être recontactés, ou l'accord dit à Anne et noté par elle.
 // Un refus (lien de désinscription d'un e-mail, ou demande faite à Anne) vaut pour tous les envois groupés ; seule une
 // nouvelle case cochée sur le site, après ce refus, le lève : Anne ne peut pas le lever elle-même.
+// Revue de code 18.7 : un accord vaut pour une adresse. Quand la fiche change le premier e-mail du contact, l'accord noté
+// (Anne ou import) est retiré dans la même écriture (`retraitAccordNote`), et l'accord donné sur le site avant ce
+// changement ne suit pas la nouvelle adresse : le contact est « sans accord, à reconfirmer » (`a_reconfirmer`), jusqu'à
+// un nouvel accord (case du site cochée après le changement, ou accord noté par Anne). Le changement est daté par
+// l'événement de la fiche qui porte `donnees.email_change`.
 import type { EnvSite } from '@site/server/env';
 import type { Etape } from '@site/server/contacts';
 
@@ -16,6 +21,8 @@ export interface EtatEmail {
   /** Date de l'accord (ou du refus pour un désinscrit), ISO UTC. */
   le: string | null;
   source: SourceAccord | null;
+  /** Un accord donné sur le site pour une adresse que la fiche a remplacée depuis : à redemander (revue de code 18.7). */
+  a_reconfirmer?: boolean;
 }
 
 export interface DonneesAccord {
@@ -28,6 +35,8 @@ export interface DonneesAccord {
   site_accord_le: string | null;
   /** Dernier désabonnement de la séquence, sur l'une des demandes du contact. */
   site_desinscrit_le: string | null;
+  /** Dernier changement du premier e-mail par la fiche (revue de code 18.7), ISO UTC. */
+  email_change_le?: string | null;
 }
 
 const plusRecent = (a: string | null, b: string | null) => (!a ? b : !b ? a : a > b ? a : b);
@@ -35,12 +44,14 @@ const plusRecent = (a: string | null, b: string | null) => (!a ? b : !b ? a : a 
 /** La règle, sans base : utilisée par la fiche et, en SQL équivalent, par le choix des destinataires. */
 export function etatEmail(d: DonneesAccord): EtatEmail {
   if (!d.email) return { statut: 'sans_email', le: null, source: null };
+  // L'accord du site ne vaut que s'il a été donné après le dernier changement d'adresse fait par la fiche.
+  const site = d.site_accord_le && (!d.email_change_le || d.site_accord_le > d.email_change_le) ? d.site_accord_le : null;
   const refus = plusRecent(d.email_desinscrit_le, d.site_desinscrit_le);
-  if (refus && !(d.site_accord_le && d.site_accord_le > refus)) return { statut: 'desinscrit', le: refus, source: null };
-  const accord = plusRecent(d.site_accord_le, d.email_accord_le);
-  if (accord) return { statut: 'accord', le: accord, source: accord === d.site_accord_le ? 'site' : d.email_accord_source };
+  if (refus && !(site && site > refus)) return { statut: 'desinscrit', le: refus, source: null };
+  const accord = plusRecent(site, d.email_accord_le);
+  if (accord) return { statut: 'accord', le: accord, source: accord === site ? 'site' : d.email_accord_source };
   if (d.etape === 'vendu' || d.etape === 'acte_signe') return { statut: 'client', le: null, source: 'client' };
-  return { statut: 'sans_accord', le: null, source: null };
+  return { statut: 'sans_accord', le: null, source: null, ...(d.site_accord_le ? { a_reconfirmer: true } : {}) };
 }
 
 export const peutRecevoirCampagne = (e: EtatEmail) => e.statut === 'accord' || e.statut === 'client';
@@ -55,7 +66,8 @@ export const RAISONS_ECART: Record<Exclude<StatutEmail, 'accord' | 'client'>, st
 /** Les colonnes de `DonneesAccord`, à joindre à une lecture de `contact` (alias `c`). */
 export const SQL_ACCORD = `c.email, c.etape, c.email_accord_le, c.email_accord_source, c.email_desinscrit_le,
   (SELECT max(l.newsletter_opt_in_at) FROM lead l WHERE l.contact_id = c.id) AS site_accord_le,
-  (SELECT max(l.newsletter_unsubscribed_at) FROM lead l WHERE l.contact_id = c.id) AS site_desinscrit_le`;
+  (SELECT max(l.newsletter_unsubscribed_at) FROM lead l WHERE l.contact_id = c.id) AS site_desinscrit_le,
+  (SELECT max(e.a) FROM contact_evenement e WHERE e.contact_id = c.id AND e.type = 'classement' AND json_type(e.donnees, '$.email_change') IS NOT NULL) AS email_change_le`;
 
 export async function lireAccord(env: EnvSite, contactId: string): Promise<EtatEmail | null> {
   const d = await env.DB.prepare(`SELECT ${SQL_ACCORD} FROM contact c WHERE c.id = ?1`).bind(contactId).first<DonneesAccord>();
@@ -84,6 +96,15 @@ export async function noterAccord(env: EnvSite, contactId: string, accord: boole
   ]);
   return true;
 }
+
+/**
+ * Revue de code 18.7 : l'écriture qui retire l'accord noté (Anne ou import) d'un contact dont la fiche change le premier
+ * e-mail, à joindre au lot de la correction ; `condition` : la garde SQL du lot (l'événement de la correction est écrit).
+ * Seul ce module écrit `email_accord_*` (AD-21).
+ */
+export const retraitAccordNote = (env: EnvSite, contactId: string, condition: string, ...liens: unknown[]) =>
+  env.DB.prepare(`UPDATE contact SET email_accord_le = NULL, email_accord_source = NULL WHERE id = ?1 AND email_accord_le IS NOT NULL AND ${condition}`)
+    .bind(contactId, ...liens);
 
 /** La personne ne veut plus d'e-mails groupés (demande faite à Anne) : vaut comme une désinscription. */
 export async function noterRefus(env: EnvSite, contactId: string, par: string): Promise<boolean> {

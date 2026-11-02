@@ -55,8 +55,9 @@ export async function listerVues(env: EnvSite): Promise<Vue[]> {
  * Crée une vue en dernière position ; ou, avec `id` et `ordre`, remet à sa place une vue qui vient d'être supprimée
  * (annulation) : si cet ordre est déjà pris, elle va en dernière position (revue de code 18.5). Revue de code 18.6 : le
  * plafond de 100 vues est vérifié dans l'insertion même (deux créations simultanées ne le dépassent pas) ; une remise en
- * place n'y est pas soumise (elle rend une place qui vient d'être libérée, et l'annulation ne doit pas échouer).
- * `existe` : une vue porte déjà cet identifiant ; `plein` : 100 vues déjà.
+ * place rend une place qui vient d'être libérée : elle passe tant qu'il y a moins de 101 vues (revue de code 18.7 : jamais
+ * sans plafond, pour qu'une suite de « remises » ne fasse pas grossir la table sans fin).
+ * `existe` : une vue porte déjà cet identifiant ; `plein` : 100 vues déjà (101 pour une remise en place).
  */
 export async function creerVue(env: EnvSite, nom: string, filtre: Filtre, retour?: { id: string; ordre: number }): Promise<Vue | 'existe' | 'plein'> {
   const maintenant = new Date().toISOString();
@@ -64,9 +65,9 @@ export async function creerVue(env: EnvSite, nom: string, filtre: Filtre, retour
   const r = await env.DB.prepare(
     `INSERT INTO vue (id, nom, ordre, filtre, created_at, maj_le)
      SELECT ?1, ?2, ${retour ? 'CASE WHEN EXISTS (SELECT 1 FROM vue WHERE ordre = ?5) THEN coalesce((SELECT max(ordre) FROM vue), 0) + 1 ELSE ?5 END' : 'coalesce((SELECT max(ordre) FROM vue), 0) + 1'}, ?3, ?4, ?4
-     WHERE NOT EXISTS (SELECT 1 FROM vue WHERE id = ?1)${retour ? '' : ` AND (SELECT count(*) FROM vue) < ${MAX_VUES}`}`,
+     WHERE NOT EXISTS (SELECT 1 FROM vue WHERE id = ?1) AND (SELECT count(*) FROM vue) < ${retour ? MAX_VUES + 1 : MAX_VUES}`,
   ).bind(id, nom, JSON.stringify(filtre), maintenant, ...(retour ? [retour.ordre] : [])).run();
-  if (!r.meta.changes) return retour ? 'existe' : 'plein';
+  if (!r.meta.changes) return retour && await env.DB.prepare('SELECT 1 FROM vue WHERE id = ?1').bind(id).first() ? 'existe' : 'plein';
   const v = await env.DB.prepare('SELECT ordre FROM vue WHERE id = ?1').bind(id).first<{ ordre: number }>();
   return { id, nom, ordre: v?.ordre ?? 0, filtre };
 }

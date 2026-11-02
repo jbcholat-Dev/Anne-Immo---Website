@@ -104,6 +104,7 @@ export function brancherFiche(r: Reglages) {
       <section class="fc-bloc" data-fiche-accord="${esc(f.accord.statut)}">
         <h3>Accord e-mail</h3>
         <p>${esc(STATUT_ACCORD[f.accord.statut])}${f.accord.le ? ` (${esc(jour(f.accord.le))})` : ''}.</p>
+        ${f.accord.a_reconfirmer ? '<p class="fc-muet" data-accord-reconfirmer>Accord à reconfirmer : il avait été donné sur le site pour une autre adresse e-mail.</p>' : ''}
         ${accordGestes ? `<div class="fc-boutons gauche">${accordGestes}</div>` : ''}
       </section>
       <section class="fc-bloc" data-fiche-dernier>

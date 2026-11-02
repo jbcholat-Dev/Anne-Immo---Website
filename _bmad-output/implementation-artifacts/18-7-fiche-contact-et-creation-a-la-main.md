@@ -1,7 +1,7 @@
 ---
 story: 18.7
 epic: 18 — Espace d'Anne : le carnet de contacts
-statut: review
+statut: done
 date: 2026-11-02
 maj: 2026-11-02
 ---
@@ -47,10 +47,24 @@ Qu'Anne ouvre la fiche d'un contact d'un clic sur son nom pour corriger ses info
 - **Opposition** : la création est refusée, sans passer outre (une personne effacée qui revient d'elle-même passe par le site). Sans `LIEN_SECRET`, la liste ne peut pas être lue : la création se fait.
 - **Création** : catégorie obligatoire (« Proches » proposée par défaut, comme la maquette), un prénom seul ne suffit pas (FR-26 : un nom ou un téléphone ; la base exige nom, téléphone ou e-mail).
 - **Correction de fiche** : événement `classement` comme le classement (18.6) ; l'annulation d'un lot de la route `/api/carnet` ne sait rendre que le classement, une correction de coordonnées n'a pas de bouton « Annuler » (l'avant-image est gardée).
+- **Doublon possible entre `contact` et `contact_coordonnee` lors d'écritures simultanées** (revue de code 18.7, constat 7) : l'unicité d'un téléphone ou d'un e-mail est tenue par la base dans chaque table (index uniques partiels de `contact`, `valeur` unique de `contact_coordonnee`), mais pas d'une table à l'autre. Deux écritures exactement simultanées (une fiche qui ajoute un numéro secondaire, une autre qui le pose en principal ailleurs) pourraient chacune passer leur garde. La garde de la correction vérifie les deux tables dans l'instruction même ; le reste demanderait une table d'unicité commune, hors de proportion avec deux personnes qui écrivent (FR-6 : pas de travail simultané sur les mêmes contacts).
+- **Opposition sans `LIEN_SECRET`** (revue de code 18.7, constat 3) : non essayé de bout en bout (l'espace d'essai tourne avec ce réglage) ; la règle est courte et lue dans `enOpposition`.
 - `pipeline.modifierCoordonnees` (ancienne fiche) écrit encore téléphone et e-mail lui-même (déjà le cas) ; à rabattre sur `carnet` avec la reprise de `pipeline` (19.1).
 
 ## Ce qui reste
-- Revue de code en session neuve (`bmad-code-review`), puis passage à `done`.
 - Séances de la fiche : à remplir avec l'epic 19 ; « Ranger » de la barre « Nouveaux » (18.11) ouvrira ce panneau prérempli.
 
 ## Revue de code
+
+2026-11-02 — relecture adverse (`bmad-code-review`, session neuve) de la PR #227, commits relus `5a143a8` (story 18.7) et `7979e27` (correction de la revue 18.6). Aucun point bloquant. Corrections dans le commit « correction de la revue 18.7 » :
+1. `carnet.ts` `corrigerFiche` : le premier e-mail changé (un secondaire passé premier compris) gardait l'accord. — corrigé : l'accord noté est retiré dans le même lot par `accord` (`retraitAccordNote`) ; l'accord du site (`lead.newsletter_opt_in_at`) n'est pas reporté sur la nouvelle adresse : `etatEmail` ne le compte que s'il est postérieur au dernier changement (événement portant `donnees.email_change`), la fiche dit « Accord à reconfirmer » ; l'événement note `email_change` (ancienne et nouvelle adresse, accord retiré, accord du site à reconfirmer) et son texte le dit. Essais ajoutés.
+2. `corrigerFiche` : pas de vérification d'opposition sur les coordonnées ajoutées. — corrigé : `enOpposition` sur les nouveaux téléphones et e-mails, 409 « opposition ». Essai ajouté.
+3. `enOpposition` sans `LIEN_SECRET` : rien de journalisé, création permise. — corrigé : `journal('opposition_sans_secret', …)` comme le site ; si la table `opposition` n'est pas vide, création et ajout de coordonnée refusés en 503 avec un message clair. Pas d'essai de bout en bout (voir les écarts).
+4. `noterContact` : événement écrit avec un `apres` faux quand l'`UPDATE` gardé ne s'appliquait pas. — corrigé : l'événement porte la même garde (dernier contact inchangé depuis la lecture et pas plus récent), l'écriture n'a lieu que si l'événement est écrit ; si la garde saute, une seule reprise relit et note le contact sans remplacer ; `remplace` dit ce qui s'est fait. Course non reproductible dans l'essai : couvert par les essais existants du contact hors séance.
+5. Garde de `corrigerFiche` sans les coordonnées secondaires. — corrigé : empreinte des secondaires lus (`type:valeur` dans l'ordre, `json_group_array`) comparée dans la garde.
+6. Coordonnée sautée par l'`INSERT … WHERE NOT EXISTS` et réponse « Fiche enregistrée ». — corrigé : la garde de l'événement vérifie qu'aucune valeur écrite n'est prise par un autre contact (dans les deux tables) ; sinon rien n'est écrit, ni suppression ni ajout, et la réponse est le conflit (409 avec le contact).
+7. Doublon possible entre `contact` et `contact_coordonnee` lors d'écritures simultanées. — écarté : écrit dans les écarts assumés (pas d'unicité commune aux deux tables ; la garde vérifie les deux ; FR-6).
+8. `ecrire` : `projet` et `temperature` gardés séparément. — corrigé : dès que l'un des deux est écrit, les deux sont gardés (classement et annulation).
+9. `vues-base.ts` : remise en place sans plafond. — corrigé : une remise en place passe tant qu'il y a moins de 101 vues. Essai ajouté.
+
+Vérification (2026-11-02) : `espace` `npm run build` et `npm run check` (0 erreur, 0 avertissement) ; `node scripts/e2e-espace.mjs` : **tout est bon, 458 constats** (454 après la 18.8, plus 4 de cette revue : accord noté retiré au changement du premier e-mail, accord du site « à reconfirmer » sur la fiche et « sans accord » dans le tableau, opposition refusée à la correction pour un téléphone et pour un e-mail, remise en place de vue refusée au-delà de 101) ; les essais existants de la 18.7 (corrections, conflits, contact hors séance, création) et de la 18.6 (lots, annulations) restent bons.
