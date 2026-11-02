@@ -17,6 +17,7 @@ import type { EnvEspace } from './env';
 import { journal } from '@site/server/journal';
 import { e164 } from '@site/server/schema';
 import { aujourdhui, echeance, plusTard } from './pipeline';
+import { ulid } from '@site/server/ulid';
 
 const API = 'https://api.leedflow.com/api/external/v1';
 export type Genre = 'appel' | 'vocal' | 'sms' | 'tache';
@@ -275,19 +276,25 @@ const NUMEROS_SUIVIS = `numeros AS (
 )`;
 /** Un élément gardé passe au contact s'il date de son entrée dans le suivi ou après (story 18.2) ; `suivi_le` NULL =
  * contact créé dans le suivi ou entré par décision d'Anne : tout l'historique du numéro est repris. */
-const REPRIS = '(n.suivi_le IS NULL OR i.a >= n.suivi_le)';
+const REPRIS = `(n.suivi_le IS NULL OR i.a >= n.suivi_le)
+  AND i.telephone NOT IN (SELECT telephone FROM leedflow_ecarte WHERE categorie = 'prospect' AND a > ?1)`;
+/** Story 18.11 : pendant ce délai après un geste de la barre « Nouveaux », le geste s'annule ; la relève ne rattache pas
+ * encore les échanges d'un numéro tout juste classé « prospect », et ne retire pas ceux d'un numéro tout juste ignoré. */
+export const ANNULATION_MS = 10 * 60_000;
+const finAnnulation = () => new Date(Date.now() - ANNULATION_MS).toISOString();
 
 /** Les éléments venus d'un numéro inconnu qui est désormais celui d'un contact suivi passent dans son historique.
  * Un contact hors suivi (étape NULL) ne les reçoit jamais tout seul (AD-32, story 18.1) ; un contact entré seul dans
  * le suivi (demande du site, `suivi_le` posé) ne reçoit pas ses échanges d'avant, qui peuvent être des appels privés. */
 export async function rattacherInconnus(env: EnvEspace): Promise<void> {
+  const limite = finAnnulation();
   await env.DB.batch([
     env.DB.prepare(
       `WITH ${NUMEROS_SUIVIS}
        INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, donnees)
        SELECT n.id, i.a, 'appel', 'leedflow', i.source_id, i.texte, i.donnees FROM leedflow_inconnu i JOIN numeros n ON n.telephone = i.telephone
        WHERE i.source_id NOT LIKE 'tache:%' AND ${REPRIS} ON CONFLICT (source, source_id) WHERE source_id IS NOT NULL DO NOTHING`,
-    ),
+    ).bind(limite),
     // Les tâches gardées avec le numéro deviennent des propositions sur le contact.
     env.DB.prepare(
       `WITH ${NUMEROS_SUIVIS}
@@ -295,19 +302,19 @@ export async function rattacherInconnus(env: EnvEspace): Promise<void> {
        SELECT substr(i.source_id, 7), n.id, i.a, json_extract(i.donnees, '$.tache'), json_extract(i.donnees, '$.echeance')
        FROM leedflow_inconnu i JOIN numeros n ON n.telephone = i.telephone
        WHERE i.source_id LIKE 'tache:%' AND json_extract(i.donnees, '$.tache') IS NOT NULL AND ${REPRIS} ON CONFLICT (id) DO NOTHING`,
-    ),
+    ).bind(limite),
     env.DB.prepare(
       `WITH ${NUMEROS_SUIVIS}
        INSERT OR IGNORE INTO leedflow_lien (leedflow_contact, contact_id)
        SELECT json_extract(i.donnees, '$.leedflow_contact'), n.id FROM leedflow_inconnu i JOIN numeros n ON n.telephone = i.telephone
        WHERE json_extract(i.donnees, '$.leedflow_contact') IS NOT NULL AND ${REPRIS}`,
-    ),
+    ).bind(limite),
     // Seul ce qui vient d'être rattaché quitte la liste des inconnus (le reste part avec la purge des 90 jours).
     env.DB.prepare(
       `WITH ${NUMEROS_SUIVIS}
        DELETE FROM leedflow_inconnu WHERE source_id IN (
          SELECT i.source_id FROM leedflow_inconnu i JOIN numeros n ON n.telephone = i.telephone WHERE ${REPRIS})`,
-    ),
+    ).bind(limite),
   ]);
 }
 
@@ -319,7 +326,7 @@ export async function relever(env: EnvEspace): Promise<void> {
   const curseurs = new Map(results.map((r) => [r.genre, r.curseur]));
   let budget = PAGES_PAR_PASSAGE;
   const fiches = { reste: FICHES_PAR_PASSAGE };
-  const bilan = { notes: 0, inconnus: 0, taches: 0, pages: 0, noms: 0, syntheses: 0 };
+  const bilan = { notes: 0, inconnus: 0, taches: 0, pages: 0, noms: 0, syntheses: 0, nouveaux: 0 };
   for (const genre of GENRES) {
     const curseur = curseurs.get(genre) ?? 0;
     let nouveau = curseur, erreur: string | null = null;
@@ -364,6 +371,7 @@ export async function relever(env: EnvEspace): Promise<void> {
   }
   bilan.noms = await nommerInconnus(env, fiches);
   await rattacherInconnus(env);
+  bilan.nouveaux = await signalerInconnus(env);
   // Tant que la migration 0012 n'est pas appliquée (quelques minutes lors d'une mise en ligne), la relève continue sans synthèse.
   bilan.syntheses = await lireSyntheses(env, fiches).catch((e) => { journal('leedflow_erreur', { genre: 'synthese', detail: String(e).slice(0, 200) }); return 0; });
   journal('leedflow_releve', bilan);
@@ -475,6 +483,16 @@ function grouper(lignes: LigneInconnu[], categories: Map<string, Categorie> = ne
   return [...parNumero.values()];
 }
 
+/** Story 18.11 : ce que l'espace sait de quelques numéros inconnus (nom Leedflow, échanges, tâches), pour les cartes de la
+ * barre « Nouveaux ». */
+export async function resumesInconnus(env: EnvEspace, tels: string[]): Promise<Map<string, NumeroInconnu>> {
+  if (!tels.length) return new Map();
+  const { results } = await env.DB.prepare(
+    `SELECT source_id, telephone, a, texte, donnees FROM leedflow_inconnu WHERE telephone IN (SELECT value FROM json_each(?1)) ORDER BY a DESC LIMIT 2000`,
+  ).bind(JSON.stringify([...new Set(tels)])).all<LigneInconnu>();
+  return new Map(grouper(results).map((n) => [n.telephone, n]));
+}
+
 /** Un numéro classé dont on ne garde aucun échange (Privé, Démarchage, ou Pro silencieux depuis). */
 const sansEchange = (r: { telephone: string; a: string; categorie: Categorie }): NumeroInconnu =>
   ({ telephone: r.telephone, prenom: '', nom: '', email: '', dernier: r.a, echanges: [], taches: [], categorie: r.categorie, silencieux: false });
@@ -579,9 +597,70 @@ export async function classerNumero(env: EnvEspace, telephone: string, categorie
     `INSERT INTO leedflow_ecarte (telephone, a, par, categorie) VALUES (?1, ?2, ?3, ?4)
      ON CONFLICT (telephone) DO UPDATE SET a = excluded.a, par = excluded.par, categorie = excluded.categorie`,
   ).bind(tel, new Date().toISOString(), par, categorie)];
+  // Story 18.11 : la carte « Nouveaux » de ce numéro sort de la barre (classé depuis « À trier »), avant que ses lignes partent.
+  lot.unshift(env.DB.prepare(
+    `UPDATE nouveau SET vu_le = ?2, issue = 'ignore' WHERE source = 'leedflow' AND vu_le IS NULL
+       AND leedflow_inconnu_id IN (SELECT source_id FROM leedflow_inconnu WHERE telephone = ?1)`,
+  ).bind(tel, new Date().toISOString()));
   if (categorie !== 'pro') lot.push(env.DB.prepare('DELETE FROM leedflow_inconnu WHERE telephone = ?1').bind(tel));
   await env.DB.batch(lot);
   return true;
+}
+
+// ——— Barre « Nouveaux » (story 18.11, FR-27, AD-32, AD-34) ———
+// `leedflow` écrit une ligne `nouveau` pour chaque numéro inconnu à trier qui n'en a pas d'ouverte, pointée sur son
+// échange le plus récent ; ferme celles dont le numéro a été classé ailleurs ou dont les échanges ont été rattachés.
+// Les gestes de la barre classent le numéro ici : « prospect » avec le contact choisi (il ne revient plus), « privé »
+// pour « Ignorer ». Ce que l'espace gardait d'un numéro ignoré n'est effacé qu'après le délai d'annulation
+// (`nettoyerIgnores`, tâche planifiée), pour que l'annulation remette la carte telle qu'elle était.
+
+/** Écrit les lignes `nouveau` des numéros inconnus à trier qui n'en ont pas d'ouverte ; renvoie le nombre écrit. */
+export async function signalerInconnus(env: EnvEspace): Promise<number> {
+  const maintenant = new Date().toISOString();
+  const limite = new Date(Date.now() - INCONNUS_JOURS * JOUR_MS).toISOString();
+  const [, , candidats] = await env.DB.batch([
+    // Fermées : numéro classé depuis (À trier), ou échange disparu (rattaché à un contact suivi, purgé).
+    env.DB.prepare(`UPDATE nouveau SET vu_le = ?1, issue = 'ignore' WHERE source = 'leedflow' AND vu_le IS NULL
+      AND EXISTS (SELECT 1 FROM leedflow_inconnu i JOIN leedflow_ecarte x ON x.telephone = i.telephone WHERE i.source_id = nouveau.leedflow_inconnu_id)`).bind(maintenant),
+    env.DB.prepare(`UPDATE nouveau SET vu_le = ?1, issue = 'vu' WHERE source = 'leedflow' AND vu_le IS NULL
+      AND NOT EXISTS (SELECT 1 FROM leedflow_inconnu i WHERE i.source_id = nouveau.leedflow_inconnu_id)`).bind(maintenant),
+    env.DB.prepare(`WITH ${NUMEROS_SUIVIS}, recents AS (
+        SELECT telephone, source_id, a, row_number() OVER (PARTITION BY telephone ORDER BY a DESC, source_id DESC) AS r
+        FROM leedflow_inconnu WHERE a >= ?1)
+      SELECT telephone, source_id, a FROM recents WHERE r = 1
+        AND telephone NOT IN (SELECT telephone FROM leedflow_ecarte) AND telephone NOT IN (SELECT telephone FROM numeros)
+        AND NOT EXISTS (SELECT 1 FROM nouveau n JOIN leedflow_inconnu j ON j.source_id = n.leedflow_inconnu_id
+          WHERE n.source = 'leedflow' AND n.vu_le IS NULL AND j.telephone = recents.telephone)
+      LIMIT 500`).bind(limite),
+  ]);
+  const lignes = candidats.results as { telephone: string; source_id: string; a: string }[];
+  if (lignes.length) {
+    await lotParPaquets(env, lignes.map((l) => env.DB.prepare(
+      `INSERT INTO nouveau (id, source, recu_le, leedflow_inconnu_id) SELECT ?1, 'leedflow', ?2, ?3
+       WHERE NOT EXISTS (SELECT 1 FROM nouveau WHERE leedflow_inconnu_id = ?3 AND vu_le IS NULL)`,
+    ).bind(ulid(), l.a, l.source_id)));
+  }
+  return lignes.length;
+}
+
+/** Classe un numéro depuis la barre (« prospect » avec son contact, ou « prive » pour « Ignorer »), daté `a` pour que
+ * l'annulation retrouve exactement ce classement. false si le numéro était déjà classé. */
+export async function classerDepuisNouveaux(env: EnvEspace, tel: string, categorie: 'prospect' | 'prive', contactId: string | null, a: string, par: string): Promise<boolean> {
+  const r = await env.DB.prepare(
+    `INSERT INTO leedflow_ecarte (telephone, a, par, categorie, contact_id) VALUES (?1, ?2, ?3, ?4, ?5) ON CONFLICT (telephone) DO NOTHING`,
+  ).bind(tel, a, par, categorie, contactId).run();
+  return r.meta.changes > 0;
+}
+
+/** Retire le classement posé par un geste de la barre, s'il est encore celui-là (annulation). */
+export async function declasserDepuisNouveaux(env: EnvEspace, tel: string, categorie: 'prospect' | 'prive', a: string): Promise<void> {
+  await env.DB.prepare('DELETE FROM leedflow_ecarte WHERE telephone = ?1 AND categorie = ?2 AND a = ?3').bind(tel, categorie, a).run();
+}
+
+/** Tâche planifiée : efface les échanges gardés des numéros ignorés (Privé, Démarchage) une fois le délai d'annulation passé. */
+export async function nettoyerIgnores(env: EnvEspace): Promise<void> {
+  await env.DB.prepare(`DELETE FROM leedflow_inconnu WHERE telephone IN (SELECT telephone FROM leedflow_ecarte WHERE categorie IN ('prive', 'demarchage') AND a <= ?1)`)
+    .bind(finAnnulation()).run();
 }
 
 // ——— Affichage d'un résumé ———

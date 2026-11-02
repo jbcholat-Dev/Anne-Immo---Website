@@ -8,22 +8,23 @@
 // Story 18.4 (FR-14, livraison 1) : la barre du haut ne montre plus que « Contacts » (la page d'accueil) et le menu
 // « Autres outils », qui mène à toutes les pages actuelles ; elle est visible à toutes les largeurs. Le menu du bas du
 // téléphone reste (Aujourd'hui, Contacts, Ajouter, Bilan) ; son « Contacts » mène à la liste en cartes `/contacts`, avec
-// l'appel en un geste (revue de code 18.4) : le grand tableau est l'accueil sur ordinateur. `large` : page sur toute la largeur (tableau des contacts).
+// l'appel en un geste (revue de code 18.4) : le grand tableau est l'accueil sur ordinateur. Story 18.8 : « Catégories et
+// méthodes » en tête du menu. `large` : page sur toute la largeur (tableau des contacts).
 import '@site/styles/global.css';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import RetourApercu from '@site/components/RetourApercu.astro';
-type Actif = 'contacts' | 'aujourdhui' | 'suivis' | 'bilan' | 'prescripteurs' | 'acheteurs' | 'pipeline' | 'ajouter' | 'importer' | 'a-trier' | 'demandes' | 'actions' | 'campagnes';
+type Actif = 'contacts' | 'aujourdhui' | 'suivis' | 'bilan' | 'prescripteurs' | 'acheteurs' | 'pipeline' | 'ajouter' | 'a-trier' | 'demandes' | 'actions' | 'campagnes' | 'categories';
 interface Props { titre: string; actif?: Actif; large?: boolean }
 const { titre, actif, large = false } = Astro.props;
 const compte = Astro.request.headers.get(ENTETE_COMPTE) ?? '';
 /** Toutes les pages d'avant la page Contacts (PRD FR-14), dans le menu « Autres outils ». */
 const OUTILS: { cle: Actif | 'qualifier'; href: string; texte: string }[] = [
+  { cle: 'categories', href: '/categories', texte: 'Catégories et méthodes' },
   { cle: 'aujourdhui', href: '/aujourdhui', texte: "Aujourd'hui" },
   { cle: 'pipeline', href: '/pipeline', texte: 'Pipeline' },
   { cle: 'suivis', href: '/contacts', texte: 'Contacts suivis' },
   { cle: 'qualifier', href: '/contacts?f=a_qualifier', texte: 'À qualifier' },
   { cle: 'ajouter', href: '/ajouter', texte: 'Ajouter' },
-  { cle: 'importer', href: '/importer', texte: 'Importer une liste' },
   { cle: 'prescripteurs', href: '/prescripteurs', texte: 'Prescripteurs' },
   { cle: 'acheteurs', href: '/acheteurs', texte: 'Acheteurs' },
   { cle: 'actions', href: '/actions', texte: 'Prospection' },

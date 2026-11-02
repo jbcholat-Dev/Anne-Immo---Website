@@ -61,8 +61,14 @@ if (Astro.request.method === 'POST') {
     }
     if (!erreur && p) {
       const r = await saisirContact(env, p, o, (saisi.note ?? '').trim().slice(0, 2000), compte);
-      if (p.telephone) await rattacherInconnus(envEspace).catch(() => {});
-      return Astro.redirect(`/contacts/fiche?id=${r.id}&m=${r.existant ? 'existant' : 'ajoute'}`, 303);
+      // Revue de code 18.8 : une personne en opposition n'est ni recréée ni complétée.
+      if ('opposition' in r) erreur = r.opposition === 'oui'
+        ? 'Cette personne a demandé l\'effacement de ses données : elle ne peut pas être ajoutée.'
+        : 'La liste des personnes qui ont demandé l\'effacement ne peut pas être vérifiée (réglage LIEN_SECRET absent) : ajout refusé, prévenez JB.';
+      else {
+        if (p.telephone) await rattacherInconnus(envEspace).catch(() => {});
+        return Astro.redirect(`/contacts/fiche?id=${r.id}&m=${r.existant ? 'existant' : 'ajoute'}`, 303);
+      }
     }
   }
 }
@@ -138,7 +144,6 @@ const date = (d: string) => new Intl.DateTimeFormat('fr-FR', { day: 'numeric', m
     )}
   </form>
 
-  <p><a href="/importer">Importer une liste (événement, tableur)</a></p>
 </Espace>
 
 <script>

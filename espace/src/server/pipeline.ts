@@ -1,13 +1,14 @@
 // Écrivain des contacts de l'espace d'Anne (AD-20, CAP-12 v7). Le site n'écrit dans ces tables que par le rattachement
 // d'une demande (site/src/server/contacts.ts) ; tout le reste passe ici : saisie à la main, passages de boîtage,
-// prescripteurs et import d'une liste (story 13.7). Une personne n'existe qu'une fois : même téléphone E.164 ou même
+// prescripteurs (story 13.7 ; l'import d'une liste est passé à server/import, story 18.9). Une personne n'existe qu'une fois : même téléphone E.164 ou même
 // e-mail = même contact, qui est complété, jamais recréé. Chaque création est notée dans l'historique avec le compte
 // qui a agi. La règle des prochaines actions est tenue par la base (CHECK de la migration 0007).
 import type { EnvSite } from '@site/server/env';
-import { ACTION_QUALIFIER, CANAUX_ORIGINE, LIBELLES_ETAPES, trouver, type Canal, type ContactTrouve, type Etape } from '@site/server/contacts';
+import { ACTION_QUALIFIER, ACTION_QUALIFIER_EMAIL, CANAUX_ORIGINE, LIBELLES_ETAPES, trouver, type Canal, type ContactTrouve, type Etape } from '@site/server/contacts';
 import { e164, emailValide } from '@site/server/schema';
 import { filtreRecherche } from '@site/server/recherche';
 import { ulid } from '@site/server/ulid';
+import { corrigerFiche, enOpposition } from './carnet';
 
 export const aujourdhui = () => new Intl.DateTimeFormat('fr-CA', { timeZone: 'Europe/Paris' }).format(new Date());
 const texte = (v: unknown, max = 200) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
@@ -114,6 +115,165 @@ function entrerDansLeSuivi(env: EnvSite, id: string, o: Origine, maintenant: str
   ).bind(id, maintenant, ACTION_QUALIFIER, aujourdhui(), o.parcours, o.canal, o.origine_detail, o.passage_id, o.prescripteur_id);
 }
 
+// ——— Barre « Nouveaux » (story 18.11, FR-27, AD-32, AD-34) ———
+// « Ajouter à sa fiche » ou « Ajouter aux contacts » sur un numéro vu par Leedflow : Anne dit que ce numéro est un
+// prospect. Le contact entre dans le suivi s'il n'y est pas (à qualifier aujourd'hui), par sa décision : `suivi_le` reste
+// NULL et la relève reprend tout l'historique du numéro (AD-32) ; un contact déjà suivi, entré seul par une demande du
+// site (`suivi_le` posé), voit aussi `suivi_le` remis à NULL. L'événement `etape` garde l'avant-image (`avant`) et la
+// ligne `nouveau`, pour l'annulation tout de suite (AD-29). `last_activity_at` ne bouge pas : ce n'est pas un échange.
+
+interface EtatSuivi { etape: Etape | null; prochaine_action: string | null; prochaine_action_le: string | null; reveil_le: string | null; motif_perte: string | null;
+  parcours: string | null; projet: string; temperature: string | null; suivi_le: string | null }
+const COLONNES_SUIVI = ['etape', 'prochaine_action', 'prochaine_action_le', 'reveil_le', 'motif_perte', 'parcours', 'projet', 'temperature', 'suivi_le'] as const;
+
+/** Fait suivre un contact après un geste de la barre « Nouveaux ». false si le contact n'existe plus ou a changé entre-temps. */
+export async function suivreParGeste(env: EnvSite, id: string, nouveau: string, par: string): Promise<boolean> {
+  const c = await env.DB.prepare(`SELECT ${COLONNES_SUIVI.join(', ')} FROM contact WHERE id = ?1`).bind(id).first<EtatSuivi>();
+  if (!c) return false;
+  if (c.etape !== null && c.suivi_le === null) return true;
+  const maintenant = new Date().toISOString();
+  const avant = Object.fromEntries(COLONNES_SUIVI.map((k) => [k, c[k]]));
+  if (c.etape !== null) {
+    const r = await env.DB.batch([
+      env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees, par)
+         SELECT ?1, ?2, 'etape', 'anne', ?3, ?4, ?5 WHERE EXISTS (SELECT 1 FROM contact WHERE id = ?1 AND suivi_le IS ?6 AND etape IS ?7)`)
+        .bind(id, maintenant, 'Historique des appels de ce numéro repris (ajouté à sa fiche depuis « Nouveaux »)',
+          JSON.stringify({ de: c.etape, vers: c.etape, avant, nouveau }), par, c.suivi_le, c.etape),
+      env.DB.prepare('UPDATE contact SET suivi_le = NULL WHERE id = ?1 AND suivi_le IS ?2 AND etape IS ?3').bind(id, c.suivi_le, c.etape),
+    ]);
+    return r[1].meta.changes > 0;
+  }
+  const projet = PROJET_SUIVI(`CASE WHEN projet IN ('vendeur', 'acheteur') THEN projet END`);
+  const r = await env.DB.batch([
+    env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees, par)
+       SELECT ?1, ?2, 'etape', 'anne', ?3, ?4, ?5 WHERE EXISTS (SELECT 1 FROM contact WHERE id = ?1 AND etape IS NULL)`)
+      .bind(id, maintenant, `Carnet → ${LIBELLES_ETAPES.a_qualifier} : numéro ajouté depuis « Nouveaux »`, JSON.stringify({ de: null, vers: 'a_qualifier', avant, nouveau }), par),
+    env.DB.prepare(
+      `UPDATE contact SET etape = 'a_qualifier', prochaine_action = ?2, prochaine_action_le = ?3, reveil_le = NULL, motif_perte = NULL, suivi_le = NULL,
+         parcours = coalesce(parcours, CASE WHEN projet IN ('vendeur', 'acheteur') THEN projet END),
+         projet = ${projet}, temperature = ${TEMPERATURE_SUIVI(projet)}
+       WHERE id = ?1 AND etape IS NULL`,
+    ).bind(id, ACTION_QUALIFIER, aujourdhui()),
+  ]);
+  return r[1].meta.changes > 0;
+}
+
+/**
+ * Annule `suivreParGeste` (AD-29) : réécrit l'avant-image si le contact n'a rien reçu depuis l'événement du geste et est
+ * encore tel que le geste l'a laissé. Renvoie « rendu », « garde » (modifié depuis, laissé tel quel) ou « rien » (le
+ * geste n'avait rien changé au suivi).
+ */
+export async function annulerSuiviParGeste(env: EnvSite, id: string, nouveau: string, par: string): Promise<'rendu' | 'garde' | 'rien'> {
+  const e = await env.DB.prepare(
+    `SELECT e.id, e.donnees, NOT EXISTS (SELECT 1 FROM contact_evenement x WHERE x.contact_id = e.contact_id AND x.id > e.id) AS dernier
+     FROM contact_evenement e WHERE e.contact_id = ?1 AND e.type = 'etape' AND e.source = 'anne' AND json_valid(e.donnees) AND json_extract(e.donnees, '$.nouveau') = ?2
+     ORDER BY e.id DESC LIMIT 1`,
+  ).bind(id, nouveau).first<{ id: number; donnees: string; dernier: number }>();
+  if (!e) return 'rien';
+  const d = JSON.parse(e.donnees) as { de: Etape | null; avant: EtatSuivi };
+  if (!e.dernier) return 'garde';
+  const maintenant = new Date().toISOString();
+  const set = COLONNES_SUIVI.map((k, i) => `${k} = ?${i + 2}`).join(', ');
+  // Garde : encore dans l'état laissé par le geste (à qualifier, suivi_le NULL) ; le CHECK de 0018 reste le dernier filet.
+  const garde = d.de === null ? `etape = 'a_qualifier' AND suivi_le IS NULL` : `etape IS ?${COLONNES_SUIVI.length + 2} AND suivi_le IS NULL`;
+  const valeurs = COLONNES_SUIVI.map((k) => d.avant[k] ?? null);
+  const r = await env.DB.prepare(`UPDATE contact SET ${set} WHERE id = ?1 AND ${garde}`).bind(id, ...valeurs, ...(d.de === null ? [] : [d.de])).run();
+  if (!r.meta.changes) return 'garde';
+  await env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees, par) VALUES (?1, ?2, 'etape', 'anne', ?3, ?4, ?5)`)
+    .bind(id, maintenant, d.de === null ? `${LIBELLES_ETAPES.a_qualifier} → Carnet : ajout depuis « Nouveaux » annulé` : 'Reprise de l\'historique du numéro annulée',
+      JSON.stringify({ de: d.de === null ? 'a_qualifier' : d.de, vers: d.de, annule: nouveau }), par).run();
+  return 'rendu';
+}
+
+// ——— Demandes des portails par e-mail (story 18.12, AD-20 entrée 3, AD-22, AD-34) ———
+
+/** Une demande lue dans un e-mail de portail par `server/portails` (seuls les champs utiles). */
+export interface DemandeLue {
+  portail: 'leboncoin' | 'seloger' | 'autre';
+  prenom: string | null; nom: string | null; telephone: string | null; email: string | null; ville: string | null;
+  message: string | null; reference: string | null; annonce: string | null; raison: string | null; recherche: string | null;
+}
+const NOMS_PORTAILS = { leboncoin: 'Leboncoin', seloger: 'SeLoger', autre: 'un portail d\'annonces' } as const;
+
+/**
+ * Rattache une demande de portail à son contact, en le créant au besoin, comme une demande du site (AD-20 inchangé :
+ * la source crée le contact) : catégorie « Demandes reçues » (vérifiée : c'est sa définition), parcours et projet
+ * acheteur, température « avec Anne », référence du bien, origine « portail », source `portail`. Un contact existant est
+ * complété (ce qui manque seulement ; la référence du bien seulement s'il n'en a pas) ; un contact du carnet entre dans le
+ * suivi « à qualifier » avec `suivi_le` (entrée seule : la relève Leedflow ne lui verse que la suite, AD-32) ; un contact
+ * en sommeil ou perdu revient à qualifier. Dans la même exécution D1 : l'événement « demande » (source `portail`,
+ * identifiant = la ligne `portail_courriel`, message gardé sur la fiche), la ligne `nouveau` de source `portail`, et la
+ * ligne `portail_courriel` passée « lue », sans le texte de l'e-mail.
+ */
+export async function rattacherDemandePortail(env: EnvSite, d: DemandeLue, courriel: string, recu: string, is_test: number): Promise<string> {
+  const parcours = 'acheteur';
+  const libelle = NOMS_PORTAILS[d.portail];
+  let contact = await trouver(env, d.telephone, d.email);
+  if (!contact) {
+    await env.DB.prepare(
+      `INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, email, parcours, etape, prochaine_action, prochaine_action_le,
+         canal, origine_detail, commune, bien_ref, is_test, categorie_id, verifie_le, projet, temperature)
+       VALUES (?1, ?2, ?2, ?3, ?4, ?5, ?6, 'acheteur', 'a_qualifier', ?7, ?2, 'portail', ?8, ?9, ?10, ?11, 'demandes_recues', ?2, 'acheteur', 'avec_anne')
+       ON CONFLICT DO NOTHING`,
+    ).bind(ulid(), recu, d.prenom, d.nom, d.telephone, d.email, d.telephone ? ACTION_QUALIFIER : ACTION_QUALIFIER_EMAIL, libelle, d.ville, d.reference, is_test).run();
+    contact = await trouver(env, d.telephone, d.email);
+    if (!contact) throw new Error('contact introuvable après création');
+  }
+  const id = contact.id;
+  const maintenant = new Date().toISOString();
+  const texteEv = [`Demande depuis ${libelle}`, d.annonce ? `annonce « ${d.annonce} »` : null, d.reference ? `réf. ${d.reference}` : null].filter(Boolean).join(', ')
+    + (d.message ? ` : ${d.message}` : '');
+  const lot = [
+    env.DB.prepare(
+      `UPDATE contact SET last_activity_at = ?2, prenom = COALESCE(prenom, ?3), nom = COALESCE(nom, ?4),
+         telephone = COALESCE(telephone, CASE WHEN ?5 IS NOT NULL AND NOT EXISTS (SELECT 1 FROM contact WHERE telephone = ?5)
+           AND NOT EXISTS (SELECT 1 FROM contact_coordonnee WHERE valeur = ?5) THEN ?5 END),
+         email = COALESCE(email, CASE WHEN ?6 IS NOT NULL AND NOT EXISTS (SELECT 1 FROM contact WHERE email = ?6)
+           AND NOT EXISTS (SELECT 1 FROM contact_coordonnee WHERE valeur = ?6) THEN ?6 END),
+         commune = COALESCE(commune, ?7), bien_ref = COALESCE(bien_ref, ?8)
+       WHERE id = ?1`,
+    ).bind(id, maintenant, d.prenom, d.nom, d.telephone, d.email, d.ville, d.reference),
+    env.DB.prepare(`UPDATE contact SET prochaine_action = ?2 WHERE id = ?1 AND prochaine_action = ?3 AND telephone IS NOT NULL`).bind(id, ACTION_QUALIFIER, ACTION_QUALIFIER_EMAIL),
+    env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, donnees) VALUES (?1, ?2, 'demande', 'portail', ?3, ?4, ?5) ON CONFLICT DO NOTHING`)
+      .bind(id, recu, courriel, texteEv.slice(0, 1400), JSON.stringify({ portail: d.portail, reference: d.reference, annonce: d.annonce, message: d.message, raison: d.raison, recherche: d.recherche, ville: d.ville })),
+  ];
+  if (contact.etape === null) {
+    lot.push(
+      env.DB.prepare(
+        `UPDATE contact SET etape = 'a_qualifier', prochaine_action = CASE WHEN telephone IS NULL THEN ?4 ELSE ?3 END,
+           prochaine_action_le = ?2, reveil_le = NULL, motif_perte = NULL, suivi_le = ?2,
+           parcours = coalesce(parcours, CASE WHEN projet IN ('vendeur', 'acheteur') THEN projet END, ?5),
+           projet = CASE WHEN projet IN ('a_qualifier', 'ambassadeur') THEN ?5 ELSE projet END,
+           canal = coalesce(canal, 'portail'), origine_detail = CASE WHEN canal IS NULL THEN ?6 ELSE origine_detail END
+         WHERE id = ?1 AND etape IS NULL`,
+      ).bind(id, maintenant, ACTION_QUALIFIER, ACTION_QUALIFIER_EMAIL, parcours, libelle),
+      env.DB.prepare(`UPDATE contact SET temperature = CASE WHEN projet IN ('vendeur', 'acheteur', 'vendeur_acheteur') THEN 'avec_anne' END WHERE id = ?1 AND suivi_le = ?2`).bind(id, maintenant),
+      env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees) SELECT ?1, ?2, 'etape', 'portail', ?3, ?4
+         WHERE EXISTS (SELECT 1 FROM contact WHERE id = ?1 AND suivi_le = ?2)`)
+        .bind(id, maintenant, `Carnet → ${LIBELLES_ETAPES.a_qualifier} : demande depuis ${libelle}`, JSON.stringify({ de: null, vers: 'a_qualifier' })),
+    );
+  } else if (contact.etape === 'en_sommeil' || contact.etape === 'perdu') {
+    lot.push(
+      env.DB.prepare(`UPDATE contact SET etape = 'a_qualifier', prochaine_action = CASE WHEN telephone IS NULL THEN ?4 ELSE ?3 END,
+          prochaine_action_le = ?2, reveil_le = NULL, motif_perte = NULL WHERE id = ?1`).bind(id, maintenant, ACTION_QUALIFIER, ACTION_QUALIFIER_EMAIL),
+      env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees) VALUES (?1, ?2, 'etape', 'portail', ?3, ?4)`)
+        .bind(id, maintenant, `${LIBELLES_ETAPES[contact.etape]} → ${LIBELLES_ETAPES.a_qualifier} : nouvelle demande depuis ${libelle}`, JSON.stringify({ de: contact.etape, vers: 'a_qualifier' })),
+    );
+  }
+  lot.push(
+    env.DB.prepare(`INSERT INTO contact_source (contact_id, source, a) SELECT ?1, 'portail', ?2 WHERE NOT EXISTS (SELECT 1 FROM contact_source WHERE contact_id = ?1 AND source = 'portail')`).bind(id, recu),
+    // La carte posée à la réception (portails.ts) passe sur le contact ; recréée si elle a disparu entre-temps.
+    env.DB.prepare(`UPDATE nouveau SET contact_id = ?2, evenement_id = (SELECT id FROM contact_evenement WHERE source = 'portail' AND source_id = ?1)
+       WHERE portail_courriel_id = ?1`).bind(courriel, id),
+    env.DB.prepare(`INSERT INTO nouveau (id, source, recu_le, contact_id, evenement_id, portail_courriel_id)
+       SELECT ?1, 'portail', ?2, ?3, (SELECT id FROM contact_evenement WHERE source = 'portail' AND source_id = ?4), ?4
+       WHERE NOT EXISTS (SELECT 1 FROM nouveau WHERE portail_courriel_id = ?4)`).bind(ulid(), recu, id, courriel),
+    env.DB.prepare(`UPDATE portail_courriel SET etat = 'lu', motif = NULL, contact_id = ?2, expediteur = NULL, sujet = NULL, texte = NULL WHERE id = ?1`).bind(courriel, id),
+  );
+  await env.DB.batch(lot);
+  return id;
+}
+
 function evenement(env: EnvSite, contactId: string, a: string, type: 'creation' | 'note' | 'qualification', source: 'anne' | 'import', texteEv: string, par: string, donnees?: unknown) {
   return env.DB.prepare('INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees, par) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)')
     .bind(contactId, a, type, source, texteEv, donnees === undefined ? null : JSON.stringify(donnees), par);
@@ -126,12 +286,12 @@ export function libelleOrigine(o: { canal: Canal | null; origine_detail: string 
   return o.origine_detail ? `${base} : ${o.origine_detail}` : base;
 }
 
-function accordImport(env: EnvSite, id: string, maintenant: string) {
-  return env.DB.prepare(`UPDATE contact SET email_accord_le = ?2, email_accord_source = 'import' WHERE id = ?1 AND email_accord_le IS NULL`).bind(id, maintenant);
-}
-
-/** Saisie à la main : crée le contact, ou complète celui qui a déjà ce téléphone ou cet e-mail. */
-export async function saisirContact(env: EnvSite, p: Personne, o: Origine, note: string, par: string): Promise<{ id: string; existant: boolean }> {
+/** Saisie à la main : crée le contact, ou complète celui qui a déjà ce téléphone ou cet e-mail (un e-mail ou un téléphone
+ * n'est ajouté que s'il manquait : jamais remplacé, donc aucun accord ne change d'adresse). */
+export async function saisirContact(env: EnvSite, p: Personne, o: Origine, note: string, par: string): Promise<{ id: string; existant: boolean } | { opposition: 'oui' | 'sans_secret' }> {
+  // Revue de code 18.8 : une personne qui a demandé l'effacement n'est ni recréée ni complétée par la saisie (AD-31).
+  const opp = await enOpposition(env, [p.telephone, p.email]);
+  if (opp !== 'non') return { opposition: opp };
   const maintenant = new Date().toISOString();
   const connu = await contactConnu(env, p.telephone, p.email);
   if (connu) {
@@ -204,103 +364,6 @@ export async function creerPrescripteur(env: EnvSite, nom: string, role: string 
   await env.DB.prepare('INSERT INTO prescripteur (id, created_at, last_activity_at, nom, role, dernier_contact_le) VALUES (?1, ?2, ?2, ?3, ?4, ?5)')
     .bind(id, maintenant, nom, role, aujourdhui()).run();
   return id;
-}
-
-// ——— Import d'une liste (événement, ancien fichier) ———
-
-export const IMPORT_MAX = 500;
-
-/** Reconnaît les colonnes d'un tableur par leur titre (Prénom, Nom, Téléphone, E-mail, Commune et variantes). */
-export function colonnes(entetes: string[]): Partial<Record<keyof Personne, number>> {
-  const sansAccents = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z]/g, '');
-  const reperes: [keyof Personne, RegExp][] = [
-    ['prenom', /^(prenom|firstname|first)$/],
-    ['nom', /^(nom|name|lastname|nomdefamille|last)$/],
-    ['telephone', /(tel|telephone|portable|mobile|phone|gsm)/],
-    ['email', /(mail|courriel)/],
-    ['commune', /^(commune|ville|city|localite)$/],
-  ];
-  const trouve: Partial<Record<keyof Personne, number>> = {};
-  entetes.forEach((e, i) => {
-    const s = sansAccents(e);
-    for (const [cle, re] of reperes) if (trouve[cle] === undefined && re.test(s)) { trouve[cle] = i; break; }
-  });
-  return trouve;
-}
-
-export interface Ligne extends Personne { connu: boolean }
-
-/** Les contacts déjà connus parmi ces personnes, en une seule requête : téléphone ou e-mail → id du contact. */
-async function connus(env: EnvSite, personnes: Personne[]): Promise<{ parTel: Map<string, string>; parEmail: Map<string, string> }> {
-  const tels = personnes.map((p) => p.telephone).filter(Boolean);
-  const mails = personnes.map((p) => p.email).filter(Boolean);
-  const { results } = await env.DB.prepare(
-    // Autres coordonnées d'abord (story 18.3) : le principal, lu ensuite, l'emporte dans les tables ci-dessous.
-    `SELECT contact_id AS id, CASE WHEN type = 'telephone' THEN valeur END AS telephone, CASE WHEN type = 'email' THEN valeur END AS email, 1 AS rang
-       FROM contact_coordonnee WHERE type IN ('telephone', 'email') AND valeur IN (SELECT value FROM json_each(?1) UNION SELECT value FROM json_each(?2))
-     UNION ALL
-     SELECT id, telephone, email, 2 FROM contact
-     WHERE telephone IN (SELECT value FROM json_each(?1)) OR email IN (SELECT value FROM json_each(?2))
-     ORDER BY rang`,
-  ).bind(JSON.stringify(tels), JSON.stringify(mails)).all<{ id: string; telephone: string | null; email: string | null }>();
-  const parTel = new Map<string, string>(), parEmail = new Map<string, string>();
-  for (const r of results) { if (r.telephone) parTel.set(r.telephone, r.id); if (r.email) parEmail.set(r.email, r.id); }
-  return { parTel, parEmail };
-}
-const idConnu = (c: Awaited<ReturnType<typeof connus>>, p: Personne) =>
-  (p.telephone && c.parTel.get(p.telephone)) || (p.email && c.parEmail.get(p.email)) || null;
-
-/** Lit les lignes d'un tableur : chaque personne, et si elle est déjà connue. Les doublons du fichier sont écartés. */
-export async function preparerImport(env: EnvSite, lignes: string[][]): Promise<{ lignes: Ligne[]; ignorees: number; colonnesVues: string[] }> {
-  const [entetes = [], ...corps] = lignes;
-  const cols = colonnes(entetes);
-  const valeur = (l: string[], c?: number) => (c === undefined ? '' : (l[c] ?? ''));
-  const vues = new Set<string>();
-  const personnes: Personne[] = [];
-  let ignorees = Math.max(0, corps.length - IMPORT_MAX);
-  for (const l of corps.slice(0, IMPORT_MAX)) {
-    const p = personne({ prenom: valeur(l, cols.prenom), nom: valeur(l, cols.nom), telephone: valeur(l, cols.telephone), email: valeur(l, cols.email), commune: valeur(l, cols.commune) });
-    if (!p) { if (l.some((v) => v.trim())) ignorees++; continue; }
-    const cles = [p.telephone, p.email, !p.telephone && !p.email ? `nom:${p.prenom ?? ''} ${p.nom ?? ''}`.toLowerCase() : null].filter((k): k is string => !!k);
-    if (cles.some((k) => vues.has(k))) { ignorees++; continue; }
-    cles.forEach((k) => vues.add(k));
-    personnes.push(p);
-  }
-  const c = await connus(env, personnes);
-  return { lignes: personnes.map((p) => ({ ...p, connu: !!idConnu(c, p) })), ignorees, colonnesVues: Object.keys(cols) };
-}
-
-/** Enregistre l'import : nouveaux contacts créés, contacts connus complétés. Écrit par lots de 40 personnes. */
-export async function importer(env: EnvSite, lignes: Personne[], o: Origine, par: string): Promise<{ nouveaux: number; completes: number }> {
-  const maintenant = new Date().toISOString();
-  const personnes = lignes.slice(0, IMPORT_MAX).map((b) => personne(b as unknown as Record<string, unknown>)).filter((p): p is Personne => !!p);
-  const c = await connus(env, personnes);
-  let nouveaux = 0, completes = 0;
-  for (let i = 0; i < personnes.length; i += 40) {
-    const morceau = personnes.slice(i, i + 40).map((p) => {
-      const existant = idConnu(c, p);
-      const id = existant ?? ulid();
-      const ecritures = existant
-        ? [completer(env, id, p, maintenant), evenement(env, id, maintenant, 'note', 'import', `Présent dans la liste importée : ${libelleOrigine(o)}`, par)]
-        : [inserer(env, id, p, o, maintenant, 0), evenement(env, id, maintenant, 'creation', 'import', `Contact importé · ${libelleOrigine(o)}`, par, o)];
-      // Les participants ont accepté d'être recontactés : c'est leur accord pour les e-mails d'Anne (story 13.26).
-      if (!o.rappel_individuel_seul) ecritures.push(accordImport(env, id, maintenant));
-      return { p, existant: !!existant, ecritures };
-    });
-    try {
-      await env.DB.batch(morceau.flatMap((m) => m.ecritures));
-      for (const m of morceau) m.existant ? completes++ : nouveaux++;
-    } catch {
-      // Une personne du lot a été créée entre-temps par une autre écriture : on reprend ce lot une personne à la fois.
-      for (const m of morceau) {
-        if (m.existant) { await env.DB.batch(m.ecritures); completes++; continue; }
-        const r = await saisirContact(env, m.p, o, '', par);
-        if (!o.rappel_individuel_seul) await accordImport(env, r.id, maintenant).run();
-        r.existant ? completes++ : nouveaux++;
-      }
-    }
-  }
-  return { nouveaux, completes };
 }
 
 // ——— Lecture pour la liste et la fiche ———
@@ -880,41 +943,54 @@ const LIBELLES_CHAMPS: Record<string, string> = {
   canal: 'origine', origine_detail: 'précision d’origine', passage_id: 'passage de boîtage', prescripteur_id: 'prescripteur',
 };
 
+export type ResultatCoordonnees =
+  | { ok: true; changes: string[] }
+  | { ok: false; conflit: string }
+  | { ok: false; opposition: true }
+  | { ok: false; indisponible: true }
+  | { ok: false; refus: string };
+
 /**
- * Corrige les coordonnées et l'origine d'un contact. Un téléphone ou un e-mail déjà porté par un autre contact est
- * refusé (jamais de doublon, jamais de fusion silencieuse) : renvoie alors l'identifiant de cet autre contact.
- * L'historique dit quels champs ont changé, sans les anciennes valeurs.
+ * Corrige les coordonnées et l'origine d'un contact depuis la fiche du suivi. Revue de code 18.8 : prénom, nom, ville,
+ * téléphone et e-mail passent par `carnet.corrigerFiche`, seul écrivain de ces colonnes (AD-22) : même garde « modifié
+ * entre-temps », même refus d'une coordonnée portée par un autre contact (renvoie cet autre contact, jamais de fusion
+ * silencieuse) ou d'une personne en opposition, et un accord e-mail qui ne suit pas une adresse changée. Le téléphone et
+ * l'e-mail saisis remplacent le premier de la liste ; les autres coordonnées sont gardées. Puis les colonnes du suivi
+ * (parcours, origine) sont écrites ici, avec leur note dans l'historique. null : contact inconnu.
  */
-export async function modifierCoordonnees(env: EnvSite, id: string, n: Coordonnees, par: string): Promise<{ ok: true; changes: string[] } | { ok: false; conflit: string } | null> {
-  const c = await env.DB.prepare('SELECT * FROM contact WHERE id = ?1').bind(id).first<Contact>();
+export async function modifierCoordonnees(env: EnvSite, id: string, n: Coordonnees, par: string): Promise<ResultatCoordonnees | null> {
+  const [lu, sec] = await env.DB.batch([
+    env.DB.prepare('SELECT * FROM contact WHERE id = ?1').bind(id),
+    env.DB.prepare(`SELECT type, valeur FROM contact_coordonnee WHERE contact_id = ?1 AND type IN ('telephone', 'email') ORDER BY id`).bind(id),
+  ]) as [D1Result<Contact>, D1Result<{ type: string; valeur: string }>];
+  const c = lu.results[0];
   if (!c) return null;
-  const autre = await env.DB.prepare(
-    `SELECT id FROM contact WHERE id <> ?1 AND ((?2 IS NOT NULL AND telephone = ?2) OR (?3 IS NOT NULL AND email = ?3)) LIMIT 1`,
-  ).bind(id, n.telephone, n.email).first<{ id: string }>();
-  if (autre) return { ok: false, conflit: autre.id };
-  const nouveau: Record<string, string | null> = {
-    prenom: n.prenom, nom: n.nom, telephone: n.telephone, email: n.email, commune: n.commune, parcours: n.parcours,
-    canal: n.origine.canal, origine_detail: n.origine.origine_detail, passage_id: n.origine.passage_id, prescripteur_id: n.origine.prescripteur_id,
+  const liste = (premier: string | null, type: string) => {
+    const autres = sec.results.filter((x) => x.type === type && x.valeur !== premier).map((x) => x.valeur);
+    return premier ? [premier, ...autres] : autres;
   };
-  const changes = Object.keys(nouveau).filter((k) => (nouveau[k] ?? null) !== ((c as unknown as Record<string, string | null>)[k] ?? null));
-  if (!changes.length) return { ok: true, changes };
+  const r = await corrigerFiche(env, id, {
+    prenom: n.prenom, nom: n.nom, commune: n.commune, telephones: liste(n.telephone, 'telephone'), emails: liste(n.email, 'email'),
+  }, par);
+  if (!r) return null;
+  if (!r.ok) return 'conflit' in r ? { ok: false, conflit: r.conflit.id } : r;
+  const changes = r.changes.map((k) => (k === 'telephones' ? 'telephone' : k === 'emails' ? 'email' : k));
+  const nouveau: Record<string, string | null> = {
+    parcours: n.parcours, canal: n.origine.canal, origine_detail: n.origine.origine_detail, passage_id: n.origine.passage_id, prescripteur_id: n.origine.prescripteur_id,
+  };
+  const suivi = Object.keys(nouveau).filter((k) => (nouveau[k] ?? null) !== ((c as unknown as Record<string, string | null>)[k] ?? null));
+  if (!changes.length && !suivi.length) return { ok: true, changes };
   const maintenant = new Date().toISOString();
-  const texteEv = changes.length === 1 ? `${LIBELLES_CHAMPS[changes[0]].replace(/^./, (l) => l.toUpperCase())} modifié` : `Coordonnées modifiées : ${changes.map((k) => LIBELLES_CHAMPS[k]).join(', ')}`;
-  try {
-    await env.DB.batch([
-      env.DB.prepare(
-        `UPDATE contact SET last_activity_at = ?2, prenom = ?3, nom = ?4, telephone = ?5, email = ?6, commune = ?7, parcours = ?8,
-           canal = ?9, origine_detail = ?10, passage_id = ?11, prescripteur_id = ?12 WHERE id = ?1`,
-      ).bind(id, maintenant, n.prenom, n.nom, n.telephone, n.email, n.commune, n.parcours, n.origine.canal, n.origine.origine_detail, n.origine.passage_id, n.origine.prescripteur_id),
-      evenement(env, id, maintenant, 'note', 'anne', texteEv, par, { modifies: changes }),
-    ]);
-  } catch (e) {
-    // Un autre contact a pris ce téléphone ou cet e-mail entre-temps.
-    const pris = await contactConnu(env, n.telephone, n.email);
-    if (pris && pris.id !== id) return { ok: false, conflit: pris.id };
-    throw e;
+  const lot: D1PreparedStatement[] = [
+    env.DB.prepare(`UPDATE contact SET last_activity_at = ?2, parcours = ?3, canal = ?4, origine_detail = ?5, passage_id = ?6, prescripteur_id = ?7 WHERE id = ?1`)
+      .bind(id, maintenant, n.parcours, n.origine.canal, n.origine.origine_detail, n.origine.passage_id, n.origine.prescripteur_id),
+  ];
+  if (suivi.length) {
+    const texteEv = suivi.length === 1 ? `${LIBELLES_CHAMPS[suivi[0]].replace(/^./, (l) => l.toUpperCase())} modifié` : `Origine modifiée : ${suivi.map((k) => LIBELLES_CHAMPS[k]).join(', ')}`;
+    lot.push(evenement(env, id, maintenant, 'note', 'anne', texteEv, par, { modifies: suivi }));
   }
-  return { ok: true, changes };
+  await env.DB.batch(lot);
+  return { ok: true, changes: [...changes, ...suivi] };
 }
 
 /** Une note libre, horodatée, rangée dans l'historique ; elle devient le « dernier texte » sur « Aujourd'hui ». */

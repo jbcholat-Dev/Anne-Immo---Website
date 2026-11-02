@@ -26,7 +26,7 @@ Le RGPD permet de garder des coordonnées sans accord écrit quand on a un inté
 ## Ce que Claude voit
 Claude fait l'import depuis la conversation : il lit les fichiers pour préparer l'aperçu et les envoie à l'espace. Les fichiers passent donc par Anthropic, l'entreprise qui fait fonctionner Claude, comme toute pièce jointe d'une conversation. Une fois l'import fait, Claude n'a plus accès qu'à l'import, jamais à la lecture des contacts (règle de conduite inscrite dans l'architecture).
 
-## Ce que JB valide
-- [ ] La base « intérêt légitime » et les règles 1 à 8.
-- [ ] La phrase d'information au premier message (à ajuster avec Anne).
-- [ ] La ligne du registre.
+## Ce que JB valide (validé par JB le 2026-11-02 à 10 h 26)
+- [x] La base « intérêt légitime » et les règles 1 à 8.
+- [x] La phrase d'information au premier message (à ajuster avec Anne).
+- [x] La ligne du registre.
