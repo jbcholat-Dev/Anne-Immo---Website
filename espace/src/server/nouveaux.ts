@@ -241,13 +241,17 @@ async function ecrireGeste(envE: EnvEspace, env: EnvSite, n: LigneNouveau, geste
       if (!c) return refus(409, 'inconnu', 'Ce numéro n\'est plus celui d\'un contact du carnet : utilisez « Ajouter aux contacts ».');
       if (!(await classerDepuisNouveaux(envE, n.tel!, 'prospect', c.id, vu, par))) return refus(409, 'classe', 'Ce numéro vient d\'être classé ailleurs (page « À trier »).');
       // Story 18.13 : les champs vides de la fiche (prénom, nom, e-mail) reçoivent ce que Leedflow connaît du numéro.
-      await completerFiche(envE, env, c.id, n.tel!, n.id, par);
+      const completes = await completerFiche(envE, env, c.id, n.tel!, n.id, par);
       if (!(await suivreParGeste(env, c.id, n.id, par))) {
         await annulerCompletion(env, c.id, n.id, par);
         await declasserDepuisNouveaux(envE, n.tel!, 'prospect', vu);
         return refus(409, 'modifie', 'Ce contact vient d\'être modifié ailleurs : rien n\'a été changé, recommencez.');
       }
-      return { ok: true, message: 'Numéro ajouté à sa fiche (prénom, nom et e-mail vides complétés) : ses appels y seront rangés, il ne reviendra plus ici.', contact_id: c.id };
+      // Revue de code 18.13 : le message ne cite que les champs vraiment complétés.
+      const noms: Record<string, string> = { prenom: 'prénom', nom: 'nom', emails: 'e-mail' };
+      const faits = completes.map((k) => noms[k]).filter(Boolean);
+      const detail = faits.length ? ` (${faits.join(', ')} complété${faits.length > 1 ? 's' : ''} depuis Leedflow)` : '';
+      return { ok: true, message: `Numéro ajouté à sa fiche${detail} : ses appels y seront rangés, il ne reviendra plus ici.`, contact_id: c.id };
     }
     case 'ajouter': {
       const r = await creerContact(env, { ...saisie!, telephone: n.tel!, accord: false }, par, { source: 'leedflow', nouveau: n.id });
@@ -294,13 +298,18 @@ async function completerFiche(envE: EnvEspace, env: EnvSite, contactId: string, 
 async function annulerCompletion(env: EnvSite, contactId: string, nouveau: string, par: string): Promise<'rendu' | 'garde' | 'rien'> {
   const e = await env.DB.prepare(
     `SELECT id, donnees FROM contact_evenement WHERE contact_id = ?1 AND type = 'classement' AND source = 'anne' AND json_valid(donnees)
-       AND json_extract(donnees, '$.nouveau') = ?2 AND json_extract(donnees, '$.complete') = 1 ORDER BY id DESC LIMIT 1`,
+       AND json_extract(donnees, '$.nouveau') = ?2 AND json_extract(donnees, '$.complete') = 1
+       -- Revue de code 18.13 : un complément déjà rendu (annulation précédente du même geste) n'est jamais rejoué.
+       AND NOT EXISTS (SELECT 1 FROM contact_evenement a WHERE a.contact_id = ?1 AND a.id > contact_evenement.id AND a.type = 'classement'
+         AND json_valid(a.donnees) AND json_extract(a.donnees, '$.annule') = ?2)
+     ORDER BY id DESC LIMIT 1`,
   ).bind(contactId, nouveau).first<{ id: number; donnees: string }>();
   if (!e) return 'rien';
   const d = JSON.parse(e.donnees) as { avant: Record<string, unknown>; apres: Record<string, unknown> };
   const depuis = await env.DB.prepare(
     `SELECT 1 AS n FROM contact_evenement x WHERE x.contact_id = ?1 AND x.id > ?3
-       AND NOT (json_valid(x.donnees) AND (json_extract(x.donnees, '$.nouveau') = ?2 OR json_extract(x.donnees, '$.annule') = ?2)) LIMIT 1`,
+       -- Revue de code 18.13 : coalesce, sinon un événement sans ces clés (ou sans donnees) donne NULL et n'est pas compté.
+       AND NOT coalesce(json_valid(x.donnees) AND (json_extract(x.donnees, '$.nouveau') = ?2 OR json_extract(x.donnees, '$.annule') = ?2), 0) LIMIT 1`,
   ).bind(contactId, nouveau, e.id).first();
   const cur = await env.DB.prepare('SELECT prenom, nom, email FROM contact WHERE id = ?1').bind(contactId).first<{ prenom: string | null; nom: string | null; email: string | null }>();
   if (depuis || !cur) return 'garde';
