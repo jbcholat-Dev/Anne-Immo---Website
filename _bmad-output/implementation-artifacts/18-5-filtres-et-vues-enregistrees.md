@@ -63,7 +63,7 @@ Qu'Anne combine des filtres sans écrire de formule et les retrouve d'un clic so
 
 ## Ce qui reste
 - Revue de code en session neuve (`bmad-code-review`), puis passage à `done`.
-- Journaliser dans le spine d'architecture l'amendement d'AD-27 (clés `ambassadeur` et `a_rappeler`, forme des valeurs).
+- Fait : amendement d'AD-27 journalisé dans le spine d'architecture (02/11).
 - Story 18.6 : cases à cocher, actions groupées ; FR-17 : choix des destinataires d'une campagne par une vue (le filtre se relit avec `verifierFiltre` et `preparerFiltre`).
 - Ordre des vues : pas de glisser-déposer (nouvelle vue en dernier) ; à proposer si Anne le demande.
 
