@@ -255,6 +255,7 @@ development_status:
   # 2026-11-02 (10 h 23) : décision de JB, epics 19 et 20 en pause jusqu'à ce qu'Anne ait utilisé le carnet (premier import fait, contacts classés)
   18-11-barre-nouveaux-site-et-leedflow: done   # 2026-11-02, PR #227, revue de code faite (par lot), mineur noté
   18-12-demandes-des-portails-par-e-mail: done   # 2026-11-02, PR #227, revue de code faite (par lot), constat corrigé (réglage PORTAILS_EXPEDITEUR_AUTORISE), DKIM noté ; réglages de JB à faire (RUNBOOK § 4 sexies)
+  18-13-rattacher-complete-la-fiche: review   # 2026-11-02, ticket n° 232
   epic-18-retrospective: optional   # non faite : décision JB « Finir économe » du 2026-11-02
 
   epic-19: backlog   # les séances et les campagnes (livraison 2) ; en pause (décision JB 2026-11-02)

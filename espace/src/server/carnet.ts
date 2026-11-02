@@ -377,8 +377,9 @@ const LIBELLES_FICHE: Record<string, string> = {
  * coordonnées secondaires ajoutées, puis un événement `classement` avec l'avant-image des seuls champs changés. L'écriture
  * n'a lieu que si le contact est encore tel qu'il a été lu (sinon, refus « modifié entre-temps »). Un téléphone ou un
  * e-mail déjà porté par un autre contact est refusé avec ce contact (jamais de fusion silencieuse). null : contact inconnu.
+ * `extra` : clés ajoutées à `donnees` de l'événement (la barre « Nouveaux » y met `nouveau`, pour l'annuler, story 18.13).
  */
-export async function corrigerFiche(env: EnvSite, id: string, corr: Correction, par: string): Promise<ResultatCorrection | null> {
+export async function corrigerFiche(env: EnvSite, id: string, corr: Correction, par: string, extra: Record<string, string | number> = {}): Promise<ResultatCorrection | null> {
   const [e, sec, site] = await env.DB.batch([
     env.DB.prepare(`SELECT id, prenom, nom, entreprise, commune, telephone, email, categorie_id, projet, temperature, verifie_le, ecarte_le,
       appel_autorise, a_rappeler_le, etape, email_accord_le FROM contact WHERE id = ?1`).bind(id),
@@ -456,7 +457,7 @@ export async function corrigerFiche(env: EnvSite, id: string, corr: Correction, 
     // L'événement d'abord, et seulement si le contact est encore tel qu'il a été lu : le reste du lot suit la même garde.
     env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, donnees, par)
        SELECT ?1, ?3, 'classement', 'anne', ?4, ?5, ?6, ?7 WHERE EXISTS (SELECT 1 FROM contact WHERE id = ?1 AND ${gardeComplete})`)
-      .bind(id, garde, maintenant, `${lot}.${id}`, texte, JSON.stringify({ avant, apres, lot, ...(changeEmail ? { email_change: changeEmail } : {}) }), par, empreinte, valeurs),
+      .bind(id, garde, maintenant, `${lot}.${id}`, texte, JSON.stringify({ avant, apres, lot, ...extra, ...(changeEmail ? { email_change: changeEmail } : {}) }), par, empreinte, valeurs),
   ];
   const evenementEcrit = `EXISTS (SELECT 1 FROM contact_evenement WHERE source = 'anne' AND source_id = ?9)`;
   // Revue de code 18.8 : poussé dès que l'adresse change (l'écriture garde sa propre condition, accord présent et événement écrit).

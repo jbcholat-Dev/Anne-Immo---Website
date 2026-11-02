@@ -3025,6 +3025,32 @@ try {
     await appeler(`${E}/cdn-cgi/handler/scheduled`);
     for (let i = 0; i < 40 && sql(`SELECT count(*) AS n FROM leedflow_inconnu WHERE telephone = '${NV_C}'`)[0].n; i++) await pause(250);
     constat(sql(`SELECT count(*) AS n FROM leedflow_inconnu WHERE telephone = '${NV_C}'`)[0].n === 0, '18.11 : après le délai d\'annulation, la tâche planifiée efface les échanges du numéro ignoré');
+    // Story 18.13 : « Ajouter à sa fiche » complète seulement les champs VIDES (prénom, nom, e-mail), sans accord e-mail, et s'annule.
+    const NV_E = `+33765${NUM}`, NV_F = `+33766${NUM}`;
+    const KE = `01KFNE${NUM}${'0'.repeat(14)}`, KF = `01KFNF${NUM}${'0'.repeat(14)}`;
+    sql(`INSERT INTO contact (id, created_at, last_activity_at, telephone, categorie_id, projet) VALUES ('${KE}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', '${NV_E}', 'lointains', 'a_qualifier')`);
+    sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, email, categorie_id, projet) VALUES ('${KF}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Fanny', 'Remplie${NUM}', '${NV_F}', 'fanny+${NUM}@example.com', 'lointains', 'a_qualifier')`);
+    LF.appels.push(
+      { id: `nve1-${NUM}`, created: Date.now() - 4 * 60_000, customer: NV_E, direction: 'inbound', duration: 50, missed: false, transcription: 'Veut une estimation', id_contact: `lfnve-${NUM}` },
+      { id: `nvf1-${NUM}`, created: Date.now() - 3 * 60_000, customer: NV_F, direction: 'inbound', duration: 50, missed: false, transcription: 'Rappelle', id_contact: `lfnvf-${NUM}` },
+    );
+    LF.contacts[`lfnve-${NUM}`] = { id: `lfnve-${NUM}`, firstname: 'Eva', lastname: `Leedflow${NUM}`, email: `eva+${NUM}@example.com`, phone: NV_E };
+    LF.contacts[`lfnvf-${NUM}`] = { id: `lfnvf-${NUM}`, firstname: 'Autre', lastname: 'Nom', email: 'autre@example.com', phone: NV_F };
+    await releve();
+    const [NE] = nvDe(NV_E), [NF] = nvDe(NV_F);
+    x = await nv({ id: NE.id, geste: 'rattacher' });
+    let ke = c7(KE);
+    constat(x.status === 200 && ke.prenom === 'Eva' && ke.nom === `Leedflow${NUM}` && ke.email === `eva+${NUM}@example.com` && ke.email_accord_le === null && ke.etape === 'a_qualifier',
+      '18.13 : « Ajouter à sa fiche » complète prénom, nom et e-mail vides avec ceux de Leedflow, sans aucun accord e-mail');
+    x = await nv({ id: NF.id, geste: 'rattacher' });
+    const kf = c7(KF);
+    constat(x.status === 200 && kf.prenom === 'Fanny' && kf.nom === `Remplie${NUM}` && kf.email === `fanny+${NUM}@example.com`,
+      '18.13 : « Ajouter à sa fiche » n\'écrase jamais un prénom, un nom ou un e-mail déjà remplis');
+    x = await nv({ annuler: NE.id });
+    ke = c7(KE);
+    constat(x.status === 200 && ke.prenom === null && ke.nom === null && ke.email === null && ke.etape === null && ligneNv(NE.id).vu_le === null,
+      '18.13 : l\'annulation du geste remet vides le prénom, le nom et l\'e-mail complétés');
+    await nv({ id: NE.id, geste: 'ignorer' }); // la carte ne reste pas dans la barre pour la suite
     // Ajouter à sa fiche, annuler, refaire.
     x = await nv({ id: NB[0].id, geste: 'rattacher' });
     let kb = c7(KB);

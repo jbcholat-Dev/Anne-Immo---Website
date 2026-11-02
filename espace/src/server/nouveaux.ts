@@ -20,7 +20,7 @@
 import type { EnvSite } from '@site/server/env';
 import { trouver } from '@site/server/contacts';
 import type { EnvEspace } from './env';
-import { annulerCreation, annulerLot, classer, creerContact, type Saisie } from './carnet';
+import { annulerCreation, annulerLot, classer, corrigerFiche, creerContact, lireCorrection, type Correction, type Saisie } from './carnet';
 import { ANNULATION_MS, classerDepuisNouveaux, declasserDepuisNouveaux, extrait, resumesInconnus } from './leedflow';
 import { annulerSuiviParGeste, suivreParGeste } from './pipeline';
 import { PORTAILS, type Portail } from './portails';
@@ -240,11 +240,18 @@ async function ecrireGeste(envE: EnvEspace, env: EnvSite, n: LigneNouveau, geste
       const c = await trouver(env, n.tel!, null);
       if (!c) return refus(409, 'inconnu', 'Ce numéro n\'est plus celui d\'un contact du carnet : utilisez « Ajouter aux contacts ».');
       if (!(await classerDepuisNouveaux(envE, n.tel!, 'prospect', c.id, vu, par))) return refus(409, 'classe', 'Ce numéro vient d\'être classé ailleurs (page « À trier »).');
+      // Story 18.13 : les champs vides de la fiche (prénom, nom, e-mail) reçoivent ce que Leedflow connaît du numéro.
+      const completes = await completerFiche(envE, env, c.id, n.tel!, n.id, par);
       if (!(await suivreParGeste(env, c.id, n.id, par))) {
+        await annulerCompletion(env, c.id, n.id, par);
         await declasserDepuisNouveaux(envE, n.tel!, 'prospect', vu);
         return refus(409, 'modifie', 'Ce contact vient d\'être modifié ailleurs : rien n\'a été changé, recommencez.');
       }
-      return { ok: true, message: 'Numéro ajouté à sa fiche : ses appels y seront rangés, il ne reviendra plus ici.', contact_id: c.id };
+      // Revue de code 18.13 : le message ne cite que les champs vraiment complétés.
+      const noms: Record<string, string> = { prenom: 'prénom', nom: 'nom', emails: 'e-mail' };
+      const faits = completes.map((k) => noms[k]).filter(Boolean);
+      const detail = faits.length ? ` (${faits.join(', ')} complété${faits.length > 1 ? 's' : ''} depuis Leedflow)` : '';
+      return { ok: true, message: `Numéro ajouté à sa fiche${detail} : ses appels y seront rangés, il ne reviendra plus ici.`, contact_id: c.id };
     }
     case 'ajouter': {
       const r = await creerContact(env, { ...saisie!, telephone: n.tel!, accord: false }, par, { source: 'leedflow', nouveau: n.id });
@@ -258,6 +265,63 @@ async function ecrireGeste(envE: EnvEspace, env: EnvSite, n: LigneNouveau, geste
       return { ok: true, message: 'Contact ajouté et suivi : ses appels y seront rangés.', contact_id: r.id };
     }
   }
+}
+
+/**
+ * Story 18.13 : « Ajouter à sa fiche » complète seulement les champs VIDES de la fiche (prénom, nom, e-mail) avec ce que
+ * Leedflow connaît du numéro ; une valeur déjà remplie n'est jamais écrasée. Écriture du carnet (`corrigerFiche`, avant-image
+ * AD-29, événement marqué `nouveau` + `complete`). L'e-mail ainsi complété ne porte aucun accord. Un e-mail refusé (déjà porté
+ * par un autre contact, opposition, invalide) est laissé de côté sans bloquer le geste. Renvoie les champs complétés.
+ */
+async function completerFiche(envE: EnvEspace, env: EnvSite, contactId: string, tel: string, nouveau: string, par: string): Promise<string[]> {
+  const p = (await resumesInconnus(envE, [tel])).get(tel);
+  if (!p) return [];
+  const [c, mails] = await Promise.all([
+    env.DB.prepare('SELECT prenom, nom, email FROM contact WHERE id = ?1').bind(contactId).first<{ prenom: string | null; nom: string | null; email: string | null }>(),
+    env.DB.prepare(`SELECT count(*) AS n FROM contact_coordonnee WHERE contact_id = ?1 AND type = 'email'`).bind(contactId).first<{ n: number }>(),
+  ]);
+  if (!c) return [];
+  const brut: Record<string, unknown> = {};
+  if (!c.prenom && p.prenom) brut.prenom = p.prenom;
+  if (!c.nom && p.nom) brut.nom = p.nom;
+  const email = !c.email && !mails?.n && p.email ? [p.email] : null;
+  for (const avecEmail of email ? [true, false] : [false]) {
+    const corr = lireCorrection({ ...brut, ...(avecEmail ? { emails: email } : {}) }, new Set());
+    if (typeof corr === 'string') continue;
+    const r = await corrigerFiche(env, contactId, corr as Correction, par, { nouveau, complete: 1 });
+    if (r?.ok) return r.changes;
+  }
+  return [];
+}
+
+/** Rend les compléments de `completerFiche` si la fiche est encore telle qu'ils l'ont laissée (rien d'autre n'est venu depuis, hors ce geste). */
+async function annulerCompletion(env: EnvSite, contactId: string, nouveau: string, par: string): Promise<'rendu' | 'garde' | 'rien'> {
+  const e = await env.DB.prepare(
+    `SELECT id, donnees FROM contact_evenement WHERE contact_id = ?1 AND type = 'classement' AND source = 'anne' AND json_valid(donnees)
+       AND json_extract(donnees, '$.nouveau') = ?2 AND json_extract(donnees, '$.complete') = 1
+       -- Revue de code 18.13 : un complément déjà rendu (annulation précédente du même geste) n'est jamais rejoué.
+       AND NOT EXISTS (SELECT 1 FROM contact_evenement a WHERE a.contact_id = ?1 AND a.id > contact_evenement.id AND a.type = 'classement'
+         AND json_valid(a.donnees) AND json_extract(a.donnees, '$.annule') = ?2)
+     ORDER BY id DESC LIMIT 1`,
+  ).bind(contactId, nouveau).first<{ id: number; donnees: string }>();
+  if (!e) return 'rien';
+  const d = JSON.parse(e.donnees) as { avant: Record<string, unknown>; apres: Record<string, unknown> };
+  const depuis = await env.DB.prepare(
+    `SELECT 1 AS n FROM contact_evenement x WHERE x.contact_id = ?1 AND x.id > ?3
+       -- Revue de code 18.13 : coalesce, sinon un événement sans ces clés (ou sans donnees) donne NULL et n'est pas compté.
+       AND NOT coalesce(json_valid(x.donnees) AND (json_extract(x.donnees, '$.nouveau') = ?2 OR json_extract(x.donnees, '$.annule') = ?2), 0) LIMIT 1`,
+  ).bind(contactId, nouveau, e.id).first();
+  const cur = await env.DB.prepare('SELECT prenom, nom, email FROM contact WHERE id = ?1').bind(contactId).first<{ prenom: string | null; nom: string | null; email: string | null }>();
+  if (depuis || !cur) return 'garde';
+  const rendre: Record<string, unknown> = {};
+  for (const k of Object.keys(d.apres)) {
+    if (k === 'prenom' || k === 'nom') { if (cur[k] !== d.apres[k]) return 'garde'; rendre[k] = d.avant[k] ?? null; }
+    else if (k === 'emails') { if (cur.email !== (d.apres.emails as string[])[0]) return 'garde'; rendre.emails = d.avant.emails ?? []; }
+  }
+  const corr = lireCorrection(rendre, new Set());
+  if (typeof corr === 'string') return 'garde';
+  const r = await corrigerFiche(env, contactId, corr, par, { annule: nouveau });
+  return r?.ok ? 'rendu' : 'garde';
 }
 
 /** Annule le geste fait sur une carte, pendant `ANNULATION_MS` ; la carte revient dans la barre. */
@@ -286,6 +350,8 @@ export async function annuler(envE: EnvEspace, id: string, par: string): Promise
     case 'rattache': {
       const c = n.tel ? await env.DB.prepare(`SELECT contact_id FROM leedflow_ecarte WHERE telephone = ?1 AND categorie = 'prospect' AND a = ?2`).bind(n.tel, n.vu_le).first<{ contact_id: string }>() : null;
       if (c?.contact_id && (await annulerSuiviParGeste(env, c.contact_id, id, par)) === 'garde') return modifie;
+      // Les compléments de la fiche (18.13) sont rendus ; si Anne les a retouchés depuis, ils sont gardés tels quels.
+      if (c?.contact_id) await annulerCompletion(env, c.contact_id, id, par);
       if (n.tel) await declasserDepuisNouveaux(envE, n.tel, 'prospect', n.vu_le);
       if (c?.contact_id) touche = { contact_id: c.contact_id };
       break;
