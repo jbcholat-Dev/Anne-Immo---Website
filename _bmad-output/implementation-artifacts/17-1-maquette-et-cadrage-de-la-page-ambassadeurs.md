@@ -54,6 +54,7 @@ Le mot d'Anne (« Vous savez comment je travaille… ») est une proposition : A
 - E-mail à l'inscrit : bienvenue + règlement en PDF ou en lien. E-mail à Anne : « Nouvel ambassadeur : Prénom Nom ».
 - Une inscription par e-mail ou téléphone : une seconde inscription ne crée pas de doublon, elle met à jour la date et dit « vous êtes déjà ambassadeur ».
 - Redirection `/ambassadeur` → `/ambassadeurs`. Page non indexée tant que le programme n'est pas ouvert.
+- Origines imprimées (fil parrainage, 2026-11-02) : `?c=carte` (carte de visite), `?c=depliant`, `?c=flyer`. Le paramètre `c` est une valeur libre gardée avec l'inscription ; aucune liste fermée à tenir dans le code.
 - Vérifications : `npm run build`, `npm run check`, `scripts/liens.mjs`, `npm run verif`, `scripts/ecrans.mjs`, essai de bout en bout sur la base d'essai. Revue de code en session neuve (story 9.8).
 
 ### Story 17.3 — Arrivée de l'ambassadeur dans l'espace d'Anne
