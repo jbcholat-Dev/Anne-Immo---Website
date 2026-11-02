@@ -3,7 +3,7 @@ story: 18.3
 epic: 18 — Espace d'Anne : le carnet de contacts
 statut: review
 date: 2026-11-01
-maj: 2026-11-01
+maj: 2026-11-02
 ---
 
 # Story 18.3 — Demandes du site et droits sur le nouveau carnet
@@ -60,11 +60,24 @@ Qu'une demande du site (formulaire de contact, diagnostic, guide, estimation, re
 - **Entrée dans le suivi par un geste d'Anne** (déplacement dans le pipeline, « Ajouter ») : `suivi_le` reste vide (AD-32) ; seule l'entrée par une demande du site le pose.
 
 ## Revue de code
-(à remplir : session neuve, skill `bmad-code-review`, avant de proposer la PR à JB)
+2026-11-02, session neuve, skill `bmad-code-review`, commit relu be08584. Corrections dans le commit « correction de la revue 18.3 ».
+1. Effacement : les demandes restées sans contact faites avec l'un des téléphones ou e-mails de la personne n'étaient pas effacées, et `rattacherOrphelins` aurait recréé le contact : corrigé. `orphelinsDe` (`rights.ts`) les trouve, `effacerContact` et `effacer` les effacent avec leurs envois et passent leurs coordonnées à l'opposition.
+2. Export par adresse : les demandes des contacts trouvés faites avec un autre e-mail ou un téléphone manquaient : corrigé (commit « correction de la revue 18.3 »), `lead WHERE lower(email) = adresse OR contact_id IN (contacts trouvés)`.
+3. Purge des importés : un signe de relation garde le contact dans la règle habituelle (accord e-mail, campagne envoyée, demande du site, événement note, appel, e-mail, séance, étape ou qualification ; un classement seul n'en est pas un) : corrigé (commit « correction de la revue 18.3 »), 7 constats dans `e2e-gestion.mjs`.
+4. Sans `LIEN_SECRET`, l'effacement renvoie `opposition: false` (`Effacement`), affiché à l'écran (« effacé, mais l'opposition n'a pas pu être notée », `/gestion` du site et de l'espace, liste des contacts après un effacement depuis la fiche) : corrigé. Condition bloquante pour la 18.10 ajoutée dans « Ce qui reste ».
+5. L'événement « Carnet → À qualifier » n'est écrit que si l'entrée dans le suivi vient d'avoir lieu (`INSERT … SELECT … WHERE EXISTS (… suivi_le = ?2)`) : corrigé.
+6. Un contact au projet « ambassadeur » qui fait une demande de vente ou d'achat prend le parcours de la demande comme projet (AD-24) : corrigé.
+7. Pas de ligne « Nouveaux » pour une demande d'essai (`is_test = 1`) : écarté : `capture.ts` pose `is_test = 1` sur **toute** demande hors production ; la base de production n'en reçoit donc jamais, et l'exclusion viderait la barre « Nouveaux » sur la base d'aperçu, où Anne l'essaie, et dans les essais de bout en bout. Commentaire ajouté dans `contacts.ts`.
+8. Une ligne `leedflow_ecarte` Pro ou Prospect n'est supprimée que si elle est liée à un contact effacé, ou à aucun contact et à l'un de ses numéros : corrigé.
+9. Téléphone normalisé en E.164 par `e164` (`schema.ts`) avant l'empreinte, repli sur les chiffres et le « + » : corrigé.
+10. Partage de `LIEN_SECRET` entre le site et l'espace pour l'opposition : écarté : décision journalisée par le coordinateur dans l'architecture.
+11. Essais `e2e-espace.mjs` : aucune valeur en clair dans `opposition` (et empreintes de 64 caractères hexadécimaux) ; effacement qui épargne une autre personne, sa demande et le classement « pro » d'un numéro rangé sur elle ; demande sans contact effacée avec la personne ; même demande traitée deux fois (une ligne « Nouveaux », un événement d'étape) ; une ligne « Nouveaux » par demande ; essai ambassadeur parti d'un projet différent du parcours (acheteur), et contact « ambassadeur » qui demande une vente : corrigé.
+
+Vérifications (2026-11-02) : `site` build (clé Turnstile d'essai) et `npm run check` (0 erreur, 0 avertissement), `base:local` (rien à appliquer) ; `espace` build et `npm run check` (0 erreur, 0 avertissement) ; `e2e-espace` **333 constats, tous bons** (4 nouveaux, et 3 constats existants renforcés) ; `e2e-gestion` **52 constats, tous bons** (7 nouveaux) ; `e2e-formulaires` **25, tous bons**.
 
 ## Ce qui reste
 - Epic 17 : le fil des ambassadeurs crée la source `ambassadeur` et ses colonnes dans `lead` ; vérifier les noms (`reglement_version`, `reglement_accepte_le`) ou ajuster `contacts.ts`.
-- Story 18.10 (import) : lire `opposition` avec `empreinteOpposition` ; exiger `LIEN_SECRET` dans l'espace.
+- Story 18.10 (import) : lire `opposition` avec `empreinteOpposition`. **Condition bloquante** (revue de code 18.3) : avant le premier import, vérifier que `LIEN_SECRET` est posé sur le Worker de l'espace (sinon les effacements faits depuis l'espace n'ont pas noté d'opposition, et l'import ne peut pas reconnaître les personnes opposées) ; l'import refuse de tourner sans lui.
 - Story 18.8 (barre « Nouveaux ») : lire `nouveau` (`vu_le` NULL).
 - Epics 19 et 20 : `seance_personne` et `resultat` (note vidée) à ajouter à l'effacement et à la purge quand leurs tables existeront.
 - Revue de code (session neuve) avant de proposer la PR à JB.

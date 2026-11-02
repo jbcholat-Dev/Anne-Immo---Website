@@ -17,6 +17,7 @@ export const POST: APIRoute = async ({ request, redirect }) => {
   if (!email || confirmation.toLowerCase() !== email.toLowerCase()) {
     return redirect(`/gestion?q=${encodeURIComponent(email)}&m=confirmation`, 303);
   }
-  const n = await effacer(envSite, email, compte);
-  return redirect(`/gestion?m=efface-${n}`, 303);
+  const { leads, opposition } = await effacer(envSite, email, compte);
+  // Sans LIEN_SECRET, l'effacement est fait mais l'opposition n'a pas pu être notée : l'écran le dit (revue de code 18.3).
+  return redirect(`/gestion?m=efface-${leads}${opposition ? '' : '-sans-opposition'}`, 303);
 };

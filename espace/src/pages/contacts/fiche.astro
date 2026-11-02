@@ -54,7 +54,11 @@ if (Astro.request.method === 'POST') {
     else if (await ajouterNote(env, id, note, compte)) return Astro.redirect(`/contacts/fiche?id=${id}&m=note`, 303);
   } else if (quoi === 'effacer') {
     if (!['SUPPRIMER', 'EFFACER'].includes(champ(f, 'confirmation').toUpperCase())) erreur = 'Tapez SUPPRIMER pour confirmer : la suppression est définitive.';
-    else if ((await effacerContact(env, id, compte)) !== null) return Astro.redirect('/contacts?m=efface', 303);
+    else {
+      const fait = await effacerContact(env, id, compte);
+      // Sans LIEN_SECRET, l'opposition n'a pas pu être notée : l'écran le dit (revue de code 18.3).
+      if (fait) return Astro.redirect(`/contacts?m=${fait.opposition ? 'efface' : 'efface-sans-opposition'}`, 303);
+    }
   } else if (quoi === 'coordonnees') {
     saisi = Object.fromEntries([...f.entries()].map(([k, v]) => [k, typeof v === 'string' ? v.trim() : '']));
     const p = personne(saisi);

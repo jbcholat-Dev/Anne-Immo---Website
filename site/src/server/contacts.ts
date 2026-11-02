@@ -174,13 +174,14 @@ export async function rattacherLead(env: EnvSite, leadId: string): Promise<strin
   } else if (contact.etape === null) {
     // Un contact du carnet entre dans le suivi par une demande (AD-22, AD-32) : à qualifier tout de suite, `suivi_le` posé.
     // Parcours pris du projet s'il est vendeur ou acheteur, sinon de la demande ; projet tiré de la demande s'il était à
-    // qualifier ; origine « site » s'il n'en avait pas (contact importé). Le téléphone est lu après le complément ci-dessus.
+    // qualifier ou ambassadeur (AD-24 : un ambassadeur qui demande une vente devient vendeur, revue de code 18.3) ; origine
+    // « site » s'il n'en avait pas (contact importé). Le téléphone est lu après le complément ci-dessus.
     lot.push(
       env.DB.prepare(
         `UPDATE contact SET etape = 'a_qualifier', prochaine_action = CASE WHEN telephone IS NULL THEN ?4 ELSE ?3 END,
            prochaine_action_le = ?2, reveil_le = NULL, motif_perte = NULL, suivi_le = ?2,
            parcours = coalesce(parcours, CASE WHEN projet IN ('vendeur', 'acheteur') THEN projet END, ?5),
-           projet = CASE WHEN projet = 'a_qualifier' AND ?5 IS NOT NULL THEN ?5 ELSE projet END,
+           projet = CASE WHEN projet IN ('a_qualifier', 'ambassadeur') AND ?5 IS NOT NULL THEN ?5 ELSE projet END,
            canal = coalesce(canal, 'site'), origine_detail = CASE WHEN canal IS NULL THEN ?6 ELSE origine_detail END
          WHERE id = ?1 AND etape IS NULL`,
       ).bind(contact.id, maintenant, ACTION_QUALIFIER, ACTION_QUALIFIER_EMAIL, parcours, lead.source),
@@ -190,8 +191,10 @@ export async function rattacherLead(env: EnvSite, leadId: string): Promise<strin
         `UPDATE contact SET temperature = CASE WHEN projet IN ('vendeur', 'acheteur', 'vendeur_acheteur') THEN 'avec_anne' END
          WHERE id = ?1 AND suivi_le = ?2`,
       ).bind(contact.id, maintenant),
+      // L'événement seulement si l'entrée vient d'avoir lieu (même `suivi_le`), pas si une autre demande l'a faite avant.
       env.DB.prepare(
-        `INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees) VALUES (?1, ?2, 'etape', 'site', ?3, ?4)`,
+        `INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees) SELECT ?1, ?2, 'etape', 'site', ?3, ?4
+         WHERE EXISTS (SELECT 1 FROM contact WHERE id = ?1 AND suivi_le = ?2)`,
       ).bind(contact.id, maintenant, `Carnet → ${LIBELLES_ETAPES.a_qualifier} : demande depuis le site`,
         JSON.stringify({ de: null, vers: 'a_qualifier' })),
     );
@@ -215,7 +218,9 @@ export async function rattacherLead(env: EnvSite, leadId: string): Promise<strin
     `INSERT INTO contact_source (contact_id, source, a) SELECT ?1, 'site', ?2
      WHERE NOT EXISTS (SELECT 1 FROM contact_source WHERE contact_id = ?1 AND source = 'site')`,
   ).bind(contact.id, lead.created_at));
-  // La file « Nouveaux » (AD-34) : une ligne par demande, liée à l'événement « demande » qu'on vient d'écrire.
+  // La file « Nouveaux » (AD-34) : une ligne par demande, liée à l'événement « demande » qu'on vient d'écrire. Aussi pour
+  // une demande d'essai : `is_test` vaut 1 pour toute demande hors production (capture.ts), donc sur la base d'aperçu où
+  // Anne essaie la barre « Nouveaux » ; la base de production n'en reçoit jamais (revue de code 18.3, constat écarté).
   lot.push(env.DB.prepare(
     `INSERT INTO nouveau (id, source, recu_le, contact_id, evenement_id)
      SELECT ?1, 'site', ?2, ?3, (SELECT id FROM contact_evenement WHERE source = 'site' AND source_id = ?4)

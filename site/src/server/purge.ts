@@ -5,7 +5,9 @@
 // Depuis la story 18.3 (AD-31) : un contact importé dans le carnet (source d'import dans `contact_source`) qu'Anne n'a
 // jamais contacté (`dernier_contact_le` vide), resté hors suivi et sans demande du site, est effacé trois ans après son
 // premier import, même si on l'a classé depuis ; ses autres coordonnées, sources et lignes « Nouveaux » partent avec lui,
-// comme pour tout contact purgé. Une ligne « Nouveaux » de plus de trois ans part aussi.
+// comme pour tout contact purgé. Une ligne « Nouveaux » de plus de trois ans part aussi. Revue de code 18.3 : un signe de
+// relation le garde dans la règle habituelle (trois ans sans activité) : accord e-mail, campagne reçue, demande, ou un
+// geste d'Anne dans son historique (note, appel, e-mail, séance, étape, qualification) ; un classement seul n'en est pas un.
 // « Activité » = last_activity_at : écriture de la demande, désabonnement de la séquence, action dans l'espace de gestion.
 // La durée est la même constante que celle affichée dans la politique de confidentialité (src/pages/confidentialite.astro).
 import { purgerEntonnoir } from './entonnoir';
@@ -29,6 +31,10 @@ export async function purger(env: EnvSite, maintenant = new Date()): Promise<num
     `SELECT c.id FROM contact c
      WHERE c.dernier_contact_le IS NULL AND c.etape IS NULL AND c.last_activity_at >= ?1
        AND NOT EXISTS (SELECT 1 FROM lead l WHERE l.contact_id = c.id)
+       AND c.email_accord_le IS NULL
+       AND NOT EXISTS (SELECT 1 FROM campagne_destinataire d WHERE d.contact_id = c.id AND d.statut = 'envoye')
+       AND NOT EXISTS (SELECT 1 FROM contact_evenement e WHERE e.contact_id = c.id
+         AND e.type IN ('demande', 'note', 'etape', 'qualification', 'appel', 'email', 'seance'))
        AND (SELECT min(s.a) FROM contact_source s WHERE s.contact_id = c.id AND s.import_lot_id IS NOT NULL) < ?1`,
   ).bind(limite).all<{ id: string }>().then((r) => r.results.map((c) => c.id))
     .catch((e) => { journal('purge_carnet_echec', { detail: String(e).slice(0, 200) }); return [] as string[]; });

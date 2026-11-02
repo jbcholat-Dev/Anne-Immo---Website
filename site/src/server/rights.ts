@@ -31,15 +31,18 @@ async function noter(env: EnvSite, type: 'acces' | 'effacement', cle: string, le
 /** Tout ce que le site garde sur une adresse, sous une forme lisible (droit d'accès). */
 export async function exporter(env: EnvSite, email: string, compte: string) {
   const adresse = email.trim().toLowerCase();
-  const { results: leads } = await env.DB.prepare('SELECT * FROM lead WHERE lower(email) = ?1 ORDER BY created_at').bind(adresse).all<Record<string, unknown>>();
-  const demandes = [];
-  for (const l of leads) demandes.push(await demandeLisible(env, l));
   const { results: contacts } = await env.DB.prepare(`SELECT * FROM contact WHERE ${CONTACTS_DE_L_ADRESSE} ORDER BY created_at`)
     .bind(adresse).all<Record<string, unknown>>();
+  // Les demandes de l'adresse, et celles des contacts trouvés faites avec un autre e-mail ou un téléphone (revue de code 18.3).
+  const { results: leads } = await env.DB.prepare(
+    'SELECT * FROM lead WHERE lower(email) = ?1 OR contact_id IN (SELECT value FROM json_each(?2)) ORDER BY created_at',
+  ).bind(adresse, JSON.stringify(contacts.map((c) => c.id))).all<Record<string, unknown>>();
+  const demandes = [];
+  for (const l of leads) demandes.push(await demandeLisible(env, l));
   const fiches = await fichesLisibles(env, contacts);
   const { results: prescripteurs } = await env.DB.prepare('SELECT * FROM prescripteur WHERE email = ?1').bind(adresse).all<Record<string, unknown>>();
   const maintenant = new Date().toISOString();
-  if (leads.length) await env.DB.prepare('UPDATE lead SET last_activity_at = ?2 WHERE lower(email) = ?1').bind(adresse, maintenant).run();
+  if (leads.length) await env.DB.prepare('UPDATE lead SET last_activity_at = ?2 WHERE id IN (SELECT value FROM json_each(?1))').bind(JSON.stringify(leads.map((l) => l.id)), maintenant).run();
   await noter(env, 'acces', adresse, leads.length, compte);
   return {
     responsable: RESPONSABLE, exporte_le: maintenant, email: adresse, demandes,
@@ -115,6 +118,29 @@ async function coordonneesDe(env: EnvSite, ids: string[]): Promise<{ telephones:
 }
 
 /**
+ * Demandes du site restées sans contact (rattachement en échec, en attente du filet de la tâche planifiée) faites avec
+ * l'un de ces téléphones ou e-mails : effacées avec la personne, sinon `rattacherOrphelins` recréerait le contact
+ * effacé (revue de code 18.3). Renvoie leurs identifiants et leurs coordonnées, pour l'opposition.
+ */
+async function orphelinsDe(env: EnvSite, telephones: string[], emails: string[]): Promise<{ ids: string[]; valeurs: string[] }> {
+  if (!telephones.length && !emails.length) return { ids: [], valeurs: [] };
+  const { results } = await env.DB.prepare(
+    `SELECT id, telephone, lower(email) AS email FROM lead WHERE contact_id IS NULL
+       AND (telephone IN (SELECT value FROM json_each(?1)) OR lower(email) IN (SELECT value FROM json_each(?2)))`,
+  ).bind(JSON.stringify(telephones), JSON.stringify(emails.map((e) => e.toLowerCase()))).all<{ id: string; telephone: string | null; email: string | null }>();
+  return { ids: results.map((l) => l.id), valeurs: results.flatMap((l) => [l.telephone, l.email].filter((v): v is string => !!v)) };
+}
+
+/** Effacement des demandes désignées par leurs identifiants, avec leurs envois. */
+const effacementDesDemandes = (env: EnvSite, ids: string[]): D1PreparedStatement[] => ids.length ? [
+  env.DB.prepare('DELETE FROM lead_delivery WHERE lead_id IN (SELECT value FROM json_each(?1))').bind(JSON.stringify(ids)),
+  env.DB.prepare('DELETE FROM lead WHERE id IN (SELECT value FROM json_each(?1))').bind(JSON.stringify(ids)),
+] : [];
+
+/** Résultat d'un effacement : demandes du site effacées, et si l'opposition a pu être notée (LIEN_SECRET posé). */
+export interface Effacement { leads: number; opposition: boolean }
+
+/**
  * Ce que l'effacement de ces contacts supprime, hors demandes du site : historique, file « Nouveaux », autres coordonnées,
  * sources, tâches et liens Leedflow, destinataires de campagne, ce que Leedflow a relevé pour leurs numéros, puis les
  * contacts. Un numéro classé Privé ou Démarchage reste classé (simple numéro, revue de code 18.1, AD-32), détaché du
@@ -133,7 +159,9 @@ function effacementDesContacts(env: EnvSite, ids: string[], telephones: string[]
     env.DB.prepare(`DELETE FROM leedflow_lien WHERE contact_id ${DE}`).bind(I),
     env.DB.prepare(`DELETE FROM campagne_destinataire WHERE contact_id ${DE}`).bind(I),
     env.DB.prepare(`DELETE FROM leedflow_inconnu WHERE telephone ${DE}`).bind(T),
-    env.DB.prepare(`DELETE FROM leedflow_ecarte WHERE categorie NOT IN ('prive', 'demarchage') AND (telephone ${DE} OR contact_id IN (SELECT value FROM json_each(?2)))`).bind(T, I),
+    // Un numéro rangé sur un autre contact garde son classement (revue de code 18.3).
+    env.DB.prepare(`DELETE FROM leedflow_ecarte WHERE categorie NOT IN ('prive', 'demarchage')
+      AND (contact_id IN (SELECT value FROM json_each(?2)) OR (contact_id IS NULL AND telephone ${DE}))`).bind(T, I),
     env.DB.prepare(`UPDATE leedflow_ecarte SET contact_id = NULL WHERE contact_id ${DE}`).bind(I),
     env.DB.prepare(`DELETE FROM contact WHERE id ${DE}`).bind(I),
   ];
@@ -144,43 +172,49 @@ function effacementDesContacts(env: EnvSite, ids: string[], telephones: string[]
  * et leurs envois, et tout ce qu'en garde le carnet (voir effacementDesContacts). Renvoie le nombre de demandes du site
  * effacées, ou null si le contact n'existe pas.
  */
-export async function effacerContact(env: EnvSite, id: string, compte: string): Promise<number | null> {
+export async function effacerContact(env: EnvSite, id: string, compte: string): Promise<Effacement | null> {
   const c = await env.DB.prepare('SELECT email, telephone FROM contact WHERE id = ?1').bind(id).first<{ email: string | null; telephone: string | null }>();
   if (!c) return null;
   const { telephones, emails } = await coordonneesDe(env, [id]);
   const { results: adresses } = await env.DB.prepare('SELECT DISTINCT lower(email) AS e FROM lead WHERE contact_id = ?1').bind(id).all<{ e: string }>();
+  const orphelins = await orphelinsDe(env, telephones, emails);
   const maintenant = new Date().toISOString();
-  const [, leads] = await env.DB.batch([
+  const opposition = await ecrituresOpposition(env, [...telephones, ...emails, ...adresses.map((a) => a.e), ...orphelins.valeurs], maintenant);
+  const [, leads, ...suite] = await env.DB.batch([
     env.DB.prepare('DELETE FROM lead_delivery WHERE lead_id IN (SELECT id FROM lead WHERE contact_id = ?1)').bind(id),
     env.DB.prepare('DELETE FROM lead WHERE contact_id = ?1').bind(id),
+    ...effacementDesDemandes(env, orphelins.ids),
     ...effacementDesContacts(env, [id], telephones),
-    ...(await ecrituresOpposition(env, [...telephones, ...emails, ...adresses.map((a) => a.e)], maintenant)),
+    ...opposition.ecritures,
   ]);
-  const n = leads.meta.changes ?? 0;
+  const n = (leads.meta.changes ?? 0) + (orphelins.ids.length ? suite[1].meta.changes ?? 0 : 0);
   await noter(env, 'effacement', c.email ?? c.telephone ?? id, n, compte);
-  return n;
+  return { leads: n, opposition: opposition.notee };
 }
 
 /** Efface toutes les demandes d'une adresse et leurs envois (droit à l'effacement). Renvoie le nombre de demandes effacées. */
-export async function effacer(env: EnvSite, email: string, compte: string): Promise<number> {
+export async function effacer(env: EnvSite, email: string, compte: string): Promise<Effacement> {
   const adresse = email.trim().toLowerCase();
   // Les contacts concernés sont relevés d'abord : ils sont retrouvés par les demandes, qu'on efface ensuite.
   const { results: contacts } = await env.DB.prepare(`SELECT id FROM contact WHERE ${CONTACTS_DE_L_ADRESSE}`).bind(adresse).all<{ id: string }>();
   const liste = contacts.map((c) => c.id);
   const ids = JSON.stringify(liste);
   const { telephones, emails } = await coordonneesDe(env, liste);
+  // Demandes sans contact de ces téléphones et e-mails ; celles de l'adresse elle-même partent par la requête suivante.
+  const orphelins = await orphelinsDe(env, telephones, emails);
   const maintenant = new Date().toISOString();
-  const DE_CES_CONTACTS = 'IN (SELECT value FROM json_each(?2))';
+  const opposition = await ecrituresOpposition(env, [adresse, ...telephones, ...emails, ...orphelins.valeurs], maintenant);
+  const touchees = `lower(email) = ?1 OR contact_id IN (SELECT value FROM json_each(?2)) OR id IN (SELECT value FROM json_each(?3))`;
   const [, leads] = await env.DB.batch([
-    env.DB.prepare(`DELETE FROM lead_delivery WHERE lead_id IN (SELECT id FROM lead WHERE lower(email) = ?1 OR contact_id ${DE_CES_CONTACTS})`).bind(adresse, ids),
-    env.DB.prepare(`DELETE FROM lead WHERE lower(email) = ?1 OR contact_id ${DE_CES_CONTACTS}`).bind(adresse, ids),
+    env.DB.prepare(`DELETE FROM lead_delivery WHERE lead_id IN (SELECT id FROM lead WHERE ${touchees})`).bind(adresse, ids, JSON.stringify(orphelins.ids)),
+    env.DB.prepare(`DELETE FROM lead WHERE ${touchees}`).bind(adresse, ids, JSON.stringify(orphelins.ids)),
     ...effacementDesContacts(env, liste, telephones),
     env.DB.prepare('DELETE FROM prescripteur WHERE email = ?1').bind(adresse),
-    ...(await ecrituresOpposition(env, [adresse, ...telephones, ...emails], maintenant)),
+    ...opposition.ecritures,
   ]);
   const n = leads.meta.changes ?? 0;
   await noter(env, 'effacement', adresse, n, compte);
-  return n;
+  return { leads: n, opposition: opposition.notee };
 }
 
 /** Les derniers droits exercés (affichés dans l'espace de gestion). */

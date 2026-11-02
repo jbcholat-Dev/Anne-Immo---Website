@@ -165,8 +165,31 @@ try {
   sql(`INSERT INTO contact_source (contact_id, source, import_lot_id, a) VALUES ('${IMP(1)}', 'telephone', '${LOT}', '${ilYa(3, -2)}'),
        ('${IMP(2)}', 'telephone', '${LOT}', '${ilYa(3, -2)}'), ('${IMP(3)}', 'telephone', '${LOT}', '${ilYa(2, 0)}'), ('${IMP(4)}', 'telephone', '${LOT}', '${ilYa(3, -2)}')`);
   sql(`INSERT INTO contact_coordonnee (contact_id, type, valeur, ajoute_le) VALUES ('${IMP(1)}', 'telephone', '+3369${String(ESSAI).replace(/\D/g, '').slice(-7).padStart(7, '0')}', '${ilYa(3, -2)}')`);
+  // Revue de code 18.3 : un signe de relation garde un importé jamais contacté (accord e-mail, campagne reçue, note, appel,
+  // séance, demande du site) ; un classement seul ne le garde pas.
+  const maint = new Date().toISOString(), vieil = ilYa(3, -2);
+  const SIGNES = { 5: 'accord', 6: 'campagne', 7: 'note', 8: 'appel', 9: 'seance', 10: 'demande', 11: 'classement' };
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, nom, email, categorie_id, email_accord_le, email_accord_source) VALUES
+       ${Object.entries(SIGNES).map(([n, quoi]) => `('${IMP(n)}', '${vieil}', '${maint}', 'Importé ${quoi}', 'imp${n}+${ESSAI}@example.com', 'proches', ${quoi === 'accord' ? `'${vieil}', 'import'` : 'NULL, NULL'})`).join(', ')}`);
+  sql(`INSERT INTO contact_source (contact_id, source, import_lot_id, a) VALUES ${Object.keys(SIGNES).map((n) => `('${IMP(n)}', 'telephone', '${LOT}', '${vieil}')`).join(', ')}`);
+  sql(`INSERT INTO campagne (id, created_at, maj_le, nom, statut) VALUES ('CAMP${ESSAI}', '${vieil}', '${vieil}', 'Essai purge', 'envoyee')`);
+  sql(`INSERT INTO campagne_destinataire (campagne_id, contact_id, email, statut, prochain_essai, envoye_le) VALUES ('CAMP${ESSAI}', '${IMP(6)}', 'imp6+${ESSAI}@example.com', 'envoye', '${vieil}', '${vieil}')`);
+  sql(`INSERT INTO contact_evenement (contact_id, a, type, source, texte) VALUES ('${IMP(7)}', '${vieil}', 'note', 'anne', 'Note'),
+       ('${IMP(8)}', '${vieil}', 'appel', 'leedflow', 'Appel'), ('${IMP(9)}', '${vieil}', 'seance', 'anne', 'Séance'), ('${IMP(11)}', '${vieil}', 'classement', 'anne', 'Classé')`);
+  sql(`INSERT INTO lead (id, submission_id, created_at, last_activity_at, lang, source, email, privacy_accepted_at, is_test, contact_id) VALUES
+       ('LIMP${ESSAI}', 'limp-${ESSAI}', '${maint}', '${maint}', 'fr', 'guide', 'imp10+${ESSAI}@example.com', '${maint}', 1, '${IMP(10)}')`);
   await appeler(`${U}/cdn-cgi/handler/scheduled`);
   await pause(1000);
+  const gardes = sql(`SELECT id FROM contact WHERE id IN (${Object.keys(SIGNES).map((n) => `'${IMP(n)}'`).join(', ')})`).map((c) => c.id);
+  for (const [n, quoi] of Object.entries(SIGNES)) {
+    const attendu = quoi !== 'classement';
+    constat(gardes.includes(IMP(n)) === attendu, `revue 18.3 purge : importé jamais contacté avec ${quoi === 'classement' ? 'un classement seul : effacé' : `signe de relation (${quoi}) : gardé`}`);
+  }
+  sql(`DELETE FROM lead WHERE id = 'LIMP${ESSAI}'`);
+  sql(`DELETE FROM campagne WHERE id = 'CAMP${ESSAI}'`);
+  sql(`DELETE FROM contact_evenement WHERE contact_id IN (${Object.keys(SIGNES).map((n) => `'${IMP(n)}'`).join(', ')})`);
+  sql(`DELETE FROM contact_source WHERE contact_id IN (${Object.keys(SIGNES).map((n) => `'${IMP(n)}'`).join(', ')})`);
+  sql(`DELETE FROM contact WHERE id IN (${Object.keys(SIGNES).map((n) => `'${IMP(n)}'`).join(', ')})`);
   const restants = sql(`SELECT id FROM contact WHERE id IN ('${IMP(1)}', '${IMP(2)}', '${IMP(3)}', '${IMP(4)}')`).map((c) => c.id).sort();
   constat(JSON.stringify(restants) === JSON.stringify([IMP(2), IMP(3), IMP(4)].sort())
     && sql(`SELECT count(*) AS n FROM contact_source WHERE contact_id = '${IMP(1)}'`)[0].n === 0 && sql(`SELECT count(*) AS n FROM contact_coordonnee WHERE contact_id = '${IMP(1)}'`)[0].n === 0,
