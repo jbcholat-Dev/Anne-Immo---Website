@@ -1,7 +1,7 @@
 ---
 story: 8.21
 epic: 8 — Structure et visuel
-statut: review
+statut: done
 date: 2026-10-15
 ---
 
@@ -39,7 +39,7 @@ La branche datait du 2026-10-15 ; `origin/main` y a été fusionné (commit de f
 
 ## Ce qui reste
 - PDF du guide : l'erreur n° 2 déborde sur une page presque vide (items 4 à 8 des diagnostics). Recommandation : demander à Anne de raccourcir son paragraphe, ou retirer le paragraphe « Bon à savoir » de cette erreur, plutôt que de réduire la mise en page de tout le guide. Texte d'Anne non modifié dans cette fusion.
-- JB : valider la demande de fusion (elle change le site) et confirmer la carte de décision.
+- Fusion : accord de JB le 2026-11-02 à 16 h 24, PR n° 155 fusionnée (commit fed381e) ; tickets n° 153 et 154 fermés.
 - Anne : remplir ses premiers partenaires et articles dans l'espace d'édition.
 - À voir avec Anne : le rapport PDF du diagnostic (`contenu-anne/guide/rapport-diagnostic.md`, q02) et l'e-mail J+9 (`sequence-emails/etape-4`) parlent encore du seul DPE de juillet 2021 ; à aligner si elle le souhaite (fil Back-end pour le rapport).
 
