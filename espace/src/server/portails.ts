@@ -6,7 +6,10 @@
 // reçu par Cloudflare Email Routing (proposé : `demandes@entrant.annevialtissot.fr`), qui les remet au gestionnaire
 // `email` du Worker de l'espace (worker.ts), puis ici.
 // - Expéditeur accepté : nettymail.com, leboncoin.fr, seloger.com (et leurs sous-domaines), ou le message de confirmation
-//   du transfert de Gmail. Tout autre expéditeur est refusé (rejet SMTP), sans rien garder.
+//   du transfert de Gmail. Tout autre expéditeur est refusé (rejet SMTP), sans rien garder. L'en-tête From s'écrit
+//   librement : l'expéditeur d'enveloppe doit en plus être la Gmail d'Anne (réglage PORTAILS_EXPEDITEUR_AUTORISE,
+//   `enveloppeAutorisee`) ; vide, tout est refusé. Non vérifié : la signature DKIM (en-tête Authentication-Results), dont la
+//   présence et la forme après le transfert de Gmail et Email Routing ne sont pas connues (mineur restant, revue de code 18.12).
 // - Un même message reçu deux fois ne fait rien de plus (identifiant Message-ID, ou empreinte du message s'il n'en a pas).
 // - Lisible (portail reconnu, téléphone ou e-mail valable) : le contact est créé ou complété par `pipeline`
 //   (catégorie « Demandes reçues », projet acheteur, référence du bien, source `portail`), avec la ligne `nouveau`.
@@ -113,6 +116,23 @@ export function lireDemande(de: string, sujet: string, texte: string): DemandePo
 
 const accepte = (de: string) => de === GMAIL_CONFIRMATION || DOMAINES.some((d) => de.endsWith(`@${d}`) || de.endsWith(`.${d}`));
 
+/**
+ * Revue de code 18.12 : l'en-tête From s'écrit librement. Seul est lu un e-mail transféré par la Gmail d'Anne : son
+ * expéditeur d'enveloppe (SMTP) est l'adresse du réglage PORTAILS_EXPEDITEUR_AUTORISE, ou sa forme de transfert automatique
+ * de Gmail (« avialtissot+caf_=demandes=…@gmail.com »). Exception : le message de confirmation du transfert, que Google envoie
+ * lui-même (enveloppe en @google.com et From forwarding-noreply@google.com) ; il n'est jamais que « à lire à la main ».
+ * Réglage vide ou absent : tout est refusé.
+ */
+export function enveloppeAutorisee(reglage: string | undefined, enveloppe: string | undefined, de: string): boolean {
+  const attendue = (reglage ?? '').trim().toLowerCase();
+  const env = (enveloppe ?? '').trim().toLowerCase();
+  if (!attendue || !env) return false;
+  if (de === GMAIL_CONFIRMATION) return env === GMAIL_CONFIRMATION || env.endsWith('@google.com');
+  if (env === attendue) return true;
+  const [local, domaine] = attendue.split('@');
+  return !!local && !!domaine && env.endsWith(`@${domaine}`) && env.startsWith(`${local}+`);
+}
+
 async function empreinte(brut: string): Promise<string> {
   const h = new Uint8Array(await crypto.subtle.digest('SHA-256', Uint8Array.from(brut, (c) => c.charCodeAt(0) & 0xff)));
   return `sha256:${Array.from(h.slice(0, 16), (o) => o.toString(16).padStart(2, '0')).join('')}`;
@@ -124,11 +144,16 @@ export type Issue = 'refuse' | 'deja' | 'lu' | 'illisible' | 'opposition';
  * Reçoit un e-mail (texte d'un caractère par octet). `taille` : taille annoncée par Cloudflare ; au-delà de TAILLE_MAX,
  * le corps n'est pas lu. Renvoie ce qui a été fait ; « refuse » demande au gestionnaire de rejeter le message.
  */
-export async function recevoirCourriel(envE: EnvEspace, brut: string, taille: number): Promise<Issue> {
+export async function recevoirCourriel(envE: EnvEspace, brut: string, taille: number, enveloppe?: string): Promise<Issue> {
   const env = envE as unknown as EnvSite;
   const gros = taille > TAILLE_MAX || brut.length > TAILLE_MAX;
   const c = lireCourriel(gros ? brut.slice(0, 64_000) : brut);
   if (!accepte(c.de)) { journal('portail_refuse', { domaine: c.de.split('@')[1] ?? '' }); return 'refuse'; }
+  // Rien n'est gardé ni créé pour un e-mail refusé (ni ligne, ni carte, ni contact).
+  if (!enveloppeAutorisee(envE.PORTAILS_EXPEDITEUR_AUTORISE, enveloppe, c.de)) {
+    journal('portail_refuse', { motif: envE.PORTAILS_EXPEDITEUR_AUTORISE?.trim() ? 'enveloppe' : 'reglage_absent', domaine: (enveloppe ?? '').split('@')[1] ?? '' });
+    return 'refuse';
+  }
   const messageId = c.messageId ?? await empreinte(brut);
   if (await env.DB.prepare('SELECT 1 AS n FROM portail_courriel WHERE message_id = ?1').bind(messageId).first()) return 'deja';
   const recu = new Date().toISOString();

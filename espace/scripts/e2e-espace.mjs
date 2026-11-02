@@ -79,6 +79,8 @@
 // Story 18.12 : demandes des portails par e-mail, injectées dans le gestionnaire `email` par /cdn-cgi/handler/email
 // (Leboncoin par Modelo, SeLoger en HTML qui complète un contact du carnet, doublon, illisible, confirmation de Gmail,
 // opposition, expéditeur refusé, e-mail trop gros ; cartes et gestes, ménage du texte ; page à 1440 et 1280 px).
+// Revue de code 18.9, 18.11, 18.12 (2026-11-02) : suite QUOTED-PRINTABLE d'une note vCard (serveur et script), CSV sans
+// ligne de titres, accord e-mail lors d'une fusion CONTACTS + EDB ; From falsifié et expéditeur d'enveloppe non autorisé.
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
 // Lancer depuis espace/ : `node scripts/e2e-espace.mjs`.
@@ -134,7 +136,9 @@ fs.writeFileSync(reglages, [`ACCESS_EQUIPE=${equipe}`, 'ACCESS_AUD=essai-aud', '
   `LEEDFLOW_API_KEY=${LF.cle}`, `LEEDFLOW_URL=http://localhost:${PORT_LF}`, 'ACCESS_CLAUDE_ID=essai-claude.access',
   `GITHUB_TOKEN=${GH.cle}`, `GITHUB_API=http://localhost:${PORT_LF}/github`,
   // Campagnes (story 13.27) : l'imitation de Resend du site, 2 e-mails par passage, pas de plafond du jour (la base d'essai garde les envois des essais précédents).
-  'RESEND_API_KEY=essai', 'BOITE_TEST=boite-test@example.com', 'URL_SERVICES_ESSAI=http://localhost:8790', 'CAMPAGNE_PAR_PASSAGE=2', 'CAMPAGNE_QUOTA_JOUR=100000'].join('\n'));
+  'RESEND_API_KEY=essai', 'BOITE_TEST=boite-test@example.com', 'URL_SERVICES_ESSAI=http://localhost:8790', 'CAMPAGNE_PAR_PASSAGE=2', 'CAMPAGNE_QUOTA_JOUR=100000',
+  // Portails par e-mail (story 18.12, revue de code) : la Gmail d'Anne fictive qui fait suivre les demandes.
+  'PORTAILS_EXPEDITEUR_AUTORISE=anne.essai@example.com'].join('\n'));
 const journal = path.join(os.tmpdir(), `e2e-${ESSAI}-espace.log`);
 const sansProxy = Object.fromEntries(Object.entries(process.env).filter(([k]) => !/^(https?|all|no)_proxy$/i.test(k)));
 const espace = spawn('npx', ['wrangler', 'dev', '--port', String(PORT), '--env-file', reglages, '--test-scheduled', '--persist-to', path.join(SITE, '.wrangler', 'state')],
@@ -3100,8 +3104,12 @@ try {
     const qp = (t) => Array.from(Buffer.from(t, 'utf8'), (o) => (o > 126 || o === 61 ? `=${o.toString(16).toUpperCase().padStart(2, '0')}` : String.fromCharCode(o))).join('');
     const b64 = (t) => Buffer.from(t, 'utf8').toString('base64').replace(/.{76}/g, '$&\r\n');
     const sujetEnc = (t) => `=?UTF-8?B?${Buffer.from(t, 'utf8').toString('base64')}?=`;
-    const recevoir = async (de, brut) => {
-      const r = await appeler(`${E}/cdn-cgi/handler/email?from=${encodeURIComponent(de)}&to=${encodeURIComponent(A)}`, { method: 'POST', body: brut });
+    // L'expéditeur d'enveloppe : celui du transfert automatique de la Gmail d'Anne (réglage PORTAILS_EXPEDITEUR_AUTORISE),
+    // sauf pour la confirmation de Gmail, envoyée par Google lui-même, ou quand l'essai en donne un autre.
+    const TRANSFERT = `anne.essai+caf_=demandes=entrant.annevialtissot.fr@example.com`;
+    const recevoir = async (de, brut, enveloppe) => {
+      const env = enveloppe ?? (de === 'forwarding-noreply@google.com' ? de : TRANSFERT);
+      const r = await appeler(`${E}/cdn-cgi/handler/email?from=${encodeURIComponent(env)}&to=${encodeURIComponent(A)}`, { method: 'POST', body: brut });
       // wrangler répond 200 « Worker successfully processed email », ou 400 avec la raison du rejet.
       const t = await r.text();
       return { status: r.status, outcome: r.ok ? 'ok' : 'rejete', raison: t };
@@ -3222,6 +3230,27 @@ try {
     const MID_X = `x-${NUM}`;
     r = await recevoir('inconnu@exemple.org', `${enTete('Inconnu <inconnu@exemple.org>', 'Publicité', MID_X, 'text/plain; charset=utf-8')}\r\n\r\nPrénom : Pub\r\nTéléphone : 06 00 00 00 00\r\n`);
     constat(r.outcome !== 'ok' && /portails/.test(r.raison ?? '') && !courrielDe(MID_X), `18.12 : un expéditeur qui n'est pas un portail est rejeté (${r.outcome}), rien n'est gardé`);
+    // Revue de code 18.12 : From falsifié (fausse adresse de portail dans le nom affiché), enveloppe qui n'est pas la Gmail
+    // d'Anne, e-mail envoyé directement sans transfert : rejetés, rien de gardé, aucun contact.
+    const TEL_FAUX = `+33774${NUM}`;
+    const corpsFaux = `Prénom : Faux\r\nNom : Portail${NUM}\r\nTéléphone : ${lisible(TEL_FAUX)}\r\nRéférence du bien : FAUX-${NUM}\r\n`;
+    const faux = [
+      ['From dont le nom affiché porte une adresse de portail', `faux1-${NUM}`, '"Netty <inbound@nettymail.com>" <pirate@exemple.org>', undefined],
+      ['enveloppe qui n\'est pas la Gmail d\'Anne', `faux2-${NUM}`, '"Netty - Contacts passerelles" <inbound@nettymail.com>', 'pirate@exemple.org'],
+      ['enveloppe d\'un autre compte Gmail à « + »', `faux3-${NUM}`, '"Netty - Contacts passerelles" <inbound@nettymail.com>', 'anne.essaix+caf_=demandes@example.com'],
+      ['e-mail du portail envoyé directement, sans transfert', `faux4-${NUM}`, '"Netty - Contacts passerelles" <inbound@nettymail.com>', 'inbound@nettymail.com'],
+      ['fausse confirmation de Gmail envoyée hors de Google', `faux5-${NUM}`, 'Gmail Team <forwarding-noreply@google.com>', 'pirate@exemple.org'],
+    ];
+    for (const [quoi, mid, de, env] of faux) {
+      r = await recevoir('inbound@nettymail.com', `${enTete(de, 'Nouveau contact Leboncoin', mid, 'text/plain; charset=utf-8')}\r\n\r\n${corpsFaux}`, env ?? TRANSFERT);
+      constat(r.outcome !== 'ok' && /portails/.test(r.raison ?? '') && !courrielDe(mid) && !sql(`SELECT 1 FROM contact WHERE telephone = '${TEL_FAUX}' OR nom = 'Portail${NUM}' AND prenom = 'Faux'`).length,
+        `revue 18.12 : ${quoi} : rejeté (${r.outcome}), rien de gardé, aucun contact`);
+    }
+    // L'adresse exacte du réglage (sans « + ») est acceptée.
+    const MID_EXACT = `exact-${NUM}`, TEL_EXACT = `+33775${NUM}`;
+    r = await recevoir('inbound@nettymail.com', `${enTete('"Netty - Contacts passerelles" <inbound@nettymail.com>', 'Nouveau contact Leboncoin', MID_EXACT, 'text/plain; charset=utf-8')}\r\n\r\nPrénom : Exacte\r\nNom : Portail${NUM}\r\nTéléphone : ${lisible(TEL_EXACT)}\r\n`, 'Anne.Essai@example.com');
+    constat(r.outcome === 'ok' && courrielDe(MID_EXACT)?.etat === 'lu' && sql(`SELECT count(*) AS n FROM contact WHERE telephone = '${TEL_EXACT}'`)[0].n === 1,
+      'revue 18.12 : enveloppe égale au réglage (casse comprise) : la demande est lue');
     // Un e-mail trop gros n'est pas lu, mais gardé et signalé.
     const MID_G = `gros-${NUM}`;
     r = await recevoir('inbound@nettymail.com', `${enTete('"Netty" <inbound@nettymail.com>', 'Pièce jointe', MID_G, 'text/plain; charset=utf-8')}\r\n\r\nTéléphone : ${lisible(TEL_LBC)}\r\n${'x'.repeat(1_100_000)}\r\n`);

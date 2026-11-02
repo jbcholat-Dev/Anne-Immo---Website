@@ -11,7 +11,8 @@
 // la barre « Nouveaux » (story 18.11), le ménage des e-mails des portails (story 18.12).
 // E-mails entrants (story 18.12, AD-20 entrée 3) : Cloudflare Email Routing remet ici chaque e-mail envoyé à l'adresse du
 // sous-domaine de réception (RUNBOOK § 4 sexies, « Demandes des portails par e-mail ») ; src/server/portails.ts le lit.
-// Un expéditeur qui n'est pas un portail est rejeté ; un e-mail illisible est gardé pour être lu à la main, jamais perdu.
+// Un expéditeur qui n'est pas un portail, ou un e-mail qui n'a pas été transféré par la Gmail d'Anne (enveloppe, réglage
+// PORTAILS_EXPEDITEUR_AUTORISE), est rejeté ; un e-mail illisible est gardé pour être lu à la main, jamais perdu.
 // En local, `wrangler dev` les accepte à l'adresse /cdn-cgi/handler/email (scripts/e2e-espace.mjs).
 // Les e-mails relancés depuis l'espace partent toujours par celle du site (toutes les 15 minutes).
 import { handle } from '@astrojs/cloudflare/handler';
@@ -87,7 +88,8 @@ export default {
     const brut = await lireBrut(message.raw);
     // Une erreur ici (base injoignable) remonte à Cloudflare, qui ne remet pas le message : rien n'est perdu pour autant,
     // le filtre Gmail ne fait suivre qu'une copie et l'e-mail reste dans la boîte d'Anne.
-    const issue = await recevoirCourriel(env, brut, message.rawSize);
+    // `message.from` : l'expéditeur d'enveloppe (SMTP), contrôlé en plus de l'en-tête From (revue de code 18.12).
+    const issue = await recevoirCourriel(env, brut, message.rawSize, message.from);
     if (issue === 'refuse') message.setReject('Adresse réservée aux demandes des portails immobiliers.');
   },
 } satisfies ExportedHandler<EnvEspace>;

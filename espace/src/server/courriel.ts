@@ -6,7 +6,7 @@
 // jointes. Fonctions pures, essayées par scripts/e2e-espace.mjs sur des e-mails fictifs.
 
 export interface Courriel {
-  /** Adresse de l'en-tête From, en minuscules. */
+  /** Adresse de l'en-tête From (le dernier « <adresse> »), en minuscules. */
   de: string;
   sujet: string;
   messageId: string | null;
@@ -136,7 +136,10 @@ const entete = (v: string | undefined) => motsEncodes(decoder(octetsDe(v ?? ''))
 export function lireCourriel(brut: string): Courriel {
   const { entetes } = separer(brut);
   const from = entete(entetes.get('from'));
-  const adresse = (/<([^>]+)>/.exec(from)?.[1] ?? from).trim().toLowerCase();
+  // Revue de code 18.12 : le DERNIER « <adresse> » est l'adresse réelle ; un nom affiché peut en contenir une fausse
+  // (« "x <inbound@nettymail.com>" <autre@exemple.org> »).
+  const chevrons = [...from.matchAll(/<([^<>]*)>/g)];
+  const adresse = (chevrons.length ? chevrons[chevrons.length - 1][1] : from).trim().toLowerCase();
   const { texte, html } = parties(brut);
   const corps = texte.find((t) => t.trim()) ?? (html.length ? htmlEnTexte(html.join('\n')) : '');
   return {

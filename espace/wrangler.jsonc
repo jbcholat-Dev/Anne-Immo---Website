@@ -38,6 +38,10 @@
     // Resend (RUNBOOK § 4 sexies) ; vide, rien ne part en production et l'aperçu garde l'expéditeur du site.
     "EXPEDITEUR_CAMPAGNES": "",
     // Les réponses aux campagnes vont dans la Gmail d'Anne, comme pour le site.
-    "BOITE_ANNE": "avialtissot@gmail.com"
+    "BOITE_ANNE": "avialtissot@gmail.com",
+    // Demandes des portails par e-mail (story 18.12, revue de code) : la Gmail d'Anne qui fait suivre les demandes. Seul un
+    // e-mail dont l'expéditeur d'enveloppe est cette adresse (ou sa forme de transfert Gmail « avialtissot+…@gmail.com »)
+    // est lu ; tout autre est refusé. Vide : tout e-mail est refusé. Voir RUNBOOK.md § 4 sexies.
+    "PORTAILS_EXPEDITEUR_AUTORISE": "avialtissot@gmail.com"
   }
 }
