@@ -31,7 +31,7 @@ export const PRENOM_EXEMPLE = 'Claire';
 
 export type EnvoiGroupe = 'non' | 'accord_ou_client';
 export const ENVOIS_GROUPES: Record<EnvoiGroupe, string> = {
-  non: 'Non permis',
+  non: 'Non permis : aucun contact de cette catégorie ne reçoit les campagnes, même avec son accord',
   accord_ou_client: 'Permis, seulement aux contacts avec accord ou anciens clients',
 };
 

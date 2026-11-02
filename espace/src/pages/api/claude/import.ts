@@ -20,12 +20,35 @@ const MAX_CORPS = 4_000_000;
 const json = (corps: unknown, status = 200) => new Response(JSON.stringify(corps), { status, headers: { 'Content-Type': 'application/json; charset=utf-8' } });
 const erreur = (code: string, message: string, status: number) => json({ ok: false, error: { code, message } }, status);
 
+/**
+ * Le corps, ou null au-delà de MAX_CORPS. Lu par morceaux sans rien garder au-delà de la limite, et vidé jusqu'au bout
+ * (20 Mo au plus) avant de répondre 413 : le serveur local de Cloudflare répond 500 à une réponse envoyée avant la fin
+ * d'un gros corps.
+ */
+async function lireCorps(request: Request): Promise<string | null> {
+  if (!request.body) return '';
+  const lecteur = request.body.getReader();
+  const morceaux: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await lecteur.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > 20_000_000) { await lecteur.cancel(); break; }
+    if (total <= MAX_CORPS) morceaux.push(value);
+  }
+  if (total > MAX_CORPS) return null;
+  const tout = new Uint8Array(total);
+  let i = 0;
+  for (const m of morceaux) { tout.set(m, i); i += m.byteLength; }
+  return new TextDecoder().decode(tout);
+}
+
 export const POST: APIRoute = async ({ request }) => {
   if (request.headers.get(ENTETE_COMPTE) !== COMPTE_CLAUDE) return erreur('acces', 'Accès refusé', 403);
   if (!(request.headers.get('content-type') ?? '').toLowerCase().startsWith('application/json')) return erreur('format', 'Corps JSON attendu.', 415);
-  if (Number(request.headers.get('content-length') ?? 0) > MAX_CORPS) return erreur('trop_grand', 'Corps trop grand : découpez le fichier.', 413);
-  const brut = await request.text();
-  if (brut.length > MAX_CORPS) return erreur('trop_grand', 'Corps trop grand : découpez le fichier.', 413);
+  const brut = await lireCorps(request);
+  if (brut === null) return erreur('trop_grand', 'Corps trop grand : découpez le fichier.', 413);
   let d: Record<string, unknown>;
   try { d = JSON.parse(brut); } catch { return erreur('format', 'Corps JSON attendu.', 400); }
   if (!d || typeof d !== 'object' || Array.isArray(d)) return erreur('format', 'Corps JSON attendu.', 400);

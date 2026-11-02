@@ -21,7 +21,7 @@ export interface EtatEmail {
   /** Date de l'accord (ou du refus pour un désinscrit), ISO UTC. */
   le: string | null;
   source: SourceAccord | null;
-  /** Un accord donné sur le site pour une adresse que la fiche a remplacée depuis : à redemander (revue de code 18.7). */
+  /** Un accord donné sur le site pour une adresse que la fiche a remplacée depuis (revue de code 18.7), ou pour une autre adresse que celle du contact (revue 18.8) : à redemander. */
   a_reconfirmer?: boolean;
 }
 
@@ -33,6 +33,8 @@ export interface DonneesAccord {
   email_desinscrit_le: string | null;
   /** Dernière case cochée sur le site, sur l'une des demandes du contact. */
   site_accord_le: string | null;
+  /** Dernière case cochée sur une demande du contact faite avec une autre adresse (revue de code 18.8) : pas un accord, « à reconfirmer ». */
+  site_accord_autre_le?: string | null;
   /** Dernier désabonnement de la séquence, sur l'une des demandes du contact. */
   site_desinscrit_le: string | null;
   /** Dernier changement du premier e-mail par la fiche (revue de code 18.7), ISO UTC. */
@@ -51,7 +53,7 @@ export function etatEmail(d: DonneesAccord): EtatEmail {
   const accord = plusRecent(site, d.email_accord_le);
   if (accord) return { statut: 'accord', le: accord, source: accord === site ? 'site' : d.email_accord_source };
   if (d.etape === 'vendu' || d.etape === 'acte_signe') return { statut: 'client', le: null, source: 'client' };
-  return { statut: 'sans_accord', le: null, source: null, ...(d.site_accord_le ? { a_reconfirmer: true } : {}) };
+  return { statut: 'sans_accord', le: null, source: null, ...(d.site_accord_le || d.site_accord_autre_le ? { a_reconfirmer: true } : {}) };
 }
 
 export const peutRecevoirCampagne = (e: EtatEmail) => e.statut === 'accord' || e.statut === 'client';
@@ -63,9 +65,14 @@ export const RAISONS_ECART: Record<Exclude<StatutEmail, 'accord' | 'client'>, st
   desinscrit: 'Désinscrit',
 };
 
-/** Les colonnes de `DonneesAccord`, à joindre à une lecture de `contact` (alias `c`). */
+/**
+ * Les colonnes de `DonneesAccord`, à joindre à une lecture de `contact` (alias `c`). Revue de code 18.8 : la case cochée
+ * sur le site ne compte que pour une demande faite avec l'adresse du contact (une demande rattachée par le téléphone, avec
+ * une autre adresse, ne donne pas l'accord pour celle du contact) ; un refus, lui, vaut quelle que soit l'adresse.
+ */
 export const SQL_ACCORD = `c.email, c.etape, c.email_accord_le, c.email_accord_source, c.email_desinscrit_le,
-  (SELECT max(l.newsletter_opt_in_at) FROM lead l WHERE l.contact_id = c.id) AS site_accord_le,
+  (SELECT max(l.newsletter_opt_in_at) FROM lead l WHERE l.contact_id = c.id AND lower(l.email) = lower(c.email)) AS site_accord_le,
+  (SELECT max(l.newsletter_opt_in_at) FROM lead l WHERE l.contact_id = c.id AND lower(l.email) IS NOT lower(c.email)) AS site_accord_autre_le,
   (SELECT max(l.newsletter_unsubscribed_at) FROM lead l WHERE l.contact_id = c.id) AS site_desinscrit_le,
   (SELECT max(e.a) FROM contact_evenement e WHERE e.contact_id = c.id AND e.type = 'classement' AND json_type(e.donnees, '$.email_change') IS NOT NULL) AS email_change_le`;
 

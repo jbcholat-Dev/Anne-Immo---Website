@@ -106,6 +106,7 @@ export const POST: APIRoute = async ({ request }) => {
     const c = lireContactNote(d.contact);
     if (typeof c === 'string') return erreur(400, 'contact', c);
     const r = await noterContact(env, id, c, compte);
+    if (r === 'conflit') return erreur(409, 'modifie', 'Ce contact vient d\'être modifié ailleurs : la fiche est rechargée, recommencez.');
     return r ? etat(id, { remplace: r.remplace }) : erreur(404, 'contact', 'Contact inconnu');
   }
   // Accord e-mail : écrit par `accord`, qui refuse ce que la loi ou la personne interdit (désinscrit, accord du site).

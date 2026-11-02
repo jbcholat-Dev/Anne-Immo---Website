@@ -8,6 +8,7 @@ import { ACTION_QUALIFIER, CANAUX_ORIGINE, LIBELLES_ETAPES, trouver, type Canal,
 import { e164, emailValide } from '@site/server/schema';
 import { filtreRecherche } from '@site/server/recherche';
 import { ulid } from '@site/server/ulid';
+import { corrigerFiche, enOpposition } from './carnet';
 
 export const aujourdhui = () => new Intl.DateTimeFormat('fr-CA', { timeZone: 'Europe/Paris' }).format(new Date());
 const texte = (v: unknown, max = 200) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
@@ -126,8 +127,12 @@ export function libelleOrigine(o: { canal: Canal | null; origine_detail: string 
   return o.origine_detail ? `${base} : ${o.origine_detail}` : base;
 }
 
-/** Saisie à la main : crée le contact, ou complète celui qui a déjà ce téléphone ou cet e-mail. */
-export async function saisirContact(env: EnvSite, p: Personne, o: Origine, note: string, par: string): Promise<{ id: string; existant: boolean }> {
+/** Saisie à la main : crée le contact, ou complète celui qui a déjà ce téléphone ou cet e-mail (un e-mail ou un téléphone
+ * n'est ajouté que s'il manquait : jamais remplacé, donc aucun accord ne change d'adresse). */
+export async function saisirContact(env: EnvSite, p: Personne, o: Origine, note: string, par: string): Promise<{ id: string; existant: boolean } | { opposition: 'oui' | 'sans_secret' }> {
+  // Revue de code 18.8 : une personne qui a demandé l'effacement n'est ni recréée ni complétée par la saisie (AD-31).
+  const opp = await enOpposition(env, [p.telephone, p.email]);
+  if (opp !== 'non') return { opposition: opp };
   const maintenant = new Date().toISOString();
   const connu = await contactConnu(env, p.telephone, p.email);
   if (connu) {
@@ -779,41 +784,54 @@ const LIBELLES_CHAMPS: Record<string, string> = {
   canal: 'origine', origine_detail: 'précision d’origine', passage_id: 'passage de boîtage', prescripteur_id: 'prescripteur',
 };
 
+export type ResultatCoordonnees =
+  | { ok: true; changes: string[] }
+  | { ok: false; conflit: string }
+  | { ok: false; opposition: true }
+  | { ok: false; indisponible: true }
+  | { ok: false; refus: string };
+
 /**
- * Corrige les coordonnées et l'origine d'un contact. Un téléphone ou un e-mail déjà porté par un autre contact est
- * refusé (jamais de doublon, jamais de fusion silencieuse) : renvoie alors l'identifiant de cet autre contact.
- * L'historique dit quels champs ont changé, sans les anciennes valeurs.
+ * Corrige les coordonnées et l'origine d'un contact depuis la fiche du suivi. Revue de code 18.8 : prénom, nom, ville,
+ * téléphone et e-mail passent par `carnet.corrigerFiche`, seul écrivain de ces colonnes (AD-22) : même garde « modifié
+ * entre-temps », même refus d'une coordonnée portée par un autre contact (renvoie cet autre contact, jamais de fusion
+ * silencieuse) ou d'une personne en opposition, et un accord e-mail qui ne suit pas une adresse changée. Le téléphone et
+ * l'e-mail saisis remplacent le premier de la liste ; les autres coordonnées sont gardées. Puis les colonnes du suivi
+ * (parcours, origine) sont écrites ici, avec leur note dans l'historique. null : contact inconnu.
  */
-export async function modifierCoordonnees(env: EnvSite, id: string, n: Coordonnees, par: string): Promise<{ ok: true; changes: string[] } | { ok: false; conflit: string } | null> {
-  const c = await env.DB.prepare('SELECT * FROM contact WHERE id = ?1').bind(id).first<Contact>();
+export async function modifierCoordonnees(env: EnvSite, id: string, n: Coordonnees, par: string): Promise<ResultatCoordonnees | null> {
+  const [lu, sec] = await env.DB.batch([
+    env.DB.prepare('SELECT * FROM contact WHERE id = ?1').bind(id),
+    env.DB.prepare(`SELECT type, valeur FROM contact_coordonnee WHERE contact_id = ?1 AND type IN ('telephone', 'email') ORDER BY id`).bind(id),
+  ]) as [D1Result<Contact>, D1Result<{ type: string; valeur: string }>];
+  const c = lu.results[0];
   if (!c) return null;
-  const autre = await env.DB.prepare(
-    `SELECT id FROM contact WHERE id <> ?1 AND ((?2 IS NOT NULL AND telephone = ?2) OR (?3 IS NOT NULL AND email = ?3)) LIMIT 1`,
-  ).bind(id, n.telephone, n.email).first<{ id: string }>();
-  if (autre) return { ok: false, conflit: autre.id };
-  const nouveau: Record<string, string | null> = {
-    prenom: n.prenom, nom: n.nom, telephone: n.telephone, email: n.email, commune: n.commune, parcours: n.parcours,
-    canal: n.origine.canal, origine_detail: n.origine.origine_detail, passage_id: n.origine.passage_id, prescripteur_id: n.origine.prescripteur_id,
+  const liste = (premier: string | null, type: string) => {
+    const autres = sec.results.filter((x) => x.type === type && x.valeur !== premier).map((x) => x.valeur);
+    return premier ? [premier, ...autres] : autres;
   };
-  const changes = Object.keys(nouveau).filter((k) => (nouveau[k] ?? null) !== ((c as unknown as Record<string, string | null>)[k] ?? null));
-  if (!changes.length) return { ok: true, changes };
+  const r = await corrigerFiche(env, id, {
+    prenom: n.prenom, nom: n.nom, commune: n.commune, telephones: liste(n.telephone, 'telephone'), emails: liste(n.email, 'email'),
+  }, par);
+  if (!r) return null;
+  if (!r.ok) return 'conflit' in r ? { ok: false, conflit: r.conflit.id } : r;
+  const changes = r.changes.map((k) => (k === 'telephones' ? 'telephone' : k === 'emails' ? 'email' : k));
+  const nouveau: Record<string, string | null> = {
+    parcours: n.parcours, canal: n.origine.canal, origine_detail: n.origine.origine_detail, passage_id: n.origine.passage_id, prescripteur_id: n.origine.prescripteur_id,
+  };
+  const suivi = Object.keys(nouveau).filter((k) => (nouveau[k] ?? null) !== ((c as unknown as Record<string, string | null>)[k] ?? null));
+  if (!changes.length && !suivi.length) return { ok: true, changes };
   const maintenant = new Date().toISOString();
-  const texteEv = changes.length === 1 ? `${LIBELLES_CHAMPS[changes[0]].replace(/^./, (l) => l.toUpperCase())} modifié` : `Coordonnées modifiées : ${changes.map((k) => LIBELLES_CHAMPS[k]).join(', ')}`;
-  try {
-    await env.DB.batch([
-      env.DB.prepare(
-        `UPDATE contact SET last_activity_at = ?2, prenom = ?3, nom = ?4, telephone = ?5, email = ?6, commune = ?7, parcours = ?8,
-           canal = ?9, origine_detail = ?10, passage_id = ?11, prescripteur_id = ?12 WHERE id = ?1`,
-      ).bind(id, maintenant, n.prenom, n.nom, n.telephone, n.email, n.commune, n.parcours, n.origine.canal, n.origine.origine_detail, n.origine.passage_id, n.origine.prescripteur_id),
-      evenement(env, id, maintenant, 'note', 'anne', texteEv, par, { modifies: changes }),
-    ]);
-  } catch (e) {
-    // Un autre contact a pris ce téléphone ou cet e-mail entre-temps.
-    const pris = await contactConnu(env, n.telephone, n.email);
-    if (pris && pris.id !== id) return { ok: false, conflit: pris.id };
-    throw e;
+  const lot: D1PreparedStatement[] = [
+    env.DB.prepare(`UPDATE contact SET last_activity_at = ?2, parcours = ?3, canal = ?4, origine_detail = ?5, passage_id = ?6, prescripteur_id = ?7 WHERE id = ?1`)
+      .bind(id, maintenant, n.parcours, n.origine.canal, n.origine.origine_detail, n.origine.passage_id, n.origine.prescripteur_id),
+  ];
+  if (suivi.length) {
+    const texteEv = suivi.length === 1 ? `${LIBELLES_CHAMPS[suivi[0]].replace(/^./, (l) => l.toUpperCase())} modifié` : `Origine modifiée : ${suivi.map((k) => LIBELLES_CHAMPS[k]).join(', ')}`;
+    lot.push(evenement(env, id, maintenant, 'note', 'anne', texteEv, par, { modifies: suivi }));
   }
-  return { ok: true, changes };
+  await env.DB.batch(lot);
+  return { ok: true, changes: [...changes, ...suivi] };
 }
 
 /** Une note libre, horodatée, rangée dans l'historique ; elle devient le « dernier texte » sur « Aujourd'hui ». */

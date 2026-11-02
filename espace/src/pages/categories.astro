@@ -66,7 +66,8 @@ const enJson = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
       const r = await fetch('/api/categories', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corps) });
       const d = await r.json().catch(() => null) as { ok: boolean; id?: string; categories?: Categorie[]; error?: { message: string } } | null;
       if (!d) { dire('Le serveur n\'a pas répondu : rien n\'a été changé.', true); return null; }
-      if (d.ok && d.categories) categories = d.categories;
+      // Revue de code 18.8 : une erreur peut apporter la liste à jour (ordre refusé) ; la catégorie choisie peut avoir disparu.
+      if (d.categories) { categories = d.categories; if (!categories.some((c) => c.id === choisie)) choisie = categories[0]?.id ?? null; }
       if (!d.ok) dire(d.error?.message ?? 'Impossible.', true);
       return d;
     } catch { dire('Pas de connexion : rien n\'a été changé.', true); return null; } finally { occupe = false; }
@@ -169,6 +170,7 @@ const enJson = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
     if (j < 0 || j >= ids.length) return;
     [ids[i], ids[j]] = [ids[j], ids[i]];
     const d = await envoyer({ ordre: ids });
+    if (d && !d.ok) tout();
     if (d?.ok) { dire('Ordre enregistré.'); tout(); zoneListe.querySelector<HTMLElement>(`[data-${haut ? 'monter' : 'descendre'}="${j}"]:not([disabled])`)?.focus(); }
   });
 

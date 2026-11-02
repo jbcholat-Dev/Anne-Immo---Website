@@ -7,7 +7,7 @@
 //   POST /api/categories { id, renommer: "nom" }               → 200 ; 404 ; 409 'existe'
 //   POST /api/categories { id, methode: { canal_conseille, demande, appel_permis, envoi_groupe, messages: [{ id?, nom, texte }] } }
 //        → 200 ; 404 ; envoi_groupe ∈ { non, accord_ou_client } (FR-13 : jamais au-delà des contacts avec accord ou anciens clients)
-//   POST /api/categories { ordre: [id, …] }                    → 200 (chaque catégorie citée une fois)
+//   POST /api/categories { ordre: [id, …] }                    → 200 (chaque catégorie citée une fois) ; 409 + liste à jour sinon
 //   POST /api/categories { id, retirer: true }                 → 200 ; 409 'pas_vide' { contacts } ; 409 'fixe' ; 404
 // 400 pour toute valeur hors vocabulaire. Réponses `{ ok, ... }` ou `{ ok: false, error: { code, message } }`.
 import type { APIRoute } from 'astro';
@@ -55,7 +55,9 @@ export const POST: APIRoute = async ({ request }) => {
 
   if (d.ordre !== undefined) {
     if (Object.keys(d).length !== 1 || !Array.isArray(d.ordre) || !d.ordre.every((x) => typeof x === 'string' && ID_CATEGORIE.test(x))) return erreur(400, 'ordre', 'Ordre : la liste des identifiants est attendue.');
-    return (await rangerCategories(env, d.ordre as string[])) === 'ok' ? liste() : erreur(400, 'ordre', 'L\'ordre doit citer chaque catégorie une fois.');
+    // Revue de code 18.8 : un ordre refusé (catégorie ajoutée ou retirée ailleurs) renvoie la liste à jour, que la page redessine.
+    return (await rangerCategories(env, d.ordre as string[])) === 'ok' ? liste()
+      : erreur(409, 'ordre', 'La liste des catégories a changé ailleurs : elle est rechargée, recommencez.', { categories: await listerCategories(env) });
   }
 
   if (typeof d.id !== 'string' || !ID_CATEGORIE.test(d.id)) return erreur(400, 'id', 'Identifiant invalide');

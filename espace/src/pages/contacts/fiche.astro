@@ -74,7 +74,13 @@ if (Astro.request.method === 'POST') {
     else if (canal === 'recommandation' && !prescripteur_id) erreur = 'Choisissez qui l\'a recommandé (ajoutez-le dans Prescripteurs s\'il manque).';
     else {
       const r = await modifierCoordonnees(env, id, { ...p, parcours, origine: { canal, origine_detail: (saisi.origine_detail ?? '').slice(0, 200) || null, passage_id, prescripteur_id, parcours } }, compte);
-      if (r && !r.ok) { conflit = r.conflit; erreur = 'Ce téléphone ou cet e-mail appartient déjà à un autre contact : rien n\'a été changé.'; }
+      // Revue de code 18.8 : les coordonnées passent par carnet.corrigerFiche, qui refuse aussi l'opposition et l'écriture concurrente.
+      if (r && !r.ok) {
+        if ('conflit' in r) { conflit = r.conflit; erreur = 'Ce téléphone ou cet e-mail appartient déjà à un autre contact : rien n\'a été changé.'; }
+        else if ('opposition' in r) erreur = 'Ce téléphone ou cet e-mail est celui d\'une personne qui a demandé l\'effacement de ses données : rien n\'a été changé.';
+        else if ('indisponible' in r) erreur = 'La liste des personnes qui ont demandé l\'effacement ne peut pas être vérifiée (réglage LIEN_SECRET absent) : rien n\'a été changé, prévenez JB.';
+        else erreur = r.refus;
+      }
       else if (r) {
         // Un nouveau numéro peut avoir déjà des appels relevés par Leedflow : ils passent dans l'historique.
         if (r.changes.includes('telephone') && p.telephone) await rattacherInconnus(envEspace).catch(() => {});

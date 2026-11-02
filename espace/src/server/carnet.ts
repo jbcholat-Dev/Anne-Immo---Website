@@ -383,7 +383,8 @@ export async function corrigerFiche(env: EnvSite, id: string, corr: Correction, 
     env.DB.prepare(`SELECT id, prenom, nom, entreprise, commune, telephone, email, categorie_id, projet, temperature, verifie_le, ecarte_le,
       appel_autorise, a_rappeler_le, etape, email_accord_le FROM contact WHERE id = ?1`).bind(id),
     env.DB.prepare(`SELECT type, valeur FROM contact_coordonnee WHERE contact_id = ?1 AND type IN ('telephone', 'email') ORDER BY id`).bind(id),
-    env.DB.prepare('SELECT max(newsletter_opt_in_at) AS le FROM lead WHERE contact_id = ?1').bind(id),
+    // Revue de code 18.8 : l'accord du site ne vaut que pour la demande faite avec l'adresse du contact.
+    env.DB.prepare('SELECT max(l.newsletter_opt_in_at) AS le FROM lead l JOIN contact c ON c.id = l.contact_id WHERE l.contact_id = ?1 AND lower(l.email) = lower(c.email)').bind(id),
   ]) as [D1Result<EtatFiche>, D1Result<{ type: string; valeur: string }>, D1Result<{ le: string | null }>];
   const etat = e.results[0];
   if (!etat) return null;
@@ -458,7 +459,8 @@ export async function corrigerFiche(env: EnvSite, id: string, corr: Correction, 
       .bind(id, garde, maintenant, `${lot}.${id}`, texte, JSON.stringify({ avant, apres, lot, ...(changeEmail ? { email_change: changeEmail } : {}) }), par, empreinte, valeurs),
   ];
   const evenementEcrit = `EXISTS (SELECT 1 FROM contact_evenement WHERE source = 'anne' AND source_id = ?9)`;
-  if (changeEmail?.accord_note_retire) ecritures.push(retraitAccordNote(env, id, evenementEcrit.replace('?9', '?2'), `${lot}.${id}`));
+  // Revue de code 18.8 : poussé dès que l'adresse change (l'écriture garde sa propre condition, accord présent et événement écrit).
+  if (changeEmail) ecritures.push(retraitAccordNote(env, id, evenementEcrit.replace('?9', '?2'), `${lot}.${id}`));
   if (coords) {
     ecritures.push(env.DB.prepare(`DELETE FROM contact_coordonnee WHERE contact_id = ?1 AND type IN ('telephone', 'email')
        AND valeur NOT IN (SELECT json_extract(value, '$.valeur') FROM json_each(?2)) AND ${evenementEcrit.replace('?9', '?3')}`)
@@ -526,7 +528,7 @@ const CANAUX_LISIBLES: Record<string, string> = { whatsapp: 'WhatsApp', sms: 'SM
  * gardé dans l'historique sans remplacer le dernier contact. C'est un échange : `last_activity_at` avance. Un événement
  * garde l'avant-image (AD-29). Renvoie le dernier contact après écriture, ou null pour un contact inconnu.
  */
-export async function noterContact(env: EnvSite, id: string, c: ContactNote, par: string, origine: 'hors_seance' = 'hors_seance', reprise = false): Promise<{ remplace: boolean; le: string | null; canal: string | null } | null> {
+export async function noterContact(env: EnvSite, id: string, c: ContactNote, par: string, origine: 'hors_seance' = 'hors_seance', reprise = false): Promise<{ remplace: boolean; le: string | null; canal: string | null } | 'conflit' | null> {
   const etat = await env.DB.prepare('SELECT dernier_contact_le, dernier_contact_canal, last_activity_at FROM contact WHERE id = ?1').bind(id)
     .first<{ dernier_contact_le: string | null; dernier_contact_canal: string | null; last_activity_at: string }>();
   if (!etat) return null;
@@ -556,7 +558,11 @@ export async function noterContact(env: EnvSite, id: string, c: ContactNote, par
         .bind(id, le, c.canal, maintenant, `${lot}.${id}`)
       : env.DB.prepare(`UPDATE contact SET last_activity_at = ?2 WHERE id = ?1 AND ${ecrit.replace('?5', '?3')}`).bind(id, maintenant, `${lot}.${id}`),
   ]);
-  if (!ev.meta.changes) return remplace && !reprise ? noterContact(env, id, c, par, origine, true) : null;
+  // Revue de code 18.8 : une garde qui saute deux fois (ou un contact effacé entre-temps) n'est pas un « contact inconnu ».
+  if (!ev.meta.changes) {
+    if (remplace && !reprise) return noterContact(env, id, c, par, origine, true);
+    return (await env.DB.prepare('SELECT 1 AS n FROM contact WHERE id = ?1').bind(id).first()) ? 'conflit' : null;
+  }
   return remplace ? { remplace, le, canal: c.canal } : { remplace, le: etat.dernier_contact_le, canal: etat.dernier_contact_canal };
 }
 
@@ -622,7 +628,7 @@ async function existant(env: EnvSite, telephone: string | null, email: string | 
  * peut être comparé ; c'est journalisé comme sur le site (`opposition_sans_secret`), et si la liste n'est pas vide la
  * réponse est `sans_secret` (création ou ajout de coordonnée refusés, 503), sinon `non`.
  */
-async function enOpposition(env: EnvSite, valeurs: (string | null)[]): Promise<'oui' | 'non' | 'sans_secret'> {
+export async function enOpposition(env: EnvSite, valeurs: (string | null)[]): Promise<'oui' | 'non' | 'sans_secret'> {
   const v = valeurs.filter((x): x is string => !!x);
   if (!v.length) return 'non';
   if (!env.LIEN_SECRET) {

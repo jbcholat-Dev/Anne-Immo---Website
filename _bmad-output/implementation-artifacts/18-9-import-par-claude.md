@@ -51,6 +51,8 @@ Que Claude fasse entrer les fichiers de contacts d'Anne (export vCard du télép
   - **vitesse, 900 fiches** (deux numéros et un e-mail chacune, base locale de ~1 450 contacts) : **aperçu 597 ms, import 261 ms, annulation 74 ms** ; vCard de 8 fiches importée en 33 ms. Les mesures sont sur la base locale de `wrangler dev` ; en ligne, chaque morceau de 250 contacts est une seule exécution D1 de sept requêtes (quatre morceaux pour 900).
   - Les essais existants restent bons, dont la vitesse du tableau (18.5 : pire 226 ms avec 1 456 contacts) et le lot de 1 000 contacts (18.6 : 89 ms, annulation 597 ms).
 
+- Après le commit de la story, dans le commit « correction de la revue 18.8 » : l'essai « corps trop grand » répondait 500 au lieu de 413 sur deux passages de suite (le serveur local de Cloudflare n'aime pas une réponse envoyée avant la fin d'un gros corps). La route lit désormais le corps par morceaux, sans rien garder au-delà de 4 Mo, le vide jusqu'au bout (20 Mo au plus), puis répond 413. Résultat cité dans la story 18.8 (section « Revue de code »).
+
 ## Écarts assumés
 - **Excel lu côté Claude** (le script envoie les cellules en texte), pas par le Worker : un `.xlsx` en base64 grossit la requête d'un tiers, et ne lire que du texte ici garde une seule règle de colonnes, appliquée par l'espace pour le CSV comme pour l'Excel. AD-26 citait le module `tableur` pour le `.xlsx` ; `tableur.ts` ne lit plus que le CSV.
 - **vCard et CSV lus par l'espace** (le script envoie le texte du fichier), pour que la liste des champs permis soit tenue par le serveur et non par le script.

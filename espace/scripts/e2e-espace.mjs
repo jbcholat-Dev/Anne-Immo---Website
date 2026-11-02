@@ -452,10 +452,11 @@ try {
   const COORD = { quoi: 'coordonnees', prenom: 'Silvie', nom: `Suite${NUM}`, telephone: `06 46 ${NUM.slice(0, 2)} ${NUM.slice(2, 4)} ${NUM.slice(4, 6)}`, email: '', commune: 'Thonon', parcours: 'vendeur', canal: 'rencontre', origine_detail: '' };
   r = await surFiche(SUITE, COORD);
   let co = sql(`SELECT prenom, telephone, commune FROM contact WHERE id = '${SUITE}'`)[0];
-  const evCoord = sql(`SELECT texte FROM contact_evenement WHERE contact_id = '${SUITE}' AND json_extract(donnees, '$.modifies') IS NOT NULL ORDER BY id DESC LIMIT 1`)[0]?.texte ?? '';
+  // Revue de code 18.8 : les coordonnées passent par carnet.corrigerFiche (événement « classement » avec avant-image, AD-29).
+  const evCoord = sql(`SELECT texte FROM contact_evenement WHERE contact_id = '${SUITE}' AND type = 'classement' ORDER BY id DESC LIMIT 1`)[0]?.texte ?? '';
   constat(r.headers.get('location') === `/contacts/fiche?id=${SUITE}&m=modifie` && co.prenom === 'Silvie' && co.telephone === `+33646${NUM}` && co.commune === 'Thonon'
-    && evCoord.startsWith('Coordonnées modifiées') && evCoord.includes('téléphone') && !evCoord.includes('+33645'),
-    'coordonnées corrigées (prénom, numéro rangé en +33, commune), historique sans l\'ancienne valeur');
+    && evCoord.startsWith('Fiche corrigée') && evCoord.includes('téléphones') && !evCoord.includes('+33645'),
+    'coordonnées corrigées (prénom, numéro rangé en +33, commune) par le carnet, texte de l\'historique sans l\'ancienne valeur');
   r = await surFiche(SUITE, { ...COORD, telephone: `+33601${NUM}` });
   html = await r.text();
   constat(r.status === 200 && html.includes(`data-conflit`) && html.includes(`/contacts/fiche?id=${didier}`) && sql(`SELECT telephone FROM contact WHERE id = '${SUITE}'`)[0].telephone === `+33646${NUM}`,
@@ -575,6 +576,16 @@ try {
     'filtres enregistrés : 3 recevront (accord, ancien client, acheteur d\'accord), 3 écartés par raison (sans accord, désinscrit, sans adresse)');
   constat(hk.includes('data-apercu') && hk.includes('Bonjour Marie') && /utm_campaign=essai-campagne-\d+/.test(hk) && hk.includes('utm_medium=email'),
     'aperçu de l\'e-mail avec un prénom d\'exemple, bouton vers le site avec les paramètres de la campagne');
+  // Revue de code 18.8 : la méthode de la catégorie restreint l'envoi groupé, jamais ne l'élargit. Alice (accord) passe dans
+  // « Proches » (pas d'envoi groupé) : écartée ; la personne sans accord (C) dans « Demandes reçues » (envoi permis) : toujours écartée.
+  sql(`UPDATE contact SET categorie_id = 'proches' WHERE id = '${K.A}'`);
+  sql(`UPDATE contact SET categorie_id = 'demandes_recues' WHERE id = '${K.C}'`);
+  await page(`/campagnes?id=${kid}`, contenuK());
+  hk = await ficheK();
+  constat(hk.includes('data-recoivent="2"') && hk.includes('Catégorie sans envoi groupé') && (hk.match(/data-ecartes=/g) ?? []).length === 4,
+    'revue 18.8 : une catégorie sans envoi groupé écarte ses contacts même avec leur accord (raison « Catégorie sans envoi groupé ») ; une catégorie qui le permet n\'ajoute pas une personne sans accord');
+  sql(`UPDATE contact SET categorie_id = NULL WHERE id IN ('${K.A}', '${K.C}')`);
+  await page(`/campagnes?id=${kid}`, contenuK());
   r = await page(`/campagnes?id=${kid}`, contenuK().map(([k, v]) => [k, k === 'parcours' ? 'vendeur' : v]));
   constat((await ficheK()).includes('data-recoivent="2"'), 'filtre vendeurs : l\'acheteur n\'est plus compté');
   r = await page(`/campagnes?id=${kid}`, contenuK().map(([k, v]) => [k, k === 'bouton_lien' ? 'javascript:alert(1)' : v]));
@@ -2441,6 +2452,54 @@ try {
     sql(`DELETE FROM lead WHERE id = 'LACC${NUM}'`);
     sql(`DELETE FROM contact WHERE id IN ('${KA}', '${KB}', '${KO}')`);
   }
+  // Revue de code 18.8 : l'ancienne fiche (/contacts/fiche, « Modifier ») passe par carnet.corrigerFiche : l'accord ne suit
+  // pas une adresse changée, une coordonnée d'une personne en opposition est refusée ; la saisie à la main (/ajouter) refuse
+  // aussi l'opposition ; une demande du site faite avec une autre adresse ne donne pas l'accord pour celle du contact.
+  {
+    const KC = `01KF8C${NUM}${'0'.repeat(14)}`, KD = `01KF8D${NUM}${'0'.repeat(14)}`, KE8 = `01KF8E${NUM}${'0'.repeat(14)}`;
+    const MC = `vieillec${NUM}@example.com`, MC2 = `nouvellec${NUM}@example.com`, MD = `vieilled${NUM}@example.com`, MD2 = `nouvelled${NUM}@example.com`;
+    const MX = `autrex${NUM}@example.com`, MY = `contacty${NUM}@example.com`, TELY = `+33678${NUM}`;
+    sql(`INSERT INTO contact (id, created_at, last_activity_at, nom, telephone, email, etape, prochaine_action, prochaine_action_le, canal, email_accord_le, email_accord_source, categorie_id) VALUES
+         ('${KC}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Fichec${NUM}', NULL, '${MC}', 'estimation', 'Rappeler', '${auj}', 'rencontre', '2026-10-01T08:00:00Z', 'anne', 'proches'),
+         ('${KD}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Fiched${NUM}', NULL, '${MD}', 'estimation', 'Rappeler', '${auj}', 'rencontre', NULL, NULL, 'proches'),
+         ('${KE8}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Fichee${NUM}', '${TELY}', '${MY}', NULL, NULL, NULL, NULL, NULL, NULL, 'proches')`);
+    sql(`INSERT INTO lead (id, submission_id, created_at, last_activity_at, lang, source, email, privacy_accepted_at, newsletter_opt_in_at, is_test, contact_id) VALUES
+         ('LACD${NUM}', 'acc-d-${NUM}', '2026-10-02T08:00:00Z', '2026-10-02T08:00:00Z', 'fr', 'guide', '${MD}', '2026-10-02T08:00:00Z', '2026-10-02T08:00:00Z', 1, '${KD}'),
+         ('LACX${NUM}', 'acc-x-${NUM}', '2026-10-02T08:00:00Z', '2026-10-02T08:00:00Z', 'fr', 'guide', '${MX}', '2026-10-02T08:00:00Z', '2026-10-02T08:00:00Z', 1, '${KE8}')`);
+    const ancienne = (id, nom, email) => page(`/contacts/fiche?id=${id}`, { quoi: 'coordonnees', prenom: '', nom, telephone: '', email, commune: '', parcours: '', canal: 'rencontre', origine_detail: '' });
+    const avantC = (await apiFiche(null, { methode: 'GET', id: KC })).d.fiche.accord.statut, avantD = (await apiFiche(null, { methode: 'GET', id: KD })).d.fiche.accord.statut;
+    let x = await ancienne(KC, `Fichec${NUM}`, MC2);
+    const evC = dernierEv(KC);
+    constat(avantC === 'accord' && x.headers.get('location') === `/contacts/fiche?id=${KC}&m=modifie` && c7(KC).email === MC2 && c7(KC).email_accord_le === null
+      && evC.type === 'classement' && evC.d.email_change?.accord_note_retire === true && evC.d.avant?.emails?.[0] === MC
+      && (await apiFiche(null, { methode: 'GET', id: KC })).d.fiche.accord.statut === 'sans_accord',
+      'revue 18.8 : l\'e-mail changé par l\'ancienne fiche passe par le carnet : l\'accord noté est retiré (événement « classement » avec avant-image)');
+    x = await ancienne(KD, `Fiched${NUM}`, MD2);
+    const fD = (await apiFiche(null, { methode: 'GET', id: KD })).d.fiche.accord;
+    constat(avantD === 'accord' && x.headers.get('location') === `/contacts/fiche?id=${KD}&m=modifie` && c7(KD).email === MD2 && fD.statut === 'sans_accord' && fD.a_reconfirmer === true
+      && dernierEv(KD).d.email_change?.accord_site_a_reconfirmer === true,
+      'revue 18.8 : l\'accord donné sur le site pour l\'ancienne adresse ne suit pas l\'e-mail changé par l\'ancienne fiche (« à reconfirmer »)');
+    const fE = (await apiFiche(null, { methode: 'GET', id: KE8 })).d.fiche.accord;
+    constat(fE.statut === 'sans_accord',
+      `revue 18.8 : une demande du site faite avec une autre adresse (case cochée, rattachée par le téléphone) ne donne pas l'accord pour l'adresse du contact (statut ${fE.statut})`);
+    // Opposition : refusée par l'ancienne fiche et par la saisie à la main.
+    const MAILO8 = `opposee8${NUM}@example.com`, TELO8 = `+33677${NUM}`;
+    const hmac8 = (v) => createHmac('sha256', 'essai').update(`opposition:${v}`).digest('hex');
+    sql(`INSERT INTO opposition (empreinte, le) VALUES ('${hmac8(MAILO8)}', '2026-10-01T08:00:00Z'), ('${hmac8(TELO8)}', '2026-10-01T08:00:00Z') ON CONFLICT DO NOTHING`);
+    const n8 = () => sql(`SELECT count(*) AS n FROM contact_evenement`)[0].n;
+    const e8 = n8();
+    x = await ancienne(KC, `Fichec${NUM}`, MAILO8);
+    const hO = await x.text();
+    const avantAjout = sql(`SELECT count(*) AS n FROM contact`)[0].n;
+    const aj = await page('/ajouter', { quoi: 'contact', prenom: 'Oppo', nom: `Ajout${NUM}`, telephone: TELO8, canal: 'rencontre', parcours: 'vendeur' });
+    const hA = await aj.text();
+    constat(x.status === 200 && /demandé l(&#39;|')effacement/.test(hO) && c7(KC).email === MC2 && n8() === e8
+      && aj.status === 200 && /effacement/.test(hA) && sql(`SELECT count(*) AS n FROM contact`)[0].n === avantAjout,
+      'revue 18.8 : un e-mail d\'une personne en opposition est refusé par l\'ancienne fiche, et un téléphone en opposition par la saisie à la main : rien n\'est écrit');
+    sql(`DELETE FROM opposition WHERE empreinte IN ('${hmac8(MAILO8)}', '${hmac8(TELO8)}')`);
+    sql(`DELETE FROM lead WHERE id IN ('LACD${NUM}', 'LACX${NUM}')`);
+    sql(`DELETE FROM contact WHERE id IN ('${KC}', '${KD}', '${KE8}')`);
+  }
   // La page : le nom ouvre le panneau ; corriger, noter, contact hors séance ; « + Nouveau contact » et doublon proposé.
   for (const largeur of [1440, 1280]) {
     const ctx = await nav.newContext({ viewport: { width: largeur, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
@@ -2632,8 +2691,9 @@ try {
       ['retirer « oui »', await apiCat({ id: cat8, retirer: 'oui' })],
       ['corps qui n\'est pas du JSON', await apiCat('id=x', { type: 'application/x-www-form-urlencoded' })],
     ];
-    constat(refus8.every(([, r]) => r.status === 400 && r.d?.ok === false) && s8() === etat8,
-      `18.8 : /api/categories refuse toute valeur hors vocabulaire (400 : ${refus8.map(([n, r]) => `${n} ${r.status}`).join(', ')}), rien n'est écrit`);
+    // Revue de code 18.8 : un ordre incomplet répond 409 avec la liste à jour (la liste a pu changer ailleurs).
+    constat(refus8.every(([n, r]) => r.status === (n === 'ordre incomplet' ? 409 : 400) && r.d?.ok === false) && s8() === etat8,
+      `18.8 : /api/categories refuse toute valeur hors vocabulaire (400, 409 pour l'ordre incomplet : ${refus8.map(([n, r]) => `${n} ${r.status}`).join(', ')}), rien n'est écrit`);
     const acces8 = [
       ['lecture sans jeton', await appeler(`${E}/api/categories`, { redirect: 'manual' })],
       ['écriture sans jeton', await appeler(`${E}/api/categories`, { method: 'POST', redirect: 'manual', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ajouter: { nom: 'Pirate' } }) })],
@@ -2652,6 +2712,10 @@ try {
     x = await apiCat({ ordre: inverse8 });
     constat(x.status === 200 && JSON.stringify(x.d.categories.map((c) => c.id)) === JSON.stringify(inverse8), '18.8 : l\'ordre des catégories se change (les deux premières échangées)');
     await apiCat({ ordre: ordre8 });
+    // Revue de code 18.8 : un ordre qui ne cite plus chaque catégorie (liste changée ailleurs) est refusé avec la liste à jour.
+    x = await apiCat({ ordre: ordre8.slice(1) });
+    constat(x.status === 409 && x.d?.error?.code === 'ordre' && JSON.stringify(x.d.categories?.map((c) => c.id)) === JSON.stringify(ordre8),
+      'revue 18.8 : un ordre refusé (catégorie ajoutée ou retirée ailleurs) renvoie la liste à jour (409), que la page redessine');
 
     // Retirer : refusé tant qu'il reste un contact (écarté compris) et pour une catégorie de départ, puis accepté.
     x = await apiCat({ id: cat8, retirer: true });

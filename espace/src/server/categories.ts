@@ -81,7 +81,7 @@ export async function enregistrerMethode(env: EnvSite, id: string, m: Methode): 
   if (m.messages.some((x) => x.id && !ids.has(x.id))) return 'message';
   const messages = m.messages.map((x, i) => ({ id: x.id ?? ulid(), nom: x.nom, texte: x.texte, ordre: i + 1 }));
   const charge = JSON.stringify(messages);
-  await env.DB.batch([
+  const r = await env.DB.batch([
     env.DB.prepare('UPDATE categorie SET canal_conseille = ?2, demande = ?3, appel_permis = ?4, envoi_groupe_permis = ?5 WHERE id = ?1')
       .bind(id, m.canal_conseille, m.demande, m.appel_permis ? 1 : 0, m.envoi_groupe === 'accord_ou_client' ? 1 : 0),
     env.DB.prepare(`DELETE FROM message_type WHERE categorie_id = ?1 AND id NOT IN (SELECT json_extract(value, '$.id') FROM json_each(?2))`).bind(id, charge),
@@ -92,7 +92,9 @@ export async function enregistrerMethode(env: EnvSite, id: string, m: Methode): 
         ON CONFLICT (id) DO UPDATE SET nom = excluded.nom, texte = excluded.texte, ordre = excluded.ordre
         WHERE message_type.categorie_id = excluded.categorie_id`).bind(id, charge),
   ]);
-  return 'ok';
+  // Revue de code 18.8 : la catégorie a pu être retirée entre la lecture et l'écriture (rien n'a alors été écrit) → 404.
+  // Deux enregistrements concurrents d'une même méthode : le dernier l'emporte (garde de version prévue à l'epic 19).
+  return r[0].meta.changes ? 'ok' : 'inconnue';
 }
 
 /** Change l'ordre des catégories : `ids` doit citer chaque catégorie une fois. `liste` : ce n'est pas le cas. */
