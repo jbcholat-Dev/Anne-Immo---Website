@@ -40,12 +40,14 @@ Les scripts Playwright utilisent `/opt/pw-browsers/chromium` s'il existe, sinon 
 | `/diagnostic/resultats` | score, profil D-23, 3 sous-scores brut + %, 9 feedbacks, sorties A/B, états guide / séquence / lien expiré | `quiz-conception-notion.md` (barème, feedbacks) |
 | `/contact` (`#reserver`, `#ecrire`) | Agenda Cal.com chargé au clic (story 10.6) + « Écrire à Anne » (champ projet vente/achat) | maquette `08-contact-*` |
 | `/guide` | guide « 10 erreurs », capture téléphone facultatif | maquette `09-guide-*` |
+| `/partenaires` | une carte par partenaire (nom, activité, commune, logo facultatif, texte, site) ; « Bientôt » tant qu'il n'y en a aucun (D-46) | `contenu-anne/partenaires/*.md`, rubrique « Partenaires » de l'espace d'édition (story 8.21) |
+| `/actualites`, `/actualites/<slug>` | articles d'Anne, du plus récent au plus ancien ; « Bientôt » tant qu'il n'y en a aucun (D-46) | `contenu-anne/actualites/*.md`, rubrique « Actualités » de l'espace d'édition (story 8.21) |
 | `/mentions-legales`, `/confidentialite`, `/cookies` | légal, lockup positif en tête des mentions, valeurs A-13 à compléter | maquette `10-legal-*` |
 | `/honoraires` | barème d'honoraires (résidentiel, commercial et terrains), lien dans le pied de page et les mentions légales (story 12.6) | hors maquette, gabarit des pages légales |
 | `/404` | page introuvable | — |
 | `/en`, `/en/track-record` | accueil EN et index « Track record » (vide : aucune story traduite, AD-2). Les autres entrées EN renvoient aux pages FR pour cette v1, sans écran mi-traduit. | `src/content/ui/en.json` |
 
-Navigation (D-2, D-6 A, D-17, D-21, D-28, D-42) : réseaux · symbole seul | Accueil · À propos ▾ (Qui suis-je ? · Ma méthode · Cible) · Réalisations · Vendre · Acheter · Contact · FR EN (sous-menu À propos : Qui suis-je ? · Ma méthode · Cible · Réseau eXp, D-34 ; « Réalisations » au pluriel, index titré « Quelques réalisations », D-29). Fixe dès le premier pixel, réduite à 56 px au défilement, jamais masquée ; menu mobile plein écran avec Accueil puis « À propos » en accordéon (lien + chevron). Pied de page `00-footer` partout.
+Navigation (D-2, D-6 A, D-17, D-21, D-28, D-42) : réseaux · symbole seul | Accueil · À propos ▾ (Qui suis-je ? · Ma méthode · Cible) · Réalisations · Vendre · Acheter · Partenaires · Actualités · Contact · FR EN (sous-menu À propos : Qui suis-je ? · Ma méthode · Cible · Réseau eXp, D-34 ; « Réalisations » au pluriel, index titré « Quelques réalisations », D-29). Fixe dès le premier pixel, réduite à 56 px au défilement, jamais masquée ; menu mobile plein écran avec Accueil puis « À propos » en accordéon (lien + chevron). Pied de page `00-footer` partout. Partenaires et Actualités (D-46, story 8.21) : toujours affichés sur l'aperçu ; sur le site public, chacun n'apparaît dans la barre et le pied de page qu'à la première fiche « publie », et sa page reste non indexée tant qu'elle est vide. Entre 900 et 1 179 px, quand ces onglets sont là, les réseaux quittent la barre.
 
 ## Réel vs placeholder
 
@@ -229,6 +231,7 @@ Charte v3 (D-31, 2026-10-08) : Gilda Display (titres, une seule graisse) et Jost
 
 ## Écarts assumés avec la maquette / les briefs
 
+- **Partenaires et Actualités** (story 8.21, D-46, ticket n° 153) : deux pages absentes de la maquette, demandées par Anne, mises en page comme l'index des réalisations. Entre 900 et 1 179 px, les icônes des réseaux quittent la barre pour que les huit entrées tiennent sur une ligne.
 - **Entonnoir du diagnostic** (story 10.12, 2026-10-26) : AD-11 et la story 10.8 prévoyaient une table `funnel_event` remplie sous le `journey_id` du parcours. La table s'appelle `entonnoir` (migration 0015), et le numéro de passage est tiré à chaque ouverture de page, car le `journey_id` est sauvegardé sur l'appareil pour la reprise : le réutiliser aurait déposé un identifiant de mesure dans le navigateur. On compte donc des passages, pas des personnes. L'entonnoir se lit dans le Bilan de l'espace, pas dans /gestion ; les rendez-vous ne sont pas comptés (ce sont déjà des demandes).
 
 - **Mentions légales au lancement** (story 12.5, 2026-10-10) : la carte professionnelle affichée est la carte T d'eXp Global France, sous laquelle Anne exerce, avec l'assurance RCP du réseau ; le numéro d'attestation d'habilitation d'Anne (`identite.attestation`) sera ajouté quand elle l'aura retrouvé, il ne bloque pas la construction.

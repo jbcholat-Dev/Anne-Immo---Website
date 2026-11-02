@@ -117,4 +117,32 @@ const textesContact = defineCollection({ loader: fichierTextes('contact'), schem
   rendez_vous: z.object({ titre: texte, texte, bouton: texte }),
 }) });
 
-export const collections = { stories, avis, instantane, pages, textesAccueil, textesVendre, textesAcheter, textesContact };
+// Partenaires et Actualités (ticket n° 153 d'Anne, story 8.21) : une fiche par partenaire ou par article, écrite par Anne dans
+// l'espace d'édition (contenu-anne/partenaires/, contenu-anne/actualites/).
+const statutFiche = z.enum(['brouillon', 'a-relire', 'publie']).default('brouillon');
+const partenaires = defineCollection({
+  loader: glob({ pattern: '*.md', base: `${CONTENU}/partenaires` }),
+  schema: z.object({
+    nom: z.string(),
+    activite: z.string(),
+    commune: vide,
+    // Adresse complète seulement : « www.x.fr » ferait un lien relatif cassé, « javascript: » un lien dangereux (revue de code 8.21).
+    site: vide.refine((v) => v === null || /^https?:\/\/[^\s]+$/i.test(v), { message: 'Le site internet doit commencer par https://' }),
+    logo: vide,
+    ordre: vide, // « Ordre » laissé vide dans l'espace d'édition = null : toléré comme annee_vente (revue de code 8.21)
+    statut: statutFiche,
+  }),
+});
+const actualites = defineCollection({
+  loader: glob({ pattern: '*.md', base: `${CONTENU}/actualites` }),
+  schema: z.object({
+    titre: z.string(),
+    date: z.coerce.date(),
+    resume: vide,
+    photo: vide,
+    photo_alt: vide,
+    statut: statutFiche,
+  }),
+});
+
+export const collections = { stories, avis, instantane, pages, partenaires, actualites, textesAccueil, textesVendre, textesAcheter, textesContact };

@@ -3,10 +3,13 @@
 import Lockup from './Lockup.astro';
 import { t, r, bascule, type Lang, type RouteKey } from '../i18n';
 import { reseaux, identite } from '../config/site';
+import { rubriquesVisibles } from '../lib/contenu';
 interface Props { lang?: Lang; courante?: RouteKey }
 const { lang = 'fr', courante } = Astro.props;
 const d = t(lang);
-const plan: RouteKey[] = ['apropos', 'realisation', 'vendre', 'acheter', 'diagnostic', 'guide', 'contact'];
+const rubriques = await rubriquesVisibles();
+const plan: RouteKey[] = ['apropos', 'realisation', 'vendre', 'acheter', 'diagnostic', 'guide',
+  ...(rubriques.partenaires ? ['partenaires' as const] : []), ...(rubriques.actualites ? ['actualites' as const] : []), 'contact'];
 const legal: { key: RouteKey; label: string }[] = [
   { key: 'mentions', label: d.footer.mentions }, { key: 'confidentialite', label: d.footer.confidentialite }, { key: 'cookies', label: d.footer.cookies },
   { key: 'honoraires', label: d.footer.honoraires },

@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-26-2026 15:10
-last_updated: 11-01-2026 22:30
+last_updated: 11-02-2026 16:00
 project: Site Anne Vial-Tissot
 project_key: NOKEY
 tracking_system: file-system
@@ -119,6 +119,7 @@ development_status:
   8-18-barre-de-navigation-compacte: done   # annulée le 2026-10-11 au soir (JB) : retour à la barre étendue D-42
   8-19-boutons-de-l-ouverture-en-bas-sur-telephone: done
   8-20-ligne-signature-sous-le-nom-de-famille: done
+  8-21-partenaires-actualites-et-dpe-du-guide: review   # tickets n° 153 et 154 d'Anne, PR n° 155 ; revue de code du 2026-11-02 : 9 constats corrigés ; D-46 confirmée par JB le 2026-11-02 ; reste la fusion par JB
   8-22-retour-au-terracotta-d-origine: done
   8-23-offert-plutôt-que-gratuit: done   # 2026-10-26, PR n° 204 fusionnée (JB) ; 2026-10-25, décision de JB : « offert », jamais « gratuit »
   8-24-section-infographies-du-design-system: done   # 2026-10-27, PR n° 210 fusionnée sur l'accord de JB : règle des infographies « schéma » (style Herubel, flux et échelle en référence) dans design-system/infographies/, D-49
