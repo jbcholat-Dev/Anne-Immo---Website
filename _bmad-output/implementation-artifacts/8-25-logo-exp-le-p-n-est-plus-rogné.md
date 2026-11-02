@@ -30,8 +30,9 @@ Dans tous les fichiers du logo eXp du design system, le dessin touche exactement
 - Captures du logo combiné dans le pied de page, les mentions légales et le diagnostic, sur ordinateur et téléphone : le « p » est entier.
 
 ## Revue de code
-À faire dans une session neuve (`bmad-code-review`) avant de proposer la PR à JB.
+2026-11-02, PR n° 228, commit 7d87a4a, `bmad-code-review` dans une session neuve : aucun constat bloquant (regex, trois appels, arrondi, positions du co-branding, autres copies du logo vérifiés).
+- Mineur : si le cadre d'un SVG change encore, la réécriture de `Lockup.astro` échoue sans rien dire → corrigé (commit suivant) : la construction s'arrête avec une erreur si le logo n'a pas été reconnu.
 
 ## Ce qui reste
-- Revue de code, puis accord de JB pour fusionner (la PR change le site).
+- Accord de JB pour fusionner (la PR change le site).
 - Recopier les mêmes cadres dans l'artefact Design System.

@@ -19,5 +19,7 @@ svg = svg
   .replace(/id="sym"/g, `id="${uid}"`)
   .replace(/url\(#sym\)/g, `url(#${uid})`)
   .replace(/<svg xmlns="http:\/\/www.w3.org\/2000\/svg" viewBox="0 -3 1206 150"/, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -3 1206 150" class="lockup ${cls}" style="width:${largeur}px;height:${Math.ceil((largeur * 150) / 1206)}px"`);
+// Si le cadre d'un SVG change encore, la réécriture ci-dessus ne trouverait plus la balise : on arrête la construction plutôt que d'afficher un logo sans taille.
+if (!svg.includes('class="lockup')) throw new Error('Lockup : balise <svg> du lockup eXp non reconnue (cadre modifié ?)');
 ---
 <Fragment set:html={svg} />
