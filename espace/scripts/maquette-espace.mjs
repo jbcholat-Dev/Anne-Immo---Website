@@ -79,7 +79,7 @@ ev('01K800000000000000000000A1', -20, 'creation', 'Contact créé : Leboncoin');
 
 // Les pages, à la largeur d'un ordinateur.
 const PAGES = [
-  ['Aujourdhui', '/', "Aujourd'hui"], ['Contacts', '/contacts', 'Contacts'], ['Fiche-vendeur', '/contacts/fiche?id=01K800000000000000000000V1', 'Fiche d\'un vendeur'],
+  ['Contacts', '/', 'Contacts'], ['Aujourdhui', '/aujourdhui', "Aujourd'hui"], ['Contacts-suivis', '/contacts', 'Contacts suivis'], ['Fiche-vendeur', '/contacts/fiche?id=01K800000000000000000000V1', 'Fiche d\'un vendeur'],
   ['Fiche-acheteur', '/contacts/fiche?id=01K800000000000000000000A1', 'Fiche d\'un acheteur'], ['Qualifier', '/contacts/qualifier?id=01K800000000000000000000N1', 'Qualifier'], ['Suite', '/contacts/suite?id=01K800000000000000000000V1', 'Noter la suite'],
   ['Pipeline', '/pipeline', 'Pipeline'], ['Ajouter', '/ajouter', 'Ajouter un contact'], ['Bilan', '/bilan', 'Bilan'], ['Prospection', '/actions', 'Prospection'],
   ['Campagnes', '/campagnes', 'Campagnes'], ['Prescripteurs', '/prescripteurs', 'Prescripteurs'], ['Prescripteur', '/prescripteurs/fiche?id=01K80000000000000000000PR1', 'Fiche d\'un prescripteur'],

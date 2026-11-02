@@ -74,7 +74,7 @@ if (Astro.request.method === 'POST') {
   }
   if (suite && !erreur) {
     await noterSuite(env, c.id, suite, compte);
-    return Astro.redirect(retour === 'jour' ? `/?m=suite#c-${c.id}` : `/contacts/fiche?id=${c.id}&m=suite`, 303);
+    return Astro.redirect(retour === 'jour' ? `/aujourdhui?m=suite#c-${c.id}` : `/contacts/fiche?id=${c.id}&m=suite`, 303);
   }
 }
 
@@ -88,7 +88,7 @@ const habituelles = JSON.stringify({ ...ACTIONS_HABITUELLES, prevue: c.prochaine
 <Espace titre={`Suite · ${nom}`} actif="contacts">
   <div style="display:flex;align-items:center;gap:12px">
     <div style="flex:1;min-width:0">
-      <div class="e-muet"><a href={retour === 'jour' ? '/' : `/contacts/fiche?id=${c.id}`}>{retour === 'jour' ? 'Aujourd\'hui' : 'Fiche'}</a></div>
+      <div class="e-muet"><a href={retour === 'jour' ? '/aujourdhui' : `/contacts/fiche?id=${c.id}`}>{retour === 'jour' ? 'Aujourd\'hui' : 'Fiche'}</a></div>
       <h1 style="overflow-wrap:anywhere">{nom}{c.commune ? ` · ${c.commune}` : ''}</h1>
       <div class="e-muet">{libelleEtape(c.etape)} · {libelleOrigine(c, passage, prescripteur)}</div>
     </div>

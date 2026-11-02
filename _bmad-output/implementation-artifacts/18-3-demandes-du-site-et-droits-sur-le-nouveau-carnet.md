@@ -60,7 +60,7 @@ Qu'une demande du site (formulaire de contact, diagnostic, guide, estimation, re
 - **Entrée dans le suivi par un geste d'Anne** (déplacement dans le pipeline, « Ajouter ») : `suivi_le` reste vide (AD-32) ; seule l'entrée par une demande du site le pose.
 
 ## Revue de code
-2026-11-02, session neuve, skill `bmad-code-review`, commit relu be08584. Corrections dans le commit « correction de la revue 18.3 ».
+2026-11-02, session neuve, skill `bmad-code-review`, commit relu be08584. Corrections dans le commit ae0ee42 (« correction de la revue 18.3 »).
 1. Effacement : les demandes restées sans contact faites avec l'un des téléphones ou e-mails de la personne n'étaient pas effacées, et `rattacherOrphelins` aurait recréé le contact : corrigé. `orphelinsDe` (`rights.ts`) les trouve, `effacerContact` et `effacer` les effacent avec leurs envois et passent leurs coordonnées à l'opposition.
 2. Export par adresse : les demandes des contacts trouvés faites avec un autre e-mail ou un téléphone manquaient : corrigé (commit « correction de la revue 18.3 »), `lead WHERE lower(email) = adresse OR contact_id IN (contacts trouvés)`.
 3. Purge des importés : un signe de relation garde le contact dans la règle habituelle (accord e-mail, campagne envoyée, demande du site, événement note, appel, e-mail, séance, étape ou qualification ; un classement seul n'en est pas un) : corrigé (commit « correction de la revue 18.3 »), 7 constats dans `e2e-gestion.mjs`.

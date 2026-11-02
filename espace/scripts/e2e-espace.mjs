@@ -44,6 +44,9 @@
 // Story 18.3 : demande du site retrouvée par un numéro secondaire et entrée dans le suivi (suivi_le), ligne « Nouveaux »,
 // inscription ambassadeur (marque sans changer projet ni catégorie), effacement (opposition, coordonnées vidées, classement
 // Privé gardé), recherche par e-mail secondaire.
+// Story 18.4 : page Contacts en accueil (tout le carnet, écartés masqués, compteur, colonnes de FR-1, recherche par morceau
+// de numéro et par entreprise, tri, colonne masquée gardée, menu « Autres outils » dont chaque page répond, « Aujourd'hui »
+// à /aujourdhui, pas de débordement à 1440 et 1280 px, 1 000 contacts fictifs triés et cherchés en moins d'une seconde).
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
 // Lancer depuis espace/ : `node scripts/e2e-espace.mjs`.
@@ -189,7 +192,7 @@ try {
   }
 
   // 2. Base partagée : la demande du site est dans l'espace, sans délai.
-  let r = await appeler(`${E}/`, { headers: avecJeton(), redirect: 'manual' });
+  let r = await appeler(`${E}/aujourdhui`, { headers: avecJeton(), redirect: 'manual' });
   let html = await r.text();
   constat(r.status === 200 && html.includes('Bonjour Anne') && html.includes(`data-contact="${contact}"`), 'accueil « Aujourd\'hui » : la demande du site est à rappeler');
   r = await appeler(`${E}/gestion`, { headers: avecJeton() });
@@ -388,7 +391,7 @@ try {
     ('${reveil}', '2026-03-01T08:00:00Z', '2026-03-01T08:00:00Z', 'Reveil${NUM}', 'en_sommeil', 'Réveiller : rappeler', '${auj}', '${auj}', 'autre', 1)`);
   sql(`INSERT INTO passage_boitage (id, created_at, secteur, fait_le, mots) VALUES ('PASS${NUM}', '2026-01-01T00:00:00Z', 'Margencel-${NUM}', '2026-01-10', 150)`);
   sql(`UPDATE prescripteur SET prochaine_relance_le = '${auj}', relance_raison = 'Lui montrer la vente d''Anthy' WHERE nom = 'Maître Durand ${ESSAI}'`);
-  r = await appeler(`${E}/`, { headers: avecJeton() });
+  r = await appeler(`${E}/aujourdhui`, { headers: avecJeton() });
   html = await r.text();
   const zone = (attr) => html.split(attr)[1]?.split('</section>')[0] ?? '';
   const nouveauxZone = zone('data-nouveaux'), rappelsZone = zone('data-rappels'), prospection = zone('data-prospection');
@@ -412,7 +415,7 @@ try {
     ('${SUITE}', '2026-02-01T08:00:00Z', '2026-02-01T08:00:00Z', 'Sylvie', 'Suite${NUM}', '+33645${NUM}', 'vendeur', 'estimation', 'Envoyer l''estimation', '${hier}', '2026-02-01T09:00:00Z', 'rencontre', 1)`);
   const etatSuite = () => sql(`SELECT etape, prochaine_action, prochaine_action_le FROM contact WHERE id = '${SUITE}'`)[0];
   const derniereNote = () => sql(`SELECT texte FROM contact_evenement WHERE contact_id = '${SUITE}' AND type = 'note' ORDER BY id DESC LIMIT 1`)[0]?.texte ?? '';
-  r = await appeler(`${E}/`, { headers: avecJeton() });
+  r = await appeler(`${E}/aujourdhui`, { headers: avecJeton() });
   html = await r.text();
   const carteSuite = html.split(`data-contact="${SUITE}"`)[1]?.split('</article>')[0] ?? '';
   constat(carteSuite.includes(`/contacts/suite?id=${SUITE}`) && !carteSuite.includes('/contacts/qualifier'), 'aujourd\'hui : « Noter la suite » d\'un rappel ouvre le formulaire de suite, pas la qualification');
@@ -427,7 +430,7 @@ try {
   constat(r.status === 200 && (await r.text()).includes('data-erreur') && etatSuite().prochaine_action_le === hier, 'suite sans résultat : refusée, rien enregistré');
   r = await suite({ resultat: 'fait', etape: 'estimation', action: 'Second rendez-vous', quand: 'autre', le: jPlus(3) });
   let st = etatSuite();
-  constat(r.headers.get('location') === `/?m=suite#c-${SUITE}` && st.etape === 'estimation' && st.prochaine_action === 'Second rendez-vous' && st.prochaine_action_le === jPlus(3)
+  constat(r.headers.get('location') === `/aujourdhui?m=suite#c-${SUITE}` && st.etape === 'estimation' && st.prochaine_action === 'Second rendez-vous' && st.prochaine_action_le === jPlus(3)
     && derniereNote().startsWith('Fait : Envoyer l\'estimation') && derniereNote().includes('Prochaine action : Second rendez-vous'),
     'fait, prochaine action « second rendez-vous » à J+3 : l\'étape reste « Estimation en préparation », historique noté');
   r = await suite({ resultat: 'pas_joint', quand: '1j' });
@@ -482,7 +485,7 @@ try {
     ('${NOTE}', '2026-02-01T08:00:00Z', '2026-02-01T08:00:00Z', 'Noté${NUM}', 'estimation', 'Envoyer l''estimation', '${hier}', 'rencontre', 1)`);
   r = await surFiche(NOTE, { quoi: 'note', note: `Note libre ${NUM} : rappeler après les vacances` });
   constat(r.headers.get('location') === `/contacts/fiche?id=${NOTE}&m=note`, 'note libre ajoutée depuis la fiche');
-  html = await (await appeler(`${E}/`, { headers: avecJeton() })).text();
+  html = await (await appeler(`${E}/aujourdhui`, { headers: avecJeton() })).text();
   constat((html.split(`data-contact="${NOTE}"`)[1]?.split('</article>')[0] ?? '').includes(`Note libre ${NUM}`), 'aujourd\'hui : la note libre est le dernier texte du rappel');
   r = await page('/ajouter', { quoi: 'contact', nom: `Boitage${NUM}`, telephone: `06 47 ${NUM.slice(0, 2)} ${NUM.slice(2, 4)} ${NUM.slice(4, 6)}`, canal: 'rencontre', note: 'Rencontré au marché' });
   const sansMail = sql(`SELECT id FROM contact WHERE telephone = '+33647${NUM}'`)[0].id;
@@ -694,7 +697,7 @@ try {
   constat(/data-etape-lien="second_rdv"[^>]*>|aria-current="page"[^>]*data-etape-lien="second_rdv"/.test(html) && /class="pl-colonne[^"]*pl-autre[^"]*"[^>]*data-colonne="estimation"/.test(html)
     && !/class="pl-colonne[^"]*pl-autre[^"]*"[^>]*data-colonne="second_rdv"/.test(html),
     'pipeline : pastilles d\'étapes, seule l\'étape choisie est montrée sur téléphone');
-  html = await (await appeler(`${E}/`, { headers: avecJeton() })).text();
+  html = await (await appeler(`${E}/aujourdhui`, { headers: avecJeton() })).text();
   constat(/data-date[^>]*>[a-zé]/.test(html) && !html.includes('text-transform:capitalize'), 'aujourd\'hui : la date en minuscules (« samedi 24 octobre »)');
 
   // 5 quinquies. Bilan du lundi par canal (story 13.13) : les chiffres suivent la base, sans saisie.
@@ -786,7 +789,7 @@ try {
   const pd = sql(`SELECT dernier_contact_le, prochaine_relance_le, relance_raison, notes FROM prescripteur WHERE id = '${durand}'`)[0];
   constat(r.headers.get('location') === `/prescripteurs/fiche?id=${durand}&m=echange` && pd.dernier_contact_le === auj && pd.prochaine_relance_le === dans3mois
     && pd.relance_raison === 'Vœux et nouvelles du quartier' && pd.notes.includes('Café à Thonon'), 'échange noté : dernier contact aujourd\'hui, relance dans 3 mois avec sa raison, note gardée');
-  r = await appeler(`${E}/`, { headers: avecJeton() });
+  r = await appeler(`${E}/aujourdhui`, { headers: avecJeton() });
   constat(!(await r.text()).includes(`Relancer Maître Durand ${ESSAI}`), 'aujourd\'hui : le prescripteur relancé n\'y est plus');
   r = await page('/prescripteurs', { nom: `Avocate ${ESSAI}`, role: 'Droit de la famille, Thonon', telephone: '04 50 00 00 00', prochaine_relance_le: auj, relance_raison: 'Premier rendez-vous de présentation' });
   const avocate = sql(`SELECT id, telephone FROM prescripteur WHERE nom = 'Avocate ${ESSAI}'`)[0];
@@ -831,7 +834,7 @@ try {
   constat(html.includes(`data-secteur="${ANTHY.toLowerCase()}"`) && html.includes('2 acheteur(s)'), 'acheteurs : la commune cherchée par 2 acheteurs');
   r = await appeler(`${E}/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`, { headers: avecJeton() });
   constat((await r.text()).includes(`data-vendeur="DORT${NUM}"`), 'depuis la commune : les vendeurs en sommeil du même secteur');
-  r = await appeler(`${E}/`, { headers: avecJeton() });
+  r = await appeler(`${E}/aujourdhui`, { headers: avecJeton() });
   constat((await r.text()).includes(`data-lettre="${ANTHY.toLowerCase()}"`), 'aujourd\'hui : lettre « j\'ai un acheteur » proposée pour la commune');
 
   // 5 octies. Vue pipeline (story 13.16).
@@ -917,7 +920,7 @@ try {
   const taches = sql(`SELECT id, statut, echeance FROM leedflow_tache WHERE contact_id = '${KLF}'`);
   constat(taches.length === 2 && taches.some((t) => t.id === `t1-${NUM}` && t.echeance === '2027-01-20') && taches.some((t) => t.id === `t2-${NUM}`) && taches.every((t) => t.statut === 'proposee'),
     'leedflow : tâches à faire proposées (dont une rangée par la fiche du contact Leedflow), tâche faite écartée');
-  r = await appeler(`${E}/`, { headers: avecJeton() });
+  r = await appeler(`${E}/aujourdhui`, { headers: avecJeton() });
   html = await r.text();
   const zoneLF = html.split('data-leedflow')[1]?.split('</section>')[0] ?? '';
   constat(zoneLF.includes(`data-tache="t1-${NUM}"`) && zoneLF.includes('href="/a-trier"') && /\d+ numéro\(s\) à trier/.test(zoneLF) && !zoneLF.includes('data-inconnu') && !zoneLF.includes(INCONNU)
@@ -983,7 +986,7 @@ try {
   // Tâches : acceptée (devient la prochaine action), ignorée.
   r = await page('/api/leedflow/tache', { id: `t1-${NUM}`, choix: 'accepter' });
   const kl = sql(`SELECT prochaine_action, prochaine_action_le, etape FROM contact WHERE id = '${KLF}'`)[0];
-  constat(r.headers.get('location') === '/?m=tache-acceptee' && kl.prochaine_action === 'Envoyer l’estimation' && kl.prochaine_action_le === '2027-01-20' && kl.etape === 'a_qualifier'
+  constat(r.headers.get('location') === '/aujourdhui?m=tache-acceptee' && kl.prochaine_action === 'Envoyer l’estimation' && kl.prochaine_action_le === '2027-01-20' && kl.etape === 'a_qualifier'
     && sql(`SELECT statut FROM leedflow_tache WHERE id = 't1-${NUM}'`)[0].statut === 'acceptee'
     && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${KLF}' AND type = 'note' AND texte LIKE '%acceptée%' AND par = 'anne@example.com'`)[0].n === 1,
     'tâche acceptée : prochaine action et date fixées, étape inchangée, noté avec le compte');
@@ -1164,9 +1167,9 @@ try {
   r = await appeler(`${E}/contacts`, { headers: avecJeton() });
   html = await r.text();
   const rp = await appeler(`${E}/pipeline`, { headers: avecJeton() });
-  const ra = await appeler(`${E}/`, { headers: avecJeton() });
+  const ra = await appeler(`${E}/aujourdhui`, { headers: avecJeton() });
   const absent = (h) => !h.includes(`fiche?id=${CARNET}`) && !h.includes(`fiche?id=${AMIE}`);
-  constat(absent(html) && absent(await rp.text()) && absent(await ra.text()), '18.2 : les contacts du carnet n\'apparaissent ni dans Contacts, ni dans le pipeline, ni sur « Aujourd\'hui »');
+  constat(absent(html) && absent(await rp.text()) && absent(await ra.text()), '18.2 : les contacts du carnet n\'apparaissent ni dans « Contacts suivis », ni dans le pipeline, ni sur « Aujourd\'hui »');
   // L'amie entre seule dans le suivi (ce que fera une demande du site, story 18.3) : `suivi_le` posé ; ses appels
   // d'avant ne sont pas versés dans son historique, ceux d'après oui.
   const suiviLe = new Date().toISOString();
@@ -1379,20 +1382,133 @@ try {
   // Clé refusée (révoquée) : la relève le note et « Aujourd'hui » le dit.
   LF.refuse = true;
   await releve();
-  r = await appeler(`${E}/`, { headers: avecJeton() });
+  r = await appeler(`${E}/aujourdhui`, { headers: avecJeton() });
   constat(sql(`SELECT count(*) AS n FROM leedflow_releve WHERE erreur = 'HTTP 401'`)[0].n >= 1 && /data-etat-leedflow[^>]*>Leedflow : la dernière relève a échoué \(HTTP 401\)/.test(await r.text()),
     'clé refusée : erreur notée et signalée sur « Aujourd\'hui »');
   LF.refuse = false;
   await releve();
   constat(sql(`SELECT count(*) AS n FROM leedflow_releve WHERE erreur IS NOT NULL`)[0].n === 0, 'clé de nouveau acceptée : l\'erreur disparaît');
 
-  // 6. Capture de la liste (ordinateur et téléphone).
+  // Story 18.4 : la page Contacts, page d'accueil. Un contact du carnet hors suivi avec un autre numéro, un lien de profil
+  // et une entreprise ; un contact écarté.
   const { chromium } = await import('../../site/node_modules/playwright/index.mjs');
   const nav = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+  const C4 = `01KFC4${NUM}${'0'.repeat(14)}`, ECART = `01KFEC${NUM}${'0'.repeat(14)}`, TEL4 = `+33634${NUM}`, TEL4B = `+33633${NUM}`;
+  const telLisible = (t) => `0${t.slice(3)}`.replace(/(\d{2})(?=\d)/g, '$1 ');
+  const ENT4 = `Fromagerie${NUM}`, PROFIL4 = `https://www.linkedin.com/in/essai-${NUM}`;
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, email, commune, entreprise, categorie_id, projet, temperature, verifie_le, dernier_contact_le, dernier_contact_canal) VALUES
+       ('${C4}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Zoé', 'Tableau${NUM}', '${TEL4}', 'zoe.tableau+${ESSAI}@example.com', 'Évian', '${ENT4}', 'partenaires', 'vendeur', 'tiede', '2026-10-02T08:00:00Z', '2026-10-28T09:00:00Z', 'whatsapp')`);
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, categorie_id, ecarte_le) VALUES ('${ECART}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Écarté', 'Tableau${NUM}', '+33632${NUM}', 'lointains', '2026-10-05T08:00:00Z')`);
+  sql(`INSERT INTO contact_coordonnee (contact_id, type, reseau, valeur, ajoute_le) VALUES ('${C4}', 'telephone', NULL, '${TEL4B}', '2026-10-01T08:00:00Z'), ('${C4}', 'profil', 'linkedin', '${PROFIL4}', '2026-10-01T08:00:00Z')`);
+  sql(`INSERT INTO contact_source (contact_id, source, a) VALUES ('${C4}', 'linkedin', '2026-10-01T08:00:00Z')`);
+  r = await appeler(`${E}/`, { headers: avecJeton() });
+  html = await r.text();
+  const donnees = JSON.parse(html.split('id="ct-donnees">')[1]?.split('</script>')[0] ?? '[]');
+  const z = donnees.find((l) => l.id === C4);
+  constat(r.status === 200 && html.includes('<h1>Contacts</h1>') && z?.suivi === false && donnees.some((l) => l.id === KLF && l.suivi === true)
+    && z?.telephones.join() === `${TEL4},${TEL4B}` && z.profils[0]?.url === PROFIL4 && z.sources.includes('linkedin') && z.categorie === 'Partenaires pros' && donnees.find((l) => l.id === ECART)?.ecarte === true,
+    '18.4 : la page Contacts est l\'accueil et charge tout le carnet (contacts hors suivi et suivis, autres numéros, profil, sources, catégorie, écartés marqués)');
+  const nonEcartes = sql('SELECT count(*) AS n FROM contact WHERE ecarte_le IS NULL')[0].n;
+  constat(donnees.length === sql('SELECT count(*) AS n FROM contact')[0].n, `18.4 : une ligne par contact non effacé (${donnees.length})`);
+  r = await appeler(`${E}/?m=suite`, { headers: avecJeton(), redirect: 'manual' });
+  const rj = await appeler(`${E}/aujourdhui`, { headers: avecJeton() });
+  constat(r.status === 301 && r.headers.get('location') === '/aujourdhui?m=suite' && rj.status === 200 && (await rj.text()).includes('Bonjour Anne'),
+    '18.4 : l\'ancienne page d\'accueil « Aujourd\'hui » reste joignable à /aujourdhui, ses anciens retours (/?m=…) y sont renvoyés');
+  const outils = [...html.matchAll(/<a href="([^"]+)"[^>]*data-outil="([^"]+)"/g)].map((m) => [m[2], m[1].replace(/&amp;/g, '&')]);
+  const reponses = await Promise.all(outils.map(([, h]) => appeler(`${E}${h}`, { headers: avecJeton() }).then((x) => x.status)));
+  const attendus = ['aujourdhui', 'pipeline', 'suivis', 'qualifier', 'ajouter', 'importer', 'prescripteurs', 'acheteurs', 'actions', 'campagnes', 'bilan', 'a-trier', 'demandes'];
+  constat(attendus.every((k) => outils.some(([o]) => o === k)) && reponses.every((x) => x === 200) && html.includes('>Autres outils</summary>'),
+    `18.4 : le menu « Autres outils » mène à toutes les pages actuelles, chacune répond (${outils.length} entrées : ${reponses.join(', ')})`);
+  constat((await appeler(`${E}/contacts/fiche?id=${C4}`, { headers: avecJeton() })).status === 200,
+    '18.4 : le nom d\'un contact du carnet ouvre sa fiche');
+  for (const largeur of [1440, 1280]) {
+    const ctx = await nav.newContext({ viewport: { width: largeur, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
+    const o = await ctx.newPage();
+    await o.goto(`${E}/`);
+    await o.waitForSelector('[data-lignes] tr[data-contact]');
+    if (largeur === 1440) {
+      const compte = await o.textContent('[data-compteur]');
+      constat(compte === `${nonEcartes} contacts sur ${nonEcartes}`, `18.4 : le compteur « N contacts sur M » (${compte})`);
+      constat(await o.isVisible(`tr[data-contact="${C4}"]`) && await o.isVisible(`tr[data-contact="${KLF}"]`) && await o.locator(`tr[data-contact="${ECART}"]`).count() === 0,
+        '18.4 : le tableau montre un contact du carnet hors suivi et un contact suivi ; l\'écarté est masqué');
+      const ligne4 = await o.locator(`tr[data-contact="${C4}"]`).innerText();
+      const lien = o.locator(`tr[data-contact="${C4}"] a[href="${PROFIL4}"]`);
+      constat(['Zoé Tableau', ENT4, 'Partenaires pros', 'Vendeur', 'Tiède', 'LinkedIn', 'Évian', telLisible(TEL4), `zoe.tableau+${ESSAI}@example.com`, '28/10/2026 · WhatsApp', 'Sans accord', '✓ vérifié'].every((t) => ligne4.includes(t))
+        && await lien.count() === 1 && (await lien.getAttribute('rel'))?.includes('noopener'),
+        '18.4 : les colonnes de FR-1 (nom, entreprise, catégorie, projet, température, source, ville, téléphone, e-mail, profil, dernier contact, accord, état)');
+      // Recherche par un morceau du milieu de l'autre numéro, tapé avec des espaces ; puis par l'entreprise.
+      await o.fill('[data-recherche]', `33 ${NUM.slice(0, 2)} ${NUM.slice(2, 4)}`);
+      const parNumero = await o.locator('[data-lignes] tr[data-contact]').evaluateAll((t) => t.map((x) => x.dataset.contact));
+      await o.fill('[data-recherche]', `06 33 ${NUM.slice(0, 2)}`);
+      const parDebut = await o.locator('[data-lignes] tr[data-contact]').evaluateAll((t) => t.map((x) => x.dataset.contact));
+      await o.fill('[data-recherche]', ENT4.toLowerCase());
+      const parEntreprise = await o.locator('[data-lignes] tr[data-contact]').evaluateAll((t) => t.map((x) => x.dataset.contact));
+      constat(parNumero.includes(C4) && parDebut.includes(C4) && !parDebut.includes(KLF) && parEntreprise.join() === C4 && (await o.textContent('[data-compteur]')) === `1 contact sur ${nonEcartes}`,
+        '18.4 : recherche par un morceau de numéro (autre numéro compris, début tapé en 06), par l\'entreprise ; le compteur suit');
+      await o.fill('[data-recherche]', '');
+      // Tri par ville, puis à l'envers : vides en fin de liste dans les deux sens.
+      const villes = () => o.locator('[data-lignes] tr[data-contact]').evaluateAll((t) => t.map((x) => x.children[6]?.textContent ?? ''));
+      const ordonne = (l, sens) => { const v = l.filter((x) => x !== '—'); const c = new Intl.Collator('fr', { sensitivity: 'base', numeric: true }); return v.every((x, i) => i === 0 || sens * c.compare(v[i - 1], x) <= 0) && l.slice(v.length).every((x) => x === '—'); };
+      await o.click('th[data-cle=ville] button');
+      const v1 = await villes(), s1 = await o.getAttribute('th[data-cle=ville]', 'aria-sort');
+      await o.click('th[data-cle=ville] button');
+      const v2 = await villes(), s2 = await o.getAttribute('th[data-cle=ville]', 'aria-sort');
+      constat(s1 === 'ascending' && s2 === 'descending' && ordonne(v1, 1) && ordonne(v2, -1) && v1.length === nonEcartes,
+        '18.4 : tri par une colonne, puis à l\'envers (vides en fin de liste)');
+      // Colonne masquée, gardée au rechargement.
+      await o.click('[data-colonnes] summary');
+      await o.uncheck('[data-colonnes] input[value=email]');
+      const masquee = await o.locator('th[data-cle=email]').count() === 0;
+      await o.reload();
+      await o.waitForSelector('[data-lignes] tr[data-contact]');
+      constat(masquee && await o.locator('th[data-cle=email]').count() === 0 && !(await o.isChecked('[data-colonnes] input[value=email]')) && await o.locator('th[data-cle=telephone]').count() === 1,
+        '18.4 : une colonne masquée (E-mail) le reste après rechargement');
+      await o.screenshot({ path: path.join(OUT, 'espace-contacts-sans-email-1440.png') });
+      await o.click('[data-colonnes] summary');
+      await o.check('[data-colonnes] input[value=email]');
+      await o.click('h1');
+      await o.click('[data-outils] summary');
+      constat(await o.isVisible('[data-outils] a[href="/aujourdhui"]'), '18.4 : le menu « Autres outils » s\'ouvre et montre ses pages');
+      await o.screenshot({ path: path.join(OUT, 'espace-contacts-menu-1440.png') });
+      await o.click('h1');
+      constat(await o.isVisible('[data-retour-ouvrir]'), '18.4 : le bouton « Un retour ? » est sur la page Contacts');
+    }
+    await o.screenshot({ path: path.join(OUT, `espace-contacts-${largeur}.png`) });
+    constat(!(await o.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)), `18.4 : page Contacts à ${largeur} px : pas de débordement horizontal`);
+    await ctx.close();
+  }
+  // 1 000 contacts fictifs : tri et recherche en moins d'une seconde dans le navigateur.
+  sql(`DELETE FROM contact WHERE id LIKE 'PERF%'`);
+  sql(`WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 1000)
+       INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, email, commune, entreprise, categorie_id, projet, is_test)
+       SELECT 'PERF' || printf('%022d', i), '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Fictif', 'Perf' || i, '+33699' || printf('%06d', i),
+         'perf' || i || '@example.com', CASE i % 4 WHEN 0 THEN 'Thonon' WHEN 1 THEN 'Évian' WHEN 2 THEN 'Publier' ELSE NULL END,
+         CASE WHEN i % 3 = 0 THEN 'Entreprise ' || (i % 17) END, CASE i % 2 WHEN 0 THEN 'proches' ELSE 'edb' END, 'a_qualifier', 1 FROM n`);
+  try {
+    const ctx = await nav.newContext({ viewport: { width: 1440, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
+    const o = await ctx.newPage();
+    await o.goto(`${E}/`);
+    await o.waitForSelector('[data-lignes] tr[data-contact]');
+    const mesure = await o.evaluate(() => {
+      const temps = (f) => { const t = performance.now(); f(); return Math.round(performance.now() - t); };
+      const q = document.querySelector('[data-recherche]');
+      const chercher = (v) => temps(() => { q.value = v; q.dispatchEvent(new Event('input')); });
+      const trier = (cle) => temps(() => document.querySelector(`th[data-cle=${cle}] button`).click());
+      return { lignes: document.querySelectorAll('[data-lignes] tr[data-contact]').length, triNom: trier('nom'), triVille: trier('ville'), triDernier: trier('dernier'),
+        rechercheMot: chercher('perf'), rechercheNumero: chercher('06 99 00 05'), rechercheVide: chercher('') };
+    });
+    const pire = Math.max(mesure.triNom, mesure.triVille, mesure.triDernier, mesure.rechercheMot, mesure.rechercheNumero, mesure.rechercheVide);
+    constat(mesure.lignes >= 1000 && pire < 1000, `18.4 : avec ${mesure.lignes} contacts, tri et recherche en moins d'une seconde (${JSON.stringify(mesure)} ms)`);
+    await ctx.close();
+  } finally {
+    sql(`DELETE FROM contact WHERE id LIKE 'PERF%'`);
+  }
+
+  // 6. Capture de la liste (ordinateur et téléphone).
   for (const [nom, viewport] of [['ordinateur', { width: 1280, height: 900 }], ['telephone', { width: 390, height: 844 }]]) {
     const ctx = await nav.newContext({ viewport, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
     const onglet = await ctx.newPage();
-    for (const [nomPage, chemin] of [['aujourdhui', '/'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['suite', `/contacts/suite?id=${SUITE}`], ['bilan', '/bilan'], ['prescripteurs', '/prescripteurs'], ['prescripteur', `/prescripteurs/fiche?id=${durand}`], ['acheteurs', `/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`], ['qualifier-acheteur', `/contacts/qualifier?id=${ach1}`], ['pipeline', '/pipeline'], ['importer', '/importer'], ['fiche-leedflow', `/contacts/fiche?id=${KLF}`], ['fiche-accord-site', `/contacts/fiche?id=${SITEACC}`], ['fiche-sans-accord', `/contacts/fiche?id=${saisie.id}`], ['qualifier-leedflow', `/contacts/qualifier?id=${KLF}`], ['inconnu', `/inconnu?tel=${encodeURIComponent(CAPTURE)}`], ['a-trier', '/a-trier'], ['actions', '/actions'], ['action', `/actions?id=${salon.id}`], ['campagnes', '/campagnes'], ['campagne', `/campagnes?id=${kbrouillon}`], ['campagne-envoyee', `/campagnes?id=${kid}`]]) {
+    for (const [nomPage, chemin] of [['accueil-contacts', '/'], ['aujourdhui', '/aujourdhui'], ['gestion', '/gestion'], ['ajouter', '/ajouter'], ['contacts', '/contacts'], ['fiche', `/contacts/fiche?id=${saisie.id}`], ['qualifier', `/contacts/qualifier?id=${carla}`], ['suite', `/contacts/suite?id=${SUITE}`], ['bilan', '/bilan'], ['prescripteurs', '/prescripteurs'], ['prescripteur', `/prescripteurs/fiche?id=${durand}`], ['acheteurs', `/acheteurs?secteur=${encodeURIComponent(ANTHY.toLowerCase())}`], ['qualifier-acheteur', `/contacts/qualifier?id=${ach1}`], ['pipeline', '/pipeline'], ['importer', '/importer'], ['fiche-leedflow', `/contacts/fiche?id=${KLF}`], ['fiche-accord-site', `/contacts/fiche?id=${SITEACC}`], ['fiche-sans-accord', `/contacts/fiche?id=${saisie.id}`], ['qualifier-leedflow', `/contacts/qualifier?id=${KLF}`], ['inconnu', `/inconnu?tel=${encodeURIComponent(CAPTURE)}`], ['a-trier', '/a-trier'], ['actions', '/actions'], ['action', `/actions?id=${salon.id}`], ['campagnes', '/campagnes'], ['campagne', `/campagnes?id=${kbrouillon}`], ['campagne-envoyee', `/campagnes?id=${kid}`]]) {
       await onglet.goto(`${E}${chemin}`);
       if (nomPage === 'ajouter') {
         await onglet.click('[data-canaux] label:has(input[value=boitage]) span');
