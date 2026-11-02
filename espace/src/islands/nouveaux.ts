@@ -58,7 +58,7 @@ export function brancherNouveaux(r: Reglages) {
       <div class="nv-tete"><span class="nv-badge" data-s="${esc(c.source)}">${esc(c.origine)}</span><span>${esc(c.titre)} · ${esc(quand(c.recu_le))}</span></div>
       <div class="nv-nom">${esc(nom)}${coord ? ` <span class="nv-coord">${esc(coord)}</span>` : ''}</div>
       ${c.annonce ? `<div class="nv-info">Annonce : ${esc(c.annonce)}</div>` : ''}
-      ${c.texte ? `<p class="nv-txt">${esc(c.texte)}</p>` : ''}
+      ${c.texte ? `<p class="nv-txt${c.source === 'portail' && !c.contact_id ? ' nv-lire' : ''}">${esc(c.texte)}</p>` : ''}
       ${c.echanges > 1 ? `<div class="nv-info">${c.echanges} échanges vus par Leedflow</div>` : ''}
       ${c.contact_id ? `<div class="nv-auto">${c.ecarte ? 'Contact écarté' : 'Contact créé automatiquement, à ranger'}</div>` : ''}
       ${c.connu ? `<div class="nv-dej">Déjà dans les contacts : <b>${esc(c.connu.nom)}</b>${c.connu.categorie ? ` (${esc(c.connu.categorie)})` : ''}</div>` : ''}

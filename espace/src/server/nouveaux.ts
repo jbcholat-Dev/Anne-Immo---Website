@@ -4,12 +4,14 @@
 // (`vu_le` et `issue`, seul à les poser et à les remettre à NULL). Les autres écritures passent par leur module :
 // `carnet` (écarter, création d'un contact), `pipeline` (entrée dans le suivi), `leedflow` (classement du numéro).
 // Gestes :
-// - demande du site : « Ranger » (la carte sort, la page ouvre la fiche du contact, story 18.7), « Vu », « Écarter »
+// - demande du site ou d'un portail (story 18.12) : « Ranger » (la carte sort, la page ouvre la fiche du contact, story 18.7), « Vu », « Écarter »
 //   (`carnet.classer`, avant-image gardée) ;
 // - numéro inconnu vu par Leedflow : « Ajouter aux contacts » (création par `carnet`, avec le contrôle d'opposition, numéro
 //   classé « prospect » avec ce contact, contact suivi), « Ajouter à sa fiche » quand le numéro est déjà dans le carnet
 //   (numéro classé « prospect » avec ce contact, qui entre dans le suivi pour que ses appels lui soient rattachés), « Ignorer »
 //   (numéro classé « privé »).
+// - e-mail d'un portail gardé pour être lu à la main (illisible, ou personne qui a demandé l'effacement ; story 18.12) :
+//   « Vu » seulement ; la carte montre l'expéditeur, le sujet et le texte de l'e-mail.
 // Chaque geste pose `vu_le` et `issue`, d'abord (un double clic ne fait rien deux fois), puis écrit ; si l'écriture est
 // refusée, la ligne est rouverte. L'annulation, possible pendant `ANNULATION_MS`, rejoue l'avant-image (AD-29) : lot du
 // carnet annulé, suivi remis comme avant, contact créé supprimé s'il n'a rien reçu d'autre, classement du numéro retiré ;
@@ -21,6 +23,7 @@ import type { EnvEspace } from './env';
 import { annulerCreation, annulerLot, classer, creerContact, type Saisie } from './carnet';
 import { ANNULATION_MS, classerDepuisNouveaux, declasserDepuisNouveaux, extrait, resumesInconnus } from './leedflow';
 import { annulerSuiviParGeste, suivreParGeste } from './pipeline';
+import { PORTAILS, type Portail } from './portails';
 
 export type Geste = 'ranger' | 'vu' | 'ecarter' | 'ajouter' | 'rattacher' | 'ignorer';
 export const GESTES: readonly Geste[] = ['ranger', 'vu', 'ecarter', 'ajouter', 'rattacher', 'ignorer'];
@@ -65,7 +68,20 @@ interface Ligne {
   id: string; source: 'site' | 'portail' | 'leedflow'; recu_le: string; contact_id: string | null; leedflow_tel: string | null;
   prenom: string | null; nom: string | null; telephone: string | null; email: string | null; ecarte_le: string | null;
   ev_texte: string | null; ev_donnees: string | null; lead_source: string | null; message: string | null; commune_bien: string | null; type_bien: string | null;
+  pc_id: string | null; pc_portail: Portail | null; pc_etat: string | null; pc_motif: string | null; pc_expediteur: string | null; pc_sujet: string | null; pc_texte: string | null;
 }
+
+/** Pourquoi un e-mail de portail est à lire à la main (motif de `portail_courriel`). */
+const MOTIFS: Record<string, string> = {
+  confirmation: 'Code de confirmation du transfert Gmail : à saisir dans Gmail',
+  taille: 'E-mail trop gros pour être lu : à lire dans la boîte pro',
+  champs: 'Format non reconnu (ni téléphone ni e-mail trouvés) : à lire à la main',
+  opposition_inverifiable: 'Liste d\'opposition invérifiable (réglage LIEN_SECRET absent) : à lire à la main',
+  echec: 'Erreur à l\'enregistrement : à saisir à la main',
+  en_cours: 'Erreur à l\'enregistrement : à saisir à la main',
+};
+/** Le texte d'un e-mail à lire à la main : assez long pour le lire (un code de confirmation, une demande). */
+const TEXTE_A_LIRE = 3000;
 
 /** Les cartes à voir, la plus récente d'abord, et leur nombre. */
 export async function lireNouveaux(envE: EnvEspace): Promise<{ total: number; cartes: CarteNouveau[] }> {
@@ -73,16 +89,19 @@ export async function lireNouveaux(envE: EnvEspace): Promise<{ total: number; ca
   const { results } = await env.DB.prepare(
     `SELECT n.id, n.source, n.recu_le, n.contact_id, i.telephone AS leedflow_tel,
        c.prenom, c.nom, c.telephone, c.email, c.ecarte_le,
-       e.texte AS ev_texte, e.donnees AS ev_donnees, l.source AS lead_source, l.message, l.commune_bien, l.type_bien
+       e.texte AS ev_texte, e.donnees AS ev_donnees, l.source AS lead_source, l.message, l.commune_bien, l.type_bien,
+       p.id AS pc_id, p.portail AS pc_portail, p.etat AS pc_etat, p.motif AS pc_motif, p.expediteur AS pc_expediteur, p.sujet AS pc_sujet, p.texte AS pc_texte
      FROM nouveau n
        LEFT JOIN contact c ON c.id = n.contact_id
        LEFT JOIN contact_evenement e ON e.id = n.evenement_id
        LEFT JOIN lead l ON e.source = 'site' AND l.id = e.source_id
        LEFT JOIN leedflow_inconnu i ON i.source_id = n.leedflow_inconnu_id
+       LEFT JOIN portail_courriel p ON p.id = n.portail_courriel_id
      WHERE n.vu_le IS NULL
        -- Une ligne de Leedflow dont l'échange a disparu (rattaché, purgé) n'a plus rien à montrer : la relève la ferme.
        AND (n.source <> 'leedflow' OR i.telephone IS NOT NULL)
-       AND (n.source = 'leedflow' OR c.id IS NOT NULL)
+       -- Une demande du site ou d'un portail dont le contact a disparu non plus, sauf un e-mail de portail à lire à la main.
+       AND (n.source = 'leedflow' OR c.id IS NOT NULL OR (n.contact_id IS NULL AND p.id IS NOT NULL))
      ORDER BY n.recu_le DESC, n.id DESC`,
   ).all<Ligne>();
   const lues = results.slice(0, MAX_CARTES);
@@ -106,6 +125,7 @@ export async function lireNouveaux(envE: EnvEspace): Promise<{ total: number; ca
     }
     let d: Record<string, unknown> = {};
     try { d = l.ev_donnees ? JSON.parse(l.ev_donnees) : {}; } catch {}
+    if (l.source === 'portail') return cartePortail(l, d);
     const lieu = [l.type_bien, l.commune_bien].filter(Boolean).join(' · ');
     return {
       id: l.id, source: l.source, recu_le: l.recu_le, origine: 'Site',
@@ -116,6 +136,35 @@ export async function lireNouveaux(envE: EnvEspace): Promise<{ total: number; ca
     };
   });
   return { total: results.length, cartes };
+}
+
+/** Texte gardé ligne à ligne (e-mail à lire à la main), lignes vides en trop retirées. */
+const lignes = (t: string | null, max: number) => { const s = (t ?? '').replace(/[ \t]+/g, ' ').replace(/\n\s*\n\s*\n+/g, '\n\n').trim(); return s ? (s.length > max ? `${s.slice(0, max - 1)}…` : s) : null; };
+const texteDe = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null);
+
+/** Carte d'une demande de portail (story 18.12) : lue (contact créé ou complété), ou e-mail gardé pour être lu à la main. */
+function cartePortail(l: Ligne, d: Record<string, unknown>): CarteNouveau {
+  const origine = PORTAILS[l.pc_portail ?? (texteDe(d.portail) as Portail | null) ?? 'autre'] ?? PORTAILS.autre;
+  const base = { id: l.id, source: 'portail' as const, recu_le: l.recu_le, origine, connu: null, prerempli: null, echanges: 0 };
+  if (l.contact_id) {
+    const annonce = [texteDe(d.annonce), texteDe(d.reference) ? `réf. ${texteDe(d.reference)}` : null].filter(Boolean).join(' · ') || null;
+    return {
+      ...base, titre: court(texteDe(d.raison) ?? texteDe(d.recherche), 80) ?? 'Demande sur une annonce',
+      contact_id: l.contact_id, nom: nomDe(l.prenom, l.nom), telephone: l.telephone, email: l.email,
+      texte: court(texteDe(d.message)), annonce, ecarte: !!l.ecarte_le, gestes: [...PAR_SOURCE.portail],
+    };
+  }
+  if (l.pc_etat === 'opposition') {
+    return {
+      ...base, titre: 'Demande d\'une personne qui a demandé l\'effacement', contact_id: null, nom: 'Nom non gardé', telephone: null, email: null,
+      texte: 'Rien de ses données n\'a été gardé ni ajouté au carnet. L\'e-mail est dans la boîte pro : y répondre sans l\'enregistrer.',
+      annonce: l.pc_motif, ecarte: false, gestes: ['vu'],
+    };
+  }
+  return {
+    ...base, titre: MOTIFS[l.pc_motif ?? ''] ?? 'À lire à la main', contact_id: null, nom: l.pc_sujet || 'E-mail sans sujet', telephone: null, email: l.pc_expediteur,
+    texte: lignes(l.pc_texte, TEXTE_A_LIRE) ?? (l.pc_motif === 'taille' ? null : 'Texte déjà effacé.'), annonce: null, ecarte: false, gestes: ['vu'],
+  };
 }
 
 /** Le contact du carnet qui porte chacun de ces numéros (principal d'abord, puis autre numéro), quelle que soit son étape. */
@@ -136,10 +185,10 @@ export type ResultatNouveaux =
   | { ok: false; status: number; code: string; message: string; existant?: { id: string; nom: string } };
 const refus = (status: number, code: string, message: string, plus: { existant?: { id: string; nom: string } } = {}): ResultatNouveaux => ({ ok: false, status, code, message, ...plus });
 
-interface LigneNouveau { id: string; source: string; contact_id: string | null; vu_le: string | null; issue: string | null; tel: string | null }
+interface LigneNouveau { id: string; source: string; contact_id: string | null; vu_le: string | null; issue: string | null; tel: string | null; portail_courriel_id: string | null }
 async function lireLigne(env: EnvSite, id: string): Promise<LigneNouveau | null> {
   return env.DB.prepare(
-    `SELECT n.id, n.source, n.contact_id, n.vu_le, n.issue, i.telephone AS tel FROM nouveau n
+    `SELECT n.id, n.source, n.contact_id, n.vu_le, n.issue, i.telephone AS tel, n.portail_courriel_id FROM nouveau n
      LEFT JOIN leedflow_inconnu i ON i.source_id = n.leedflow_inconnu_id WHERE n.id = ?1`,
   ).bind(id).first<LigneNouveau>();
 }
@@ -156,7 +205,10 @@ export async function agir(envE: EnvEspace, id: string, geste: Geste, par: strin
   if (n.vu_le) return refus(409, 'traitee', 'Cette demande a déjà été traitée.');
   if (!PAR_SOURCE[n.source]?.includes(geste)) return refus(400, 'geste', 'Ce geste ne s\'applique pas à cette demande.');
   if (n.source === 'leedflow' && !n.tel) return refus(409, 'disparue', 'Ce numéro n\'est plus à trier (rattaché ou effacé entre-temps).');
-  if (n.source !== 'leedflow' && !n.contact_id) return refus(409, 'disparue', 'Le contact de cette demande n\'existe plus.');
+  // E-mail de portail à lire à la main (story 18.12) : pas de contact, seul « Vu » s'applique.
+  const aLire = n.source === 'portail' && !n.contact_id && !!n.portail_courriel_id;
+  if (aLire && geste !== 'vu') return refus(400, 'geste', 'Cet e-mail est à lire à la main : seul « Vu » s\'applique.');
+  if (n.source !== 'leedflow' && !n.contact_id && !aLire) return refus(409, 'disparue', 'Le contact de cette demande n\'existe plus.');
   if (geste === 'ajouter' && !saisie) return refus(400, 'saisie', 'Saisie du contact attendue.');
   const vu = new Date().toISOString();
   const pris = await env.DB.prepare('UPDATE nouveau SET vu_le = ?2, issue = ?3 WHERE id = ?1 AND vu_le IS NULL').bind(id, vu, ISSUES[geste]).run();
@@ -173,7 +225,7 @@ export async function agir(envE: EnvEspace, id: string, geste: Geste, par: strin
 
 async function ecrireGeste(envE: EnvEspace, env: EnvSite, n: LigneNouveau, geste: Geste, vu: string, par: string, saisie?: Saisie): Promise<ResultatNouveaux> {
   switch (geste) {
-    case 'vu': return { ok: true, message: 'Demande marquée vue : le contact reste dans le tableau.' };
+    case 'vu': return { ok: true, message: n.contact_id ? 'Demande marquée vue : le contact reste dans le tableau.' : 'E-mail marqué lu : son texte sera effacé de l\'espace (il reste dans la boîte pro).' };
     case 'ranger': return { ok: true, message: 'Demande rangée : corrigez la catégorie, le projet et la température dans la fiche.', contact_id: n.contact_id! };
     case 'ecarter': {
       const r = await classer(env, [n.contact_id!], { ecarte: true }, par, { nouveau: n.id });

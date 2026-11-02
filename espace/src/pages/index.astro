@@ -734,6 +734,8 @@ const donneesNouveaux = enJson(nouveaux);
   .nv-nom { font-weight: 600; overflow-wrap: anywhere; }
   .nv-coord { font-weight: 400; color: var(--avt-text-muted); font-size: 13.5px; }
   .nv-txt { font-size: 14px; margin: 0; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  /* E-mail de portail à lire à la main (story 18.12) : tout le texte, lignes gardées, défilant au-delà de 14 lignes. */
+  .nv-txt.nv-lire { display: block; -webkit-line-clamp: unset; white-space: pre-wrap; max-height: 21em; overflow-y: auto; background: var(--avt-brume); padding: 8px 10px; border-radius: 8px; font-size: 13px; }
   .nv-info, .nv-auto { font-size: 13px; color: var(--avt-text-muted); }
   .nv-dej { font-size: 13px; background: #fbf1e3; color: #7a4a12; padding: 6px 8px; border-radius: 8px; }
   .nv-alerte { font-size: 13px; background: #fbe9e7; color: #8a2a1c; padding: 6px 8px; border-radius: 8px; }

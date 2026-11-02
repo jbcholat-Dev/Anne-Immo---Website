@@ -4,7 +4,7 @@
 // e-mail = même contact, qui est complété, jamais recréé. Chaque création est notée dans l'historique avec le compte
 // qui a agi. La règle des prochaines actions est tenue par la base (CHECK de la migration 0007).
 import type { EnvSite } from '@site/server/env';
-import { ACTION_QUALIFIER, CANAUX_ORIGINE, LIBELLES_ETAPES, trouver, type Canal, type ContactTrouve, type Etape } from '@site/server/contacts';
+import { ACTION_QUALIFIER, ACTION_QUALIFIER_EMAIL, CANAUX_ORIGINE, LIBELLES_ETAPES, trouver, type Canal, type ContactTrouve, type Etape } from '@site/server/contacts';
 import { e164, emailValide } from '@site/server/schema';
 import { filtreRecherche } from '@site/server/recherche';
 import { ulid } from '@site/server/ulid';
@@ -183,6 +183,95 @@ export async function annulerSuiviParGeste(env: EnvSite, id: string, nouveau: st
     .bind(id, maintenant, d.de === null ? `${LIBELLES_ETAPES.a_qualifier} → Carnet : ajout depuis « Nouveaux » annulé` : 'Reprise de l\'historique du numéro annulée',
       JSON.stringify({ de: d.de === null ? 'a_qualifier' : d.de, vers: d.de, annule: nouveau }), par).run();
   return 'rendu';
+}
+
+// ——— Demandes des portails par e-mail (story 18.12, AD-20 entrée 3, AD-22, AD-34) ———
+
+/** Une demande lue dans un e-mail de portail par `server/portails` (seuls les champs utiles). */
+export interface DemandeLue {
+  portail: 'leboncoin' | 'seloger' | 'autre';
+  prenom: string | null; nom: string | null; telephone: string | null; email: string | null; ville: string | null;
+  message: string | null; reference: string | null; annonce: string | null; raison: string | null; recherche: string | null;
+}
+const NOMS_PORTAILS = { leboncoin: 'Leboncoin', seloger: 'SeLoger', autre: 'un portail d\'annonces' } as const;
+
+/**
+ * Rattache une demande de portail à son contact, en le créant au besoin, comme une demande du site (AD-20 inchangé :
+ * la source crée le contact) : catégorie « Demandes reçues » (vérifiée : c'est sa définition), parcours et projet
+ * acheteur, température « avec Anne », référence du bien, origine « portail », source `portail`. Un contact existant est
+ * complété (ce qui manque seulement ; la référence du bien seulement s'il n'en a pas) ; un contact du carnet entre dans le
+ * suivi « à qualifier » avec `suivi_le` (entrée seule : la relève Leedflow ne lui verse que la suite, AD-32) ; un contact
+ * en sommeil ou perdu revient à qualifier. Dans la même exécution D1 : l'événement « demande » (source `portail`,
+ * identifiant = la ligne `portail_courriel`, message gardé sur la fiche), la ligne `nouveau` de source `portail`, et la
+ * ligne `portail_courriel` passée « lue », sans le texte de l'e-mail.
+ */
+export async function rattacherDemandePortail(env: EnvSite, d: DemandeLue, courriel: string, recu: string, is_test: number): Promise<string> {
+  const parcours = 'acheteur';
+  const libelle = NOMS_PORTAILS[d.portail];
+  let contact = await trouver(env, d.telephone, d.email);
+  if (!contact) {
+    await env.DB.prepare(
+      `INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, email, parcours, etape, prochaine_action, prochaine_action_le,
+         canal, origine_detail, commune, bien_ref, is_test, categorie_id, verifie_le, projet, temperature)
+       VALUES (?1, ?2, ?2, ?3, ?4, ?5, ?6, 'acheteur', 'a_qualifier', ?7, ?2, 'portail', ?8, ?9, ?10, ?11, 'demandes_recues', ?2, 'acheteur', 'avec_anne')
+       ON CONFLICT DO NOTHING`,
+    ).bind(ulid(), recu, d.prenom, d.nom, d.telephone, d.email, d.telephone ? ACTION_QUALIFIER : ACTION_QUALIFIER_EMAIL, libelle, d.ville, d.reference, is_test).run();
+    contact = await trouver(env, d.telephone, d.email);
+    if (!contact) throw new Error('contact introuvable après création');
+  }
+  const id = contact.id;
+  const maintenant = new Date().toISOString();
+  const texteEv = [`Demande depuis ${libelle}`, d.annonce ? `annonce « ${d.annonce} »` : null, d.reference ? `réf. ${d.reference}` : null].filter(Boolean).join(', ')
+    + (d.message ? ` : ${d.message}` : '');
+  const lot = [
+    env.DB.prepare(
+      `UPDATE contact SET last_activity_at = ?2, prenom = COALESCE(prenom, ?3), nom = COALESCE(nom, ?4),
+         telephone = COALESCE(telephone, CASE WHEN ?5 IS NOT NULL AND NOT EXISTS (SELECT 1 FROM contact WHERE telephone = ?5)
+           AND NOT EXISTS (SELECT 1 FROM contact_coordonnee WHERE valeur = ?5) THEN ?5 END),
+         email = COALESCE(email, CASE WHEN ?6 IS NOT NULL AND NOT EXISTS (SELECT 1 FROM contact WHERE email = ?6)
+           AND NOT EXISTS (SELECT 1 FROM contact_coordonnee WHERE valeur = ?6) THEN ?6 END),
+         commune = COALESCE(commune, ?7), bien_ref = COALESCE(bien_ref, ?8)
+       WHERE id = ?1`,
+    ).bind(id, maintenant, d.prenom, d.nom, d.telephone, d.email, d.ville, d.reference),
+    env.DB.prepare(`UPDATE contact SET prochaine_action = ?2 WHERE id = ?1 AND prochaine_action = ?3 AND telephone IS NOT NULL`).bind(id, ACTION_QUALIFIER, ACTION_QUALIFIER_EMAIL),
+    env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, donnees) VALUES (?1, ?2, 'demande', 'portail', ?3, ?4, ?5) ON CONFLICT DO NOTHING`)
+      .bind(id, recu, courriel, texteEv.slice(0, 1400), JSON.stringify({ portail: d.portail, reference: d.reference, annonce: d.annonce, message: d.message, raison: d.raison, recherche: d.recherche, ville: d.ville })),
+  ];
+  if (contact.etape === null) {
+    lot.push(
+      env.DB.prepare(
+        `UPDATE contact SET etape = 'a_qualifier', prochaine_action = CASE WHEN telephone IS NULL THEN ?4 ELSE ?3 END,
+           prochaine_action_le = ?2, reveil_le = NULL, motif_perte = NULL, suivi_le = ?2,
+           parcours = coalesce(parcours, CASE WHEN projet IN ('vendeur', 'acheteur') THEN projet END, ?5),
+           projet = CASE WHEN projet IN ('a_qualifier', 'ambassadeur') THEN ?5 ELSE projet END,
+           canal = coalesce(canal, 'portail'), origine_detail = CASE WHEN canal IS NULL THEN ?6 ELSE origine_detail END
+         WHERE id = ?1 AND etape IS NULL`,
+      ).bind(id, maintenant, ACTION_QUALIFIER, ACTION_QUALIFIER_EMAIL, parcours, libelle),
+      env.DB.prepare(`UPDATE contact SET temperature = CASE WHEN projet IN ('vendeur', 'acheteur', 'vendeur_acheteur') THEN 'avec_anne' END WHERE id = ?1 AND suivi_le = ?2`).bind(id, maintenant),
+      env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees) SELECT ?1, ?2, 'etape', 'portail', ?3, ?4
+         WHERE EXISTS (SELECT 1 FROM contact WHERE id = ?1 AND suivi_le = ?2)`)
+        .bind(id, maintenant, `Carnet → ${LIBELLES_ETAPES.a_qualifier} : demande depuis ${libelle}`, JSON.stringify({ de: null, vers: 'a_qualifier' })),
+    );
+  } else if (contact.etape === 'en_sommeil' || contact.etape === 'perdu') {
+    lot.push(
+      env.DB.prepare(`UPDATE contact SET etape = 'a_qualifier', prochaine_action = CASE WHEN telephone IS NULL THEN ?4 ELSE ?3 END,
+          prochaine_action_le = ?2, reveil_le = NULL, motif_perte = NULL WHERE id = ?1`).bind(id, maintenant, ACTION_QUALIFIER, ACTION_QUALIFIER_EMAIL),
+      env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees) VALUES (?1, ?2, 'etape', 'portail', ?3, ?4)`)
+        .bind(id, maintenant, `${LIBELLES_ETAPES[contact.etape]} → ${LIBELLES_ETAPES.a_qualifier} : nouvelle demande depuis ${libelle}`, JSON.stringify({ de: contact.etape, vers: 'a_qualifier' })),
+    );
+  }
+  lot.push(
+    env.DB.prepare(`INSERT INTO contact_source (contact_id, source, a) SELECT ?1, 'portail', ?2 WHERE NOT EXISTS (SELECT 1 FROM contact_source WHERE contact_id = ?1 AND source = 'portail')`).bind(id, recu),
+    // La carte posée à la réception (portails.ts) passe sur le contact ; recréée si elle a disparu entre-temps.
+    env.DB.prepare(`UPDATE nouveau SET contact_id = ?2, evenement_id = (SELECT id FROM contact_evenement WHERE source = 'portail' AND source_id = ?1)
+       WHERE portail_courriel_id = ?1`).bind(courriel, id),
+    env.DB.prepare(`INSERT INTO nouveau (id, source, recu_le, contact_id, evenement_id, portail_courriel_id)
+       SELECT ?1, 'portail', ?2, ?3, (SELECT id FROM contact_evenement WHERE source = 'portail' AND source_id = ?4), ?4
+       WHERE NOT EXISTS (SELECT 1 FROM nouveau WHERE portail_courriel_id = ?4)`).bind(ulid(), recu, id, courriel),
+    env.DB.prepare(`UPDATE portail_courriel SET etat = 'lu', motif = NULL, contact_id = ?2, expediteur = NULL, sujet = NULL, texte = NULL WHERE id = ?1`).bind(courriel, id),
+  );
+  await env.DB.batch(lot);
+  return id;
 }
 
 function evenement(env: EnvSite, contactId: string, a: string, type: 'creation' | 'note' | 'qualification', source: 'anne' | 'import', texteEv: string, par: string, donnees?: unknown) {

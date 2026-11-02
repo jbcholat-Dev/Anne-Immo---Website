@@ -76,6 +76,9 @@
 // second geste refusé, annulation trop tardive ; numéros inconnus de Leedflow, une ligne par numéro, Ignorer, Ajouter à sa
 // fiche, Ajouter aux contacts, chacun annulé, numéro ajouté à une fiche qui ne revient plus, opposition, 400, 403, 413) ;
 // la page (barre repliée, cartes, Vu puis Annuler, création préremplie) à 1440 et 1280 px.
+// Story 18.12 : demandes des portails par e-mail, injectées dans le gestionnaire `email` par /cdn-cgi/handler/email
+// (Leboncoin par Modelo, SeLoger en HTML qui complète un contact du carnet, doublon, illisible, confirmation de Gmail,
+// opposition, expéditeur refusé, e-mail trop gros ; cartes et gestes, ménage du texte ; page à 1440 et 1280 px).
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
 // Lancer depuis espace/ : `node scripts/e2e-espace.mjs`.
@@ -3023,6 +3026,160 @@ try {
           '18.11 : « Ajouter aux contacts » ouvre la création préremplie (nom Leedflow, numéro non modifiable, sans case d\'accord), le contact est créé');
       }
       constat(!(await o.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)), `18.11 : page Contacts avec la barre ouverte à ${largeur} px : pas de débordement horizontal`);
+      await ctx.close();
+    }
+  }
+  // Story 18.12 : les demandes des portails par e-mail, injectées dans le gestionnaire `email` du Worker par l'adresse locale
+  // de wrangler (/cdn-cgi/handler/email). E-mails fictifs : notification Modelo d'une demande Leboncoin (texte,
+  // quoted-printable, sujet encodé), e-mail de SeLoger (HTML en base64, tableau) qui complète un contact du carnet, e-mail
+  // illisible, confirmation du transfert Gmail, personne en opposition, doublon, expéditeur refusé.
+  {
+    const A = 'demandes@entrant.annevialtissot.fr';
+    const qp = (t) => Array.from(Buffer.from(t, 'utf8'), (o) => (o > 126 || o === 61 ? `=${o.toString(16).toUpperCase().padStart(2, '0')}` : String.fromCharCode(o))).join('');
+    const b64 = (t) => Buffer.from(t, 'utf8').toString('base64').replace(/.{76}/g, '$&\r\n');
+    const sujetEnc = (t) => `=?UTF-8?B?${Buffer.from(t, 'utf8').toString('base64')}?=`;
+    const recevoir = async (de, brut) => {
+      const r = await appeler(`${E}/cdn-cgi/handler/email?from=${encodeURIComponent(de)}&to=${encodeURIComponent(A)}`, { method: 'POST', body: brut });
+      // wrangler répond 200 « Worker successfully processed email », ou 400 avec la raison du rejet.
+      const t = await r.text();
+      return { status: r.status, outcome: r.ok ? 'ok' : 'rejete', raison: t };
+    };
+    const enTete = (de, sujet, id, type, enc) => [`From: ${de}`, `To: ${A}`, `Subject: ${sujet}`, `Message-ID: <${id}@essai.example>`, 'Date: Mon, 02 Nov 2026 09:12:00 +0100', 'MIME-Version: 1.0',
+      ...(type ? [`Content-Type: ${type}`] : []), ...(enc ? [`Content-Transfer-Encoding: ${enc}`] : [])].join('\r\n');
+    const nvP = async () => {
+      const rr = await appeler(`${E}/api/nouveaux`, { headers: avecJeton() });
+      return (await rr.json().catch(() => ({}))).cartes ?? [];
+    };
+    const gesteP = async (corps) => {
+      const rr = await appeler(`${E}/api/nouveaux`, { method: 'POST', headers: avecJeton(JETON, { 'Content-Type': 'application/json' }), body: JSON.stringify(corps) });
+      return { status: rr.status, d: await rr.json().catch(() => ({})) };
+    };
+    const courrielDe = (mid) => sql(`SELECT * FROM portail_courriel WHERE message_id = '<${mid}@essai.example>'`)[0];
+    const nouveauDe = (pcId) => sql(`SELECT * FROM nouveau WHERE portail_courriel_id = '${pcId}'`)[0];
+    const TEL_LBC = `+33771${NUM}`, TEL_SL = `+33772${NUM}`, TEL_OPP = `+33773${NUM}`;
+    const lisible = (t) => `0${t.slice(3, 4)} ${t.slice(4, 6)} ${t.slice(6, 8)} ${t.slice(8, 10)} ${t.slice(10, 12)}`;
+
+    // 1. Leboncoin par Modelo : contact créé, catégorie « Demandes reçues », acheteur, référence du bien, source portail.
+    const MID_LBC = `lbc-${NUM}`;
+    const corpsLbc = `Bonjour,\r\n\r\nVous avez reçu une nouvelle demande de contact depuis la passerelle Leboncoin.\r\n\r\nPrénom : Lucie\r\nNom : Portail${NUM}\r\nE-mail : lucie.portail${NUM}@example.com\r\nTéléphone : ${lisible(TEL_LBC)}\r\nVille : Thonon-les-Bains\r\nRaison du contact : Demande de visite\r\nType de recherche : Achat\r\nMessage : Bonjour, cette maison avec jardin m'intéresse.\r\nEst-elle toujours disponible ? <script>alert(1)</script>\r\nRéférence du bien : AVT-${NUM}\r\n\r\nCordialement,\r\nNetty - Contacts passerelles\r\n`;
+    let r = await recevoir('inbound@nettymail.com', `${enTete('"Netty - Contacts passerelles" <inbound@nettymail.com>', sujetEnc(`Nouveau contact Leboncoin - Réf. AVT-${NUM}`), MID_LBC, 'text/plain; charset=utf-8', 'quoted-printable')}\r\n\r\n${qp(corpsLbc)}`);
+    const pcL = courrielDe(MID_LBC);
+    const kL = sql(`SELECT * FROM contact WHERE telephone = '${TEL_LBC}'`)[0];
+    const nL = pcL ? nouveauDe(pcL.id) : null;
+    const evL = kL ? sql(`SELECT * FROM contact_evenement WHERE contact_id = '${kL.id}' AND type = 'demande' AND source = 'portail'`)[0] : null;
+    constat(r.outcome === 'ok' && pcL?.etat === 'lu' && pcL.portail === 'leboncoin' && pcL.texte === null && pcL.sujet === null && pcL.expediteur === null && pcL.contact_id === kL?.id
+      && kL?.prenom === 'Lucie' && kL.nom === `Portail${NUM}` && kL.email === `lucie.portail${NUM}@example.com` && kL.categorie_id === 'demandes_recues' && kL.projet === 'acheteur'
+      && kL.parcours === 'acheteur' && kL.bien_ref === `AVT-${NUM}` && kL.canal === 'portail' && kL.origine_detail === 'Leboncoin' && kL.etape === 'a_qualifier' && kL.commune === 'Thonon-les-Bains'
+      && sql(`SELECT source FROM contact_source WHERE contact_id = '${kL.id}'`).map((s) => s.source).join() === 'portail'
+      && nL?.source === 'portail' && nL.contact_id === kL.id && nL.evenement_id === evL?.id && nL.vu_le === null,
+      '18.12 : une demande Leboncoin (Modelo) crée le contact : « Demandes reçues », acheteur, référence du bien, source portail, ligne `nouveau` portail');
+    let cartes = await nvP();
+    const cL = cartes.find((c) => c.id === nL?.id);
+    constat(!!cL && cL.origine === 'Leboncoin' && cL.titre === 'Demande de visite' && cL.nom === `Lucie Portail${NUM}` && cL.telephone === TEL_LBC && cL.annonce === `réf. AVT-${NUM}`
+      && cL.texte.includes('toujours disponible') && cL.texte.includes('<script>') && JSON.stringify(cL.gestes) === '["ranger","vu","ecarter"]',
+      '18.12 : sa carte « Nouveaux » : portail, raison, nom, coordonnées, message, référence ; gestes Ranger, Vu, Écarter');
+    const evD = evL?.donnees ? JSON.parse(evL.donnees) : {};
+    constat(Object.keys(evD).sort().join() === 'annonce,message,portail,raison,recherche,reference,ville' && !JSON.stringify(evD).includes('Netty'),
+      '18.12 : seuls les champs utiles sont gardés dans l\'historique (ni l\'e-mail, ni sa signature)');
+    // Le même e-mail reçu deux fois ne fait rien de plus.
+    r = await recevoir('inbound@nettymail.com', `${enTete('"Netty - Contacts passerelles" <inbound@nettymail.com>', 'Nouveau contact', MID_LBC, 'text/plain; charset=utf-8', 'quoted-printable')}\r\n\r\n${qp(corpsLbc)}`);
+    constat(r.outcome === 'ok' && sql(`SELECT count(*) AS n FROM portail_courriel WHERE message_id = '<${MID_LBC}@essai.example>'`)[0].n === 1
+      && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${kL?.id}' AND type = 'demande'`)[0].n === 1 && sql(`SELECT count(*) AS n FROM nouveau WHERE contact_id = '${kL?.id}'`)[0].n === 1,
+      '18.12 : un e-mail reçu deux fois (même Message-ID) ne crée ni second événement ni seconde carte');
+    // Ranger : la carte sort, s'annule.
+    let x = await gesteP({ id: nL?.id, geste: 'ranger' });
+    const apresRanger = sql(`SELECT issue FROM nouveau WHERE id = '${nL?.id}'`)[0]?.issue;
+    const annule = await gesteP({ annuler: nL?.id });
+    constat(x.status === 200 && x.d.contact_id === kL?.id && apresRanger === 'range' && annule.status === 200 && sql(`SELECT vu_le FROM nouveau WHERE id = '${nL?.id}'`)[0]?.vu_le === null,
+      '18.12 : « Ranger » sur une demande de portail ouvre son contact ; s\'annule');
+
+    // 2. SeLoger, e-mail HTML en base64 : complète un contact du carnet (même téléphone), qui entre dans le suivi.
+    const KSL = `01KFPS${NUM}${'0'.repeat(14)}`;
+    sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, categorie_id, projet) VALUES ('${KSL}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Marc', 'Carnet${NUM}', '${TEL_SL}', 'lointains', 'a_qualifier')`);
+    const MID_SL = `sl-${NUM}`;
+    const html = `<html><head><style>td{padding:4px}</style></head><body><p>Bonjour,</p><p>Un internaute est int&eacute;ress&eacute; par votre annonce sur SeLoger.</p>
+<table><tr><td><b>Nom et prénom</b></td><td>Marc Durand${NUM}</td></tr><tr><td>Téléphone</td><td>${lisible(TEL_SL)}</td></tr><tr><td>Email</td><td>marc.sl${NUM}@example.com</td></tr>
+<tr><td>Annonce</td><td>Appartement T3 vue lac &ndash; Évian-les-Bains</td></tr><tr><td>Référence</td><td>SL-${NUM}</td></tr><tr><td>Message</td><td>Je souhaite visiter samedi.</td></tr></table>
+<p>L'équipe SeLoger</p></body></html>`;
+    const borne = `b-${NUM}`;
+    r = await recevoir('notification@seloger.com', `${enTete('SeLoger <notification@seloger.com>', sujetEnc('Nouvelle demande sur votre annonce'), MID_SL, `multipart/alternative; boundary="${borne}"`)}\r\n\r\n--${borne}\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: base64\r\n\r\n${b64(html)}\r\n--${borne}--\r\n`);
+    const kS = sql(`SELECT * FROM contact WHERE id = '${KSL}'`)[0];
+    const pcS = courrielDe(MID_SL);
+    constat(r.outcome === 'ok' && pcS?.etat === 'lu' && pcS.portail === 'seloger' && pcS.contact_id === KSL && kS.prenom === 'Marc' && kS.nom === `Carnet${NUM}` && kS.email === `marc.sl${NUM}@example.com`
+      && kS.bien_ref === `SL-${NUM}` && kS.etape === 'a_qualifier' && !!kS.suivi_le && kS.categorie_id === 'lointains' && sql(`SELECT count(*) AS n FROM contact WHERE telephone = '${TEL_SL}'`)[0].n === 1,
+      '18.12 : une demande SeLoger (HTML, base64) complète le contact du carnet qui a ce téléphone (e-mail, référence ; rien n\'est remplacé) et le fait entrer dans le suivi');
+    cartes = await nvP();
+    const cS = cartes.find((c) => c.id === nouveauDe(pcS?.id)?.id);
+    constat(!!cS && cS.origine === 'SeLoger' && cS.annonce === `Appartement T3 vue lac – Évian-les-Bains · réf. SL-${NUM}` && cS.texte === 'Je souhaite visiter samedi.',
+      '18.12 : sa carte nomme SeLoger, l\'annonce et sa référence');
+    x = await gesteP({ id: cS?.id, geste: 'ecarter' });
+    const ecarte = sql(`SELECT ecarte_le FROM contact WHERE id = '${KSL}'`)[0]?.ecarte_le;
+    const annuleE = await gesteP({ annuler: cS?.id });
+    constat(x.status === 200 && !!ecarte && annuleE.status === 200 && sql(`SELECT ecarte_le FROM contact WHERE id = '${KSL}'`)[0]?.ecarte_le === null,
+      '18.12 : « Écarter » sur une demande de portail écarte le contact ; s\'annule');
+
+    // 3. Illisible : gardé avec son texte, carte « à lire à la main », seul « Vu » s'applique ; texte effacé après.
+    const MID_ILL = `ill-${NUM}`;
+    r = await recevoir('inbound@nettymail.com', `${enTete('"Netty" <inbound@nettymail.com>', 'Nouvelle demande', MID_ILL, 'text/plain; charset=utf-8')}\r\n\r\nUne personne a laissé un message pour le bien ${NUM} : rappeler Mme Illisible${NUM} au plus vite.\r\n`);
+    const pcI = courrielDe(MID_ILL);
+    const nI = pcI ? nouveauDe(pcI.id) : null;
+    cartes = await nvP();
+    const cI = cartes.find((c) => c.id === nI?.id);
+    constat(r.outcome === 'ok' && pcI?.etat === 'illisible' && pcI.motif === 'champs' && pcI.contact_id === null && pcI.texte.includes(`Illisible${NUM}`) && pcI.expediteur === 'inbound@nettymail.com'
+      && !sql(`SELECT 1 FROM contact WHERE nom LIKE '%Illisible${NUM}%'`).length && !!cI && cI.titre.includes('Format non reconnu') && cI.texte.includes(`Illisible${NUM}`)
+      && cI.nom === 'Nouvelle demande' && JSON.stringify(cI.gestes) === '["vu"]',
+      '18.12 : un e-mail illisible est gardé (expéditeur, sujet, texte) et signalé par une carte « à lire à la main », sans contact créé');
+    x = await gesteP({ id: nI?.id, geste: 'ranger' });
+    constat(x.status === 400 && sql(`SELECT vu_le FROM nouveau WHERE id = '${nI?.id}'`)[0]?.vu_le === null, '18.12 : sur un e-mail à lire à la main, seul « Vu » s\'applique (Ranger refusé, 400)');
+    x = await gesteP({ id: nI?.id, geste: 'vu' });
+    constat(x.status === 200 && courrielDe(MID_ILL)?.texte !== null, '18.12 : « Vu » sort la carte ; le texte reste le temps de l\'annulation');
+    sql(`UPDATE nouveau SET vu_le = '2026-01-01T00:00:00Z' WHERE id = '${nI?.id}'`);
+    await appeler(`${E}/cdn-cgi/handler/scheduled`);
+    for (let i = 0; i < 40 && courrielDe(MID_ILL)?.texte !== null; i++) await pause(250);
+    const pcI2 = courrielDe(MID_ILL);
+    constat(pcI2?.texte === null && pcI2.sujet === null && pcI2.expediteur === null && pcI2.etat === 'illisible', '18.12 : passé le délai, la tâche planifiée efface le texte, le sujet et l\'expéditeur de l\'e-mail lu');
+    // Confirmation du transfert Gmail : gardée pour en lire le code.
+    const MID_GM = `gm-${NUM}`;
+    r = await recevoir('forwarding-noreply@google.com', `${enTete('Gmail Team <forwarding-noreply@google.com>', `(#7${NUM}) Confirmation de transfert Gmail`, MID_GM, 'text/plain; charset=utf-8')}\r\n\r\navialtissot@gmail.com a demandé à transférer automatiquement ses e-mails à l'adresse ${A}.\r\nCode de confirmation : 7${NUM}\r\n`);
+    const pcG = courrielDe(MID_GM);
+    const cG = (await nvP()).find((c) => c.id === nouveauDe(pcG?.id)?.id);
+    constat(r.outcome === 'ok' && pcG?.motif === 'confirmation' && !!cG && cG.titre.includes('Code de confirmation') && cG.texte.includes(`Code de confirmation : 7${NUM}`),
+      '18.12 : la confirmation du transfert Gmail est montrée sur une carte, avec son code');
+
+    // 4. Opposition : aucune donnée de la personne gardée, aucune fiche ; la carte dit qu'une demande est arrivée.
+    sql(`INSERT INTO opposition (empreinte, le) VALUES ('${createHmac('sha256', 'essai').update(`opposition:${TEL_OPP}`).digest('hex')}', '2026-10-01T00:00:00Z') ON CONFLICT DO NOTHING`);
+    const MID_OPP = `opp-${NUM}`;
+    r = await recevoir('inbound@nettymail.com', `${enTete('"Netty - Contacts passerelles" <inbound@nettymail.com>', 'Nouveau contact Leboncoin', MID_OPP, 'text/plain; charset=utf-8')}\r\n\r\nPrénom : Olga\r\nNom : Opposee${NUM}\r\nTéléphone : ${lisible(TEL_OPP)}\r\nMessage : Encore moi.\r\nRéférence du bien : OPP-${NUM}\r\n`);
+    const pcO = courrielDe(MID_OPP);
+    const cO = (await nvP()).find((c) => c.id === nouveauDe(pcO?.id)?.id);
+    constat(r.outcome === 'ok' && pcO?.etat === 'opposition' && pcO.texte === null && pcO.sujet === null && pcO.expediteur === null && pcO.contact_id === null && pcO.motif === `Réf. OPP-${NUM}`
+      && !sql(`SELECT 1 FROM contact WHERE telephone = '${TEL_OPP}' OR nom = 'Opposee${NUM}'`).length && !!cO && JSON.stringify(cO.gestes) === '["vu"]' && !JSON.stringify(cO).includes('Olga') && cO.annonce === `Réf. OPP-${NUM}`,
+      '18.12 : une personne en opposition : ni contact ni donnée gardée ; la carte signale la demande (référence du bien seulement)');
+
+    // 5. Expéditeur qui n'est pas un portail : refusé, rien gardé.
+    const MID_X = `x-${NUM}`;
+    r = await recevoir('inconnu@exemple.org', `${enTete('Inconnu <inconnu@exemple.org>', 'Publicité', MID_X, 'text/plain; charset=utf-8')}\r\n\r\nPrénom : Pub\r\nTéléphone : 06 00 00 00 00\r\n`);
+    constat(r.outcome !== 'ok' && /portails/.test(r.raison ?? '') && !courrielDe(MID_X), `18.12 : un expéditeur qui n'est pas un portail est rejeté (${r.outcome}), rien n'est gardé`);
+    // Un e-mail trop gros n'est pas lu, mais gardé et signalé.
+    const MID_G = `gros-${NUM}`;
+    r = await recevoir('inbound@nettymail.com', `${enTete('"Netty" <inbound@nettymail.com>', 'Pièce jointe', MID_G, 'text/plain; charset=utf-8')}\r\n\r\nTéléphone : ${lisible(TEL_LBC)}\r\n${'x'.repeat(1_100_000)}\r\n`);
+    const pcGros = courrielDe(MID_G);
+    constat(r.outcome === 'ok' && pcGros?.etat === 'illisible' && pcGros.motif === 'taille' && pcGros.texte === null && !!nouveauDe(pcGros.id), '18.12 : un e-mail trop gros n\'est pas lu, mais gardé et signalé (carte « à lire à la main »)');
+
+    // La page : cartes des portails à 1440 et 1280 px.
+    for (const largeur of [1440, 1280]) {
+      const ctx = await nav.newContext({ viewport: { width: largeur, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
+      const o = await ctx.newPage();
+      await o.goto(`${E}/`);
+      constat((await o.textContent('[data-nv-src]')).includes('Leboncoin'), `18.12 : à ${largeur} px, la barre repliée cite Leboncoin parmi les sources`);
+      await o.click('[data-nv-barre]');
+      await o.waitForSelector(`[data-nv-carte="${nL?.id}"]`);
+      const lire = o.locator(`[data-nv-carte="${cG?.id}"] .nv-lire`);
+      constat(await lire.count() === 1 && (await lire.textContent()).includes(`7${NUM}`) && await o.locator('[data-nv-liste] script').count() === 0,
+        `18.12 : à ${largeur} px, une carte « à lire à la main » montre tout le texte de l'e-mail ; un message reste du texte`);
+      await o.locator(`[data-nv-carte="${cG?.id}"]`).scrollIntoViewIfNeeded();
+      await o.screenshot({ path: path.join(OUT, `espace-nouveaux-portails-${largeur}.png`) });
+      constat(!(await o.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)), `18.12 : cartes des portails à ${largeur} px : pas de débordement horizontal`);
       await ctx.close();
     }
   }
