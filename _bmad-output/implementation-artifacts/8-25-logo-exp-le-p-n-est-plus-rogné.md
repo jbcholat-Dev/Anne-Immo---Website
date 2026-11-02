@@ -1,7 +1,7 @@
 ---
 story: 8.25
 epic: 8 — Structure et visuel
-statut: review
+statut: done
 date: 2026-11-02
 ---
 
@@ -34,5 +34,5 @@ Dans tous les fichiers du logo eXp du design system, le dessin touche exactement
 - Mineur : si le cadre d'un SVG change encore, la réécriture de `Lockup.astro` échoue sans rien dire → corrigé (commit suivant) : la construction s'arrête avec une erreur si le logo n'a pas été reconnu.
 
 ## Ce qui reste
-- Accord de JB pour fusionner (la PR change le site).
-- Recopier les mêmes cadres dans l'artefact Design System.
+- Fusion : accord de JB le 2026-11-02 à 11 h 10 (« ok »), PR n° 228 fusionnée (commit 55394ac).
+- Artefact Design System : les six fichiers eXp et la carte Co-branding eXp mis à jour le 2026-11-02 (fait).
