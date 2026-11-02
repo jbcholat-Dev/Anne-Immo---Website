@@ -32,6 +32,8 @@ export interface LigneTableau {
   ecarte: boolean;
   /** Dans le suivi des ventes (étape renseignée), ou au carnet seulement. */
   suivi: boolean;
+  /** Dans le suivi et en cours (ni perdu ni en sommeil) : la température y suit l'étape (AD-24), elle ne se choisit pas. */
+  en_cours: boolean;
   /** Date « à rappeler le » (AAAA-MM-JJ, FR-16), ou null. */
   a_rappeler_le: string | null;
   /** Inscrit au programme ambassadeurs (marque à part du projet, glossaire du PRD). */
@@ -63,6 +65,20 @@ export const PROJETS: Record<string, string> = {
 export const TEMPERATURES: Record<string, string> = {
   froid: 'Froid', tiede: 'Tiède', chaud: 'Chaud', en_vente: 'Déjà en vente', recherche_active: 'En recherche active', avec_anne: 'Avec Anne', termine: 'Terminé',
 };
+/** Les températures qu'Anne ou JB choisissent ; « avec Anne » et « terminé » sont posées par le suivi des ventes (AD-24). */
+export const TEMPERATURES_CHOIX = ['froid', 'tiede', 'chaud', 'en_vente', 'recherche_active'] as const;
+/** Les projets qui ont une température (FR-4) ; à qualifier et ambassadeur n'en ont pas. */
+export const PROJETS_AVEC_TEMPERATURE: readonly string[] = ['vendeur', 'acheteur', 'vendeur_acheteur'];
+/** Une température est-elle permise pour ce projet (CHECK de la migration 0018, AD-24) ? null l'est toujours. */
+export function temperaturePermise(t: string | null, projet: string): boolean {
+  if (t === null) return true;
+  if (!PROJETS_AVEC_TEMPERATURE.includes(projet)) return false;
+  if (t === 'en_vente') return projet === 'vendeur' || projet === 'vendeur_acheteur';
+  if (t === 'recherche_active') return projet === 'acheteur';
+  return true;
+}
+/** Dans le suivi des ventes et en cours (étape autre que perdu ou en sommeil). */
+export const suiviEnCours = (etape: string | null) => etape !== null && etape !== 'perdu' && etape !== 'en_sommeil';
 export const CANAUX_CONTACT: Record<string, string> = {
   whatsapp: 'WhatsApp', sms: 'SMS', email: 'E-mail', appel: 'Appel', rencontre: 'Rencontre', autre: 'Autre',
 };

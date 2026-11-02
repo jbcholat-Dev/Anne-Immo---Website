@@ -51,6 +51,11 @@
 // « écartés »), combinaison avec la recherche, vues enregistrées (création avec un nom échappé, choix, renommage, suppression
 // et annulation, « Tous les contacts » indélébile), /api/vues (vocabulaire fermé d'AD-27 : clé ou valeur inconnue refusée,
 // accès réservé à Anne et JB, jamais à Claude), routes /api/claude/… sans contacts ni vues, vitesse sous 300 ms avec 1 200 contacts.
+// Story 18.6 : /api/carnet (lot avec avant-image et lot commun, annulation exacte, catégorie qui marque vérifié, projet sans
+// température, température seulement là où elle s'applique, contact du suivi classé sans que son étape bouge, écarter et
+// faire revenir, 400 hors vocabulaire, 403 sans jeton ou avec celui de Claude) ; la page (Maj + clic, cases gardées au tri et
+// au filtre, barre d'actions et annulation sans recharger, une seule ligne dans sa cellule, écarté puis revenu, tout cocher) ;
+// un lot de 1 000 contacts.
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
 // Lancer depuis espace/ : `node scripts/e2e-espace.mjs`.
@@ -1466,7 +1471,7 @@ try {
         'revue 18.4 : « helene » trouve « Hélène » (accents ignorés) ; des chiffres cherchent aussi dans le texte (entreprise, nom)');
       await chercher('');
       // Tri par ville, puis à l'envers : vides en fin de liste dans les deux sens.
-      const villes = () => o.locator('[data-lignes] tr[data-contact]').evaluateAll((t) => t.map((x) => x.children[6]?.textContent ?? ''));
+      const villes = () => o.locator('[data-lignes] tr[data-contact]').evaluateAll((t) => t.map((x) => x.querySelector(':scope > td:nth-child(8)')?.textContent ?? '')); // 1re colonne : la case (18.6)
       const ordonne = (l, sens) => { const v = l.filter((x) => x !== '—'); const c = new Intl.Collator('fr', { sensitivity: 'base', numeric: true }); return v.every((x, i) => i === 0 || sens * c.compare(v[i - 1], x) <= 0) && l.slice(v.length).every((x) => x === '—'); };
       // Story 18.5 : les lignes s'écrivent par paquets ; attendre la dernière (`data-complet`).
       const complet = () => o.waitForSelector('[data-lignes][data-complet]', { state: 'attached' });
@@ -1649,10 +1654,198 @@ try {
   // réponses ne contiennent aucun nom de vue.
   const routesClaude = fs.readdirSync(path.join(ICI, 'src', 'pages', 'api', 'claude')).map((f) => fs.readFileSync(path.join(ICI, 'src', 'pages', 'api', 'claude', f), 'utf8'));
   const repClaude = (await (await claude('/api/claude/actions')).text()) + (await (await claude('/api/claude/bilan?p=semaine')).text());
-  constat(routesClaude.length >= 2 && routesClaude.every((t) => !/vues|tableau|FROM vue\b/.test(t)) && !repClaude.includes('Vendeurs chauds') && !repClaude.includes(`Filtreun${NUM}`),
+  constat(routesClaude.length >= 2 && routesClaude.every((t) => !/vues|tableau|carnet|FROM vue\b/.test(t)) && !repClaude.includes('Vendeurs chauds') && !repClaude.includes(`Filtreun${NUM}`),
     '18.5 : les routes /api/claude/… ne lisent ni les contacts du tableau ni les vues');
   sql(`DELETE FROM vue WHERE nom LIKE 'Essai vue%'`);
   constat(nVues() === vuesAvant, `18.5 : vues de l'essai retirées (${vuesAvant} vues en base)`);
+  // Story 18.6 : classer plusieurs contacts à la fois, une seule ligne, écarter, annuler. Quatre contacts d'une ville propre
+  // à cet essai, dont un du suivi des ventes ; toutes les écritures passent par /api/carnet (`server/carnet`, AD-29).
+  const VILLE6 = `Classeville${NUM}`;
+  const G1 = `01KF6A${NUM}${'0'.repeat(14)}`, G2 = `01KF6B${NUM}${'0'.repeat(14)}`, G3 = `01KF6C${NUM}${'0'.repeat(14)}`, GP = `01KF6D${NUM}${'0'.repeat(14)}`;
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, commune, categorie_id, projet, temperature, telephone) VALUES
+       ('${G1}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Gabin', 'Classeun${NUM}', '${VILLE6}', 'lointains', 'vendeur', 'en_vente', '+33661${NUM}')`);
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, commune, projet, temperature, telephone) VALUES
+       ('${G2}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Gina <i>x</i>', 'Classedeux${NUM}', '${VILLE6}', 'acheteur', 'recherche_active', '+33662${NUM}')`);
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, commune, categorie_id, verifie_le, telephone) VALUES
+       ('${G3}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Gaspard', 'Classetrois${NUM}', '${VILLE6}', 'proches', '2026-10-02T08:00:00Z', '+33663${NUM}')`);
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, commune, categorie_id, projet, temperature, telephone, etape, parcours, prochaine_action, prochaine_action_le, dernier_contact_le, dernier_contact_canal) VALUES
+       ('${GP}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Gilles', 'Classesuivi${NUM}', '${VILLE6}', 'demandes_recues', 'vendeur', 'avec_anne', '+33664${NUM}', 'premier_rdv', 'vendeur', 'Rappeler', '2026-12-01', '2026-10-20T09:00:00Z', 'appel')`);
+  const CLASSEMENT = 'categorie_id, projet, temperature, verifie_le, ecarte_le';
+  const etatG = (ids = [G1, G2, G3, GP]) => JSON.stringify(sql(`SELECT id, ${CLASSEMENT} FROM contact WHERE id IN (${ids.map((x) => `'${x}'`).join(',')}) ORDER BY id`));
+  const un = (id) => sql(`SELECT ${CLASSEMENT}, etape, parcours, prochaine_action, prochaine_action_le, dernier_contact_le, dernier_contact_canal FROM contact WHERE id = '${id}'`)[0];
+  const nEv = () => sql(`SELECT count(*) AS n FROM contact_evenement WHERE type = 'classement'`)[0].n;
+  const api = async (corps, { jeton = JETON, type = 'application/json' } = {}) => {
+    const x = await appeler(`${E}/api/carnet`, { method: 'POST', redirect: 'manual', headers: { 'cf-access-jwt-assertion': jeton, 'Content-Type': type, Origin: E }, body: typeof corps === 'string' ? corps : JSON.stringify(corps) });
+    let d = null; try { d = await x.json(); } catch {}
+    return { status: x.status, d };
+  };
+  {
+    // Lot : catégorie sur trois contacts, avant-image gardée, « vérifié » posé (sans changer une date déjà là), puis annulation.
+    const avant = etatG();
+    let x = await api({ ids: [G1, G2, G3], changements: { categorie_id: 'edb' } });
+    const evs = sql(`SELECT contact_id, donnees, source, par FROM contact_evenement WHERE type = 'classement' AND json_extract(donnees, '$.lot') = '${x.d?.lot}' ORDER BY contact_id`);
+    const d1 = evs.map((e) => JSON.parse(e.donnees));
+    constat(x.status === 200 && x.d.ok && x.d.touches === 3 && evs.length === 3 && d1[0].avant.categorie_id === 'lointains' && d1[0].apres.categorie_id === 'edb' && d1[1].avant.categorie_id === null
+      && d1[0].avant.verifie_le === null && !!d1[0].apres.verifie_le && !('verifie_le' in d1[2].apres) && evs.every((e) => e.source === 'anne' && e.par) && x.d.lignes.length === 3,
+      `18.6 : un lot de trois contacts change leur catégorie et garde pour chacun son avant-image dans contact_evenement, avec un lot commun (${x.d?.lot})`);
+    constat(un(G1).categorie_id === 'edb' && !!un(G1).verifie_le && !!un(G2).verifie_le && un(G3).verifie_le === '2026-10-02T08:00:00Z',
+      '18.6 : changer la catégorie marque « vérifié » (une date de vérification déjà posée est gardée)');
+    const lot1 = x.d.lot;
+    x = await api({ annuler: lot1 });
+    const apresAnnul = etatG();
+    const y = await api({ annuler: lot1 });
+    constat(x.status === 200 && x.d.rendus === 3 && apresAnnul === avant && y.status === 200 && y.d.rendus === 0 && etatG() === avant,
+      '18.6 : annuler le lot rend l\'état exact d\'avant (catégorie, vérifié) ; une seconde annulation ne rend plus rien');
+    // Projet sans température : la température est effacée ; un projet incompatible aussi (déjà en vente → acheteur).
+    x = await api({ ids: [G1, G2], changements: { projet: 'ambassadeur' } });
+    const amb = [un(G1), un(G2)];
+    await api({ annuler: x.d.lot });
+    x = await api({ ids: [G1, G2], changements: { projet: 'acheteur' } });
+    constat(amb.every((c) => c.projet === 'ambassadeur' && c.temperature === null) && x.d.touches === 1 && x.d.inchanges === 1 && un(G1).projet === 'acheteur' && un(G1).temperature === null && un(G2).temperature === 'recherche_active',
+      '18.6 : un projet sans température (ambassadeur) efface la température ; « déjà en vente » ne passe pas chez un acheteur ; un contact déjà dans l\'état demandé n\'est pas touché');
+    // Température : posée seulement là où elle s'applique ; un contact suivi garde celle du suivi.
+    x = await api({ ids: [G1, G3, GP], changements: { temperature: 'chaud' } });
+    constat(x.d.touches === 1 && x.d.ignores === 2 && un(G1).temperature === 'chaud' && un(G3).temperature === null && un(GP).temperature === 'avec_anne',
+      `18.6 : une température groupée ne touche que les vendeurs ou acheteurs hors suivi en cours (${x.d.touches} touché, ${x.d.ignores} ignorés)`);
+    // Le contact du suivi des ventes : classé (catégorie, projet) sans que son étape ni son dernier contact bougent.
+    const p0 = un(GP);
+    x = await api({ ids: [GP], changements: { categorie_id: 'partenaires' } });
+    const x2 = await api({ ids: [GP], changements: { projet: 'vendeur_acheteur' } });
+    const p1 = un(GP);
+    constat(x.d.touches === 1 && x2.d.touches === 1 && p1.categorie_id === 'partenaires' && p1.projet === 'vendeur_acheteur' && p1.temperature === 'avec_anne'
+      && ['etape', 'parcours', 'prochaine_action', 'prochaine_action_le', 'dernier_contact_le', 'dernier_contact_canal'].every((k) => p1[k] === p0[k]),
+      '18.6 : un contact du suivi des ventes se classe sans que son étape, sa prochaine action ni son dernier contact bougent (température « avec Anne » gardée)');
+    // Écarter puis faire revenir.
+    x = await api({ ids: [G3], changements: { ecarte: true } });
+    const ecarte = un(G3).ecarte_le;
+    const x3 = await api({ ids: [G3], changements: { ecarte: false } });
+    constat(x.d.touches === 1 && !!ecarte && x3.d.touches === 1 && un(G3).ecarte_le === null, '18.6 : écarter pose « écarté », faire revenir l\'enlève, par le carnet');
+    // Annulation d'un lot dont un contact a été modifié depuis : celui-là est gardé (AD-29).
+    const a = await api({ ids: [G1, G2], changements: { categorie_id: 'lointains' } });
+    await api({ ids: [G2], changements: { categorie_id: 'proches' } });
+    x = await api({ annuler: a.d.lot });
+    constat(x.d.rendus === 1 && x.d.gardes === 1 && un(G2).categorie_id === 'proches', '18.6 : annuler un lot garde un contact modifié depuis par une autre écriture');
+    // Refus : 400 pour toute valeur hors vocabulaire, rien n'est écrit ; 404 pour un lot inconnu ; 403 sans jeton ou avec celui de Claude.
+    const e0 = nEv(), s0 = etatG();
+    const trop = Array.from({ length: 2001 }, (_, i) => `01KF6Z${String(i).padStart(20, '0')}`);
+    const refus = [
+      ['catégorie inconnue', await api({ ids: [G1], changements: { categorie_id: 'inexistante' } })],
+      ['projet inconnu', await api({ ids: [G1], changements: { projet: 'roi' } })],
+      ['température « avec Anne »', await api({ ids: [G1], changements: { temperature: 'avec_anne' } })],
+      ['température « terminé »', await api({ ids: [G1], changements: { temperature: 'termine' } })],
+      ['température inconnue', await api({ ids: [G1], changements: { temperature: 'brulant' } })],
+      ['vérifié non booléen', await api({ ids: [G1], changements: { verifie: 'oui' } })],
+      ['changement inconnu', await api({ ids: [G1], changements: { etape: 'vendu' } })],
+      ['dernier contact', await api({ ids: [G1], changements: { dernier_contact_le: '2026-10-01' } })],
+      ['aucun changement', await api({ ids: [G1], changements: {} })],
+      ['aucun identifiant', await api({ ids: [], changements: { verifie: true } })],
+      ['identifiant mal formé', await api({ ids: ["x' OR 1=1"], changements: { verifie: true } })],
+      ['2 001 identifiants', await api({ ids: trop, changements: { verifie: true } })],
+      ['lot mal formé', await api({ annuler: 'tous' })],
+      ['corps qui n\'est pas du JSON', await api('ids=x', { type: 'application/x-www-form-urlencoded' })],
+    ];
+    constat(refus.every(([, r]) => r.status === 400 && r.d?.ok === false) && nEv() === e0 && etatG() === s0,
+      `18.6 : /api/carnet refuse toute valeur hors vocabulaire (400 : ${refus.map(([n, r]) => `${n} ${r.status}`).join(', ')}), rien n'est écrit`);
+    const inconnu = await api({ annuler: '01ARZ3NDEKTSV4RRFFQ69G5FAV' });
+    const acces = [
+      ['sans jeton', await appeler(`${E}/api/carnet`, { method: 'POST', redirect: 'manual', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [G1], changements: { ecarte: true } }) })],
+      ['jeton de Claude', await api({ ids: [G1], changements: { ecarte: true } }, { jeton: JETON_CLAUDE })],
+      ['jeton de Claude (annulation)', await api({ annuler: a.d.lot }, { jeton: JETON_CLAUDE })],
+    ];
+    constat(inconnu.status === 404 && acces.every(([, r]) => r.status === 403) && nEv() === e0 && etatG() === s0,
+      `18.6 : lot inconnu 404 ; /api/carnet réservé à Anne et JB (${acces.map(([n, r]) => `${n} ${r.status}`).join(', ')})`);
+  }
+  // La page : cases, Maj + clic, barre d'actions groupées, annulation, une seule ligne, écarter et faire revenir.
+  for (const largeur of [1440, 1280]) {
+    const ctx = await nav.newContext({ viewport: { width: largeur, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
+    const o = await ctx.newPage();
+    await o.goto(`${E}/`);
+    const attendre = () => o.waitForSelector('[data-lignes][data-complet]', { state: 'attached' });
+    await attendre();
+    await o.selectOption('[data-filtre=ville]', VILLE6); await attendre();
+    const ids = () => o.locator('[data-lignes] tr[data-contact]').evaluateAll((t) => t.map((x) => x.dataset.contact));
+    const cochees = () => o.locator('[data-lignes] tr[data-contact]:has(input[data-cocher]:checked)').evaluateAll((t) => t.map((x) => x.dataset.contact));
+    const caseDe = (id) => `tr[data-contact="${id}"] input[data-cocher]`;
+    if (largeur === 1440) {
+      const ordre = await ids();
+      await o.click(caseDe(ordre[0]));
+      await o.click(caseDe(ordre[2]), { modifiers: ['Shift'] });
+      const plage = await cochees();
+      constat(plage.length === 3 && plage.join() === ordre.slice(0, 3).join() && (await o.textContent('[data-lot-n]')).startsWith('3 sélectionnés') && await o.isVisible('[data-lot]'),
+        '18.6 : Maj + clic coche toute la plage entre la case cliquée juste avant et celle-ci ; la barre d\'actions annonce « 3 sélectionnés »');
+      await o.click(caseDe(ordre[2]), { modifiers: ['Shift'] });
+      await o.click(caseDe(ordre[0]), { modifiers: ['Shift'] });
+      const decoche = await cochees();
+      await o.click(caseDe(ordre[0])); await o.click(caseDe(ordre[2]), { modifiers: ['Shift'] });
+      constat(decoche.length === 0 && (await cochees()).length === 3, '18.6 : Maj + clic sur une case décochée décoche toute la plage');
+      await o.click('th[data-cle=nom] button'); await attendre();
+      const apresTri = await cochees();
+      await o.fill('[data-recherche]', `classeun${NUM}`); await o.waitForTimeout(300); await attendre();
+      const pendant = (await o.textContent('[data-lot-n]')) ?? '';
+      await o.fill('[data-recherche]', ''); await o.waitForTimeout(300); await attendre();
+      constat(apresTri.length === 3 && plage.every((x) => apresTri.includes(x)) && /3 sélectionnés \(dont \d hors de l'affichage\)/.test(pendant) && (await cochees()).length === 3,
+        `18.6 : les cases cochées gardent leur état quand le tableau est retrié ou filtré (${pendant})`);
+      constat(await o.locator('[data-lignes] i').count() === 0 && (await o.getAttribute(caseDe(G2), 'aria-label')) === `Cocher Gina <i>x</i> Classedeux${NUM}`,
+        '18.6 : un nom avec des balises reste du texte (case et cellules échappées)');
+      // Action groupée : catégorie ; tableau mis à jour sans recharger ; Annuler rend l'état d'avant.
+      const avant = etatG(plage);
+      await o.evaluate(() => { window.__marque = 'meme-page'; });
+      await o.selectOption('[data-lot-action=categorie_id]', 'anciens_clients');
+      await o.waitForSelector('[data-toast-annuler]:visible');
+      const message = await o.textContent('[data-toast-texte]');
+      const cellules = await Promise.all(plage.map((id) => o.locator(`tr[data-contact="${id}"]`).innerText()));
+      const enBase = plage.map((id) => un(id).categorie_id);
+      await o.screenshot({ path: path.join(OUT, 'espace-contacts-lot-fait-1440.png') });
+      constat(message.startsWith('3 contacts touchés') && enBase.every((c) => c === 'anciens_clients') && cellules.every((t) => t.includes('Anciens clients') && t.includes('✓ vérifié'))
+        && (await o.evaluate(() => window.__marque)) === 'meme-page' && (await cochees()).length === 0 && await o.isHidden('[data-lot]'),
+        `18.6 : la barre change la catégorie des cochés : « ${message} », tableau mis à jour sans recharger, cases vidées`);
+      await o.click('[data-toast-annuler]');
+      await o.waitForFunction(() => document.querySelector('[data-toast-texte]')?.textContent?.includes('remis comme avant'));
+      await attendre();
+      const textes = await Promise.all(plage.map((id) => o.locator(`tr[data-contact="${id}"]`).innerText()));
+      constat(etatG(plage) === avant && textes.every((t) => !t.includes('Anciens clients')),
+        '18.6 : « Annuler » rend l\'état exact d\'avant le lot, en base et dans le tableau');
+      // Une seule ligne : projet puis température directement dans la cellule.
+      await o.click(`tr[data-contact="${G3}"] [data-classer=projet]`);
+      await o.selectOption(`tr[data-contact="${G3}"] select[data-liste=projet]`, 'vendeur');
+      await o.waitForFunction((id) => document.querySelector(`tr[data-contact="${id}"]`)?.textContent?.includes('Vendeur'), G3);
+      await o.click(`tr[data-contact="${G3}"] [data-classer=temperature]`);
+      const choixTemp = await o.locator(`tr[data-contact="${G3}"] select[data-liste=temperature] option`).evaluateAll((t) => t.map((x) => x.value));
+      await o.selectOption(`tr[data-contact="${G3}"] select[data-liste=temperature]`, 'tiede');
+      await o.waitForFunction((id) => document.querySelector(`tr[data-contact="${id}"]`)?.textContent?.includes('Tiède'), G3);
+      const g3 = un(G3);
+      constat(g3.projet === 'vendeur' && g3.temperature === 'tiede' && choixTemp.includes('en_vente') && !choixTemp.includes('recherche_active') && !choixTemp.includes('avec_anne')
+        && (await o.textContent('[data-toast-texte]')).startsWith('1 contact touché'),
+        `18.6 : une seule ligne se classe dans sa cellule (projet puis température, choix permis seulement : ${choixTemp.join(', ')})`);
+      constat(await o.locator(`tr[data-contact="${GP}"] [data-classer=temperature]`).count() === 0 && await o.locator(`tr[data-contact="${GP}"] [data-classer=projet]`).count() === 1,
+        '18.6 : la température d\'un contact du suivi en cours ne se choisit pas dans le tableau (elle suit l\'étape)');
+      // Écarter depuis la barre, puis faire revenir depuis le filtre « Écartés ».
+      await o.click(caseDe(G3));
+      await o.click('[data-lot-ecarter]');
+      await o.waitForSelector(`tr[data-contact="${G3}"]`, { state: 'detached' });
+      const ecarte = !!un(G3).ecarte_le;
+      await o.selectOption('[data-filtre=etat]', 'ecarte:oui'); await attendre();
+      const dansEcartes = (await ids()).includes(G3);
+      await o.click(caseDe(G3));
+      const libelle = await o.textContent('[data-lot-ecarter]');
+      await o.click('[data-lot-ecarter]');
+      await o.waitForSelector(`tr[data-contact="${G3}"]`, { state: 'detached' });
+      await o.click('[data-retirer=ecarte]'); await attendre();
+      constat(ecarte && dansEcartes && libelle === 'Faire revenir' && un(G3).ecarte_le === null && (await ids()).includes(G3),
+        '18.6 : un contact écarté disparaît du tableau, se retrouve avec le filtre « Écartés » et en revient par « Faire revenir »');
+      // Tout cocher : toutes les lignes affichées.
+      await o.click('[data-tout]');
+      const toutes = await cochees(), affichees = await ids();
+      await o.screenshot({ path: path.join(OUT, 'espace-contacts-lot-1440.png') });
+      await o.click('[data-lot-aucun]');
+      constat(toutes.length === affichees.length && affichees.length >= 4 && (await cochees()).length === 0, `18.6 : la case d'en-tête coche toutes les lignes affichées (${toutes.length}) ; « Désélectionner » les décoche`);
+    } else {
+      await o.click(caseDe(G1)); await o.click(caseDe(G2));
+      await o.screenshot({ path: path.join(OUT, `espace-contacts-lot-${largeur}.png`) });
+    }
+    constat(!(await o.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)), `18.6 : page Contacts avec la barre d'actions à ${largeur} px : pas de débordement horizontal`);
+    await ctx.close();
+  }
   // 1 150 contacts fictifs (environ 1 230 en tout, story 18.5) : tri, recherche et filtres dans le navigateur.
   sql(`DELETE FROM contact WHERE id LIKE 'PERF%'`);
   sql(`WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 1150)
@@ -1714,6 +1907,35 @@ try {
     constat(mesure.lignes >= 1000 && pire < 1000, `18.4 : avec ${mesure.lignes} contacts, tri, recherche et filtres en moins d'une seconde`);
     constat(mesure.lignes >= 1000 && pire < 300,
       `18.5 : avec ${mesure.lignes} contacts, chaque tri, recherche ou filtre redessine le tableau en moins de 300 ms, attente de 120 ms comprise (pire ${pire} ms ; ${gestes.map(([k, v]) => `${k} ${v.peint}/${v.complet}`).join(', ')} ms, redessiné/complet)`);
+    // Story 18.6 : un lot de 1 000 contacts, par la route (catégorie puis annulation), puis par la page (tout cocher, catégorie, annuler).
+    const perf = sql(`SELECT id, categorie_id FROM contact WHERE id LIKE 'PERF%' ORDER BY id LIMIT 1000`);
+    const cats0 = JSON.stringify(perf);
+    const appelLot = async (corps) => { const t0 = performance.now(); const x = await appeler(`${E}/api/carnet`, { method: 'POST', headers: { 'cf-access-jwt-assertion': JETON, 'Content-Type': 'application/json', Origin: E }, body: JSON.stringify(corps) }); const d = await x.json(); return { d, ms: Math.round(performance.now() - t0) }; };
+    const l1 = await appelLot({ ids: perf.map((x) => x.id), changements: { categorie_id: 'lointains' } });
+    const tous1000 = sql(`SELECT count(*) AS n FROM contact WHERE id LIKE 'PERF%' AND categorie_id = 'lointains'`)[0].n;
+    const evs1000 = sql(`SELECT count(*) AS n FROM contact_evenement WHERE json_extract(donnees, '$.lot') = '${l1.d.lot}'`)[0].n;
+    const l2 = await appelLot({ annuler: l1.d.lot });
+    const rendu = JSON.stringify(sql(`SELECT id, categorie_id FROM contact WHERE id LIKE 'PERF%' ORDER BY id LIMIT 1000`)) === cats0;
+    await o.fill('[data-recherche]', 'fictif'); await o.waitForTimeout(300);
+    await o.waitForSelector('[data-lignes][data-complet]', { state: 'attached' });
+    await o.click('[data-tout]');
+    const nCoches = await o.textContent('[data-lot-n]');
+    const page = await o.evaluate(async () => {
+      const t0 = performance.now();
+      const s = document.querySelector('[data-lot-action=categorie_id]');
+      s.value = 'partenaires'; s.dispatchEvent(new Event('change', { bubbles: true }));
+      await new Promise((ok) => { const v = () => (!document.querySelector('[data-toast]').hidden && document.querySelector('[data-lignes]').hasAttribute('data-complet')) ? ok() : setTimeout(v, 5); v(); });
+      const fait = Math.round(performance.now() - t0), message = document.querySelector('[data-toast-texte]').textContent;
+      const t1 = performance.now();
+      document.querySelector('[data-toast-annuler]').click();
+      await new Promise((ok) => { const v = () => document.querySelector('[data-toast-texte]').textContent.includes('remis comme avant') && document.querySelector('[data-lignes]').hasAttribute('data-complet') ? ok() : setTimeout(v, 5); v(); });
+      return { fait, annule: Math.round(performance.now() - t1), message };
+    });
+    const renduPage = JSON.stringify(sql(`SELECT id, categorie_id FROM contact WHERE id LIKE 'PERF%' ORDER BY id LIMIT 1000`)) === cats0;
+    constat(l1.d.touches === 1000 && tous1000 === 1000 && evs1000 === 1000 && l2.d.rendus === 1000 && rendu && l1.ms < 3000 && l2.ms < 3000,
+      `18.6 : un lot de 1 000 contacts par /api/carnet : ${l1.ms} ms (1 000 événements), annulation ${l2.ms} ms, état rendu à l'identique`);
+    constat(Number(/^(\d+) contacts touchés/.exec(page.message)?.[1] ?? 0) >= 1000 && renduPage && page.fait < 3000 && page.annule < 3000,
+      `18.6 : dans la page, ${nCoches} d'un clic (« ${page.message.split(' :')[0]} »), catégorie changée et tableau redessiné en ${page.fait} ms, annulé en ${page.annule} ms`);
     await ctx.close();
   } finally {
     sql(`DELETE FROM contact WHERE id LIKE 'PERF%'`);

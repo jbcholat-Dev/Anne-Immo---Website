@@ -1,10 +1,10 @@
 // Page Contacts (story 18.4, FR-1, AD-27) : tous les contacts non effacés (un effacement supprime la ligne, AD-31), du
 // carnet comme du suivi des ventes, écartés compris (masqués par défaut dans le navigateur), lus en trois requêtes et
-// réunis ici. Lecture seule : les écritures du tableau passeront par `carnet` (AD-22, stories 18.6 et 18.7).
+// réunis ici. Lecture seule : le classement s'écrit par `carnet` (AD-22, story 18.6 ; fiche : story 18.7).
 // Story 18.5 : la date « à rappeler le » et la marque ambassadeur (filtres d'AD-27), et la liste des catégories.
 import type { EnvSite } from '@site/server/env';
 import { etatEmail, SQL_ACCORD, type DonneesAccord } from './accord';
-import type { LigneTableau } from './tableau-colonnes';
+import { suiviEnCours, type LigneTableau } from './tableau-colonnes';
 
 interface LigneContact extends DonneesAccord {
   id: string; prenom: string | null; nom: string | null; telephone: string | null; entreprise: string | null;
@@ -51,7 +51,7 @@ export async function lireTableau(env: EnvSite): Promise<LigneTableau[]> {
       emails: [c.email, ...(a?.emails ?? [])].filter((e): e is string => !!e),
       profils: a?.profils ?? [],
       dernier_le: c.dernier_contact_le, dernier_canal: c.dernier_contact_canal,
-      accord: etatEmail(c).statut, verifie: !!c.verifie_le, ecarte: !!c.ecarte_le, suivi: c.etape !== null,
+      accord: etatEmail(c).statut, verifie: !!c.verifie_le, ecarte: !!c.ecarte_le, suivi: c.etape !== null, en_cours: suiviEnCours(c.etape),
       a_rappeler_le: c.a_rappeler_le, ambassadeur_inscrit: !!c.ambassadeur_inscrit_le,
     };
   });

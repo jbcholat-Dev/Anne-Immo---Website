@@ -6,15 +6,18 @@
 // Story 18.5 : filtres (FR-2, plus « à rappeler », vocabulaire fermé d'AD-27 dans `server/vues.ts`) dans la barre
 // d'outils, pastilles des filtres actifs au-dessus du tableau, vues enregistrées et catégories dans la colonne de gauche ;
 // les vues s'écrivent par /api/vues. Recherche et filtres lisent un index calculé une fois au chargement.
+// Story 18.6 : une case à cocher par ligne (Maj + clic coche la plage, case d'en-tête pour toutes les lignes affichées),
+// barre d'actions groupées (catégorie, projet, température, vérifié, écarter ou faire revenir) et classement d'une seule
+// ligne dans ses cellules ; tout s'écrit par /api/carnet (`server/carnet`, avant-image gardée, AD-29) et s'annule depuis
+// le message qui suit. Le tableau se met à jour sans recharger.
 // Place laissée aux stories suivantes, dans la mise en page de la maquette : barre « Nouveaux » (18.11) au-dessus de la
-// recherche, cases à cocher et actions groupées (18.6) en tête du tableau, « + Nouveau contact » et fiche (18.7) en haut
-// à droite et sur le nom.
+// recherche, « + Nouveau contact » et fiche (18.7) en haut à droite et sur le nom.
 // L'ancienne page d'accueil « Aujourd'hui » est à /aujourdhui ; ses anciens retours (`/?m=…`) y sont renvoyés.
 import Espace from '../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { pourSite as env } from '../server/env';
 import { lireCategories, lireTableau } from '../server/tableau';
-import { ACCORDS, COLONNES, PROJETS, TEMPERATURES } from '../server/tableau-colonnes';
+import { ACCORDS, COLONNES, PROJETS, TEMPERATURES, TEMPERATURES_CHOIX } from '../server/tableau-colonnes';
 import { DUREES } from '../server/vues';
 import { listerVues } from '../server/vues-base';
 
@@ -78,6 +81,15 @@ const reglages = enJson({ vues, categories });
         </select>
       </div>
       <div class="ct-actifs"><span class="ct-pastilles" data-pastilles></span><span class="ct-total" data-compteur aria-live="polite">{total} contact{total > 1 ? 's' : ''} sur {total}</span></div>
+      <div class="ct-lot" data-lot hidden>
+        <strong data-lot-n aria-live="polite">0 sélectionné</strong>
+        <select data-lot-action="categorie_id" aria-label="Changer la catégorie des contacts cochés"><option value="">Changer la catégorie…</option>{categories.map((c) => <option value={c.id}>{c.nom}</option>)}</select>
+        <select data-lot-action="projet" aria-label="Changer le projet des contacts cochés"><option value="">Projet…</option>{Object.entries(PROJETS).map(([k, v]) => <option value={k}>{v}</option>)}</select>
+        <select data-lot-action="temperature" aria-label="Changer la température des contacts cochés"><option value="">Température…</option>{TEMPERATURES_CHOIX.map((k) => <option value={k}>{TEMPERATURES[k]}</option>)}<option value="aucune">Effacer la température</option></select>
+        <button type="button" class="ct-btn" data-lot-verifie>Marquer vérifié</button>
+        <button type="button" class="ct-btn" data-lot-ecarter>Écarter</button>
+        <button type="button" class="ct-btn ct-lot-fin" data-lot-aucun>Désélectionner</button>
+      </div>
       <div class="ct-boite">
         <table class="ct-table" data-tableau>
           <thead><tr data-entetes></tr></thead>
@@ -107,8 +119,8 @@ const reglages = enJson({ vues, categories });
   // contacts, de vues, de catégories, villes) passe par `esc` avant d'entrer dans le HTML, ou par textContent / value.
   import { telLisible } from '@site/server/recherche';
   import {
-    ACCORDS, CANAUX_CONTACT, COLONNES, PROJETS, TEMPERATURES, indexer, libelleSource, preparerRecherche, valeurTri,
-    type CleColonne, type LigneTableau,
+    ACCORDS, CANAUX_CONTACT, COLONNES, PROJETS, PROJETS_AVEC_TEMPERATURE, TEMPERATURES, TEMPERATURES_CHOIX, indexer,
+    libelleSource, preparerRecherche, temperaturePermise, valeurTri, type CleColonne, type LigneTableau,
   } from '../server/tableau-colonnes';
   import { ajouter, pastilles, preparerFiltre, retirer, type CleFiltre, type Filtre, type Vue } from '../server/vues';
 
@@ -121,7 +133,8 @@ const reglages = enJson({ vues, categories });
   // Calculé une seule fois : textes sans accents, numéros réduits aux chiffres, dates en millisecondes.
   const index = lignes.map(indexer);
   const dates = lignes.map((l) => l.dernier_le ? new Date(l.dernier_le).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' }) : '');
-  const total = lignes.filter((l) => !l.ecarte).length;
+  let total = lignes.filter((l) => !l.ecarte).length;
+  const parId = new Map(lignes.map((l, i) => [l.id, i]));
   const nomsCategories = new Map(reglages.categories.map((c) => [c.id, c.nom]));
   let vues: Vue[] = reglages.vues;
   const comparer = new Intl.Collator('fr', { sensitivity: 'base', numeric: true }).compare;
@@ -162,16 +175,22 @@ const reglages = enJson({ vues, categories });
   const pastille = (texte: string, classe = '') => `<span class="ct-pastille ${classe}">${esc(texte)}</span>`;
   const reseau = (r: string | null) => r ? ({ linkedin: 'LinkedIn', instagram: 'Instagram', facebook: 'Facebook' } as Record<string, string>)[r.toLowerCase()] ?? r : 'Profil';
 
+  const nomDe = (l: LigneTableau) => [l.prenom, l.nom].filter(Boolean).join(' ') || telLisible(l.telephones[0]) || l.emails[0] || 'Sans nom';
+  // Story 18.6 : catégorie, projet et température se changent dans la cellule (bouton ▾ qui devient une liste).
+  const classer = (cle: string, contenu: string, titre: string) => `<button type="button" class="ct-classer" data-classer="${cle}" title="${esc(titre)}">${contenu}<span class="ct-chevron" aria-hidden="true">▾</span></button>`;
+
   function cellule(l: LigneTableau, i: number, cle: CleColonne): string {
     switch (cle) {
-      case 'nom': {
-        const nom = [l.prenom, l.nom].filter(Boolean).join(' ') || telLisible(l.telephones[0]) || l.emails[0] || 'Sans nom';
-        return `<td class="ct-nom"><a href="/contacts/fiche?id=${esc(l.id)}">${esc(nom)}</a></td>`;
-      }
+      case 'nom': return `<td class="ct-nom"><a href="/contacts/fiche?id=${esc(l.id)}">${esc(nomDe(l))}</a></td>`;
       case 'entreprise': return `<td class="ct-coupe" title="${esc(l.entreprise)}">${l.entreprise ? esc(l.entreprise) : vide}</td>`;
-      case 'categorie': return `<td>${l.categorie ? pastille(l.categorie) : vide}</td>`;
-      case 'projet': return `<td>${pastille(PROJETS[l.projet] ?? l.projet, l.projet === 'a_qualifier' ? 'aq' : '')}</td>`;
-      case 'temperature': return `<td>${l.temperature ? pastille(TEMPERATURES[l.temperature] ?? l.temperature, `t-${esc(l.temperature)}`) : vide}</td>`;
+      case 'categorie': return `<td>${classer('categorie_id', l.categorie ? pastille(l.categorie) : pastille('à ranger', 'aq'), 'Changer la catégorie')}</td>`;
+      case 'projet': return `<td>${classer('projet', pastille(PROJETS[l.projet] ?? l.projet, l.projet === 'a_qualifier' ? 'aq' : ''), 'Changer le projet')}</td>`;
+      case 'temperature': {
+        const p = l.temperature ? pastille(TEMPERATURES[l.temperature] ?? l.temperature, `t-${esc(l.temperature)}`) : '';
+        // Suivi des ventes en cours : la température suit l'étape (AD-24) ; projet sans température : rien à choisir.
+        if (l.en_cours || !PROJETS_AVEC_TEMPERATURE.includes(l.projet)) return `<td>${p || vide}</td>`;
+        return `<td>${classer('temperature', p || pastille('à préciser', 'aq'), 'Changer la température')}</td>`;
+      }
       case 'sources': return `<td class="ct-src">${l.sources.length ? esc(l.sources.map(libelleSource).join(' + ')) : vide}</td>`;
       case 'ville': return `<td>${l.ville ? esc(l.ville) : vide}</td>`;
       case 'telephone': return `<td class="ct-num">${l.telephones.length ? esc(telLisible(l.telephones[0])) + plus(l.telephones, telLisible) : vide}</td>`;
@@ -187,7 +206,12 @@ const reglages = enJson({ vues, categories });
   // Le HTML d'une ligne est gardé tant que les colonnes affichées ne changent pas : trier ou filtrer ne le recalcule pas.
   let html: (string | undefined)[] = [];
   let colonnes = COLONNES.filter((c) => !cachees.has(c.cle));
-  const ligneHtml = (i: number) => html[i] ??= `<tr data-contact="${esc(lignes[i].id)}">${colonnes.map((c) => cellule(lignes[i], i, c.cle)).join('')}</tr>`;
+  /** Les contacts cochés (identifiants) : gardés quand le tableau est redessiné (tri, filtres, recherche, paquets). */
+  const coches = new Set<string>();
+  const ligneHtml = (i: number) => {
+    const l = lignes[i], on = coches.has(l.id);
+    return html[i] ??= `<tr data-contact="${esc(l.id)}" data-i="${i}"${on ? ' class="ct-sel"' : ''}><td class="ct-case"><input type="checkbox" data-cocher aria-label="Cocher ${esc(nomDe(l))}"${on ? ' checked' : ''} /></td>${colonnes.map((c) => cellule(l, i, c.cle)).join('')}</tr>`;
+  };
 
   /** Les lignes gardées par un filtre et une recherche (indices). */
   function garder(f: Filtre, q: string): number[] {
@@ -198,8 +222,10 @@ const reglages = enJson({ vues, categories });
   }
 
   let generation = 0;
+  /** Les lignes affichées (filtre et recherche), dans l'ordre du tableau : la plage de Maj + clic et « tout cocher ». */
+  let affichees: number[] = [];
   function afficher() {
-    entetes.innerHTML = colonnes.map((c) => {
+    entetes.innerHTML = '<th class="ct-case"><input type="checkbox" data-tout aria-label="Cocher toutes les lignes affichées" /></th>' + colonnes.map((c) => {
       const actif = tri.cle === c.cle;
       return `<th data-cle="${c.cle}" aria-sort="${actif ? (tri.sens === 1 ? 'ascending' : 'descending') : 'none'}"><button type="button" data-trier="${c.cle}">${esc(c.libelle)}<span class="ct-fleche" aria-hidden="true">${actif ? (tri.sens === 1 ? '▲' : '▼') : ''}</span></button></th>`;
     }).join('');
@@ -211,11 +237,12 @@ const reglages = enJson({ vues, categories });
       const r = typeof x === 'number' && typeof y === 'number' ? x - y : comparer(String(x), String(y));
       return r * tri.sens;
     });
+    affichees = garde;
     const g = ++generation;
     corps.removeAttribute('data-complet');
     corps.innerHTML = garde.length
       ? garde.slice(0, PREMIER).map(ligneHtml).join('')
-      : `<tr><td class="ct-attente" colspan="${colonnes.length}">${lignes.length ? 'Aucun contact pour ces filtres ou cette recherche.' : 'Aucun contact pour l\'instant.'}</td></tr>`;
+      : `<tr><td class="ct-attente" colspan="${colonnes.length + 1}">${lignes.length ? 'Aucun contact pour ces filtres ou cette recherche.' : 'Aucun contact pour l\'instant.'}</td></tr>`;
     let n = PREMIER;
     const suite = () => {
       if (g !== generation) return;
@@ -228,6 +255,7 @@ const reglages = enJson({ vues, categories });
     compteur.textContent = `${garde.length} contact${garde.length > 1 ? 's' : ''} sur ${total}`;
     afficherPastilles();
     marquerVue();
+    majLot();
   }
 
   // Pastilles des filtres actifs : un clic en retire une. La recherche garde sa propre case.
@@ -412,6 +440,156 @@ const reglages = enJson({ vues, categories });
       afficher();
     });
   }
+  // Story 18.6 : cases à cocher, actions groupées et classement d'une seule ligne (FR-4, FR-5). Écritures par /api/carnet.
+  const barreLot = $<HTMLElement>('[data-lot]');
+  const lotN = $<HTMLElement>('[data-lot-n]');
+  const boutonEcarter = $<HTMLButtonElement>('[data-lot-ecarter]');
+  /** Dernière case cliquée (indice de ligne), départ de la plage de Maj + clic. */
+  let derniere: number | null = null;
+  /** Remet les cases et le surlignage des lignes déjà écrites d'après `coches`, en un seul passage. */
+  function peindreCoches() {
+    for (const tr of corps.querySelectorAll<HTMLTableRowElement>('tr[data-i]')) {
+      const on = coches.has(lignes[Number(tr.dataset.i)].id);
+      tr.classList.toggle('ct-sel', on);
+      const c = tr.querySelector<HTMLInputElement>('input[data-cocher]');
+      if (c) c.checked = on;
+    }
+    majLot();
+  }
+  function cocher(indices: number[], on: boolean) {
+    for (const i of indices) { if (on) coches.add(lignes[i].id); else coches.delete(lignes[i].id); html[i] = undefined; }
+    peindreCoches();
+  }
+  function majLot() {
+    let vus = 0;
+    for (const i of affichees) if (coches.has(lignes[i].id)) vus++;
+    const tout = entetes.querySelector<HTMLInputElement>('[data-tout]');
+    if (tout) { tout.checked = affichees.length > 0 && vus === affichees.length; tout.indeterminate = vus > 0 && vus < affichees.length; }
+    barreLot.hidden = coches.size === 0;
+    const n = coches.size, caches = n - vus;
+    lotN.textContent = `${n} sélectionné${n > 1 ? 's' : ''}${caches ? ` (dont ${caches} hors de l'affichage)` : ''}`;
+    boutonEcarter.textContent = filtre.ecarte === 'oui' ? 'Faire revenir' : 'Écarter';
+  }
+  entetes.addEventListener('change', (e) => {
+    const t = e.target as HTMLInputElement;
+    if (t.matches('[data-tout]')) cocher(affichees, t.checked);
+  });
+
+  type Changements = { categorie_id?: string; projet?: string; temperature?: string | null; verifie?: boolean; ecarte?: boolean };
+  type LigneClassee = Pick<LigneTableau, 'id' | 'categorie_id' | 'categorie' | 'projet' | 'temperature' | 'verifie' | 'ecarte'>;
+  type Reponse = { ok: boolean; error?: { message: string }; lot?: string | null; touches?: number; ignores?: number; inchanges?: number; rendus?: number; gardes?: number; lignes?: LigneClassee[] };
+  async function carnet(corpsJson: unknown): Promise<Reponse> {
+    try {
+      const r = await fetch('/api/carnet', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpsJson) });
+      const d = await r.json().catch(() => ({}));
+      return r.ok ? d : { ok: false, error: { message: d.error?.message ?? `Erreur ${r.status}` } };
+    } catch { return { ok: false, error: { message: 'Pas de connexion : réessayez.' } }; }
+  }
+  /** Reporte dans le tableau les lignes renvoyées par le serveur, sans recharger : compteurs, vues et catégories suivent. */
+  function reporter(l: LigneClassee[] = []) {
+    for (const x of l) {
+      const i = parId.get(x.id);
+      if (i === undefined) continue;
+      Object.assign(lignes[i], { categorie_id: x.categorie_id, categorie: x.categorie, projet: x.projet, temperature: x.temperature, verifie: x.verifie, ecarte: x.ecarte });
+      html[i] = undefined;
+    }
+    valeurs.clear();
+    total = lignes.filter((x) => !x.ecarte).length;
+    compterVues();
+    afficherVues();
+    afficher();
+  }
+  const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
+  let enCours = false;
+  /** Envoie un classement, met le tableau à jour, annonce le nombre de contacts touchés et propose d'annuler. */
+  async function envoyer(ids: string[], ch: Changements, detail: string) {
+    if (enCours || !ids.length) return false;
+    enCours = true;
+    barreLot.querySelectorAll<HTMLButtonElement | HTMLSelectElement>('button, select').forEach((b) => { b.disabled = true; });
+    const r = await carnet({ ids, changements: ch });
+    enCours = false;
+    barreLot.querySelectorAll<HTMLButtonElement | HTMLSelectElement>('button, select').forEach((b) => { b.disabled = false; });
+    if (!r.ok) { montrer(r.error?.message ?? 'Erreur'); return false; }
+    reporter(r.lignes);
+    const n = r.touches ?? 0, ign = r.ignores ?? 0;
+    const texte = `${pluriel(n, 'contact')} touché${n > 1 ? 's' : ''}${n ? ` : ${detail}` : ''}`
+      + (ign ? ` (${pluriel(ign, 'ignoré')} : pas de température pour leur projet, ou fixée par le suivi des ventes)` : '');
+    const lot = r.lot;
+    montrer(texte, lot ? async () => {
+      const a = await carnet({ annuler: lot });
+      if (!a.ok) { montrer(a.error?.message ?? 'Erreur'); return; }
+      reporter(a.lignes);
+      montrer(`${pluriel(a.rendus ?? 0, 'contact')} remis comme avant${a.gardes ? ` ; ${pluriel(a.gardes, 'contact')} modifié${(a.gardes ?? 0) > 1 ? 's' : ''} depuis, gardé${(a.gardes ?? 0) > 1 ? 's' : ''} tel${(a.gardes ?? 0) > 1 ? 's' : ''} quel${(a.gardes ?? 0) > 1 ? 's' : ''}` : ''}`);
+    } : null);
+    return true;
+  }
+  const libelleChangement = (cle: string, v: string) => cle === 'categorie_id' ? `rangé dans « ${nomsCategories.get(v) ?? v} », vérifié`
+    : cle === 'projet' ? `projet « ${PROJETS[v] ?? v} »${PROJETS_AVEC_TEMPERATURE.includes(v) ? '' : ', température effacée'}`
+    : v === 'aucune' ? 'température effacée' : `température « ${TEMPERATURES[v] ?? v} »`;
+  /** Une action groupée : sur tous les contacts cochés ; les cases se vident si elle réussit. */
+  async function lot(ch: Changements, detail: string) {
+    if (await envoyer([...coches], ch, detail)) { coches.clear(); html = []; derniere = null; afficher(); }
+  }
+  barreLot.addEventListener('change', (e) => {
+    const s = e.target as HTMLSelectElement;
+    const cle = s.dataset.lotAction;
+    if (!cle || !s.value) return;
+    const v = s.value;
+    s.value = '';
+    void lot(cle === 'temperature' ? { temperature: v === 'aucune' ? null : v } : { [cle]: v }, libelleChangement(cle, v));
+  });
+  $<HTMLButtonElement>('[data-lot-verifie]').addEventListener('click', () => void lot({ verifie: true }, 'marqués vérifiés'));
+  boutonEcarter.addEventListener('click', () => {
+    const revenir = filtre.ecarte === 'oui';
+    void lot({ ecarte: !revenir }, revenir ? 'revenus dans le tableau' : 'écartés (filtre « Écartés » pour les revoir)');
+  });
+  $<HTMLButtonElement>('[data-lot-aucun]').addEventListener('click', () => { coches.clear(); html = []; derniere = null; peindreCoches(); });
+
+  // Une seule ligne : le bouton ▾ de la cellule devient une petite liste ; choisir écrit tout de suite.
+  function ouvrirListe(b: HTMLElement, i: number) {
+    const l = lignes[i], cle = b.dataset.classer!;
+    const options: [string, string][] = cle === 'categorie_id' ? reglages.categories.map((c) => [c.id, c.nom])
+      : cle === 'projet' ? Object.entries(PROJETS)
+      : [['', 'à préciser'], ...TEMPERATURES_CHOIX.filter((t) => temperaturePermise(t, l.projet)).map((t): [string, string] => [t, TEMPERATURES[t]])];
+    const actuelle = cle === 'categorie_id' ? l.categorie_id : cle === 'projet' ? l.projet : l.temperature ?? '';
+    const s = document.createElement('select');
+    s.className = 'ct-liste';
+    s.dataset.liste = cle;
+    s.setAttribute('aria-label', `${cle === 'categorie_id' ? 'Catégorie' : cle === 'projet' ? 'Projet' : 'Température'} de ${nomDe(l)}`);
+    s.innerHTML = (cle === 'categorie_id' && !l.categorie_id ? '<option value="" selected disabled>Choisir…</option>' : '')
+      + options.map(([v, t]) => `<option value="${esc(v)}"${v === actuelle ? ' selected' : ''}>${esc(t)}</option>`).join('');
+    b.replaceWith(s);
+    s.focus();
+    let fini = false;
+    const refermer = () => { if (fini) return; fini = true; const tr = s.closest('tr'); if (tr) tr.outerHTML = ligneHtml(i); };
+    s.addEventListener('change', async () => {
+      fini = true;
+      const v = s.value;
+      s.disabled = true;
+      const ch: Changements = cle === 'temperature' ? { temperature: v || null } : { [cle]: v };
+      const ok = await envoyer([l.id], ch, `${nomDe(l)}, ${cle === 'temperature' && !v ? 'température effacée' : libelleChangement(cle, v)}`);
+      if (!ok) { fini = false; refermer(); }
+    });
+    s.addEventListener('blur', () => setTimeout(refermer, 150));
+    s.addEventListener('keydown', (e) => { if (e.key === 'Escape') refermer(); });
+  }
+
+  corps.addEventListener('click', (e) => {
+    const cible = e.target as HTMLElement;
+    const tr = cible.closest<HTMLTableRowElement>('tr[data-i]');
+    if (!tr) return;
+    const i = Number(tr.dataset.i);
+    if (cible.matches('input[data-cocher]')) {
+      const on = (cible as HTMLInputElement).checked;
+      const a = derniere === null ? -1 : affichees.indexOf(derniere), b = affichees.indexOf(i);
+      // Maj + clic : toute la plage entre la case cliquée juste avant et celle-ci, dans l'ordre affiché (FR-4).
+      cocher(e.shiftKey && a >= 0 && b >= 0 ? affichees.slice(Math.min(a, b), Math.max(a, b) + 1) : [i], on);
+      derniere = i;
+      return;
+    }
+    const b = cible.closest<HTMLElement>('[data-classer]');
+    if (b) ouvrirListe(b, i);
+  });
   document.addEventListener('click', (e) => { if (!menuColonnes.contains(e.target as Node)) menuColonnes.open = false; });
   compterVues();
   afficherVues();
@@ -510,4 +688,23 @@ const reglages = enJson({ vues, categories });
   .ct-toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 20px; z-index: 50; background: var(--avt-brun); color: #fff; padding: 10px 18px; border-radius: 999px; display: flex; gap: 14px; align-items: center; font-size: 14px; max-width: calc(100% - 32px); }
   .ct-toast[hidden] { display: none; }
   .ct-toast button { background: none; border: 0; color: #f3c3ad; font: inherit; font-weight: 600; cursor: pointer; min-height: 32px; }
+  /* Story 18.6 : cases à cocher, barre d'actions groupées (sombre, collée en haut, comme la maquette), classement en ligne. */
+  .ct-case { width: 34px; padding-left: 12px !important; padding-right: 4px !important; user-select: none; }
+  .ct-case input { width: 17px; height: 17px; margin: 0; accent-color: var(--avt-klein); cursor: pointer; vertical-align: middle; }
+  .ct-table th.ct-case { padding: 0 4px 0 12px; }
+  .ct-table tbody tr.ct-sel td { background: var(--avt-brume); }
+  .ct-lot { position: sticky; top: 0; z-index: 5; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; background: var(--avt-brun); color: #fff; padding: 10px 14px; border-radius: 12px; }
+  .ct-lot[hidden] { display: none; }
+  .ct-lot strong { font-weight: 500; margin-right: 4px; }
+  .ct-lot select, .ct-lot .ct-btn { background: transparent; color: #fff; border: 1px solid rgba(255, 255, 255, .4); min-height: 36px; border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 13.5px; }
+  .ct-lot select option { color: var(--avt-brun); }
+  .ct-lot select:focus-visible, .ct-lot .ct-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .ct-lot :disabled { opacity: .5; }
+  .ct-lot-fin { margin-left: auto; }
+  .ct-classer { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 3px; cursor: pointer; border-radius: 999px; min-height: 26px; }
+  .ct-classer:focus-visible { outline: 2px solid var(--avt-klein); outline-offset: 2px; }
+  .ct-chevron { font-size: 10px; color: var(--avt-text-muted); opacity: 0; }
+  tr:hover .ct-chevron, .ct-classer:focus-visible .ct-chevron { opacity: 1; }
+  .ct-liste { font: inherit; font-size: 13px; padding: 3px 6px; border: 1px solid var(--avt-klein); border-radius: 8px; background: #fff; color: var(--avt-brun); max-width: 190px; }
+  @media (hover: none) { .ct-chevron { opacity: 1; } }
 </style>
