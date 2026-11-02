@@ -25,3 +25,26 @@ Ticket n° 232 ([Retour espace]). Dans la barre « Nouveaux », « Ajouter à sa
 ## Ce qui reste
 - Lancer `node scripts/e2e-espace.mjs` en entier avant fusion.
 - Revue de code (story 9.8) dans une session neuve, la PR touchant `espace/src/`.
+
+## Revue de code
+2026-11-02, PR #234, commit relu `d53e5d5` (diff `origin/main...HEAD`), skill `bmad-code-review` dans une session neuve (4 relectures : sans contexte, cas limites, trous de vérification, conformité à la story). Les quatre points prioritaires tiennent sur le chemin normal : aucune valeur remplie écrasée, aucun accord posé (`noterAccord` jamais appelé), opposition respectée (`enOpposition` dans `corrigerFiche`, nouvel essai sans l'e-mail), annulation qui rend le complément. Aucun constat bloquant.
+
+À corriger :
+- `annulerCompletion` : le contrôle « rien d'autre depuis » ne comptait aucun événement (logique NULL de SQL sur un événement sans `nouveau`/`annule` ou sans `donnees`), donc une annulation pouvait vider un e-mail sur lequel Anne avait noté un accord entre-temps : corrigé (`159d9e4`, coalesce ; vérifié sur une base SQLite d'essai).
+- `annulerCompletion` : un complément déjà rendu par une annulation précédente du même geste pouvait être rejoué à une seconde annulation : corrigé (`159d9e4`).
+- Message de confirmation écrit en dur (« prénom, nom et e-mail vides complétés ») même quand rien n'est complété ou que l'e-mail est refusé : corrigé (`159d9e4`, il cite les champs vraiment complétés).
+- `espace/README.md` ne décrivait pas le complément (CLAUDE.md § 2) : corrigé (`159d9e4`).
+
+Mineurs :
+- Course entre la lecture de `completerFiche` (ou de `annulerCompletion`) et celle de `corrigerFiche` : une valeur saisie au même instant par Anne peut être écrasée ; de même, un échec de `suivreParGeste` dû à une modification simultanée peut laisser le complément avec le message « rien n'a été changé » : mineur, noté.
+- La boucle réessaie sans l'e-mail pour toute raison d'échec, pas seulement un refus de l'e-mail : mineur, noté.
+- Prénom ou nom Leedflow trop longs (`lireCorrection`) : rien n'est complété, e-mail compris : mineur, noté.
+- Fiche avec nom mais sans prénom : le prénom Leedflow peut être celui d'une autre personne (identité mêlée) : mineur, noté.
+- Exception dans `completerFiche` après `classerDepuisNouveaux` : numéro classé sans suivi, carte rouverte : mineur, noté (risque déjà présent avant la story).
+- L'annulation ne dit pas quand le complément est gardé parce qu'Anne l'a retouché : mineur, noté (comportement voulu).
+- Provenance : l'événement est `source = 'anne'`, l'origine Leedflow ne se lit que par la clé `nouveau` : mineur, noté.
+- `...extra` placé après `avant`/`apres`/`lot` dans `corrigerFiche` (un appelant pourrait les écraser) ; `JSON.parse` des `donnees` sans contrôle de forme ; `as Correction` inutile : mineur, noté.
+- Cas non couverts par l'e2e : e-mail Leedflow en doublon ou en opposition, fiche partiellement remplie, annulation après retouche, échec de `suivreParGeste` : mineur, noté.
+- Script e2e non lancé (seulement `node --check`) : mineur, noté ; reste dans « Ce qui reste ».
+
+Vérification après correction : `cd espace && npm install && npm run build && npm run check` : construction réussie, 0 erreur, 0 avertissement (5 indications déjà présentes).
