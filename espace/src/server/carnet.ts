@@ -7,7 +7,9 @@
 // contact touché reçoit un `contact_evenement` de type `classement` qui garde son avant-image :
 // `donnees` = { avant: {colonne: valeur}, apres: {colonne: valeur}, lot } (AD-29), `source_id` = « lot.contact » (index
 // unique déjà présent, qui sert aussi à retrouver un lot pour l'annuler). Annuler un lot réécrit `avant` par ce module,
-// pour les seuls contacts restés tels que le lot les a laissés (sinon une écriture plus récente l'emporte, AD-29).
+// pour les seuls contacts qui n'ont reçu aucun événement depuis le lot (sinon une écriture plus récente l'emporte, AD-29).
+// Revue de code 18.6 : chaque écriture n'a lieu que si le contact est encore tel qu'il a été lu ; un classement ne fait
+// pas avancer `last_activity_at` (ce n'est pas un échange, AD-22 amendé).
 // Règles (PRD FR-4, AD-24) : choisir une catégorie la confirme (vérifié) ; un projet sans température (à qualifier,
 // ambassadeur) ou incompatible efface la température ; « avec Anne » et « terminé » ne se choisissent jamais ici (ils
 // viennent du suivi des ventes) ; un contact suivi (étape autre que perdu ou en sommeil) garde la température que le suivi
@@ -105,25 +107,45 @@ export function appliquer(e: Etat, ch: Changements, maintenant: string): { apres
 /** Une ligne du tableau après écriture : de quoi la page se met à jour sans recharger. */
 export interface LigneClassee { id: string; categorie_id: string | null; categorie: string | null; projet: string; temperature: string | null; verifie: boolean; ecarte: boolean }
 
-interface Ecriture { id: string; avant: Partial<Classement>; apres: Partial<Classement> }
+/** `garde` : `etape` et les colonnes telles que lues avant le lot ; l'écriture n'a lieu que si le contact n'a pas changé depuis. */
+interface Ecriture { id: string; avant: Partial<Classement>; apres: Partial<Classement>; garde: Partial<Classement> & { etape: string | null } }
 
-/** Écrit un lot en une seule exécution : les colonnes de `apres` de chaque contact, puis un événement par contact. */
-async function ecrire(env: EnvSite, ecritures: Ecriture[], lot: string, par: string, texte: string, annule?: string): Promise<void> {
-  if (!ecritures.length) return;
+/**
+ * Écrit un lot en une seule exécution D1 (revue de code 18.6) : d'abord un événement par contact encore tel qu'il a été lu
+ * (`etape` et colonnes de `garde`) et dont la catégorie écrite existe toujours ; puis les colonnes de `apres`, seulement
+ * pour les contacts qui ont reçu leur événement. Un contact changé ou effacé entre la lecture et l'écriture, ou une
+ * catégorie supprimée entre-temps, n'est donc ni écrit ni cause d'échec du lot. Pas de `last_activity_at` : un classement
+ * n'est pas un échange avec la personne (AD-22 amendé). Renvoie les identifiants réellement écrits.
+ */
+async function ecrire(env: EnvSite, ecritures: Ecriture[], lot: string, par: string, texte: string, annule?: string): Promise<string[]> {
+  if (!ecritures.length) return [];
   const maintenant = new Date().toISOString();
   const set = COLONNES.map((c) => `${c} = CASE WHEN json_type(j.value, '$.apres.${c}') IS NULL THEN contact.${c} ELSE json_extract(j.value, '$.apres.${c}') END`).join(', ');
-  const charge = JSON.stringify(ecritures.map((x) => ({ id: x.id, apres: x.apres })));
-  const evenements = JSON.stringify(ecritures.map((x) => ({
-    id: x.id, donnees: JSON.stringify({ avant: x.avant, apres: x.apres, lot, ...(annule ? { annule } : {}) }),
+  const garde = [...COLONNES, 'etape'].map((c) => `(json_type(j.value, '$.garde.${c}') IS NULL OR c.${c} IS json_extract(j.value, '$.garde.${c}'))`).join(' AND ');
+  const charge = JSON.stringify(ecritures.map((x) => ({
+    id: x.id, apres: x.apres, garde: x.garde, donnees: JSON.stringify({ avant: x.avant, apres: x.apres, lot, ...(annule ? { annule } : {}) }),
   })));
   await env.DB.batch([
-    // Une boucle sur le lot, chaque contact trouvé par sa clé (plan vérifié : pas de parcours de toute la table).
-    env.DB.prepare(`UPDATE contact SET ${set}, last_activity_at = ?2 FROM json_each(?1) AS j WHERE contact.id = json_extract(j.value, '$.id')`)
-      .bind(charge, maintenant),
     env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, donnees, par)
-       SELECT json_extract(value, '$.id'), ?2, 'classement', 'anne', ?3 || '.' || json_extract(value, '$.id'), ?4, json_extract(value, '$.donnees'), ?5
-       FROM json_each(?1)`).bind(evenements, maintenant, lot, texte, par),
+       SELECT c.id, ?2, 'classement', 'anne', ?3 || '.' || c.id, ?4, json_extract(j.value, '$.donnees'), ?5
+       FROM json_each(?1) AS j JOIN contact c ON c.id = json_extract(j.value, '$.id')
+       WHERE ${garde}
+         AND (json_type(j.value, '$.apres.categorie_id') IS NOT 'text' OR EXISTS (SELECT 1 FROM categorie k WHERE k.id = json_extract(j.value, '$.apres.categorie_id')))`)
+      .bind(charge, maintenant, lot, texte, par),
+    // Une boucle sur le lot, chaque contact trouvé par sa clé (plan vérifié : pas de parcours de toute la table).
+    env.DB.prepare(`UPDATE contact SET ${set} FROM json_each(?1) AS j WHERE contact.id = json_extract(j.value, '$.id')
+       AND EXISTS (SELECT 1 FROM contact_evenement e WHERE e.source = 'anne' AND e.source_id = ?2 || '.' || contact.id)`)
+      .bind(charge, lot),
   ]);
+  return (await env.DB.prepare(`SELECT contact_id FROM contact_evenement WHERE source = 'anne' AND source_id > ?1 AND source_id < ?2`)
+    .bind(`${lot}.`, `${lot}/`).all<{ contact_id: string }>()).results.map((x) => x.contact_id);
+}
+
+/** Parmi des contacts non écrits, ceux qui n'existent plus (effacés entre la lecture et l'écriture). */
+async function effaces(env: EnvSite, ids: string[]): Promise<number> {
+  if (!ids.length) return 0;
+  const r = await env.DB.prepare('SELECT count(*) AS n FROM contact WHERE id IN (SELECT value FROM json_each(?1))').bind(JSON.stringify(ids)).first<{ n: number }>();
+  return ids.length - (r?.n ?? 0);
 }
 
 async function lireEtats(env: EnvSite, ids: string[]): Promise<Etat[]> {
@@ -156,7 +178,8 @@ export interface ResultatLot { lot: string | null; touches: number; ignores: num
 
 /**
  * Classe un lot de contacts. `touches` : contacts réellement changés (chacun a son événement) ; `ignores` : température
- * qui ne s'applique pas ; `inchanges` : déjà dans l'état demandé ; `inconnus` : identifiants absents (effacés entre-temps).
+ * qui ne s'applique pas, ou contact changé entre la lecture et l'écriture (revue de code 18.6) ; `inchanges` : déjà dans
+ * l'état demandé ; `inconnus` : identifiants absents (effacés, même entre la lecture et l'écriture).
  */
 export async function classer(env: EnvSite, ids: string[], ch: Changements, par: string): Promise<ResultatLot> {
   const etats = await lireEtats(env, ids);
@@ -167,47 +190,60 @@ export async function classer(env: EnvSite, ids: string[], ch: Changements, par:
   for (const e of etats) {
     const { apres, ignore } = appliquer(e, ch, maintenant);
     if (ignore) ignores++;
-    const x: Ecriture = { id: e.id, avant: {}, apres: {} };
+    const x: Ecriture = { id: e.id, avant: {}, apres: {}, garde: { etape: e.etape } };
     for (const c of COLONNES) {
-      if (apres[c] !== e[c]) { (x.avant as Record<string, unknown>)[c] = e[c]; (x.apres as Record<string, unknown>)[c] = apres[c]; }
+      if (apres[c] !== e[c]) { (x.avant as Record<string, unknown>)[c] = e[c]; (x.apres as Record<string, unknown>)[c] = apres[c]; (x.garde as Record<string, unknown>)[c] = e[c]; }
     }
     if (Object.keys(x.apres).length) ecritures.push(x);
   }
-  await ecrire(env, ecritures, lot, par, resume(ch));
+  const ecrits = await ecrire(env, ecritures, lot, par, resume(ch));
+  const faits = new Set(ecrits);
+  const manques = ecritures.filter((x) => !faits.has(x.id)).map((x) => x.id);
+  const partis = await effaces(env, manques);
   return {
-    lot: ecritures.length ? lot : null, touches: ecritures.length, ignores, inchanges: etats.length - ecritures.length,
-    inconnus: ids.length - etats.length, lignes: await lignes(env, ecritures.map((x) => x.id)),
+    lot: ecrits.length ? lot : null, touches: ecrits.length, ignores: ignores + manques.length - partis, inchanges: etats.length - ecritures.length,
+    inconnus: ids.length - etats.length + partis, lignes: await lignes(env, ecrits),
   };
 }
 
 export interface ResultatAnnulation { lot: string | null; rendus: number; gardes: number; lignes: LigneClassee[] }
 
 /**
- * Annule un lot : rejoue l'avant-image de chaque contact qu'il a touché, si ce contact est encore tel que le lot l'a
- * laissé (colonnes de `apres` inchangées) ; les autres, modifiés depuis, sont gardés et comptés. Un lot déjà annulé ne
- * rend plus rien. L'annulation est elle-même un lot, avec ses événements (`annule` = lot annulé).
+ * Annule un lot : rejoue l'avant-image de chaque contact qu'il a touché, si ce contact n'a rien reçu depuis (aucun
+ * `contact_evenement` plus récent que celui du lot, quelle qu'en soit la source : règle d'AD-29, revue de code 18.6), s'il
+ * est encore tel que le lot l'a laissé, si le classement rendu reste permis avec le projet d'aujourd'hui et si la
+ * catégorie rendue existe encore. Les autres (modifiés depuis, effacés, catégorie supprimée) sont gardés et comptés. Un
+ * lot déjà annulé ne rend plus rien. L'annulation est elle-même un lot, avec ses événements (`annule` = lot annulé).
  */
 export async function annulerLot(env: EnvSite, lot: string, par: string): Promise<ResultatAnnulation | null> {
   const evs = (await env.DB.prepare(
-    `SELECT contact_id, donnees FROM contact_evenement WHERE source = 'anne' AND source_id > ?1 AND source_id < ?2 AND type = 'classement'`,
-  ).bind(`${lot}.`, `${lot}/`).all<{ contact_id: string; donnees: string }>()).results;
+    `SELECT e.contact_id, e.donnees, NOT EXISTS (SELECT 1 FROM contact_evenement x WHERE x.contact_id = e.contact_id AND x.id > e.id) AS dernier
+     FROM contact_evenement e WHERE e.source = 'anne' AND e.source_id > ?1 AND e.source_id < ?2 AND e.type = 'classement'`,
+  ).bind(`${lot}.`, `${lot}/`).all<{ contact_id: string; donnees: string; dernier: number }>()).results;
   if (!evs.length) return null;
-  const parContact = new Map<string, { avant: Partial<Classement>; apres: Partial<Classement> }>();
+  const parContact = new Map<string, { avant: Partial<Classement>; apres: Partial<Classement>; dernier: boolean }>();
   for (const e of evs) {
-    try { const d = JSON.parse(e.donnees) as { avant: Partial<Classement>; apres: Partial<Classement>; lot: string }; if (d.lot === lot) parContact.set(e.contact_id, d); } catch {}
+    try { const d = JSON.parse(e.donnees) as { avant: Partial<Classement>; apres: Partial<Classement>; lot: string }; if (d.lot === lot) parContact.set(e.contact_id, { ...d, dernier: !!e.dernier }); } catch {}
   }
-  const etats = await lireEtats(env, [...parContact.keys()]);
+  const [etats, categories] = await Promise.all([lireEtats(env, [...parContact.keys()]), env.DB.prepare('SELECT id FROM categorie').all<{ id: string }>()]);
+  const existantes = new Set(categories.results.map((c) => c.id));
   const ecritures: Ecriture[] = [];
   for (const e of etats) {
     const d = parContact.get(e.id)!;
-    const intact = (Object.keys(d.apres) as Colonne[]).every((c) => COLONNES.includes(c) && e[c] === d.apres[c]);
+    const cles = Object.keys(d.apres) as Colonne[];
+    const intact = d.dernier && cles.every((c) => COLONNES.includes(c) && e[c] === d.apres[c]);
     // Le classement rendu doit rester permis avec le projet d'aujourd'hui (CHECK de 0018), sinon le contact est gardé.
     const projet = d.avant.projet ?? e.projet, temperature = d.avant.temperature !== undefined ? d.avant.temperature : e.temperature;
-    if (intact && temperaturePermise(temperature, projet)) ecritures.push({ id: e.id, avant: d.apres, apres: d.avant });
+    const categorieOk = !d.avant.categorie_id || existantes.has(d.avant.categorie_id);
+    if (intact && categorieOk && temperaturePermise(temperature, projet)) {
+      const garde: Ecriture['garde'] = { etape: e.etape };
+      for (const c of cles) (garde as Record<string, unknown>)[c] = e[c];
+      ecritures.push({ id: e.id, avant: d.apres, apres: d.avant, garde });
+    }
   }
   const nouveau = ulid();
-  await ecrire(env, ecritures, nouveau, par, 'Classement annulé', lot);
-  return { lot: ecritures.length ? nouveau : null, rendus: ecritures.length, gardes: parContact.size - ecritures.length, lignes: await lignes(env, ecritures.map((x) => x.id)) };
+  const ecrits = await ecrire(env, ecritures, nouveau, par, 'Classement annulé', lot);
+  return { lot: ecrits.length ? nouveau : null, rendus: ecrits.length, gardes: parContact.size - ecrits.length, lignes: await lignes(env, ecrits) };
 }
 
 // ——— Fiche d'un contact et création à la main (story 18.7, FR-26, FR-28, AD-22, AD-28, AD-29, AD-34) ———

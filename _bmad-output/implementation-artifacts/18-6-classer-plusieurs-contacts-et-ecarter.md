@@ -1,7 +1,7 @@
 ---
 story: 18.6
 epic: 18 — Espace d'Anne : le carnet de contacts
-statut: review
+statut: done
 date: 2026-11-02
 maj: 2026-11-02
 ---
@@ -56,8 +56,16 @@ Qu'Anne fasse le classement de départ sans y passer des semaines : cocher des l
 - **Pas de bouton « Lancer une séance »** dans la barre (maquette) : epic 19.
 
 ## Ce qui reste
-- Revue de code en session neuve (`bmad-code-review`), puis passage à `done`.
 - `pipeline.ts` écrit encore lui-même `projet` et `temperature` à l'entrée dans le suivi (déjà le cas avant cette story) ; AD-22 veut que ce passe par `carnet`. À reprendre quand `pipeline` sera touché (19.1 ou une story dédiée), sans changer le comportement.
 - Fiche contact et création à la main (18.7) : réutiliser `classer` pour la catégorie, le projet et la température.
 
 ## Revue de code
+Relecture adverse (`bmad-code-review`) en session neuve, 2026-11-02, PR #227, commits relus `780a77a` (story 18.6) et `554b164` (correction de la revue 18.5). Aucun point bloquant. Corrections dans le commit « correction de la revue 18.6 », fait après celui de la story 18.7 (`5a143a8`) pour éviter les conflits dans `carnet.ts` et `index.astro`.
+1. `index.astro` (barre d'actions et liste d'une cellule) : « change » partait à chaque flèche du clavier, une flèche classait tous les cochés. **Corrigé** (commit « correction de la revue 18.6 ») : `surChoix` n'écrit qu'au clic dans la liste ouverte ou par Entrée ; flèches et lettres ne font que changer la valeur affichée, Échap ou sortie de la liste l'abandonnent ; choix au clavier possible dans une cellule (le bouton ▾ s'ouvre par Entrée). Essai : flèche puis Entrée dans la barre et dans une cellule.
+2. `carnet.ts` : un classement faisait avancer `last_activity_at` (purge des trois ans relancée, contacts du suivi remontés dans les « récents »). **Corrigé** : plus de `last_activity_at` dans `classer` ni `annulerLot` ; AD-22 amendé (spine et memlog d'architecture, dans le commit de la 18.7) ; la note et le contact noté hors séance de la 18.7 la mettent à jour. Essai : `last_activity_at` inchangé après tous les lots.
+3. `annulerLot` : un contact qui avait reçu un événement après le lot (une note…) pouvait être rendu. **Corrigé** : `NOT EXISTS` d'un `contact_evenement` d'id supérieur à celui du lot (règle d'AD-29) ; ces contacts sont gardés et comptés. Essai : note écrite après un lot, annulation qui garde le contact.
+4. `ecrire` : l'`UPDATE` n'était pas conditionnel. **Corrigé** : l'événement s'écrit d'abord, seulement pour un contact dont `etape` et les colonnes changées sont encore celles lues ; l'`UPDATE` ne touche que les contacts qui ont reçu leur événement, dans la même exécution D1. Les lignes changées entre-temps sont comptées comme ignorées (ou inconnues si effacées). Pas d'essai de concurrence (deux écritures simultanées ne se provoquent pas de façon sûre en local).
+5. Contacts effacés et catégorie supprimée faisaient échouer tout le lot (500). **Corrigé** : la condition d'écriture exige que le contact existe (jointure) et que la catégorie écrite existe encore ; `annulerLot` écarte d'avance une catégorie supprimée ; ces contacts sont gardés (annulation), ignorés ou inconnus (classement). Essai : annulation après suppression de la catégorie d'avant (200, contact gardé) ; contact effacé après un lot, les autres sont rendus (200).
+6. Vues : une vue invalide partait vers la page avec ses valeurs non vérifiées ; le plafond de 100 était lu avant l'insertion. **Corrigé** : vue invalide envoyée avec le filtre `{}` et la marque `invalide` ; plafond dans l'`INSERT … WHERE (SELECT count(*) FROM vue) < 100`, atomique ; une remise en place avec `id` (annulation d'une suppression) n'y est pas soumise, pour que l'annulation ne puisse pas échouer (lecture retenue du constat : « ne s'applique pas à une remise en place »). Essais : filtre vide de la vue invalide dans la page ; 101e vue refusée, remise en place acceptée au plafond.
+Vérifié : `espace` `npm run build`, `npm run check` (0 erreur), `node scripts/e2e-espace.mjs` : **tout est bon, 433 constats** (427 après la 18.7, dont 6 nouveaux pour cette revue) ; lot de 1 000 contacts en 73 ms, annulé en 87 ms ; essai de vitesse 18.5 pire 216 ms avec 1 303 contacts.
+

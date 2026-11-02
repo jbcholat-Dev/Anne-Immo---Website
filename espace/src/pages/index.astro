@@ -580,14 +580,30 @@ const reglages = enJson({ vues, categories });
   async function lot(ch: Changements, detail: string) {
     if (await envoyer([...coches], ch, detail)) { coches.clear(); html = []; derniere = null; afficher(); }
   }
-  barreLot.addEventListener('change', (e) => {
-    const s = e.target as HTMLSelectElement;
-    const cle = s.dataset.lotAction;
-    if (!cle || !s.value) return;
-    const v = s.value;
-    s.value = '';
-    void lot(cle === 'temperature' ? { temperature: v === 'aucune' ? null : v } : { [cle]: v }, libelleChangement(cle, v));
-  });
+  /**
+   * Revue de code 18.6 : une liste n'écrit qu'au choix confirmé, d'un clic dans la liste ouverte ou par Entrée. Sur une liste
+   * fermée, les flèches (ou une lettre) du clavier changent la valeur affichée à chaque touche et le navigateur envoie
+   * aussitôt « change » : sans cette garde, une seule flèche classerait tous les contacts cochés.
+   */
+  function surChoix(s: HTMLSelectElement, appliquer: (v: string) => void, abandon: () => void, vide = false) {
+    let clavier = false;
+    const valider = () => { clavier = false; const v = s.value; if (v || vide) appliquer(v); };
+    s.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); valider(); return; }
+      if (e.key === 'Escape') { clavier = false; abandon(); return; }
+      if (e.key !== 'Tab' && e.key !== ' ' && !e.altKey && !e.ctrlKey && !e.metaKey) clavier = true;
+    });
+    s.addEventListener('pointerdown', () => { clavier = false; });
+    s.addEventListener('change', () => { if (!clavier) valider(); });
+    s.addEventListener('blur', () => { if (clavier) { clavier = false; abandon(); } });
+  }
+  for (const s of barreLot.querySelectorAll<HTMLSelectElement>('select[data-lot-action]')) {
+    const cle = s.dataset.lotAction!;
+    surChoix(s, (v) => {
+      s.value = '';
+      void lot(cle === 'temperature' ? { temperature: v === 'aucune' ? null : v } : { [cle]: v }, libelleChangement(cle, v));
+    }, () => { s.value = ''; });
+  }
   $<HTMLButtonElement>('[data-lot-verifie]').addEventListener('click', () => void lot({ verifie: true }, 'marqués vérifiés'));
   boutonEcarter.addEventListener('click', () => {
     const revenir = filtre.ecarte === 'oui';
@@ -612,16 +628,19 @@ const reglages = enJson({ vues, categories });
     s.focus();
     let fini = false;
     const refermer = () => { if (fini) return; fini = true; const tr = s.closest('tr'); if (tr) tr.outerHTML = ligneHtml(i); };
-    s.addEventListener('change', async () => {
+    // Revue de code 18.6 : écrit au clic dans la liste ouverte ou par Entrée, jamais à chaque flèche du clavier (`surChoix`).
+    const choisir = async () => {
+      if (fini) return;
       fini = true;
       const v = s.value;
       s.disabled = true;
       const ch: Changements = cle === 'temperature' ? { temperature: v || null } : { [cle]: v };
       const ok = await envoyer([l.id], ch, `${nomDe(l)}, ${cle === 'temperature' && !v ? 'température effacée' : libelleChangement(cle, v)}`);
       if (!ok) { fini = false; refermer(); }
-    });
+    };
+    // « À préciser » (température vide) se choisit aussi.
+    surChoix(s, () => void choisir(), () => refermer(), cle === 'temperature');
     s.addEventListener('blur', () => setTimeout(refermer, 150));
-    s.addEventListener('keydown', (e) => { if (e.key === 'Escape') refermer(); });
   }
 
   corps.addEventListener('click', (e) => {

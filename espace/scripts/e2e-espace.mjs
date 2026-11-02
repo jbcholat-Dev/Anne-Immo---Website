@@ -63,6 +63,9 @@
 // e-mails multiples, conflit avec un autre contact, écarter, note, contact hors séance qui met à jour le dernier contact,
 // contact du suivi, accord), création à la main (vérifiée, source « saisie », doublon proposé, opposition), 400 et 403 ;
 // le panneau dans la page (correction, note, contact, conflit, « + Nouveau contact », lien direct ?fiche=).
+// Revue de code 18.6 : classer n'avance pas last_activity_at, une note après un lot garde le contact à l'annulation, une
+// catégorie supprimée ou un contact effacé ne font plus échouer une annulation, une flèche du clavier n'écrit rien (Entrée
+// écrit), une vue invalide arrive avec un filtre vide, une remise en place de vue passe le plafond de 100.
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
 // Lancer depuis espace/ : `node scripts/e2e-espace.mjs`.
@@ -1686,6 +1689,7 @@ try {
     constat(vinv?.invalide === 'une catégorie a disparu' && (await ids()).length === 0 && message.includes('Vue à refaire : une catégorie a disparu')
       && (await o.textContent(`[data-vue="${VINV}"] small`)) === 'à refaire' && vmix && !vmix.invalide && vmix.filtre.categorie_id.join() === 'edb',
       'revue 18.5 : une vue dont toutes les catégories ont disparu ne garde aucun contact et l\'écran dit « vue à refaire » ; une vue qui en garde une ne perd que la valeur disparue');
+    constat(JSON.stringify(vinv?.filtre) === '{}', 'revue 18.6 : une vue invalide arrive dans la page avec un filtre vide (aucune valeur non vérifiée)');
     await o.click('[data-vue=tous]'); await attendre();
     // Jours de Paris et « à rappeler » avec une heure.
     await o.selectOption('[data-filtre=ville]', VILLE5); await attendre();
@@ -1748,6 +1752,9 @@ try {
     const manque = Math.max(0, 100 - nVues());
     if (manque) sql(`WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < ${manque}) INSERT INTO vue (id, nom, ordre, filtre, created_at, maj_le) SELECT '01KFR5D' || printf('%019d', i), 'Essai vue plafond ' || i, 1000 + i, '{"verifie":"non"}', '2026-11-02T00:00:00Z', '2026-11-02T00:00:00Z' FROM n`);
     const r101 = await vues('POST', { nom: 'Essai vue de trop', filtre: { verifie: 'oui' } });
+    // Revue de code 18.6 : une remise en place (annulation d'une suppression) n'est pas soumise au plafond.
+    const rRemise = await vues('POST', { id: '01KFR5C0000000000000000002', nom: 'Essai vue remise au plafond', ordre: 5000, filtre: { verifie: 'oui' } });
+    const nPlafond = nVues();
     // En dernier : le serveur local de wrangler perd la requête qui suit un corps refusé sans être lu (pas Cloudflare) ;
     // une requête jetable vient donc après.
     const r413 = await vues('POST', gros);
@@ -1755,6 +1762,7 @@ try {
     sql(`DELETE FROM vue WHERE nom LIKE 'Essai vue%'`);
     constat(refus.every(([, x]) => x.status === 400) && r413.status === 413 && retablie?.ordre === max + 1 && r101.status === 400 && nVues() === n1,
       `revue 18.5 : /api/vues refuse « ambassadeur : non » et un filtre vide (400), un corps annoncé trop grand (${r413.status}), une 101e vue (${r101.status}) ; une vue rétablie sur un ordre pris va en dernier (${retablie?.ordre} = ${max} + 1)`);
+    constat(r101.status === 400 && rRemise.status === 201 && nPlafond === 101, `revue 18.6 : plafond de 100 vues vérifié dans l'insertion (101e refusée, ${r101.status}) ; une remise en place après suppression passe (${rRemise.status})`);
   }
   // Les routes /api/claude/… ne lisent ni les contacts ni les vues : aucune n'importe le tableau ni les vues, et leurs
   // réponses ne contiennent aucun nom de vue.
@@ -1831,6 +1839,36 @@ try {
     await api({ ids: [G2], changements: { categorie_id: 'proches' } });
     x = await api({ annuler: a.d.lot });
     constat(x.d.rendus === 1 && x.d.gardes === 1 && un(G2).categorie_id === 'proches', '18.6 : annuler un lot garde un contact modifié depuis par une autre écriture');
+    // Revue de code 18.6 : un classement ne fait pas avancer la date d'activité (purge des trois ans, « récents »).
+    constat(sql(`SELECT last_activity_at FROM contact WHERE id IN ('${G1}', '${G2}', '${G3}', '${GP}')`).every((c) => c.last_activity_at === '2026-10-01T08:00:00Z'),
+      'revue 18.6 : classer et annuler ne touchent pas last_activity_at');
+    // Revue de code 18.6 : un contact qui a reçu un événement après le lot (une note) est gardé à l'annulation (AD-29).
+    {
+      const l = await api({ ids: [G3], changements: { categorie_id: 'edb' } });
+      const note = await appeler(`${E}/api/fiche`, { method: 'POST', headers: { 'cf-access-jwt-assertion': JETON, 'Content-Type': 'application/json' }, body: JSON.stringify({ id: G3, note: 'Note après le lot' }) });
+      const an = await api({ annuler: l.d.lot });
+      constat(note.status === 200 && an.status === 200 && an.d.rendus === 0 && an.d.gardes === 1 && un(G3).categorie_id === 'edb',
+        'revue 18.6 : une note écrite après un lot suffit à garder le contact à l\'annulation (événement plus récent, AD-29)');
+      await api({ ids: [G3], changements: { categorie_id: 'proches' } });
+    }
+    // Revue de code 18.6 : une annulation qui remettrait une catégorie supprimée garde le contact au lieu d'échouer (500) ;
+    // un contact effacé après le lot n'empêche pas d'annuler les autres.
+    {
+      const TMP = `essai_tmp_${NUM.replace(/\d/g, (d) => 'abcdefghij'[d])}`;
+      sql(`INSERT INTO categorie (id, nom, ordre) VALUES ('${TMP}', 'Essai temporaire', 99) ON CONFLICT DO NOTHING`);
+      await api({ ids: [G2], changements: { categorie_id: TMP } });
+      const b = await api({ ids: [G2], changements: { categorie_id: 'lointains' } });
+      sql(`DELETE FROM categorie WHERE id = '${TMP}'`);
+      const an = await api({ annuler: b.d.lot });
+      const GD = `01KF6E${NUM}${'0'.repeat(14)}`;
+      sql(`INSERT INTO contact (id, created_at, last_activity_at, nom, commune) VALUES ('${GD}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Effaceun${NUM}', 'Ailleurs${NUM}')`);
+      const g1Avant = JSON.stringify(un(G1));
+      const c = await api({ ids: [GD, G1], changements: { projet: 'ambassadeur' } });
+      sql(`DELETE FROM contact WHERE id = '${GD}'`);
+      const an2 = await api({ annuler: c.d.lot });
+      constat(an.status === 200 && an.d.rendus === 0 && an.d.gardes === 1 && un(G2).categorie_id === 'lointains' && c.d.touches === 2 && an2.status === 200 && an2.d.rendus === 1 && JSON.stringify(un(G1)) === g1Avant,
+        `revue 18.6 : annuler un lot dont la catégorie d'avant a été supprimée garde le contact (${an.status}, ${an.d?.gardes} gardé) ; un contact effacé depuis n'empêche pas d'annuler les autres (${an2.status}, ${an2.d?.rendus} rendu)`);
+    }
     // Refus : 400 pour toute valeur hors vocabulaire, rien n'est écrit ; 404 pour un lot inconnu ; 403 sans jeton ou avec celui de Claude.
     const e0 = nEv(), s0 = etatG();
     const trop = Array.from({ length: 2001 }, (_, i) => `01KF6Z${String(i).padStart(20, '0')}`);
@@ -1911,6 +1949,34 @@ try {
       const textes = await Promise.all(plage.map((id) => o.locator(`tr[data-contact="${id}"]`).innerText()));
       constat(etatG(plage) === avant && textes.every((t) => !t.includes('Anciens clients')),
         '18.6 : « Annuler » rend l\'état exact d\'avant le lot, en base et dans le tableau');
+      // Revue de code 18.6 : au clavier, une flèche sur une liste fermée change la valeur affichée sans rien écrire ; Entrée écrit.
+      {
+        await o.click(caseDe(G1));
+        const cat0 = un(G1).categorie_id;
+        await o.focus('[data-lot-action=categorie_id]');
+        await o.keyboard.press('ArrowDown');
+        await o.waitForTimeout(600);
+        const apresFleche = un(G1).categorie_id, affichee = await o.inputValue('[data-lot-action=categorie_id]');
+        await o.keyboard.press('Enter');
+        await o.waitForFunction(() => document.querySelector('[data-toast-texte]')?.textContent?.includes('touché'));
+        const apresEntree = un(G1).categorie_id;
+        await o.click('[data-toast-annuler]');
+        await o.waitForFunction(() => document.querySelector('[data-toast-texte]')?.textContent?.includes('remis comme avant'));
+        await attendre();
+        const p0 = un(G1).projet;
+        await o.click(`tr[data-contact="${G1}"] [data-classer=projet]`);
+        await o.keyboard.press('ArrowDown');
+        await o.waitForTimeout(600);
+        const pFleche = un(G1).projet;
+        await o.keyboard.press('Enter');
+        await o.waitForFunction(() => document.querySelector('[data-toast-texte]')?.textContent?.includes('touché'));
+        const pEntree = un(G1).projet;
+        await o.click('[data-toast-annuler]');
+        await o.waitForFunction(() => document.querySelector('[data-toast-texte]')?.textContent?.includes('remis comme avant'));
+        await attendre();
+        constat(apresFleche === cat0 && affichee && apresEntree === affichee && un(G1).categorie_id === cat0 && pFleche === p0 && pEntree !== p0 && un(G1).projet === p0,
+          `revue 18.6 : au clavier, une flèche dans la barre ou dans une cellule n'écrit rien, Entrée écrit (catégorie ${cat0} → ${apresEntree}, projet ${p0} → ${pEntree}), puis annulé`);
+      }
       // Une seule ligne : projet puis température directement dans la cellule.
       await o.click(`tr[data-contact="${G3}"] [data-classer=projet]`);
       await o.selectOption(`tr[data-contact="${G3}"] select[data-liste=projet]`, 'vendeur');

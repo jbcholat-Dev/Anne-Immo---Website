@@ -3,7 +3,7 @@
 // passe jamais (worker.ts ne le reconnaît que sous /api/claude/, refusé ici aussi par précaution). Corps en JSON seulement :
 // un formulaire d'un autre site ne peut pas l'envoyer sans l'accord du navigateur. Le filtre est vérifié contre le
 // vocabulaire fermé (`verifierFiltre`) : une clé ou une valeur inconnue est refusée (400), un filtre vide aussi ; au plus
-// 100 vues ; un corps annoncé de plus de 8 000 octets est refusé (413) avant d'être lu (revue de code 18.5).
+// 100 vues, vérifié dans l'insertion même (une remise en place après suppression n'y est pas soumise, revue de code 18.6) ; un corps annoncé de plus de 8 000 octets est refusé (413) avant d'être lu (revue de code 18.5).
 //   POST   /api/vues  { nom, filtre }                 → 201 { vue } (nouvelle vue, en dernière position)
 //   POST   /api/vues  { id, nom, ordre, filtre }      → 201 { vue } (annulation d'une suppression : remise à sa place)
 //   PATCH  /api/vues  { id, nom }                     → 200 { vue } (renommer)
@@ -14,7 +14,7 @@ import { ENTETE_COMPTE } from '@site/server/acces';
 import { COMPTE_CLAUDE, pourSite as env } from '../../server/env';
 import { ULID } from '../../server/formulaires';
 import { nomVue, verifierFiltre } from '../../server/vues';
-import { creerVue, idsCategories, MAX_VUES, nombreVues, renommerVue, supprimerVue } from '../../server/vues-base';
+import { creerVue, idsCategories, MAX_VUES, renommerVue, supprimerVue } from '../../server/vues-base';
 
 export const prerender = false;
 const json = (corps: unknown, status = 200) => new Response(JSON.stringify(corps), { status, headers: { 'Content-Type': 'application/json; charset=utf-8' } });
@@ -47,7 +47,6 @@ export const POST: APIRoute = async ({ request }) => {
   const filtre = verifierFiltre(d.filtre, await idsCategories(env));
   if (typeof filtre === 'string') return json({ erreur: filtre }, 400);
   if (!Object.keys(filtre).length) return json({ erreur: 'Choisissez au moins un filtre.' }, 400);
-  if (await nombreVues(env) >= MAX_VUES) return json({ erreur: `Au plus ${MAX_VUES} vues : supprimez-en une d'abord.` }, 400);
   let retour: { id: string; ordre: number } | undefined;
   if (d.id !== undefined) {
     if (typeof d.id !== 'string' || !ULID.test(d.id) || !Number.isInteger(d.ordre) || (d.ordre as number) < 0 || (d.ordre as number) > 100_000) {
@@ -56,7 +55,8 @@ export const POST: APIRoute = async ({ request }) => {
     retour = { id: d.id, ordre: d.ordre as number };
   }
   const vue = await creerVue(env, nom, filtre, retour);
-  if (!vue) return json({ erreur: 'Cette vue existe déjà' }, 409);
+  if (vue === 'plein') return json({ erreur: `Au plus ${MAX_VUES} vues : supprimez-en une d'abord.` }, 400);
+  if (vue === 'existe') return json({ erreur: 'Cette vue existe déjà' }, 409);
   return json({ vue }, 201);
 };
 
