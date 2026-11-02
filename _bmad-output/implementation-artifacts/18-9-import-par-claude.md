@@ -1,7 +1,7 @@
 ---
 story: 18.9
 epic: 18 — Espace d'Anne : le carnet de contacts
-statut: review
+statut: done
 date: 2026-11-02
 maj: 2026-11-02
 ---
@@ -68,7 +68,20 @@ Que Claude fasse entrer les fichiers de contacts d'Anne (export vCard du télép
 - **La route n'est ouverte qu'à Claude** ; un import par Anne reste la dette du PRD § 6.2.
 
 ## Ce qui reste
-- Revue de code en session neuve (`bmad-code-review`), puis passage à `done`.
+- ~~Revue de code en session neuve, puis passage à `done`~~ : faite le 2026-11-02 (section « Revue de code »).
 - Story 18.10 : le premier import réel, après la validation de la fiche légale par JB (question 5) et l'export de la base de production (question 6) ; les noms exacts des colonnes du fichier « SUIVI PROSPECTION » seront vérifiés sur l'aperçu (colonnes reconnues ou signalées « ignorées »).
 
 ## Revue de code
+Relecture adverse (`bmad-code-review`) en session neuve, **2026-11-02**, PR #227, lot `2ed4fb8..c5dd329` relu (stories 18.9, 18.11 et 18.12 ensemble). Règle de JB du 2026-11-02 : seuls les constats « à corriger » sont corrigés, les « mineurs » sont notés sans correction. Numérotation commune au lot (1 à 11).
+
+- 1 (à corriger) — vCard 2.1 : la suite QUOTED-PRINTABLE d'une note (ligne finie par « = », suite sans espace) échappait au filtre du script et pouvait être lue comme un TEL (numéro d'un tiers) : corrigé (commit f3387b6). Lignes logiques réunies avant tout tri (repli RFC et saut doux QUOTED-PRINTABLE, le saut doux d'abord), dans `scripts/claude-import.mjs` (`vcardEpuree` : seules les valeurs de N, FN, TEL, EMAIL, ORG partent, les autres propriétés sans valeur) et dans `src/server/import.ts` (`lignesLogiquesVcard`) ; côté serveur, un nom de propriété hors `/^[A-Z][A-Z0-9-]{0,29}$/` n'est jamais renvoyé dans l'aperçu, seulement compté en « lignes vCard illisibles ».
+- 2 (à corriger) — CSV sans ligne de titres : la première ligne de données ressortait dans `champs_ignores` : corrigé (commit f3387b6). Un titre ignoré n'est renvoyé que s'il ne contient ni chiffre ni « @ », sinon seulement compté (« colonnes au titre non affiché »). Reste assumé : un prénom ou un nom sans chiffre de cette première ligne peut encore apparaître comme titre ignoré.
+- 3 (à corriger) — accord e-mail posé lors d'une fusion sur une adresse venue d'un autre onglet que EDB : corrigé (commit f3387b6). Chaque personne garde `emailsAccord` (adresses des seules lignes avec accord) ; l'accord n'est posé que si l'e-mail final en fait partie, pour un complément comme pour un nouveau contact (pour un nouveau contact, l'adresse avec accord passe en premier).
+- 5 (mineur) — l'import permet de sonder le carnet (savoir si un numéro y est par les compteurs de l'aperçu) : mineur, noté sans correction (règle de JB du 2026-11-02) : limite assumée de AD-26, la route n'est ouverte qu'au jeton de Claude.
+- 6 (mineur) — un contact écarté peut revenir par son nom via la décision « garder » d'un doublon probable : mineur, noté sans correction (règle de JB du 2026-11-02) : la décision est prise par JB sur l'aperçu, qui montre le contact existant.
+- 7 (mineur) — « +33 (0)6… » mal converti en E.164 ; un numéro suisse écrit sans « 00 » ni « + » est rejeté : mineur, noté sans correction (règle de JB du 2026-11-02) : formes rares dans les fichiers d'Anne ; le numéro suisse est compté « illisible » dans l'aperçu, le « (0) » peut donner un numéro faux, corrigeable sur la fiche.
+- 8 (mineur) — renommer le fichier contourne « déjà importé » : mineur, noté sans correction (règle de JB du 2026-11-02) : un réimport ne crée pas de doublon (les contacts sont retrouvés par leurs coordonnées), il complète seulement.
+- 9 (mineur) — l'aperçu sous-comptait les accords (compléments oubliés) : corrigé dans la foulée du constat 3 (commit f3387b6), l'aperçu compte les accords que l'import poserait, nouveaux et compléments.
+- 10, 11 : voir les stories 18.11 et 18.12 ; 4 : story 18.12.
+
+Vérifications après correction (2026-11-02, tête `e1eb560`) : `site` : `npm run build` (avec la clé d'essai Turnstile) OK, `npm run check` 0 erreur, `npm run base:local` OK ; `espace` : `npm run build` OK, `npm run check` 0 erreur ; `node scripts/e2e-espace.mjs` : 4 passages complets sur le même code (le dernier sur une base locale neuve, l'ancienne mise de côté) : 562 vérifications OK sur 563 au mieux (passages 2 et 4) ; les 10 nouveaux essais « revue » au vert à chaque passage. Échecs restants, chacun sur un essai différent à chaque passage et sans rapport avec le lot corrigé, chacun au vert dans un autre passage : « synthèse : relue dans l'heure » (Leedflow, minutage), « bilan : test A/B » (passage 3), « 18.11 : une demande du site arrive dans Nouveaux » (passage 4), « refuse (415) corps non JSON » (passage 1 : 500 renvoyé par le serveur local de Cloudflare avant le Worker). Nouveaux essais « revue 18.9 » (4) et « revue 18.12 » (6) tous au vert.

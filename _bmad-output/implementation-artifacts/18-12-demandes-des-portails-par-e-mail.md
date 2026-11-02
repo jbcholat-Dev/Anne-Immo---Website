@@ -1,7 +1,7 @@
 ---
 story: 18.12
 epic: 18 — Espace d'Anne : le carnet de contacts
-statut: review
+statut: done
 date: 2026-11-02
 maj: 2026-11-02
 ---
@@ -57,6 +57,14 @@ Les deux réglages de JB (réception sur un sous-domaine dans Cloudflare Email R
 
 ## Ce qui reste
 - **Réglages de JB** (RUNBOOK § 4 sexies, ≈ 25 min) : sous-domaine `entrant` et adresse `demandes@entrant.annevialtissot.fr` vers le Worker `anne-espace` dans Cloudflare Email Routing ; adresse de transfert confirmée et filtre dans la Gmail d'Anne. Puis vérifier sur une vraie demande.
-- Revue de code (`bmad-code-review`, session neuve) : décision de JB du 2026-11-02, relecture par lot de 2 ou 3 stories (avec la 18.11).
+- ~~Revue de code (`bmad-code-review`, session neuve, relecture par lot)~~ : faite le 2026-11-02 (section « Revue de code »).
 
 ## Revue de code
+Relecture adverse (`bmad-code-review`) en session neuve, **2026-11-02**, PR #227, lot `2ed4fb8..c5dd329` relu (stories 18.9, 18.11 et 18.12 ensemble). Règle de JB du 2026-11-02 : seuls les constats « à corriger » sont corrigés, les « mineurs » sont notés sans correction. Numérotation commune au lot (1 à 11).
+
+- 4 (à corriger) — seul l'en-tête From était contrôlé, et c'est la première adresse entre chevrons qui était lue : corrigé (commit e1eb560). L'adresse lue est désormais le **dernier** « <adresse> » du From (`courriel.ts`) ; l'expéditeur d'enveloppe (`message.from`, passé par la fonction `email()` de `worker.ts`) doit être la Gmail d'Anne, lue dans le réglage public **`PORTAILS_EXPEDITEUR_AUTORISE`** de `wrangler.jsonc` (`avialtissot@gmail.com`), ou sa forme de transfert Gmail `avialtissot+…@gmail.com` ; la confirmation du transfert n'est acceptée qu'avec une enveloppe en `@google.com` (elle reste « à lire à la main »). Réglage vide : tout est refusé (rejet SMTP). Un e-mail refusé ne crée ni ligne, ni carte, ni contact. Documenté : RUNBOOK § 4 sexies, `wrangler.jsonc`, `espace/README.md`.
+- 4 bis (reste, mineur) — signature DKIM (`Authentication-Results` dkim=pass) non vérifiée : la présence et la forme de cet en-tête après le transfert de Gmail puis Email Routing ne sont pas connues sans un vrai e-mail ; l'exiger à l'aveugle risquait de refuser toutes les vraies demandes. Quelqu'un qui connaît l'adresse de réception et la Gmail d'Anne peut encore annoncer une fausse enveloppe ; la carte s'écarte d'un clic. À revoir sur le premier e-mail réel (lire ses en-têtes).
+- 11 (mineur) — contact orphelin si le lot d'écriture d'un e-mail de portail échoue après la création du contact : mineur, noté sans correction (règle de JB du 2026-11-02) : l'e-mail reste « à lire à la main » (motif `echec`), le contact créé est visible dans le carnet.
+- 1 à 3, 5 à 9 : story 18.9 ; 10 : story 18.11.
+
+Vérifications après correction (2026-11-02, tête `e1eb560`) : `site` : `npm run build` (avec la clé d'essai Turnstile) OK, `npm run check` 0 erreur, `npm run base:local` OK ; `espace` : `npm run build` OK, `npm run check` 0 erreur ; `node scripts/e2e-espace.mjs` : 4 passages complets sur le même code (le dernier sur une base locale neuve, l'ancienne mise de côté) : 562 vérifications OK sur 563 au mieux (passages 2 et 4) ; les 10 nouveaux essais « revue » au vert à chaque passage. Échecs restants, chacun sur un essai différent à chaque passage et sans rapport avec le lot corrigé, chacun au vert dans un autre passage : « synthèse : relue dans l'heure » (Leedflow, minutage), « bilan : test A/B » (passage 3), « 18.11 : une demande du site arrive dans Nouveaux » (passage 4), « refuse (415) corps non JSON » (passage 1 : 500 renvoyé par le serveur local de Cloudflare avant le Worker). Nouveaux essais « revue 18.9 » (4) et « revue 18.12 » (6) tous au vert.

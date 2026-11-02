@@ -1,7 +1,7 @@
 ---
 story: 18.11
 epic: 18 — Espace d'Anne : le carnet de contacts
-statut: review
+statut: done
 date: 2026-11-02
 maj: 2026-11-02
 ---
@@ -45,7 +45,13 @@ Qu'Anne voie, au-dessus du tableau de la page Contacts, les demandes reçues qu'
 - **Au plus 200 cartes affichées** ; le compteur donne le total, une phrase dit combien attendent.
 
 ## Ce qui reste
-- Revue de code (`bmad-code-review`, session neuve) : décision de JB du 2026-11-02, relecture par lot de 2 ou 3 stories (ici avec la 18.12).
+- ~~Revue de code (`bmad-code-review`, session neuve, relecture par lot)~~ : faite le 2026-11-02 (section « Revue de code »).
 - Story 18.12 : les demandes des portails par e-mail entrent dans la même barre.
 
 ## Revue de code
+Relecture adverse (`bmad-code-review`) en session neuve, **2026-11-02**, PR #227, lot `2ed4fb8..c5dd329` relu (stories 18.9, 18.11 et 18.12 ensemble). Règle de JB du 2026-11-02 : seuls les constats « à corriger » sont corrigés, les « mineurs » sont notés sans correction. Numérotation commune au lot (1 à 11).
+
+- 10 (mineur) — « Annuler » refusé après « Ajouter aux contacts » quand le numéro avait une note (note écrite sans `donnees`, prise pour un événement plus récent) : mineur, noté sans correction (règle de JB du 2026-11-02) : le contact reste correct, Anne le corrige depuis sa fiche.
+- 1 à 9 : stories 18.9 et 18.12 (aucun constat « à corriger » sur la barre « Nouveaux » elle-même).
+
+Vérifications après correction (2026-11-02, tête `e1eb560`) : `site` : `npm run build` (avec la clé d'essai Turnstile) OK, `npm run check` 0 erreur, `npm run base:local` OK ; `espace` : `npm run build` OK, `npm run check` 0 erreur ; `node scripts/e2e-espace.mjs` : 4 passages complets sur le même code (le dernier sur une base locale neuve, l'ancienne mise de côté) : 562 vérifications OK sur 563 au mieux (passages 2 et 4) ; les 10 nouveaux essais « revue » au vert à chaque passage. Échecs restants, chacun sur un essai différent à chaque passage et sans rapport avec le lot corrigé, chacun au vert dans un autre passage : « synthèse : relue dans l'heure » (Leedflow, minutage), « bilan : test A/B » (passage 3), « 18.11 : une demande du site arrive dans Nouveaux » (passage 4), « refuse (415) corps non JSON » (passage 1 : 500 renvoyé par le serveur local de Cloudflare avant le Worker). Nouveaux essais « revue 18.9 » (4) et « revue 18.12 » (6) tous au vert.
