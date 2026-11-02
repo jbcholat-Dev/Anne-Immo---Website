@@ -239,9 +239,9 @@ development_status:
   # Nouvelle version de l'espace d'Anne (refonte BMAD du 2026-11-01) : _bmad-output/planning-artifacts/epics-espace-anne-2026-11-01.md
   epic-18: in-progress   # le carnet de contacts (livraison 1)
   18-1-leedflow-ne-range-un-appel-que-sur-un-contact-suivi: done   # 2026-11-01, PR #225
-  18-2-nouvelle-base-du-carnet-migration-0018: review
-  18-3-demandes-du-site-et-droits-sur-le-nouveau-carnet: review   # 2026-11-01, avec les corrections de la revue 18.2
-  18-4-page-contacts: review   # 2026-11-02
+  18-2-nouvelle-base-du-carnet-migration-0018: done   # 2026-11-02, PR #226
+  18-3-demandes-du-site-et-droits-sur-le-nouveau-carnet: done   # 2026-11-02, PR #226, avec les corrections de la revue 18.2
+  18-4-page-contacts: done   # 2026-11-02, PR #226
   18-5-filtres-et-vues-enregistrees: backlog
   18-6-classer-plusieurs-contacts-et-ecarter: backlog
   18-7-fiche-contact-et-creation-a-la-main: backlog

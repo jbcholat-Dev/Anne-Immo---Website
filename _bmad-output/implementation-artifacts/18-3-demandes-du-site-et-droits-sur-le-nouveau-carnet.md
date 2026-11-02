@@ -1,7 +1,7 @@
 ---
 story: 18.3
 epic: 18 — Espace d'Anne : le carnet de contacts
-statut: review
+statut: done
 date: 2026-11-01
 maj: 2026-11-02
 ---

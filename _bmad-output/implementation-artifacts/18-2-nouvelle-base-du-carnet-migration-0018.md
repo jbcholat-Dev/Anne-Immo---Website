@@ -1,7 +1,7 @@
 ---
 story: 18.2
 epic: 18 — Espace d'Anne : le carnet de contacts
-statut: review
+statut: done
 date: 2026-11-01
 maj: 2026-11-01
 ---
@@ -65,7 +65,7 @@ Ajouts de la revue de code de la story 18.1 (demandés le 01/11 par le fil) : co
 
 ## Écarts assumés
 - **Répétition sur une base locale remplie par l'essai**, pas sur une copie de la base d'essai (`wrangler d1 export`) comme le prévoit AD-23 : Claude n'a aucun droit D1 sur les bases distantes. La base locale contient des lignes dans chaque table fille (événements, tâches, liens, destinataires de campagne, demandes rattachées, numéros classés et inconnus).
-- **Sauvegarde de la production avant fusion** : elle s'appuie sur le retour arrière automatique de D1 (« Time Travel », qui permet de remettre la base dans son état d'une minute donnée des 30 derniers jours) ; l'heure exacte sera notée au moment de la fusion, avec l'export fait par JB (action du tableau de bord).
+- **Sauvegarde de la production avant fusion** : elle s'appuie sur le retour arrière automatique de D1 (« Time Travel », qui permet de remettre la base dans son état d'une minute donnée des 30 derniers jours) ; point de retour noté juste avant la fusion de la PR #226 : **2026-11-02 01:43 UTC** (la base de production `anne-leads` peut être remise dans son état de cette minute pendant 30 jours). Écart avec le plan : pas d'export préalable par JB, qui a demandé de ne pas être impliqué dans cette construction ; Time Travel couvre le même besoin.
 - **`envoi_groupe_permis`** est un oui/non, comme le prévoit AD-25. « Demandes reçues : seulement avec accord » n'est pas une troisième valeur : tout envoi groupé passe par `accord.ts`, qui exige l'accord (sauf anciens clients) et vérifie les désinscriptions avant chaque envoi.
 - **Contacts créés par le site et à la main marqués vérifiés** (`verifie_le` posé) : « Demandes reçues » est leur définition même, rien n'est proposé à confirmer ; cohérent avec la reprise de l'existant.
 - **Reprise `contact_source`** : une ligne `espace` par contact existant, pour que le filtre « source » de la page Contacts les retrouve.
@@ -91,7 +91,7 @@ Ajouts de la revue de code de la story 18.1 (demandés le 01/11 par le fil) : co
 Vérifications après corrections (base locale repartie de zéro, 0001-0018) : `site` `npm run build` (clé Turnstile d'essai), `npm run check` (0 erreur, 0 avertissement), `npm run base:local` ; `node scripts/e2e-migration-0018.mjs` : **22 constats, tous bons** ; `espace` `npm run build`, `npm run check` (0 erreur, 0 avertissement, 5 indications déjà présentes ou sans effet) ; `node scripts/e2e-espace.mjs` : **tout est bon (317 constats, dont 5 nouveaux de la revue)**.
 
 ## Ce qui reste
-- Avant que 0018 atteigne `main` : JB fait l'export de la base de production et note l'heure du point de retour arrière (Time Travel). Action à ajouter au tableau de bord.
+- Fait : point de retour arrière (Time Travel) noté à 2026-11-02 01:43 UTC, juste avant la fusion. En cas de souci, la commande de retour est dans `RUNBOOK.md` (Cloudflare D1 › Time Travel › restaurer à cette minute), puis rejouer les effacements faits depuis (AD-31).
 - Première poussée de la branche : la construction du site applique 0018 à la base d'aperçu, sans retour ; si l'espace est construit avant, sa construction échoue (voulu) et se relance. À surveiller : que le jeton de construction de l'espace a bien le droit de lire la liste des migrations D1.
 - Story 18.3 : rattachement des demandes du site sur `contact_coordonnee`, entrée dans le suivi avec `suivi_le`, ligne `nouveau`, droits RGPD et purge sur les nouvelles tables, `opposition`.
 - Une erreur dans 0018 se corrige par une migration 0019, jamais en modifiant 0018 une fois poussée.
