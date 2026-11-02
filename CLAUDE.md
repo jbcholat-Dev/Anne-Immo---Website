@@ -82,6 +82,7 @@ node scripts/ecrans.mjs        # signale tout débordement ou bouton trop petit,
 node scripts/e2e-diagnostic.mjs # diagnostic de bout en bout sur le serveur local (préalable : site/README.md)
 node scripts/e2e-rendez-vous.mjs # webhook Cal.com et agenda de /contact sur le serveur local (même préalable)
 node scripts/e2e-guide.mjs     # guide par lien signé, séquence et désabonnement sur le serveur local (même préalable)
+node scripts/e2e-rubriques.mjs # onglets Partenaires et Actualités (D-46) : deux constructions publiques avec fiches d'essai, retirées ensuite ; refaire npm run build après
 node scripts/e2e-gestion.mjs   # espace de gestion /gestion, droits RGPD et purge, avec une imitation de Cloudflare Access (même préalable)
 node scripts/e2e-migration-0018.mjs # répète la migration 0018 sur une base locale neuve à part : rien de perdu, reprise, relance, garde de construction de l'espace (aucun préalable)
 node scripts/maquette-emails.mjs # fait partir les 12 e-mails aux prospects sur le serveur local, vérifie leur mise en forme et les capture dans site/.verif/emails (même préalable)
