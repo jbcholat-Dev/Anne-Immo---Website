@@ -47,6 +47,10 @@
 // Story 18.4 : page Contacts en accueil (tout le carnet, écartés masqués, compteur, colonnes de FR-1, recherche par morceau
 // de numéro et par entreprise, tri, colonne masquée gardée, menu « Autres outils » dont chaque page répond, « Aujourd'hui »
 // à /aujourdhui, pas de débordement à 1440 et 1280 px, 1 000 contacts fictifs triés et cherchés en moins d'une seconde).
+// Story 18.5 : filtres (chacun de FR-2, plus « à rappeler », pastilles retirées d'un clic, écartés masqués sans le filtre
+// « écartés »), combinaison avec la recherche, vues enregistrées (création avec un nom échappé, choix, renommage, suppression
+// et annulation, « Tous les contacts » indélébile), /api/vues (vocabulaire fermé d'AD-27 : clé ou valeur inconnue refusée,
+// accès réservé à Anne et JB, jamais à Claude), routes /api/claude/… sans contacts ni vues, vitesse sous 300 ms avec 1 200 contacts.
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
 // Lancer depuis espace/ : `node scripts/e2e-espace.mjs`.
@@ -1437,7 +1441,7 @@ try {
     const ctx = await nav.newContext({ viewport: { width: largeur, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
     const o = await ctx.newPage();
     await o.goto(`${E}/`);
-    await o.waitForSelector('[data-lignes] tr[data-contact]');
+    await o.waitForSelector('[data-lignes][data-complet]', { state: 'attached' });
     if (largeur === 1440) {
       const compte = await o.textContent('[data-compteur]');
       constat(compte === `${nonEcartes} contacts sur ${nonEcartes}`, `18.4 : le compteur « N contacts sur M » (${compte})`);
@@ -1450,7 +1454,7 @@ try {
         '18.4 : les colonnes de FR-1 (nom, entreprise, catégorie, projet, température, source, ville, téléphone, e-mail, profil, dernier contact, accord, état)');
       // Recherche par un morceau du milieu de l'autre numéro, tapé avec des espaces ; puis par l'entreprise. Le tableau se
       // recalcule 120 ms après la dernière frappe : l'essai attend 300 ms.
-      const chercher = async (v) => { await o.fill('[data-recherche]', v); await o.waitForTimeout(300); return o.locator('[data-lignes] tr[data-contact]').evaluateAll((t) => t.map((x) => x.dataset.contact)); };
+      const chercher = async (v) => { await o.fill('[data-recherche]', v); await o.waitForTimeout(300); await o.waitForSelector('[data-lignes][data-complet]', { state: 'attached' }); return o.locator('[data-lignes] tr[data-contact]').evaluateAll((t) => t.map((x) => x.dataset.contact)); };
       const parNumero = await chercher(`33 ${NUM.slice(0, 2)} ${NUM.slice(2, 4)}`);
       const parDebut = await chercher(`06 33 ${NUM.slice(0, 2)}`);
       const parAccent = await chercher(`helene accentuee${NUM}`);
@@ -1464,9 +1468,11 @@ try {
       // Tri par ville, puis à l'envers : vides en fin de liste dans les deux sens.
       const villes = () => o.locator('[data-lignes] tr[data-contact]').evaluateAll((t) => t.map((x) => x.children[6]?.textContent ?? ''));
       const ordonne = (l, sens) => { const v = l.filter((x) => x !== '—'); const c = new Intl.Collator('fr', { sensitivity: 'base', numeric: true }); return v.every((x, i) => i === 0 || sens * c.compare(v[i - 1], x) <= 0) && l.slice(v.length).every((x) => x === '—'); };
-      await o.click('th[data-cle=ville] button');
+      // Story 18.5 : les lignes s'écrivent par paquets ; attendre la dernière (`data-complet`).
+      const complet = () => o.waitForSelector('[data-lignes][data-complet]', { state: 'attached' });
+      await o.click('th[data-cle=ville] button'); await complet();
       const v1 = await villes(), s1 = await o.getAttribute('th[data-cle=ville]', 'aria-sort');
-      await o.click('th[data-cle=ville] button');
+      await o.click('th[data-cle=ville] button'); await complet();
       const v2 = await villes(), s2 = await o.getAttribute('th[data-cle=ville]', 'aria-sort');
       constat(s1 === 'ascending' && s2 === 'descending' && ordonne(v1, 1) && ordonne(v2, -1) && v1.length === nonEcartes,
         '18.4 : tri par une colonne, puis à l\'envers (vides en fin de liste)');
@@ -1475,7 +1481,7 @@ try {
       await o.uncheck('[data-colonnes] input[value=email]');
       const masquee = await o.locator('th[data-cle=email]').count() === 0;
       await o.reload();
-      await o.waitForSelector('[data-lignes] tr[data-contact]');
+      await o.waitForSelector('[data-lignes][data-complet]', { state: 'attached' });
       constat(masquee && await o.locator('th[data-cle=email]').count() === 0 && !(await o.isChecked('[data-colonnes] input[value=email]')) && await o.locator('th[data-cle=telephone]').count() === 1,
         '18.4 : une colonne masquée (E-mail) le reste après rechargement');
       await o.screenshot({ path: path.join(OUT, 'espace-contacts-sans-email-1440.png') });
@@ -1492,9 +1498,164 @@ try {
     constat(!(await o.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)), `18.4 : page Contacts à ${largeur} px : pas de débordement horizontal`);
     await ctx.close();
   }
-  // 1 000 contacts fictifs : tri et recherche en moins d'une seconde dans le navigateur.
+  // Story 18.5 : filtres et vues enregistrées. Quatre contacts d'une même ville propre à cet essai (plus un écarté), pour
+  // vérifier chaque filtre de FR-2 (plus « à rappeler ») sans dépendre du reste de la base.
+  const VILLE5 = `Filtreville${NUM}`;
+  const F1 = `01KF5A${NUM}${'0'.repeat(14)}`, F2 = `01KF5B${NUM}${'0'.repeat(14)}`, F3 = `01KF5C${NUM}${'0'.repeat(14)}`, F4 = `01KF5D${NUM}${'0'.repeat(14)}`;
+  const jourParis = (decalage) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(Date.now() + decalage * 86_400_000));
+  const ilYa = (jours) => new Date(Date.now() - jours * 86_400_000).toISOString();
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, commune, entreprise, categorie_id, projet, temperature, verifie_le, a_rappeler_le, telephone) VALUES
+       ('${F1}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Fanny', 'Filtreun${NUM}', '${VILLE5}', 'Laiterie${NUM}', 'edb', 'vendeur', 'chaud', '2026-10-02T08:00:00Z', '${jourParis(-1)}', '+33651${NUM}')`);
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, commune, categorie_id, projet, temperature, email, email_accord_le, email_accord_source, dernier_contact_le, dernier_contact_canal, ambassadeur_inscrit_le, a_rappeler_le) VALUES
+       ('${F2}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Félix', 'Filtredeux${NUM}', '${VILLE5}', 'edb', 'acheteur', 'tiede', 'felix.filtre+${ESSAI}@example.com', '2026-10-01T08:00:00Z', 'anne', '${ilYa(200)}', 'sms', '2026-10-03T08:00:00Z', '${jourParis(1)}')`);
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, commune, categorie_id, ecarte_le, telephone) VALUES
+       ('${F3}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Firmin', 'Filtretrois${NUM}', '${VILLE5}', 'edb', '2026-10-05T08:00:00Z', '+33652${NUM}')`);
+  sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, commune, categorie_id, telephone, etape, parcours, prochaine_action_le, dernier_contact_le, dernier_contact_canal) VALUES
+       ('${F4}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Flore', 'Filtrequatre${NUM}', '${VILLE5}', 'proches', '+33653${NUM}', 'premier_rdv', 'vendeur', '2026-12-01', '${ilYa(10)}', 'appel')`);
+  sql(`INSERT INTO contact_source (contact_id, source, a) VALUES ('${F1}', 'site', '2026-10-01T08:00:00Z')`);
+  sql(`DELETE FROM vue WHERE nom LIKE 'Essai vue%'`);
+  const vuesAvant = sql('SELECT count(*) AS n FROM vue')[0].n;
+  {
+    const ctx = await nav.newContext({ viewport: { width: 1440, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
+    const o = await ctx.newPage();
+    await o.goto(`${E}/`);
+    await o.waitForSelector('[data-lignes][data-complet]', { state: 'attached' });
+    const ids = () => o.locator('[data-lignes] tr[data-contact]').evaluateAll((t) => t.map((x) => x.dataset.contact));
+    const attendre = () => o.waitForSelector('[data-lignes][data-complet]', { state: 'attached' });
+    const choisir = async (filtre, valeur) => { await o.selectOption(`[data-filtre=${filtre}]`, String(valeur)); await attendre(); return ids(); };
+    const retirerP = async (cle, valeur) => { await o.click(`[data-retirer="${cle}"]${valeur ? `[data-valeur="${valeur}"]` : ''}`); await attendre(); return ids(); };
+    const memes = (a, b) => a.length === b.length && b.every((x) => a.includes(x));
+    const pastillesVues = () => o.locator('[data-pastilles] [data-retirer]').allInnerTexts();
+    const essais = [];
+    let l = await choisir('ville', VILLE5);
+    essais.push(['ville', memes(l, [F1, F2, F4])]);
+    const chipVille = (await pastillesVues()).some((t) => t.includes(`Ville : ${VILLE5}`));
+    l = await choisir('categorie_id', 'edb'); essais.push(['catégorie', memes(l, [F1, F2])]);
+    l = await choisir('projet', 'vendeur'); essais.push(['projet', memes(l, [F1])]);
+    l = await choisir('projet', 'acheteur'); essais.push(['projet, deux valeurs', memes(l, [F1, F2])]);
+    l = await retirerP('projet', 'vendeur'); essais.push(['pastille retirée (une valeur)', memes(l, [F2])]);
+    l = await retirerP('projet', 'acheteur'); l = await retirerP('categorie_id', 'edb');
+    essais.push(['pastilles retirées', memes(l, [F1, F2, F4])]);
+    l = await choisir('temperature', 'tiede'); essais.push(['température', memes(l, [F2])]); await retirerP('temperature', 'tiede');
+    l = await choisir('source', 'site'); essais.push(['source', memes(l, [F1])]); await retirerP('source', 'site');
+    await o.fill('[data-filtre-texte=entreprise_contient]', `laiterie${NUM}`); await o.waitForTimeout(300); await attendre();
+    l = await ids(); essais.push(['entreprise contient', memes(l, [F1])]); await retirerP('entreprise_contient');
+    essais.push(['case entreprise vidée', (await o.inputValue('[data-filtre-texte=entreprise_contient]')) === '']);
+    l = await choisir('etat', 'verifie:oui'); essais.push(['vérifiés', memes(l, [F1])]);
+    l = await choisir('etat', 'verifie:non'); essais.push(['à vérifier', memes(l, [F2, F4])]);
+    l = await choisir('etat', 'ecarte:oui'); essais.push(['écartés (seuls)', memes(l, [F3])]);
+    l = await retirerP('ecarte'); essais.push(['sans le filtre « écartés », l\'écarté est masqué', memes(l, [F1, F2, F4])]);
+    l = await choisir('autres', 'accord:accord'); essais.push(['accord', memes(l, [F2])]); await retirerP('accord', 'accord');
+    l = await choisir('dernier_contact', 'jamais'); essais.push(['jamais recontacté', memes(l, [F1])]);
+    l = await choisir('dernier_contact', '90'); essais.push(['dernier contact plus ancien que 3 mois', memes(l, [F1, F2])]); await retirerP('dernier_contact');
+    l = await choisir('autres', 'pipeline:dans'); essais.push(['dans le suivi', memes(l, [F4])]);
+    l = await choisir('autres', 'pipeline:hors'); essais.push(['hors suivi', memes(l, [F1, F2])]); await retirerP('pipeline');
+    l = await choisir('autres', 'ambassadeur:oui'); essais.push(['ambassadeurs', memes(l, [F2])]); await retirerP('ambassadeur');
+    l = await choisir('autres', 'a_rappeler:oui'); essais.push(['à rappeler (date arrivée)', memes(l, [F1])]); await retirerP('a_rappeler');
+    const rates = essais.filter(([, ok]) => !ok).map(([n]) => n);
+    constat(!rates.length && chipVille, `18.5 : chaque filtre (${essais.length} essais : ${essais.map(([n]) => n).join(', ')})${rates.length ? ` ; ratés : ${rates.join(', ')}` : ''}`);
+    // Combinaison avec la recherche : ville + catégorie, puis un nom.
+    await choisir('categorie_id', 'edb');
+    await o.fill('[data-recherche]', `filtredeux${NUM}`); await o.waitForTimeout(300); await attendre();
+    const combine = await ids();
+    await o.fill('[data-recherche]', `filtrequatre${NUM}`); await o.waitForTimeout(300); await attendre();
+    const horsFiltre = await ids();
+    await o.fill('[data-recherche]', ''); await o.waitForTimeout(300); await attendre();
+    constat(memes(combine, [F2]) && horsFiltre.length === 0 && (await o.textContent('[data-compteur]')).startsWith('2 contacts sur'),
+      '18.5 : les filtres se combinent avec la recherche (un nom hors de la catégorie choisie ne sort pas) ; le compteur suit');
+    await o.click('[data-retirer-tout]'); await attendre();
+    constat((await o.locator('[data-pastilles] [data-retirer]').count()) === 0 && (await ids()).length === nonEcartes + 3,
+      '18.5 : « Tout retirer » enlève toutes les pastilles, le tableau revient à tous les contacts non écartés');
+    await o.screenshot({ path: path.join(OUT, 'espace-contacts-filtres-1440.png') });
+    // Nouvelle vue avec ces filtres : nom avec du HTML, montré tel quel.
+    await choisir('ville', VILLE5); await choisir('projet', 'vendeur');
+    await o.screenshot({ path: path.join(OUT, 'espace-contacts-pastilles-1440.png') });
+    const NOMV = `Essai vue <b>${NUM}</b>`;
+    await o.click('[data-nouvelle-vue]');
+    await o.fill('[data-form-vue] input[name=nom]', NOMV);
+    await o.screenshot({ path: path.join(OUT, 'espace-contacts-nouvelle-vue-1440.png') });
+    await o.click('[data-form-vue] button[type=submit]');
+    await o.waitForFunction((n) => [...document.querySelectorAll('[data-vues] .ct-vue span')].some((s) => s.textContent === n), NOMV);
+    const enBase = sql(`SELECT id, filtre FROM vue WHERE nom = '${NOMV.replace(/'/g, "''")}'`)[0];
+    const filtreBase = enBase ? JSON.parse(enBase.filtre) : null;
+    const boutonVue = o.locator(`[data-vue="${enBase?.id}"]`);
+    constat(!!enBase && filtreBase?.projet?.join() === 'vendeur' && filtreBase?.ville?.join() === VILLE5 && Object.keys(filtreBase).length === 2,
+      `18.5 : « Nouvelle vue avec ces filtres » enregistre les filtres sous un nom (${enBase?.filtre})`);
+    constat(await o.locator('[data-vues] b').count() === 0 && (await boutonVue.locator('small').textContent()) === '1' && (await boutonVue.getAttribute('aria-pressed')) === 'true',
+      '18.5 : le nom de la vue est échappé (montré tel quel, sans balise), avec son compteur, et la vue est choisie');
+    await o.click('[data-vue=tous]'); await attendre();
+    const tous = await ids();
+    await boutonVue.click(); await attendre();
+    constat(tous.length === nonEcartes + 3 && memes(await ids(), [F1]) && (await pastillesVues()).length === 2,
+      '18.5 : « Tous les contacts » retire les filtres ; un clic sur la vue les retrouve');
+    // Renommer.
+    await o.click(`[data-renommer-vue="${enBase.id}"]`);
+    await o.fill('[data-form-vue] input[name=nom]', `Essai vue renommée ${NUM}`);
+    await o.click('[data-form-vue] button[type=submit]');
+    await o.waitForFunction((id) => document.querySelector(`[data-vue="${id}"] span`)?.textContent?.startsWith('Essai vue renommée'), enBase.id);
+    const renommee = sql(`SELECT nom, filtre FROM vue WHERE id = '${enBase.id}'`)[0];
+    constat(renommee?.nom === `Essai vue renommée ${NUM}` && renommee.filtre === enBase.filtre, '18.5 : une vue se renomme (filtres inchangés)');
+    // Supprimer, puis annuler tout de suite.
+    await o.click(`[data-supprimer-vue="${enBase.id}"]`);
+    await o.waitForSelector('[data-toast-annuler]:visible');
+    const supprimee = sql(`SELECT count(*) AS n FROM vue WHERE id = '${enBase.id}'`)[0].n === 0 && await o.locator(`[data-vue="${enBase.id}"]`).count() === 0;
+    await o.screenshot({ path: path.join(OUT, 'espace-contacts-vue-supprimee-1440.png') });
+    constat(supprimee && (await o.textContent('[data-toast-texte]')).includes('supprimée'), '18.5 : une vue se supprime, l\'annulation est proposée tout de suite');
+    await o.click('[data-toast-annuler]');
+    await o.waitForSelector(`[data-vue="${enBase.id}"]`);
+    const remise = sql(`SELECT nom, filtre FROM vue WHERE id = '${enBase.id}'`)[0];
+    constat(remise?.nom === `Essai vue renommée ${NUM}` && remise.filtre === enBase.filtre, '18.5 : « Annuler » remet la vue (même identifiant, même nom, mêmes filtres)');
+    constat(await o.locator('.ct-vue-l:has([data-vue=tous]) [data-supprimer-vue], .ct-vue-l:has([data-vue=tous]) [data-renommer-vue]').count() === 0
+      && await o.locator('[data-supprimer-vue]').count() === sql('SELECT count(*) AS n FROM vue')[0].n,
+      '18.5 : « Tous les contacts » n\'a ni bouton de suppression ni de renommage ; chaque vue de la table en a un');
+    // Vues de départ : « Vendeurs chauds » trouve le vendeur chaud de cet essai.
+    const vc = sql(`SELECT id FROM vue WHERE id = '01M6A6FT000000000000000003'`)[0];
+    if (vc) { await o.click(`[data-vue="${vc.id}"]`); await attendre(); }
+    constat(!vc || (await ids()).includes(F1), '18.5 : la vue de départ « Vendeurs chauds » s\'applique (vendeur chaud de l\'essai trouvé)');
+    await o.click('[data-vue=tous]');
+    await ctx.close();
+  }
+  // Les écritures passent par /api/vues, qui valide le filtre contre le vocabulaire fermé d'AD-27.
+  const vues = (methode, corps, { jeton = JETON, type = 'application/json', id } = {}) => appeler(`${E}/api/vues${id ? `?id=${encodeURIComponent(id)}` : ''}`, {
+    method: methode, redirect: 'manual', headers: { 'cf-access-jwt-assertion': jeton, 'Content-Type': type, Origin: E }, body: corps === undefined ? undefined : typeof corps === 'string' ? corps : JSON.stringify(corps),
+  });
+  const nVues = () => sql('SELECT count(*) AS n FROM vue')[0].n;
+  const n0 = nVues();
+  const refusVues = [
+    ['clé inconnue', await vues('POST', { nom: 'Essai vue refusée', filtre: { inconnu: 'x' } })],
+    ['valeur inconnue (projet)', await vues('POST', { nom: 'Essai vue refusée', filtre: { projet: ['roi'] } })],
+    ['catégorie inconnue', await vues('POST', { nom: 'Essai vue refusée', filtre: { categorie_id: ['inexistante'] } })],
+    ['durée hors bornes', await vues('POST', { nom: 'Essai vue refusée', filtre: { dernier_contact: 0 } })],
+    ['liste attendue', await vues('POST', { nom: 'Essai vue refusée', filtre: { projet: 'vendeur' } })],
+    ['nom vide', await vues('POST', { nom: '  ', filtre: { verifie: 'non' } })],
+    ['corps qui n\'est pas du JSON', await vues('POST', 'nom=x', { type: 'application/x-www-form-urlencoded' })],
+  ];
+  constat(refusVues.every(([, x]) => x.status === 400) && nVues() === n0, `18.5 : /api/vues refuse un filtre hors du vocabulaire fermé (400 : ${refusVues.map(([n, x]) => `${n} ${x.status}`).join(', ')}), rien n'est écrit`);
+  r = await vues('POST', { nom: 'Essai vue API', filtre: { verifie: 'non', dernier_contact: 45, ecarte: 'non', recherche: 'thonon', a_rappeler: 'oui', categorie_id: ['proches'] } });
+  const creeeApi = (await r.json()).vue;
+  constat(r.status === 201 && !!creeeApi?.id && nVues() === n0 + 1, '18.5 : /api/vues accepte un filtre du vocabulaire (201)');
+  const refusDelete = [await vues('DELETE', undefined, { id: 'tous' }), await vues('DELETE', undefined, { id: 'Tous les contacts' }), await vues('DELETE', undefined, { id: '01ARZ3NDEKTSV4RRFFQ69G5FAV' })];
+  constat(refusDelete[0].status === 400 && refusDelete[1].status === 400 && refusDelete[2].status === 404 && nVues() === n0 + 1,
+    `18.5 : « Tous les contacts » ne peut pas être supprimée (${refusDelete.map((x) => x.status).join(', ')}), aucune vue n'est touchée`);
+  const accesVues = [
+    ['sans jeton', await appeler(`${E}/api/vues`, { method: 'POST', redirect: 'manual', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nom: 'Essai vue pirate', filtre: {} }) })],
+    ['jeton de Claude', await vues('POST', { nom: 'Essai vue pirate', filtre: {} }, { jeton: JETON_CLAUDE })],
+    ['jeton de Claude (suppression)', await vues('DELETE', undefined, { jeton: JETON_CLAUDE, id: creeeApi.id })],
+  ];
+  constat(accesVues.every(([, x]) => x.status === 403) && nVues() === n0 + 1, `18.5 : /api/vues réservé à Anne et JB (${accesVues.map(([n, x]) => `${n} ${x.status}`).join(', ')})`);
+  r = await vues('DELETE', undefined, { id: creeeApi.id });
+  constat(r.status === 200 && nVues() === n0, '18.5 : la vue créée par l\'essai est supprimée');
+  // Les routes /api/claude/… ne lisent ni les contacts ni les vues : aucune n'importe le tableau ni les vues, et leurs
+  // réponses ne contiennent aucun nom de vue.
+  const routesClaude = fs.readdirSync(path.join(ICI, 'src', 'pages', 'api', 'claude')).map((f) => fs.readFileSync(path.join(ICI, 'src', 'pages', 'api', 'claude', f), 'utf8'));
+  const repClaude = (await (await claude('/api/claude/actions')).text()) + (await (await claude('/api/claude/bilan?p=semaine')).text());
+  constat(routesClaude.length >= 2 && routesClaude.every((t) => !/vues|tableau|FROM vue\b/.test(t)) && !repClaude.includes('Vendeurs chauds') && !repClaude.includes(`Filtreun${NUM}`),
+    '18.5 : les routes /api/claude/… ne lisent ni les contacts du tableau ni les vues');
+  sql(`DELETE FROM vue WHERE nom LIKE 'Essai vue%'`);
+  constat(nVues() === vuesAvant, `18.5 : vues de l'essai retirées (${vuesAvant} vues en base)`);
+  // 1 150 contacts fictifs (environ 1 230 en tout, story 18.5) : tri, recherche et filtres dans le navigateur.
   sql(`DELETE FROM contact WHERE id LIKE 'PERF%'`);
-  sql(`WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 1000)
+  sql(`WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 1150)
        INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, email, commune, entreprise, categorie_id, projet, is_test)
        SELECT 'PERF' || printf('%022d', i), '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Fictif', 'Perf' || i, '+33699' || printf('%06d', i),
          'perf' || i || '@example.com', CASE i % 4 WHEN 0 THEN 'Thonon' WHEN 1 THEN 'Évian' WHEN 2 THEN 'Publier' ELSE NULL END,
@@ -1503,24 +1664,56 @@ try {
     const ctx = await nav.newContext({ viewport: { width: 1440, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
     const o = await ctx.newPage();
     await o.goto(`${E}/`);
-    await o.waitForSelector('[data-lignes] tr[data-contact]');
+    await o.waitForSelector('[data-lignes][data-complet]', { state: 'attached' });
+    // Story 18.5 : chaque geste est mesuré depuis un tableau au repos (toutes les lignes écrites) jusqu'au tableau redessiné
+    // et peint (image suivante), attente de 120 ms comprise pour la recherche ; seuil 300 ms. « complet » : jusqu'à la
+    // dernière ligne écrite (les suivantes s'ajoutent par paquets, sans bloquer la page).
     const mesure = await o.evaluate(async () => {
-      const temps = (f) => { const t = performance.now(); f(); return Math.round(performance.now() - t); };
-      const q = document.querySelector('[data-recherche]');
       const corps = document.querySelector('[data-lignes]');
-      // Recherche : de la frappe au tableau redessiné, attente de 120 ms comprise.
-      const chercher = (v) => new Promise((ok) => {
-        const t = performance.now();
-        const obs = new MutationObserver(() => { obs.disconnect(); ok(Math.round(performance.now() - t)); });
-        obs.observe(corps, { childList: true });
-        q.value = v; q.dispatchEvent(new Event('input'));
-      });
-      const trier = (cle) => temps(() => document.querySelector(`th[data-cle=${cle}] button`).click());
-      return { lignes: document.querySelectorAll('[data-lignes] tr[data-contact]').length, triNom: trier('nom'), triVille: trier('ville'), triDernier: trier('dernier'),
-        rechercheMot: await chercher('perf'), rechercheNumero: await chercher('06 99 00 05'), rechercheVide: await chercher('') };
+      const q = document.querySelector('[data-recherche]');
+      const repos = () => new Promise((ok) => { const v = () => corps.hasAttribute('data-complet') ? setTimeout(ok, 50) : setTimeout(v, 10); v(); });
+      const mesurer = async (agir) => {
+        await repos();
+        return new Promise((ok) => {
+          const t = performance.now();
+          let peint = null;
+          const obs = new MutationObserver(() => {
+            obs.disconnect();
+            requestAnimationFrame(() => setTimeout(() => {
+              peint = Math.round(performance.now() - t);
+              const fin = () => corps.hasAttribute('data-complet') ? ok({ peint, complet: Math.round(performance.now() - t) }) : setTimeout(fin, 5);
+              fin();
+            }));
+          });
+          obs.observe(corps, { childList: true });
+          agir();
+        });
+      };
+      const taper = (v) => () => { q.value = v; q.dispatchEvent(new Event('input')); };
+      const choisir = (cle, v) => () => { const s = document.querySelector(`[data-filtre=${cle}]`); s.value = v; s.dispatchEvent(new Event('change', { bubbles: true })); };
+      const cliquer = (sel) => () => document.querySelector(sel).click();
+      const r = { lignes: document.querySelectorAll('[data-lignes] tr[data-contact]').length };
+      r.triNom = await mesurer(cliquer('th[data-cle=nom] button'));
+      r.triVille = await mesurer(cliquer('th[data-cle=ville] button'));
+      r.triDernier = await mesurer(cliquer('th[data-cle=dernier] button'));
+      r.rechercheMot = await mesurer(taper('perf'));
+      r.rechercheNumero = await mesurer(taper('06 99 00 05'));
+      r.rechercheVide = await mesurer(taper(''));
+      r.filtreProjet = await mesurer(choisir('projet', 'a_qualifier'));
+      r.filtreEtRecherche = await mesurer(choisir('categorie_id', 'edb'));
+      r.rechercheDansFiltre = await mesurer(taper('perf1'));
+      r.pastilleRetiree = await mesurer(cliquer('[data-retirer=categorie_id]'));
+      r.pastilleProjetRetiree = await mesurer(cliquer('[data-retirer=projet]'));
+      r.rechercheVide2 = await mesurer(taper(''));
+      if (document.querySelector('[data-vue="01M6A6FT000000000000000001"]')) r.vueAVerifier = await mesurer(cliquer('[data-vue="01M6A6FT000000000000000001"]'));
+      r.tousLesContacts = await mesurer(cliquer('[data-vue=tous]'));
+      return r;
     });
-    const pire = Math.max(mesure.triNom, mesure.triVille, mesure.triDernier, mesure.rechercheMot, mesure.rechercheNumero, mesure.rechercheVide);
-    constat(mesure.lignes >= 1000 && pire < 1000, `18.4 : avec ${mesure.lignes} contacts, tri et recherche en moins d'une seconde (${JSON.stringify(mesure)} ms)`);
+    const gestes = Object.entries(mesure).filter(([k]) => k !== 'lignes');
+    const pire = Math.max(...gestes.map(([, v]) => v.peint));
+    constat(mesure.lignes >= 1000 && pire < 1000, `18.4 : avec ${mesure.lignes} contacts, tri, recherche et filtres en moins d'une seconde`);
+    constat(mesure.lignes >= 1000 && pire < 300,
+      `18.5 : avec ${mesure.lignes} contacts, chaque tri, recherche ou filtre redessine le tableau en moins de 300 ms, attente de 120 ms comprise (pire ${pire} ms ; ${gestes.map(([k, v]) => `${k} ${v.peint}/${v.complet}`).join(', ')} ms, redessiné/complet)`);
     await ctx.close();
   } finally {
     sql(`DELETE FROM contact WHERE id LIKE 'PERF%'`);
