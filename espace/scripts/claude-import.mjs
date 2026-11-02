@@ -16,8 +16,8 @@
 // Pour un classeur Excel (.xlsx), --genre est remplacé par un --onglet par onglet à importer (les autres ne sont pas
 // envoyés) : --onglet "EDB=edb:EDB Thonon, mars 2026" --onglet "Feuil1=complement" --onglet "CONTACTS=relations".
 // Genres : telephone, linkedin, reseaux, edb, complement, relations, partenaires, anciens_clients (server/import.ts).
-// Formats : .vcf (vCard), .csv, .xlsx. Le fichier est lu ici ; pour un .vcf, les propriétés que l'espace n'importe jamais
-// (PHOTO, ADR, BDAY, NOTE) ne sont pas envoyées.
+// Formats : .vcf (vCard), .csv, .xlsx. Le fichier est lu ici ; pour un .vcf, seules les valeurs que l'espace lit (N, FN,
+// TEL, EMAIL, ORG) sont envoyées : PHOTO, ADR, BDAY, NOTE et le reste partent sans leur valeur (vcardEpuree).
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
@@ -93,6 +93,34 @@ function lireXlsx(octets) {
   });
 }
 
+/**
+ * Une vCard réduite à ce que l'espace lit, avant l'envoi (fiche légale, règle 1). Les lignes logiques sont d'abord réunies,
+ * comme côté serveur (`lignesLogiquesVcard` de src/server/import.ts) : ligne repliée (suite commençant par une espace ou une
+ * tabulation) et, en vCard 2.1, valeur QUOTED-PRINTABLE poursuivie après un « = » final, suite sans espace en tête (revue
+ * de code 18.9 : sans cela, la suite d'une note partait seule et pouvait être lue comme un TEL). Les propriétés lues (N, FN,
+ * TEL, EMAIL, ORG) partent telles quelles ; toute autre part sans sa valeur, son nom seulement (l'aperçu la signale comme
+ * ignorée) ; une ligne sans nom de propriété valable ne part pas.
+ */
+const LUES = new Set(['BEGIN', 'END', 'VERSION', 'N', 'FN', 'TEL', 'EMAIL', 'ORG']);
+function vcardEpuree(t) {
+  const logiques = [];
+  for (const l of t.replace(/^\uFEFF/, '').split(/\r\n|\r|\n/)) {
+    const i = logiques.length - 1;
+    if (i >= 0 && logiques[i].endsWith('=') && /QUOTED-PRINTABLE/i.test(logiques[i].split(':')[0])) { logiques[i] = logiques[i].slice(0, -1) + l; continue; }
+    if (i >= 0 && /^[ \t]/.test(l)) { logiques[i] += l.slice(1); continue; }
+    logiques.push(l);
+  }
+  const sortie = [];
+  for (const l of logiques) {
+    const deux = l.indexOf(':');
+    if (deux < 0) continue;
+    const prop = l.slice(0, deux).split(';')[0].replace(/^[^.]*\./, '').toUpperCase();
+    if (!/^[A-Z][A-Z0-9-]{0,29}$/.test(prop)) continue;
+    sortie.push(LUES.has(prop) ? l : `${prop}:`);
+  }
+  return `${sortie.join('\r\n')}\r\n`;
+}
+
 /** Le `fichier` envoyé à l'espace, lu depuis le disque. */
 function fichier(chemin) {
   if (!chemin || !fs.existsSync(chemin)) sortir(`Fichier introuvable : ${chemin ?? '(aucun)'}`);
@@ -111,10 +139,7 @@ function fichier(chemin) {
   }
   if (!options.genre) sortir('--genre attendu (telephone, linkedin, reseaux, edb, relations, partenaires, anciens_clients…).');
   let contenu = fs.readFileSync(chemin, 'utf8');
-  if (ext === '.vcf') {
-    // Propriétés jamais importées (fiche légale, règle 1) : retirées avant l'envoi, lignes de suite comprises.
-    contenu = contenu.replace(/\r\n|\r/g, '\n').replace(/^(?:[^.:\n]*\.)?(PHOTO|ADR|BDAY|NOTE|LOGO|SOUND|KEY)[;:][^\n]*(?:\n[ \t][^\n]*)*\n?/gim, '');
-  }
+  if (ext === '.vcf') contenu = vcardEpuree(contenu);
   return { format: ext === '.vcf' ? 'vcard' : 'csv', nom, genre: options.genre, ...(options.detail ? { detail: options.detail } : {}), contenu };
 }
 

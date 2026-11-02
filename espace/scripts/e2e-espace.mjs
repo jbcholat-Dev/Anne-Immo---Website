@@ -1341,6 +1341,68 @@ try {
       ['CSV sans titres reconnus', await IMP({ action: 'apercu', fichier: { format: 'csv', nom: 'x.csv', genre: 'telephone', contenu: 'A;B\nx;y\n' } }), 400],
     ];
     for (const [quoi, rep, attendu] of refusImport) constat(rep.status === attendu, `18.9 : /api/claude/import refuse (${attendu}) : ${quoi} (${rep.status})`);
+
+    // Revue de code 18.9 (2026-11-02) : suites QUOTED-PRINTABLE d'une note, CSV sans titres, accord e-mail lors d'une fusion.
+    {
+      const t65 = (k) => `+3365${k}${NUM}`, l65 = (k) => `06 5${k} ${NUM.slice(0, 2)} ${NUM.slice(2, 4)} ${NUM.slice(4)}`;
+      const nTel = (v) => sql(`SELECT (SELECT count(*) FROM contact WHERE telephone = '${v}') + (SELECT count(*) FROM contact_coordonnee WHERE valeur = '${v}') AS n`)[0].n;
+      // 1. vCard 2.1 : une note QUOTED-PRINTABLE poursuivie après un « = » final, dont la suite (sans espace en tête) porte
+      // « Tel: » et le numéro d'un tiers ; une ligne cassée qui ressemble à une propriété.
+      const vcfQp = ['BEGIN:VCARD', 'VERSION:2.1', `N:Qp${NUM};Quentin;;;`, `TEL;CELL:${l65(0)}`,
+        'NOTE;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:Rappeler son voisin =', `Tel: ${l65(1)} =`, 'Mme Secr=C3=A8te', 'Rappeler Mme Dupont: demain', 'END:VCARD'].join('\r\n');
+      r = await IMP({ action: 'apercu', fichier: { format: 'vcard', nom: 'qp.vcf', genre: 'telephone', contenu: vcfQp } });
+      const apQ = (await r.json()).apercu;
+      constat(r.status === 200 && apQ?.nouveaux === 1 && apQ.telephones_invalides === 0 && apQ.champs_ignores.includes('propriété vCard NOTE')
+        && apQ.champs_ignores.includes('lignes vCard illisibles (non lues) : 1') && !/Dupont|RAPPELER|Secr|TEL:|Tel/.test(JSON.stringify(apQ.champs_ignores)),
+        `revue 18.9 : vCard 2.1, la suite QUOTED-PRINTABLE d'une note reste dans la note ; une ligne cassée est comptée « illisible », jamais renvoyée (${apQ?.champs_ignores.join(' | ')})`);
+      // Le même fichier par le script de Claude : le contact n'a que son numéro, jamais celui du tiers cité dans la note.
+      const dossierQp = fs.mkdtempSync(path.join(os.tmpdir(), 'essai-qp-'));
+      const cheminQp = path.join(dossierQp, 'qp.vcf');
+      fs.writeFileSync(cheminQp, vcfQp);
+      const scriptQp = (args) => spawnSync('node', [path.join(ICI, 'scripts', 'claude-import.mjs'), ...args],
+        { encoding: 'utf8', env: { ...sansProxy, ESPACE_URL: E, ESPACE_JETON_ESSAI: JETON_CLAUDE } });
+      let so = scriptQp(['apercu', cheminQp, '--genre', 'telephone']);
+      const empQ = /Empreinte : ([0-9a-f]{64})/.exec(so.stdout)?.[1];
+      const ignoresQ = so.stdout;
+      so = scriptQp(['importer', cheminQp, '--genre', 'telephone', '--empreinte', empQ ?? '', '--oui']);
+      const lotQ = /lot ([0-9A-Z]{26})/.exec(so.stdout)?.[1];
+      const kQ = sql(`SELECT id FROM contact WHERE telephone = '${t65(0)}'`)[0];
+      constat(!!empQ && !!lotQ && !!kQ && nTel(t65(1)) === 0 && sql(`SELECT count(*) AS n FROM contact_coordonnee WHERE contact_id = '${kQ.id}'`)[0].n === 0
+        && /Téléphones \/ e-mails illisibles\s+0 \/ 0/.test(ignoresQ) && !/Secr|Dupont|voisin/.test(ignoresQ),
+        'revue 18.9 : script, vCard 2.1 avec « Tel: » dans la suite QUOTED-PRINTABLE d\'une note : le numéro du tiers n\'est ni envoyé ni importé');
+      if (lotQ) scriptQp(['annuler', lotQ, '--oui']);
+      fs.rmSync(dossierQp, { recursive: true, force: true });
+
+      // 2. CSV sans ligne de titres (adresses gmail) : la première ligne n'est pas renvoyée dans les colonnes ignorées.
+      const csvSans = `Jean,Sanstitre,jean.sanstitre${NUM}@gmail.com,${l65(2)}\nMarie,Sanstitre,marie.sanstitre${NUM}@gmail.com,${l65(3)}\n`;
+      r = await IMP({ action: 'apercu', fichier: { format: 'csv', nom: 'sans-titres.csv', genre: 'telephone', contenu: csvSans } });
+      const apS = (await r.json()).apercu;
+      const igS = JSON.stringify(apS?.champs_ignores ?? []);
+      constat(r.status === 200 && !/@gmail|sanstitre\d|jean\./i.test(igS) && !igS.includes(NUM.slice(2, 4)) && !/\d{2} \d{2}/.test(igS) && igS.includes('colonnes au titre non affiché (chiffre ou @) : 1'),
+        `revue 18.9 : CSV sans ligne de titres : ni adresse gmail ni numéro dans les colonnes ignorées, seulement compté (${igS})`);
+
+      // 3. Fusion CONTACTS + EDB avec deux adresses différentes : l'accord ne va qu'à l'adresse de l'onglet EDB.
+      const KF = sid();
+      sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, categorie_id) VALUES ('${KF}', '${ilYa}', '${ilYa}', 'Fanny', 'Fusion${NUM}', '${t65(5)}', 'lointains')`);
+      const mC = (q) => `${q}.contacts${NUM}@example.com`, mE = (q) => `${q}.edb${NUM}@example.com`;
+      const titres = ['Prénom', 'Nom', 'Téléphone', 'Mail'];
+      const fFus = { format: 'tableur', nom: 'fusion.xlsx', onglets: [
+        { nom: 'CONTACTS', genre: 'relations', lignes: [titres, ['Rita', `Fusion${NUM}`, `654${NUM}`, mC('rita')], ['Fanny', `Fusion${NUM}`, `655${NUM}`, mC('fanny')]] },
+        { nom: 'EDB', genre: 'edb', lignes: [titres, ['Rita', `Fusion${NUM}`, `654${NUM}`, mE('rita')], ['Fanny', `Fusion${NUM}`, `655${NUM}`, mE('fanny')]] },
+      ] };
+      r = await IMP({ action: 'apercu', fichier: fFus });
+      const apF = (await r.json()).apercu;
+      r = await IMP({ action: 'importer', fichier: fFus, empreinte: apF?.empreinte });
+      const impF = (await r.json()).import;
+      const rita = sql(`SELECT id, email, email_accord_le FROM contact WHERE telephone = '${t65(4)}'`)[0];
+      const fanny = sql(`SELECT email, email_accord_le FROM contact WHERE id = '${KF}'`)[0];
+      constat(apF?.nouveaux === 1 && apF.complements === 1 && apF.accords === 1 && impF?.accords === 1
+        && rita?.email === mE('rita') && !!rita.email_accord_le && sql(`SELECT count(*) AS n FROM contact_coordonnee WHERE contact_id = '${rita.id}' AND valeur = '${mC('rita')}'`)[0].n === 1
+        && fanny?.email === mC('fanny') && fanny.email_accord_le === null,
+        `revue 18.9 : fusion CONTACTS + EDB à deux adresses : l'accord va à l'adresse de l'onglet EDB (nouveau contact), jamais à celle de CONTACTS (complément) ; l'aperçu compte les accords des compléments (${JSON.stringify({ a: apF?.accords, i: impF?.accords })})`);
+      if (impF?.lot) await IMP({ action: 'annuler', lot: impF.lot });
+      sql(`DELETE FROM contact WHERE id = '${KF}'`);
+    }
     // Seule la route d'import touche aux contacts : les autres routes /api/claude/… n'importent ni le carnet ni l'import.
     const dossierClaude = path.join(ICI, 'src', 'pages', 'api', 'claude');
     const autres = fs.readdirSync(dossierClaude).filter((f) => f !== 'import.ts').map((f) => fs.readFileSync(path.join(dossierClaude, f), 'utf8'));

@@ -174,7 +174,16 @@ export function champDe(titre: string): Champ | null {
 function lireGrille(grille: string[][], nomOnglet: string, genre: Genre, io: number, c: Compteurs, ignores: Set<string>): Ligne[] {
   const [entetes = [], ...corps] = grille;
   const champs = entetes.map((t) => champDe(String(t ?? '')));
-  entetes.forEach((t, i) => { if (!champs[i] && String(t ?? '').trim()) ignores.add(`colonne « ${String(t).trim().slice(0, 40)} »${nomOnglet ? ` (${nomOnglet.slice(0, 40)})` : ''}`); });
+  // Revue de code 18.9 : un fichier sans ligne de titres fait prendre sa première ligne de données pour des titres. Un titre
+  // ignoré n'est renvoyé que s'il ne ressemble pas à une donnée (ni chiffre ni « @ ») ; sinon il est seulement compté.
+  let masques = 0;
+  entetes.forEach((t, i) => {
+    const titre = String(t ?? '').trim();
+    if (champs[i] || !titre) return;
+    if (/[0-9@]/.test(titre)) { masques++; return; }
+    ignores.add(`colonne « ${titre.slice(0, 40)} »${nomOnglet ? ` (${nomOnglet.slice(0, 40)})` : ''}`);
+  });
+  if (masques) ignores.add(`colonnes au titre non affiché (chiffre ou @)${nomOnglet ? ` (${nomOnglet.slice(0, 40)})` : ''} : ${masques}`);
   if (!champs.some((x) => x === 'telephones' || x === 'emails' || x === 'nom' || x === 'nomComplet' || x === 'prenom')) {
     throw new ErreurImport('colonnes', `Aucune colonne reconnue${nomOnglet ? ` dans l'onglet « ${nomOnglet.slice(0, 40)} »` : ''} : la première ligne doit porter les titres (Prénom, Nom, Téléphone, E-mail…).`);
   }
@@ -206,27 +215,40 @@ function decoderQp(v: string, charset: string): string {
 const deseparer = (v: string) => v.replace(/\\n/gi, ' ').replace(/\\([,;\\])/g, '$1');
 const composants = (v: string) => v.split(/(?<!\\);/).map(deseparer);
 
-/** Lit un export vCard : une ligne par fiche. Les propriétés non lues sont comptées dans `ignores` (par nom seulement). */
-export function lireVcard(t: string, genre: Genre, c: Compteurs, ignores: Set<string>): Ligne[] {
-  const brutes = t.replace(/^﻿/, '').split(/\r\n|\r|\n/);
+/** Nom de propriété vCard acceptable dans l'aperçu (RFC 6350 : lettres, chiffres, tirets). */
+const NOM_PROPRIETE = /^[A-Z][A-Z0-9-]{0,29}$/;
+
+/**
+ * Les lignes logiques d'une vCard : une ligne repliée (suite commençant par une espace ou une tabulation, RFC 6350) et,
+ * en vCard 2.1, une valeur QUOTED-PRINTABLE poursuivie après un « = » final (saut doux, suite sans espace en tête) sont
+ * réunies avant toute lecture. Le saut doux passe d'abord : la suite d'une valeur QUOTED-PRINTABLE garde son espace de
+ * tête. Même règle dans scripts/claude-import.mjs, qui retire les propriétés interdites avant l'envoi (revue de code 18.9).
+ */
+export function lignesLogiquesVcard(t: string): string[] {
   const logiques: string[] = [];
-  for (const l of brutes) {
-    const precedente = logiques.length - 1;
-    if (precedente >= 0 && /^[ \t]/.test(l)) { logiques[precedente] += l.slice(1); continue; }
-    // vCard 2.1 : une valeur QUOTED-PRINTABLE se poursuit à la ligne suivante après un « = » final (saut doux).
-    if (precedente >= 0 && /QUOTED-PRINTABLE/i.test(logiques[precedente].split(':')[0]) && logiques[precedente].endsWith('=')) {
-      logiques[precedente] = logiques[precedente].slice(0, -1) + l; continue;
-    }
+  for (const l of t.replace(/^\uFEFF/, '').split(/\r\n|\r|\n/)) {
+    const i = logiques.length - 1;
+    if (i >= 0 && logiques[i].endsWith('=') && /QUOTED-PRINTABLE/i.test(logiques[i].split(':')[0])) { logiques[i] = logiques[i].slice(0, -1) + l; continue; }
+    if (i >= 0 && /^[ \t]/.test(l)) { logiques[i] += l.slice(1); continue; }
     logiques.push(l);
   }
+  return logiques;
+}
+
+/** Lit un export vCard : une ligne par fiche. Les propriétés non lues sont comptées dans `ignores` (par nom seulement). */
+export function lireVcard(t: string, genre: Genre, c: Compteurs, ignores: Set<string>): Ligne[] {
+  const logiques = lignesLogiquesVcard(t);
   const lignes: Ligne[] = [];
-  let b: Brut | null = null, n = 0;
+  let b: Brut | null = null, n = 0, illisibles = 0;
   for (const l of logiques) {
     const deux = l.indexOf(':');
-    if (deux < 0) continue;
+    if (deux < 0) { if (b && l.trim()) illisibles++; continue; }
     const tete = l.slice(0, deux), brute = l.slice(deux + 1);
     const [nomProp, ...params] = tete.split(';');
     const prop = nomProp.replace(/^[^.]*\./, '').toUpperCase();
+    // Revue de code 18.9 : un nom de propriété qui n'en est pas un (morceau de note, ligne cassée) n'est jamais renvoyé dans
+    // l'aperçu, seulement compté : il pourrait porter une donnée.
+    if (!NOM_PROPRIETE.test(prop)) { if (b) illisibles++; continue; }
     if (prop === 'BEGIN' && /^VCARD$/i.test(brute.trim())) { b = { telephones: [], emails: [], profils: [], commentaires: [] }; continue; }
     if (prop === 'END' && /^VCARD$/i.test(brute.trim())) {
       if (b) lignes.push(nettoyer(b, `0:${++n}`, genre, c));
@@ -244,9 +266,10 @@ export function lireVcard(t: string, genre: Genre, c: Compteurs, ignores: Set<st
       case 'EMAIL': b.emails.push(valeur); break;
       case 'ORG': b.entreprise ??= composants(valeur)[0] || null; break;
       case 'VERSION': case 'PRODID': case 'UID': case 'REV': break;
-      default: ignores.add(`propriété vCard ${prop.slice(0, 30)}`);
+      default: ignores.add(`propriété vCard ${prop}`);
     }
   }
+  if (illisibles) ignores.add(`lignes vCard illisibles (non lues) : ${illisibles}`);
   return lignes;
 }
 
@@ -309,6 +332,9 @@ interface Personne {
   ref: string; refs: string[]; genres: Set<Genre>; details: Set<string>;
   prenom: string | null; nom: string | null; telephones: string[]; emails: string[]; profils: string[];
   ville: string | null; entreprise: string | null; projet: string | null; notes: string[];
+  /** Revue de code 18.9 : les seules adresses venues d'une ligne où la personne a donné son accord (onglet EDB, FR-10).
+   * Une adresse venue d'un autre onglet, même fusionnée dans la même personne, n'en reçoit jamais. */
+  emailsAccord: string[];
 }
 
 function personnes(l: Lecture): { liste: Personne[]; rejets: { ligne: string; raison: Raison }[]; fusionnees: number } {
@@ -323,7 +349,7 @@ function personnes(l: Lecture): { liste: Personne[]; rejets: { ligne: string; ra
     const trouvees = [...new Set(cles.map((k) => parCle.get(k)).filter((p): p is Personne => !!p))];
     let p: Personne;
     if (!trouvees.length) {
-      p = { ref: x.ref, refs: [], genres: new Set(), details: new Set(), prenom: null, nom: null, telephones: [], emails: [], profils: [], ville: null, entreprise: null, projet: null, notes: [] };
+      p = { ref: x.ref, refs: [], genres: new Set(), details: new Set(), prenom: null, nom: null, telephones: [], emails: [], profils: [], ville: null, entreprise: null, projet: null, notes: [], emailsAccord: [] };
       liste.push(p);
     } else {
       p = trouvees[0];
@@ -336,7 +362,8 @@ function personnes(l: Lecture): { liste: Personne[]; rejets: { ligne: string; ra
       }
     }
     fusionner(p, { ref: x.ref, refs: [x.ref], genres: new Set([x.genre]), details: new Set(o.detail ? [o.detail] : []), prenom: x.prenom, nom: x.nom,
-      telephones: x.telephones, emails: x.emails, profils: x.profils, ville: x.ville, entreprise: x.entreprise, projet: x.projet, notes: x.commentaire ? [x.commentaire] : [] });
+      telephones: x.telephones, emails: x.emails, profils: x.profils, ville: x.ville, entreprise: x.entreprise, projet: x.projet, notes: x.commentaire ? [x.commentaire] : [],
+      emailsAccord: GENRES[x.genre].accord ? x.emails : [] });
     for (const k of cles) parCle.set(k, p);
   }
   return { liste, rejets, fusionnees };
@@ -347,7 +374,7 @@ function fusionner(p: Personne, q: Personne): void {
   q.genres.forEach((g) => p.genres.add(g));
   q.details.forEach((d) => p.details.add(d));
   if (!p.prenom && !p.nom) { p.prenom = q.prenom; p.nom = q.nom; }
-  for (const k of ['telephones', 'emails', 'profils'] as const) for (const v of q[k]) if (!p[k].includes(v)) p[k].push(v);
+  for (const k of ['telephones', 'emails', 'profils', 'emailsAccord'] as const) for (const v of q[k]) if (!p[k].includes(v)) p[k].push(v);
   p.ville ??= q.ville; p.entreprise ??= q.entreprise;
   if (q.projet && (!p.projet || p.projet === 'a_qualifier')) p.projet = q.projet;
   p.notes.push(...q.notes);
@@ -356,7 +383,6 @@ function fusionner(p: Personne, q: Personne): void {
 const categorieDe = (p: Personne): string => [...p.genres].map((g) => GENRES[g].categorie as string).sort((a, b) => rang(a) - rang(b))[0];
 const sourcesDe = (p: Personne): string[] => [...new Set([...p.genres].filter((g) => GENRES[g].cree).map((g) => GENRES[g].source as string))];
 const cree = (p: Personne) => [...p.genres].some((g) => GENRES[g].cree);
-const accordDe = (p: Personne) => [...p.genres].some((g) => GENRES[g].accord);
 
 // ——— Ce que la base sait déjà (lecture seule, rien de renvoyé hors du module) ———
 
@@ -506,7 +532,9 @@ export async function apercu(env: EnvSite, l: Lecture, decisions: Record<string,
     personnes: plan.nouveaux.length + plan.complements.length + plan.doublons.length, fusionnees_dans_le_fichier: plan.fusionnees,
     nouveaux: plan.nouveaux.length, complements: plan.complements.length, complements_verifies: plan.complements.filter((x) => x.cible.verifie_le).length,
     doublons_probables: plan.doublons.length, rejetes: plan.rejets.length, raisons: compterRaisons(plan.rejets), categories,
-    accords: plan.nouveaux.filter(({ p }) => accordDe(p) && p.emails.length).length,
+    // Les accords que l'import poserait : nouveaux et compléments (revue de code 18.9, l'aperçu oubliait les compléments).
+    accords: plan.nouveaux.filter(({ p }) => accordNouveau(p)).length
+      + plan.complements.filter((x) => ecritureComplement(x, plan.secondaires.get(x.cible.id) ?? []).accord).length,
     telephones_invalides: l.telephonesInvalides, emails_invalides: l.emailsInvalides, champs_ignores: l.ignores,
     doublons: plan.doublons, rejets: plan.rejets,
   };
@@ -541,7 +569,7 @@ function ecritureComplement(x: { p: Personne; cible: Existant }, secondairesActu
     secondaires: [...tels.map((v) => ({ type: 'telephone', valeur: v })), ...mails.map((v) => ({ type: 'email', valeur: v })), ...profils.map((v) => ({ type: 'profil', valeur: v, reseau: reseauDe(v) }))],
     sources: sourcesDe(p),
     notes: verifie ? [] : p.notes.map((n) => noteAvecDetail(n, p)),
-    accord: !verifie && accordDe(p) && !!emailFinal && p.emails.includes(emailFinal) && !c.email_accord_le && !c.email_desinscrit_le,
+    accord: !verifie && !!emailFinal && p.emailsAccord.includes(emailFinal) && !c.email_accord_le && !c.email_desinscrit_le,
     detail: [...p.details].join(' · ') || null,
   };
 }
@@ -549,16 +577,22 @@ function ecritureComplement(x: { p: Personne; cible: Existant }, secondairesActu
 const reseauDe = (url: string) => /linkedin\./.test(url) ? 'linkedin' : /instagram\./.test(url) ? 'instagram' : /facebook\.|fb\./.test(url) ? 'facebook' : null;
 const noteAvecDetail = (n: string, p: Personne) => `Note du fichier${p.details.size ? ` (${[...p.details].join(' · ')})` : ''} : ${n}`;
 
+/** Un nouveau contact reçoit l'accord seulement si son e-mail principal vient d'une ligne avec accord (revue de code 18.9) ;
+ * une adresse avec accord passe donc en premier. */
+const emailsNouveau = (p: Personne) => { const a = p.emails.find((m) => p.emailsAccord.includes(m)); return a ? [a, ...p.emails.filter((m) => m !== a)] : p.emails; };
+const accordNouveau = (p: Personne) => { const m = emailsNouveau(p)[0]; return !!m && p.emailsAccord.includes(m); };
+
 function ecritureNouveau(p: Personne): EcritureImport {
+  const emails = emailsNouveau(p);
   const apres: Record<string, string | null> = {
-    prenom: p.prenom, nom: p.nom, telephone: p.telephones[0] ?? null, email: p.emails[0] ?? null, commune: p.ville, entreprise: p.entreprise,
+    prenom: p.prenom, nom: p.nom, telephone: p.telephones[0] ?? null, email: emails[0] ?? null, commune: p.ville, entreprise: p.entreprise,
     categorie_id: categorieDe(p), projet: p.projet ?? 'a_qualifier',
   };
   return {
     id: ulid(), nouveau: true, ligne: p.ref, avant: {}, apres, garde: {},
-    secondaires: [...p.telephones.slice(1).map((v) => ({ type: 'telephone', valeur: v })), ...p.emails.slice(1).map((v) => ({ type: 'email', valeur: v })),
+    secondaires: [...p.telephones.slice(1).map((v) => ({ type: 'telephone', valeur: v })), ...emails.slice(1).map((v) => ({ type: 'email', valeur: v })),
       ...p.profils.map((v) => ({ type: 'profil', valeur: v, reseau: reseauDe(v) }))],
-    sources: sourcesDe(p), notes: p.notes.map((n) => noteAvecDetail(n, p)), accord: accordDe(p) && !!p.emails.length,
+    sources: sourcesDe(p), notes: p.notes.map((n) => noteAvecDetail(n, p)), accord: accordNouveau(p),
     detail: [...p.details].join(' · ') || null,
   };
 }
