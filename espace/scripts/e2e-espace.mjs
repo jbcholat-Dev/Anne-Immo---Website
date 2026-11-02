@@ -66,6 +66,10 @@
 // Revue de code 18.6 : classer n'avance pas last_activity_at, une note après un lot garde le contact à l'annulation, une
 // catégorie supprimée ou un contact effacé ne font plus échouer une annulation, une flèche du clavier n'écrit rien (Entrée
 // écrit), une vue invalide arrive avec un filtre vide, une remise en place de vue passe le plafond de 100.
+// Story 18.8 : /api/categories (six méthodes de départ, ajout, nom déjà pris, renommage sans effet sur les contacts, la vue
+// ni l'historique, méthode et messages types, identifiant d'un message gardé, envoi groupé hors règle refusé, retrait refusé
+// tant qu'il reste un contact ou pour une catégorie de départ puis accepté, vue « à refaire », ordre, 400 et 403) ; la page
+// (menu, liste, aperçu avec un prénom d'exemple, enregistrement, renommage, retrait refusé puis accepté, flèches).
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`.
 // Lancer depuis espace/ : `node scripts/e2e-espace.mjs`.
@@ -2244,6 +2248,243 @@ try {
       '18.7 : /?fiche=… ouvre la fiche ; un contact du suivi garde le lien vers sa fiche de suivi, sa température n\'est pas modifiable');
     await o.screenshot({ path: path.join(OUT, 'espace-fiche-suivi-1280.png') });
     await ctx.close();
+  }
+  // Story 18.8 : catégories et méthodes, par /api/categories puis dans la page /categories. Les catégories de départ sont
+  // remises comme avant à la fin (nom, ordre, méthode), les catégories d'essai retirées (marque « E188 » dans le nom).
+  const ancienne8 = sql(`SELECT id FROM categorie WHERE nom LIKE '%E188%'`).map((c) => `'${c.id}'`).join(',');
+  if (ancienne8) { sql(`DELETE FROM contact WHERE categorie_id IN (${ancienne8})`); sql(`DELETE FROM categorie WHERE id IN (${ancienne8})`); }
+  const departs8 = sql(`SELECT id, nom, ordre, canal_conseille, demande, appel_permis, envoi_groupe_permis FROM categorie ORDER BY id`);
+  const apiCat = async (corps, { jeton = JETON, type = 'application/json', methode = 'POST' } = {}) => {
+    const x = await appeler(`${E}/api/categories`, { method: methode, redirect: 'manual', headers: { 'cf-access-jwt-assertion': jeton, ...(methode === 'POST' ? { 'Content-Type': type } : {}), Origin: E }, body: methode === 'POST' ? (typeof corps === 'string' ? corps : JSON.stringify(corps)) : undefined });
+    let d = null; try { d = await x.json(); } catch {}
+    return { status: x.status, d };
+  };
+  const reglagesAccueil = async () => {
+    const h = await (await appeler(`${E}/`, { headers: avecJeton() })).text();
+    return JSON.parse(/<script type="application\/json" id="ct-reglages">([\s\S]*?)<\/script>/.exec(h)?.[1] ?? '{}');
+  };
+  const C8A = `01KF8A${NUM}${'0'.repeat(14)}`, C8B = `01KF8B${NUM}${'0'.repeat(14)}`;
+  const NOM8 = `Voisins <i>E188</i> ${NUM}`;
+  let cat8 = null, vue8 = null;
+  try {
+    // Les six méthodes de départ (PRD FR-12, question 1 tranchée par JB le 01/11 à 21 h 47).
+    let x = await apiCat(null, { methode: 'GET' });
+    const parId = Object.fromEntries((x.d?.categories ?? []).map((c) => [c.id, c]));
+    const attendu8 = { anciens_clients: [true, 'accord_ou_client'], proches: [true, 'non'], edb: [false, 'accord_ou_client'], partenaires: [true, 'accord_ou_client'], lointains: [false, 'non'], demandes_recues: [true, 'accord_ou_client'] };
+    constat(x.status === 200 && Object.entries(attendu8).every(([id, [appel, envoi]]) => parId[id]?.appel_permis === appel && parId[id]?.envoi_groupe === envoi && parId[id].fixe && parId[id].canal_conseille && parId[id].demande)
+      && parId.proches.nom === 'Proches' && parId.edb.nom === 'Rencontrés à l\'EDB' && typeof parId.proches.contacts === 'number',
+      '18.8 : les six méthodes de départ sont celles du PRD (appel permis pour proches, anciens clients, partenaires et demandes reçues ; non permis pour l\'EDB et les relations lointaines ; envoi groupé sauf proches et lointains), avec leur nombre de contacts');
+
+    // Ajouter.
+    x = await apiCat({ ajouter: { nom: `  ${NOM8}  ` } });
+    cat8 = x.d?.id;
+    const ajoutee = x.d?.categories?.find((c) => c.id === cat8);
+    constat(x.status === 201 && /^[0-9A-HJKMNP-TV-Z]{26}$/.test(cat8 ?? '') && ajoutee?.nom === NOM8 && !ajoutee.fixe && ajoutee.contacts === 0 && !ajoutee.appel_permis && ajoutee.envoi_groupe === 'non'
+      && x.d.categories.at(-1).id === cat8,
+      '18.8 : une catégorie s\'ajoute (identifiant ULID, en dernière position, sans appel ni envoi groupé, aucun contact)');
+    const doublon8 = await apiCat({ ajouter: { nom: NOM8.toUpperCase().replace('VOISINS', 'VOÏSINS') } });
+    constat(doublon8.status === 409 && doublon8.d?.error?.code === 'existe', '18.8 : un nom déjà pris (à la casse et aux accents près) est refusé (409)');
+
+    // Deux contacts dans la catégorie (un écarté) et une vue qui la cite.
+    sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, categorie_id) VALUES
+         ('${C8A}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Victor', 'Voisinun${NUM}', '+33681${NUM}', '${cat8}')`);
+    sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, categorie_id, ecarte_le) VALUES
+         ('${C8B}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Vera', 'Voisindeux${NUM}', '+33682${NUM}', '${cat8}', '2026-10-05T08:00:00Z')`);
+    const rv = await appeler(`${E}/api/vues`, { method: 'POST', headers: avecJeton(JETON, { 'Content-Type': 'application/json' }), body: JSON.stringify({ nom: `Vue E188 ${NUM}`, filtre: { categorie_id: [cat8], verifie: 'non' } }) });
+    vue8 = (await rv.json()).vue?.id;
+
+    // Renommer : ni les contacts, ni la vue, ni l'historique ne bougent ; l'identifiant reste.
+    const contacts8 = () => JSON.stringify(sql(`SELECT * FROM contact WHERE id IN ('${C8A}', '${C8B}') ORDER BY id`));
+    const vueBase8 = () => JSON.stringify(sql(`SELECT * FROM vue WHERE id = '${vue8}'`));
+    const ev8 = () => sql(`SELECT count(*) AS n FROM contact_evenement`)[0].n;
+    const proches8 = () => JSON.stringify(sql(`SELECT id, categorie_id, verifie_le FROM contact WHERE categorie_id = 'proches' ORDER BY id`));
+    const avant8 = [contacts8(), vueBase8(), ev8(), proches8()];
+    x = await apiCat({ id: cat8, renommer: `Voisins renommés E188 ${NUM}` });
+    const y = await apiCat({ id: 'proches', renommer: 'Proches et amis' });
+    const regl8 = await reglagesAccueil();
+    const vueLue8 = regl8.vues?.find((v) => v.id === vue8);
+    constat(x.status === 200 && y.status === 200 && x.d.categories.find((c) => c.id === cat8)?.nom === `Voisins renommés E188 ${NUM}` && x.d.categories.find((c) => c.id === cat8)?.contacts === 2
+      && x.d.categories.find((c) => c.id === cat8)?.ecartes === 1
+      && JSON.stringify([contacts8(), vueBase8(), ev8(), proches8()]) === JSON.stringify(avant8)
+      && vueLue8 && !vueLue8.invalide && vueLue8.filtre.categorie_id?.[0] === cat8 && regl8.categories.find((c) => c.id === 'proches')?.nom === 'Proches et amis',
+      '18.8 : renommer (une catégorie ajoutée, puis « Proches ») ne change ni les contacts, ni la vue qui la cite, ni l\'historique ; l\'identifiant reste et le tableau montre le nouveau nom');
+    const renomDoublon = await apiCat({ id: cat8, renommer: 'proches ET AMIS' });
+    constat(renomDoublon.status === 409, '18.8 : renommer vers le nom d\'une autre catégorie est refusé (409)');
+    await apiCat({ id: 'proches', renommer: 'Proches' });
+
+    // Méthode et messages types.
+    const m8 = { canal_conseille: 'Mot dans la boîte aux lettres', demande: 'Recommander Anne', appel_permis: true, envoi_groupe: 'accord_ou_client',
+      messages: [{ nom: 'Bonjour', texte: 'Bonjour {prénom}, je suis votre voisine.' }, { nom: 'Relance', texte: 'Re-bonjour {prénom} !' }] };
+    x = await apiCat({ id: cat8, methode: m8 });
+    let k8 = sql(`SELECT * FROM categorie WHERE id = '${cat8}'`)[0];
+    let msgs8 = sql(`SELECT * FROM message_type WHERE categorie_id = '${cat8}' ORDER BY ordre`);
+    constat(x.status === 200 && k8.canal_conseille === m8.canal_conseille && k8.demande === m8.demande && k8.appel_permis === 1 && k8.envoi_groupe_permis === 1
+      && msgs8.length === 2 && msgs8[0].nom === 'Bonjour' && msgs8[0].texte === m8.messages[0].texte && msgs8[1].ordre === 2
+      && x.d.categories.find((c) => c.id === cat8)?.messages.length === 2,
+      '18.8 : la méthode s\'enregistre (canal conseillé, demande, appel permis, envoi groupé avec accord) avec ses messages types dans l\'ordre');
+    const id1 = msgs8[0].id;
+    x = await apiCat({ id: cat8, methode: { ...m8, appel_permis: false, envoi_groupe: 'non', messages: [{ nom: 'Troisième', texte: 'Salut {prénom}' }, { id: id1, nom: 'Bonjour', texte: 'Bonjour {prénom}, texte revu.' }] } });
+    k8 = sql(`SELECT * FROM categorie WHERE id = '${cat8}'`)[0];
+    msgs8 = sql(`SELECT * FROM message_type WHERE categorie_id = '${cat8}' ORDER BY ordre`);
+    constat(x.status === 200 && k8.appel_permis === 0 && k8.envoi_groupe_permis === 0 && msgs8.length === 2 && msgs8[0].nom === 'Troisième' && msgs8[1].id === id1 && msgs8[1].texte === 'Bonjour {prénom}, texte revu.',
+      '18.8 : un message type modifié garde son identifiant, un message retiré de la liste disparaît, un nouveau s\'ajoute ; l\'ordre suit la liste');
+
+    // Envoi groupé hors règle (FR-13, AD-21) : seules « non » et « accord_ou_client » existent.
+    const s8 = () => JSON.stringify([sql(`SELECT * FROM categorie ORDER BY id`), sql(`SELECT * FROM message_type ORDER BY id`)]);
+    const etat8 = s8();
+    const horsRegle = [
+      ['tous', await apiCat({ id: cat8, methode: { ...m8, envoi_groupe: 'tous' } })],
+      ['sans accord', await apiCat({ id: 'proches', methode: { ...m8, envoi_groupe: 'sans_accord' } })],
+      ['vrai', await apiCat({ id: cat8, methode: { ...m8, envoi_groupe: true } })],
+      ['oui', await apiCat({ id: 'lointains', methode: { ...m8, envoi_groupe: 'oui' } })],
+    ];
+    constat(horsRegle.every(([, r]) => r.status === 400 && /accord/.test(r.d?.error?.message ?? '')) && s8() === etat8,
+      `18.8 : un envoi groupé qui irait au-delà des contacts avec accord ou anciens clients est refusé (400 : ${horsRegle.map(([n, r]) => `${n} ${r.status}`).join(', ')}), rien n'est écrit`);
+
+    // Valeurs hors vocabulaire : 400, rien n'est écrit.
+    const msgAutre = sql(`SELECT id FROM message_type WHERE categorie_id <> '${cat8}' LIMIT 1`)[0]?.id ?? '01ARZ3NDEKTSV4RRFFQ69G5FAV';
+    const refus8 = [
+      ['champ inconnu', await apiCat({ id: cat8, couleur: 'rouge' })],
+      ['deux gestes', await apiCat({ id: cat8, renommer: 'X', retirer: true })],
+      ['nom vide', await apiCat({ ajouter: { nom: '   ' } })],
+      ['nom trop long', await apiCat({ ajouter: { nom: 'x'.repeat(41) } })],
+      ['ajout avec un champ en plus', await apiCat({ ajouter: { nom: 'Ok', ordre: 1 } })],
+      ['identifiant mal formé', await apiCat({ id: "x' OR 1=1", renommer: 'X' })],
+      ['méthode incomplète', await apiCat({ id: cat8, methode: { canal_conseille: 'x' } })],
+      ['appel « oui »', await apiCat({ id: cat8, methode: { ...m8, appel_permis: 'oui' } })],
+      ['champ inconnu dans la méthode', await apiCat({ id: cat8, methode: { ...m8, priorite: 1 } })],
+      ['11 messages', await apiCat({ id: cat8, methode: { ...m8, messages: Array.from({ length: 11 }, (_, i) => ({ nom: `M${i}`, texte: 't' })) } })],
+      ['champ {nom} dans un message', await apiCat({ id: cat8, methode: { ...m8, messages: [{ nom: 'A', texte: 'Bonjour {nom}' }] } })],
+      ['message sans texte', await apiCat({ id: cat8, methode: { ...m8, messages: [{ nom: 'A', texte: ' ' }] } })],
+      ['deux messages de même nom', await apiCat({ id: cat8, methode: { ...m8, messages: [{ nom: 'A', texte: 'x' }, { nom: 'a', texte: 'y' }] } })],
+      ['message d\'une autre catégorie', await apiCat({ id: cat8, methode: { ...m8, messages: [{ id: msgAutre, nom: 'Vol', texte: 'x' }] } })],
+      ['ordre incomplet', await apiCat({ ordre: ['proches', 'edb'] })],
+      ['retirer « oui »', await apiCat({ id: cat8, retirer: 'oui' })],
+      ['corps qui n\'est pas du JSON', await apiCat('id=x', { type: 'application/x-www-form-urlencoded' })],
+    ];
+    constat(refus8.every(([, r]) => r.status === 400 && r.d?.ok === false) && s8() === etat8,
+      `18.8 : /api/categories refuse toute valeur hors vocabulaire (400 : ${refus8.map(([n, r]) => `${n} ${r.status}`).join(', ')}), rien n'est écrit`);
+    const acces8 = [
+      ['lecture sans jeton', await appeler(`${E}/api/categories`, { redirect: 'manual' })],
+      ['écriture sans jeton', await appeler(`${E}/api/categories`, { method: 'POST', redirect: 'manual', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ajouter: { nom: 'Pirate' } }) })],
+      ['lecture avec le jeton de Claude', await apiCat(null, { methode: 'GET', jeton: JETON_CLAUDE })],
+      ['ajout avec le jeton de Claude', await apiCat({ ajouter: { nom: 'Pirate E188' } }, { jeton: JETON_CLAUDE })],
+      ['retrait avec le jeton de Claude', await apiCat({ id: cat8, retirer: true }, { jeton: JETON_CLAUDE })],
+      ['page avec le jeton de Claude', await appeler(`${E}/categories`, { redirect: 'manual', headers: avecJeton(JETON_CLAUDE) })],
+    ];
+    const inconnue8 = await apiCat({ id: '01ARZ3NDEKTSV4RRFFQ69G5FAV', renommer: 'X' });
+    constat(acces8.every(([, r]) => r.status === 403) && inconnue8.status === 404 && s8() === etat8,
+      `18.8 : /api/categories et la page réservés à Anne et JB (${acces8.map(([n, r]) => `${n} ${r.status}`).join(', ')}) ; catégorie inconnue 404`);
+
+    // Ordre.
+    const ordre8 = x.d.categories.map((c) => c.id);
+    const inverse8 = [ordre8[1], ordre8[0], ...ordre8.slice(2)];
+    x = await apiCat({ ordre: inverse8 });
+    constat(x.status === 200 && JSON.stringify(x.d.categories.map((c) => c.id)) === JSON.stringify(inverse8), '18.8 : l\'ordre des catégories se change (les deux premières échangées)');
+    await apiCat({ ordre: ordre8 });
+
+    // Retirer : refusé tant qu'il reste un contact (écarté compris) et pour une catégorie de départ, puis accepté.
+    x = await apiCat({ id: cat8, retirer: true });
+    const fixe8 = await apiCat({ id: 'lointains', retirer: true });
+    constat(x.status === 409 && x.d?.error?.code === 'pas_vide' && x.d.contacts === 2 && /rangez-les/.test(x.d.error.message) && fixe8.status === 409 && fixe8.d?.error?.code === 'fixe'
+      && sql(`SELECT count(*) AS n FROM categorie WHERE id IN ('${cat8}', 'lointains')`)[0].n === 2,
+      '18.8 : retirer une catégorie qui a des contacts est refusé avec leur nombre (409, écartés compris) ; une catégorie de départ ne se retire pas (409)');
+    const deplace8 = await appeler(`${E}/api/carnet`, { method: 'POST', headers: avecJeton(JETON, { 'Content-Type': 'application/json' }), body: JSON.stringify({ ids: [C8A], changements: { categorie_id: 'proches' } }) });
+    x = await apiCat({ id: cat8, retirer: true });
+    const unReste = x.status === 409 && x.d.contacts === 1;
+    sql(`UPDATE contact SET categorie_id = 'lointains' WHERE id = '${C8B}'`);
+    x = await apiCat({ id: cat8, retirer: true });
+    const regl8b = await reglagesAccueil();
+    const vueApres8 = regl8b.vues?.find((v) => v.id === vue8);
+    constat(deplace8.status === 200 && unReste && x.status === 200 && !x.d.categories.some((c) => c.id === cat8) && sql(`SELECT count(*) AS n FROM message_type WHERE categorie_id = '${cat8}'`)[0].n === 0
+      && vueApres8?.invalide === 'une catégorie a disparu' && JSON.stringify(vueApres8.filtre) === '{}',
+      '18.8 : une fois vide, la catégorie se retire avec ses messages types ; la vue qui la citait est marquée « à refaire » et ne montre plus aucun contact');
+    cat8 = null;
+
+    // La page : liste, aperçu d'un message type, enregistrement, renommage, retrait refusé puis accepté.
+    x = await apiCat({ ajouter: { nom: NOM8 } });
+    cat8 = x.d.id;
+    sql(`UPDATE contact SET categorie_id = '${cat8}' WHERE id = '${C8B}'`);
+    for (const largeur of [1440, 1280]) {
+      const ctx = await nav.newContext({ viewport: { width: largeur, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
+      const o = await ctx.newPage();
+      o.on('dialog', (d) => d.accept());
+      await o.goto(`${E}/`);
+      await o.click('[data-outils] summary');
+      const lienMenu = await o.getAttribute('[data-outil=categories]', 'href');
+      const lienBloc = await o.getAttribute('[data-gerer-categories]', 'href');
+      await o.goto(`${E}/categories?id=${cat8}`);
+      await o.waitForSelector('[data-liste][data-pret]', { state: 'attached' });
+      const nLignes = await o.locator('[data-liste] li').count();
+      const titre8 = await o.textContent('#cm-titre');
+      if (largeur === 1440) {
+        constat(lienMenu === '/categories' && lienBloc === '/categories' && nLignes === sql('SELECT count(*) AS n FROM categorie')[0].n && titre8 === NOM8
+          && await o.locator('#cm-titre i').count() === 0 && (await o.textContent('[data-compte]')).startsWith('1 contact (dont 1 écarté)'),
+          '18.8 : « Catégories et méthodes » s\'ouvre depuis « Autres outils » et depuis la page Contacts ; la page liste chaque catégorie, le nom montré en texte, avec son nombre de contacts');
+        await o.click('[data-ajouter-msg]');
+        await o.fill('[data-msg] [name=msg-nom]', 'Bienvenue');
+        await o.fill('[data-msg] [name=msg-texte]', 'Bonjour , ');
+        await o.click('[data-msg] [name=msg-texte]');
+        await o.evaluate(() => { const t = document.querySelector('[data-msg] [name=msg-texte]'); t.setSelectionRange(8, 8); });
+        await o.click('[data-msg] [data-inserer]');
+        await o.press('[data-msg] [name=msg-texte]', 'End');
+        await o.type('[data-msg] [name=msg-texte]', 'bienvenue <b>dans</b> le quartier.');
+        const apercu8 = await o.textContent('[data-msg] [data-apercu]');
+        await o.fill('[data-methode] [name=canal_conseille]', 'Mot dans la boîte');
+        await o.click('[data-methode] label:has(input[name=appel][value=oui]) span');
+        await o.click('[data-methode] label:has(input[name=envoi][value=accord_ou_client]) span');
+        await o.screenshot({ path: path.join(OUT, 'espace-categories-1440.png'), fullPage: true });
+        await o.click('[data-enregistrer]');
+        await o.waitForFunction(() => document.querySelector('[data-message]')?.textContent === 'Méthode enregistrée.');
+        const k = sql(`SELECT * FROM categorie WHERE id = '${cat8}'`)[0], m = sql(`SELECT * FROM message_type WHERE categorie_id = '${cat8}'`);
+        constat(apercu8 === 'Bonjour Claire, bienvenue <b>dans</b> le quartier.' && await o.locator('[data-apercu] b').count() === 0
+          && k.canal_conseille === 'Mot dans la boîte' && k.appel_permis === 1 && k.envoi_groupe_permis === 1 && m.length === 1 && m[0].texte === 'Bonjour {prénom}, bienvenue <b>dans</b> le quartier.',
+          `18.8 : dans la page, « Insérer {prénom} » et l'aperçu avec un prénom d'exemple (« ${apercu8} », en texte) ; la méthode et le message s'enregistrent`);
+        await o.fill('[data-renommer] [name=nom]', `Voisins du lac E188 ${NUM}`);
+        await o.click('[data-renommer] button[type=submit]');
+        await o.waitForFunction(() => document.querySelector('[data-message]')?.textContent?.startsWith('Catégorie renommée'));
+        const nomListe = await o.textContent(`[data-categorie="${cat8}"] .cm-nom`);
+        await o.click('[data-retirer]');
+        await o.waitForSelector('[data-message].erreur');
+        const refusPage = await o.textContent('[data-message]');
+        await o.screenshot({ path: path.join(OUT, 'espace-categories-retrait-refuse-1440.png') });
+        constat(nomListe === `Voisins du lac E188 ${NUM}` && sql(`SELECT categorie_id FROM contact WHERE id = '${C8B}'`)[0].categorie_id === cat8 && /encore 1 contact/.test(refusPage)
+          && sql(`SELECT count(*) AS n FROM categorie WHERE id = '${cat8}'`)[0].n === 1,
+          '18.8 : dans la page, un renommage s\'affiche dans la liste sans toucher au contact ; « Retirer » sur une catégorie non vide affiche un message clair et rien n\'est retiré');
+        sql(`UPDATE contact SET categorie_id = 'lointains' WHERE id = '${C8B}'`);
+        await o.reload();
+        await o.waitForSelector('[data-liste][data-pret]', { state: 'attached' });
+        await o.click('[data-retirer]');
+        await o.waitForFunction(() => document.querySelector('[data-message]')?.textContent?.includes('retirée'));
+        constat(sql(`SELECT count(*) AS n FROM categorie WHERE id = '${cat8}'`)[0].n === 0 && !(await o.locator(`[data-categorie="${cat8}"]`).count()),
+          '18.8 : dans la page, une catégorie vide se retire (après confirmation) et quitte la liste');
+        cat8 = null;
+        // Ordre par les flèches : la deuxième monte, puis redescend.
+        const avantFl = sql('SELECT id FROM categorie ORDER BY ordre, nom, id').map((c) => c.id);
+        await o.click('[data-monter="1"]');
+        await o.waitForFunction(() => document.querySelector('[data-message]')?.textContent === 'Ordre enregistré.');
+        const apresFl = sql('SELECT id FROM categorie ORDER BY ordre, nom, id').map((c) => c.id);
+        await o.click('[data-descendre="0"]');
+        await o.waitForFunction((id) => document.querySelector('[data-liste] li')?.getAttribute('data-categorie') === id, avantFl[0]);
+        constat(apresFl[0] === avantFl[1] && apresFl[1] === avantFl[0] && JSON.stringify(sql('SELECT id FROM categorie ORDER BY ordre, nom, id').map((c) => c.id)) === JSON.stringify(avantFl),
+          '18.8 : dans la page, les flèches changent l\'ordre des catégories');
+        await o.click(`[data-choisir="anciens_clients"]`);
+        await o.waitForFunction(() => document.querySelector('#cm-titre')?.textContent === 'Anciens clients');
+        constat(await o.isDisabled('[data-retirer]') && await o.isChecked('[data-methode] input[name=appel][value=oui]') && await o.isChecked('[data-methode] input[name=envoi][value=accord_ou_client]'),
+          '18.8 : une catégorie de départ montre sa méthode, et son bouton « Retirer » est désactivé');
+      }
+      await o.screenshot({ path: path.join(OUT, `espace-categories-depart-${largeur}.png`), fullPage: true });
+      constat(!(await o.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)), `18.8 : page Catégories à ${largeur} px : pas de débordement horizontal`);
+      await ctx.close();
+    }
+  } finally {
+    sql(`DELETE FROM contact WHERE id IN ('${C8A}', '${C8B}')`);
+    if (vue8) sql(`DELETE FROM vue WHERE id = '${vue8}'`);
+    const restes8 = sql(`SELECT id FROM categorie WHERE nom LIKE '%E188%'`).map((c) => `'${c.id}'`).join(',');
+    if (restes8) sql(`DELETE FROM categorie WHERE id IN (${restes8})`);
+    for (const k of departs8) {
+      sql(`UPDATE categorie SET nom = '${k.nom.replace(/'/g, "''")}', ordre = ${k.ordre}, canal_conseille = '${(k.canal_conseille ?? '').replace(/'/g, "''")}', demande = '${(k.demande ?? '').replace(/'/g, "''")}', appel_permis = ${k.appel_permis}, envoi_groupe_permis = ${k.envoi_groupe_permis} WHERE id = '${k.id}'`);
+    }
   }
   // 1 150 contacts fictifs (environ 1 230 en tout, story 18.5) : tri, recherche et filtres dans le navigateur.
   sql(`DELETE FROM contact WHERE id LIKE 'PERF%'`);

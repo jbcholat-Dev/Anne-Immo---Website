@@ -13,6 +13,7 @@
 // Story 18.7 : un clic sur le nom ouvre la fiche du contact dans un panneau à droite (`islands/fiche-contact`, /api/fiche) ;
 // « + Nouveau contact » en haut à droite ouvre la saisie de la maquette. La ligne écrite revient dans le tableau sans
 // recharger ; `/?fiche=<id>` ouvre la page avec la fiche ouverte.
+// Story 18.8 : sous les catégories, un lien vers « Catégories et méthodes » (/categories).
 // Place laissée à la story 18.11 : barre « Nouveaux » au-dessus de la recherche.
 // L'ancienne page d'accueil « Aujourd'hui » est à /aujourdhui ; ses anciens retours (`/?m=…`) y sont renvoyés.
 import Espace from '../layouts/Espace.astro';
@@ -54,6 +55,7 @@ const reglages = enJson({ vues, categories });
       <div class="ct-bloc">
         <h3>Catégories</h3>
         <div data-categories></div>
+        <a href="/categories" class="ct-gerer" data-gerer-categories>Catégories et méthodes</a>
       </div>
     </aside>
     <div class="ct-principal">
@@ -693,6 +695,7 @@ const reglages = enJson({ vues, categories });
   @media (min-width: 900px) { .ct-page { grid-template-columns: 210px minmax(0, 1fr); } }
   .ct-cote { display: flex; flex-direction: column; gap: 18px; }
   .ct-bloc { background: #fff; border: 1px solid var(--avt-galet); border-radius: 12px; padding: 14px; }
+  .ct-gerer { display: inline-block; margin-top: 8px; font-size: 13px; color: var(--avt-klein); padding: 4px 8px; }
   .ct-bloc h3 { margin: 0 0 8px; font-family: var(--avt-font-text); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--avt-text-muted); font-weight: 500; }
   .ct-vue { display: flex; justify-content: space-between; width: 100%; background: none; border: 0; padding: 6px 8px; border-radius: 8px; text-align: left; font: inherit; font-size: 14px; color: inherit; cursor: default; }
   .ct-vue.actif { background: var(--avt-brume); color: var(--avt-klein); font-weight: 500; }

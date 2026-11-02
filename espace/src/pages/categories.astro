@@ -1,0 +1,290 @@
+---
+// Catégories et méthodes (story 18.8, FR-12, FR-13, AD-25), dans le menu « Autres outils ». À gauche, les catégories dans
+// leur ordre avec leur nombre de contacts (flèches pour changer l'ordre, ajout d'une catégorie) ; à droite, la catégorie
+// choisie : son nom (renommer), sa méthode (canal conseillé, ce qu'on demande, appel permis, envoi groupé), ses messages
+// types avec `{prénom}` et leur aperçu avec un prénom d'exemple, et « Retirer » (vide seulement). La maquette
+// `ux-espace-anne-2026-11-01` n'a pas cet écran : il reprend la charte et les blocs de la page Contacts.
+// Tout s'écrit par /api/categories (`server/categories`) ; la page se redessine avec la liste renvoyée, sans recharger.
+// Tout texte venu des données passe par `esc` avant d'entrer dans le HTML.
+import Espace from '../layouts/Espace.astro';
+import { ENTETE_COMPTE } from '@site/server/acces';
+import { COMPTE_CLAUDE, pourSite as env } from '../server/env';
+import { listerCategories } from '../server/categories';
+
+export const prerender = false;
+const compte = Astro.request.headers.get(ENTETE_COMPTE);
+if (!compte || compte === COMPTE_CLAUDE) return new Response('Accès refusé', { status: 403 });
+const categories = await listerCategories(env);
+const choisie = Astro.url.searchParams.get('id');
+const enJson = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
+---
+<Espace titre="Catégories et méthodes" actif="categories">
+  <div class="cm-tete">
+    <h1>Catégories et méthodes</h1>
+    <p class="e-muet">Chaque catégorie dit comment contacter ses personnes : les séances proposeront ce canal et ces messages. Renommer une catégorie ne change rien à ses contacts ni aux vues.</p>
+  </div>
+  <p class="cm-message" data-message role="status" hidden></p>
+  <div class="cm-page">
+    <aside class="cm-cote" aria-label="Catégories">
+      <ol class="cm-liste" data-liste></ol>
+      <form class="cm-ajout" data-ajouter>
+        <label class="cm-champ">Nouvelle catégorie<input name="nom" maxlength="40" autocomplete="off" required placeholder="Ex. Voisins" /></label>
+        <button type="submit" class="cm-btn bleu">Ajouter</button>
+      </form>
+    </aside>
+    <section class="cm-detail" data-detail aria-live="polite"></section>
+  </div>
+  <script type="application/json" id="cm-donnees" set:html={enJson({ categories, choisie })}></script>
+</Espace>
+
+<script>
+  import {
+    CHAMP_PRENOM, ENVOIS_GROUPES, MAX_MESSAGES, PRENOM_EXEMPLE, remplirMessage, type Categorie, type EnvoiGroupe,
+  } from '../server/categories-regles';
+
+  const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+  const $ = <T extends Element>(s: string, racine: ParentNode = document) => racine.querySelector<T>(s)!;
+  const donnees: { categories: Categorie[]; choisie: string | null } = JSON.parse(document.getElementById('cm-donnees')?.textContent || '{"categories":[]}');
+  let categories = donnees.categories;
+  let choisie = categories.some((c) => c.id === donnees.choisie) ? donnees.choisie! : categories[0]?.id ?? null;
+  const zoneListe = $<HTMLOListElement>('[data-liste]'), zoneDetail = $<HTMLElement>('[data-detail]'), zoneMessage = $<HTMLElement>('[data-message]');
+  let occupe = false;
+
+  const nContacts = (c: Categorie) => `${c.contacts} contact${c.contacts > 1 ? 's' : ''}${c.ecartes ? ` (dont ${c.ecartes} écarté${c.ecartes > 1 ? 's' : ''})` : ''}`;
+
+  function dire(texte: string, erreur = false) {
+    zoneMessage.textContent = texte;
+    zoneMessage.classList.toggle('erreur', erreur);
+    zoneMessage.setAttribute('role', erreur ? 'alert' : 'status');
+    zoneMessage.hidden = !texte;
+  }
+
+  async function envoyer(corps: unknown): Promise<{ ok: boolean; id?: string; error?: { message: string } } | null> {
+    if (occupe) return null;
+    occupe = true;
+    try {
+      const r = await fetch('/api/categories', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corps) });
+      const d = await r.json().catch(() => null) as { ok: boolean; id?: string; categories?: Categorie[]; error?: { message: string } } | null;
+      if (!d) { dire('Le serveur n\'a pas répondu : rien n\'a été changé.', true); return null; }
+      if (d.ok && d.categories) categories = d.categories;
+      if (!d.ok) dire(d.error?.message ?? 'Impossible.', true);
+      return d;
+    } catch { dire('Pas de connexion : rien n\'a été changé.', true); return null; } finally { occupe = false; }
+  }
+
+  function dessinerListe() {
+    zoneListe.innerHTML = categories.map((c, i) => `<li class="cm-ligne${c.id === choisie ? ' actif' : ''}" data-categorie="${esc(c.id)}">
+      <button type="button" class="cm-choisir" data-choisir="${esc(c.id)}" aria-pressed="${c.id === choisie}">
+        <span class="cm-nom">${esc(c.nom)}</span><small>${c.contacts}</small>
+        <span class="cm-regles">${c.appel_permis ? 'appel permis' : 'appel non permis'} · ${c.envoi_groupe === 'non' ? 'pas d\'envoi groupé' : 'envoi groupé avec accord'}</span>
+      </button>
+      <span class="cm-fleches">
+        <button type="button" class="cm-fleche" data-monter="${i}" aria-label="Monter ${esc(c.nom)}"${i === 0 ? ' disabled' : ''}>↑</button>
+        <button type="button" class="cm-fleche" data-descendre="${i}" aria-label="Descendre ${esc(c.nom)}"${i === categories.length - 1 ? ' disabled' : ''}>↓</button>
+      </span></li>`).join('');
+  }
+
+  const radio = (nom: string, valeur: string, texte: string, coche: boolean) =>
+    `<label><input type="radio" name="${nom}" value="${esc(valeur)}"${coche ? ' checked' : ''} /><span>${esc(texte)}</span></label>`;
+
+  function blocMessage(m: { id?: string; nom: string; texte: string }) {
+    return `<div class="cm-msg" data-msg${m.id ? ` data-msg-id="${esc(m.id)}"` : ''}>
+      <div class="cm-msg-tete">
+        <label class="cm-champ">Nom du message<input name="msg-nom" value="${esc(m.nom)}" maxlength="60" autocomplete="off" placeholder="Ex. Parrainage" /></label>
+        <button type="button" class="cm-btn" data-inserer>Insérer ${esc(CHAMP_PRENOM)}</button>
+        <button type="button" class="cm-btn" data-retirer-msg>Retirer ce message</button>
+      </div>
+      <label class="cm-champ">Texte<textarea name="msg-texte" rows="4" maxlength="2000" placeholder="Bonjour ${esc(CHAMP_PRENOM)}, …">${esc(m.texte)}</textarea></label>
+      <div class="cm-apercu"><span class="e-muet">Aperçu avec « ${esc(PRENOM_EXEMPLE)} » :</span><p data-apercu>${esc(remplirMessage(m.texte, PRENOM_EXEMPLE))}</p></div>
+    </div>`;
+  }
+
+  function dessinerDetail() {
+    const c = categories.find((x) => x.id === choisie);
+    if (!c) { zoneDetail.innerHTML = '<p class="e-muet">Aucune catégorie.</p>'; return; }
+    const retrait = c.fixe ? 'Catégorie de départ : elle se renomme, mais ne se retire pas.'
+      : c.contacts ? `Pour la retirer, rangez d'abord ses contacts dans une autre catégorie (page Contacts) : ${nContacts(c)}.` : 'Elle est vide : elle peut être retirée.';
+    zoneDetail.innerHTML = `
+      <div class="cm-carte">
+        <h2 id="cm-titre" tabindex="-1">${esc(c.nom)}</h2>
+        <p class="e-muet" data-compte>${esc(nContacts(c))}</p>
+        <form class="cm-renommer" data-renommer>
+          <label class="cm-champ">Nom de la catégorie<input name="nom" value="${esc(c.nom)}" maxlength="40" autocomplete="off" required /></label>
+          <button type="submit" class="cm-btn">Renommer</button>
+        </form>
+      </div>
+      <form class="cm-carte" data-methode>
+        <h3>Méthode</h3>
+        <div class="cm-deux">
+          <label class="cm-champ">Canal conseillé<input name="canal_conseille" value="${esc(c.canal_conseille)}" maxlength="200" autocomplete="off" placeholder="Ex. Message personnel, un par un" /></label>
+          <label class="cm-champ">Ce qu'on demande<input name="demande" value="${esc(c.demande)}" maxlength="300" autocomplete="off" placeholder="Ex. Prendre des nouvelles et parler du parrainage" /></label>
+        </div>
+        <fieldset class="cm-choix"><legend>Appel</legend>
+          ${radio('appel', 'oui', 'Permis', c.appel_permis)}${radio('appel', 'non', 'Non permis', !c.appel_permis)}
+          <p class="e-muet">Règle de la catégorie ; une fiche peut la changer pour une personne (« appel autorisé »).</p>
+        </fieldset>
+        <fieldset class="cm-choix"><legend>Envoi groupé par e-mail</legend>
+          ${(Object.entries(ENVOIS_GROUPES) as [EnvoiGroupe, string][]).map(([v, t]) => radio('envoi', v, t, c.envoi_groupe === v)).join('')}
+          <p class="e-muet">Même permis, un e-mail groupé ne part que vers les contacts qui ont donné leur accord ou sont anciens clients ; l'espace revérifie juste avant l'envoi.</p>
+        </fieldset>
+        <div class="cm-msgs-tete"><h3>Messages types</h3><span class="e-muet">${esc(CHAMP_PRENOM)} est remplacé par le prénom du contact.</span></div>
+        <div class="cm-msgs" data-messages>${c.messages.map(blocMessage).join('') || '<p class="e-muet" data-aucun>Aucun message type pour l\'instant.</p>'}</div>
+        <div class="cm-actions">
+          <button type="button" class="cm-btn" data-ajouter-msg>+ Ajouter un message type</button>
+          <button type="submit" class="cm-btn bleu" data-enregistrer>Enregistrer la méthode</button>
+        </div>
+      </form>
+      <div class="cm-carte cm-retrait">
+        <p class="e-muet" data-retrait-texte>${esc(retrait)}</p>
+        <button type="button" class="cm-btn danger" data-retirer${c.fixe ? ' disabled' : ''}>Retirer la catégorie</button>
+      </div>`;
+  }
+
+  function tout() { dessinerListe(); dessinerDetail(); }
+
+  /** La méthode telle qu'écrite dans le formulaire. */
+  function lireFormulaire(f: HTMLFormElement) {
+    const fd = new FormData(f);
+    return {
+      canal_conseille: String(fd.get('canal_conseille') ?? ''),
+      demande: String(fd.get('demande') ?? ''),
+      appel_permis: fd.get('appel') === 'oui',
+      envoi_groupe: String(fd.get('envoi') ?? 'non'),
+      messages: [...f.querySelectorAll<HTMLElement>('[data-msg]')].map((b) => ({
+        ...(b.dataset.msgId ? { id: b.dataset.msgId } : {}),
+        nom: $<HTMLInputElement>('[name=msg-nom]', b).value,
+        texte: $<HTMLTextAreaElement>('[name=msg-texte]', b).value,
+      })),
+    };
+  }
+
+  zoneListe.addEventListener('click', async (e) => {
+    const t = e.target as HTMLElement;
+    const choix = t.closest<HTMLElement>('[data-choisir]');
+    if (choix) { choisie = choix.dataset.choisir!; dire(''); tout(); history.replaceState(null, '', `?id=${encodeURIComponent(choisie)}`); return; }
+    const haut = t.closest<HTMLElement>('[data-monter]'), bas = t.closest<HTMLElement>('[data-descendre]');
+    if (!haut && !bas) return;
+    const i = Number((haut ?? bas)!.dataset[haut ? 'monter' : 'descendre']), j = haut ? i - 1 : i + 1;
+    const ids = categories.map((c) => c.id);
+    if (j < 0 || j >= ids.length) return;
+    [ids[i], ids[j]] = [ids[j], ids[i]];
+    const d = await envoyer({ ordre: ids });
+    if (d?.ok) { dire('Ordre enregistré.'); tout(); zoneListe.querySelector<HTMLElement>(`[data-${haut ? 'monter' : 'descendre'}="${j}"]:not([disabled])`)?.focus(); }
+  });
+
+  $<HTMLFormElement>('[data-ajouter]').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.currentTarget as HTMLFormElement;
+    const nom = $<HTMLInputElement>('[name=nom]', f).value;
+    const d = await envoyer({ ajouter: { nom } });
+    if (d?.ok && d.id) { choisie = d.id; f.reset(); tout(); dire(`Catégorie « ${categories.find((c) => c.id === d.id)?.nom ?? nom} » ajoutée : écrivez sa méthode.`); $<HTMLElement>('#cm-titre').focus(); }
+  });
+
+  zoneDetail.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target as HTMLFormElement;
+    if (f.matches('[data-renommer]')) {
+      const d = await envoyer({ id: choisie, renommer: $<HTMLInputElement>('[name=nom]', f).value });
+      if (d?.ok) { tout(); dire('Catégorie renommée : ses contacts et les vues n\'ont pas changé.'); }
+    } else if (f.matches('[data-methode]')) {
+      const d = await envoyer({ id: choisie, methode: lireFormulaire(f) });
+      if (d?.ok) { tout(); dire('Méthode enregistrée.'); }
+    }
+  });
+
+  zoneDetail.addEventListener('click', async (e) => {
+    const t = e.target as HTMLElement;
+    if (t.closest('[data-ajouter-msg]')) {
+      const zone = $<HTMLElement>('[data-messages]');
+      if (zone.querySelectorAll('[data-msg]').length >= MAX_MESSAGES) { dire(`Au plus ${MAX_MESSAGES} messages types par catégorie.`, true); return; }
+      zone.querySelector('[data-aucun]')?.remove();
+      zone.insertAdjacentHTML('beforeend', blocMessage({ nom: '', texte: '' }));
+      zone.querySelector<HTMLInputElement>('[data-msg]:last-child [name=msg-nom]')?.focus();
+      return;
+    }
+    if (t.closest('[data-retirer-msg]')) { t.closest('[data-msg]')?.remove(); dire('Message retiré : enregistrez la méthode pour confirmer.'); return; }
+    if (t.closest('[data-inserer]')) {
+      const zone = $<HTMLTextAreaElement>('[name=msg-texte]', t.closest('[data-msg]')!);
+      const debut = zone.selectionStart ?? zone.value.length, fin = zone.selectionEnd ?? debut;
+      zone.setRangeText(CHAMP_PRENOM, debut, fin, 'end');
+      zone.dispatchEvent(new Event('input', { bubbles: true }));
+      zone.focus();
+      return;
+    }
+    if (t.closest('[data-retirer]')) {
+      const c = categories.find((x) => x.id === choisie);
+      if (!c) return;
+      if (!c.contacts && !confirm(`Retirer la catégorie « ${c.nom} » et ses messages types ?`)) return;
+      const d = await envoyer({ id: choisie, retirer: true });
+      if (d?.ok) { choisie = categories[0]?.id ?? null; tout(); dire(`Catégorie « ${c.nom} » retirée.`); }
+    }
+  });
+
+  zoneDetail.addEventListener('input', (e) => {
+    const t = e.target as HTMLElement;
+    if (!t.matches('[name=msg-texte]')) return;
+    const bloc = t.closest('[data-msg]')!;
+    $<HTMLElement>('[data-apercu]', bloc).textContent = remplirMessage((t as HTMLTextAreaElement).value, PRENOM_EXEMPLE);
+  });
+
+  tout();
+  zoneListe.dataset.pret = '';
+</script>
+
+<style is:global>
+  .cm-tete p { margin: 6px 0 0; max-width: 75ch; }
+  .cm-message { margin: 0; padding: 10px 14px; border-radius: 10px; background: var(--avt-brume); color: var(--avt-klein); }
+  .cm-message.erreur { background: #fbe9e3; color: var(--avt-terra); }
+  .cm-page { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (max-width: 860px) { .cm-page { grid-template-columns: 1fr; } }
+  .cm-cote { display: flex; flex-direction: column; gap: 14px; background: #fff; border: 1px solid var(--avt-galet); border-radius: 12px; padding: 12px; }
+  .cm-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+  .cm-ligne { display: flex; align-items: stretch; gap: 4px; border-radius: 10px; }
+  .cm-ligne.actif { background: var(--avt-brume); }
+  .cm-choisir { flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; text-align: left; background: none; border: 0; padding: 8px 10px; border-radius: 10px; font: inherit; color: var(--avt-brun); cursor: pointer; }
+  .cm-choisir:hover { background: var(--avt-galet); }
+  .cm-ligne.actif .cm-choisir { color: var(--avt-klein); }
+  .cm-nom { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cm-choisir small { color: var(--avt-text-muted); font-variant-numeric: tabular-nums; font-size: 13px; }
+  .cm-regles { grid-column: 1 / -1; font-size: 12px; color: var(--avt-text-muted); }
+  .cm-fleches { display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+  .cm-fleche { width: 30px; height: 26px; border: 1px solid var(--avt-galet); background: #fff; border-radius: 6px; font: inherit; font-size: 13px; color: var(--avt-brun); cursor: pointer; }
+  .cm-fleche:disabled { opacity: .35; cursor: default; }
+  .cm-ajout { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--avt-galet); padding-top: 12px; }
+  .cm-detail { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .cm-carte { background: #fff; border: 1px solid var(--avt-galet); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; margin: 0; }
+  .cm-carte h2 { margin: 0; font-size: 24px; }
+  .cm-carte h3 { margin: 0; font-family: var(--avt-font-text); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--avt-text-muted); font-weight: 500; }
+  .cm-carte > p { margin: 0; }
+  .cm-renommer { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+  .cm-renommer .cm-champ { flex: 1 1 260px; }
+  .cm-deux { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 640px) { .cm-deux { grid-template-columns: 1fr; } }
+  .cm-champ { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--avt-text-muted); }
+  .cm-champ input, .cm-champ textarea { font: inherit; font-size: 15px; color: var(--avt-brun); padding: 8px 10px; border: 1px solid var(--avt-galet); border-radius: 8px; background: #fff; width: 100%; box-sizing: border-box; min-height: 40px; }
+  .cm-champ textarea { resize: vertical; line-height: 1.45; }
+  .cm-champ input:focus-visible, .cm-champ textarea:focus-visible, .cm-btn:focus-visible, .cm-choisir:focus-visible, .cm-fleche:focus-visible, .cm-choix input:focus-visible + span { outline: 2px solid var(--avt-klein); outline-offset: 2px; }
+  .cm-choix { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .cm-choix legend { font-size: 13px; color: var(--avt-text-muted); margin-bottom: 6px; padding: 0; }
+  .cm-choix label { position: relative; }
+  .cm-choix input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+  .cm-choix span { display: inline-flex; align-items: center; min-height: 36px; padding: 6px 14px; border-radius: 999px; border: 1.5px solid var(--avt-galet); background: #fff; font-size: 14px; cursor: pointer; }
+  .cm-choix input:checked + span { background: var(--avt-klein); border-color: var(--avt-klein); color: #fff; }
+  .cm-choix p { flex-basis: 100%; margin: 0; font-size: 13px; }
+  .cm-msgs-tete { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; border-top: 1px solid var(--avt-galet); padding-top: 12px; }
+  .cm-msgs-tete span { font-size: 13px; }
+  .cm-msgs { display: flex; flex-direction: column; gap: 12px; }
+  .cm-msgs > p { margin: 0; }
+  .cm-msg { border: 1px solid var(--avt-galet); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; background: var(--avt-ecru, #fffdf9); }
+  .cm-msg-tete { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+  .cm-msg-tete .cm-champ { flex: 1 1 220px; }
+  .cm-apercu { background: var(--avt-brume); border-radius: 8px; padding: 8px 12px; font-size: 14px; }
+  .cm-apercu p { margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--avt-brun); }
+  .cm-actions { display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap; }
+  .cm-retrait { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .cm-btn { min-height: 38px; border: 1px solid var(--avt-galet); background: #fff; border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 14px; color: var(--avt-brun); cursor: pointer; }
+  .cm-btn:hover { border-color: var(--avt-text-muted); }
+  .cm-btn.bleu { background: var(--avt-klein); border-color: var(--avt-klein); color: #fff; }
+  .cm-btn.danger { color: var(--avt-terra); border-color: var(--avt-terra); }
+  .cm-btn:disabled { opacity: .45; cursor: default; }
+</style>
