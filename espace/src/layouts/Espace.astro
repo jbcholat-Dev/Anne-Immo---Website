@@ -11,6 +11,7 @@
 // l'appel en un geste (revue de code 18.4) : le grand tableau est l'accueil sur ordinateur. Story 18.8 : « Catégories et
 // méthodes » en tête du menu. `large` : page sur toute la largeur (tableau des contacts).
 import '@site/styles/global.css';
+import '../styles/pointeur.css';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import RetourApercu from '@site/components/RetourApercu.astro';
 type Actif = 'contacts' | 'aujourdhui' | 'suivis' | 'bilan' | 'prescripteurs' | 'acheteurs' | 'pipeline' | 'ajouter' | 'a-trier' | 'demandes' | 'actions' | 'campagnes' | 'categories';
@@ -76,8 +77,6 @@ const dansOutils = !!actif && actif !== 'contacts';
   </body>
 </html>
 <style is:global>
-  /* Ticket n° 235 : pas de rond du logo comme pointeur dans l'espace d'Anne (la règle du site, global.css, ne vaut que pour le site) ; la main habituelle revient. */
-  a[href], button:not([disabled]), summary, label[for], [role="button"], select { cursor: pointer; }
   [hidden] { display: none !important; }
   .e-corps { min-height: 100vh; padding-bottom: 76px; }
   .e-tete { display: flex; align-items: center; gap: 24px; padding: 14px 20px; border-bottom: 1px solid var(--avt-galet); background: #fff; flex-wrap: wrap; }

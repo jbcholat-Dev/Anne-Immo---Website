@@ -1,0 +1,5 @@
+/* Ticket n° 235 (story 18.14) : pas de rond du logo comme pointeur dans l'espace d'Anne. La règle du site
+   (site/src/styles/global.css, ticket 105) ne vaut que pour le site public ; la main habituelle revient. Ce fichier
+   est importé après global.css par src/layouts/Espace.astro et par les pages /gestion, qui gardent le gabarit
+   Gestion du site (revue de code 18.14). */
+a[href], button:not([disabled]), summary, label[for], [role="button"], select { cursor: pointer; }
