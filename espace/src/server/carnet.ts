@@ -42,6 +42,8 @@ export interface Changements {
   verifie?: boolean;
   /** true : écarter ; false : faire revenir. */
   ecarte?: boolean;
+  /** Interne (story 18.15, retrait d'une catégorie) : changer la catégorie sans marquer vérifié. Jamais lu de l'API. */
+  sansVerifier?: boolean;
 }
 
 /** Les colonnes de classement, telles qu'en base. */
@@ -90,7 +92,7 @@ export function lireChangements(brut: unknown, categories: ReadonlySet<string>):
 export function appliquer(e: Etat, ch: Changements, maintenant: string): { apres: Classement; ignore: boolean } {
   const a: Classement = { categorie_id: e.categorie_id, projet: e.projet, temperature: e.temperature, verifie_le: e.verifie_le, ecarte_le: e.ecarte_le };
   let ignore = false;
-  if (ch.categorie_id !== undefined) { a.categorie_id = ch.categorie_id; a.verifie_le ??= maintenant; }
+  if (ch.categorie_id !== undefined) { a.categorie_id = ch.categorie_id; if (!ch.sansVerifier) a.verifie_le ??= maintenant; }
   if (ch.verifie !== undefined) a.verifie_le = ch.verifie ? a.verifie_le ?? maintenant : null;
   if (ch.ecarte !== undefined) a.ecarte_le = ch.ecarte ? a.ecarte_le ?? maintenant : null;
   if (ch.projet !== undefined) {

@@ -8,7 +8,9 @@
 //   POST /api/categories { id, methode: { canal_conseille, demande, appel_permis, envoi_groupe, messages: [{ id?, nom, texte }] } }
 //        → 200 ; 404 ; envoi_groupe ∈ { non, accord_ou_client } (FR-13 : jamais au-delà des contacts avec accord ou anciens clients)
 //   POST /api/categories { ordre: [id, …] }                    → 200 (chaque catégorie citée une fois) ; 409 + liste à jour sinon
-//   POST /api/categories { id, retirer: true }                 → 200 ; 409 'pas_vide' { contacts } ; 409 'fixe' ; 404
+//   POST /api/categories { id, retirer: true, ranger_dans?: id } → 200 ; 409 'pas_vide' { contacts } ; 409 'gardee' (demandes_recues) ; 404 ;
+//        400 si ranger_dans est la catégorie elle-même ou une catégorie inconnue. Avec ranger_dans (story 18.15), les contacts de la
+//        catégorie, écartés compris, y sont rangés d'abord (`classer`, avant-image AD-29) ; sans, la catégorie doit être vide.
 // 400 pour toute valeur hors vocabulaire. Réponses `{ ok, ... }` ou `{ ok: false, error: { code, message } }`.
 import type { APIRoute } from 'astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
@@ -63,7 +65,9 @@ export const POST: APIRoute = async ({ request }) => {
   if (typeof d.id !== 'string' || !ID_CATEGORIE.test(d.id)) return erreur(400, 'id', 'Identifiant invalide');
   const id = d.id;
   const gestes = ['renommer', 'methode', 'retirer'].filter((k) => d[k] !== undefined);
-  if (gestes.length !== 1 || Object.keys(d).length !== 2) return erreur(400, 'corps', 'Un seul geste à la fois : renommer, methode ou retirer');
+  // Un seul geste ; `ranger_dans` n'accompagne que `retirer` (story 18.15).
+  const avecRange = d.ranger_dans !== undefined;
+  if (gestes.length !== 1 || Object.keys(d).length !== 2 + (avecRange ? 1 : 0) || (avecRange && gestes[0] !== 'retirer')) return erreur(400, 'corps', 'Un seul geste à la fois : renommer, methode ou retirer');
 
   if (gestes[0] === 'renommer') {
     const nom = nomCategorie(d.renommer);
@@ -82,9 +86,11 @@ export const POST: APIRoute = async ({ request }) => {
     return liste();
   }
   if (d.retirer !== true) return erreur(400, 'retirer', 'retirer : true attendu');
-  const r = await retirerCategorie(env, id);
-  if (r === 'fixe') return erreur(409, 'fixe', 'Cette catégorie de départ se renomme, mais ne se retire pas : le site, les campagnes et l\'import y rangent des contacts.');
+  if (avecRange && (typeof d.ranger_dans !== 'string' || !ID_CATEGORIE.test(d.ranger_dans) || d.ranger_dans === id)) return erreur(400, 'ranger_dans', 'Choisissez une autre catégorie où ranger les contacts.');
+  const r = await retirerCategorie(env, id, avecRange ? d.ranger_dans as string : undefined, request.headers.get(ENTETE_COMPTE)!);
+  if (r === 'gardee') return erreur(409, 'gardee', 'Cette catégorie se renomme, mais ne se retire pas : le site et les portails y rangent les nouvelles demandes.');
   if (r === 'inconnue') return erreur(404, 'categorie', 'Catégorie inconnue');
-  if (r !== 'ok') return erreur(409, 'pas_vide', `Cette catégorie contient encore ${r.contacts} contact${r.contacts > 1 ? 's' : ''} (écartés compris) : rangez-les d'abord dans une autre catégorie depuis la page Contacts.`, { contacts: r.contacts });
+  if (r === 'destination') return erreur(404, 'ranger_dans', 'La catégorie où ranger les contacts n\'existe pas.');
+  if (r !== 'ok') return erreur(409, 'pas_vide', `Cette catégorie contient ${avecRange ? 'encore ' : ''}${r.contacts} contact${r.contacts > 1 ? 's' : ''} (écartés compris) : choisissez où les ranger pour la retirer.`, { contacts: r.contacts });
   return liste();
 };

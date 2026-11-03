@@ -394,7 +394,16 @@ function fusionner(p: Personne, q: Personne): void {
   p.notes.push(...q.notes);
 }
 
-const categorieDe = (p: Personne): string => [...p.genres].map((g) => GENRES[g].categorie as string).sort((a, b) => rang(a) - rang(b))[0];
+/**
+ * La catégorie de départ d'une personne (la plus haute de ses genres, FR-9). Story 18.15 : si Anne a retiré cette
+ * catégorie (`existantes` : celles de la table `categorie`), la fiche arrive « à ranger » (null) plutôt que d'échouer sur
+ * la clé étrangère.
+ */
+const categorieDe = (p: Personne, existantes: ReadonlySet<string>): string | null => {
+  const c = [...p.genres].map((g) => GENRES[g].categorie as string).sort((a, b) => rang(a) - rang(b))[0];
+  return existantes.has(c) ? c : null;
+};
+const categoriesExistantes = async (env: EnvSite) => new Set((await env.DB.prepare('SELECT id FROM categorie').all<{ id: string }>()).results.map((c) => c.id));
 const sourcesDe = (p: Personne): string[] => [...new Set([...p.genres].filter((g) => GENRES[g].cree).map((g) => GENRES[g].source as string))];
 const cree = (p: Personne) => [...p.genres].some((g) => GENRES[g].cree);
 
@@ -540,7 +549,9 @@ const compterRaisons = (r: { raison: Raison }[]) => r.reduce<Partial<Record<Rais
 export async function apercu(env: EnvSite, l: Lecture, decisions: Record<string, Decision> = {}): Promise<Apercu> {
   const plan = await planifier(env, l, decisions);
   const categories: Record<string, number> = {};
-  for (const { p } of plan.nouveaux) { const c = categorieDe(p); categories[c] = (categories[c] ?? 0) + 1; }
+  const existantes = await categoriesExistantes(env);
+  // « a_ranger » : la catégorie de départ a été retirée, la fiche arriverait sans catégorie (story 18.15).
+  for (const { p } of plan.nouveaux) { const c = categorieDe(p, existantes) ?? 'a_ranger'; categories[c] = (categories[c] ?? 0) + 1; }
   return {
     empreinte: l.empreinte, fichier: l.nom, lignes: l.lignesLues,
     personnes: plan.nouveaux.length + plan.complements.length + plan.doublons.length, fusionnees_dans_le_fichier: plan.fusionnees,
@@ -548,7 +559,7 @@ export async function apercu(env: EnvSite, l: Lecture, decisions: Record<string,
     doublons_probables: plan.doublons.length, rejetes: plan.rejets.length, raisons: compterRaisons(plan.rejets), categories,
     // Les accords que l'import poserait : nouveaux et compléments (revue de code 18.9, l'aperçu oubliait les compléments).
     accords: plan.nouveaux.filter(({ p }) => accordNouveau(p)).length
-      + plan.complements.filter((x) => ecritureComplement(x, plan.secondaires.get(x.cible.id) ?? []).accord).length,
+      + plan.complements.filter((x) => ecritureComplement(x, plan.secondaires.get(x.cible.id) ?? [], existantes).accord).length,
     telephones_invalides: l.telephonesInvalides, emails_invalides: l.emailsInvalides, champs_ignores: l.ignores,
     doublons: plan.doublons, rejets: plan.rejets,
   };
@@ -557,7 +568,7 @@ export async function apercu(env: EnvSite, l: Lecture, decisions: Record<string,
 // ——— Import réel ———
 
 /** Ce qu'un contact existant reçoit, selon AD-26 et FR-8, FR-9 : jamais rien d'autre qu'une source et des coordonnées s'il est vérifié. */
-function ecritureComplement(x: { p: Personne; cible: Existant }, secondairesActuels: string[]): EcritureImport {
+function ecritureComplement(x: { p: Personne; cible: Existant }, secondairesActuels: string[], existantes: ReadonlySet<string>): EcritureImport {
   const { p, cible: c } = x;
   const verifie = !!c.verifie_le;
   const connues = new Set([c.telephone, c.email, ...secondairesActuels].filter(Boolean));
@@ -571,8 +582,8 @@ function ecritureComplement(x: { p: Personne; cible: Existant }, secondairesActu
     if (!c.commune) poser('commune', p.ville);
     if (!c.entreprise) poser('entreprise', p.entreprise);
     // FR-9 : la règle la plus haute l'emporte, entre la catégorie proposée d'avant et celle de ce fichier.
-    const proposee = categorieDe(p);
-    if (!c.categorie_id || (rang(c.categorie_id) < 99 && rang(proposee) < rang(c.categorie_id))) poser('categorie_id', proposee);
+    const proposee = categorieDe(p, existantes);
+    if (proposee && (!c.categorie_id || (rang(c.categorie_id) < 99 && rang(proposee) < rang(c.categorie_id)))) poser('categorie_id', proposee);
     if (c.projet === 'a_qualifier' && c.etape === null && p.projet && p.projet !== 'a_qualifier') poser('projet', p.projet);
   }
   const emailFinal = apres.email ?? c.email;
@@ -596,11 +607,11 @@ const noteAvecDetail = (n: string, p: Personne) => `Note du fichier${p.details.s
 const emailsNouveau = (p: Personne) => { const a = p.emails.find((m) => p.emailsAccord.includes(m)); return a ? [a, ...p.emails.filter((m) => m !== a)] : p.emails; };
 const accordNouveau = (p: Personne) => { const m = emailsNouveau(p)[0]; return !!m && p.emailsAccord.includes(m); };
 
-function ecritureNouveau(p: Personne): EcritureImport {
+function ecritureNouveau(p: Personne, existantes: ReadonlySet<string>): EcritureImport {
   const emails = emailsNouveau(p);
   const apres: Record<string, string | null> = {
     prenom: p.prenom, nom: p.nom, telephone: p.telephones[0] ?? null, email: emails[0] ?? null, commune: p.ville, entreprise: p.entreprise,
-    categorie_id: categorieDe(p), projet: p.projet ?? 'a_qualifier',
+    categorie_id: categorieDe(p, existantes), projet: p.projet ?? 'a_qualifier',
   };
   return {
     id: ulid(), nouveau: true, ligne: p.ref, avant: {}, apres, garde: {},
@@ -633,9 +644,10 @@ export async function importer(env: EnvSite, l: Lecture, empreinte: unknown, dec
   const source = [...new Set(l.onglets.map((o) => GENRES[o.genre].source as string))].join('+');
   await env.DB.prepare('INSERT INTO import_lot (id, fichier, empreinte, source, a, par, doublons, rejetes) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)')
     .bind(lot, l.nom, l.empreinte, source, maintenant, par, plan.doublons.length, plan.rejets.length).run();
+  const existantes = await categoriesExistantes(env);
   const ecritures = [
-    ...plan.nouveaux.map(({ p }) => ecritureNouveau(p)),
-    ...plan.complements.map((x) => ecritureComplement(x, plan.secondaires.get(x.cible.id) ?? [])),
+    ...plan.nouveaux.map(({ p }) => ecritureNouveau(p, existantes)),
+    ...plan.complements.map((x) => ecritureComplement(x, plan.secondaires.get(x.cible.id) ?? [], existantes)),
   ];
   let nouveaux = 0, complements = 0, accords = 0;
   for (let i = 0; i < ecritures.length; i += PAR_LOT_D1) {
