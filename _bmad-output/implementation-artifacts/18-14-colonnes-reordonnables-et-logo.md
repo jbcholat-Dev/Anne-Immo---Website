@@ -1,6 +1,6 @@
 # Story 18.14 : colonnes réordonnables et pointeur ordinaire (tickets 233 et 235)
 
-Epic 18 (le carnet de contacts). Statut : review. Date : 2026-11-02.
+Epic 18 (le carnet de contacts). Statut : done. Date : 2026-11-02, fusionnée le 2026-11-03.
 
 ## Objectif
 
@@ -33,3 +33,7 @@ Epic 18 (le carnet de contacts). Statut : review. Date : 2026-11-02.
 - Mineur, écarté : le déplacement n'est pas annoncé aux lecteurs d'écran (le focus reste sur la flèche) ; amélioration possible avec une zone `aria-live`.
 - Mineur, écarté (antérieur à la PR) : une liste de colonnes masquées trafiquée dans le navigateur qui contiendrait `nom` masquerait le nom ; aucun chemin de l'interface ne l'écrit.
 - Mineur, écarté : l'essai de bout en bout ne couvre pas un stockage invalide ; vérifié à la lecture du code (`ordreValide`).
+
+## Fusion
+
+2026-11-03 : PR #237 fusionnée dans main (commit de fusion 74a96b4), constructions Cloudflare au vert sur aa788db. Correctif de la revue (pointeur sur /gestion) vérifié par `npm run build` et `npm run check` de l'espace (0 erreur). Tickets 233 et 235 transmis au fil des tickets pour fermeture.

@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-26-2026 15:10
-last_updated: 11-02-2026 16:40
+last_updated: 11-03-2026 09:00
 project: Site Anne Vial-Tissot
 project_key: NOKEY
 tracking_system: file-system
@@ -256,7 +256,7 @@ development_status:
   18-11-barre-nouveaux-site-et-leedflow: done   # 2026-11-02, PR #227, revue de code faite (par lot), mineur noté
   18-12-demandes-des-portails-par-e-mail: done   # 2026-11-02, PR #227, revue de code faite (par lot), constat corrigé (réglage PORTAILS_EXPEDITEUR_AUTORISE), DKIM noté ; réglages de JB à faire (RUNBOOK § 4 sexies)
   18-13-rattacher-complete-la-fiche: done   # 2026-11-02, ticket n° 232
-  18-14-colonnes-reordonnables-et-logo: review   # 2026-11-02, tickets n° 233 et 235
+  18-14-colonnes-reordonnables-et-logo: done   # 2026-11-02, tickets n° 233 et 235
   epic-18-retrospective: optional   # non faite : décision JB « Finir économe » du 2026-11-02
 
   epic-19: backlog   # les séances et les campagnes (livraison 2) ; en pause (décision JB 2026-11-02)
