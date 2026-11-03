@@ -109,7 +109,7 @@ const enJson = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
       : c.contacts ? `Elle contient ${nContacts(c)} : choisissez où les ranger pour la retirer. Ses messages types sont retirés avec elle.` : 'Elle est vide : elle peut être retirée.';
     const peutRetirer = !c.gardee && autres.length > 0;
     const destination = peutRetirer && c.contacts
-      ? `<label class="cm-champ">Ranger ses ${c.contacts} contact${c.contacts > 1 ? 's' : ''} dans :<select data-ranger-dans required><option value="" selected disabled>Choisir une catégorie…</option>${autres.map((x) => `<option value="${esc(x.id)}">${esc(x.nom)}</option>`).join('')}</select></label>` : '';
+      ? `<label class="cm-champ">${c.contacts > 1 ? `Ranger ses ${c.contacts} contacts` : 'Ranger son contact'}${c.ecartes ? ' (écartés compris)' : ''} dans :<select data-ranger-dans required><option value="" selected disabled>Choisir une catégorie…</option>${autres.map((x) => `<option value="${esc(x.id)}">${esc(x.nom)}</option>`).join('')}</select></label>` : '';
     zoneDetail.innerHTML = `
       <div class="cm-carte">
         <h2 id="cm-titre" tabindex="-1">${esc(c.nom)}</h2>
@@ -227,9 +227,11 @@ const enJson = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
         const id = $<HTMLSelectElement>('[data-ranger-dans]').value;
         vers = categories.find((x) => x.id === id);
         if (!vers) { dire('Choisissez d\'abord la catégorie où ranger les contacts.', true); $<HTMLSelectElement>('[data-ranger-dans]').focus(); return; }
-        if (!confirm(`Retirer la catégorie « ${c.nom} » et ses messages types ? Ses ${nContacts(c)} seront rangés dans « ${vers.nom} ».`)) return;
+        if (!confirm(`Retirer la catégorie « ${c.nom} » et ses messages types ? ${c.contacts > 1 ? `Ses ${nContacts(c)} seront rangés` : `Son contact${c.ecartes ? ' (écarté)' : ''} sera rangé`} dans « ${vers.nom} ». Ce retrait ne s'annule pas.`)) return;
       } else if (!confirm(`Retirer la catégorie « ${c.nom} » et ses messages types ?`)) return;
       const d = await envoyer({ id: choisie, retirer: true, ...(vers ? { ranger_dans: vers.id } : {}) });
+      // Revue de code 18.15 : un refus apporte la liste à jour (contacts arrivés entre-temps) ; la page la redessine.
+      if (d && !d.ok) tout();
       if (d?.ok) { choisie = vers?.id ?? categories[0]?.id ?? null; tout(); dire(vers ? `Catégorie « ${c.nom} » retirée : ses contacts sont dans « ${vers.nom} ».` : `Catégorie « ${c.nom} » retirée.`); }
     }
   });
@@ -277,7 +279,7 @@ const enJson = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
   .cm-champ { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--avt-text-muted); }
   .cm-champ input, .cm-champ textarea, .cm-champ select { font: inherit; font-size: 15px; color: var(--avt-brun); padding: 8px 10px; border: 1px solid var(--avt-galet); border-radius: 8px; background: #fff; width: 100%; box-sizing: border-box; min-height: 40px; }
   .cm-champ textarea { resize: vertical; line-height: 1.45; }
-  .cm-champ input:focus-visible, .cm-champ textarea:focus-visible, .cm-btn:focus-visible, .cm-choisir:focus-visible, .cm-fleche:focus-visible, .cm-choix input:focus-visible + span { outline: 2px solid var(--avt-klein); outline-offset: 2px; }
+  .cm-champ input:focus-visible, .cm-champ textarea:focus-visible, .cm-champ select:focus-visible, .cm-btn:focus-visible, .cm-choisir:focus-visible, .cm-fleche:focus-visible, .cm-choix input:focus-visible + span { outline: 2px solid var(--avt-klein); outline-offset: 2px; }
   .cm-choix { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .cm-choix legend { font-size: 13px; color: var(--avt-text-muted); margin-bottom: 6px; padding: 0; }
   .cm-choix label { position: relative; }

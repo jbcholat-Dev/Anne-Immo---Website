@@ -91,6 +91,11 @@ export const POST: APIRoute = async ({ request }) => {
   if (r === 'gardee') return erreur(409, 'gardee', 'Cette catégorie se renomme, mais ne se retire pas : le site et les portails y rangent les nouvelles demandes.');
   if (r === 'inconnue') return erreur(404, 'categorie', 'Catégorie inconnue');
   if (r === 'destination') return erreur(404, 'ranger_dans', 'La catégorie où ranger les contacts n\'existe pas.');
-  if (r !== 'ok') return erreur(409, 'pas_vide', `Cette catégorie contient ${avecRange ? 'encore ' : ''}${r.contacts} contact${r.contacts > 1 ? 's' : ''} (écartés compris) : choisissez où les ranger pour la retirer.`, { contacts: r.contacts });
-  return liste();
+  // Revue de code 18.15 : la liste à jour accompagne le refus, pour que la page montre le choix de destination (elle a pu
+  // croire la catégorie vide) ; avec `ranger_dans`, des contacts y ont été rangés pendant le retrait.
+  if (r === 'ok') return liste();
+  const s = r.contacts > 1 ? 's' : '';
+  return erreur(409, 'pas_vide', avecRange
+    ? `${r.contacts} contact${s} ${r.contacts > 1 ? 'sont' : 'est'} encore dans cette catégorie (changé${s} pendant le retrait) : elle est gardée. La liste est rechargée, recommencez.`
+    : `Cette catégorie contient ${r.contacts} contact${s} (écartés compris) : choisissez où les ranger pour la retirer.`, { contacts: r.contacts, categories: await listerCategories(env) });
 };

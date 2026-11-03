@@ -2870,11 +2870,12 @@ try {
       const ligneP = sql(`SELECT * FROM categorie WHERE id = 'partenaires'`)[0];
       const msgsP = sql(`SELECT * FROM message_type WHERE categorie_id = 'partenaires'`);
       const dejaP = sql(`SELECT id FROM contact WHERE categorie_id = 'partenaires'`).map((c) => c.id);
-      const ecartsAvant = sql(`SELECT id, categorie_id, ecarte_le FROM contact WHERE id IN ('${C8A}', '${C8B}')`);
+      const ecartsAvant = sql(`SELECT id, categorie_id, ecarte_le, verifie_le FROM contact WHERE id IN ('${C8A}', '${C8B}')`);
       const dest = await apiCat({ ajouter: { nom: `Destination ${NUM}` } });
       const dest8 = dest.d.id;
       sql(`UPDATE contact SET categorie_id = 'partenaires' WHERE id = '${C8A}'`);
-      sql(`UPDATE contact SET categorie_id = 'partenaires', ecarte_le = '2026-10-05T08:00:00Z' WHERE id = '${C8B}'`);
+      // Revue de code 18.15 : C8B est « à vérifier » ; le retrait le range sans le marquer vérifié (`sansVerifier`).
+      sql(`UPDATE contact SET categorie_id = 'partenaires', ecarte_le = '2026-10-05T08:00:00Z', verifie_le = NULL WHERE id = '${C8B}'`);
       const nP = dejaP.length + 2 - (dejaP.includes(C8A) ? 1 : 0) - (dejaP.includes(C8B) ? 1 : 0);
       const sansDest = await apiCat({ id: 'partenaires', retirer: true });
       const soi = await apiCat({ id: 'partenaires', retirer: true, ranger_dans: 'partenaires' });
@@ -2883,19 +2884,19 @@ try {
       const gardee = await apiCat({ id: 'demandes_recues', retirer: true, ranger_dans: dest8 });
       const intactAvant = sql(`SELECT count(*) AS n FROM categorie WHERE id = 'partenaires'`)[0].n === 1;
       const ok = await apiCat({ id: 'partenaires', retirer: true, ranger_dans: dest8 });
-      const dedans = sql(`SELECT id, ecarte_le FROM contact WHERE categorie_id = '${dest8}'`);
+      const dedans = sql(`SELECT id, ecarte_le, verifie_le FROM contact WHERE categorie_id = '${dest8}'`);
       const evs = sql(`SELECT donnees FROM contact_evenement WHERE contact_id = '${C8B}' AND type = 'classement' ORDER BY id DESC LIMIT 1`).map((e) => JSON.parse(e.donnees));
       constat(sansDest.status === 409 && sansDest.d?.error?.code === 'pas_vide' && sansDest.d.contacts === nP
         && soi.status === 400 && inconnue.status === 404 && melange.status === 400 && gardee.status === 409 && gardee.d?.error?.code === 'gardee' && intactAvant
         && ok.status === 200 && !ok.d.categories.some((c) => c.id === 'partenaires')
         && sql(`SELECT count(*) AS n FROM categorie WHERE id = 'partenaires'`)[0].n === 0 && sql(`SELECT count(*) AS n FROM message_type WHERE categorie_id = 'partenaires'`)[0].n === 0
-        && dedans.length === nP && dedans.some((c) => c.id === C8B && c.ecarte_le) && evs[0]?.avant?.categorie_id === 'partenaires' && evs[0]?.apres?.categorie_id === dest8,
-        '18.15 : une catégorie de départ (partenaires) se retire en rangeant ses contacts, écartés compris, dans une autre (événement avec avant-image) ; ranger_dans = elle-même, inconnue ou avec un autre geste est refusé, « Demandes reçues » reste gardée');
+        && dedans.length === nP && dedans.some((c) => c.id === C8B && c.ecarte_le && c.verifie_le === null) && evs[0]?.avant?.categorie_id === 'partenaires' && evs[0]?.apres?.categorie_id === dest8,
+        '18.15 : une catégorie de départ (partenaires) se retire en rangeant ses contacts, écartés compris, dans une autre (événement avec avant-image), sans marquer vérifié ; ranger_dans = elle-même, inconnue ou avec un autre geste est refusé, « Demandes reçues » reste gardée');
       // Remise en l'état.
       insere('categorie', ligneP);
       for (const m of msgsP) insere('message_type', m);
       sql(`UPDATE contact SET categorie_id = 'partenaires' WHERE categorie_id = '${dest8}' AND id IN (${dejaP.map(q).join(', ')})`);
-      for (const c of ecartsAvant) sql(`UPDATE contact SET categorie_id = ${q(c.categorie_id)}, ecarte_le = ${q(c.ecarte_le)} WHERE id = '${c.id}'`);
+      for (const c of ecartsAvant) sql(`UPDATE contact SET categorie_id = ${q(c.categorie_id)}, ecarte_le = ${q(c.ecarte_le)}, verifie_le = ${q(c.verifie_le)} WHERE id = '${c.id}'`);
       await apiCat({ id: dest8, retirer: true });
     }
 
