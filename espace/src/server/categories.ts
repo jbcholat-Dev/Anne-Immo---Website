@@ -2,16 +2,19 @@
 // `message_type` (migration 0018). Le vocabulaire et les règles sans base sont dans `categories-regles.ts`.
 // - Les contacts et les vues citent une catégorie par son identifiant (AD-25, AD-27) : un renommage ne change que `nom`,
 //   jamais `id` ; aucun contact, aucune vue, aucun événement n'est touché.
-// - Une catégorie ne se retire que vide (aucun contact, écartés compris) : la condition est dans la suppression même,
-//   en une exécution D1, pour qu'un contact rangé entre la lecture et l'écriture l'empêche. Les six catégories de départ
-//   ne se retirent pas : le site (demandes reçues), `accord` (anciens clients) et l'import (pré-rangement, 18.9) les
-//   citent par leur identifiant. Une vue qui citait une catégorie retirée est marquée invalide à sa lecture (`vues-base`,
-//   story 18.5) et ne montre plus aucun contact.
+// - Une catégorie se retire vide (aucun contact, écartés compris) : la condition est dans la suppression même, en une
+//   exécution D1, pour qu'un contact rangé entre la lecture et l'écriture l'empêche. Story 18.15 (ticket 240) : une
+//   catégorie qui a des contacts se retire en choisissant où les ranger (`ranger_dans`) ; ils passent par `classer`
+//   (avant-image, AD-29), écartés compris. Seule `demandes_recues` est gardée : le site et les portails y rangent les
+//   nouvelles demandes. Les autres catégories de départ se retirent ; l'import (18.9) se rabat sur « à ranger » si la
+//   sienne n'existe plus. Une vue qui citait une catégorie retirée perd cette valeur à sa lecture ou est marquée
+//   invalide (`vues-base`, story 18.5) et ne montre plus aucun contact.
 // - Les messages types gardent leur identifiant quand ils sont modifiés (une séance, epic 19, citera `message_type.id`).
 // Jamais appelé par les routes /api/claude/… (Claude ne lit ni n'écrit les catégories, AD-26).
 import type { EnvSite } from '@site/server/env';
 import { ulid } from '@site/server/ulid';
-import { cleNom, estFixe, MAX_CATEGORIES, type Categorie, type EnvoiGroupe, type Methode } from './categories-regles';
+import { classer, MAX_LOT } from './carnet';
+import { cleNom, estGardee, MAX_CATEGORIES, type Categorie, type EnvoiGroupe, type Methode } from './categories-regles';
 
 interface LigneCategorie {
   id: string; nom: string; ordre: number; canal_conseille: string | null; demande: string | null;
@@ -33,7 +36,7 @@ export async function listerCategories(env: EnvSite): Promise<Categorie[]> {
   return cats.results.map((k) => ({
     id: k.id, nom: k.nom, ordre: k.ordre, canal_conseille: k.canal_conseille, demande: k.demande,
     appel_permis: !!k.appel_permis, envoi_groupe: (k.envoi_groupe_permis ? 'accord_ou_client' : 'non') as EnvoiGroupe,
-    fixe: estFixe(k.id), contacts: k.contacts, ecartes: k.ecartes,
+    gardee: estGardee(k.id), contacts: k.contacts, ecartes: k.ecartes,
     messages: (parCategorie.get(k.id) ?? []).map((m) => ({ id: m.id, nom: m.nom, texte: m.texte, ordre: m.ordre })),
   }));
 }
@@ -106,12 +109,27 @@ export async function rangerCategories(env: EnvSite, ids: string[]): Promise<'ok
 }
 
 /**
- * Retire une catégorie vide, avec ses messages types. La condition « vide » est dans les deux suppressions, exécutées
- * ensemble : un contact rangé entre-temps empêche tout. `fixe` (catégorie de départ), `inconnue`, ou le nombre de
- * contacts qui l'empêchent.
+ * Retire une catégorie, avec ses messages types. Sans `rangerDans`, elle doit être vide : la condition est dans les deux
+ * suppressions, exécutées ensemble. Avec `rangerDans` (story 18.15), ses contacts, écartés compris, sont d'abord rangés
+ * dans cette autre catégorie par `classer` (par paquets de `MAX_LOT`), puis la suppression se fait comme ci-dessus : un
+ * contact rangé entre-temps l'empêche encore (`pas_vide`, la catégorie est alors gardée). `gardee` (`demandes_recues`),
+ * `inconnue`, `destination` (la catégorie de destination est elle-même ou n'existe pas), ou le nombre de contacts restants.
  */
-export async function retirerCategorie(env: EnvSite, id: string): Promise<'ok' | 'fixe' | 'inconnue' | { contacts: number }> {
-  if (estFixe(id)) return 'fixe';
+export async function retirerCategorie(env: EnvSite, id: string, rangerDans?: string, par = ''): Promise<'ok' | 'gardee' | 'inconnue' | 'destination' | { contacts: number }> {
+  if (estGardee(id)) return 'gardee';
+  if (rangerDans !== undefined) {
+    if (rangerDans === id) return 'destination';
+    const noms = await lireNoms(env);
+    if (!noms.some((k) => k.id === id)) return 'inconnue';
+    if (!noms.some((k) => k.id === rangerDans)) return 'destination';
+    for (;;) {
+      const ids = (await env.DB.prepare('SELECT id FROM contact WHERE categorie_id = ?1 LIMIT ?2').bind(id, MAX_LOT).all<{ id: string }>()).results.map((c) => c.id);
+      if (!ids.length) break;
+      const r = await classer(env, ids, { categorie_id: rangerDans, sansVerifier: true }, par);
+      // Rien n'a bougé (contact changé entre-temps…) : on s'arrête, la suppression ci-dessous dira ce qui reste.
+      if (!r.touches) break;
+    }
+  }
   const vide = 'NOT EXISTS (SELECT 1 FROM contact WHERE categorie_id = ?1)';
   const [, supprimee] = await env.DB.batch([
     env.DB.prepare(`DELETE FROM message_type WHERE categorie_id = ?1 AND ${vide}`).bind(id),

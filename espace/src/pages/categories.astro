@@ -2,7 +2,7 @@
 // Catégories et méthodes (story 18.8, FR-12, FR-13, AD-25), dans le menu « Autres outils ». À gauche, les catégories dans
 // leur ordre avec leur nombre de contacts (flèches pour changer l'ordre, ajout d'une catégorie) ; à droite, la catégorie
 // choisie : son nom (renommer), sa méthode (canal conseillé, ce qu'on demande, appel permis, envoi groupé), ses messages
-// types avec `{prénom}` et leur aperçu avec un prénom d'exemple, et « Retirer » (vide seulement). La maquette
+// types avec `{prénom}` et leur aperçu avec un prénom d'exemple, et « Retirer » (vide, ou en choisissant où ranger ses contacts ; seule « Demandes reçues » ne se retire pas, story 18.15). La maquette
 // `ux-espace-anne-2026-11-01` n'a pas cet écran : il reprend la charte et les blocs de la page Contacts.
 // Tout s'écrit par /api/categories (`server/categories`) ; la page se redessine avec la liste renvoyée, sans recharger.
 // Tout texte venu des données passe par `esc` avant d'entrer dans le HTML.
@@ -103,8 +103,13 @@ const enJson = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
   function dessinerDetail() {
     const c = categories.find((x) => x.id === choisie);
     if (!c) { zoneDetail.innerHTML = '<p class="e-muet">Aucune catégorie.</p>'; return; }
-    const retrait = c.fixe ? 'Catégorie de départ : elle se renomme, mais ne se retire pas.'
-      : c.contacts ? `Pour la retirer, rangez d'abord ses contacts dans une autre catégorie (page Contacts) : ${nContacts(c)}.` : 'Elle est vide : elle peut être retirée.';
+    const autres = categories.filter((x) => x.id !== c.id);
+    const retrait = c.gardee ? 'Cette catégorie se renomme, mais ne se retire pas : le site et les portails y rangent les nouvelles demandes.'
+      : !autres.length ? 'C\'est la seule catégorie : ajoutez-en une autre pour pouvoir la retirer.'
+      : c.contacts ? `Elle contient ${nContacts(c)} : choisissez où les ranger pour la retirer. Ses messages types sont retirés avec elle.` : 'Elle est vide : elle peut être retirée.';
+    const peutRetirer = !c.gardee && autres.length > 0;
+    const destination = peutRetirer && c.contacts
+      ? `<label class="cm-champ">${c.contacts > 1 ? `Ranger ses ${c.contacts} contacts` : 'Ranger son contact'}${c.ecartes ? ' (écartés compris)' : ''} dans :<select data-ranger-dans required><option value="" selected disabled>Choisir une catégorie…</option>${autres.map((x) => `<option value="${esc(x.id)}">${esc(x.nom)}</option>`).join('')}</select></label>` : '';
     zoneDetail.innerHTML = `
       <div class="cm-carte">
         <h2 id="cm-titre" tabindex="-1">${esc(c.nom)}</h2>
@@ -137,7 +142,8 @@ const enJson = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
       </form>
       <div class="cm-carte cm-retrait">
         <p class="e-muet" data-retrait-texte>${esc(retrait)}</p>
-        <button type="button" class="cm-btn danger" data-retirer${c.fixe ? ' disabled' : ''}>Retirer la catégorie</button>
+        ${destination}
+        <button type="button" class="cm-btn danger" data-retirer${peutRetirer ? '' : ' disabled'}>Retirer la catégorie</button>
       </div>`;
   }
 
@@ -216,9 +222,17 @@ const enJson = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
     if (t.closest('[data-retirer]')) {
       const c = categories.find((x) => x.id === choisie);
       if (!c) return;
-      if (!c.contacts && !confirm(`Retirer la catégorie « ${c.nom} » et ses messages types ?`)) return;
-      const d = await envoyer({ id: choisie, retirer: true });
-      if (d?.ok) { choisie = categories[0]?.id ?? null; tout(); dire(`Catégorie « ${c.nom} » retirée.`); }
+      let vers: Categorie | undefined;
+      if (c.contacts) {
+        const id = $<HTMLSelectElement>('[data-ranger-dans]').value;
+        vers = categories.find((x) => x.id === id);
+        if (!vers) { dire('Choisissez d\'abord la catégorie où ranger les contacts.', true); $<HTMLSelectElement>('[data-ranger-dans]').focus(); return; }
+        if (!confirm(`Retirer la catégorie « ${c.nom} » et ses messages types ? ${c.contacts > 1 ? `Ses ${nContacts(c)} seront rangés` : `Son contact${c.ecartes ? ' (écarté)' : ''} sera rangé`} dans « ${vers.nom} ». Ce retrait ne s'annule pas.`)) return;
+      } else if (!confirm(`Retirer la catégorie « ${c.nom} » et ses messages types ?`)) return;
+      const d = await envoyer({ id: choisie, retirer: true, ...(vers ? { ranger_dans: vers.id } : {}) });
+      // Revue de code 18.15 : un refus apporte la liste à jour (contacts arrivés entre-temps) ; la page la redessine.
+      if (d && !d.ok) tout();
+      if (d?.ok) { choisie = vers?.id ?? categories[0]?.id ?? null; tout(); dire(vers ? `Catégorie « ${c.nom} » retirée : ses contacts sont dans « ${vers.nom} ».` : `Catégorie « ${c.nom} » retirée.`); }
     }
   });
 
@@ -263,9 +277,9 @@ const enJson = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
   .cm-deux { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   @media (max-width: 640px) { .cm-deux { grid-template-columns: 1fr; } }
   .cm-champ { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--avt-text-muted); }
-  .cm-champ input, .cm-champ textarea { font: inherit; font-size: 15px; color: var(--avt-brun); padding: 8px 10px; border: 1px solid var(--avt-galet); border-radius: 8px; background: #fff; width: 100%; box-sizing: border-box; min-height: 40px; }
+  .cm-champ input, .cm-champ textarea, .cm-champ select { font: inherit; font-size: 15px; color: var(--avt-brun); padding: 8px 10px; border: 1px solid var(--avt-galet); border-radius: 8px; background: #fff; width: 100%; box-sizing: border-box; min-height: 40px; }
   .cm-champ textarea { resize: vertical; line-height: 1.45; }
-  .cm-champ input:focus-visible, .cm-champ textarea:focus-visible, .cm-btn:focus-visible, .cm-choisir:focus-visible, .cm-fleche:focus-visible, .cm-choix input:focus-visible + span { outline: 2px solid var(--avt-klein); outline-offset: 2px; }
+  .cm-champ input:focus-visible, .cm-champ textarea:focus-visible, .cm-champ select:focus-visible, .cm-btn:focus-visible, .cm-choisir:focus-visible, .cm-fleche:focus-visible, .cm-choix input:focus-visible + span { outline: 2px solid var(--avt-klein); outline-offset: 2px; }
   .cm-choix { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .cm-choix legend { font-size: 13px; color: var(--avt-text-muted); margin-bottom: 6px; padding: 0; }
   .cm-choix label { position: relative; }
@@ -283,6 +297,7 @@ const enJson = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
   .cm-apercu { background: var(--avt-brume); border-radius: 8px; padding: 8px 12px; font-size: 14px; }
   .cm-apercu p { margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--avt-brun); }
   .cm-actions { display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap; }
+  .cm-retrait .cm-champ { flex: 1 1 260px; }
   .cm-retrait { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; }
   .cm-btn { min-height: 38px; border: 1px solid var(--avt-galet); background: #fff; border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 14px; color: var(--avt-brun); cursor: pointer; }
   .cm-btn:hover { border-color: var(--avt-text-muted); }

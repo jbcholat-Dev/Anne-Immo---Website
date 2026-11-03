@@ -184,7 +184,7 @@ L'espace actuel ne contient presque aucun contact (JB, 01/11 19 h 14) : ils ne s
 #### FR-12 : Gérer les catégories
 JB peut renommer une catégorie, en ajouter une, ou en retirer une.
 - Renommer une catégorie ne change rien pour ses contacts.
-- Une catégorie ne peut être retirée que vide : ses contacts sont d'abord rangés ailleurs (FR-4).
+- Une catégorie ne peut être retirée que vide : ses contacts sont d'abord rangés ailleurs (FR-4). *(amendé story 18.15, 03/11, ticket 240)* Au retrait, Anne choisit la catégorie où ranger ses contacts, qui y passent en une fois ; toutes les catégories se retirent, sauf « Demandes reçues », où arrivent les demandes du site et des portails.
 - Les six catégories de départ sont créées avec leur méthode :
   - **Anciens clients** (des gens pour qui Anne a déjà vendu ou acheté un bien) : appel ou message personnel ; on demande un avis et une recommandation (parrainage, dès l'accord d'eXp). Envoi groupé permis ; appel permis.
   - **Proches** (amis, famille, anciens collègues qu'Anne connaît vraiment) : message personnel, un par un (SMS, WhatsApp, appel) ; on prend des nouvelles et on parle du parrainage. Envoi groupé non permis ; appel permis.

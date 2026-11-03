@@ -10,9 +10,14 @@
 // prétendrait ouvrir l'envoi groupé sans accord, est refusée (400). En base, `envoi_groupe_permis` = 1 signifie
 // `accord_ou_client`.
 
-/** Les six catégories de départ (AD-25) : identifiants fixes, cités par le code ; elles se renomment, ne se retirent pas. */
-export const CATEGORIES_FIXES = ['anciens_clients', 'proches', 'edb', 'partenaires', 'lointains', 'demandes_recues'] as const;
-export const estFixe = (id: string) => (CATEGORIES_FIXES as readonly string[]).includes(id);
+/**
+ * Les catégories de départ (AD-25) portent des identifiants fixes, mais seule `demandes_recues` est gardée (story 18.15,
+ * ticket 238 : toutes les autres se retirent) : le site et les portails y rangent les nouvelles demandes. Elle se
+ * renomme, ne se retire pas. Les autres départs (`anciens_clients`, `proches`, `edb`, `partenaires`, `lointains`) sont
+ * citées par l'import et `accord` mais leur absence est tolérée (l'import range alors « à ranger »).
+ */
+export const CATEGORIES_GARDEES = ['demandes_recues'] as const;
+export const estGardee = (id: string) => (CATEGORIES_GARDEES as readonly string[]).includes(id);
 
 /** Au plus 30 catégories : un filtre de vue n'en cite pas plus (`vues.ts`, MAX_VALEURS). */
 export const MAX_CATEGORIES = 30;
@@ -39,8 +44,8 @@ export interface MessageType { id: string; nom: string; texte: string; ordre: nu
 /** Une catégorie telle que la page la reçoit. */
 export interface Categorie {
   id: string; nom: string; ordre: number; canal_conseille: string | null; demande: string | null;
-  appel_permis: boolean; envoi_groupe: EnvoiGroupe; fixe: boolean;
-  /** Contacts rangés dans la catégorie, écartés compris (une catégorie ne se retire que vide, AD-25). */
+  appel_permis: boolean; envoi_groupe: EnvoiGroupe; gardee: boolean;
+  /** Contacts rangés dans la catégorie, écartés compris (à ranger ailleurs pour retirer la catégorie, AD-25). */
   contacts: number; ecartes: number;
   messages: MessageType[];
 }

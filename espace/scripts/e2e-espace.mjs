@@ -2727,7 +2727,7 @@ try {
     let x = await apiCat(null, { methode: 'GET' });
     const parId = Object.fromEntries((x.d?.categories ?? []).map((c) => [c.id, c]));
     const attendu8 = { anciens_clients: [true, 'accord_ou_client'], proches: [true, 'non'], edb: [false, 'accord_ou_client'], partenaires: [true, 'accord_ou_client'], lointains: [false, 'non'], demandes_recues: [true, 'accord_ou_client'] };
-    constat(x.status === 200 && Object.entries(attendu8).every(([id, [appel, envoi]]) => parId[id]?.appel_permis === appel && parId[id]?.envoi_groupe === envoi && parId[id].fixe && parId[id].canal_conseille && parId[id].demande)
+    constat(x.status === 200 && Object.entries(attendu8).every(([id, [appel, envoi]]) => parId[id]?.appel_permis === appel && parId[id]?.envoi_groupe === envoi && parId[id].gardee === (id === 'demandes_recues') && parId[id].canal_conseille && parId[id].demande)
       && parId.proches.nom === 'Proches' && parId.edb.nom === 'Rencontrés à l\'EDB' && typeof parId.proches.contacts === 'number',
       '18.8 : les six méthodes de départ sont celles du PRD (appel permis pour proches, anciens clients, partenaires et demandes reçues ; non permis pour l\'EDB et les relations lointaines ; envoi groupé sauf proches et lointains), avec leur nombre de contacts');
 
@@ -2735,7 +2735,7 @@ try {
     x = await apiCat({ ajouter: { nom: `  ${NOM8}  ` } });
     cat8 = x.d?.id;
     const ajoutee = x.d?.categories?.find((c) => c.id === cat8);
-    constat(x.status === 201 && /^[0-9A-HJKMNP-TV-Z]{26}$/.test(cat8 ?? '') && ajoutee?.nom === NOM8 && !ajoutee.fixe && ajoutee.contacts === 0 && !ajoutee.appel_permis && ajoutee.envoi_groupe === 'non'
+    constat(x.status === 201 && /^[0-9A-HJKMNP-TV-Z]{26}$/.test(cat8 ?? '') && ajoutee?.nom === NOM8 && !ajoutee.gardee && ajoutee.contacts === 0 && !ajoutee.appel_permis && ajoutee.envoi_groupe === 'non'
       && x.d.categories.at(-1).id === cat8,
       '18.8 : une catégorie s\'ajoute (identifiant ULID, en dernière position, sans appel ni envoi groupé, aucun contact)');
     const doublon8 = await apiCat({ ajouter: { nom: NOM8.toUpperCase().replace('VOISINS', 'VOÏSINS') } });
@@ -2844,12 +2844,12 @@ try {
     constat(x.status === 409 && x.d?.error?.code === 'ordre' && JSON.stringify(x.d.categories?.map((c) => c.id)) === JSON.stringify(ordre8),
       'revue 18.8 : un ordre refusé (catégorie ajoutée ou retirée ailleurs) renvoie la liste à jour (409), que la page redessine');
 
-    // Retirer : refusé tant qu'il reste un contact (écarté compris) et pour une catégorie de départ, puis accepté.
+    // Retirer : refusé tant qu'il reste un contact (écarté compris) sans catégorie où les ranger, et pour « Demandes reçues » (story 18.15), puis accepté.
     x = await apiCat({ id: cat8, retirer: true });
-    const fixe8 = await apiCat({ id: 'lointains', retirer: true });
-    constat(x.status === 409 && x.d?.error?.code === 'pas_vide' && x.d.contacts === 2 && /rangez-les/.test(x.d.error.message) && fixe8.status === 409 && fixe8.d?.error?.code === 'fixe'
-      && sql(`SELECT count(*) AS n FROM categorie WHERE id IN ('${cat8}', 'lointains')`)[0].n === 2,
-      '18.8 : retirer une catégorie qui a des contacts est refusé avec leur nombre (409, écartés compris) ; une catégorie de départ ne se retire pas (409)');
+    const gardee8 = await apiCat({ id: 'demandes_recues', retirer: true });
+    constat(x.status === 409 && x.d?.error?.code === 'pas_vide' && x.d.contacts === 2 && /choisissez où/.test(x.d.error.message) && gardee8.status === 409 && gardee8.d?.error?.code === 'gardee'
+      && sql(`SELECT count(*) AS n FROM categorie WHERE id IN ('${cat8}', 'demandes_recues')`)[0].n === 2,
+      '18.8 : retirer une catégorie qui a des contacts sans dire où les ranger est refusé avec leur nombre (409, écartés compris) ; « Demandes reçues » ne se retire pas (409 gardee)');
     const deplace8 = await appeler(`${E}/api/carnet`, { method: 'POST', headers: avecJeton(JETON, { 'Content-Type': 'application/json' }), body: JSON.stringify({ ids: [C8A], changements: { categorie_id: 'proches' } }) });
     x = await apiCat({ id: cat8, retirer: true });
     const unReste = x.status === 409 && x.d.contacts === 1;
@@ -2861,6 +2861,44 @@ try {
       && vueApres8?.invalide === 'une catégorie a disparu' && JSON.stringify(vueApres8.filtre) === '{}',
       '18.8 : une fois vide, la catégorie se retire avec ses messages types ; la vue qui la citait est marquée « à refaire » et ne montre plus aucun contact');
     cat8 = null;
+
+    // Story 18.15 (ticket 240) : une catégorie de départ se retire en rangeant ses contacts (écartés compris) ailleurs.
+    // `partenaires` est retirée puis remise telle qu'elle était (ses lignes, ses messages types, ses contacts) pour ne rien changer aux essais suivants.
+    {
+      const q = (v) => (v === null || v === undefined ? 'NULL' : typeof v === 'number' ? String(v) : `'${String(v).replace(/'/g, "''")}'`);
+      const insere = (table, l) => sql(`INSERT INTO ${table} (${Object.keys(l).join(', ')}) VALUES (${Object.values(l).map(q).join(', ')})`);
+      const ligneP = sql(`SELECT * FROM categorie WHERE id = 'partenaires'`)[0];
+      const msgsP = sql(`SELECT * FROM message_type WHERE categorie_id = 'partenaires'`);
+      const dejaP = sql(`SELECT id FROM contact WHERE categorie_id = 'partenaires'`).map((c) => c.id);
+      const ecartsAvant = sql(`SELECT id, categorie_id, ecarte_le, verifie_le FROM contact WHERE id IN ('${C8A}', '${C8B}')`);
+      const dest = await apiCat({ ajouter: { nom: `Destination ${NUM}` } });
+      const dest8 = dest.d.id;
+      sql(`UPDATE contact SET categorie_id = 'partenaires' WHERE id = '${C8A}'`);
+      // Revue de code 18.15 : C8B est « à vérifier » ; le retrait le range sans le marquer vérifié (`sansVerifier`).
+      sql(`UPDATE contact SET categorie_id = 'partenaires', ecarte_le = '2026-10-05T08:00:00Z', verifie_le = NULL WHERE id = '${C8B}'`);
+      const nP = dejaP.length + 2 - (dejaP.includes(C8A) ? 1 : 0) - (dejaP.includes(C8B) ? 1 : 0);
+      const sansDest = await apiCat({ id: 'partenaires', retirer: true });
+      const soi = await apiCat({ id: 'partenaires', retirer: true, ranger_dans: 'partenaires' });
+      const inconnue = await apiCat({ id: 'partenaires', retirer: true, ranger_dans: '01KF8Z00000000000000000000' });
+      const melange = await apiCat({ id: 'partenaires', renommer: 'Autre', ranger_dans: dest8 });
+      const gardee = await apiCat({ id: 'demandes_recues', retirer: true, ranger_dans: dest8 });
+      const intactAvant = sql(`SELECT count(*) AS n FROM categorie WHERE id = 'partenaires'`)[0].n === 1;
+      const ok = await apiCat({ id: 'partenaires', retirer: true, ranger_dans: dest8 });
+      const dedans = sql(`SELECT id, ecarte_le, verifie_le FROM contact WHERE categorie_id = '${dest8}'`);
+      const evs = sql(`SELECT donnees FROM contact_evenement WHERE contact_id = '${C8B}' AND type = 'classement' ORDER BY id DESC LIMIT 1`).map((e) => JSON.parse(e.donnees));
+      constat(sansDest.status === 409 && sansDest.d?.error?.code === 'pas_vide' && sansDest.d.contacts === nP
+        && soi.status === 400 && inconnue.status === 404 && melange.status === 400 && gardee.status === 409 && gardee.d?.error?.code === 'gardee' && intactAvant
+        && ok.status === 200 && !ok.d.categories.some((c) => c.id === 'partenaires')
+        && sql(`SELECT count(*) AS n FROM categorie WHERE id = 'partenaires'`)[0].n === 0 && sql(`SELECT count(*) AS n FROM message_type WHERE categorie_id = 'partenaires'`)[0].n === 0
+        && dedans.length === nP && dedans.some((c) => c.id === C8B && c.ecarte_le && c.verifie_le === null) && evs[0]?.avant?.categorie_id === 'partenaires' && evs[0]?.apres?.categorie_id === dest8,
+        '18.15 : une catégorie de départ (partenaires) se retire en rangeant ses contacts, écartés compris, dans une autre (événement avec avant-image), sans marquer vérifié ; ranger_dans = elle-même, inconnue ou avec un autre geste est refusé, « Demandes reçues » reste gardée');
+      // Remise en l'état.
+      insere('categorie', ligneP);
+      for (const m of msgsP) insere('message_type', m);
+      sql(`UPDATE contact SET categorie_id = 'partenaires' WHERE categorie_id = '${dest8}' AND id IN (${dejaP.map(q).join(', ')})`);
+      for (const c of ecartsAvant) sql(`UPDATE contact SET categorie_id = ${q(c.categorie_id)}, ecarte_le = ${q(c.ecarte_le)}, verifie_le = ${q(c.verifie_le)} WHERE id = '${c.id}'`);
+      await apiCat({ id: dest8, retirer: true });
+    }
 
     // La page : liste, aperçu d'un message type, enregistrement, renommage, retrait refusé puis accepté.
     x = await apiCat({ ajouter: { nom: NOM8 } });
@@ -2909,9 +2947,9 @@ try {
         await o.waitForSelector('[data-message].erreur');
         const refusPage = await o.textContent('[data-message]');
         await o.screenshot({ path: path.join(OUT, 'espace-categories-retrait-refuse-1440.png') });
-        constat(nomListe === `Voisins du lac E188 ${NUM}` && sql(`SELECT categorie_id FROM contact WHERE id = '${C8B}'`)[0].categorie_id === cat8 && /encore 1 contact/.test(refusPage)
+        constat(nomListe === `Voisins du lac E188 ${NUM}` && sql(`SELECT categorie_id FROM contact WHERE id = '${C8B}'`)[0].categorie_id === cat8 && /Choisissez d.abord la catégorie/.test(refusPage)
           && sql(`SELECT count(*) AS n FROM categorie WHERE id = '${cat8}'`)[0].n === 1,
-          '18.8 : dans la page, un renommage s\'affiche dans la liste sans toucher au contact ; « Retirer » sur une catégorie non vide affiche un message clair et rien n\'est retiré');
+          '18.8 : dans la page, un renommage s\'affiche dans la liste sans toucher au contact ; « Retirer » sur une catégorie non vide sans catégorie de destination choisie affiche un message clair et rien n\'est retiré');
         sql(`UPDATE contact SET categorie_id = 'lointains' WHERE id = '${C8B}'`);
         await o.reload();
         await o.waitForSelector('[data-liste][data-pret]', { state: 'attached' });
@@ -2929,10 +2967,10 @@ try {
         await o.waitForFunction((id) => document.querySelector('[data-liste] li')?.getAttribute('data-categorie') === id, avantFl[0]);
         constat(apresFl[0] === avantFl[1] && apresFl[1] === avantFl[0] && JSON.stringify(sql('SELECT id FROM categorie ORDER BY ordre, nom, id').map((c) => c.id)) === JSON.stringify(avantFl),
           '18.8 : dans la page, les flèches changent l\'ordre des catégories');
-        await o.click(`[data-choisir="anciens_clients"]`);
-        await o.waitForFunction(() => document.querySelector('#cm-titre')?.textContent === 'Anciens clients');
+        await o.click(`[data-choisir="demandes_recues"]`);
+        await o.waitForFunction(() => document.querySelector('.cm-ligne.actif')?.getAttribute('data-categorie') === 'demandes_recues');
         constat(await o.isDisabled('[data-retirer]') && await o.isChecked('[data-methode] input[name=appel][value=oui]') && await o.isChecked('[data-methode] input[name=envoi][value=accord_ou_client]'),
-          '18.8 : une catégorie de départ montre sa méthode, et son bouton « Retirer » est désactivé');
+          '18.8 / 18.15 : « Demandes reçues » montre sa méthode, et son bouton « Retirer » est désactivé (la seule catégorie gardée)');
       }
       await o.screenshot({ path: path.join(OUT, `espace-categories-depart-${largeur}.png`), fullPage: true });
       constat(!(await o.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)), `18.8 : page Catégories à ${largeur} px : pas de débordement horizontal`);
