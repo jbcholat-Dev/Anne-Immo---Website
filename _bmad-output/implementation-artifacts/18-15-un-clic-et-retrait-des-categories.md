@@ -1,6 +1,6 @@
 # Story 18.15 : un clic pour éditer et retrait de toutes les catégories (tickets 238 et 240)
 
-Epic 18 (le carnet de contacts). Statut : review. Date : 2026-11-03.
+Epic 18 (le carnet de contacts). Statut : done. Date : 2026-11-03, fusionnée le même jour.
 
 ## Objectif
 
@@ -67,3 +67,7 @@ Mineurs (notés, non corrigés) :
 - `request.headers.get(ENTETE_COMPTE)!` : écarté, `worker.ts` pose toujours l'en-tête après le contrôle d'accès, comme pour les autres routes de l'espace.
 - « Ancien client » défini par `categorie_id = 'anciens_clients'` (AD-25) : écarté pour le code, `accord.ts` ne lit que l'étape ; la règle est mise à jour dans l'amendement d'AD-25.
 - Les vues enregistrées ne sont pas réécrites vers la destination : écarté, choix assumé et motivé dans la story (point 5).
+
+## Fusion
+
+2026-11-03 : PR #241 fusionnée dans main (commit de fusion 5c3538d), constructions Cloudflare au vert sur 706cb8e. Corrections de la revue vérifiées par `npm run build` et `npm run check` de l'espace (0 erreur). Tickets 238 et 240 transmis au fil des tickets pour fermeture.
