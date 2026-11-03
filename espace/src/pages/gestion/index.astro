@@ -3,6 +3,7 @@
 // Espace d'Anne (story 13.3) : reprise de site/src/pages/gestion/index.astro, qui disparaîtra du site en phase 2.
 // Atteint seulement à travers worker.ts, qui a vérifié le jeton Cloudflare Access (src/server/acces.ts).
 import Gestion from '@site/layouts/Gestion.astro';
+import '../../styles/pointeur.css'; // ticket 235 : pointeur ordinaire, après le CSS du gabarit
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { pourSite as envSite } from '../../server/env';
 import { listerLeads, quand, SOURCES } from '@site/server/gestion-donnees';

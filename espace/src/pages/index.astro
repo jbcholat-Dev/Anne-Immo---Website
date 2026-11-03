@@ -2,7 +2,7 @@
 // Contacts (story 18.4, FR-1, FR-3, FR-14 ; maquette `ux-espace-anne-2026-11-01`) : la page d'accueil de l'espace. Un
 // grand tableau, une ligne par contact non effacé, du carnet comme du suivi des ventes ; les écartés sont masqués.
 // Le serveur lit tout une fois (`lireTableau`, AD-27) et l'envoie dans la page ; l'îlot ci-dessous trie, cherche et
-// masque des colonnes dans le navigateur (choix des colonnes gardé dans ce navigateur), sans revenir au serveur.
+// masque et réordonne des colonnes dans le navigateur (choix et ordre des colonnes gardés dans ce navigateur), sans revenir au serveur.
 // Story 18.5 : filtres (FR-2, plus « à rappeler », vocabulaire fermé d'AD-27 dans `server/vues.ts`) dans la barre
 // d'outils, pastilles des filtres actifs au-dessus du tableau, vues enregistrées et catégories dans la colonne de gauche ;
 // les vues s'écrivent par /api/vues. Recherche et filtres lisent un index calculé une fois au chargement.
@@ -73,9 +73,13 @@ const donneesNouveaux = enJson(nouveaux);
         <input type="search" data-recherche value={q} placeholder="Nom, numéro, e-mail, entreprise…" aria-label="Rechercher un contact" autocomplete="off" />
         <details class="ct-menu" data-colonnes>
           <summary>Colonnes</summary>
-          <div class="ct-menu-liste">
+          <div class="ct-menu-liste" data-colonnes-liste>
             {COLONNES.filter((c) => c.masquable).map((c) => (
-              <label><input type="checkbox" value={c.cle} checked /> {c.libelle}</label>
+              <div class="ct-col" data-col={c.cle}>
+                <label><input type="checkbox" value={c.cle} checked /> {c.libelle}</label>
+                <button type="button" class="ct-col-b" data-monter aria-label={`Monter la colonne ${c.libelle}`}>▲</button>
+                <button type="button" class="ct-col-b" data-descendre aria-label={`Descendre la colonne ${c.libelle}`}>▼</button>
+              </div>
             ))}
           </div>
         </details>
@@ -201,6 +205,18 @@ const donneesNouveaux = enJson(nouveaux);
 
   let cachees = new Set<CleColonne>();
   try { cachees = new Set(JSON.parse(localStorage.getItem(MEMOIRE) ?? '[]')); } catch {}
+  // Ticket n° 233 : l'ordre des colonnes est gardé comme leur visibilité, dans ce navigateur (`localStorage`). Le nom reste en tête ;
+  // une clé inconnue est ignorée et une colonne absente de la liste gardée (ajoutée plus tard) va à la fin.
+  const MEMOIRE_ORDRE = 'espace.contacts.colonnes-ordre';
+  const ordreDefaut = COLONNES.map((c) => c.cle);
+  const ordreValide = (brut: unknown): CleColonne[] => {
+    const lu = Array.isArray(brut) ? brut.filter((k): k is CleColonne => ordreDefaut.includes(k as CleColonne)) : [];
+    const sans = [...new Set(lu)].filter((k) => k !== 'nom');
+    return ['nom', ...sans, ...ordreDefaut.filter((k) => k !== 'nom' && !sans.includes(k))];
+  };
+  let ordre: CleColonne[] = ordreDefaut;
+  try { ordre = ordreValide(JSON.parse(localStorage.getItem(MEMOIRE_ORDRE) ?? '[]')); } catch {}
+  const colonnesVisibles = () => ordre.map((k) => COLONNES.find((c) => c.cle === k)!).filter((c) => !cachees.has(c.cle));
   let tri: { cle: CleColonne; sens: 1 | -1 } = { cle: 'nom', sens: 1 };
   let filtre: Filtre = {};
   /** La vue choisie (« tous », un identifiant), ou null quand les filtres ont changé depuis. */
@@ -249,7 +265,7 @@ const donneesNouveaux = enJson(nouveaux);
 
   // Le HTML d'une ligne est gardé tant que les colonnes affichées ne changent pas : trier ou filtrer ne le recalcule pas.
   let html: (string | undefined)[] = [];
-  let colonnes = COLONNES.filter((c) => !cachees.has(c.cle));
+  let colonnes = colonnesVisibles();
   /** Les contacts cochés (identifiants) : gardés quand le tableau est redessiné (tri, filtres, recherche, paquets). */
   const coches = new Set<string>();
   const ligneHtml = (i: number) => {
@@ -502,11 +518,36 @@ const donneesNouveaux = enJson(nouveaux);
     boite.addEventListener('change', () => {
       if (boite.checked) cachees.delete(boite.value as CleColonne); else cachees.add(boite.value as CleColonne);
       try { localStorage.setItem(MEMOIRE, JSON.stringify([...cachees])); } catch {}
-      colonnes = COLONNES.filter((c) => !cachees.has(c.cle));
+      colonnes = colonnesVisibles();
       html = [];
       afficher();
     });
   }
+  // Flèches monter / descendre : le menu se réordonne, puis le tableau (le nom, premier, ne bouge pas).
+  const listeColonnes = menuColonnes.querySelector<HTMLElement>('[data-colonnes-liste]')!;
+  const rangerMenu = () => {
+    for (const k of ordre) { const ligne = listeColonnes.querySelector(`[data-col="${k}"]`); if (ligne) listeColonnes.append(ligne); }
+    const lignes = [...listeColonnes.querySelectorAll<HTMLElement>('[data-col]')];
+    lignes.forEach((l, i) => {
+      l.querySelector<HTMLButtonElement>('[data-monter]')!.disabled = i === 0;
+      l.querySelector<HTMLButtonElement>('[data-descendre]')!.disabled = i === lignes.length - 1;
+    });
+  };
+  rangerMenu();
+  listeColonnes.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-monter], [data-descendre]');
+    const cle = b?.closest<HTMLElement>('[data-col]')?.dataset.col as CleColonne | undefined;
+    if (!b || !cle) return;
+    const i = ordre.indexOf(cle), j = i + (b.hasAttribute('data-monter') ? -1 : 1);
+    if (j < 1 || j >= ordre.length) return; // le nom (rang 0) ne bouge pas, rien ne passe devant lui
+    [ordre[i], ordre[j]] = [ordre[j], ordre[i]];
+    try { localStorage.setItem(MEMOIRE_ORDRE, JSON.stringify(ordre)); } catch {}
+    colonnes = colonnesVisibles();
+    html = [];
+    rangerMenu();
+    afficher();
+    listeColonnes.querySelector<HTMLButtonElement>(`[data-col="${cle}"] ${b.hasAttribute('data-monter') ? '[data-monter]' : '[data-descendre]'}`)?.focus();
+  });
   // Story 18.6 : cases à cocher, actions groupées et classement d'une seule ligne (FR-4, FR-5). Écritures par /api/carnet.
   const barreLot = $<HTMLElement>('[data-lot]');
   const lotN = $<HTMLElement>('[data-lot-n]');
@@ -762,6 +803,11 @@ const donneesNouveaux = enJson(nouveaux);
   .ct-menu summary::-webkit-details-marker { display: none; }
   .ct-menu summary::after { content: '▾'; font-size: 12px; }
   .ct-menu-liste { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; background: #fff; border: 1px solid var(--avt-galet); border-radius: 10px; padding: 8px; min-width: 210px; box-shadow: 0 8px 24px rgba(0, 0, 0, .12); display: flex; flex-direction: column; }
+  .ct-col { display: flex; align-items: center; gap: 2px; }
+  .ct-col label { flex: 1; }
+  .ct-col-b { border: 0; background: none; color: var(--avt-brun); font: inherit; font-size: 11px; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; }
+  .ct-col-b:hover:not(:disabled) { background: var(--avt-galet); }
+  .ct-col-b:disabled { opacity: .25; cursor: default; }
   .ct-menu-liste label { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 6px; font-size: 14px; cursor: pointer; }
   .ct-menu-liste label:hover { background: var(--avt-galet); }
   .ct-menu-liste input { width: 16px; height: 16px; accent-color: var(--avt-klein); }

@@ -1854,6 +1854,21 @@ try {
       await o.screenshot({ path: path.join(OUT, 'espace-contacts-sans-email-1440.png') });
       await o.click('[data-colonnes] summary');
       await o.check('[data-colonnes] input[value=email]');
+      // Ticket n° 233 : monter la colonne Ville d'un cran la place avant Téléphone, tout de suite et après rechargement ; le nom reste premier.
+      const entetesCles = () => o.locator('th[data-cle]').evaluateAll((t) => t.map((x) => x.getAttribute('data-cle')));
+      const avant = await entetesCles();
+      await o.click('[data-col=telephone] [data-monter]');
+      const apresMonter = await entetesCles();
+      await o.reload();
+      await o.waitForSelector('[data-lignes][data-complet]', { state: 'attached' });
+      const apresRecharge = await entetesCles();
+      const iTel = avant.indexOf('telephone');
+      constat(apresMonter.indexOf('telephone') === iTel - 1 && apresMonter.indexOf('ville') === iTel && apresMonter[0] === 'nom'
+        && JSON.stringify(apresRecharge) === JSON.stringify(apresMonter) && await o.isDisabled('[data-col=entreprise] [data-monter]'),
+        'ticket 233 : monter une colonne (Téléphone) la passe devant Ville tout de suite, l\'ordre est gardé au rechargement, le nom reste premier');
+      await o.click('[data-colonnes] summary');
+      await o.click('[data-col=telephone] [data-descendre]');
+      constat(JSON.stringify(await entetesCles()) === JSON.stringify(avant), 'ticket 233 : descendre la colonne rend l\'ordre d\'origine');
       await o.click('h1');
       await o.click('[data-outils] summary');
       constat(await o.isVisible('[data-outils] a[href="/aujourdhui"]'), '18.4 : le menu « Autres outils » s\'ouvre et montre ses pages');

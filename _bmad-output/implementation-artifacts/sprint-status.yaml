@@ -256,6 +256,7 @@ development_status:
   18-11-barre-nouveaux-site-et-leedflow: done   # 2026-11-02, PR #227, revue de code faite (par lot), mineur noté
   18-12-demandes-des-portails-par-e-mail: done   # 2026-11-02, PR #227, revue de code faite (par lot), constat corrigé (réglage PORTAILS_EXPEDITEUR_AUTORISE), DKIM noté ; réglages de JB à faire (RUNBOOK § 4 sexies)
   18-13-rattacher-complete-la-fiche: done   # 2026-11-02, ticket n° 232
+  18-14-colonnes-reordonnables-et-logo: review   # 2026-11-02, tickets n° 233 et 235
   epic-18-retrospective: optional   # non faite : décision JB « Finir économe » du 2026-11-02
 
   epic-19: backlog   # les séances et les campagnes (livraison 2) ; en pause (décision JB 2026-11-02)
