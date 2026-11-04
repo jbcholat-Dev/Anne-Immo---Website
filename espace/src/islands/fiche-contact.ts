@@ -126,7 +126,7 @@ export function brancherFiche(r: Reglages) {
         <div class="fc-boutons"><button type="submit" class="ct-btn">Ajouter la note</button></div>
       </form>
       <section class="fc-bloc fc-deux">
-        <div><h3>Sources</h3><ul class="fc-simple" data-fiche-sources>${f.sources.map((s) => `<li>${esc(s.libelle)} <span class="fc-muet">${esc(jour(s.a))}</span></li>`).join('') || '<li class="fc-muet">—</li>'}</ul></div>
+        <div><h3>Sources</h3><ul class="fc-simple" data-fiche-sources>${f.sources.map((s) => `<li>${esc(s.libelle)} <span class="fc-muet">${esc(jour(s.a))}</span></li>`).join('') || '<li class="fc-muet">—</li>'}</ul>${f.rencontres.length ? `<h3>Rencontres</h3><ul class="fc-simple" data-fiche-rencontres>${f.rencontres.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}</div>
         <div><h3>Séances</h3><ul class="fc-simple" data-fiche-seances>${f.seances.map((s) => `<li>${esc(s.nom)}</li>`).join('') || '<li class="fc-muet">Aucune séance pour l\'instant.</li>'}</ul></div>
       </section>
       ${f.demandes.length ? `<section class="fc-bloc" data-fiche-demandes><h3>Demandes reçues du site</h3>${f.demandes.map((d) => `<div class="fc-demande"><div class="fc-muet">${esc(d.libelle)} · ${esc(quand(d.created_at))}${d.type_bien || d.commune_bien ? ` · ${esc([d.type_bien, d.commune_bien].filter(Boolean).join(', '))}` : ''}</div>${d.message ? `<div class="fc-texte">${esc(d.message)}</div>` : ''}</div>`).join('')}</section>` : ''}

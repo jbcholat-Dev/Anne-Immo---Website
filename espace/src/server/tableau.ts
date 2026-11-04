@@ -4,7 +4,7 @@
 // Story 18.5 : la date « à rappeler le » et la marque ambassadeur (filtres d'AD-27), et la liste des catégories.
 import type { EnvSite } from '@site/server/env';
 import { etatEmail, SQL_ACCORD, type DonneesAccord } from './accord';
-import { suiviEnCours, type LigneTableau } from './tableau-colonnes';
+import { rencontresDe, suiviEnCours, type LigneTableau } from './tableau-colonnes';
 
 interface LigneContact extends DonneesAccord {
   id: string; prenom: string | null; nom: string | null; telephone: string | null; entreprise: string | null;
@@ -27,8 +27,8 @@ export async function lireTableau(env: EnvSite, id?: string): Promise<LigneTable
        FROM contact c LEFT JOIN categorie k ON k.id = c.categorie_id${seul}`,
     )),
     lier(env.DB.prepare(`SELECT contact_id, type, reseau, valeur FROM contact_coordonnee${seulFille} ORDER BY id`)),
-    lier(env.DB.prepare(`SELECT contact_id, source FROM contact_source${seulFille} ORDER BY a, id`)),
-  ]) as [D1Result<LigneContact>, D1Result<{ contact_id: string; type: string; reseau: string | null; valeur: string }>, D1Result<{ contact_id: string; source: string }>];
+    lier(env.DB.prepare(`SELECT contact_id, source, lieu, mois FROM contact_source${seulFille} ORDER BY a, id`)),
+  ]) as [D1Result<LigneContact>, D1Result<{ contact_id: string; type: string; reseau: string | null; valeur: string }>, D1Result<{ contact_id: string; source: string; lieu: string | null; mois: string | null }>];
 
   const autres = new Map<string, { telephones: string[]; emails: string[]; profils: { reseau: string | null; url: string }[] }>();
   for (const k of coordonnees.results) {
@@ -39,17 +39,19 @@ export async function lireTableau(env: EnvSite, id?: string): Promise<LigneTable
     autres.set(k.contact_id, a);
   }
   const parContact = new Map<string, string[]>();
+  const rencontres = new Map<string, { source: string; lieu: string | null; mois: string | null }[]>();
   for (const s of sources.results) {
     const l = parContact.get(s.contact_id) ?? [];
     if (!l.includes(s.source)) l.push(s.source);
     parContact.set(s.contact_id, l);
+    if (s.lieu || s.mois) rencontres.set(s.contact_id, [...(rencontres.get(s.contact_id) ?? []), s]);
   }
 
   return contacts.results.map((c) => {
     const a = autres.get(c.id);
     return {
       id: c.id, prenom: c.prenom, nom: c.nom, entreprise: c.entreprise, categorie_id: c.categorie_id, categorie: c.categorie,
-      projet: c.projet, temperature: c.temperature, sources: parContact.get(c.id) ?? [], ville: c.commune,
+      projet: c.projet, temperature: c.temperature, sources: parContact.get(c.id) ?? [], rencontres: rencontresDe(rencontres.get(c.id) ?? []), ville: c.commune,
       telephones: [c.telephone, ...(a?.telephones ?? [])].filter((t): t is string => !!t),
       emails: [c.email, ...(a?.emails ?? [])].filter((e): e is string => !!e),
       profils: a?.profils ?? [],

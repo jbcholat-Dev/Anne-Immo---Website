@@ -715,7 +715,13 @@ export interface EcritureImport {
   avant: Record<string, string | null>; apres: Record<string, string | null>; garde: Record<string, string | null>;
   secondaires: { type: string; valeur: string; reseau?: string | null }[];
   sources: string[]; notes: string[]; accord: boolean; detail: string | null;
+  /** Story 18.17 : les lignes de `contact_source` à écrire (source, avec le lieu et le mois de la rencontre s'il y en a une). */
+  lignesSource: LigneSourceImport[];
+  /** Story 18.17 : lignes de source d'un autre lot dont l'import complète le lieu et le mois ; l'annulation les vide à nouveau. */
+  sourcesCompletees: SourceCompletee[];
 }
+export interface LigneSourceImport { source: string; lieu: string | null; mois: string | null }
+export interface SourceCompletee { id: number; lieu: string | null; mois: string | null; avant_lieu: string | null; avant_mois: string | null }
 
 const COLONNES_IMPORT = ['prenom', 'nom', 'telephone', 'email', 'commune', 'entreprise', 'categorie_id', 'projet'] as const;
 const GARDE_IMPORT = [...COLONNES_IMPORT, 'temperature', 'verifie_le', 'ecarte_le', 'etape', 'email_accord_le'] as const;
@@ -736,7 +742,7 @@ export async function ecrireImport(env: EnvSite, lot: string, ecritures: Ecritur
     const origine = [x.sources.join(', ') || 'complément', x.detail].filter(Boolean).join(', ');
     return {
       ...x, texte: x.nouveau ? `Contact importé par Claude (${origine})` : `Complété par un import de Claude (${origine})`,
-      donnees: JSON.stringify({ avant: x.avant, apres: x.apres, lot, ligne: x.ligne, creation: x.nouveau, coordonnees: x.secondaires.map((s) => s.valeur), sources: x.sources, accord: x.accord }),
+      donnees: JSON.stringify({ avant: x.avant, apres: x.apres, lot, ligne: x.ligne, creation: x.nouveau, coordonnees: x.secondaires.map((s) => s.valeur), sources: x.sources, accord: x.accord, completees: x.sourcesCompletees }),
     };
   }));
   const ecrit = (id: string) => `EXISTS (SELECT 1 FROM contact_evenement e WHERE e.source = 'claude' AND e.source_id = ?2 || '.' || ${id})`;
@@ -758,9 +764,16 @@ export async function ecrireImport(env: EnvSite, lot: string, ecritures: Ecritur
        SELECT ${jx('$.id')}, json_extract(s.value, '$.type'), json_extract(s.value, '$.reseau'), json_extract(s.value, '$.valeur'), ?3
        FROM json_each(?1) AS j, json_each(j.value, '$.secondaires') AS s
        WHERE ${ecrit(jx('$.id'))} AND ${libre("json_extract(s.value, '$.valeur')")}`).bind(charge, lot, maintenant),
-    env.DB.prepare(`INSERT INTO contact_source (contact_id, source, import_lot_id, a)
-       SELECT ${jx('$.id')}, s.value, ?2, ?3 FROM json_each(?1) AS j, json_each(j.value, '$.sources') AS s WHERE ${ecrit(jx('$.id'))}`)
+    env.DB.prepare(`INSERT INTO contact_source (contact_id, source, lieu, mois, import_lot_id, a)
+       SELECT ${jx('$.id')}, json_extract(s.value, '$.source'), json_extract(s.value, '$.lieu'), json_extract(s.value, '$.mois'), ?2, ?3
+       FROM json_each(?1) AS j, json_each(j.value, '$.lignesSource') AS s WHERE ${ecrit(jx('$.id'))}`)
       .bind(charge, lot, maintenant),
+    // Story 18.17 : une rencontre complète la ligne de source d'un import précédent (seulement si elle n'a pas changé depuis).
+    env.DB.prepare(`UPDATE contact_source SET lieu = json_extract(s.value, '$.lieu'), mois = json_extract(s.value, '$.mois')
+       FROM json_each(?1) AS j, json_each(j.value, '$.sourcesCompletees') AS s
+       WHERE contact_source.id = json_extract(s.value, '$.id') AND contact_source.contact_id = ${jx('$.id')}
+         AND contact_source.lieu IS json_extract(s.value, '$.avant_lieu') AND contact_source.mois IS json_extract(s.value, '$.avant_mois') AND ${ecrit(jx('$.id'))}`)
+      .bind(charge, lot),
     env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, par)
        SELECT ${jx('$.id')}, ?3, 'note', 'claude', ?2 || '.' || ${jx('$.id')} || '.n' || s.key, s.value, ?4
        FROM json_each(?1) AS j, json_each(j.value, '$.notes') AS s WHERE ${ecrit(jx('$.id'))}`).bind(charge, lot, maintenant, par),
@@ -803,14 +816,14 @@ export async function annulerImport(env: EnvSite, lot: string, par: string): Pro
   ).bind(debut, debut, fin).all<{ ev: number; id: string; donnees: string; etape: string | null; modifie: number; demande: number }>()).results;
   const gardes: ResultatAnnulationImport['gardes'] = [];
   const aSupprimer: { id: string; ev: number; ligne: string }[] = [];
-  const aRendre: { id: string; ev: number; ligne: string; avant: Record<string, string | null>; apres: Record<string, string | null>; coordonnees: string[]; accord: boolean }[] = [];
+  const aRendre: { id: string; ev: number; ligne: string; avant: Record<string, string | null>; apres: Record<string, string | null>; coordonnees: string[]; accord: boolean; completees: SourceCompletee[] }[] = [];
   for (const e of evs) {
-    let d: { avant: Record<string, string | null>; apres: Record<string, string | null>; ligne: string; creation: boolean; coordonnees: string[]; accord: boolean };
+    let d: { avant: Record<string, string | null>; apres: Record<string, string | null>; ligne: string; creation: boolean; coordonnees: string[]; accord: boolean; completees?: SourceCompletee[] };
     try { d = JSON.parse(e.donnees); } catch { continue; }
     const raison: RaisonGarde | null = e.modifie ? 'modifie_depuis' : e.demande ? 'demande_du_site' : e.etape !== null && d.creation ? 'dans_le_suivi' : null;
     if (raison) { gardes.push({ ligne: d.ligne, raison }); continue; }
     if (d.creation) aSupprimer.push({ id: e.id, ev: e.ev, ligne: d.ligne });
-    else aRendre.push({ id: e.id, ev: e.ev, ligne: d.ligne, avant: d.avant, apres: d.apres, coordonnees: d.coordonnees ?? [], accord: !!d.accord });
+    else aRendre.push({ id: e.id, ev: e.ev, ligne: d.ligne, avant: d.avant, apres: d.apres, coordonnees: d.coordonnees ?? [], accord: !!d.accord, completees: d.completees ?? [] });
   }
   const ann = ulid(), maintenant = new Date().toISOString();
   const sansSuite = (idSql: string, evSql: string) => `NOT EXISTS (SELECT 1 FROM contact_evenement x WHERE x.contact_id = ${idSql} AND x.id > ${evSql} AND ${hors})`;
@@ -836,6 +849,11 @@ export async function annulerImport(env: EnvSite, lot: string, par: string): Pro
          JOIN contact_coordonnee k ON k.contact_id = ${jx('$.id')} AND k.valeur = v.value WHERE ${rendu(jx('$.id'))})`).bind(charge, debut, fin, ann),
       env.DB.prepare(`DELETE FROM contact_source WHERE import_lot_id = ?2 AND contact_id IN (SELECT ${jx('$.id')} FROM json_each(?1) AS j WHERE ${rendu(jx('$.id'))})`)
         .bind(charge, lot, fin, ann),
+      // Story 18.17 : les lignes de source complétées par ce lot (autre lot) retrouvent leur lieu et leur mois d'avant, si personne n'y a touché.
+      env.DB.prepare(`UPDATE contact_source SET lieu = json_extract(s.value, '$.avant_lieu'), mois = json_extract(s.value, '$.avant_mois')
+         FROM json_each(?1) AS j, json_each(j.value, '$.completees') AS s
+         WHERE contact_source.id = json_extract(s.value, '$.id') AND contact_source.lieu IS json_extract(s.value, '$.lieu') AND contact_source.mois IS json_extract(s.value, '$.mois')
+           AND contact_source.contact_id = ${jx('$.id')} AND ${rendu(jx('$.id'))}`).bind(charge, debut, fin, ann),
       env.DB.prepare(`DELETE FROM contact_evenement WHERE source = 'claude' AND type = 'note' AND source_id > ?2 AND source_id < ?3
          AND contact_id IN (SELECT ${jx('$.id')} FROM json_each(?1) AS j WHERE ${rendu(jx('$.id'))})`).bind(charge, debut, fin, ann),
     );

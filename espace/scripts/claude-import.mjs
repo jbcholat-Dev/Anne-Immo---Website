@@ -15,6 +15,9 @@
 //   annuler  <lot> --oui
 // Pour un classeur Excel (.xlsx), --genre est remplacé par un --onglet par onglet à importer (les autres ne sont pas
 // envoyés) : --onglet "EDB=edb:EDB Thonon, mars 2026" --onglet "Feuil1=complement" --onglet "CONTACTS=relations".
+// Repasser un fichier déjà importé (story 18.17) : même commande, mêmes onglets ; l'espace retrouve chaque contact par son
+// téléphone ou son e-mail et lui ajoute sa rencontre (colonnes EDB et DATE), les commentaires qu'il n'a pas déjà en note
+// (RELANCE 1 et 2 comprises) et le projet (Projet HA, PA, PV) ; l'aperçu compte tout cela sans écrire ni rien montrer.
 // Genres : telephone, linkedin, reseaux, edb, complement, relations, partenaires, anciens_clients (server/import.ts).
 // Formats : .vcf (vCard), .csv, .xlsx. Le fichier est lu ici ; pour un .vcf, seules les valeurs que l'espace lit (N, FN,
 // TEL, EMAIL, ORG) sont envoyées : PHOTO, ADR, BDAY, NOTE et le reste partent sans leur valeur (vcardEpuree).
@@ -152,6 +155,16 @@ async function appel(corps) {
 }
 const decisions = () => (options.decisions ? JSON.parse(fs.readFileSync(options.decisions, 'utf8')) : undefined);
 const ligne = (libelle, n) => console.log(`${libelle.padEnd(34, ' ')} ${n}`);
+/** Story 18.17 : ce que l'import ajouterait à des fiches (rencontres, notes, projets), en nombres seulement. */
+const ligne_bilan = (b) => {
+  if (!b) return;
+  ligne('Rencontres ajoutées', b.rencontres_ajoutees);
+  ligne('Rencontres complétées (lieu, mois)', b.rencontres_completees);
+  ligne('Notes ajoutées', b.notes_ajoutees);
+  ligne('Commentaires déjà présents (non répétés)', b.notes_deja_presentes);
+  ligne('Projets posés (à qualifier → projet)', b.projets_poses);
+  ligne('Vendeur → vendeur et acheteur', b.vendeur_vers_vendeur_acheteur);
+};
 const parRaison = (r) => Object.entries(r ?? {}).map(([k, n]) => `${k} ${n}`).join(', ') || '—';
 
 if (commande === 'apercu') {
@@ -167,6 +180,7 @@ if (commande === 'apercu') {
   ligne('Doublons probables à confirmer', a.doublons_probables);
   ligne('Rejetés', `${a.rejetes} (${parRaison(a.raisons)})`);
   ligne('Téléphones / e-mails illisibles', `${a.telephones_invalides} / ${a.emails_invalides}`);
+  ligne_bilan(a.bilan);
   ligne('Champs ignorés', a.champs_ignores.length ? a.champs_ignores.length : '—');
   for (const c of a.champs_ignores) console.log(`  · ${c}`);
   console.log(`Empreinte : ${a.empreinte}`);
@@ -186,6 +200,7 @@ if (commande === 'apercu') {
   ligne('Accords e-mail notés', r.accords);
   ligne('Doublons laissés de côté', r.doublons_laisses);
   ligne('Rejetés', `${r.rejetes} (${parRaison(r.raisons)})`);
+  ligne_bilan(r.bilan);
   ligne('Non écrits (changés entre-temps)', r.ignores_entre_temps);
 } else if (commande === 'annuler') {
   if (!options.oui) sortir('Annulation : ajoutez --oui.');

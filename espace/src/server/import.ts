@@ -18,6 +18,10 @@
 //
 // Champs importés (fiche légale, règle 1 ; AD-26) : prénom, nom, téléphones, e-mails, lien de profil, ville, entreprise ;
 // pour le fichier d'Anne (genres edb, complement, relations, partenaires, anciens_clients) le projet et le commentaire.
+// Story 18.17 : pour ces mêmes genres, la rencontre (colonne `EDB` : lieu ; colonne `DATE` : mois) est une donnée filtrable
+// écrite sur la ligne de `contact_source` (lieu « Publier », mois « AAAA-MM »), pas une note ; `RELANCE 1` et `RELANCE 2`
+// sont des commentaires ; `Projet HA`, `HA`, `PA` valent achat et `PV` vente. Repasser un fichier déjà importé complète les
+// contacts retrouvés (rencontre, notes absentes, projet) sans doublon ; tout passe par le lot, donc par `annuler`.
 // Jamais les adresses, dates de naissance, photos ni notes du téléphone : une colonne ou une propriété qui n'est pas dans
 // cette liste n'est pas lue.
 //
@@ -29,7 +33,7 @@ import { journal } from '@site/server/journal';
 import { empreinteOpposition } from '@site/server/opposition';
 import { emailValide } from '@site/server/schema';
 import { ulid } from '@site/server/ulid';
-import { annulerImport, ecrireImport, telephoneSaisi, type EcritureImport, type ResultatAnnulationImport } from './carnet';
+import { annulerImport, ecrireImport, telephoneSaisi, type EcritureImport, type LigneSourceImport, type ResultatAnnulationImport, type SourceCompletee } from './carnet';
 import { lireCsv } from './tableur';
 
 /** Plafonds : un import vise ~900 fiches ; au-delà, découper le fichier. */
@@ -73,7 +77,9 @@ export type Raison = keyof typeof RAISONS_REJET;
 /** Une ligne du fichier, après lecture et nettoyage (seulement les champs permis). */
 export interface Ligne {
   ref: string; genre: Genre; prenom: string | null; nom: string | null; telephones: string[]; emails: string[]; profils: string[];
-  ville: string | null; entreprise: string | null; projet: string | null; commentaire: string | null;
+  ville: string | null; entreprise: string | null; projet: string | null; commentaires: string[];
+  /** Story 18.17 : lieu et mois (« AAAA-MM ») de la rencontre du fichier, ou null. */
+  rencontre: { lieu: string | null; mois: string | null } | null;
 }
 interface Onglet { nom: string; genre: Genre; detail: string | null; lignes: Ligne[] }
 export interface Lecture { nom: string; onglets: Onglet[]; lignesLues: number; ignores: string[]; telephonesInvalides: number; emailsInvalides: number; empreinte: string }
@@ -116,9 +122,48 @@ function projetDe(v: string | null, vente: string | null, achat: string | null):
   return null;
 }
 
+/** Un nombre de série Excel (jours depuis le 30/12/1899) → « AAAA-MM » ; null hors de 2000 à 2100. */
+function moisDeSerie(n: number): string | null {
+  if (!Number.isFinite(n) || n < 36526 || n > 73050) return null;
+  return new Date(Math.round((n - 25569) * 86_400_000)).toISOString().slice(0, 7);
+}
+/**
+ * Le mois d'une cellule « date » (story 18.17) : nombre de série Excel (ce que le script envoie pour une cellule de date),
+ * « jj/mm/aaaa », « mm/aaaa », « aaaa-mm » ou « aaaa-mm-jj » → « AAAA-MM » ; null si la valeur n'est pas une date lisible.
+ */
+export function moisDe(v: string | null | undefined): string | null {
+  const t = (v ?? '').trim();
+  if (!t) return null;
+  const ok = (a: string, m: string) => (+m >= 1 && +m <= 12 && +a >= 2000 && +a <= 2100 ? `${a}-${m.padStart(2, '0')}` : null);
+  let m: RegExpExecArray | null;
+  if (/^\d{5}(\.\d+)?$/.test(t)) return moisDeSerie(Number(t));
+  if ((m = /^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/.exec(t))) return ok(m[3], m[2]);
+  if ((m = /^(\d{1,2})[/.-](\d{4})$/.exec(t))) return ok(m[2], m[1]);
+  if ((m = /^(\d{4})-(\d{1,2})(?:-\d{1,2})?(?:[T ].*)?$/.exec(t))) return ok(m[1], m[2]);
+  return null;
+}
+/** Le lieu d'une rencontre en casse de titre (« PUBLIER » → « Publier ») ; un lieu déjà en casse mixte reste tel quel. */
+function lieuDe(v: string | null | undefined): string | null {
+  const t = texte(v, 60);
+  if (!t) return null;
+  if (t !== t.toUpperCase() && t !== t.toLowerCase()) return t;
+  return t.toLowerCase().replace(/(^|[\s'’-])(\p{L})/gu, (_, a: string, b: string) => a + b.toUpperCase());
+}
+/** Une cellule de relance qui est une date Excel (« 45627 ») devient « jj/mm/aaaa » ; tout autre texte reste tel quel. */
+function relanceLisible(v: string): string {
+  const t = v.trim();
+  if (!/^\d{5}(\.\d+)?$/.test(t) || moisDeSerie(Number(t)) === null) return t;
+  const d = new Date(Math.round((Number(t) - 25569) * 86_400_000));
+  return `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}/${d.getUTCFullYear()}`;
+}
+
+/** « RELANCE 1 » → « Relance 1 » : le titre de la colonne, devant le texte de la cellule. */
+const etiquetteRelance = (titre: string) => { const t = titre.trim().replace(/\s+/g, ' ').toLowerCase(); return t.charAt(0).toUpperCase() + t.slice(1); };
+
 interface Brut {
   prenom?: string | null; nom?: string | null; nomComplet?: string | null; telephones: string[]; emails: string[]; profils: string[];
   ville?: string | null; entreprise?: string | null; projet?: string | null; vente?: string | null; achat?: string | null; commentaires: string[];
+  lieu?: string | null; date?: string | null;
 }
 interface Compteurs { tel: number; mail: number }
 
@@ -138,17 +183,20 @@ function nettoyer(b: Brut, ref: string, genre: Genre, c: Compteurs): Ligne {
   for (const brut of b.profils) { const p = profil(brut); if (p && !profils.includes(p)) profils.push(p); }
   let prenom = texte(b.prenom, 80), nom = texte(b.nom, 80);
   if (!prenom && !nom) nom = texte(b.nomComplet, 80);
-  const commentaire = g.anne ? texte(b.commentaires.filter((x) => x && x.trim()).join(' · '), 2000) : null;
+  // Story 18.17 : un fragment par cellule de commentaire (sans doublon), pour retrouver ceux qu'une fiche porte déjà.
+  const commentaires = g.anne ? [...new Set(b.commentaires.map((x) => texte(x, 1000)).filter((x): x is string => !!x))].slice(0, 10) : [];
+  const lieu = g.anne ? lieuDe(b.lieu) : null, mois = g.anne ? moisDe(b.date) : null;
   return {
     ref, genre, prenom, nom, telephones: telephones.slice(0, 10), emails: emails.slice(0, 10), profils: profils.slice(0, 5),
     ville: texte(b.ville, 80), entreprise: texte(b.entreprise, 120),
-    projet: g.anne ? projetDe(texte(b.projet, 80), b.vente ?? null, b.achat ?? null) : null, commentaire,
+    projet: g.anne ? projetDe(texte(b.projet, 80), b.vente ?? null, b.achat ?? null) : null, commentaires,
+    rencontre: lieu || mois ? { lieu, mois } : null,
   };
 }
 
 // ——— Colonnes d'un CSV ou d'un onglet Excel ———
 
-type Champ = 'prenom' | 'nom' | 'nomComplet' | 'telephones' | 'emails' | 'profils' | 'ville' | 'entreprise' | 'projet' | 'vente' | 'achat' | 'commentaires';
+type Champ = 'prenom' | 'nom' | 'nomComplet' | 'telephones' | 'emails' | 'profils' | 'ville' | 'entreprise' | 'projet' | 'vente' | 'achat' | 'commentaires' | 'lieu' | 'date';
 
 /** Le champ d'un titre de colonne, ou null (colonne ignorée). L'ordre compte : e-mail avant adresse, interdits avant le reste. */
 export function champDe(titre: string): Champ | null {
@@ -165,10 +213,14 @@ export function champDe(titre: string): Champ | null {
   if (/(url|profil|profile|linkedin)/.test(s)) return 'profils';
   if (/^(ville|city|commune|localite)([0-9]|domicile|perso|pro|value)*$/.test(s)) return 'ville';
   if (/(entreprise|societe|company|organisation|organization|employeur)/.test(s)) return 'entreprise';
-  if (/projet.*vente/.test(s)) return 'vente';
-  if (/projet.*achat/.test(s)) return 'achat';
+  // Story 18.17 : « Projet HA » (achat) du fichier d'Anne, « PA » et « PV » de Feuil1 ; exacts seulement, jamais « pa » dans un mot.
+  if (/projet.*vente/.test(s) || /^(projet)?pv$/.test(s)) return 'vente';
+  if (/projet.*achat/.test(s) || /^(projet)?(ha|pa)$/.test(s)) return 'achat';
   if (/^projet$/.test(s)) return 'projet';
-  if (/(commentaire|remarque|rappel)/.test(s)) return 'commentaires';
+  // La rencontre (animation EDB) : colonne « EDB » = le lieu, « DATE » = le mois.
+  if (/^(edb|lieurencontre|lieuderencontre)$/.test(s)) return 'lieu';
+  if (/^(date|daterencontre|datedelarencontre|moisderencontre)$/.test(s)) return 'date';
+  if (/(commentaire|remarque|rappel)/.test(s) || /^relance[0-9]*$/.test(s)) return 'commentaires';
   return null;
 }
 
@@ -208,7 +260,8 @@ function lireGrille(grille: string[][], nomOnglet: string, genre: Genre, io: num
     champs.forEach((ch, k) => {
       const v = String(cellules[k] ?? '');
       if (!ch || !v.trim()) return;
-      if (ch === 'telephones' || ch === 'emails' || ch === 'profils' || ch === 'commentaires') b[ch].push(v);
+      if (ch === 'commentaires') b.commentaires.push(/^relance/i.test(sansAccents(String(entetes[k] ?? '')).trim()) ? `${etiquetteRelance(String(entetes[k]))} : ${relanceLisible(v)}` : v);
+      else if (ch === 'telephones' || ch === 'emails' || ch === 'profils') b[ch].push(v);
       else if (!b[ch]) b[ch] = v;
     });
     lignes.push(nettoyer(b, `${io}:${i + 2}`, genre, c));
@@ -342,10 +395,15 @@ export async function lireFichier(brut: unknown): Promise<Lecture> {
 // ——— Les personnes du fichier ———
 
 /** Une personne du fichier : ses lignes (fusionnées quand elles partagent un téléphone, un e-mail ou un profil). */
+interface RencontreFichier { source: string; lieu: string | null; mois: string | null }
 interface Personne {
   ref: string; refs: string[]; genres: Set<Genre>; details: Set<string>;
   prenom: string | null; nom: string | null; telephones: string[]; emails: string[]; profils: string[];
-  ville: string | null; entreprise: string | null; projet: string | null; notes: string[];
+  ville: string | null; entreprise: string | null; projet: string | null;
+  /** Les fragments de commentaire du fichier (un par cellule), sans doublon. */
+  notes: string[];
+  /** Story 18.17 : les rencontres du fichier (source de la ligne, lieu, mois), sans doublon. */
+  rencontres: RencontreFichier[];
   /** Revue de code 18.9 : les seules adresses venues d'une ligne où la personne a donné son accord (onglet EDB, FR-10).
    * Une adresse venue d'un autre onglet, même fusionnée dans la même personne, n'en reçoit jamais. */
   emailsAccord: string[];
@@ -363,7 +421,7 @@ function personnes(l: Lecture): { liste: Personne[]; rejets: { ligne: string; ra
     const trouvees = [...new Set(cles.map((k) => parCle.get(k)).filter((p): p is Personne => !!p))];
     let p: Personne;
     if (!trouvees.length) {
-      p = { ref: x.ref, refs: [], genres: new Set(), details: new Set(), prenom: null, nom: null, telephones: [], emails: [], profils: [], ville: null, entreprise: null, projet: null, notes: [], emailsAccord: [] };
+      p = { ref: x.ref, refs: [], genres: new Set(), details: new Set(), prenom: null, nom: null, telephones: [], emails: [], profils: [], ville: null, entreprise: null, projet: null, notes: [], rencontres: [], emailsAccord: [] };
       liste.push(p);
     } else {
       p = trouvees[0];
@@ -376,7 +434,8 @@ function personnes(l: Lecture): { liste: Personne[]; rejets: { ligne: string; ra
       }
     }
     fusionner(p, { ref: x.ref, refs: [x.ref], genres: new Set([x.genre]), details: new Set(o.detail ? [o.detail] : []), prenom: x.prenom, nom: x.nom,
-      telephones: x.telephones, emails: x.emails, profils: x.profils, ville: x.ville, entreprise: x.entreprise, projet: x.projet, notes: x.commentaire ? [x.commentaire] : [],
+      telephones: x.telephones, emails: x.emails, profils: x.profils, ville: x.ville, entreprise: x.entreprise, projet: x.projet, notes: x.commentaires,
+      rencontres: x.rencontre ? [{ source: GENRES[x.genre].source, ...x.rencontre }] : [],
       emailsAccord: GENRES[x.genre].accord ? x.emails : [] });
     for (const k of cles) parCle.set(k, p);
   }
@@ -391,7 +450,8 @@ function fusionner(p: Personne, q: Personne): void {
   for (const k of ['telephones', 'emails', 'profils', 'emailsAccord'] as const) for (const v of q[k]) if (!p[k].includes(v)) p[k].push(v);
   p.ville ??= q.ville; p.entreprise ??= q.entreprise;
   if (q.projet && (!p.projet || p.projet === 'a_qualifier')) p.projet = q.projet;
-  p.notes.push(...q.notes);
+  for (const n of q.notes) if (!p.notes.includes(n)) p.notes.push(n);
+  for (const r of q.rencontres) if (!p.rencontres.some((x) => x.source === r.source && x.lieu === r.lieu && x.mois === r.mois)) p.rencontres.push(r);
 }
 
 /**
@@ -404,7 +464,8 @@ const categorieDe = (p: Personne, existantes: ReadonlySet<string>): string | nul
   return existantes.has(c) ? c : null;
 };
 const categoriesExistantes = async (env: EnvSite) => new Set((await env.DB.prepare('SELECT id FROM categorie').all<{ id: string }>()).results.map((c) => c.id));
-const sourcesDe = (p: Personne): string[] => [...new Set([...p.genres].filter((g) => GENRES[g].cree).map((g) => GENRES[g].source as string))];
+const sourcesDe = (p: Personne): string[] =>
+  [...new Set([...[...p.genres].filter((g) => GENRES[g].cree).map((g) => GENRES[g].source as string), ...p.rencontres.map((r) => r.source)])];
 const cree = (p: Personne) => [...p.genres].some((g) => GENRES[g].cree);
 
 // ——— Ce que la base sait déjà (lecture seule, rien de renvoyé hors du module) ———
@@ -451,19 +512,24 @@ async function lireBase(env: EnvSite, liste: Personne[]) {
   return { parValeur, parNom };
 }
 
-async function lireExistants(env: EnvSite, ids: string[]): Promise<{ etats: Map<string, Existant>; secondaires: Map<string, string[]>; sources: Map<string, string[]> }> {
-  const etats = new Map<string, Existant>(), secondaires = new Map<string, string[]>(), sources = new Map<string, string[]>();
-  if (!ids.length) return { etats, secondaires, sources };
+/** Une ligne de `contact_source` d'un contact existant (story 18.17). */
+interface SourceExistante { id: number; source: string; lieu: string | null; mois: string | null }
+
+async function lireExistants(env: EnvSite, ids: string[]): Promise<{ etats: Map<string, Existant>; secondaires: Map<string, string[]>; sources: Map<string, SourceExistante[]>; notes: Map<string, string[]> }> {
+  const etats = new Map<string, Existant>(), secondaires = new Map<string, string[]>(), sources = new Map<string, SourceExistante[]>(), notes = new Map<string, string[]>();
+  if (!ids.length) return { etats, secondaires, sources, notes };
   const charge = JSON.stringify(ids);
-  const [e, s, src] = await env.DB.batch([
+  const [e, s, src, nts] = await env.DB.batch([
     env.DB.prepare(`SELECT ${COLONNES_EXISTANT} FROM contact WHERE id IN (SELECT value FROM json_each(?1))`).bind(charge),
     env.DB.prepare('SELECT contact_id, valeur FROM contact_coordonnee WHERE contact_id IN (SELECT value FROM json_each(?1))').bind(charge),
-    env.DB.prepare('SELECT DISTINCT contact_id, source FROM contact_source WHERE contact_id IN (SELECT value FROM json_each(?1))').bind(charge),
-  ]) as [D1Result<Existant>, D1Result<{ contact_id: string; valeur: string }>, D1Result<{ contact_id: string; source: string }>];
+    env.DB.prepare('SELECT id, contact_id, source, lieu, mois FROM contact_source WHERE contact_id IN (SELECT value FROM json_each(?1)) ORDER BY id').bind(charge),
+    env.DB.prepare(`SELECT contact_id, texte FROM contact_evenement WHERE type = 'note' AND texte IS NOT NULL AND contact_id IN (SELECT value FROM json_each(?1))`).bind(charge),
+  ]) as [D1Result<Existant>, D1Result<{ contact_id: string; valeur: string }>, D1Result<SourceExistante & { contact_id: string }>, D1Result<{ contact_id: string; texte: string }>];
   for (const x of e.results) etats.set(x.id, x);
   for (const x of s.results) secondaires.set(x.contact_id, [...(secondaires.get(x.contact_id) ?? []), x.valeur]);
-  for (const x of src.results) sources.set(x.contact_id, [...(sources.get(x.contact_id) ?? []), x.source]);
-  return { etats, secondaires, sources };
+  for (const x of src.results) sources.set(x.contact_id, [...(sources.get(x.contact_id) ?? []), { id: x.id, source: x.source, lieu: x.lieu, mois: x.mois }]);
+  for (const x of nts.results) notes.set(x.contact_id, [...(notes.get(x.contact_id) ?? []), x.texte]);
+  return { etats, secondaires, sources, notes };
 }
 
 // ——— Le plan : ce que l'import ferait ———
@@ -478,6 +544,9 @@ interface Plan {
   rejets: { ligne: string; raison: Raison }[];
   fusionnees: number;
   secondaires: Map<string, string[]>;
+  /** Story 18.17 : ce que la base porte déjà de chaque contact retrouvé (lignes de source, textes des notes). */
+  sourcesExistantes: Map<string, SourceExistante[]>;
+  notesExistantes: Map<string, string[]>;
 }
 
 async function planifier(env: EnvSite, l: Lecture, decisions: Record<string, Decision>): Promise<Plan> {
@@ -495,8 +564,8 @@ async function planifier(env: EnvSite, l: Lecture, decisions: Record<string, Dec
   const aLire = new Set<string>();
   for (const ids of sures.values()) ids.forEach((i) => aLire.add(i));
   for (const ids of parNomTrouve.values()) ids.forEach((i) => aLire.add(i));
-  const { etats, secondaires, sources } = await lireExistants(env, [...aLire]);
-  const plan: Plan = { nouveaux: [], complements: [], doublons: [], rejets, fusionnees, secondaires };
+  const { etats, secondaires, sources, notes } = await lireExistants(env, [...aLire]);
+  const plan: Plan = { nouveaux: [], complements: [], doublons: [], rejets, fusionnees, secondaires, sourcesExistantes: sources, notesExistantes: notes };
   const parCible = new Map<string, { p: Personne; cible: Existant }>();
   const completer = (p: Personne, cible: Existant) => {
     if (cible.ecarte_le) { plan.rejets.push({ ligne: p.ref, raison: 'ecarte' }); return; }
@@ -524,7 +593,7 @@ async function planifier(env: EnvSite, l: Lecture, decisions: Record<string, Dec
       plan.doublons.push({
         ligne: p.ref, prenom: p.prenom, nom: p.nom,
         existants: candidats.map((id) => etats.get(id)).filter((c): c is Existant => !!c)
-          .map((c) => ({ id: c.id, nom: [c.prenom, c.nom].filter(Boolean).join(' '), sources: sources.get(c.id) ?? [] })),
+          .map((c) => ({ id: c.id, nom: [c.prenom, c.nom].filter(Boolean).join(' '), sources: [...new Set((sources.get(c.id) ?? []).map((x) => x.source))] })),
       });
       continue;
     }
@@ -541,6 +610,24 @@ export interface Apercu {
   raisons: Partial<Record<Raison, number>>; categories: Record<string, number>; accords: number;
   telephones_invalides: number; emails_invalides: number; champs_ignores: string[];
   doublons: Doublon[]; rejets: { ligne: string; raison: Raison }[];
+  /** Story 18.17 : rencontres, notes et projets que l'import ajouterait, en nombres. */
+  bilan: Bilan;
+}
+
+/** Les écritures du plan, nouveaux puis compléments, et leur bilan en nombres (aperçu et import). */
+function ecrituresDuPlan(plan: Plan, existantes: ReadonlySet<string>): { ecritures: EcritureImport[]; bilan: Bilan } {
+  const bilan = bilanVide();
+  const ecritures: EcritureImport[] = plan.nouveaux.map(({ p }) => {
+    bilan.rencontres_ajoutees += p.rencontres.length;
+    if (p.notes.length) bilan.notes_ajoutees++;
+    return ecritureNouveau(p, existantes);
+  });
+  for (const x of plan.complements) {
+    const { e, b } = ecritureComplement(x, plan.secondaires.get(x.cible.id) ?? [], existantes, plan.sourcesExistantes.get(x.cible.id) ?? [], plan.notesExistantes.get(x.cible.id) ?? []);
+    ecritures.push(e);
+    for (const k of Object.keys(b) as (keyof Bilan)[]) bilan[k] += b[k];
+  }
+  return { ecritures, bilan };
 }
 
 const compterRaisons = (r: { raison: Raison }[]) => r.reduce<Partial<Record<Raison, number>>>((t, x) => ({ ...t, [x.raison]: (t[x.raison] ?? 0) + 1 }), {});
@@ -552,25 +639,48 @@ export async function apercu(env: EnvSite, l: Lecture, decisions: Record<string,
   const existantes = await categoriesExistantes(env);
   // « a_ranger » : la catégorie de départ a été retirée, la fiche arriverait sans catégorie (story 18.15).
   for (const { p } of plan.nouveaux) { const c = categorieDe(p, existantes) ?? 'a_ranger'; categories[c] = (categories[c] ?? 0) + 1; }
+  const { ecritures, bilan } = ecrituresDuPlan(plan, existantes);
   return {
     empreinte: l.empreinte, fichier: l.nom, lignes: l.lignesLues,
     personnes: plan.nouveaux.length + plan.complements.length + plan.doublons.length, fusionnees_dans_le_fichier: plan.fusionnees,
     nouveaux: plan.nouveaux.length, complements: plan.complements.length, complements_verifies: plan.complements.filter((x) => x.cible.verifie_le).length,
     doublons_probables: plan.doublons.length, rejetes: plan.rejets.length, raisons: compterRaisons(plan.rejets), categories,
     // Les accords que l'import poserait : nouveaux et compléments (revue de code 18.9, l'aperçu oubliait les compléments).
-    accords: plan.nouveaux.filter(({ p }) => accordNouveau(p)).length
-      + plan.complements.filter((x) => ecritureComplement(x, plan.secondaires.get(x.cible.id) ?? [], existantes).accord).length,
+    accords: ecritures.filter((e) => e.accord).length,
     telephones_invalides: l.telephonesInvalides, emails_invalides: l.emailsInvalides, champs_ignores: l.ignores,
-    doublons: plan.doublons, rejets: plan.rejets,
+    doublons: plan.doublons, rejets: plan.rejets, bilan,
   };
 }
 
 // ——— Import réel ———
 
-/** Ce qu'un contact existant reçoit, selon AD-26 et FR-8, FR-9 : jamais rien d'autre qu'une source et des coordonnées s'il est vérifié. */
-function ecritureComplement(x: { p: Personne; cible: Existant }, secondairesActuels: string[], existantes: ReadonlySet<string>): EcritureImport {
+/** Ce que l'import ajoute ou change, en nombres seulement (aperçu et résultat, story 18.17) : jamais une donnée. */
+export interface Bilan {
+  rencontres_ajoutees: number; rencontres_completees: number; notes_ajoutees: number; notes_deja_presentes: number;
+  projets_poses: number; vendeur_vers_vendeur_acheteur: number;
+}
+const bilanVide = (): Bilan => ({ rencontres_ajoutees: 0, rencontres_completees: 0, notes_ajoutees: 0, notes_deja_presentes: 0, projets_poses: 0, vendeur_vers_vendeur_acheteur: 0 });
+
+/** Un texte de note comparé sans accents, majuscules ni espaces en trop. */
+const normaliserNote = (t: string) => sansAccents(t).toLowerCase().replace(/\s+/g, ' ').trim();
+/** Ce commentaire est-il déjà sur la fiche ? Un long fragment se retrouve dans le texte d'une note, un court (« oui ») doit en être un morceau entier. */
+const dejaNote = (fragment: string, notes: string[]) => {
+  const k = normaliserNote(fragment);
+  return notes.some((d) => (k.length >= 8 ? d.includes(k) : d.split(/ · | : /).some((m) => m === k)));
+};
+
+/**
+ * Ce qu'un contact existant reçoit, selon AD-26, FR-8, FR-9 et la story 18.17. Un contact vérifié ne reçoit qu'une source, des
+ * coordonnées, la rencontre du fichier, les commentaires qu'il n'a pas déjà en note et le passage de vendeur à vendeur et
+ * acheteur ; un contact non vérifié reçoit en plus nom, ville, entreprise vides, catégorie proposée et projet. Un contact déjà
+ * importé de la même source (`reprise`) ne change jamais de catégorie : Anne a pu la changer.
+ */
+function ecritureComplement(x: { p: Personne; cible: Existant }, secondairesActuels: string[], existantes: ReadonlySet<string>,
+  sourcesActuelles: SourceExistante[], notesActuelles: string[]): { e: EcritureImport; b: Bilan } {
   const { p, cible: c } = x;
+  const b = bilanVide();
   const verifie = !!c.verifie_le;
+  const reprise = sourcesDe(p).some((s) => sourcesActuelles.some((a) => a.source === s));
   const connues = new Set([c.telephone, c.email, ...secondairesActuels].filter(Boolean));
   const tels = p.telephones.filter((v) => !connues.has(v)), mails = p.emails.filter((v) => !connues.has(v)), profils = p.profils.filter((v) => !connues.has(v));
   const avant: Record<string, string | null> = {}, apres: Record<string, string | null> = {};
@@ -583,20 +693,45 @@ function ecritureComplement(x: { p: Personne; cible: Existant }, secondairesActu
     if (!c.entreprise) poser('entreprise', p.entreprise);
     // FR-9 : la règle la plus haute l'emporte, entre la catégorie proposée d'avant et celle de ce fichier.
     const proposee = categorieDe(p, existantes);
-    if (proposee && (!c.categorie_id || (rang(c.categorie_id) < 99 && rang(proposee) < rang(c.categorie_id)))) poser('categorie_id', proposee);
-    if (c.projet === 'a_qualifier' && c.etape === null && p.projet && p.projet !== 'a_qualifier') poser('projet', p.projet);
+    if (!reprise && proposee && (!c.categorie_id || (rang(c.categorie_id) < 99 && rang(proposee) < rang(c.categorie_id)))) poser('categorie_id', proposee);
+    if (c.projet === 'a_qualifier' && c.etape === null && p.projet && p.projet !== 'a_qualifier') { poser('projet', p.projet); b.projets_poses++; }
   }
+  // Story 18.17 : le fichier dit achat et vente, la fiche est encore « vendeur » sans suivi : elle devient « vendeur et acheteur ».
+  if (c.projet === 'vendeur' && c.etape === null && p.projet === 'vendeur_acheteur') { poser('projet', 'vendeur_acheteur'); b.vendeur_vers_vendeur_acheteur++; }
+
+  // Les rencontres : une ligne identique (source, lieu, mois) existe déjà, sinon on complète une ligne de la même source qui
+  // n'a pas encore ce lieu ou ce mois, sinon on en ajoute une. Les sources sans rencontre n'ajoutent une ligne que si absentes.
+  const lignesSource: LigneSourceImport[] = [], sourcesCompletees: SourceCompletee[] = [], prises = new Set<number>();
+  for (const r of p.rencontres) {
+    if (sourcesActuelles.some((s) => s.source === r.source && s.lieu === r.lieu && s.mois === r.mois)) continue;
+    const cible = sourcesActuelles.find((s) => !prises.has(s.id) && s.source === r.source && (s.lieu === null || s.lieu === r.lieu) && (s.mois === null || s.mois === r.mois));
+    if (cible) {
+      prises.add(cible.id);
+      sourcesCompletees.push({ id: cible.id, lieu: cible.lieu ?? r.lieu, mois: cible.mois ?? r.mois, avant_lieu: cible.lieu, avant_mois: cible.mois });
+      b.rencontres_completees++;
+    } else { lignesSource.push({ source: r.source, lieu: r.lieu, mois: r.mois }); b.rencontres_ajoutees++; }
+  }
+  for (const src of sourcesDe(p)) {
+    if (!p.rencontres.some((r) => r.source === src) && !sourcesActuelles.some((s) => s.source === src)) lignesSource.push({ source: src, lieu: null, mois: null });
+  }
+
+  // Les commentaires du fichier, même pour une fiche vérifiée, sauf ceux que la fiche porte déjà (une seule note pour les nouveaux).
+  const dejaLa = notesActuelles.map(normaliserNote);
+  const nouvelles = p.notes.filter((n) => !dejaNote(n, dejaLa));
+  b.notes_deja_presentes += p.notes.length - nouvelles.length;
+  if (nouvelles.length) b.notes_ajoutees++;
+
   const emailFinal = apres.email ?? c.email;
-  return {
+  return { b, e: {
     id: c.id, nouveau: false, ligne: p.ref, avant, apres,
     garde: { prenom: c.prenom, nom: c.nom, telephone: c.telephone, email: c.email, commune: c.commune, entreprise: c.entreprise, categorie_id: c.categorie_id,
       projet: c.projet, temperature: c.temperature, verifie_le: c.verifie_le, ecarte_le: c.ecarte_le, etape: c.etape, email_accord_le: c.email_accord_le },
     secondaires: [...tels.map((v) => ({ type: 'telephone', valeur: v })), ...mails.map((v) => ({ type: 'email', valeur: v })), ...profils.map((v) => ({ type: 'profil', valeur: v, reseau: reseauDe(v) }))],
-    sources: sourcesDe(p),
-    notes: verifie ? [] : p.notes.map((n) => noteAvecDetail(n, p)),
+    sources: sourcesDe(p), lignesSource, sourcesCompletees,
+    notes: nouvelles.length ? [noteAvecDetail(nouvelles.join(' · '), p)] : [],
     accord: !verifie && !!emailFinal && p.emailsAccord.includes(emailFinal) && !c.email_accord_le && !c.email_desinscrit_le,
     detail: [...p.details].join(' · ') || null,
-  };
+  } };
 }
 
 const reseauDe = (url: string) => /linkedin\./.test(url) ? 'linkedin' : /instagram\./.test(url) ? 'instagram' : /facebook\.|fb\./.test(url) ? 'facebook' : null;
@@ -617,7 +752,11 @@ function ecritureNouveau(p: Personne, existantes: ReadonlySet<string>): Ecriture
     id: ulid(), nouveau: true, ligne: p.ref, avant: {}, apres, garde: {},
     secondaires: [...p.telephones.slice(1).map((v) => ({ type: 'telephone', valeur: v })), ...emails.slice(1).map((v) => ({ type: 'email', valeur: v })),
       ...p.profils.map((v) => ({ type: 'profil', valeur: v, reseau: reseauDe(v) }))],
-    sources: sourcesDe(p), notes: p.notes.map((n) => noteAvecDetail(n, p)), accord: accordNouveau(p),
+    sources: sourcesDe(p), lignesSource: sourcesDe(p).flatMap((src) => {
+      const r = p.rencontres.filter((x) => x.source === src);
+      return r.length ? r.map((x) => ({ source: src, lieu: x.lieu, mois: x.mois })) : [{ source: src, lieu: null, mois: null }];
+    }), sourcesCompletees: [],
+    notes: p.notes.length ? [noteAvecDetail(p.notes.join(' · '), p)] : [], accord: accordNouveau(p),
     detail: [...p.details].join(' · ') || null,
   };
 }
@@ -625,6 +764,8 @@ function ecritureNouveau(p: Personne, existantes: ReadonlySet<string>): Ecriture
 export interface ResultatImport {
   lot: string; nouveaux: number; complements: number; doublons_laisses: number; rejetes: number; raisons: Partial<Record<Raison, number>>;
   ignores_entre_temps: number; accords: number;
+  /** Story 18.17 : rencontres, notes et projets prévus par le plan (moins ceux des contacts non écrits, `ignores_entre_temps`). */
+  bilan: Bilan;
 }
 
 /**
@@ -645,10 +786,7 @@ export async function importer(env: EnvSite, l: Lecture, empreinte: unknown, dec
   await env.DB.prepare('INSERT INTO import_lot (id, fichier, empreinte, source, a, par, doublons, rejetes) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)')
     .bind(lot, l.nom, l.empreinte, source, maintenant, par, plan.doublons.length, plan.rejets.length).run();
   const existantes = await categoriesExistantes(env);
-  const ecritures = [
-    ...plan.nouveaux.map(({ p }) => ecritureNouveau(p, existantes)),
-    ...plan.complements.map((x) => ecritureComplement(x, plan.secondaires.get(x.cible.id) ?? [], existantes)),
-  ];
+  const { ecritures, bilan } = ecrituresDuPlan(plan, existantes);
   let nouveaux = 0, complements = 0, accords = 0;
   for (let i = 0; i < ecritures.length; i += PAR_LOT_D1) {
     const r = await ecrireImport(env, lot, ecritures.slice(i, i + PAR_LOT_D1), maintenant, par);
@@ -658,7 +796,7 @@ export async function importer(env: EnvSite, l: Lecture, empreinte: unknown, dec
   journal('import_claude', { lot, lignes: l.lignesLues, nouveaux, complements, doublons: plan.doublons.length, rejetes: plan.rejets.length });
   return {
     lot, nouveaux, complements, doublons_laisses: plan.doublons.length, rejetes: plan.rejets.length, raisons: compterRaisons(plan.rejets),
-    ignores_entre_temps: ecritures.length - nouveaux - complements, accords,
+    ignores_entre_temps: ecritures.length - nouveaux - complements, accords, bilan,
   };
 }
 

@@ -259,6 +259,7 @@ development_status:
   18-14-colonnes-reordonnables-et-logo: done   # 2026-11-02, tickets n° 233 et 235
   18-15-un-clic-et-retrait-des-categories: done   # 2026-11-03, tickets n° 238 et 240
   18-16-projet-sponsoring: review   # 2026-11-04, ticket n° 243
+  18-17-rencontre-et-reprise-edb: review   # 2026-11-04, retour d'Anne sur l'import EDB
   epic-18-retrospective: optional   # non faite : décision JB « Finir économe » du 2026-11-02
 
   epic-19: backlog   # les séances et les campagnes (livraison 2) ; en pause (décision JB 2026-11-02)
