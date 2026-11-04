@@ -239,7 +239,7 @@ development_status:
   16-2-video-espace-acheteur: done
   epic-16-retrospective: optional
   # Nouvelle version de l'espace d'Anne (refonte BMAD du 2026-11-01) : _bmad-output/planning-artifacts/epics-espace-anne-2026-11-01.md
-  epic-18: done   # le carnet de contacts (livraison 1), 18.15 fusionnée le 2026-11-03
+  epic-18: in-progress   # le carnet de contacts (livraison 1), 18.15 fusionnée le 2026-11-03, 18.16 en revue
   18-1-leedflow-ne-range-un-appel-que-sur-un-contact-suivi: done   # 2026-11-01, PR #225
   18-2-nouvelle-base-du-carnet-migration-0018: done   # 2026-11-02, PR #226
   18-3-demandes-du-site-et-droits-sur-le-nouveau-carnet: done   # 2026-11-02, PR #226, avec les corrections de la revue 18.2
@@ -258,6 +258,7 @@ development_status:
   18-13-rattacher-complete-la-fiche: done   # 2026-11-02, ticket n° 232
   18-14-colonnes-reordonnables-et-logo: done   # 2026-11-02, tickets n° 233 et 235
   18-15-un-clic-et-retrait-des-categories: done   # 2026-11-03, tickets n° 238 et 240
+  18-16-projet-sponsoring: review   # 2026-11-04, ticket n° 243
   epic-18-retrospective: optional   # non faite : décision JB « Finir économe » du 2026-11-02
 
   epic-19: backlog   # les séances et les campagnes (livraison 2) ; en pause (décision JB 2026-11-02)

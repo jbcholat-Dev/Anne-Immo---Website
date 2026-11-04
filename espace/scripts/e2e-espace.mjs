@@ -2261,6 +2261,18 @@ try {
     ];
     constat(refus.every(([, r]) => r.status === 400 && r.d?.ok === false) && nEv() === e0 && etatG() === s0,
       `18.6 : /api/carnet refuse toute valeur hors vocabulaire (400 : ${refus.map(([n, r]) => `${n} ${r.status}`).join(', ')}), rien n'est écrit`);
+    // Story 18.16 (ticket 243) : le projet « sponsoring » a une température froid, tiède ou chaud, jamais « en vente ».
+    {
+      const g3Avant = JSON.stringify(un(G3));
+      const x = await api({ ids: [G3], changements: { projet: 'sponsoring', temperature: 'chaud' } });
+      const y = await api({ ids: [G3], changements: { temperature: 'en_vente' } });
+      const z = await api({ ids: [G3], changements: { temperature: 'recherche_active' } });
+      const apresSp = un(G3);
+      const r = await api({ annuler: x.d?.lot });
+      constat(x.status === 200 && x.d.touches === 1 && apresSp.projet === 'sponsoring' && apresSp.temperature === 'chaud' && y.status === 200 && y.d.ignores === 1 && z.d.ignores === 1
+        && r.d?.rendus === 1 && JSON.stringify(un(G3)) === g3Avant,
+        `18.16 : projet « sponsoring » + chaud accepté par /api/carnet, « en vente » et « en recherche active » refusés (ignorés), annulation rend le contact (${x.status}, ${y.d?.ignores}, ${z.d?.ignores})`);
+    }
     const inconnu = await api({ annuler: '01ARZ3NDEKTSV4RRFFQ69G5FAV' });
     const acces = [
       ['sans jeton', await appeler(`${E}/api/carnet`, { method: 'POST', redirect: 'manual', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [G1], changements: { ecarte: true } }) })],

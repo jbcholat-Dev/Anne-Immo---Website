@@ -61,18 +61,22 @@ export const COLONNES: { cle: CleColonne; libelle: string; masquable: boolean }[
 
 export const PROJETS: Record<string, string> = {
   a_qualifier: 'À qualifier', vendeur: 'Vendeur', acheteur: 'Acheteur', vendeur_acheteur: 'Vendeur et acheteur', ambassadeur: 'Ambassadeur',
+  sponsoring: 'Sponsoring', // story 18.16 (ticket n° 243) : futurs collaborateurs qu'Anne recrute dans le réseau eXp
 };
 export const TEMPERATURES: Record<string, string> = {
   froid: 'Froid', tiede: 'Tiède', chaud: 'Chaud', en_vente: 'Déjà en vente', recherche_active: 'En recherche active', avec_anne: 'Avec Anne', termine: 'Terminé',
 };
 /** Les températures qu'Anne ou JB choisissent ; « avec Anne » et « terminé » sont posées par le suivi des ventes (AD-24). */
 export const TEMPERATURES_CHOIX = ['froid', 'tiede', 'chaud', 'en_vente', 'recherche_active'] as const;
-/** Les projets qui ont une température (FR-4) ; à qualifier et ambassadeur n'en ont pas. */
-export const PROJETS_AVEC_TEMPERATURE: readonly string[] = ['vendeur', 'acheteur', 'vendeur_acheteur'];
-/** Une température est-elle permise pour ce projet (CHECK de la migration 0018, AD-24) ? null l'est toujours. */
+/** Les projets du suivi des ventes (pipeline vendeur et acheteur) : leur température « avec Anne » ou « terminé » suit l'étape (AD-24). */
+export const PROJETS_DU_SUIVI: readonly string[] = ['vendeur', 'acheteur', 'vendeur_acheteur'];
+/** Les projets qui ont une température (FR-4) ; à qualifier et ambassadeur n'en ont pas. Sponsoring en a une (froid, tiède, chaud), sans suivi des ventes (18.16). */
+export const PROJETS_AVEC_TEMPERATURE: readonly string[] = [...PROJETS_DU_SUIVI, 'sponsoring'];
+/** Une température est-elle permise pour ce projet (CHECK des migrations 0018 et 0020, AD-24) ? null l'est toujours. */
 export function temperaturePermise(t: string | null, projet: string): boolean {
   if (t === null) return true;
   if (!PROJETS_AVEC_TEMPERATURE.includes(projet)) return false;
+  if (projet === 'sponsoring') return t === 'froid' || t === 'tiede' || t === 'chaud'; // ni en vente, ni recherche active, ni suivi des ventes
   if (t === 'en_vente') return projet === 'vendeur' || projet === 'vendeur_acheteur';
   if (t === 'recherche_active') return projet === 'acheteur';
   return true;

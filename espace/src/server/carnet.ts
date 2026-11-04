@@ -25,7 +25,7 @@ import { empreinteOpposition } from '@site/server/opposition';
 import { e164, emailValide } from '@site/server/schema';
 import { journal } from '@site/server/journal';
 import { accordImport, noterAccord, retraitAccordImport, retraitAccordNote } from './accord';
-import { PROJETS, PROJETS_AVEC_TEMPERATURE, TEMPERATURES_CHOIX, suiviEnCours, temperaturePermise } from './tableau-colonnes';
+import { PROJETS, PROJETS_DU_SUIVI, TEMPERATURES_CHOIX, suiviEnCours, temperaturePermise } from './tableau-colonnes';
 
 /** Au plus 2 000 contacts par lot (le classement de départ se fait par vues de quelques centaines). */
 export const MAX_LOT = 2000;
@@ -98,7 +98,7 @@ export function appliquer(e: Etat, ch: Changements, maintenant: string): { apres
   if (ch.projet !== undefined) {
     a.projet = ch.projet;
     if (!temperaturePermise(a.temperature, a.projet)) a.temperature = null;
-    if (suiviEnCours(e.etape) && PROJETS_AVEC_TEMPERATURE.includes(a.projet) && a.temperature === null) {
+    if (suiviEnCours(e.etape) && PROJETS_DU_SUIVI.includes(a.projet) && a.temperature === null) {
       a.temperature = e.etape === 'vendu' || e.etape === 'acte_signe' ? 'termine' : 'avec_anne';
     }
   }
