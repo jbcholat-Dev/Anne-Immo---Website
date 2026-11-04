@@ -1367,8 +1367,8 @@ try {
       const bR = apR?.bilan ?? {};
       constat(r.status === 200 && apR.lignes === 7 && apR.nouveaux === 1 && apR.complements === 5 && apR.fusionnees_dans_le_fichier === 1
         && bR.rencontres_ajoutees === 3 && bR.rencontres_completees === 3 && bR.notes_ajoutees === 2 && bR.notes_deja_presentes === 1 && bR.projets_poses === 1 && bR.vendeur_vers_vendeur_acheteur === 1
-        && !apR.champs_ignores.some((c) => /EDB|DATE|RELANCE|Projet HA/i.test(c)),
-        `18.17 : aperçu du fichier avec Projet HA, DATE, EDB et RELANCE 1 : 1 nouveau, 5 compléments, 3 rencontres ajoutées, 3 complétées, 2 notes ajoutées, 1 déjà présente, 1 projet posé, 1 vendeur → vendeur et acheteur (${JSON.stringify(bR)})`);
+        && !apR.champs_ignores.some((c) => /EDB|DATE|RELANCE|Projet HA/i.test(c.replace('(EDB)', ''))),
+        `18.17 : aperçu du fichier avec Projet HA, DATE, EDB et RELANCE 1 : 1 nouveau, 5 compléments, 3 rencontres ajoutées, 3 complétées, 2 notes ajoutées, 1 déjà présente, 1 projet posé, 1 vendeur → vendeur et acheteur (${JSON.stringify(bR)} ; lignes ${apR?.lignes}, nouveaux ${apR?.nouveaux}, compléments ${apR?.complements}, fusionnées ${apR?.fusionnees_dans_le_fichier}, ignorés ${JSON.stringify(apR?.champs_ignores)})`);
       constat(JSON.stringify(compte()) === JSON.stringify(avantR) && !JSON.stringify(apR).includes(raw(1)) && !JSON.stringify(apR).includes('Rencontre1'),
         '18.17 : l\'aperçu n\'écrit rien et ne montre aucune donnée personnelle (seulement des nombres)');
       r = await IMP({ action: 'importer', fichier: fR(), empreinte: apR.empreinte });
@@ -1926,7 +1926,8 @@ try {
         'revue 18.4 : « helene » trouve « Hélène » (accents ignorés) ; des chiffres cherchent aussi dans le texte (entreprise, nom)');
       await chercher('');
       // Tri par ville, puis à l'envers : vides en fin de liste dans les deux sens.
-      const villes = () => o.locator('[data-lignes] tr[data-contact]').evaluateAll((t) => t.map((x) => x.querySelector(':scope > td:nth-child(8)')?.textContent ?? '')); // 1re colonne : la case (18.6)
+      // Story 18.17 : la colonne de la ville se repère par son en-tête (une colonne « Rencontre » a été ajoutée avant elle).
+      const villes = () => o.locator('[data-lignes] tr[data-contact]').evaluateAll((t) => { const i = [...document.querySelectorAll('thead th')].findIndex((h) => h.getAttribute('data-cle') === 'ville') + 1; return t.map((x) => x.querySelector(`:scope > td:nth-child(${i})`)?.textContent ?? ''); });
       const ordonne = (l, sens) => { const v = l.filter((x) => x !== '—'); const c = new Intl.Collator('fr', { sensitivity: 'base', numeric: true }); return v.every((x, i) => i === 0 || sens * c.compare(v[i - 1], x) <= 0) && l.slice(v.length).every((x) => x === '—'); };
       // Story 18.5 : les lignes s'écrivent par paquets ; attendre la dernière (`data-complet`).
       const complet = () => o.waitForSelector('[data-lignes][data-complet]', { state: 'attached' });
@@ -2386,6 +2387,14 @@ try {
     ];
     constat(refus.every(([, r]) => r.status === 400 && r.d?.ok === false) && nEv() === e0 && etatG() === s0,
       `18.6 : /api/carnet refuse toute valeur hors vocabulaire (400 : ${refus.map(([n, r]) => `${n} ${r.status}`).join(', ')}), rien n'est écrit`);
+    const inconnu = await api({ annuler: '01ARZ3NDEKTSV4RRFFQ69G5FAV' });
+    const acces = [
+      ['sans jeton', await appeler(`${E}/api/carnet`, { method: 'POST', redirect: 'manual', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [G1], changements: { ecarte: true } }) })],
+      ['jeton de Claude', await api({ ids: [G1], changements: { ecarte: true } }, { jeton: JETON_CLAUDE })],
+      ['jeton de Claude (annulation)', await api({ annuler: a.d.lot }, { jeton: JETON_CLAUDE })],
+    ];
+    constat(inconnu.status === 404 && acces.every(([, r]) => r.status === 403) && nEv() === e0 && etatG() === s0,
+      `18.6 : lot inconnu 404 ; /api/carnet réservé à Anne et JB (${acces.map(([n, r]) => `${n} ${r.status}`).join(', ')})`);
     // Story 18.16 (ticket 243) : le projet « sponsoring » a une température froid, tiède ou chaud, jamais « en vente ».
     {
       const g3Avant = JSON.stringify(un(G3));
@@ -2398,14 +2407,6 @@ try {
         && r.d?.rendus === 1 && JSON.stringify(un(G3)) === g3Avant,
         `18.16 : projet « sponsoring » + chaud accepté par /api/carnet, « en vente » et « en recherche active » refusés (ignorés), annulation rend le contact (${x.status}, ${y.d?.ignores}, ${z.d?.ignores})`);
     }
-    const inconnu = await api({ annuler: '01ARZ3NDEKTSV4RRFFQ69G5FAV' });
-    const acces = [
-      ['sans jeton', await appeler(`${E}/api/carnet`, { method: 'POST', redirect: 'manual', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [G1], changements: { ecarte: true } }) })],
-      ['jeton de Claude', await api({ ids: [G1], changements: { ecarte: true } }, { jeton: JETON_CLAUDE })],
-      ['jeton de Claude (annulation)', await api({ annuler: a.d.lot }, { jeton: JETON_CLAUDE })],
-    ];
-    constat(inconnu.status === 404 && acces.every(([, r]) => r.status === 403) && nEv() === e0 && etatG() === s0,
-      `18.6 : lot inconnu 404 ; /api/carnet réservé à Anne et JB (${acces.map(([n, r]) => `${n} ${r.status}`).join(', ')})`);
   }
   // La page : cases, Maj + clic, barre d'actions groupées, annulation, une seule ligne, écarter et faire revenir.
   for (const largeur of [1440, 1280]) {

@@ -20,6 +20,8 @@ Anne recrute de futurs collaborateurs dans le réseau eXp (le « sponsoring »).
 - `cd espace && npm run build` : réussi. `npm run check` : 0 erreur, 0 avertissement (5 indications). `node --check espace/scripts/e2e-espace.mjs` : ok. L'essai complet de l'espace n'est pas relancé ici (JB le lance).
 - `site/src` non touché : pas de construction du site.
 
+- 2026-11-04 (fil), essai complet `node scripts/e2e-espace.mjs` sur la base locale, branche avec 18.16 et 18.17 : trois passages. Deux essais adaptés (le tri par ville repère sa colonne par l'en-tête, la colonne « Rencontre » ayant décalé les colonnes ; l'aperçu 18.17 ne confond plus le nom de l'onglet EDB avec un titre ignoré ; le constat 18.16 déplacé après le constat « lot inconnu », qui compte les événements). Dernier passage : 583 réussis ; échecs restants sans lien avec ces stories : les intermittents connus (synthèse dans l'heure, test A/B du bilan et de Claude, 18.11), « En retard » et « boîtage par secteur » (passage lancé vers minuit, heure de Paris, à la bascule de date), et une fois « jeton de Claude (suppression) 500 » sur /api/vues, sans aucune erreur 500 dans le journal du serveur (réussi aux deux passages précédents).
+
 ## Ce qui reste
 
 - Appliquer la migration 0020 sur la base distante au moment de la mise en ligne de l'espace (jamais fait depuis cette session) ; sans elle, choisir « Sponsoring » est refusé par la base.

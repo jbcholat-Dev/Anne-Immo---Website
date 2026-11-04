@@ -26,6 +26,8 @@ Le fichier d'Anne a été importé le 2026-11-02 (story 18.10). Il manquait l'es
 - `champDe` et `moisDe` essayés sur les titres réels de l'onglet EDB et de Feuil1 (Projet HA, HA, PA, PV, DATE, EDB, RELANCE 1 et 2, R1, R2, Contact tél…) et sur des dates (série Excel 45627 → 2024-12, jj/mm/aaaa, mm/aaaa, aaaa-mm).
 - L'essai complet de l'espace n'est pas relancé ici (JB le lance). `site/src` non touché : pas de construction du site.
 
+- 2026-11-04 (fil), essai complet `node scripts/e2e-espace.mjs` sur la base locale, branche avec 18.16 et 18.17 : trois passages. Deux essais adaptés (le tri par ville repère sa colonne par l'en-tête, la colonne « Rencontre » ayant décalé les colonnes ; l'aperçu 18.17 ne confond plus le nom de l'onglet EDB avec un titre ignoré ; le constat 18.16 déplacé après le constat « lot inconnu », qui compte les événements). Dernier passage : 583 réussis ; échecs restants sans lien avec ces stories : les intermittents connus (synthèse dans l'heure, test A/B du bilan et de Claude, 18.11), « En retard » et « boîtage par secteur » (passage lancé vers minuit, heure de Paris, à la bascule de date), et une fois « jeton de Claude (suppression) 500 » sur /api/vues, sans aucune erreur 500 dans le journal du serveur (réussi aux deux passages précédents).
+
 ## Ce qui reste
 
 - Appliquer la migration 0021 sur la base distante avant la mise en ligne de l'espace.
