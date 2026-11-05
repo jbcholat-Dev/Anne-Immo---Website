@@ -1,6 +1,6 @@
 # Story 18.17 : la rencontre (lieu, mois) filtrable et la reprise de l'onglet EDB
 
-Epic 18 (le carnet de contacts). Statut : review. Date : 2026-11-04. Origine : retour d'Anne sur l'import EDB, décisions de JB du 2026-11-04.
+Epic 18 (le carnet de contacts). Statut : done (fusionnée le 2026-11-05, PR #244, commit f65c50c). Date : 2026-11-04. Origine : retour d'Anne sur l'import EDB, décisions de JB du 2026-11-04.
 
 ## Objectif
 
@@ -31,10 +31,9 @@ Le fichier d'Anne a été importé le 2026-11-02 (story 18.10). Il manquait l'es
 ## Ce qui reste
 
 - Migration 0021 : appliquée sur la vraie base le 2026-11-04 à 21:11 UTC par la construction Cloudflare de la branche ; réussie, vérifiée par un aperçu d’import (531 contacts EDB retrouvés, 0 nouveau).
-- Lancer `node scripts/e2e-espace.mjs` (constats 18.17).
-- Après validation de JB, repasser l'onglet EDB du vrai fichier (aperçu, puis import avec l'empreinte).
-- Revue de code (story 9.8) dans une session neuve avant fusion : la PR touche `espace/src/`.
-- Doutes : la colonne sans titre de Feuil1 (commentaires) n'est pas lue ; l'export RGPD de `site/src/server/rights.ts` ne détaille pas lieu et mois ; le passage vendeur → vendeur et acheteur s'applique aussi à une fiche vérifiée sans étape (lecture littérale de la décision).
+- Fait le 2026-11-05 : essai complet passé (voir plus haut), revue de code faite (section ci-dessous), PR #244 fusionnée (commit f65c50c). Onglet EDB repassé dans la vraie base avec l'accord de JB : lot 01M6NF9S4BYJF4PXC3RFFWMZ26, 531 compléments, 0 nouveau, 531 rencontres complétées, 1 ajoutée, 44 projets posés, 12 vendeurs passés vendeur et acheteur, 7 notes ajoutées, 0 fiche changée entre-temps. Aucun contact écarté ni vérifié parmi les 531 (travail d'Anne non touché). Fichier source supprimé du conteneur.
+- Reste : 3 doublons probables laissés de côté, à trancher dans l'espace si besoin.
+- Doutes : la colonne sans titre de Feuil1 (commentaires) n'est pas lue ; le passage vendeur → vendeur et acheteur s'applique aussi à une fiche vérifiée sans étape (lecture littérale de la décision).
 
 ## Revue de code
 

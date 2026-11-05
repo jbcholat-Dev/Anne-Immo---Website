@@ -1,6 +1,6 @@
 # Story 18.16 : le projet « Sponsoring » (ticket 243)
 
-Epic 18 (le carnet de contacts). Statut : review. Date : 2026-11-04.
+Epic 18 (le carnet de contacts). Statut : done (fusionnée le 2026-11-05, PR #244, commit f65c50c). Date : 2026-11-04.
 
 ## Objectif
 
