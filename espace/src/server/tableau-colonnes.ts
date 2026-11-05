@@ -43,9 +43,25 @@ export interface LigneTableau {
   a_rappeler_le: string | null;
   /** Inscrit au programme ambassadeurs (marque à part du projet, glossaire du PRD). */
   ambassadeur_inscrit: boolean;
+  /** Etat ambassadeur (story 18.18) : null si le contact n'est ni de projet « ambassadeur » ni inscrit. */
+  ambassadeur_etat: EtatAmbassadeur | null;
+  /** Un modèle lui a déjà été envoyé (sert à recalculer l'état quand le projet change dans le tableau). */
+  ambassadeur_contacte: boolean;
 }
 
-export type CleColonne = 'nom' | 'entreprise' | 'categorie' | 'projet' | 'temperature' | 'sources' | 'rencontre' | 'ville' | 'telephone' | 'email' | 'profil' | 'dernier' | 'accord' | 'verifie';
+/**
+ * Inscrit : `ambassadeur_inscrit_le` renseigné (inscription faite sur le site). Contacté : pas inscrit, mais un modèle lui a
+ * été envoyé (e-mail groupé ou « Envoyé » de la fiche : un événement porte `envoi_modele`). À contacter : ni l'un ni l'autre.
+ */
+export type EtatAmbassadeur = 'inscrit' | 'contacte' | 'a_contacter';
+export const ETATS_AMBASSADEUR: Record<EtatAmbassadeur, string> = { inscrit: 'Inscrit', contacte: 'Contacté', a_contacter: 'À contacter' };
+export function etatAmbassadeur(projet: string, inscrit: boolean, modeleEnvoye: boolean): EtatAmbassadeur | null {
+  if (inscrit) return 'inscrit';
+  if (projet !== 'ambassadeur') return null;
+  return modeleEnvoye ? 'contacte' : 'a_contacter';
+}
+
+export type CleColonne = 'nom' | 'entreprise' | 'categorie' | 'projet' | 'temperature' | 'sources' | 'rencontre' | 'ville' | 'telephone' | 'email' | 'profil' | 'dernier' | 'accord' | 'ambassadeur' | 'verifie';
 
 /** Les colonnes de FR-1, dans l'ordre affiché. Le nom ne se masque pas. */
 export const COLONNES: { cle: CleColonne; libelle: string; masquable: boolean }[] = [
@@ -53,6 +69,7 @@ export const COLONNES: { cle: CleColonne; libelle: string; masquable: boolean }[
   { cle: 'entreprise', libelle: 'Entreprise', masquable: true },
   { cle: 'categorie', libelle: 'Catégorie', masquable: true },
   { cle: 'projet', libelle: 'Projet', masquable: true },
+  { cle: 'ambassadeur', libelle: 'Ambassadeur', masquable: true },
   { cle: 'temperature', libelle: 'Température', masquable: true },
   { cle: 'sources', libelle: 'Source', masquable: true },
   { cle: 'rencontre', libelle: 'Rencontre', masquable: true },
@@ -178,6 +195,9 @@ export function preparerRecherche(q: string): (x: IndexLigne) => boolean {
 /** Ordre de tri des valeurs fermées (dans l'ordre des listes ci-dessus). */
 const ORDRE_PROJET = Object.keys(PROJETS), ORDRE_TEMP = Object.keys(TEMPERATURES), ORDRE_ACCORD: Accord[] = ['accord', 'client', 'sans_accord', 'desinscrit'];
 
+/** Tri de la colonne Ambassadeur (JB) : À contacter, Contacté, Inscrit ; les contacts sans état, en fin de liste. */
+const ORDRE_AMBASSADEUR: EtatAmbassadeur[] = ['a_contacter', 'contacte', 'inscrit'];
+
 /** La valeur de tri d'une ligne pour une colonne ; null = vide, toujours en fin de liste. */
 export function valeurTri(l: LigneTableau, cle: CleColonne): string | number | null {
   switch (cle) {
@@ -194,6 +214,7 @@ export function valeurTri(l: LigneTableau, cle: CleColonne): string | number | n
     case 'profil': return l.profils[0]?.reseau ?? (l.profils.length ? 'profil' : null);
     case 'dernier': return l.dernier_le;
     case 'accord': return l.accord === 'sans_email' ? null : ORDRE_ACCORD.indexOf(l.accord);
+    case 'ambassadeur': return l.ambassadeur_etat ? ORDRE_AMBASSADEUR.indexOf(l.ambassadeur_etat) : null;
     case 'verifie': return l.ecarte ? 2 : l.verifie ? 1 : 0;
   }
 }

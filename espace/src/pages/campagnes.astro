@@ -10,8 +10,9 @@ import { enProduction } from '@site/server/env';
 import { emailValide } from '@site/server/schema';
 import {
   apercuHtml, compteurs, creerCampagne, envoyerEssai, ETAPES_PAR_DEFAUT, expediteur, enregistrerBrouillon, lancer, lienBouton,
-  lienValable, lireCampagne, lireFiltres, listerCampagnes, nonEnvoyes, selectionner, supprimerBrouillon, type Contenu, type Filtres,
+  lienValable, lireCampagne, lireFiltres, listerCampagnes, modeDe, nonEnvoyes, selectionner, supprimerBrouillon, type Contenu, type Filtres,
 } from '../server/campagnes';
+import { listerVues } from '../server/vues-base';
 import { pourSite as env } from '../server/env';
 import { champ, ULID } from '../server/formulaires';
 import { echeance } from '../server/pipeline';
@@ -25,7 +26,7 @@ let campagne = ULID.test(id) ? await lireCampagne(env, id) : null;
 if (id && !campagne) return new Response('Campagne inconnue', { status: 404 });
 
 /** Le brouillon tel que saisi, ou le message d'erreur. */
-function contenuDuFormulaire(f: FormData): Contenu | string {
+function contenuDuFormulaire(f: FormData, avant: Filtres): Contenu | string {
   const nom = champ(f, 'nom', 120);
   if (!nom) return 'Donnez un nom à la campagne (pour vous seulement).';
   const bouton_libelle = champ(f, 'bouton_libelle', 60) || null;
@@ -33,8 +34,13 @@ function contenuDuFormulaire(f: FormData): Contenu | string {
   if (bouton_lien && !lienValable(bouton_lien)) return 'Le lien du bouton doit être une page du site (« /diagnostic ») ou une adresse complète en https.';
   if (bouton_libelle && !bouton_lien) return 'Indiquez où mène le bouton, ou effacez son texte.';
   const etapes = f.getAll('etapes').filter((e): e is Etape => typeof e === 'string' && e in LIBELLES_ETAPES);
+  // Story 18.18 : « À qui » = les anciens filtres, une vue enregistrée, ou les contacts cochés dans le tableau (gardés tels quels).
+  const mode = champ(f, 'mode');
+  const vue = mode === 'vue' ? champ(f, 'vue') : '';
+  if (mode === 'vue' && !vue) return 'Choisissez la vue enregistrée qui désigne les destinataires.';
   const filtres: Filtres = lireFiltres(JSON.stringify({
     parcours: champ(f, 'parcours'), etapes, commune: champ(f, 'commune', 80), canal: champ(f, 'canal'),
+    ids: mode === 'liste' ? avant.ids : [], vue, verso: f.has('verso'), modele: f.has('modele'),
   }));
   return { nom, objet: champ(f, 'objet', 150), texte: champ(f, 'texte', 10000), bouton_libelle: bouton_lien ? bouton_libelle : null, bouton_lien, filtres };
 }
@@ -58,7 +64,7 @@ if (Astro.request.method === 'POST') {
       else return Astro.redirect(`/campagnes?id=${campagne.id}&m=lancee`, 303);
     }
   } else if (campagne && (quoi === 'enregistrer' || quoi === 'essai')) {
-    const c = contenuDuFormulaire(f);
+    const c = contenuDuFormulaire(f, lireFiltres(campagne.filtres));
     if (typeof c === 'string') erreur = c;
     else if (!(await enregistrerBrouillon(env, campagne.id, c, compte))) erreur = 'Cette campagne est déjà partie : elle ne peut plus être modifiée.';
     else if (quoi === 'enregistrer') return Astro.redirect(`/campagnes?id=${campagne.id}&m=enregistree`, 303);
@@ -88,6 +94,8 @@ const liste = campagne ? [] : await listerCampagnes(env);
 const brouillon = campagne?.statut === 'brouillon';
 const filtres = campagne ? lireFiltres(campagne.filtres) : null;
 const selection = brouillon && filtres ? await selectionner(env, filtres) : null;
+const vues = brouillon ? await listerVues(env) : [];
+const mode = filtres ? modeDe(filtres) : 'filtres';
 const etat = campagne && !brouillon ? await compteurs(env, campagne.id) : null;
 const rates = campagne && !brouillon ? await nonEnvoyes(env, campagne.id) : [];
 const sansExpediteur = expediteur(env) === null;
@@ -152,7 +160,24 @@ const quand = (iso: string | null) => (iso ? echeance(iso.slice(0, 10)) : '');
         </div>
         {lien && <p class="e-muet" style="margin:0" data-lien-bouton>Lien envoyé : {lien}</p>}
 
+        <label class="k-case"><input type="checkbox" name="verso" checked={filtres.verso} /> Joindre le verso de la carte ambassadeur dans l'e-mail</label>
+        <label class="k-case"><input type="checkbox" name="modele" checked={filtres.modele} /> Garder comme modèle (proposé par « Envoyer un modèle » dans Contacts et par « Écrire » sur les fiches)</label>
+        <p class="e-muet large" style="margin:0">[Formule] est remplacé par « Bonjour Prénom » (proches, anciens clients et autres catégories) ou « Bonjour Prénom Nom » (relations lointaines) : écrivez-le seul sur la première ligne, suivi d'une virgule.</p>
+
         <h2>À qui</h2>
+        <fieldset class="k-etapes" data-mode>
+          <legend>Les destinataires sont</legend>
+          <label class="k-case"><input type="radio" name="mode" value="filtres" checked={mode === 'filtres'} /> Choisis par les filtres ci-dessous</label>
+          <label class="k-case"><input type="radio" name="mode" value="vue" checked={mode === 'vue'} /> Ceux d'une vue enregistrée</label>
+          {filtres.ids.length > 0 && <label class="k-case"><input type="radio" name="mode" value="liste" checked={mode === 'liste'} data-liste={filtres.ids.length} /> Les {filtres.ids.length} contacts cochés dans le tableau</label>}
+        </fieldset>
+        <label class="e-champ">Vue enregistrée
+          <select name="vue">
+            <option value="">Choisir…</option>
+            {vues.map((v) => <option value={v.id} selected={filtres.vue === v.id}>{v.nom}{v.invalide ? ' (à corriger)' : ''}</option>)}
+          </select>
+        </label>
+        <p class="e-muet" style="margin:0">Quel que soit le choix, seuls les contacts avec accord ou anciens clients reçoivent la campagne ; les autres sont écartés avec la raison, ci-dessous.</p>
         <div class="e-champs">
           <label class="e-champ">Parcours
             <select name="parcours">
@@ -184,6 +209,7 @@ const quand = (iso: string | null) => (iso ? echeance(iso.slice(0, 10)) : '');
 
       <section class="e-carte" data-selection>
         <h2>Qui la recevra</h2>
+        {selection.probleme && <p class="e-message" role="alert" data-probleme>{selection.probleme}</p>}
         <p style="margin:0" data-recoivent={selection.recoivent.length}><strong>{selection.recoivent.length} personne(s) la recevront.</strong>{selection.ecartes.length > 0 && <> {selection.ecartes.map((e) => `${e.personnes.length} écartée(s) : ${e.raison.toLowerCase()}`).join(' ; ')}.</>}</p>
         <p class="e-muet" style="margin:0">Selon le dernier enregistrement des filtres.</p>
         {selection.recoivent.length > 0 && (

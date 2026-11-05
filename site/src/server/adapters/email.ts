@@ -22,6 +22,8 @@ export interface Email {
   html?: string;
   repondreA?: string;
   test: boolean;
+  /** Images jointes en plus du logo, appelées par `cid:<id>` dans le HTML (story 18.18) ; `base64` sans l'en-tête `data:`. */
+  images?: { id: string; nom: string; base64: string; type: string }[];
   /** En-têtes ajoutés (désabonnement en un clic de la séquence, story 10.5). */
   entetes?: Record<string, string>;
   /** Clé qui empêche Resend d'envoyer deux fois le même e-mail (même lead, même canal) pendant 24 h. */
@@ -41,7 +43,8 @@ export async function envoyerEmail(env: EnvSite, e: Email): Promise<ResultatEnvo
     text: e.test ? `(E-mail de test : en production, il serait parti vers ${e.a}.)\n\n${e.texte}` : e.texte,
     ...(e.html ? {
       html: e.test ? e.html.replace(/(<body[^>]*>)/, `$1<p style="margin:0;padding:8px;background:#E9E0D2;font:13px Arial,sans-serif;color:#26201A;text-align:center;">E-mail de test : en production, il serait parti vers ${e.a}.</p>`) : e.html,
-      attachments: [{ filename: 'logo.png', content: LOGO_BASE64, content_type: 'image/png', content_id: CID_LOGO }],
+      attachments: [{ filename: 'logo.png', content: LOGO_BASE64, content_type: 'image/png', content_id: CID_LOGO },
+        ...(e.images ?? []).map((i) => ({ filename: i.nom, content: i.base64, content_type: i.type, content_id: i.id }))],
     } : {}),
     ...(e.repondreA ? { reply_to: e.repondreA } : {}),
     ...(e.entetes ? { headers: e.entetes } : {}),
