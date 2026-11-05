@@ -5,7 +5,7 @@
 // envoi, jamais à l'ouverture de la page (AD-11).
 
 type Champ = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-type Reponse = { ok: boolean; url?: string; error?: { code: string; message?: string; champ?: string } };
+type Reponse = { ok: boolean; url?: string; deja?: boolean; error?: { code: string; message?: string; champ?: string } };
 
 export function telephoneValide(v: string) {
   const chiffres = v.replace(/\D/g, '');
@@ -156,6 +156,8 @@ function brancher(form: HTMLFormElement) {
     if (res.ok) {
       form.dataset.submission = ulid();
       form.dispatchEvent(new CustomEvent('avt:envoye', { detail: donnees, bubbles: true }));
+      // La réponse du serveur, pour la page qui adapte sa confirmation (ambassadeurs : « déjà inscrit », story 17.2).
+      form.dispatchEvent(new CustomEvent('avt:reponse', { detail: res, bubbles: true }));
       if (confirmation) {
         confirmation.querySelectorAll<HTMLElement>('[data-champ]').forEach((el) => { el.textContent = String(donnees[el.dataset.champ!] ?? ''); });
         // Guide (story 10.5) : le lien signé renvoyé par le serveur, à ouvrir tout de suite.

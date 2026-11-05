@@ -10,7 +10,7 @@ const DIST=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../dist/cl
 const T={'.html':'text/html','.css':'text/css','.js':'text/javascript','.svg':'image/svg+xml','.webp':'image/webp','.jpg':'image/jpeg','.woff2':'font/woff2','.mp4':'video/mp4','.webm':'video/webm'};
 const s=createServer((q,r)=>{let p=decodeURIComponent(new URL(q.url,'http://x').pathname);let f=path.join(DIST,p);if(fs.existsSync(f+'.html'))f+='.html';else if(fs.existsSync(f)&&fs.statSync(f).isDirectory())f=path.join(f,'index.html');if(!fs.existsSync(f)){f=path.join(DIST,'404.html');r.statusCode=404}r.setHeader('Content-Type',T[path.extname(f)]??'application/octet-stream');fs.createReadStream(f).pipe(r)});
 await new Promise(o=>s.listen(4398,o));
-const pages=['/','/en','/a-propos','/vendre','/acheter','/contact','/guide','/realisation','/en/track-record','/realisation/appartement-cascade-2024','/diagnostic','/diagnostic/questions','/diagnostic/resultats','/mentions-legales','/confidentialite','/cookies','/404','/partenaires','/actualites'];
+const pages=['/','/en','/a-propos','/vendre','/acheter','/contact','/guide','/realisation','/en/track-record','/realisation/appartement-cascade-2024','/diagnostic','/diagnostic/questions','/diagnostic/resultats','/mentions-legales','/confidentialite','/cookies','/404','/partenaires','/actualites','/ambassadeurs','/ambassadeurs/reglement'];
 const stories=fs.readdirSync(DIST+'/realisation').filter(f=>f.endsWith('.html')).map(f=>'/realisation/'+f.replace('.html',''));
 const articles=fs.existsSync(DIST+'/actualites')?fs.readdirSync(DIST+'/actualites').filter(f=>f.endsWith('.html')&&f!=='index.html').map(f=>'/actualites/'+f.replace('.html','')):[]; // story 8.21
 stories.push(...articles);

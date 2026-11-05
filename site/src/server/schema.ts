@@ -2,7 +2,9 @@
 // le navigateur l'a déjà fait (une vérification faite seulement dans la page se contourne).
 // Renvoie soit le lead prêt à écrire, soit le premier champ refusé.
 
-export type SourceFormulaire = 'contact' | 'estimation' | 'guide' | 'diagnostic' | 'rdv';
+export type SourceFormulaire = 'contact' | 'estimation' | 'guide' | 'diagnostic' | 'rdv' | 'ambassadeur';
+/** Version du règlement du programme ambassadeurs publiée sur /ambassadeurs/reglement (story 17.2), gardée avec l'inscription. */
+export const REGLEMENT_AMBASSADEURS = 'v1';
 export const TYPES_BIEN = ['Maison', 'Appartement', 'Chalet', 'Terrain', 'Autre'] as const;
 const CLES_UTM = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'] as const;
 
@@ -23,6 +25,8 @@ export interface LeadFormulaire {
   utm: string | null;
   /** Début du rendez-vous Cal.com (UTC), pour un lead `rdv` seulement. */
   rdv_start?: string | null;
+  /** Ambassadeur (story 17.2) : version du règlement accepté (l'heure d'acceptation est celle de l'écriture). */
+  reglement_version?: string | null;
 }
 
 export type Verdict = { ok: true; lead: LeadFormulaire } | { ok: false; champ: string };
@@ -43,9 +47,13 @@ export function e164(v: string, indicatif = '+33'): string | null {
 }
 const INDICATIFS = ['+33', '+41'];
 
-function utm(v: unknown): string | null {
-  if (!v || typeof v !== 'object') return null;
+function utm(v: unknown, origine?: unknown): string | null {
   const garde: Record<string, string> = {};
+  // Origine imprimée (story 17.2) : `?c=carte`, `?c=depliant`, `?c=flyer`… des QR codes des ambassadeurs, gardée comme
+  // utm_source quand la page n'en a pas d'autre (règle des origines de campagne, story 5.4).
+  const c = texte(origine).toLowerCase();
+  if (/^[a-z0-9_-]{1,40}$/.test(c)) garde.utm_source = c;
+  if (!v || typeof v !== 'object') return Object.keys(garde).length ? JSON.stringify(garde) : null;
   for (const cle of CLES_UTM) {
     const valeur = texte((v as Record<string, unknown>)[cle]).slice(0, 200);
     if (valeur) garde[cle] = valeur;
@@ -75,7 +83,10 @@ export function valider(source: SourceFormulaire, d: Record<string, unknown>): V
   if (telSaisi && !telephone) return refus('telephone');
   if (!telephone && source !== 'guide') return refus('telephone');
 
-  if (!coche(d.privacy)) return refus('privacy');
+  // Ambassadeur (story 17.2) : une seule case obligatoire, qui porte le règlement et la politique de confidentialité.
+  if (source === 'ambassadeur') {
+    if (!coche(d.reglement)) return refus('reglement');
+  } else if (!coche(d.privacy)) return refus('privacy');
 
   let projet: LeadFormulaire['projet'] = null;
   let message: string | null = texte(d.message) || null;
@@ -94,10 +105,16 @@ export function valider(source: SourceFormulaire, d: Record<string, unknown>): V
     if (!(TYPES_BIEN as readonly string[]).includes(type_bien)) return refus('type_bien');
   } else if (source === 'guide') {
     message = null; // le guide n'a pas de message
+  } else if (source === 'ambassadeur') {
+    message = null; // pas de message : la recommandation passe par un message direct à Anne, jamais par le site
   } // diagnostic : le message est la réponse libre à la question 15, facultative
 
   return {
     ok: true,
-    lead: { source, lang, prenom, nom, email, telephone, projet, message, commune_bien, type_bien, newsletter: coche(d.newsletter), utm: utm(d.utm) },
+    lead: {
+      source, lang, prenom, nom, email, telephone, projet, message, commune_bien, type_bien, newsletter: coche(d.newsletter),
+      utm: utm(d.utm, source === 'ambassadeur' ? d.c : undefined),
+      ...(source === 'ambassadeur' ? { reglement_version: REGLEMENT_AMBASSADEURS } : {}),
+    },
   };
 }

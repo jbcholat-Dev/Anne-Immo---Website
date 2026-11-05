@@ -63,8 +63,7 @@ interface LeadARattacher {
   type_bien: string | null;
   is_test: number;
   contact_id: string | null;
-  // Inscription sur /ambassadeurs (epic 17, autre fil) : la version et la date du règlement accepté. Ces colonnes ne sont
-  // pas encore dans `lead` : la demande est lue avec `SELECT *` et ces champs valent undefined tant qu'ils manquent.
+  // Inscription sur /ambassadeurs (story 17.2, migration 0022) : la version et la date du règlement accepté.
   reglement_version?: string | null;
   reglement_accepte_le?: string | null;
 }

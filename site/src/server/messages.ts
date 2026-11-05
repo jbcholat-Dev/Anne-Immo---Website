@@ -2,6 +2,7 @@
 import bareme from '../content/diagnostic/bareme.json';
 import contenu from '../content/diagnostic/questions.json';
 import type { Scores } from './diagnostic';
+import { telephone } from '../config/site';
 import { enHtml, enTexte } from './email-html';
 import { sujetEtape, type EtapeSequence } from './sequence';
 
@@ -19,7 +20,7 @@ export interface LigneLead {
   id: string;
   created_at: string;
   lang: 'fr' | 'en';
-  source: 'contact' | 'estimation' | 'guide' | 'diagnostic' | 'rdv';
+  source: 'contact' | 'estimation' | 'guide' | 'diagnostic' | 'rdv' | 'ambassadeur';
   email: string;
   prenom: string | null;
   nom: string | null;
@@ -33,6 +34,8 @@ export interface LigneLead {
   scores?: string | null;
   orientation?: 'A' | 'B' | null;
   rdv_start?: string | null;
+  reglement_version?: string | null;
+  reglement_accepte_le?: string | null;
   utm: string | null;
   is_test: number;
 }
@@ -66,6 +69,7 @@ const ORIGINE: Record<string, string> = {
   guide: 'demande du guide « Les 10 erreurs fatales »',
   diagnostic: 'diagnostic vendeur',
   rdv: 'rendez-vous réservé dans Cal.com',
+  ambassadeur: 'inscription au programme ambassadeurs',
 };
 
 /** « jeudi 9 octobre à 11:00 » (heure de Paris). */
@@ -107,12 +111,15 @@ function reponsesLisibles(l: LigneLead): string[] {
   return reponsesDiagnostic(l.answers).map((r) => `${r.question} ${r.reponse}`);
 }
 
+/** Le numéro d'Anne tel qu'on le lit (« 06 71 99 17 54 »), pour l'e-mail de bienvenue des ambassadeurs. */
+const TELEPHONE_ANNE = telephone.affiche;
 const SIGNATURE = 'Anne VIAL-TISSOT\nConseillère en immobilier · Chablais, Léman · réseau eXp France\nwww.annevialtissot.fr';
 const SIGNATURE_EN = 'Anne VIAL-TISSOT\nReal estate advisor · Chablais, Lake Geneva · eXp France network\nwww.annevialtissot.fr';
 
 export function notifierAnne(l: LigneLead): Message {
   const nomComplet = [l.prenom, l.nom].filter(Boolean).join(' ');
-  const type = l.source === 'contact' && l.projet === 'achat' ? 'Acquéreur' : l.source === 'rdv' ? 'À préciser pendant l\'appel' : 'Vendeur';
+  const type = l.source === 'contact' && l.projet === 'achat' ? 'Acquéreur' : l.source === 'rdv' ? 'À préciser pendant l\'appel'
+    : l.source === 'ambassadeur' ? 'Ambassadeur (pas un projet immobilier)' : 'Vendeur';
   const detail = l.source === 'contact' ? ` (${l.projet === 'achat' ? 'achat' : 'vente'})` : '';
   const campagne = l.utm ? Object.values(JSON.parse(l.utm) as Record<string, string>).join(' · ') : '';
   const diag = resultat(l);
@@ -126,9 +133,13 @@ export function notifierAnne(l: LigneLead): Message {
     ] : l.source === 'rdv' && l.rdv_start ? [
       `Rendez-vous « Premier échange » le ${rendezVous(l.rdv_start)} (heure de Paris), par téléphone.`,
       ...(l.message ? [`Note du prospect : ${l.message}`] : []),
+    ] : l.source === 'ambassadeur' ? [
+      `Règlement du programme accepté le ${dateParis(l.reglement_accepte_le ?? l.created_at)} (version ${l.reglement_version ?? '?'}).`,
     ] : [l.message ?? '']),
     `Demande du ${dateParis(l.created_at)} via www.annevialtissot.fr (${ORIGINE[l.source] ?? l.source}${detail}).`,
-    `Séquence d'e-mails : ${l.newsletter_opt_in_at ? 'acceptée' : 'non demandée'}.`,
+    l.source === 'ambassadeur'
+      ? `Nouvelles d'Anne par e-mail : ${l.newsletter_opt_in_at ? 'acceptées' : 'non demandées'}.`
+      : `Séquence d'e-mails : ${l.newsletter_opt_in_at ? 'acceptée' : 'non demandée'}.`,
     l.lang === 'en' ? 'Demande faite depuis la version anglaise du site.' : '',
     campagne ? `Campagne : ${campagne}.` : '',
   ].filter(Boolean).join('\n');
@@ -153,9 +164,21 @@ export function notifierAnne(l: LigneLead): Message {
         : 'À faire : un appel quand vous le jugez utile ; ses résultats lui proposent le guide (sortie B).'
       : l.source === 'guide'
       ? 'Le site lui a envoyé le guide par e-mail (lien valable 7 jours). À faire : un appel quand vous le jugez utile.'
+      : l.source === 'ambassadeur'
+      ? 'Le site lui a envoyé le lien du règlement. À faire : un message pour le remercier de son inscription. La fiche est dans votre espace, avec la marque ambassadeur.'
       : l.source === 'estimation'
         ? 'À faire : rappeler sous un jour ouvré (le site le lui a promis).'
         : 'À faire : répondre sous un jour ouvré (le site le lui a promis).';
+  if (l.source === 'ambassadeur') return {
+    objet: `Nouvel ambassadeur · ${nomComplet}`,
+    texte: [
+      `Nouvel ambassadeur inscrit sur le site le ${dateParis(l.created_at)} (heure de Paris).`,
+      aFaire, '',
+      ...blocs.filter(([titre, v]) => v && !['Commune du bien', 'Type de bien'].includes(titre)).map(([titre, v]) => `${titre}\n${v}\n`),
+      `Répondre à cet e-mail écrit directement à ${nomComplet || l.email}.`,
+      `Référence de l'inscription : ${l.id}`,
+    ].join('\n'),
+  };
   const texte = [
     `Nouvelle demande reçue par le site le ${dateParis(l.created_at)} (heure de Paris) : ${ORIGINE[l.source] ?? l.source}${detail}.`,
     aFaire,
@@ -185,6 +208,19 @@ export function confirmerProspect(l: LigneLead, lienGuide: string | null = null,
   const tel = telephoneLisible(l.telephone);
   const diag = resultat(l);
   const sequence = l.newsletter_opt_in_at && etapes ? ['', PIED_SEQUENCE(etapes)] : [];
+  if (l.source === 'ambassadeur') {
+    // Story 17.2 : la bienvenue, le chemin de la recommandation (un message direct à Anne, jamais le site) et le règlement.
+    const le = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', dateStyle: 'long' }).format(new Date(l.reglement_accepte_le ?? l.created_at));
+    return auProspect('Bienvenue parmi mes ambassadeurs', [
+      bonjour(l), '',
+      'Merci de rejoindre mon programme ambassadeurs.', '',
+      "Le principe est simple. Un proche pense à vendre sa maison, son appartement ou un terrain ? Présentez-le-moi, avec son accord. Si la vente se fait avec moi, je vous remercie : **jusqu'à 1 500 €**. Vous choisissez la forme : un virement ou une carte cadeau.", '',
+      `Pour me le présenter, répondez à cet e-mail ou envoyez-moi un message au ${TELEPHONE_ANNE} : son prénom, son numéro, et deux mots sur son projet. Je fais le reste.`, '',
+      `Vous avez accepté la version ${saisie(l.reglement_version ?? '1').replace(/^v/, '')} du règlement le ${le}. Vous pouvez le relire à tout moment :`, '',
+      '[Lire le règlement](https://annevialtissot.fr/ambassadeurs/reglement)',
+      ...(l.newsletter_opt_in_at ? ['', "Vous recevrez aussi de mes nouvelles par e-mail, quelques fois par an. Chaque e-mail contient un lien pour arrêter."] : []),
+    ].join('\n'), 'fr', "Merci de rejoindre mon programme ambassadeurs : voici comment me présenter un proche.");
+  }
   if (l.source === 'guide') {
     return auProspect('Votre guide « Les 10 erreurs fatales des vendeurs particuliers »', [
       bonjour(l), '',
