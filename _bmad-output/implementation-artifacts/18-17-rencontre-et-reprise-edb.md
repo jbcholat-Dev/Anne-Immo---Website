@@ -30,7 +30,7 @@ Le fichier d'Anne a été importé le 2026-11-02 (story 18.10). Il manquait l'es
 
 ## Ce qui reste
 
-- Appliquer la migration 0021 sur la base distante avant la mise en ligne de l'espace.
+- Migration 0021 : appliquée sur la vraie base le 2026-11-04 à 21:11 UTC par la construction Cloudflare de la branche ; réussie, vérifiée par un aperçu d’import (531 contacts EDB retrouvés, 0 nouveau).
 - Lancer `node scripts/e2e-espace.mjs` (constats 18.17).
 - Après validation de JB, repasser l'onglet EDB du vrai fichier (aperçu, puis import avec l'empreinte).
 - Revue de code (story 9.8) dans une session neuve avant fusion : la PR touche `espace/src/`.

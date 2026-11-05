@@ -24,7 +24,7 @@ Anne recrute de futurs collaborateurs dans le réseau eXp (le « sponsoring »).
 
 ## Ce qui reste
 
-- Appliquer la migration 0020 sur la base distante au moment de la mise en ligne de l'espace (jamais fait depuis cette session) ; sans elle, choisir « Sponsoring » est refusé par la base.
+- Migration 0020 : appliquée sur la vraie base le 2026-11-04 à 20:57 UTC par la construction Cloudflare de la branche (les migrations partent à chaque push, quelle que soit la branche) ; réussie, vérifiée par les journaux de construction et un aperçu d’import en lecture seule.
 - Lancer `node scripts/e2e-espace.mjs` (constat 18.16).
 - Revue de code (story 9.8) dans une session neuve avant fusion : la PR touche `espace/src/`.
 - Doute noté : un contact « Sponsoring » que l'on ajoute au suivi des ventes à la main perd sa température (comme un projet sans température), car « avec Anne » n'est posée que pour vendeur et acheteur ; à confirmer avec JB si le cas se présente.
