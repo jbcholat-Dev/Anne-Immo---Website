@@ -532,7 +532,7 @@ try {
     const avant = sql(`SELECT count(*) AS n, group_concat(coalesce(mots, 'x') || coalesce(type_bien, '-') || coalesce(r1, '-') || coalesce(r2, '-') || fait_le) AS h FROM passage_boitage`)[0];
     const bon = { fait_le: J.milieu, ville: `${P} Refus` };
     const cas = [
-      ['type de bien inconnu', { ajouter: { ...bon, type_bien: 'villa' } }], ['type de bien en majuscule', { ajouter: { ...bon, type_bien: 'Maison' } }],
+      ['type de bien inconnu', { ajouter: { ...bon, type_bien: 'villa' } }], ['type de bien = propriété héritée d\'un objet (toString)', { ajouter: { ...bon, type_bien: 'toString' } }], ['type de bien en majuscule', { ajouter: { ...bon, type_bien: 'Maison' } }],
       ['date mal formée (jj/mm/aaaa)', { ajouter: { ...bon, fait_le: '05/11/2026' } }], ['date impossible', { ajouter: { ...bon, fait_le: '2026-02-31' } }],
       ['date dans le futur', { ajouter: { ...bon, fait_le: J.futur } }], ['date absente', { ajouter: { ville: `${P} Refus` } }], ['ville absente', { ajouter: { fait_le: J.milieu } }],
       ['ville vide', { ajouter: { ...bon, ville: '   ' } }], ['ville trop longue', { ajouter: { ...bon, ville: 'V'.repeat(81) } }],

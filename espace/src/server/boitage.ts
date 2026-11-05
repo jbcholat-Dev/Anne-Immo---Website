@@ -66,7 +66,7 @@ export function verifierBoitage(d: Record<string, unknown>, complet: boolean): P
     sortie[k] = texte(k, max) ?? null;
   }
   if (d.type_bien !== undefined) {
-    if (!vide(d.type_bien) && !(typeof d.type_bien === 'string' && d.type_bien in TYPES_BIEN)) return 'Le type de bien est « maison » ou « appartement ».';
+    if (!vide(d.type_bien) && !(typeof d.type_bien === 'string' && Object.hasOwn(TYPES_BIEN, d.type_bien))) return 'Le type de bien est « maison » ou « appartement ».';
     sortie.type_bien = vide(d.type_bien) ? null : d.type_bien as TypeBien;
   }
   if (d.flyers !== undefined) {

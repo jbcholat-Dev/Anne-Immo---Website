@@ -43,11 +43,24 @@ Elle veut donc, dans l'espace, une page où chaque passage est une ligne de ce t
 ## Ce qui reste
 
 - Anne : confirmer que R1 et R2 sont bien des dates de relance (sinon migration 0024).
-- Revue de code (`bmad-code-review`, session neuve, CLAUDE.md § 2, story 9.8) avant que la PR sorte du brouillon : à faire, la section ci-dessous reste à remplir.
+- Revue de code (`bmad-code-review`, session neuve, CLAUDE.md § 2, story 9.8) : faite le 2026-11-05, voir ci-dessous ; la PR peut sortir du brouillon.
 - Mise en ligne : la migration 0023 part sur la base de production à la construction de `main` ; elle est additive, sans risque pour les données existantes.
 - Pistes, non demandées : voir les relances R1 et R2 dues dans « Aujourd'hui », supprimer une ligne, filtrer ou trier le tableau, bilan par ville et par type de bien.
 - Note d'essai : une demande trop grosse refusée en 413 laisse parfois la connexion suivante en échec côté essai (500 de l'outil d'essai, pas du serveur) ; le constat 413 est donc joué après les autres.
 
 ## Revue de code
 
-À faire (session neuve).
+2026-11-05, session neuve (relecture adverse, `bmad-code-review`), commits relus 8d1297d, 6750518, f6f69d1 (`git diff origin/main..HEAD`). Aucun constat bloquant.
+
+- Migration 0023, ADD COLUMN avec CHECK : écarté, sûr. Les sept colonnes sont ajoutées vides (NULL) et chaque CHECK commence par `IS NULL OR …` : aucune ligne existante ne peut le violer, même si SQLite/D1 teste le CHECK sur les lignes présentes. SQLite et D1 acceptent ADD COLUMN avec CHECK ; l'index est neuf (pas de collision), la table n'est pas reconstruite (clés étrangères de `contact` intactes). Le trou de numérotation (pas de 0022) est sans effet : wrangler applique les migrations non appliquées par nom.
+- Le CHECK de format de date (`GLOB`) laisse passer « 2026-19-39 » : écarté, le contrôle réel est fait par l'application (`estDate`) ; le CHECK ne sert que de filet.
+- À corriger, corrigé (commit « Boîtage : refuse toString… ») : `type_bien: "toString"` (ou `constructor`, `valueOf`) passait la validation (`in` voit les propriétés héritées de l'objet), puis le CHECK de la base refusait l'écriture : erreur 500 au lieu de 400. Remplacé par `Object.hasOwn` ; un cas ajouté à l'essai (29 saisies refusées au lieu de 28).
+- À corriger, corrigé (même commit) : Entrée tenue ou double Entrée rapide dans la ligne d'ajout envoyait plusieurs requêtes avant la réponse (le bouton désactivé ne gardait pas le chemin clavier) : passages en double. Ajout d'un verrou d'envoi, et Entrée ignorée pendant une composition de saisie (`isComposing`) ou en répétition.
+- Injection sur /actions : écarté, rien à corriger. Aucun `innerHTML` ; tout passe par `textContent` / `value` / `setAttribute` ; les données de la page sont dans un `<script type="application/json">` avec `<` échappé en `\u003c`.
+- Droits, jeton de Claude, taille, JSON seulement, champs inconnus, deux gestes, dates réelles, ordre des relances : écarté, conformes (403 sans compte et au compte de Claude, 413 au-delà de 20 000, 400 sinon ; une requête inter-sites ne peut pas envoyer `application/json` sans demande préalable).
+- Régressions sur `passage_boitage` : écarté. Le bilan par secteur, « boîtage à refaire », le coût, « Aujourd'hui », la fiche et /ajouter n'utilisent que des colonnes existantes, listées par nom (aucun `SELECT *`, aucun `INSERT` sans noms de colonnes). Les longueurs de /ajouter (secteur 80, mots 6 chiffres) tiennent dans les limites du tableau (ville 80, flyers 999 999), donc un ancien passage reste modifiable.
+- Modifier un ancien passage écrit sa ville (= son secteur) et le même secteur : écarté, sans effet visible ; le coût n'est jamais touché.
+- Corriger la ville ou le quartier d'une ligne change son secteur, donc son regroupement dans le bilan : écarté, voulu (« ville · quartier » est la clé) ; deux écritures différentes d'un même lieu font deux secteurs, comme sur /ajouter.
+- Cliquer « Modifier » sur une ligne efface ce qui était tapé, mais pas encore ajouté, dans la ligne du haut : écarté, mineur (date, ville, quartier et type de bien sont gardés).
+- Le tableau s'arrête à 500 lignes (les plus récentes) sans le dire : écarté pour l'instant, plusieurs années de boîtage ; à revoir si Anne s'en approche.
+- Dates extrêmes (« 0001-01-01 ») acceptées : écarté, sans conséquence.

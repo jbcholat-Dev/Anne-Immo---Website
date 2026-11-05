@@ -241,11 +241,15 @@ const dates = (a: { debut: string; fin: string | null }) => (a.fin ? `du ${echea
       if (!ajout) { const annuler = bouton('Annuler', ''); annuler.dataset.btAnnuler = ''; actions.append(annuler); }
       tr.append(actions);
 
+      let enCoursEnvoi = false;
       const valider = async () => {
+        if (enCoursEnvoi) return; // Entrée tenue ou double clic : un seul passage ajouté
+        enCoursEnvoi = true;
         enregistrer.disabled = true;
         const champs = lire(tr);
         const d = await envoyer(ajout ? { ajouter: champs } : { id: ligne!.id, corriger: champs });
         enregistrer.disabled = false;
+        enCoursEnvoi = false;
         if (!d.ok || !d.lignes) { montrerErreur(d.error?.message ?? 'Le passage n\'a pas été enregistré.'); return; }
         lignes = d.lignes;
         enEdition = null;
@@ -256,7 +260,7 @@ const dates = (a: { debut: string; fin: string | null }) => (a.fin ? `du ${echea
       };
       enregistrer.addEventListener('click', valider);
       tr.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'BUTTON') { e.preventDefault(); void valider(); }
+        if (e.key === 'Enter' && !e.isComposing && !e.repeat && (e.target as HTMLElement).tagName !== 'BUTTON') { e.preventDefault(); void valider(); }
         if (e.key === 'Escape' && !ajout) { enEdition = null; montrerErreur(''); dessiner(); }
       });
       tr.querySelector<HTMLElement>('[data-bt-annuler]')?.addEventListener('click', () => { enEdition = null; montrerErreur(''); dessiner(); });
