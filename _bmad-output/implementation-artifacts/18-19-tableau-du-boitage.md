@@ -1,6 +1,6 @@
 # Story 18.19 : le tableau du boîtage
 
-Epic 18 (le carnet de contacts). Statut : review. Date : 2026-11-05. Origine : ticket GitHub n° 249 « [Retour espace] », envoyé par Anne depuis la page /actions de l'espace.
+Epic 18 (le carnet de contacts). Statut : done (PR #250 fusionnée le 2026-11-05, commit 016c4ed ; migration 0023 appliquée par la construction). Date : 2026-11-05. Origine : ticket GitHub n° 249 « [Retour espace] », envoyé par Anne depuis la page /actions de l'espace.
 
 ## Objectif
 
