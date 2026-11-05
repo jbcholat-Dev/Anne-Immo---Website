@@ -74,7 +74,8 @@ async function fichesLisibles(env: EnvSite, contacts: Record<string, unknown>[])
     const { results: taches } = await env.DB.prepare('SELECT a, texte, echeance, statut FROM leedflow_tache WHERE contact_id = ?1 ORDER BY a').bind(c.id).all<Record<string, unknown>>();
     // Carnet (story 18.3) : autres numéros, e-mails et profils, et d'où vient le contact.
     const { results: coordonnees } = await env.DB.prepare('SELECT type, reseau, valeur, ajoute_le FROM contact_coordonnee WHERE contact_id = ?1 ORDER BY id').bind(c.id).all<Record<string, unknown>>();
-    const { results: sources } = await env.DB.prepare('SELECT source, a FROM contact_source WHERE contact_id = ?1 ORDER BY a').bind(c.id).all<Record<string, unknown>>();
+    // Story 18.17 : la rencontre (lieu et mois) est une donnée personnelle de plus, elle fait partie de l'export.
+    const { results: sources } = await env.DB.prepare('SELECT source, a, lieu, mois FROM contact_source WHERE contact_id = ?1 ORDER BY a, id').bind(c.id).all<Record<string, unknown>>();
     const lisible: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(c)) {
       if (v === null || k === 'is_test') continue;
@@ -85,7 +86,7 @@ async function fichesLisibles(env: EnvSite, contacts: Record<string, unknown>[])
       historique: historique.map((h) => ({ ...h, donnees: typeof h.donnees === 'string' ? JSON.parse(h.donnees) : undefined })),
       ...(taches.length ? { taches_proposees_par_leedflow: taches } : {}),
       ...(coordonnees.length ? { autres_coordonnees: coordonnees.map((k) => Object.fromEntries(Object.entries(k).filter(([, v]) => v !== null))) } : {}),
-      ...(sources.length ? { sources } : {}),
+      ...(sources.length ? { sources: sources.map((s) => Object.fromEntries(Object.entries(s).filter(([, v]) => v !== null))) } : {}),
     });
   }
   return fiches;
