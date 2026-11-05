@@ -7,6 +7,9 @@ import { lireRecherche } from '@site/server/recherche';
 
 export type Accord = 'accord' | 'client' | 'sans_accord' | 'desinscrit' | 'sans_email';
 
+/** Une rencontre : la source (edb…), le lieu (« Publier ») et le mois (« AAAA-MM ») ; l'un des deux peut manquer (story 18.17). */
+export interface Rencontre { source: string; lieu: string | null; mois: string | null }
+
 /** Une ligne du tableau : un contact non effacé, avec ses coordonnées principales puis secondaires. */
 export interface LigneTableau {
   id: string;
@@ -18,6 +21,8 @@ export interface LigneTableau {
   projet: string;
   temperature: string | null;
   sources: string[];
+  /** Rencontres (animation EDB…) : lieu et mois de `contact_source` (story 18.17), la plus récente d'abord. */
+  rencontres: Rencontre[];
   ville: string | null;
   /** E.164, le principal d'abord. */
   telephones: string[];
@@ -40,7 +45,7 @@ export interface LigneTableau {
   ambassadeur_inscrit: boolean;
 }
 
-export type CleColonne = 'nom' | 'entreprise' | 'categorie' | 'projet' | 'temperature' | 'sources' | 'ville' | 'telephone' | 'email' | 'profil' | 'dernier' | 'accord' | 'verifie';
+export type CleColonne = 'nom' | 'entreprise' | 'categorie' | 'projet' | 'temperature' | 'sources' | 'rencontre' | 'ville' | 'telephone' | 'email' | 'profil' | 'dernier' | 'accord' | 'verifie';
 
 /** Les colonnes de FR-1, dans l'ordre affiché. Le nom ne se masque pas. */
 export const COLONNES: { cle: CleColonne; libelle: string; masquable: boolean }[] = [
@@ -50,6 +55,7 @@ export const COLONNES: { cle: CleColonne; libelle: string; masquable: boolean }[
   { cle: 'projet', libelle: 'Projet', masquable: true },
   { cle: 'temperature', libelle: 'Température', masquable: true },
   { cle: 'sources', libelle: 'Source', masquable: true },
+  { cle: 'rencontre', libelle: 'Rencontre', masquable: true },
   { cle: 'ville', libelle: 'Ville', masquable: true },
   { cle: 'telephone', libelle: 'Téléphone', masquable: true },
   { cle: 'email', libelle: 'E-mail', masquable: true },
@@ -61,18 +67,22 @@ export const COLONNES: { cle: CleColonne; libelle: string; masquable: boolean }[
 
 export const PROJETS: Record<string, string> = {
   a_qualifier: 'À qualifier', vendeur: 'Vendeur', acheteur: 'Acheteur', vendeur_acheteur: 'Vendeur et acheteur', ambassadeur: 'Ambassadeur',
+  sponsoring: 'Sponsoring', // story 18.16 (ticket n° 243) : futurs collaborateurs qu'Anne recrute dans le réseau eXp
 };
 export const TEMPERATURES: Record<string, string> = {
   froid: 'Froid', tiede: 'Tiède', chaud: 'Chaud', en_vente: 'Déjà en vente', recherche_active: 'En recherche active', avec_anne: 'Avec Anne', termine: 'Terminé',
 };
 /** Les températures qu'Anne ou JB choisissent ; « avec Anne » et « terminé » sont posées par le suivi des ventes (AD-24). */
 export const TEMPERATURES_CHOIX = ['froid', 'tiede', 'chaud', 'en_vente', 'recherche_active'] as const;
-/** Les projets qui ont une température (FR-4) ; à qualifier et ambassadeur n'en ont pas. */
-export const PROJETS_AVEC_TEMPERATURE: readonly string[] = ['vendeur', 'acheteur', 'vendeur_acheteur'];
-/** Une température est-elle permise pour ce projet (CHECK de la migration 0018, AD-24) ? null l'est toujours. */
+/** Les projets du suivi des ventes (pipeline vendeur et acheteur) : leur température « avec Anne » ou « terminé » suit l'étape (AD-24). */
+export const PROJETS_DU_SUIVI: readonly string[] = ['vendeur', 'acheteur', 'vendeur_acheteur'];
+/** Les projets qui ont une température (FR-4) ; à qualifier et ambassadeur n'en ont pas. Sponsoring en a une (froid, tiède, chaud), sans suivi des ventes (18.16). */
+export const PROJETS_AVEC_TEMPERATURE: readonly string[] = [...PROJETS_DU_SUIVI, 'sponsoring'];
+/** Une température est-elle permise pour ce projet (CHECK des migrations 0018 et 0020, AD-24) ? null l'est toujours. */
 export function temperaturePermise(t: string | null, projet: string): boolean {
   if (t === null) return true;
   if (!PROJETS_AVEC_TEMPERATURE.includes(projet)) return false;
+  if (projet === 'sponsoring') return t === 'froid' || t === 'tiede' || t === 'chaud'; // ni en vente, ni recherche active, ni suivi des ventes
   if (t === 'en_vente') return projet === 'vendeur' || projet === 'vendeur_acheteur';
   if (t === 'recherche_active') return projet === 'acheteur';
   return true;
@@ -91,6 +101,32 @@ export const SOURCES: Record<string, string> = {
   edb: 'Animations EDB', suivi: 'Fichier de suivi', saisie: 'Saisie à la main',
 };
 export const libelleSource = (s: string) => SOURCES[s] ?? s;
+
+const MOIS_COURTS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+/** « 2024-12 » → « déc. 2024 » ; une valeur qui n'est pas un mois est rendue telle quelle (story 18.17). */
+export function libelleMois(mois: string): string {
+  const m = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(mois);
+  return m ? `${MOIS_COURTS[Number(m[2]) - 1]} ${m[1]}` : mois;
+}
+/** Le nom court d'une source dans une rencontre : « EDB » plutôt que « Animations EDB ». */
+const SOURCE_COURTE: Record<string, string> = { edb: 'EDB' };
+/** « EDB Publier · déc. 2024 » (story 18.17) ; vide si la rencontre n'a ni lieu ni mois. */
+export function libelleRencontre(r: Rencontre): string {
+  const debut = [SOURCE_COURTE[r.source] ?? libelleSource(r.source), r.lieu].filter(Boolean).join(' ');
+  return r.lieu || r.mois ? `${debut}${r.mois ? ` · ${libelleMois(r.mois)}` : ''}` : '';
+}
+/** Plusieurs rencontres séparées par « + », la plus récente d'abord (l'ordre vient de `rencontresDe`). */
+export const libelleRencontres = (l: Rencontre[]) => l.map(libelleRencontre).filter(Boolean).join(' + ');
+/** Les rencontres d'un contact à partir de ses lignes de `contact_source` : sans doublon, la plus récente d'abord, celles sans mois en fin. */
+export function rencontresDe(lignes: { source: string; lieu: string | null; mois: string | null }[]): Rencontre[] {
+  const vues = new Set<string>(), sortie: Rencontre[] = [];
+  for (const x of lignes) {
+    if (!x.lieu && !x.mois) continue;
+    const cle = `${x.source}|${x.lieu ?? ''}|${x.mois ?? ''}`;
+    if (!vues.has(cle)) { vues.add(cle); sortie.push({ source: x.source, lieu: x.lieu, mois: x.mois }); }
+  }
+  return sortie.sort((a, b) => (a.mois === b.mois ? 0 : a.mois === null ? 1 : b.mois === null ? -1 : a.mois < b.mois ? 1 : -1));
+}
 
 /** Sans accents ni majuscules : « Hélène » se trouve en tapant « helene » (revue de code 18.4). */
 export const sansAccents = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -151,6 +187,7 @@ export function valeurTri(l: LigneTableau, cle: CleColonne): string | number | n
     case 'projet': return ORDRE_PROJET.indexOf(l.projet);
     case 'temperature': return l.temperature ? ORDRE_TEMP.indexOf(l.temperature) : null;
     case 'sources': return l.sources.length ? libelleSource(l.sources[0]) : null;
+    case 'rencontre': return l.rencontres[0]?.mois ?? null;
     case 'ville': return l.ville || null;
     case 'telephone': return l.telephones[0] ?? null;
     case 'email': return l.emails[0] ?? null;

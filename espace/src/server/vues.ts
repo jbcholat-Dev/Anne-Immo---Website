@@ -5,7 +5,7 @@
 // Une vue = { nom, filtre } ; un filtre = un objet JSON dont chaque clé est dans VOCABULAIRE. Les clés à plusieurs
 // valeurs (catégorie, projet…) gardent un contact qui a l'une d'elles ; des clés différentes se combinent (et).
 import {
-  ACCORDS, PROJETS, SOURCES, TEMPERATURES, libelleSource, sansAccents, type Accord, type IndexLigne, type LigneTableau,
+  ACCORDS, PROJETS, SOURCES, TEMPERATURES, libelleMois, libelleSource, sansAccents, type Accord, type IndexLigne, type LigneTableau,
 } from './tableau-colonnes';
 
 /** Un filtre de vue, dans le vocabulaire d'AD-27 (plus `ambassadeur`, migration 0018, et `a_rappeler`, FR-16). */
@@ -16,6 +16,9 @@ export interface Filtre {
   source?: string[];
   entreprise_contient?: string;
   ville?: string[];
+  /** Lieu de rencontre (« Publier ») et mois de rencontre (« AAAA-MM »), story 18.17 : avec les deux, une même rencontre doit avoir les deux. */
+  lieu?: string[];
+  mois?: string[];
   verifie?: 'oui' | 'non';
   /** Absent ou « non » : les écartés sont masqués (FR-1) ; « oui » : seulement les écartés. */
   ecarte?: 'oui' | 'non';
@@ -51,6 +54,8 @@ export const VOCABULAIRE: Record<CleFiltre, Regle> = {
   source: { liste: (v) => v in SOURCES },
   entreprise_contient: { texte: 80 },
   ville: { liste: (v) => v.trim().length > 0 && v.length <= 80 && !/[\u0000-\u001f]/.test(v) },
+  lieu: { liste: (v) => v.trim().length > 0 && v.length <= 80 && !/[\u0000-\u001f]/.test(v) },
+  mois: { liste: (v) => /^\d{4}-(0[1-9]|1[0-2])$/.test(v) },
   verifie: { choix: ['oui', 'non'] },
   ecarte: { choix: ['oui', 'non'] },
   accord: { liste: (v) => (ACCORDS_CLES as string[]).includes(v) },
@@ -121,6 +126,7 @@ export function preparerFiltre(f: Filtre, maintenant = new Date()): (l: LigneTab
   const ensemble = (l?: string[]) => (l?.length ? new Set(l) : null);
   const cat = ensemble(f.categorie_id), proj = ensemble(f.projet), temp = ensemble(f.temperature), src = ensemble(f.source);
   const acc = ensemble(f.accord), villes = f.ville?.length ? new Set(f.ville.map((v) => sansAccents(v).trim())) : null;
+  const lieux = f.lieu?.length ? new Set(f.lieu.map((v) => sansAccents(v).trim())) : null, mois = ensemble(f.mois);
   const ent = f.entreprise_contient ? sansAccents(f.entreprise_contient) : '';
   const ecartes = f.ecarte === 'oui';
   const jour = aujourdhuiParis(maintenant);
@@ -135,6 +141,8 @@ export function preparerFiltre(f: Filtre, maintenant = new Date()): (l: LigneTab
     if (src && !l.sources.some((s) => src.has(s))) return false;
     if (ent && !x.entreprise.includes(ent)) return false;
     if (villes && !villes.has(x.ville)) return false;
+    // Story 18.17 : lieu et mois de rencontre se lisent sur une même rencontre (« EDB Publier, décembre 2024 »).
+    if ((lieux || mois) && !l.rencontres.some((r) => (!lieux || (!!r.lieu && lieux.has(sansAccents(r.lieu).trim()))) && (!mois || (!!r.mois && mois.has(r.mois))))) return false;
     if (f.verifie && l.verifie !== (f.verifie === 'oui')) return false;
     if (acc && !acc.has(l.accord)) return false;
     if (f.dernier_contact === 'jamais' && l.dernier_le) return false;
@@ -151,7 +159,7 @@ export interface Pastille { cle: CleFiltre; valeur: string | null; libelle: stri
 
 export const LIBELLES_CLES: Record<CleFiltre, string> = {
   categorie_id: 'Catégorie', projet: 'Projet', temperature: 'Température', source: 'Source', entreprise_contient: 'Entreprise contient',
-  ville: 'Ville', verifie: 'État', ecarte: 'État', accord: 'Accord e-mail', dernier_contact: 'Dernier contact', pipeline: 'Suivi des ventes',
+  ville: 'Ville', lieu: 'Lieu de rencontre', mois: 'Mois de rencontre', verifie: 'État', ecarte: 'État', accord: 'Accord e-mail', dernier_contact: 'Dernier contact', pipeline: 'Suivi des ventes',
   recherche: 'Recherche', ambassadeur: 'Ambassadeurs', a_rappeler: 'À rappeler',
 };
 
@@ -167,6 +175,8 @@ export function pastilles(f: Filtre, categories: ReadonlyMap<string, string>): P
   liste('source', f.source, libelleSource);
   if (f.entreprise_contient) p.push({ cle: 'entreprise_contient', valeur: null, libelle: `Entreprise contient : ${f.entreprise_contient}` });
   liste('ville', f.ville, (v) => v);
+  liste('lieu', f.lieu, (v) => v);
+  liste('mois', f.mois, libelleMois);
   if (f.verifie) p.push({ cle: 'verifie', valeur: null, libelle: f.verifie === 'oui' ? 'Vérifiés' : 'À vérifier' });
   if (f.ecarte === 'oui') p.push({ cle: 'ecarte', valeur: null, libelle: 'Écartés' });
   liste('accord', f.accord, (v) => ACCORDS[v as Accord] || 'Sans e-mail');

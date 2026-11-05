@@ -1332,6 +1332,99 @@ try {
     const r404 = await IMP({ action: 'annuler', lot: sid() });
     constat(r.status === 409 && r404.status === 404, `18.9 : un lot déjà annulé (${r.status}) ou inconnu (${r404.status}) n'annule rien`);
 
+    // ——— Story 18.17 : la rencontre (lieu, mois) est une donnée filtrable ; repasser un fichier déjà importé ———
+    // Six contacts « déjà importés » (le premier import avait perdu Projet HA, DATE, EDB et RELANCE) : R1 non vérifié vendeur avec
+    // la note du premier import ; R2 vérifié ; R3 qui a déjà sa rencontre de décembre ; R4 sans ligne de source ; R6 vendeur.
+    {
+      const raw = (k) => `66${k}${NUM}`, e164 = (k) => `+33${raw(k)}`;
+      const [R1, R2, R3, R4, R6] = [sid(), sid(), sid(), sid(), sid()];
+      const ilYaR = '2026-11-02T08:00:00.000Z';
+      sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, telephone, categorie_id, projet, verifie_le) VALUES
+        ('${R1}', '${ilYaR}', '${ilYaR}', 'Pat1', 'Rencontre1${ESSAI}', '${e164(1)}', 'edb', 'vendeur', NULL),
+        ('${R2}', '${ilYaR}', '${ilYaR}', 'Pat2', 'Rencontre2${ESSAI}', '${e164(2)}', 'edb', 'a_qualifier', '${ilYaR}'),
+        ('${R3}', '${ilYaR}', '${ilYaR}', 'Pat3', 'Rencontre3${ESSAI}', '${e164(3)}', 'edb', 'a_qualifier', NULL),
+        ('${R4}', '${ilYaR}', '${ilYaR}', 'Pat4', 'Rencontre4${ESSAI}', '${e164(4)}', 'edb', 'vendeur', NULL),
+        ('${R6}', '${ilYaR}', '${ilYaR}', 'Pat6', 'Rencontre6${ESSAI}', '${e164(6)}', 'edb', 'vendeur', NULL);
+        INSERT INTO contact_source (contact_id, source, lieu, mois, a) VALUES ('${R1}', 'edb', NULL, NULL, '${ilYaR}'), ('${R2}', 'edb', NULL, NULL, '${ilYaR}'),
+          ('${R3}', 'edb', 'Publier', '2024-12', '${ilYaR}'), ('${R6}', 'edb', NULL, NULL, '${ilYaR}');
+        INSERT INTO contact_evenement (contact_id, a, type, source, texte, par) VALUES
+          ('${R1}', '${ilYaR}', 'note', 'claude', 'Note du fichier (EDB) : Rappeler en juin', 'claude')`);
+      const entetes = ['EDB', 'DATE', 'NOM', 'PRENOM', 'TEL', 'EMAIL', 'Projet HA', 'Projet Vente', 'Commentaire', 'R1', 'RELANCE 1'];
+      const ligneEdb = (lieu, date, k, ha, pv, comm = '', relance = '', email = '') => [lieu, date, `Rencontre${k}${ESSAI}`, `Pat${k}`, raw(k), email, ha, pv, comm, 'ambigu', relance];
+      const lignesR = [
+        ligneEdb('PUBLIER', '45627', 1, 'OUI', '1', 'Rappeler en juin', 'Appelé le 3 décembre'),
+        ligneEdb('MARGENCEL', '45689', 2, 'OUI', 'NON', 'Veut visiter'),
+        ligneEdb('PUBLIER', '45627', 3, 'OUI', 'NON'),
+        ligneEdb('MARGENCEL', '45689', 3, 'OUI', 'NON'),
+        ligneEdb('MARGENCEL', '45689', 4, 'OUI', 'NON'),
+        ligneEdb('ANNEMASSE', '45689', 5, 'OUI', 'NON', '', '', `rencontre5+${ESSAI.toLowerCase()}@example.com`),
+        ligneEdb('PUBLIER', '45627', 6, 'NON', 'OUI'),
+      ];
+      const fR = (detail) => ({ format: 'tableur', nom: 'rencontres-essai.xlsx', onglets: [{ nom: 'EDB', genre: 'edb', ...(detail ? { detail } : {}), lignes: [entetes, ...lignesR] }] });
+      const avantR = compte();
+      r = await IMP({ action: 'apercu', fichier: fR() });
+      const apR = (await r.json()).apercu;
+      const bR = apR?.bilan ?? {};
+      constat(r.status === 200 && apR.lignes === 7 && apR.nouveaux === 1 && apR.complements === 5 && apR.fusionnees_dans_le_fichier === 1
+        && bR.rencontres_ajoutees === 3 && bR.rencontres_completees === 3 && bR.notes_ajoutees === 2 && bR.notes_deja_presentes === 1 && bR.projets_poses === 1 && bR.vendeur_vers_vendeur_acheteur === 1
+        && !apR.champs_ignores.some((c) => /EDB|DATE|RELANCE|Projet HA/i.test(c.replace('(EDB)', ''))),
+        `18.17 : aperçu du fichier avec Projet HA, DATE, EDB et RELANCE 1 : 1 nouveau, 5 compléments, 3 rencontres ajoutées, 3 complétées, 2 notes ajoutées, 1 déjà présente, 1 projet posé, 1 vendeur → vendeur et acheteur (${JSON.stringify(bR)} ; lignes ${apR?.lignes}, nouveaux ${apR?.nouveaux}, compléments ${apR?.complements}, fusionnées ${apR?.fusionnees_dans_le_fichier}, ignorés ${JSON.stringify(apR?.champs_ignores)})`);
+      constat(JSON.stringify(compte()) === JSON.stringify(avantR) && !JSON.stringify(apR).includes(raw(1)) && !JSON.stringify(apR).includes('Rencontre1'),
+        '18.17 : l\'aperçu n\'écrit rien et ne montre aucune donnée personnelle (seulement des nombres)');
+      r = await IMP({ action: 'importer', fichier: fR(), empreinte: apR.empreinte });
+      const impR = (await r.json()).import;
+      const R5 = sql(`SELECT id, projet, email_accord_source FROM contact WHERE telephone = '${e164(5)}'`)[0];
+      const src = (id) => sql(`SELECT source, lieu, mois, import_lot_id FROM contact_source WHERE contact_id = '${id}' ORDER BY id`);
+      const notesR = (id) => sql(`SELECT texte FROM contact_evenement WHERE contact_id = '${id}' AND type = 'note' ORDER BY id`).map((n) => n.texte);
+      const proj = (id) => sql(`SELECT projet, categorie_id, nom FROM contact WHERE id = '${id}'`)[0];
+      const rowsR1 = src(R1), rowsR3 = src(R3);
+      constat(r.status === 201 && impR?.nouveaux === 1 && impR.complements === 5 && impR.bilan?.rencontres_ajoutees === 3 && impR.bilan.notes_ajoutees === 2,
+        `18.17 : import du fichier de rencontres : 1 créé, 5 complétés (${JSON.stringify(impR?.bilan)})`);
+      constat(rowsR1.length === 1 && rowsR1[0].lieu === 'Publier' && rowsR1[0].mois === '2024-12' && rowsR1[0].import_lot_id === null
+        && src(R2).length === 1 && src(R2)[0].lieu === 'Margencel' && src(R2)[0].mois === '2025-02'
+        && src(R6).length === 1 && src(R6)[0].lieu === 'Publier' && src(R6)[0].mois === '2024-12',
+        '18.17 : la rencontre complète la ligne de source sans lieu ni mois (casse de titre : PUBLIER → Publier ; date Excel 45627 → 2024-12), sans ajouter de ligne');
+      constat(rowsR3.length === 2 && rowsR3[0].lieu === 'Publier' && rowsR3[0].import_lot_id === null && rowsR3[1].lieu === 'Margencel' && rowsR3[1].mois === '2025-02' && rowsR3[1].import_lot_id === impR.lot
+        && src(R4).length === 1 && src(R4)[0].lieu === 'Margencel' && R5?.projet === 'acheteur' && src(R5.id).length === 1 && src(R5.id)[0].lieu === 'Annemasse' && src(R5.id)[0].mois === '2025-02'
+        && R5.email_accord_source === 'import',
+        '18.17 : rencontre déjà présente non répétée, deuxième rencontre ajoutée, contact sans source qui en reçoit une, nouveau contact avec sa rencontre');
+      const nR1 = notesR(R1), nR2 = notesR(R2);
+      constat(nR1.length === 2 && nR1[0] === 'Note du fichier (EDB) : Rappeler en juin' && nR1[1] === 'Note du fichier : Relance 1 : Appelé le 3 décembre'
+        && nR2.length === 1 && nR2[0] === 'Note du fichier : Veut visiter' && proj(R2).projet === 'a_qualifier' && proj(R2).nom === `Rencontre2${ESSAI}`
+        && sql(`SELECT count(*) AS n FROM contact_evenement WHERE texte LIKE '%ambigu%' OR donnees LIKE '%ambigu%'`)[0].n === 0,
+        '18.17 : le commentaire déjà en note n\'est pas répété, RELANCE 1 devient une note, un contact vérifié reçoit sa note mais pas de projet, la colonne R1 est ignorée');
+      constat(proj(R1).projet === 'vendeur_acheteur' && proj(R3).projet === 'acheteur' && proj(R4).projet === 'vendeur' && proj(R6).projet === 'vendeur'
+        && proj(R1).categorie_id === 'edb',
+        '18.17 : projet : vendeur → vendeur et acheteur (achat et vente OUI), à qualifier → acheteur, rien d\'autre (vendeur avec achat seul et vendeur avec vente seule inchangés)');
+
+      // Annulation du lot : lieu et mois rendus, notes retirées, projet rendu, contact créé supprimé.
+      r = await IMP({ action: 'annuler', lot: impR.lot });
+      const annR = (await r.json()).annulation;
+      constat(r.status === 200 && annR?.supprimes === 1 && annR.rendus === 5 && annR.gardes.length === 0
+        && src(R1)[0].lieu === null && src(R1)[0].mois === null && src(R2)[0].lieu === null && src(R6)[0].lieu === null
+        && src(R3).length === 1 && src(R3)[0].lieu === 'Publier' && src(R4).length === 0 && sql(`SELECT count(*) AS n FROM contact WHERE telephone = '${e164(5)}'`)[0].n === 0
+        && notesR(R1).length === 1 && notesR(R2).length === 0 && proj(R1).projet === 'vendeur' && proj(R3).projet === 'a_qualifier',
+        `18.17 : annulation du lot : lignes de source complétées ou ajoutées défaites, notes retirées (celle d'avant gardée), projets rendus (${JSON.stringify(annR)})`);
+
+      // Repasser le fichier : même fichier après annulation, puis une troisième fois avec un autre détail (empreinte différente).
+      r = await IMP({ action: 'importer', fichier: fR(), empreinte: apR.empreinte });
+      const impR2 = (await r.json()).import;
+      const detailsAvant = () => ({ s: sql(`SELECT count(*) AS n FROM contact_source WHERE contact_id IN ('${R1}', '${R2}', '${R3}', '${R4}', '${R6}')`)[0].n,
+        n: sql(`SELECT count(*) AS n FROM contact_evenement WHERE type = 'note' AND contact_id IN ('${R1}', '${R2}', '${R3}', '${R4}', '${R6}')`)[0].n });
+      const avantRepasse = detailsAvant();
+      r = await IMP({ action: 'apercu', fichier: fR('Reprise') });
+      const apRep = (await r.json()).apercu, bRep = apRep?.bilan ?? {};
+      constat(r.status === 200 && impR2?.complements === 5 && apRep.nouveaux === 0 && apRep.complements === 6
+        && bRep.rencontres_ajoutees === 0 && bRep.rencontres_completees === 0 && bRep.notes_ajoutees === 0 && bRep.notes_deja_presentes === 3 && bRep.projets_poses === 0 && bRep.vendeur_vers_vendeur_acheteur === 0,
+        `18.17 : repasser le même fichier (autre détail) : aperçu à zéro (rien à ajouter, 3 commentaires déjà présents) (${JSON.stringify(bRep)})`);
+      r = await IMP({ action: 'importer', fichier: fR('Reprise'), empreinte: apRep.empreinte });
+      const apresRepasse = detailsAvant();
+      constat(r.status === 201 && JSON.stringify(apresRepasse) === JSON.stringify(avantRepasse) && src(R3).length === 2 && src(R1).length === 1
+        && proj(R1).projet === 'vendeur_acheteur',
+        '18.17 : repasser le fichier une fois de plus n\'ajoute ni ligne de source ni note ni projet');
+      sql(`DELETE FROM contact WHERE id IN ('${R1}', '${R2}', '${R3}', '${R4}', '${R6}') OR telephone = '${e164(5)}'`);
+    }
+
     // Accès : le jeton d'Anne ou de JB, l'absence de jeton, un autre jeton de service sont refusés ; JSON seulement, plafond.
     const refusImport = [
       ['Anne connectée', await IMP({ action: 'apercu', fichier: fVcf }, JETON), 403],
@@ -1833,7 +1926,8 @@ try {
         'revue 18.4 : « helene » trouve « Hélène » (accents ignorés) ; des chiffres cherchent aussi dans le texte (entreprise, nom)');
       await chercher('');
       // Tri par ville, puis à l'envers : vides en fin de liste dans les deux sens.
-      const villes = () => o.locator('[data-lignes] tr[data-contact]').evaluateAll((t) => t.map((x) => x.querySelector(':scope > td:nth-child(8)')?.textContent ?? '')); // 1re colonne : la case (18.6)
+      // Story 18.17 : la colonne de la ville se repère par son en-tête (une colonne « Rencontre » a été ajoutée avant elle).
+      const villes = () => o.locator('[data-lignes] tr[data-contact]').evaluateAll((t) => { const i = [...document.querySelectorAll('thead th')].findIndex((h) => h.getAttribute('data-cle') === 'ville') + 1; return t.map((x) => x.querySelector(`:scope > td:nth-child(${i})`)?.textContent ?? ''); });
       const ordonne = (l, sens) => { const v = l.filter((x) => x !== '—'); const c = new Intl.Collator('fr', { sensitivity: 'base', numeric: true }); return v.every((x, i) => i === 0 || sens * c.compare(v[i - 1], x) <= 0) && l.slice(v.length).every((x) => x === '—'); };
       // Story 18.5 : les lignes s'écrivent par paquets ; attendre la dernière (`data-complet`).
       const complet = () => o.waitForSelector('[data-lignes][data-complet]', { state: 'attached' });
@@ -1895,6 +1989,12 @@ try {
   sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, commune, categorie_id, telephone, etape, parcours, prochaine_action_le, dernier_contact_le, dernier_contact_canal) VALUES
        ('${F4}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Flore', 'Filtrequatre${NUM}', '${VILLE5}', 'proches', '+33653${NUM}', 'premier_rdv', 'vendeur', '2026-12-01', '${ilYa(10)}', 'appel')`);
   sql(`INSERT INTO contact_source (contact_id, source, a) VALUES ('${F1}', 'site', '2026-10-01T08:00:00Z')`);
+  // Story 18.17 : F1 a rencontré Anne à Publier en décembre 2024 ; F2 à Publier en février 2025 et à Margencel en décembre 2024.
+  // Lieux propres à cet essai (la base locale garde les essais d'avant) ; les mois d'avant sont retirés pour que le filtre « mois » seul reste exact.
+  const PUB5 = `Publier${NUM}`, MARG5 = `Margencel${NUM}`;
+  sql(`DELETE FROM contact_source WHERE source = 'edb' AND mois IN ('2024-12', '2025-02')`);
+  sql(`INSERT INTO contact_source (contact_id, source, lieu, mois, a) VALUES ('${F1}', 'edb', '${PUB5}', '2024-12', '2026-10-01T08:00:00Z'),
+       ('${F2}', 'edb', '${PUB5}', '2025-02', '2026-10-01T08:00:00Z'), ('${F2}', 'edb', '${MARG5}', '2024-12', '2026-10-01T08:00:01Z')`);
   sql(`DELETE FROM vue WHERE nom LIKE 'Essai vue%'`);
   const vuesAvant = sql('SELECT count(*) AS n FROM vue')[0].n;
   {
@@ -1934,6 +2034,13 @@ try {
     l = await choisir('autres', 'pipeline:hors'); essais.push(['hors suivi', memes(l, [F1, F2])]); await retirerP('pipeline');
     l = await choisir('autres', 'ambassadeur:oui'); essais.push(['ambassadeurs', memes(l, [F2])]); await retirerP('ambassadeur');
     l = await choisir('autres', 'a_rappeler:oui'); essais.push(['à rappeler (date arrivée)', memes(l, [F1])]); await retirerP('a_rappeler');
+    // Story 18.17 : lieu et mois de rencontre ; avec les deux, une même rencontre doit avoir les deux (F2 : Publier et décembre 2024, mais pas ensemble).
+    l = await choisir('lieu', PUB5); essais.push(['lieu de rencontre', memes(l, [F1, F2])]);
+    const colRencontre = await o.locator(`tr[data-contact="${F2}"] td`).allInnerTexts();
+    essais.push(['colonne Rencontre (plusieurs, la plus récente d\'abord)', colRencontre.includes(`EDB ${PUB5} · févr. 2025 + EDB ${MARG5} · déc. 2024`)]);
+    l = await choisir('mois', '2024-12'); essais.push(['lieu et mois sur la même rencontre', memes(l, [F1])]);
+    essais.push(['pastilles lieu et mois', (await pastillesVues()).some((t) => t.includes(`Lieu de rencontre : ${PUB5}`)) && (await pastillesVues()).some((t) => t.includes('Mois de rencontre : déc. 2024'))]);
+    await retirerP('lieu', PUB5); l = await ids(); essais.push(['mois de rencontre seul', memes(l, [F1, F2])]); await retirerP('mois', '2024-12');
     const rates = essais.filter(([, ok]) => !ok).map(([n]) => n);
     constat(!rates.length && chipVille, `18.5 : chaque filtre (${essais.length} essais : ${essais.map(([n]) => n).join(', ')})${rates.length ? ` ; ratés : ${rates.join(', ')}` : ''}`);
     // Combinaison avec la recherche : ville + catégorie, puis un nom.
@@ -2018,6 +2125,25 @@ try {
   r = await vues('POST', { nom: 'Essai vue API', filtre: { verifie: 'non', dernier_contact: 45, ecarte: 'non', recherche: 'thonon', a_rappeler: 'oui', categorie_id: ['proches'] } });
   const creeeApi = (await r.json()).vue;
   constat(r.status === 201 && !!creeeApi?.id && nVues() === n0 + 1, '18.5 : /api/vues accepte un filtre du vocabulaire (201)');
+  // Story 18.17 : une vue enregistrée « EDB Publier, décembre 2024 » (lieu + mois) est acceptée, relue, appliquée par la page.
+  {
+    const refusR = [['mois mal formé', { mois: ['décembre 2024'] }], ['mois impossible', { mois: ['2024-13'] }], ['lieu vide', { lieu: [] }], ['lieu en texte', { lieu: PUB5 }]];
+    const reponsesR = [];
+    for (const [, f] of refusR) reponsesR.push((await vues('POST', { nom: 'Essai vue refusée', filtre: f })).status);
+    r = await vues('POST', { nom: 'Essai vue rencontre', filtre: { lieu: [PUB5], mois: ['2024-12'] } });
+    const vr = (await r.json()).vue;
+    const ctxR = await nav.newContext({ viewport: { width: 1440, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
+    const pR = await ctxR.newPage();
+    await pR.goto(`${E}/`);
+    await pR.waitForSelector('[data-lignes][data-complet]', { state: 'attached' });
+    await pR.click(`[data-vue="${vr?.id}"]`);
+    await pR.waitForSelector('[data-lignes][data-complet]', { state: 'attached' });
+    const idsR = await pR.locator('[data-lignes] tr[data-contact]').evaluateAll((t) => t.map((x) => x.dataset.contact));
+    await ctxR.close();
+    constat(reponsesR.every((x) => x === 400) && r.status === 201 && vr?.filtre?.lieu?.join() === PUB5 && vr.filtre.mois?.join() === '2024-12' && idsR.length === 1 && idsR[0] === F1,
+      `18.17 : /api/vues refuse un mois ou un lieu mal formé (${reponsesR.join(', ')}) ; la vue « lieu Publier, mois 2024-12 » s'enregistre et la page la retrouve (${idsR.length} contact)`);
+    await vues('DELETE', undefined, { id: vr?.id });
+  }
   const refusDelete = [await vues('DELETE', undefined, { id: 'tous' }), await vues('DELETE', undefined, { id: 'Tous les contacts' }), await vues('DELETE', undefined, { id: '01ARZ3NDEKTSV4RRFFQ69G5FAV' })];
   constat(refusDelete[0].status === 400 && refusDelete[1].status === 400 && refusDelete[2].status === 404 && nVues() === n0 + 1,
     `18.5 : « Tous les contacts » ne peut pas être supprimée (${refusDelete.map((x) => x.status).join(', ')}), aucune vue n'est touchée`);
@@ -2269,6 +2395,18 @@ try {
     ];
     constat(inconnu.status === 404 && acces.every(([, r]) => r.status === 403) && nEv() === e0 && etatG() === s0,
       `18.6 : lot inconnu 404 ; /api/carnet réservé à Anne et JB (${acces.map(([n, r]) => `${n} ${r.status}`).join(', ')})`);
+    // Story 18.16 (ticket 243) : le projet « sponsoring » a une température froid, tiède ou chaud, jamais « en vente ».
+    {
+      const g3Avant = JSON.stringify(un(G3));
+      const x = await api({ ids: [G3], changements: { projet: 'sponsoring', temperature: 'chaud' } });
+      const y = await api({ ids: [G3], changements: { temperature: 'en_vente' } });
+      const z = await api({ ids: [G3], changements: { temperature: 'recherche_active' } });
+      const apresSp = un(G3);
+      const r = await api({ annuler: x.d?.lot });
+      constat(x.status === 200 && x.d.touches === 1 && apresSp.projet === 'sponsoring' && apresSp.temperature === 'chaud' && y.status === 200 && y.d.ignores === 1 && z.d.ignores === 1
+        && r.d?.rendus === 1 && JSON.stringify(un(G3)) === g3Avant,
+        `18.16 : projet « sponsoring » + chaud accepté par /api/carnet, « en vente » et « en recherche active » refusés (ignorés), annulation rend le contact (${x.status}, ${y.d?.ignores}, ${z.d?.ignores})`);
+    }
   }
   // La page : cases, Maj + clic, barre d'actions groupées, annulation, une seule ligne, écarter et faire revenir.
   for (const largeur of [1440, 1280]) {

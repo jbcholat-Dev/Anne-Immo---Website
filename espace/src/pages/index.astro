@@ -90,6 +90,8 @@ const donneesNouveaux = enJson(nouveaux);
         <select data-filtre="temperature" aria-label="Filtrer par température"><option value="">Température</option>{Object.entries(TEMPERATURES).map(([k, v]) => <option value={k}>{v}</option>)}</select>
         <select data-filtre="source" aria-label="Filtrer par source"><option value="">Source</option></select>
         <select data-filtre="ville" aria-label="Filtrer par ville"><option value="">Ville</option></select>
+        <select data-filtre="lieu" aria-label="Filtrer par lieu de rencontre"><option value="">Lieu de rencontre</option></select>
+        <select data-filtre="mois" aria-label="Filtrer par mois de rencontre"><option value="">Mois de rencontre</option></select>
         <input type="search" data-filtre-texte="entreprise_contient" placeholder="Entreprise contient…" aria-label="Filtrer par entreprise (contient)" autocomplete="off" />
         <select data-filtre="dernier_contact" aria-label="Filtrer par dernier contact"><option value="">Dernier contact</option><option value="jamais">Jamais recontacté</option>{DUREES.map((d) => <option value={d.jours}>{d.libelle.charAt(0).toUpperCase() + d.libelle.slice(1)}</option>)}</select>
         <select data-filtre="etat" aria-label="Filtrer par état"><option value="">État</option><option value="verifie:non">À vérifier</option><option value="verifie:oui">Vérifiés</option><option value="ecarte:oui">Écartés</option></select>
@@ -162,7 +164,7 @@ const donneesNouveaux = enJson(nouveaux);
   import { telLisible } from '@site/server/recherche';
   import {
     ACCORDS, CANAUX_CONTACT, COLONNES, PROJETS, PROJETS_AVEC_TEMPERATURE, TEMPERATURES, TEMPERATURES_CHOIX, indexer,
-    libelleSource, preparerRecherche, temperaturePermise, valeurTri, type CleColonne, type LigneTableau,
+    libelleMois, libelleRencontres, libelleSource, preparerRecherche, temperaturePermise, valeurTri, type CleColonne, type LigneTableau,
   } from '../server/tableau-colonnes';
   import { ajouter, pastilles, preparerFiltre, retirer, type CleFiltre, type Filtre, type Vue } from '../server/vues';
   import { brancherFiche } from '../islands/fiche-contact';
@@ -252,6 +254,7 @@ const donneesNouveaux = enJson(nouveaux);
         return `<td>${classer('temperature', p || pastille('à préciser', 'aq'), 'Changer la température')}</td>`;
       }
       case 'sources': return `<td class="ct-src">${l.sources.length ? esc(l.sources.map(libelleSource).join(' + ')) : vide}</td>`;
+      case 'rencontre': { const t = libelleRencontres(l.rencontres); return `<td class="ct-coupe" title="${esc(t)}">${t ? esc(t) : vide}</td>`; }
       case 'ville': return `<td>${l.ville ? esc(l.ville) : vide}</td>`;
       case 'telephone': return `<td class="ct-num">${l.telephones.length ? esc(telLisible(l.telephones[0])) + plus(l.telephones, telLisible) : vide}</td>`;
       case 'email': return `<td class="ct-coupe ct-mail" title="${esc(l.emails.join(', '))}">${l.emails.length ? esc(l.emails[0]) + plus(l.emails, (e) => e) : vide}</td>`;
@@ -362,6 +365,14 @@ const donneesNouveaux = enJson(nouveaux);
   const villes = new Map<string, string>();
   for (const l of lignes) { const v = l.ville?.trim(); if (v && !villes.has(v.toLowerCase())) villes.set(v.toLowerCase(), v); }
   remplir('ville', [...villes.values()].sort(comparer).map((v): [string, string] => [v, v]));
+  // Story 18.17 : lieux et mois de rencontre présents en base (le mois le plus récent d'abord).
+  const lieux = new Map<string, string>(), moisPresents = new Set<string>();
+  for (const l of lignes) for (const r of l.rencontres) {
+    if (r.lieu && !lieux.has(r.lieu.toLowerCase())) lieux.set(r.lieu.toLowerCase(), r.lieu);
+    if (r.mois) moisPresents.add(r.mois);
+  }
+  remplir('lieu', [...lieux.values()].sort(comparer).map((v): [string, string] => [v, v]));
+  remplir('mois', [...moisPresents].sort().reverse().map((m): [string, string] => [m, libelleMois(m)]));
 
   zoneFiltres.addEventListener('change', (e) => {
     const s = e.target as HTMLSelectElement;

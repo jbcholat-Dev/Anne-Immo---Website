@@ -5,7 +5,7 @@ import type { EnvSite } from '@site/server/env';
 import { LIBELLES_ETAPES, type Etape } from '@site/server/contacts';
 import { SOURCES as SOURCES_DEMANDE } from '@site/server/gestion-donnees';
 import { etatEmail, SQL_ACCORD, type DonneesAccord, type EtatEmail } from './accord';
-import { libelleSource, suiviEnCours } from './tableau-colonnes';
+import { libelleRencontre, libelleSource, rencontresDe, suiviEnCours } from './tableau-colonnes';
 
 const LIEN_WEB = /^https?:\/\/[^\s"'<>]+$/i;
 
@@ -25,6 +25,8 @@ export interface Fiche {
   prochaine_action: string | null; prochaine_action_le: string | null;
   accord: EtatEmail;
   sources: { source: string; libelle: string; a: string }[];
+  /** Rencontres (lieu et mois, story 18.17), « EDB Publier · déc. 2024 », la plus récente d'abord ; lecture seule. */
+  rencontres: string[];
   /** Les séances où la personne a été mise (epic 19) : vide tant que les séances n'existent pas. */
   seances: { nom: string; contacte_le: string | null; canal: string | null }[];
   /** Demandes reçues du site, avec leur message (FR-27). */
@@ -47,10 +49,10 @@ export async function lireFiche(env: EnvSite, id: string): Promise<Fiche | null>
         c.ambassadeur_inscrit_le, c.prochaine_action, c.prochaine_action_le, ${SQL_ACCORD}
       FROM contact c LEFT JOIN categorie k ON k.id = c.categorie_id WHERE c.id = ?1`).bind(id),
     env.DB.prepare('SELECT type, reseau, valeur FROM contact_coordonnee WHERE contact_id = ?1 ORDER BY id').bind(id),
-    env.DB.prepare('SELECT source, a FROM contact_source WHERE contact_id = ?1 ORDER BY a, id').bind(id),
+    env.DB.prepare('SELECT source, a, lieu, mois FROM contact_source WHERE contact_id = ?1 ORDER BY a, id').bind(id),
     env.DB.prepare('SELECT id, source, created_at, message, commune_bien, type_bien FROM lead WHERE contact_id = ?1 ORDER BY created_at DESC LIMIT 50').bind(id),
     env.DB.prepare('SELECT a, type, source, texte, par FROM contact_evenement WHERE contact_id = ?1 ORDER BY a DESC, id DESC LIMIT 200').bind(id),
-  ]) as [D1Result<Ligne>, D1Result<{ type: string; reseau: string | null; valeur: string }>, D1Result<{ source: string; a: string }>,
+  ]) as [D1Result<Ligne>, D1Result<{ type: string; reseau: string | null; valeur: string }>, D1Result<{ source: string; a: string; lieu: string | null; mois: string | null }>,
     D1Result<{ id: string; source: string; created_at: string; message: string | null; commune_bien: string | null; type_bien: string | null }>, D1Result<EvenementFiche>];
   const l = c.results[0];
   if (!l) return null;
@@ -68,6 +70,7 @@ export async function lireFiche(env: EnvSite, id: string): Promise<Fiche | null>
     prochaine_action: l.prochaine_action, prochaine_action_le: l.prochaine_action_le,
     accord: etatEmail(l),
     sources: sources.results.filter((s) => !vus.has(s.source) && vus.add(s.source)).map((s) => ({ source: s.source, libelle: libelleSource(s.source), a: s.a })),
+    rencontres: rencontresDe(sources.results).map(libelleRencontre).filter(Boolean),
     seances: [],
     demandes: demandes.results.map((d) => ({ ...d, libelle: SOURCES_DEMANDE[d.source] ?? d.source })),
     historique: historique.results,
