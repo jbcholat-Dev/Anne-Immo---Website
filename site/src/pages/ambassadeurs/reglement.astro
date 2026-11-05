@@ -1,0 +1,83 @@
+---
+// Règlement du programme ambassadeurs, version 1 du 2026-11-02 (validé par JB, fil « [Com] Campagne de parrainage »,
+// https://claude.ai/artifact/NWDwwi4pgoaqbJyuqNM1z8). La version publiée ici est celle que garde chaque inscription
+// (`lead.reglement_version`, REGLEMENT_AMBASSADEURS dans schema.ts) : un changement de texte = une nouvelle version, jamais
+// une correction en place. Écarts avec le document (story 17.2) : l'organisateur est lu dans src/config/site.ts (AD-13),
+// et l'article 4 ne cite plus de bulletin papier (le bulletin n'existe qu'en ligne, même document).
+import Page from '../../layouts/Page.astro';
+import { identite } from '../../config/site';
+import { REGLEMENT_AMBASSADEURS } from '../../server/schema';
+---
+<Page titre="Règlement du programme ambassadeurs — Anne VIAL-TISSOT" description="Le règlement du programme ambassadeurs d'Anne VIAL-TISSOT, version 1." noindex>
+  <article class="rg">
+    <p class="rg-retour"><a href="/ambassadeurs">← Programme ambassadeurs</a></p>
+    <h1>Règlement du programme ambassadeurs</h1>
+    <p class="texte-muet">Version {REGLEMENT_AMBASSADEURS.replace(/^v/, '')}, du 2 novembre 2026.</p>
+
+    <h2>Article 1. Qui organise</h2>
+    <p>Le programme ambassadeurs est organisé par {identite.nom}, agent commercial en immobilier du réseau eXp France{identite.rsac && identite.greffe ? `, immatriculée au RSAC de ${identite.greffe} sous le numéro ${identite.rsac}` : ''}{identite.adresse ? `, ${identite.adresse}` : ''}. Elle est appelée « Anne » dans ce règlement.</p>
+
+    <h2>Article 2. Le principe</h2>
+    <p>Vous connaissez quelqu'un qui veut vendre un bien immobilier. Avec son accord, vous le présentez à Anne. Si la vente se fait par Anne, Anne vous remercie par une somme d'argent ou une carte cadeau voyage.</p>
+    <p>Votre rôle s'arrête à la présentation. Vous ne visitez pas, vous ne négociez pas, vous ne conseillez pas sur le prix. Ces actes sont réservés aux professionnels de l'immobilier (loi n° 70-9 du 2 janvier 1970, dite loi Hoguet).</p>
+
+    <h2>Article 3. Qui peut devenir ambassadeur</h2>
+    <ul>
+      <li>Toute personne physique majeure, qui agit à titre privé.</li>
+      <li>Sont exclus : les professionnels de l'immobilier (agents, mandataires, notaires, diagnostiqueurs, courtiers), les salariés et partenaires d'eXp France, et le foyer d'Anne.</li>
+      <li>On ne peut pas se recommander soi-même, ni recommander une personne de son propre foyer.</li>
+    </ul>
+
+    <h2>Article 4. Comment devenir ambassadeur</h2>
+    <p>Vous vous inscrivez sur <a href="/ambassadeurs">annevialtissot.fr/ambassadeurs</a>. Vous acceptez ce règlement au moment de l'inscription. <strong>L'inscription doit précéder la recommandation</strong> : une recommandation faite avant l'inscription ne donne droit à rien.</p>
+
+    <h2>Article 5. Ce qu'est une recommandation valable</h2>
+    <p>Une recommandation est valable si toutes ces conditions sont remplies :</p>
+    <ol>
+      <li>La personne présentée est d'accord pour qu'Anne la contacte.</li>
+      <li>Elle est propriétaire du bien et souhaite le vendre.</li>
+      <li>Elle n'était pas déjà en contact avec Anne pour ce projet. En cas de doute, c'est le fichier de contacts d'Anne qui fait foi, et Anne vous répond par écrit sous huit jours.</li>
+      <li>Elle signe avec Anne un mandat de vente exclusif dans les douze mois qui suivent la présentation.</li>
+      <li>La vente est signée chez le notaire (acte authentique).</li>
+    </ol>
+    <p>Si deux ambassadeurs présentent la même personne, le premier à l'avoir fait par écrit est retenu.</p>
+
+    <h2>Article 6. Le remerciement</h2>
+    <ul>
+      <li><strong>Montant</strong> : 5 % des honoraires hors taxes de l'agence, tels qu'ils figurent dans l'acte de vente, plafonnés à 1 500 €.</li>
+      <li><strong>Exemple</strong> : pour des honoraires de 20 000 € HT, le remerciement est de 1 000 €.</li>
+      <li><strong>Forme</strong> : au choix de l'ambassadeur, un virement bancaire ou une carte cadeau voyage du même montant.</li>
+      <li><strong>Quand</strong> : dans le mois qui suit la signature de l'acte de vente et l'encaissement des honoraires par Anne.</li>
+      <li><strong>Qui paie</strong> : Anne, à titre personnel. Ni eXp France ni le vendeur ne versent quoi que ce soit.</li>
+      <li>Aucun remerciement n'est dû si la vente n'a pas lieu, même après la signature d'un compromis.</li>
+    </ul>
+
+    <h2>Article 7. Une participation occasionnelle</h2>
+    <p>Le programme reste occasionnel : un ambassadeur reçoit au plus trois remerciements par année civile. Au-delà, Anne peut le remercier autrement, sans somme d'argent.</p>
+
+    <h2>Article 8. Les impôts</h2>
+    <p>La somme reçue est un revenu. L'ambassadeur la déclare dans sa déclaration de revenus, dans la catégorie des bénéfices non commerciaux. Si un ambassadeur reçoit plus de 1 200 € dans l'année, Anne le déclare à l'administration fiscale (article 240 du Code général des impôts). Pour cela, Anne demande ses nom, adresse et coordonnées bancaires au moment du versement.</p>
+
+    <h2>Article 9. Vos données personnelles</h2>
+    <p>Anne garde vos nom, prénom, e-mail et téléphone pour gérer le programme et vous tenir informé. Les coordonnées de la personne que vous présentez ne passent jamais par le site : vous les transmettez directement à Anne, avec l'accord de cette personne. Les données sont conservées trois ans après votre dernier échange avec Anne, puis supprimées. Vous pouvez les consulter, les corriger ou les faire supprimer à tout moment en écrivant à {identite.email ? <a href={`mailto:${identite.email}`}>{identite.email}</a> : 'Anne'}.</p>
+
+    <h2>Article 10. Durée et modifications</h2>
+    <p>Le programme commence à la mise en ligne de la page ambassadeurs, pour une durée indéterminée. Anne peut le modifier ou l'arrêter à tout moment. Une recommandation faite avant une modification ou un arrêt reste régie par la version du règlement acceptée à ce moment-là.</p>
+
+    <h2>Article 11. Un désaccord</h2>
+    <p>En cas de désaccord, écrivez d'abord à Anne : elle vous répond sous quinze jours. Ce règlement est soumis au droit français.</p>
+
+    <p class="texte-muet rg-fin"><em>Règlement version 1, du 2 novembre 2026. Il est accessible à tout moment sur annevialtissot.fr/ambassadeurs.</em></p>
+    <p><a href="/ambassadeurs#inscription" class="btn btn-primaire">Devenir ambassadeur</a></p>
+  </article>
+</Page>
+<style>
+  .rg { max-width: 68ch; margin: 0 auto; padding: 32px 20px 72px; font-size: 16px; line-height: 1.7; }
+  .rg h1 { font-size: 34px; line-height: 1.15; margin: 8px 0 4px; }
+  .rg h2 { font-size: 22px; margin: 32px 0 8px; }
+  .rg ul, .rg ol { padding-left: 1.2em; }
+  .rg strong { font-weight: 500; }
+  .rg-retour { margin: 0; font-size: 15px; }
+  .rg-fin { margin-top: 32px; }
+  @media (min-width: 900px) { .rg { padding: 72px 20px 96px; } .rg h1 { font-size: 44px; } }
+</style>
