@@ -2,6 +2,7 @@
 // Fiche d'une demande : tous ses champs, l'état de chaque envoi, rejeu et marque « recopié dans Modelo » (story 10.7).
 // Espace d'Anne (story 13.3) : reprise de site/src/pages/gestion/lead.astro, qui disparaîtra du site en phase 2.
 import Gestion from '@site/layouts/Gestion.astro';
+import '../../styles/pointeur.css'; // ticket 235 : pointeur ordinaire, après le CSS du gabarit
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { pourSite as envSite } from '../../server/env';
 import { canal, detailLead, ETATS, quand, rejouable, SOURCES } from '@site/server/gestion-donnees';

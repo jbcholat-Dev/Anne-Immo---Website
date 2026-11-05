@@ -16,7 +16,8 @@ const m = Astro.url.searchParams.get('m') ?? '';
 const leads = await listerLeads(envSite, q);
 const adresse = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(q) ? q.toLowerCase() : '';
 const droits = await droitsExerces(envSite, 10);
-const message = m.startsWith('efface-') ? `C'est fait : ${m.slice(7)} demande(s) effacée(s), avec leurs envois.` : m === 'confirmation' ? "Effacement non fait : l'adresse de confirmation ne correspond pas." : '';
+const sansOpposition = m.endsWith('-sans-opposition');
+const message = m.startsWith('efface-') ? `C'est fait : ${parseInt(m.slice(7), 10) || 0} demande(s) effacée(s), avec leurs envois.${sansOpposition ? " Effacé, mais l'opposition n'a pas pu être notée : le réglage LIEN_SECRET manque (RUNBOOK). Prévenez JB." : ''}` : m === 'confirmation' ? "Effacement non fait : l'adresse de confirmation ne correspond pas." : '';
 ---
 <Gestion titre="Demandes">
   <h1>Demandes</h1>

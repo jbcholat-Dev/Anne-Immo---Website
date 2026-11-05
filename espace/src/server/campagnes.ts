@@ -14,7 +14,7 @@ import { enProduction, type EnvSite } from '@site/server/env';
 import { journal } from '@site/server/journal';
 import { lienDesinscriptionContact, urlSite } from '@site/server/liens';
 import { ulid } from '@site/server/ulid';
-import { etatEmail, peutRecevoirCampagne, RAISONS_ECART, SQL_ACCORD, type DonneesAccord, type StatutEmail } from './accord';
+import { etatEmail, peutRecevoirCampagne, RAISONS_ECART, SQL_ACCORD, type DonneesAccord } from './accord';
 
 export type Statut = 'brouillon' | 'envoi' | 'envoyee';
 
@@ -127,6 +127,10 @@ export async function supprimerBrouillon(env: EnvSite, id: string): Promise<bool
 // ——— À qui ———
 
 export interface Personne { id: string; prenom: string | null; nom: string | null; email: string | null }
+
+/** 1 si la catégorie du contact permet l'envoi groupé (ou s'il n'a pas de catégorie), 0 sinon (méthode de la catégorie, story 18.8). */
+const SQL_ENVOI_GROUPE = `coalesce((SELECT k.envoi_groupe_permis FROM categorie k WHERE k.id = c.categorie_id), 1)`;
+const RAISON_CATEGORIE = 'Catégorie sans envoi groupé';
 export interface Selection { recoivent: Personne[]; ecartes: { raison: string; personnes: Personne[] }[] }
 
 /** Les contacts que les filtres désignent, partagés entre ceux qui recevront la campagne et ceux écartés (par raison). */
@@ -138,17 +142,19 @@ export async function selectionner(env: EnvSite, f: Filtres): Promise<Selection>
   if (f.canal) { valeurs.push(f.canal); conditions.push(`c.canal = ?${valeurs.length}`); }
   if (f.commune.trim()) { valeurs.push(`%${f.commune.trim().toLowerCase()}%`); conditions.push(`lower(coalesce(c.commune, '')) LIKE ?${valeurs.length}`); }
   const { results } = await env.DB.prepare(
-    `SELECT c.id, c.prenom, c.nom, ${SQL_ACCORD} FROM contact c WHERE ${conditions.join(' AND ')} ORDER BY c.nom, c.prenom LIMIT 5000`,
-  ).bind(...valeurs).all<Personne & DonneesAccord>();
+    `SELECT c.id, c.prenom, c.nom, ${SQL_ACCORD}, ${SQL_ENVOI_GROUPE} AS envoi_groupe FROM contact c WHERE ${conditions.join(' AND ')} ORDER BY c.nom, c.prenom LIMIT 5000`,
+  ).bind(...valeurs).all<Personne & DonneesAccord & { envoi_groupe: number }>();
   const recoivent: Personne[] = [];
-  const parRaison = new Map<StatutEmail, Personne[]>();
+  const parRaison = new Map<string, Personne[]>();
   for (const r of results) {
     const e = etatEmail(r);
     const p = { id: r.id, prenom: r.prenom, nom: r.nom, email: r.email };
-    if (peutRecevoirCampagne(e)) recoivent.push(p);
-    else parRaison.set(e.statut, [...(parRaison.get(e.statut) ?? []), p]);
+    // Revue de code 18.8 : la méthode de la catégorie restreint (jamais n'élargit) : « pas d'envoi groupé » écarte tous ses contacts, accord ou non.
+    const raison = !r.envoi_groupe ? RAISON_CATEGORIE : peutRecevoirCampagne(e) ? null : RAISONS_ECART[e.statut as keyof typeof RAISONS_ECART];
+    if (!raison) recoivent.push(p);
+    else parRaison.set(raison, [...(parRaison.get(raison) ?? []), p]);
   }
-  const ecartes = [...parRaison.entries()].map(([s, personnes]) => ({ raison: RAISONS_ECART[s as keyof typeof RAISONS_ECART], personnes }));
+  const ecartes = [...parRaison.entries()].map(([raison, personnes]) => ({ raison, personnes }));
   return { recoivent, ecartes };
 }
 
@@ -287,10 +293,11 @@ export async function envoyerCampagnes(env: EnvSite): Promise<number> {
 async function envoyerA(env: EnvSite, c: Campagne, d: ADestinataire): Promise<boolean> {
   const ici = 'WHERE campagne_id = ?1 AND contact_id = ?2';
   // La personne a pu se désinscrire, perdre son accord ou changer d'adresse depuis le lancement.
-  const accord = await env.DB.prepare(`SELECT ${SQL_ACCORD} FROM contact c WHERE c.id = ?1`).bind(d.contact_id).first<DonneesAccord>();
+  // Revue de code 18.8 : ou être passée dans une catégorie sans envoi groupé.
+  const accord = await env.DB.prepare(`SELECT ${SQL_ACCORD}, ${SQL_ENVOI_GROUPE} AS envoi_groupe FROM contact c WHERE c.id = ?1`).bind(d.contact_id).first<DonneesAccord & { envoi_groupe: number }>();
   const etat = accord ? etatEmail(accord) : null;
-  if (!accord || !etat || !peutRecevoirCampagne(etat) || accord.email !== d.email) {
-    const raison = !etat ? 'contact effacé' : etat.statut !== 'accord' && etat.statut !== 'client' ? RAISONS_ECART[etat.statut].toLowerCase() : 'adresse changée';
+  if (!accord || !etat || !accord.envoi_groupe || !peutRecevoirCampagne(etat) || accord.email !== d.email) {
+    const raison = !accord || !etat ? 'contact effacé' : !accord.envoi_groupe ? RAISON_CATEGORIE.toLowerCase() : etat.statut !== 'accord' && etat.statut !== 'client' ? RAISONS_ECART[etat.statut].toLowerCase() : 'adresse changée';
     await env.DB.prepare(`UPDATE campagne_destinataire SET statut = 'annule', erreur = ?3 ${ici}`).bind(d.campagne_id, d.contact_id, raison).run();
     return false;
   }

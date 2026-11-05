@@ -1,153 +1,961 @@
 ---
-// Aujourd'hui (story 13.5, maquette v2 écran 1) : la page d'ouverture de l'espace. En tête, les nouveaux contacts pas
-// encore qualifiés, ceux qui ont laissé un téléphone d'abord (story 10.15), puis le plus ancien, avec le temps écoulé ; puis les rappels dus et en retard (et les contacts
-// en sommeil à réveiller) ; puis les prescripteurs à relancer, les lettres « j'ai un acheteur » et les secteurs de boîtage à refaire. Depuis chaque carte,
-// Anne appelle en un geste et ouvre la qualification. Story 13.10 : sous les nouveaux contacts, ce que Leedflow a vu
-// (tâches proposées comme prochaine action) ; story 13.19 : les numéros inconnus
-// ne sont plus qu'une ligne vers « Numéros à trier », et l'état de la relève en bas de page. Story 13.22 : « Noter la
-// suite » d'un rappel ouvre le formulaire de suite (fait, pas joint, prochaine action), plus la qualification.
+// Contacts (story 18.4, FR-1, FR-3, FR-14 ; maquette `ux-espace-anne-2026-11-01`) : la page d'accueil de l'espace. Un
+// grand tableau, une ligne par contact non effacé, du carnet comme du suivi des ventes ; les écartés sont masqués.
+// Le serveur lit tout une fois (`lireTableau`, AD-27) et l'envoie dans la page ; l'îlot ci-dessous trie, cherche et
+// masque et réordonne des colonnes dans le navigateur (choix et ordre des colonnes gardés dans ce navigateur), sans revenir au serveur.
+// Story 18.5 : filtres (FR-2, plus « à rappeler », vocabulaire fermé d'AD-27 dans `server/vues.ts`) dans la barre
+// d'outils, pastilles des filtres actifs au-dessus du tableau, vues enregistrées et catégories dans la colonne de gauche ;
+// les vues s'écrivent par /api/vues. Recherche et filtres lisent un index calculé une fois au chargement.
+// Story 18.6 : une case à cocher par ligne (Maj + clic coche la plage, case d'en-tête pour toutes les lignes affichées),
+// barre d'actions groupées (catégorie, projet, température, vérifié, écarter ou faire revenir) et classement d'une seule
+// ligne dans ses cellules ; tout s'écrit par /api/carnet (`server/carnet`, avant-image gardée, AD-29) et s'annule depuis
+// le message qui suit. Le tableau se met à jour sans recharger.
+// Story 18.7 : un clic sur le nom ouvre la fiche du contact dans un panneau à droite (`islands/fiche-contact`, /api/fiche) ;
+// « + Nouveau contact » en haut à droite ouvre la saisie de la maquette. La ligne écrite revient dans le tableau sans
+// recharger ; `/?fiche=<id>` ouvre la page avec la fiche ouverte.
+// Story 18.8 : sous les catégories, un lien vers « Catégories et méthodes » (/categories).
+// Story 18.11 : la barre « Nouveaux » au-dessus de la recherche (`islands/nouveaux`, /api/nouveaux) : les demandes
+// reçues pas encore vues (site, numéros inconnus de Leedflow), dépliées d'un clic, chacune avec ses gestes et l'annulation.
+// L'ancienne page d'accueil « Aujourd'hui » est à /aujourdhui ; ses anciens retours (`/?m=…`) y sont renvoyés.
 import Espace from '../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
-import { telLisible } from '@site/server/recherche';
-import { LIBELLES_ETAPES } from '@site/server/contacts';
-import { envEspace, pourSite as env } from '../server/env';
-import { etatReleve, extrait, propositions } from '../server/leedflow';
-import { acheteursActifs, BOITAGE_A_REFAIRE_JOURS, depuis, echeance, enRetard, journee, libelleOrigine, type ContactDuJour } from '../server/pipeline';
+import { pourSite as env } from '../server/env';
+import { lireCategories, lireTableau } from '../server/tableau';
+import { ACCORDS, COLONNES, PROJETS, TEMPERATURES, TEMPERATURES_CHOIX } from '../server/tableau-colonnes';
+import { DUREES } from '../server/vues';
+import { listerVues } from '../server/vues-base';
+import { lireNouveaux } from '../server/nouveaux';
+import { envEspace } from '../server/env';
 
 export const prerender = false;
 if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
-
-const [{ nouveaux, rappels, prescripteurs, secteurs }, acheteurs, leedflow, releve] = await Promise.all([journee(env), acheteursActifs(env), 
-  // Tant que la migration 0008 n'est pas appliquée (quelques minutes lors d'une mise en ligne), la page s'affiche sans Leedflow.
-  propositions(envEspace).catch(() => ({ taches: [], aTrier: { total: 0, silencieux: 0 } })),
-  etatReleve(envEspace).catch(() => ({ branche: !!envEspace.LEEDFLOW_API_KEY, passe_le: null, erreur: null })),
-]);
 const m = Astro.url.searchParams.get('m') ?? '';
-const message = m === 'suite' ? 'Suite notée.' : m === 'tache-acceptee' ? 'Prochaine action mise à jour.' : m === 'tache-ignoree' ? 'Proposition ignorée.' : '';
-const etatLeedflow = !releve.branche ? 'Leedflow n\'est pas encore branché : la clé d\'accès reste à poser (RUNBOOK § 4 sexies).'
-  : releve.erreur ? `Leedflow : la dernière relève a échoué (${releve.erreur}). Si cela dure, la clé a peut-être été révoquée.`
-  : releve.passe_le ? `Leedflow : appels relevés ${depuis(releve.passe_le)}.` : 'Leedflow : première relève dans les 10 minutes.';
-// « J'ai un acheteur » (story 13.15) : les communes cherchées par au moins deux acheteurs actifs.
-const parCommune = new Map<string, number>();
-for (const a of acheteurs) for (const c of a.communes) parCommune.set(c, (parCommune.get(c) ?? 0) + 1);
-const lettres = [...parCommune.entries()].filter(([, n]) => n >= 2).sort((a, b) => b[1] - a[1]).slice(0, 2);
-const date = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Paris' });
-const nom = (c: ContactDuJour) => [c.prenom, c.nom].filter(Boolean).join(' ') || telLisible(c.telephone) || c.email || 'Sans nom';
-const origine = (c: ContactDuJour) => libelleOrigine(c,
-  c.passage_secteur ? { id: '', secteur: c.passage_secteur, fait_le: c.passage_le ?? '', mots: null, contacts: 0 } : null,
-  c.prescripteur_nom ? { id: '', nom: c.prescripteur_nom, role: null, commune: null } : null);
-const rien = nouveaux.length + leedflow.taches.length + leedflow.aTrier.total + rappels.length + prescripteurs.length + secteurs.length + lettres.length === 0;
+if (['suite', 'tache-acceptee', 'tache-ignoree'].includes(m)) return Astro.redirect(`/aujourdhui?m=${m}`, 302);
+
+const [lignes, vues, categories, nouveaux] = await Promise.all([lireTableau(env), listerVues(env), lireCategories(env), lireNouveaux(envEspace)]);
+const total = lignes.filter((l) => !l.ecarte).length;
+const q = (Astro.url.searchParams.get('q') ?? '').trim().slice(0, 100);
+// Dans un <script type="application/json"> : « < » échappé, pour qu'aucun texte saisi ne ferme la balise.
+const enJson = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
+const donnees = enJson(lignes);
+const reglages = enJson({ vues, categories });
+const donneesNouveaux = enJson(nouveaux);
 ---
-<Espace titre="Aujourd'hui" actif="aujourdhui">
-  <div>
-    <div class="e-muet" data-date>{date}</div>
-    <h1>Bonjour Anne</h1>
+<Espace titre="Contacts" actif="contacts" large>
+  <div class="ct-tete">
+    <div><h1>Contacts</h1><div class="e-muet">Tous les contacts d'Anne, toutes sources confondues.</div></div>
+    <button type="button" class="ct-btn bleu ct-nouveau" data-nouveau-contact>+ Nouveau contact</button>
   </div>
-  {message && <p class="e-message" role="status" data-message>{message}</p>}
-
-  <section class="e-jour" aria-label="À rappeler maintenant" data-nouveaux>
-    <div class="e-jour-tete"><h2>À rappeler maintenant</h2>{nouveaux.length > 0 && <span class="e-alerte">{nouveaux.length} à qualifier</span>}</div>
-    {nouveaux.length === 0 ? <p class="e-muet">Aucun nouveau contact à rappeler. Bien joué.</p> : nouveaux.map((c, i) => (
-      <article class={i === 0 ? 'e-carte e-carte-forte' : 'e-carte'} data-contact={c.id}>
-        <div class="e-ligne"><a href={`/contacts/fiche?id=${c.id}`} class="e-nom">{nom(c)}{c.commune ? ` · ${c.commune}` : ''}</a><span class={i === 0 ? 'e-quand fort' : 'e-quand'}>{depuis(c.created_at)}</span></div>
-        <div class="e-tags"><span class="e-tag">{origine(c)}</span>{c.parcours && <span class="e-tag neutre">{c.parcours === 'vendeur' ? 'Vendeur' : 'Acheteur'}</span>}{c.prochaine_action !== 'Rappeler pour qualifier' && c.prochaine_action && <span class="e-tag neutre">{c.prochaine_action}</span>}</div>
-        {c.dernier_texte && <p class="e-muet e-extrait">{extrait(c.dernier_texte)}</p>}
-        <div class="e-gestes">
-          {c.telephone ? <a class="e-bouton second" href={`tel:${c.telephone}`}>Appeler</a> : c.email ? <a class="e-bouton second" href={`mailto:${c.email}`}>Écrire</a> : null}
-          <a class="e-bouton" href={`/contacts/qualifier?id=${c.id}`}>Qualifier</a>
+  <div class="ct-page">
+    <aside class="ct-cote" aria-label="Vues et catégories">
+      <div class="ct-bloc">
+        <h3>Vues</h3>
+        <div data-vues>
+          <div class="ct-vue-l"><button type="button" class="ct-vue actif" data-vue="tous" aria-pressed="true"><span>Tous les contacts</span><small>{total}</small></button></div>
+          {vues.map((v) => <div class="ct-vue-l"><button type="button" class="ct-vue" data-vue={v.id} aria-pressed="false"><span>{v.nom}</span></button></div>)}
         </div>
-      </article>
-    ))}
-  </section>
-
-  {(leedflow.taches.length > 0 || leedflow.aTrier.total > 0) && (
-    <section class="e-jour" aria-label="Vu par Leedflow" data-leedflow>
-      <h2>Vu par Leedflow</h2>
-      {leedflow.taches.map((t) => (
-        <article class="e-carte" data-tache={t.id}>
-          <div class="e-ligne"><a href={`/contacts/fiche?id=${t.contact_id}`} class="e-nom">{[t.prenom, t.nom].filter(Boolean).join(' ') || telLisible(t.telephone) || 'Contact'}</a><span class="e-quand">{depuis(t.a)}</span></div>
-          <p class="e-raison">Prochaine action proposée : {t.texte}{t.echeance ? ` · ${echeance(t.echeance)}` : ''}</p>
-          <form method="post" action="/api/leedflow/tache" class="e-gestes">
-            <input type="hidden" name="id" value={t.id} />
-            <button class="e-bouton" name="choix" value="accepter">Accepter</button>
-            <button class="e-bouton second" name="choix" value="ignorer">Ignorer</button>
-          </form>
-        </article>
-      ))}
-      {leedflow.aTrier.total > 0 && (
-        <a class="e-carte e-a-trier" href="/a-trier" data-a-trier>
-          <span class="e-nom">{leedflow.aTrier.total} numéro(s) à trier</span>
-          <span class="e-muet">{leedflow.aTrier.total - leedflow.aTrier.silencieux > 0 ? `${leedflow.aTrier.total - leedflow.aTrier.silencieux} avec un message ou un résumé` : 'Seulement des appels manqués sans message'}{leedflow.aTrier.silencieux > 0 && leedflow.aTrier.total > leedflow.aTrier.silencieux ? `, ${leedflow.aTrier.silencieux} appel(s) manqué(s) sans message` : ''} · Prospect, privé, pro ou démarchage</span>
-        </a>
-      )}
-    </section>
-  )}
-
-  {rappels.length > 0 && (
-    <section class="e-jour" aria-label="Rappels prévus" data-rappels>
-      <h2>Rappels prévus</h2>
-      {rappels.map((c) => (
-        <article class="e-carte" id={`c-${c.id}`} data-contact={c.id}>
-          <div class="e-ligne"><a href={`/contacts/fiche?id=${c.id}`} class="e-nom">{nom(c)}{c.commune ? ` · ${c.commune}` : ''}</a>
-            {enRetard(c.prochaine_action_le) ? <span class="e-quand fort" data-retard>En retard · {echeance(c.prochaine_action_le)}</span> : <span class="e-quand">{echeance(c.prochaine_action_le)}</span>}</div>
-          <div class="e-muet">{c.etape === 'en_sommeil' ? 'En sommeil : à réveiller' : LIBELLES_ETAPES[c.etape]} · {c.prochaine_action}</div>
-          {c.dernier_texte && <p class="e-raison e-extrait">{extrait(c.dernier_texte)}</p>}
-          <div class="e-gestes">
-            {c.telephone && <a class="e-bouton second" href={`tel:${c.telephone}`}>Appeler</a>}
-            <a class="e-bouton" href={`/contacts/suite?id=${c.id}&retour=jour`} data-suite-lien>Noter la suite</a>
+        <button type="button" class="ct-btn ct-nouvelle" data-nouvelle-vue>+ Nouvelle vue avec ces filtres</button>
+      </div>
+      <div class="ct-bloc">
+        <h3>Catégories</h3>
+        <div data-categories></div>
+        <a href="/categories" class="ct-gerer" data-gerer-categories>Catégories et méthodes</a>
+      </div>
+    </aside>
+    <div class="ct-principal">
+      <section class="nv" data-nouveaux aria-label="Nouvelles demandes">
+        <button type="button" class="nv-barre" data-nv-barre aria-expanded="false" aria-controls="nv-liste">
+          <span class="nv-pastille" data-nv-compte>{nouveaux.total}</span><strong>Nouveaux</strong><span class="nv-src" data-nv-src></span><span class="nv-chev" aria-hidden="true">▾</span>
+        </button>
+        <div class="nv-liste" id="nv-liste" data-nv-liste hidden></div>
+      </section>
+      <div class="ct-outils">
+        <input type="search" data-recherche value={q} placeholder="Nom, numéro, e-mail, entreprise…" aria-label="Rechercher un contact" autocomplete="off" />
+        <details class="ct-menu" data-colonnes>
+          <summary>Colonnes</summary>
+          <div class="ct-menu-liste" data-colonnes-liste>
+            {COLONNES.filter((c) => c.masquable).map((c) => (
+              <div class="ct-col" data-col={c.cle}>
+                <label><input type="checkbox" value={c.cle} checked /> {c.libelle}</label>
+                <button type="button" class="ct-col-b" data-monter aria-label={`Monter la colonne ${c.libelle}`}>▲</button>
+                <button type="button" class="ct-col-b" data-descendre aria-label={`Descendre la colonne ${c.libelle}`}>▼</button>
+              </div>
+            ))}
           </div>
-        </article>
-      ))}
-    </section>
-  )}
-
-  {(prescripteurs.length > 0 || secteurs.length > 0 || lettres.length > 0) && (
-    <section class="e-jour" aria-label="Trouver des vendeurs cette semaine" data-prospection>
-      <h2>Trouver des vendeurs cette semaine</h2>
-      {prescripteurs.map((p) => (
-        <div class="e-pousse" data-prescripteur={p.id}>
-          <strong><a href={`/prescripteurs/fiche?id=${p.id}`}>Relancer {p.nom}{p.role ? `, ${p.role}` : ''}</a></strong>
-          <div>{p.relance_raison ?? 'Relance prévue'}{p.dernier_contact_le ? ` · dernier contact le ${echeance(p.dernier_contact_le)}` : ''}</div>
-        </div>
-      ))}
-      {lettres.map(([commune, n]) => (
-        <div class="e-pousse" data-lettre={commune}>
-          <strong><a href={`/acheteurs?secteur=${encodeURIComponent(commune)}#sommeil`}>Lettre « j'ai un acheteur » à {commune.charAt(0).toUpperCase() + commune.slice(1)}</a></strong>
-          <div>{n} acheteurs actifs cherchent dans cette commune.</div>
-        </div>
-      ))}
-      {secteurs.map((s) => (
-        <div class="e-pousse" data-secteur={s.secteur}>
-          <strong>Repasser à {s.secteur}</strong>
-          <div>Dernier passage il y a {Math.round(s.jours / 7)} semaines{s.mots ? ` : ${s.mots} mots` : ''}, {s.contacts} contact(s).</div>
-        </div>
-      ))}
-    </section>
-  )}
-
-  {rien && <p class="e-muet">Rien d'autre de prévu aujourd'hui. <a href="/ajouter">Ajouter un contact ou un passage de boîtage</a>.</p>}
-  <p class="e-muet">Un secteur de boîtage revient ici {BOITAGE_A_REFAIRE_JOURS / 7} semaines après son dernier passage.</p>
-  <p class="e-muet" data-etat-leedflow>{etatLeedflow}</p>
+        </details>
+      </div>
+      <div class="ct-filtres" data-filtres>
+        <select data-filtre="categorie_id" aria-label="Filtrer par catégorie"><option value="">Catégorie</option>{categories.map((c) => <option value={c.id}>{c.nom}</option>)}</select>
+        <select data-filtre="projet" aria-label="Filtrer par projet"><option value="">Projet</option>{Object.entries(PROJETS).map(([k, v]) => <option value={k}>{v}</option>)}</select>
+        <select data-filtre="temperature" aria-label="Filtrer par température"><option value="">Température</option>{Object.entries(TEMPERATURES).map(([k, v]) => <option value={k}>{v}</option>)}</select>
+        <select data-filtre="source" aria-label="Filtrer par source"><option value="">Source</option></select>
+        <select data-filtre="ville" aria-label="Filtrer par ville"><option value="">Ville</option></select>
+        <select data-filtre="lieu" aria-label="Filtrer par lieu de rencontre"><option value="">Lieu de rencontre</option></select>
+        <select data-filtre="mois" aria-label="Filtrer par mois de rencontre"><option value="">Mois de rencontre</option></select>
+        <input type="search" data-filtre-texte="entreprise_contient" placeholder="Entreprise contient…" aria-label="Filtrer par entreprise (contient)" autocomplete="off" />
+        <select data-filtre="dernier_contact" aria-label="Filtrer par dernier contact"><option value="">Dernier contact</option><option value="jamais">Jamais recontacté</option>{DUREES.map((d) => <option value={d.jours}>{d.libelle.charAt(0).toUpperCase() + d.libelle.slice(1)}</option>)}</select>
+        <select data-filtre="etat" aria-label="Filtrer par état"><option value="">État</option><option value="verifie:non">À vérifier</option><option value="verifie:oui">Vérifiés</option><option value="ecarte:oui">Écartés</option></select>
+        <select data-filtre="autres" aria-label="Autres filtres"><option value="">Autres filtres</option>
+          <optgroup label="Accord e-mail">{Object.entries(ACCORDS).map(([k, v]) => <option value={`accord:${k}`}>{v || 'Sans e-mail'}</option>)}</optgroup>
+          <optgroup label="Suivi des ventes"><option value="pipeline:dans">Dans le suivi</option><option value="pipeline:hors">Hors suivi</option></optgroup>
+          <optgroup label="Autres"><option value="ambassadeur:oui">Ambassadeurs</option><option value="a_rappeler:oui">À rappeler</option></optgroup>
+        </select>
+      </div>
+      <div class="ct-actifs"><span class="ct-pastilles" data-pastilles></span><span class="ct-total" data-compteur aria-live="polite">{total} contact{total > 1 ? 's' : ''} sur {total}</span></div>
+      <div class="ct-lot" data-lot hidden>
+        <strong data-lot-n aria-live="polite">0 sélectionné</strong>
+        <select data-lot-action="categorie_id" aria-label="Changer la catégorie des contacts cochés"><option value="">Changer la catégorie…</option>{categories.map((c) => <option value={c.id}>{c.nom}</option>)}</select>
+        <select data-lot-action="projet" aria-label="Changer le projet des contacts cochés"><option value="">Projet…</option>{Object.entries(PROJETS).map(([k, v]) => <option value={k}>{v}</option>)}</select>
+        <select data-lot-action="temperature" aria-label="Changer la température des contacts cochés"><option value="">Température…</option>{TEMPERATURES_CHOIX.map((k) => <option value={k}>{TEMPERATURES[k]}</option>)}<option value="aucune">Effacer la température</option></select>
+        <button type="button" class="ct-btn" data-lot-verifie>Marquer vérifié</button>
+        <button type="button" class="ct-btn" data-lot-ecarter>Écarter</button>
+        <button type="button" class="ct-btn ct-lot-fin" data-lot-aucun>Désélectionner</button>
+      </div>
+      <div class="ct-boite">
+        <table class="ct-table" data-tableau>
+          <thead><tr data-entetes></tr></thead>
+          <tbody data-lignes><tr><td class="ct-attente">Chargement des contacts…</td></tr></tbody>
+        </table>
+      </div>
+      <noscript><p class="e-message">Le tableau a besoin de JavaScript. La liste des contacts suivis reste sur <a href="/contacts">/contacts</a>.</p></noscript>
+    </div>
+  </div>
+  <dialog class="ct-dialogue" data-dialogue-vue aria-labelledby="ct-dialogue-titre">
+    <form method="dialog" data-form-vue>
+      <h2 id="ct-dialogue-titre" data-dialogue-titre>Nouvelle vue</h2>
+      <p class="e-muet" data-dialogue-aide></p>
+      <label class="ct-champ">Nom de la vue<input name="nom" maxlength="60" autocomplete="off" required /></label>
+      <p class="ct-erreur" data-dialogue-erreur role="alert" hidden></p>
+      <div class="ct-boutons"><button type="button" class="ct-btn" data-dialogue-annuler>Annuler</button><button type="submit" class="ct-btn bleu">Enregistrer</button></div>
+    </form>
+  </dialog>
+  <dialog class="fc-panneau" data-fiche aria-labelledby="fc-titre"><div class="fc-corps" data-fiche-corps></div></dialog>
+  <dialog class="ct-dialogue ct-creation" data-creation aria-labelledby="ct-creation-titre">
+    <form data-form-creation novalidate>
+      <h2 id="ct-creation-titre">Nouveau contact</h2>
+      <p class="e-muet" data-creation-intro>Au moins un nom ou un téléphone. Le contact est créé vérifié, source « saisie à la main ».</p>
+      <div class="fc-grille">
+        <label class="ct-champ">Prénom<input name="prenom" maxlength="80" autocomplete="off" /></label>
+        <label class="ct-champ">Nom<input name="nom" maxlength="80" autocomplete="off" /></label>
+        <label class="ct-champ">Téléphone<input name="telephone" type="tel" maxlength="40" autocomplete="off" /></label>
+        <label class="ct-champ">E-mail<input name="email" type="email" maxlength="254" autocomplete="off" /></label>
+        <label class="ct-champ">Ville<input name="commune" maxlength="80" autocomplete="off" /></label>
+        <label class="ct-champ">Entreprise<input name="entreprise" maxlength="120" autocomplete="off" /></label>
+        <label class="ct-champ">Catégorie<select name="categorie_id">{categories.map((c) => <option value={c.id} selected={c.id === (categories.some((x) => x.id === 'proches') ? 'proches' : categories[0]?.id)}>{c.nom}</option>)}</select></label>
+        <label class="ct-champ">Projet<select name="projet">{Object.entries(PROJETS).map(([k, v]) => <option value={k}>{v}</option>)}</select></label>
+        <label class="ct-champ">Température<select name="temperature"></select></label>
+      </div>
+      <label class="ct-champ">Note<textarea name="note" rows="2" maxlength="2000"></textarea></label>
+      <label class="fc-case"><input type="checkbox" name="accord" /> A accepté de recevoir les e-mails d'Anne</label>
+      <p class="ct-erreur" data-creation-erreur role="alert" hidden></p>
+      <div class="ct-boutons"><button type="button" class="ct-btn" data-creation-annuler>Annuler</button><button type="submit" class="ct-btn bleu">Enregistrer</button></div>
+    </form>
+  </dialog>
+  <div class="ct-toast" data-toast role="status" hidden><span data-toast-texte></span><button type="button" data-toast-annuler hidden>Annuler</button></div>
+  <script type="application/json" id="ct-donnees" set:html={donnees}></script>
+  <script type="application/json" id="ct-reglages" set:html={reglages}></script>
+  <script type="application/json" id="nv-donnees" set:html={donneesNouveaux}></script>
 </Espace>
 
-<style>
-  .e-jour { display: flex; flex-direction: column; gap: 10px; }
-  .e-jour-tete { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-  .e-alerte { font-size: 13px; color: var(--avt-terra); font-weight: 500; }
-  .e-carte-forte { border-color: var(--avt-terra); }
-  .e-ligne { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
-  .e-nom { font-weight: 500; font-size: 16px; color: var(--avt-brun); overflow-wrap: anywhere; }
-  .e-quand { font-size: 13px; color: var(--avt-text-muted); white-space: nowrap; }
-  .e-quand.fort { color: var(--avt-terra); font-weight: 500; }
-  .e-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-  .e-extrait { margin: 0; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .e-une-ligne { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .e-raison { margin: 0; font-size: 14px; color: var(--avt-klein); overflow-wrap: anywhere; }
-  .e-a-trier { gap: 4px; text-decoration: none; }
-  .e-gestes { display: flex; gap: 8px; }
-  .e-gestes button { cursor: pointer; }
-  .e-gestes .e-bouton { flex: 1; min-height: 44px; padding: 8px 12px; font-size: 15px; }
-  .e-pousse { background: var(--avt-brume); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
-  .e-pousse strong { font-weight: 500; font-size: 15px; }
-  @media (min-width: 900px) { .e-gestes { max-width: 420px; } }
+<script>
+  // Îlot du tableau (AD-22) : tri, recherche (story 13.24), filtres et vues enregistrées (story 18.5, AD-27) et colonnes
+  // masquées, tout dans le navigateur ; seules les vues s'écrivent, par /api/vues. Tout texte venu des données (noms de
+  // contacts, de vues, de catégories, villes) passe par `esc` avant d'entrer dans le HTML, ou par textContent / value.
+  import { telLisible } from '@site/server/recherche';
+  import {
+    ACCORDS, CANAUX_CONTACT, COLONNES, PROJETS, PROJETS_AVEC_TEMPERATURE, TEMPERATURES, TEMPERATURES_CHOIX, indexer,
+    libelleMois, libelleRencontres, libelleSource, preparerRecherche, temperaturePermise, valeurTri, type CleColonne, type LigneTableau,
+  } from '../server/tableau-colonnes';
+  import { ajouter, pastilles, preparerFiltre, retirer, type CleFiltre, type Filtre, type Vue } from '../server/vues';
+  import { brancherFiche } from '../islands/fiche-contact';
+  import { brancherNouveaux } from '../islands/nouveaux';
+
+  const MEMOIRE = 'espace.contacts.colonnes';
+  // Premier paquet de lignes écrit tout de suite, la suite par paquets aux images suivantes : le tableau répond vite même
+  // avec des milliers de lignes (story 18.5 : chaque recherche ou filtre sous 300 ms avec 1 200 contacts).
+  const PREMIER = 120, PAQUET = 400;
+  const lignes: LigneTableau[] = JSON.parse(document.getElementById('ct-donnees')?.textContent || '[]');
+  const reglages: { vues: Vue[]; categories: { id: string; nom: string }[] } = JSON.parse(document.getElementById('ct-reglages')?.textContent || '{"vues":[],"categories":[]}');
+  // Calculé une seule fois : textes sans accents, numéros réduits aux chiffres, dates en millisecondes.
+  const index = lignes.map(indexer);
+  const dateDe = (l: LigneTableau) => l.dernier_le ? new Date(l.dernier_le).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' }) : '';
+  const dates = lignes.map(dateDe);
+  /** Story 18.11 : contacts supprimés depuis le chargement (« Ajouter aux contacts » annulé) : plus jamais affichés ni comptés. */
+  const retires = new Set<string>();
+  const actifs = () => lignes.filter((x) => !x.ecarte && !retires.has(x.id)).length;
+  let total = actifs();
+  const parId = new Map(lignes.map((l, i) => [l.id, i]));
+  const nomsCategories = new Map(reglages.categories.map((c) => [c.id, c.nom]));
+  let vues: Vue[] = reglages.vues;
+  const comparer = new Intl.Collator('fr', { sensitivity: 'base', numeric: true }).compare;
+  const $ = <T extends Element>(s: string) => document.querySelector<T>(s)!;
+  const recherche = $<HTMLInputElement>('[data-recherche]');
+  const entetes = $<HTMLTableRowElement>('[data-entetes]');
+  const corps = $<HTMLTableSectionElement>('[data-lignes]');
+  const compteur = $<HTMLElement>('[data-compteur]');
+  const menuColonnes = $<HTMLDetailsElement>('[data-colonnes]');
+  const zoneVues = $<HTMLElement>('[data-vues]');
+  const zoneCategories = $<HTMLElement>('[data-categories]');
+  const zonePastilles = $<HTMLElement>('[data-pastilles]');
+  const zoneFiltres = $<HTMLElement>('[data-filtres]');
+  const entreprise = $<HTMLInputElement>('[data-filtre-texte=entreprise_contient]');
+  const dialogue = $<HTMLDialogElement>('[data-dialogue-vue]');
+  const formVue = $<HTMLFormElement>('[data-form-vue]');
+  const erreurVue = $<HTMLElement>('[data-dialogue-erreur]');
+  const toast = $<HTMLElement>('[data-toast]');
+  const toastAnnuler = $<HTMLButtonElement>('[data-toast-annuler]');
+
+  let cachees = new Set<CleColonne>();
+  try { cachees = new Set(JSON.parse(localStorage.getItem(MEMOIRE) ?? '[]')); } catch {}
+  // Ticket n° 233 : l'ordre des colonnes est gardé comme leur visibilité, dans ce navigateur (`localStorage`). Le nom reste en tête ;
+  // une clé inconnue est ignorée et une colonne absente de la liste gardée (ajoutée plus tard) va à la fin.
+  const MEMOIRE_ORDRE = 'espace.contacts.colonnes-ordre';
+  const ordreDefaut = COLONNES.map((c) => c.cle);
+  const ordreValide = (brut: unknown): CleColonne[] => {
+    const lu = Array.isArray(brut) ? brut.filter((k): k is CleColonne => ordreDefaut.includes(k as CleColonne)) : [];
+    const sans = [...new Set(lu)].filter((k) => k !== 'nom');
+    return ['nom', ...sans, ...ordreDefaut.filter((k) => k !== 'nom' && !sans.includes(k))];
+  };
+  let ordre: CleColonne[] = ordreDefaut;
+  try { ordre = ordreValide(JSON.parse(localStorage.getItem(MEMOIRE_ORDRE) ?? '[]')); } catch {}
+  const colonnesVisibles = () => ordre.map((k) => COLONNES.find((c) => c.cle === k)!).filter((c) => !cachees.has(c.cle));
+  let tri: { cle: CleColonne; sens: 1 | -1 } = { cle: 'nom', sens: 1 };
+  let filtre: Filtre = {};
+  /** La vue choisie (« tous », un identifiant), ou null quand les filtres ont changé depuis. */
+  let vueActive: string | null = 'tous';
+  const valeurs = new Map<CleColonne, (string | number | null)[]>();
+  const valeursDe = (cle: CleColonne) => {
+    let v = valeurs.get(cle);
+    if (!v) { v = lignes.map((l) => valeurTri(l, cle)); valeurs.set(cle, v); }
+    return v;
+  };
+
+  const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+  const vide = '<span class="ct-vide">—</span>';
+  const plus = (liste: string[], montrer: (v: string) => string) => liste.length > 1
+    ? ` <span class="ct-plus" title="${esc(liste.slice(1).map(montrer).join(', '))}">+${liste.length - 1}</span>` : '';
+  const pastille = (texte: string, classe = '') => `<span class="ct-pastille ${classe}">${esc(texte)}</span>`;
+  const reseau = (r: string | null) => r ? ({ linkedin: 'LinkedIn', instagram: 'Instagram', facebook: 'Facebook' } as Record<string, string>)[r.toLowerCase()] ?? r : 'Profil';
+
+  const nomDe = (l: LigneTableau) => [l.prenom, l.nom].filter(Boolean).join(' ') || telLisible(l.telephones[0]) || l.emails[0] || 'Sans nom';
+  // Story 18.6 : catégorie, projet et température se changent dans la cellule (bouton ▾ qui devient une liste).
+  const classer = (cle: string, contenu: string, titre: string) => `<button type="button" class="ct-classer" data-classer="${cle}" title="${esc(titre)}">${contenu}<span class="ct-chevron" aria-hidden="true">▾</span></button>`;
+
+  function cellule(l: LigneTableau, i: number, cle: CleColonne): string {
+    switch (cle) {
+      case 'nom': return `<td class="ct-nom"><a href="/?fiche=${esc(l.id)}" data-ouvrir-fiche>${esc(nomDe(l))}</a></td>`;
+      case 'entreprise': return `<td class="ct-coupe" title="${esc(l.entreprise)}">${l.entreprise ? esc(l.entreprise) : vide}</td>`;
+      case 'categorie': return `<td>${classer('categorie_id', l.categorie ? pastille(l.categorie) : pastille('à ranger', 'aq'), 'Changer la catégorie')}</td>`;
+      case 'projet': return `<td>${classer('projet', pastille(PROJETS[l.projet] ?? l.projet, l.projet === 'a_qualifier' ? 'aq' : ''), 'Changer le projet')}</td>`;
+      case 'temperature': {
+        const p = l.temperature ? pastille(TEMPERATURES[l.temperature] ?? l.temperature, `t-${esc(l.temperature)}`) : '';
+        // Suivi des ventes en cours : la température suit l'étape (AD-24) ; projet sans température : rien à choisir.
+        if (l.en_cours || !PROJETS_AVEC_TEMPERATURE.includes(l.projet)) return `<td>${p || vide}</td>`;
+        return `<td>${classer('temperature', p || pastille('à préciser', 'aq'), 'Changer la température')}</td>`;
+      }
+      case 'sources': return `<td class="ct-src">${l.sources.length ? esc(l.sources.map(libelleSource).join(' + ')) : vide}</td>`;
+      case 'rencontre': { const t = libelleRencontres(l.rencontres); return `<td class="ct-coupe" title="${esc(t)}">${t ? esc(t) : vide}</td>`; }
+      case 'ville': return `<td>${l.ville ? esc(l.ville) : vide}</td>`;
+      case 'telephone': return `<td class="ct-num">${l.telephones.length ? esc(telLisible(l.telephones[0])) + plus(l.telephones, telLisible) : vide}</td>`;
+      case 'email': return `<td class="ct-coupe ct-mail" title="${esc(l.emails.join(', '))}">${l.emails.length ? esc(l.emails[0]) + plus(l.emails, (e) => e) : vide}</td>`;
+      case 'profil': return `<td>${l.profils.length ? l.profils.map((p) => `<a href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">${esc(reseau(p.reseau))}</a>`).join(' ') : vide}</td>`;
+      case 'dernier': return `<td class="ct-num">${l.dernier_le ? `${esc(dates[i])}${l.dernier_canal ? ` · ${esc(CANAUX_CONTACT[l.dernier_canal] ?? l.dernier_canal)}` : ''}` : '<span class="ct-vide">jamais</span>'}</td>`;
+      case 'accord': return `<td>${l.accord === 'sans_email' ? vide : `<span class="ct-accord ${esc(l.accord)}">${esc(ACCORDS[l.accord])}</span>`}</td>`;
+      case 'verifie': return `<td>${l.ecarte ? '<span class="ct-etat">écarté</span>' : l.verifie ? '<span class="ct-etat ok">✓ vérifié</span>' : '<span class="ct-etat av">à vérifier</span>'}</td>`;
+      default: return '<td></td>';
+    }
+  }
+
+  // Le HTML d'une ligne est gardé tant que les colonnes affichées ne changent pas : trier ou filtrer ne le recalcule pas.
+  let html: (string | undefined)[] = [];
+  let colonnes = colonnesVisibles();
+  /** Les contacts cochés (identifiants) : gardés quand le tableau est redessiné (tri, filtres, recherche, paquets). */
+  const coches = new Set<string>();
+  const ligneHtml = (i: number) => {
+    const l = lignes[i], on = coches.has(l.id);
+    return html[i] ??= `<tr data-contact="${esc(l.id)}" data-i="${i}"${on ? ' class="ct-sel"' : ''}><td class="ct-case"><input type="checkbox" data-cocher aria-label="Cocher ${esc(nomDe(l))}"${on ? ' checked' : ''} /></td>${colonnes.map((c) => cellule(l, i, c.cle)).join('')}</tr>`;
+  };
+
+  /** Les lignes gardées par un filtre et une recherche (indices). */
+  function garder(f: Filtre, q: string): number[] {
+    const passe = preparerFiltre(f), cherche = preparerRecherche(q);
+    const r: number[] = [];
+    for (let i = 0; i < lignes.length; i++) if (!retires.has(lignes[i].id) && passe(lignes[i], index[i]) && cherche(index[i])) r.push(i);
+    return r;
+  }
+
+  let generation = 0;
+  /** Les lignes affichées (filtre et recherche), dans l'ordre du tableau : la plage de Maj + clic et « tout cocher ». */
+  let affichees: number[] = [];
+  function afficher() {
+    entetes.innerHTML = '<th class="ct-case"><input type="checkbox" data-tout aria-label="Cocher toutes les lignes affichées" /></th>' + colonnes.map((c) => {
+      const actif = tri.cle === c.cle;
+      return `<th data-cle="${c.cle}" aria-sort="${actif ? (tri.sens === 1 ? 'ascending' : 'descending') : 'none'}"><button type="button" data-trier="${c.cle}">${esc(c.libelle)}<span class="ct-fleche" aria-hidden="true">${actif ? (tri.sens === 1 ? '▲' : '▼') : ''}</span></button></th>`;
+    }).join('');
+    // Revue de code 18.5 : une vue invalide (une catégorie a disparu…) ne garde aucun contact, et le dit.
+    const garde = vueInvalide ? [] : garder(filtre, recherche.value);
+    const v = valeursDe(tri.cle);
+    garde.sort((a, b) => {
+      const x = v[a], y = v[b];
+      if (x === null || y === null) return x === y ? 0 : x === null ? 1 : -1; // vides en fin de liste, dans les deux sens
+      const r = typeof x === 'number' && typeof y === 'number' ? x - y : comparer(String(x), String(y));
+      return r * tri.sens;
+    });
+    affichees = garde;
+    const g = ++generation;
+    corps.removeAttribute('data-complet');
+    corps.innerHTML = garde.length
+      ? garde.slice(0, PREMIER).map(ligneHtml).join('')
+      : `<tr><td class="ct-attente${vueInvalide ? ' ct-a-refaire' : ''}" colspan="${colonnes.length + 1}">${vueInvalide ? `Vue à refaire : ${esc(vueInvalide)}. Elle ne montre aucun contact tant que ses filtres ne sont pas choisis à nouveau.` : lignes.length ? 'Aucun contact pour ces filtres ou cette recherche.' : 'Aucun contact pour l\'instant.'}</td></tr>`;
+    let n = PREMIER;
+    const suite = () => {
+      if (g !== generation) return;
+      if (n >= garde.length) { corps.dataset.complet = '1'; return; }
+      corps.insertAdjacentHTML('beforeend', garde.slice(n, n + PAQUET).map(ligneHtml).join(''));
+      n += PAQUET;
+      requestAnimationFrame(() => setTimeout(suite));
+    };
+    if (garde.length <= PREMIER) corps.dataset.complet = '1'; else requestAnimationFrame(() => setTimeout(suite));
+    compteur.textContent = `${garde.length} contact${garde.length > 1 ? 's' : ''} sur ${total}`;
+    afficherPastilles();
+    marquerVue();
+    majLot();
+  }
+
+  // Pastilles des filtres actifs : un clic en retire une. La recherche garde sa propre case.
+  function afficherPastilles() {
+    const p = pastilles(filtre, nomsCategories);
+    zonePastilles.innerHTML = p.map((x) => `<button type="button" class="ct-chip" data-retirer="${esc(x.cle)}"${x.valeur === null ? '' : ` data-valeur="${esc(x.valeur)}"`} aria-label="Retirer le filtre ${esc(x.libelle)}">${esc(x.libelle)} <span aria-hidden="true">✕</span></button>`).join('')
+      + (p.length > 1 ? '<button type="button" class="ct-chip ct-chip-tout" data-retirer-tout>Tout retirer</button>' : '');
+    if (document.activeElement !== entreprise) entreprise.value = filtre.entreprise_contient ?? '';
+  }
+
+  // Colonne de gauche : « Tous les contacts », les vues (compteur sans la recherche), puis les catégories.
+  let comptes = new Map<string, number>();
+  const compterVues = () => { comptes = new Map(vues.map((v) => [v.id, v.invalide ? 0 : garder(v.filtre, v.filtre.recherche ?? '').length])); };
+  function afficherVues() {
+    zoneVues.innerHTML = `<div class="ct-vue-l"><button type="button" class="ct-vue" data-vue="tous"><span>Tous les contacts</span><small>${total}</small></button></div>`
+      + vues.map((v) => `<div class="ct-vue-l"><button type="button" class="ct-vue${v.invalide ? ' ct-vue-invalide' : ''}" data-vue="${esc(v.id)}"${v.invalide ? ` title="Vue à refaire : ${esc(v.invalide)}"` : ''}><span>${v.invalide ? '<b aria-hidden="true">⚠</b> ' : ''}${esc(v.nom)}</span><small>${v.invalide ? 'à refaire' : comptes.get(v.id) ?? 0}</small></button>`
+        + `<span class="ct-vue-gestes"><button type="button" class="ct-vue-x" data-renommer-vue="${esc(v.id)}" title="Renommer la vue" aria-label="Renommer la vue ${esc(v.nom)}">✎</button>`
+        + `<button type="button" class="ct-vue-x" data-supprimer-vue="${esc(v.id)}" title="Supprimer la vue" aria-label="Supprimer la vue ${esc(v.nom)}">×</button></span></div>`).join('');
+    const parCategorie = new Map<string, number>();
+    for (const l of lignes) if (!l.ecarte && !retires.has(l.id) && l.categorie_id) parCategorie.set(l.categorie_id, (parCategorie.get(l.categorie_id) ?? 0) + 1);
+    zoneCategories.innerHTML = reglages.categories.map((c) => `<button type="button" class="ct-vue" data-categorie="${esc(c.id)}"><span>${esc(c.nom)}</span><small>${parCategorie.get(c.id) ?? 0}</small></button>`).join('');
+    marquerVue();
+  }
+  function marquerVue() {
+    const sansFiltre = !Object.keys(filtre).length;
+    const seuleCategorie = Object.keys(filtre).length === 1 && filtre.categorie_id?.length === 1 ? filtre.categorie_id[0] : null;
+    for (const b of document.querySelectorAll<HTMLButtonElement>('[data-vue], [data-categorie]')) {
+      const actif = b.dataset.vue ? (b.dataset.vue === 'tous' ? sansFiltre && vueActive !== null : b.dataset.vue === vueActive) : b.dataset.categorie === seuleCategorie && vueActive === null;
+      b.classList.toggle('actif', actif);
+      b.setAttribute('aria-pressed', String(actif));
+    }
+  }
+
+  /** Le motif de la vue invalide choisie (revue de code 18.5), ou null. */
+  let vueInvalide: string | null = null;
+  const changerFiltre = (f: Filtre) => { filtre = f; vueActive = null; vueInvalide = null; afficher(); };
+
+  // Choix des sources et des villes : celles des contacts chargés, dans l'ordre alphabétique.
+  const remplir = (cle: string, valeursChoix: [string, string][]) => {
+    $<HTMLSelectElement>(`[data-filtre=${cle}]`).insertAdjacentHTML('beforeend', valeursChoix.map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join(''));
+  };
+  remplir('source', [...new Set(lignes.flatMap((l) => l.sources))].map((s): [string, string] => [s, libelleSource(s)]).sort((a, b) => comparer(a[1], b[1])));
+  const villes = new Map<string, string>();
+  for (const l of lignes) { const v = l.ville?.trim(); if (v && !villes.has(v.toLowerCase())) villes.set(v.toLowerCase(), v); }
+  remplir('ville', [...villes.values()].sort(comparer).map((v): [string, string] => [v, v]));
+  // Story 18.17 : lieux et mois de rencontre présents en base (le mois le plus récent d'abord).
+  const lieux = new Map<string, string>(), moisPresents = new Set<string>();
+  for (const l of lignes) for (const r of l.rencontres) {
+    if (r.lieu && !lieux.has(r.lieu.toLowerCase())) lieux.set(r.lieu.toLowerCase(), r.lieu);
+    if (r.mois) moisPresents.add(r.mois);
+  }
+  remplir('lieu', [...lieux.values()].sort(comparer).map((v): [string, string] => [v, v]));
+  remplir('mois', [...moisPresents].sort().reverse().map((m): [string, string] => [m, libelleMois(m)]));
+
+  zoneFiltres.addEventListener('change', (e) => {
+    const s = e.target as HTMLSelectElement;
+    if (s.tagName !== 'SELECT' || !s.value) return;
+    const [cle, valeur] = s.dataset.filtre === 'etat' || s.dataset.filtre === 'autres' ? s.value.split(':') : [s.dataset.filtre!, s.value];
+    s.value = '';
+    let f = filtre;
+    if (cle === 'verifie' || cle === 'ecarte') f = retirer(retirer(f, 'verifie', null), 'ecarte', null); // un seul état à la fois
+    changerFiltre(ajouter(f, cle as CleFiltre, cle === 'dernier_contact' && valeur !== 'jamais' ? Number(valeur) : valeur));
+  });
+  let attenteEntreprise: ReturnType<typeof setTimeout> | undefined;
+  entreprise.addEventListener('input', () => {
+    clearTimeout(attenteEntreprise);
+    attenteEntreprise = setTimeout(() => {
+      const v = entreprise.value.trim().slice(0, 80);
+      changerFiltre(v ? ajouter(filtre, 'entreprise_contient', v) : retirer(filtre, 'entreprise_contient', null));
+    }, 120);
+  });
+  zonePastilles.addEventListener('click', (e) => {
+    const b = (e.target as Element).closest<HTMLElement>('[data-retirer], [data-retirer-tout]');
+    if (!b) return;
+    changerFiltre(b.dataset.retirer ? retirer(filtre, b.dataset.retirer as CleFiltre, b.dataset.valeur ?? null) : {});
+  });
+  zoneCategories.addEventListener('click', (e) => {
+    const b = (e.target as Element).closest<HTMLElement>('[data-categorie]');
+    if (b) changerFiltre({ categorie_id: [b.dataset.categorie!] });
+  });
+
+  // Vues : choisir, enregistrer, renommer, supprimer (et annuler la suppression tout de suite).
+  async function appeler(methode: string, corpsJson?: unknown, id?: string): Promise<{ vue?: Vue; erreur?: string; status?: number }> {
+    try {
+      const r = await fetch(`/api/vues${id ? `?id=${encodeURIComponent(id)}` : ''}`, {
+        method: methode, headers: corpsJson ? { 'Content-Type': 'application/json' } : {}, body: corpsJson ? JSON.stringify(corpsJson) : undefined,
+      });
+      const d = await r.json().catch(() => ({}));
+      return r.ok ? d : { erreur: d.erreur ?? `Erreur ${r.status}`, status: r.status };
+    } catch { return { erreur: 'Pas de connexion : réessayez.' }; }
+  }
+  let finToast: ReturnType<typeof setTimeout> | undefined;
+  let annulation: (() => void) | null = null;
+  function montrer(texte: string, annuler: (() => void) | null = null) {
+    if (annuler !== annulerVue) supprimees.length = 0; // un autre message : les annulations de vues en attente expirent
+    $<HTMLElement>('[data-toast-texte]').textContent = texte;
+    annulation = annuler;
+    toastAnnuler.hidden = !annuler;
+    toast.hidden = false;
+    clearTimeout(finToast);
+    finToast = setTimeout(() => { toast.hidden = true; annulation = null; supprimees.length = 0; }, annuler ? 10000 : 4000);
+  }
+  // Revue de code 18.5 : une annulation par vue supprimée. « Annuler » remet la dernière supprimée, puis propose la précédente.
+  const supprimees: Vue[] = [];
+  async function annulerVue() {
+    const v = supprimees.pop();
+    if (!v) return;
+    const x = await appeler('POST', { id: v.id, nom: v.nom, ordre: v.ordre, filtre: v.filtre });
+    if (x.vue) { vues.push(x.vue); ranger(); }
+    const suivante = supprimees[supprimees.length - 1];
+    const fait = x.vue ? `Vue « ${x.vue.nom} » remise` : x.erreur ?? 'Erreur';
+    if (suivante) montrer(`${fait}. Vue « ${suivante.nom} » supprimée`, annulerVue); else montrer(fait);
+  }
+  toastAnnuler.addEventListener('click', () => { const a = annulation; annulation = null; toast.hidden = true; a?.(); });
+  // Ordres égaux départagés par l'identifiant, en ordre binaire comme la base (revue de code 18.5).
+  const ranger = () => { vues.sort((a, b) => a.ordre - b.ordre || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)); compterVues(); afficherVues(); };
+
+  let renommer: Vue | null = null;
+  function ouvrirDialogue(titre: string, aide: string, nom: string, vue: Vue | null) {
+    renommer = vue;
+    $<HTMLElement>('[data-dialogue-titre]').textContent = titre;
+    $<HTMLElement>('[data-dialogue-aide]').textContent = aide;
+    formVue.nom.value = nom;
+    erreurVue.hidden = true;
+    dialogue.showModal();
+    formVue.nom.select();
+  }
+  $<HTMLButtonElement>('[data-nouvelle-vue]').addEventListener('click', () => {
+    const { recherche: _r, ...f } = filtre;
+    if (!Object.keys(f).length) { montrer('Choisissez d\'abord des filtres au-dessus du tableau, puis enregistrez-les comme vue.'); return; }
+    ouvrirDialogue('Nouvelle vue', `Filtres : ${pastilles(f, nomsCategories).map((p) => p.libelle).join(' · ')}. La recherche n'est pas enregistrée.`, '', null);
+  });
+  $<HTMLButtonElement>('[data-dialogue-annuler]').addEventListener('click', () => dialogue.close());
+  formVue.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nom = String(formVue.nom.value).trim();
+    if (!nom) return;
+    const { recherche: _r, ...f } = filtre;
+    // Revue de code 18.5 : « Enregistrer » désactivé pendant l'appel (un double clic ne crée pas deux vues).
+    const bouton = formVue.querySelector<HTMLButtonElement>('button[type=submit]')!;
+    if (bouton.disabled) return;
+    bouton.disabled = true;
+    const r = renommer ? await appeler('PATCH', { id: renommer.id, nom }) : await appeler('POST', { nom, filtre: f });
+    bouton.disabled = false;
+    if (!r.vue) { erreurVue.textContent = r.erreur ?? 'Erreur'; erreurVue.hidden = false; return; }
+    dialogue.close();
+    if (renommer) {
+      const v = vues.find((x) => x.id === r.vue!.id);
+      if (v) v.nom = r.vue.nom;
+      afficherVues();
+      montrer(`Vue renommée « ${r.vue.nom} »`);
+    } else {
+      vues.push(r.vue);
+      vueActive = r.vue.id;
+      ranger();
+      montrer(`Vue « ${r.vue.nom} » enregistrée`);
+    }
+  });
+  zoneVues.addEventListener('click', async (e) => {
+    const cible = e.target as Element;
+    const ren = cible.closest<HTMLElement>('[data-renommer-vue]'), sup = cible.closest<HTMLElement>('[data-supprimer-vue]');
+    if (ren) {
+      const v = vues.find((x) => x.id === ren.dataset.renommerVue);
+      if (v) ouvrirDialogue('Renommer la vue', 'Les filtres de la vue ne changent pas.', v.nom, v);
+      return;
+    }
+    if (sup) {
+      // Revue de code 18.5 : bouton désactivé pendant l'appel ; une vue déjà retirée (404) part sans message d'erreur.
+      if ((sup as HTMLButtonElement).disabled) return;
+      (sup as HTMLButtonElement).disabled = true;
+      const id = sup.dataset.supprimerVue!;
+      const r = await appeler('DELETE', undefined, id);
+      (sup as HTMLButtonElement).disabled = false;
+      if (!r.vue && r.status !== 404) { montrer(r.erreur ?? 'Erreur'); return; }
+      vues = vues.filter((x) => x.id !== id);
+      if (vueActive === id) { vueActive = null; vueInvalide = null; }
+      ranger();
+      afficher();
+      if (!r.vue) return;
+      supprimees.push(r.vue);
+      montrer(`Vue « ${r.vue.nom} » supprimée`, annulerVue);
+      return;
+    }
+    const b = cible.closest<HTMLElement>('[data-vue]');
+    if (!b) return;
+    const v = vues.find((x) => x.id === b.dataset.vue);
+    const { recherche: q, ...f } = v?.filtre ?? {};
+    clearTimeout(attenteEntreprise); // revue de code 18.5 : une frappe en attente dans « Entreprise contient » ne vient pas changer la vue
+    filtre = f;
+    if (q) recherche.value = q;
+    vueActive = v ? v.id : 'tous';
+    vueInvalide = v?.invalide ?? null;
+    afficher();
+  });
+
+  entetes.addEventListener('click', (e) => {
+    const cle = (e.target as Element).closest<HTMLElement>('[data-trier]')?.dataset.trier as CleColonne | undefined;
+    if (!cle) return;
+    tri = tri.cle === cle ? { cle, sens: tri.sens === 1 ? -1 : 1 } : { cle, sens: 1 };
+    afficher();
+  });
+  // Le tableau se recalcule 120 ms après la dernière frappe, pas à chaque lettre (revue de code 18.4).
+  let attente: ReturnType<typeof setTimeout> | undefined;
+  recherche.addEventListener('input', () => { clearTimeout(attente); attente = setTimeout(afficher, 120); });
+  for (const boite of menuColonnes.querySelectorAll<HTMLInputElement>('input[type=checkbox]')) {
+    boite.checked = !cachees.has(boite.value as CleColonne);
+    boite.addEventListener('change', () => {
+      if (boite.checked) cachees.delete(boite.value as CleColonne); else cachees.add(boite.value as CleColonne);
+      try { localStorage.setItem(MEMOIRE, JSON.stringify([...cachees])); } catch {}
+      colonnes = colonnesVisibles();
+      html = [];
+      afficher();
+    });
+  }
+  // Flèches monter / descendre : le menu se réordonne, puis le tableau (le nom, premier, ne bouge pas).
+  const listeColonnes = menuColonnes.querySelector<HTMLElement>('[data-colonnes-liste]')!;
+  const rangerMenu = () => {
+    for (const k of ordre) { const ligne = listeColonnes.querySelector(`[data-col="${k}"]`); if (ligne) listeColonnes.append(ligne); }
+    const lignes = [...listeColonnes.querySelectorAll<HTMLElement>('[data-col]')];
+    lignes.forEach((l, i) => {
+      l.querySelector<HTMLButtonElement>('[data-monter]')!.disabled = i === 0;
+      l.querySelector<HTMLButtonElement>('[data-descendre]')!.disabled = i === lignes.length - 1;
+    });
+  };
+  rangerMenu();
+  listeColonnes.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-monter], [data-descendre]');
+    const cle = b?.closest<HTMLElement>('[data-col]')?.dataset.col as CleColonne | undefined;
+    if (!b || !cle) return;
+    const i = ordre.indexOf(cle), j = i + (b.hasAttribute('data-monter') ? -1 : 1);
+    if (j < 1 || j >= ordre.length) return; // le nom (rang 0) ne bouge pas, rien ne passe devant lui
+    [ordre[i], ordre[j]] = [ordre[j], ordre[i]];
+    try { localStorage.setItem(MEMOIRE_ORDRE, JSON.stringify(ordre)); } catch {}
+    colonnes = colonnesVisibles();
+    html = [];
+    rangerMenu();
+    afficher();
+    listeColonnes.querySelector<HTMLButtonElement>(`[data-col="${cle}"] ${b.hasAttribute('data-monter') ? '[data-monter]' : '[data-descendre]'}`)?.focus();
+  });
+  // Story 18.6 : cases à cocher, actions groupées et classement d'une seule ligne (FR-4, FR-5). Écritures par /api/carnet.
+  const barreLot = $<HTMLElement>('[data-lot]');
+  const lotN = $<HTMLElement>('[data-lot-n]');
+  const boutonEcarter = $<HTMLButtonElement>('[data-lot-ecarter]');
+  /** Dernière case cliquée (indice de ligne), départ de la plage de Maj + clic. */
+  let derniere: number | null = null;
+  /** Remet les cases et le surlignage des lignes déjà écrites d'après `coches`, en un seul passage. */
+  function peindreCoches() {
+    for (const tr of corps.querySelectorAll<HTMLTableRowElement>('tr[data-i]')) {
+      const on = coches.has(lignes[Number(tr.dataset.i)].id);
+      tr.classList.toggle('ct-sel', on);
+      const c = tr.querySelector<HTMLInputElement>('input[data-cocher]');
+      if (c) c.checked = on;
+    }
+    majLot();
+  }
+  function cocher(indices: number[], on: boolean) {
+    for (const i of indices) { if (on) coches.add(lignes[i].id); else coches.delete(lignes[i].id); html[i] = undefined; }
+    peindreCoches();
+  }
+  function majLot() {
+    let vus = 0;
+    for (const i of affichees) if (coches.has(lignes[i].id)) vus++;
+    const tout = entetes.querySelector<HTMLInputElement>('[data-tout]');
+    if (tout) { tout.checked = affichees.length > 0 && vus === affichees.length; tout.indeterminate = vus > 0 && vus < affichees.length; }
+    barreLot.hidden = coches.size === 0;
+    const n = coches.size, caches = n - vus;
+    lotN.textContent = `${n} sélectionné${n > 1 ? 's' : ''}${caches ? ` (dont ${caches} hors de l'affichage)` : ''}`;
+    boutonEcarter.textContent = filtre.ecarte === 'oui' ? 'Faire revenir' : 'Écarter';
+  }
+  entetes.addEventListener('change', (e) => {
+    const t = e.target as HTMLInputElement;
+    if (t.matches('[data-tout]')) cocher(affichees, t.checked);
+  });
+
+  type Changements = { categorie_id?: string; projet?: string; temperature?: string | null; verifie?: boolean; ecarte?: boolean };
+  type LigneClassee = Pick<LigneTableau, 'id' | 'categorie_id' | 'categorie' | 'projet' | 'temperature' | 'verifie' | 'ecarte'>;
+  type Reponse = { ok: boolean; error?: { message: string }; lot?: string | null; touches?: number; ignores?: number; inchanges?: number; rendus?: number; gardes?: number; lignes?: LigneClassee[] };
+  async function carnet(corpsJson: unknown): Promise<Reponse> {
+    try {
+      const r = await fetch('/api/carnet', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpsJson) });
+      const d = await r.json().catch(() => ({}));
+      return r.ok ? d : { ok: false, error: { message: d.error?.message ?? `Erreur ${r.status}` } };
+    } catch { return { ok: false, error: { message: 'Pas de connexion : réessayez.' } }; }
+  }
+  /** Reporte dans le tableau les lignes renvoyées par le serveur, sans recharger : compteurs, vues et catégories suivent. */
+  function reporter(l: LigneClassee[] = []) {
+    for (const x of l) {
+      const i = parId.get(x.id);
+      if (i === undefined) continue;
+      Object.assign(lignes[i], { categorie_id: x.categorie_id, categorie: x.categorie, projet: x.projet, temperature: x.temperature, verifie: x.verifie, ecarte: x.ecarte });
+      html[i] = undefined;
+    }
+    valeurs.clear();
+    total = actifs();
+    compterVues();
+    afficherVues();
+    afficher();
+  }
+  const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
+  let enCours = false;
+  /** Envoie un classement, met le tableau à jour, annonce le nombre de contacts touchés et propose d'annuler. */
+  async function envoyer(ids: string[], ch: Changements, detail: string) {
+    if (enCours || !ids.length) return false;
+    enCours = true;
+    barreLot.querySelectorAll<HTMLButtonElement | HTMLSelectElement>('button, select').forEach((b) => { b.disabled = true; });
+    const r = await carnet({ ids, changements: ch });
+    enCours = false;
+    barreLot.querySelectorAll<HTMLButtonElement | HTMLSelectElement>('button, select').forEach((b) => { b.disabled = false; });
+    if (!r.ok) { montrer(r.error?.message ?? 'Erreur'); return false; }
+    reporter(r.lignes);
+    const n = r.touches ?? 0, ign = r.ignores ?? 0;
+    const texte = `${pluriel(n, 'contact')} touché${n > 1 ? 's' : ''}${n ? ` : ${detail}` : ''}`
+      + (ign ? ` (${pluriel(ign, 'ignoré')} : pas de température pour leur projet, ou fixée par le suivi des ventes)` : '');
+    const lot = r.lot;
+    montrer(texte, lot ? async () => {
+      const a = await carnet({ annuler: lot });
+      if (!a.ok) { montrer(a.error?.message ?? 'Erreur'); return; }
+      reporter(a.lignes);
+      montrer(`${pluriel(a.rendus ?? 0, 'contact')} remis comme avant${a.gardes ? ` ; ${pluriel(a.gardes, 'contact')} modifié${(a.gardes ?? 0) > 1 ? 's' : ''} depuis, gardé${(a.gardes ?? 0) > 1 ? 's' : ''} tel${(a.gardes ?? 0) > 1 ? 's' : ''} quel${(a.gardes ?? 0) > 1 ? 's' : ''}` : ''}`);
+    } : null);
+    return true;
+  }
+  const libelleChangement = (cle: string, v: string) => cle === 'categorie_id' ? `rangé dans « ${nomsCategories.get(v) ?? v} », vérifié`
+    : cle === 'projet' ? `projet « ${PROJETS[v] ?? v} »${PROJETS_AVEC_TEMPERATURE.includes(v) ? '' : ', température effacée'}`
+    : v === 'aucune' ? 'température effacée' : `température « ${TEMPERATURES[v] ?? v} »`;
+  /** Une action groupée : sur tous les contacts cochés ; les cases se vident si elle réussit. */
+  async function lot(ch: Changements, detail: string) {
+    if (await envoyer([...coches], ch, detail)) { coches.clear(); html = []; derniere = null; afficher(); }
+  }
+  /**
+   * Revue de code 18.6 : une liste n'écrit qu'au choix confirmé, d'un clic dans la liste ouverte ou par Entrée. Sur une liste
+   * fermée, les flèches (ou une lettre) du clavier changent la valeur affichée à chaque touche et le navigateur envoie
+   * aussitôt « change » : sans cette garde, une seule flèche classerait tous les contacts cochés.
+   */
+  function surChoix(s: HTMLSelectElement, appliquer: (v: string) => void, abandon: () => void, vide = false) {
+    let clavier = false;
+    const valider = () => { clavier = false; const v = s.value; if (v || vide) appliquer(v); };
+    s.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); valider(); return; }
+      if (e.key === 'Escape') { clavier = false; abandon(); return; }
+      if (e.key !== 'Tab' && e.key !== ' ' && !e.altKey && !e.ctrlKey && !e.metaKey) clavier = true;
+    });
+    s.addEventListener('pointerdown', () => { clavier = false; });
+    s.addEventListener('change', () => { if (!clavier) valider(); });
+    s.addEventListener('blur', () => { if (clavier) { clavier = false; abandon(); } });
+  }
+  for (const s of barreLot.querySelectorAll<HTMLSelectElement>('select[data-lot-action]')) {
+    const cle = s.dataset.lotAction!;
+    surChoix(s, (v) => {
+      s.value = '';
+      void lot(cle === 'temperature' ? { temperature: v === 'aucune' ? null : v } : { [cle]: v }, libelleChangement(cle, v));
+    }, () => { s.value = ''; });
+  }
+  $<HTMLButtonElement>('[data-lot-verifie]').addEventListener('click', () => void lot({ verifie: true }, 'marqués vérifiés'));
+  boutonEcarter.addEventListener('click', () => {
+    const revenir = filtre.ecarte === 'oui';
+    void lot({ ecarte: !revenir }, revenir ? 'revenus dans le tableau' : 'écartés (filtre « Écartés » pour les revoir)');
+  });
+  $<HTMLButtonElement>('[data-lot-aucun]').addEventListener('click', () => { coches.clear(); html = []; derniere = null; peindreCoches(); });
+
+  // Une seule ligne : le bouton ▾ de la cellule devient une petite liste ; choisir écrit tout de suite.
+  function ouvrirListe(b: HTMLElement, i: number) {
+    const l = lignes[i], cle = b.dataset.classer!;
+    const options: [string, string][] = cle === 'categorie_id' ? reglages.categories.map((c) => [c.id, c.nom])
+      : cle === 'projet' ? Object.entries(PROJETS)
+      : [['', 'à préciser'], ...TEMPERATURES_CHOIX.filter((t) => temperaturePermise(t, l.projet)).map((t): [string, string] => [t, TEMPERATURES[t]])];
+    const actuelle = cle === 'categorie_id' ? l.categorie_id : cle === 'projet' ? l.projet : l.temperature ?? '';
+    const s = document.createElement('select');
+    s.className = 'ct-liste';
+    s.dataset.liste = cle;
+    s.setAttribute('aria-label', `${cle === 'categorie_id' ? 'Catégorie' : cle === 'projet' ? 'Projet' : 'Température'} de ${nomDe(l)}`);
+    s.innerHTML = (cle === 'categorie_id' && !l.categorie_id ? '<option value="" selected disabled>Choisir…</option>' : '')
+      + options.map(([v, t]) => `<option value="${esc(v)}"${v === actuelle ? ' selected' : ''}>${esc(t)}</option>`).join('');
+    b.replaceWith(s);
+    s.focus();
+    // Story 18.15 (ticket 238) : un seul clic ; le clic de la pastille donne l'activation que showPicker exige. Sans
+    // support (ou refusé), la liste garde le focus comme avant.
+    try { s.showPicker(); } catch {}
+    let fini = false;
+    const refermer = () => { if (fini) return; fini = true; const tr = s.closest('tr'); if (tr) tr.outerHTML = ligneHtml(i); };
+    // Revue de code 18.6 : écrit au clic dans la liste ouverte ou par Entrée, jamais à chaque flèche du clavier (`surChoix`).
+    const choisir = async () => {
+      if (fini) return;
+      fini = true;
+      const v = s.value;
+      s.disabled = true;
+      const ch: Changements = cle === 'temperature' ? { temperature: v || null } : { [cle]: v };
+      const ok = await envoyer([l.id], ch, `${nomDe(l)}, ${cle === 'temperature' && !v ? 'température effacée' : libelleChangement(cle, v)}`);
+      if (!ok) { fini = false; refermer(); }
+    };
+    // « À préciser » (température vide) se choisit aussi.
+    surChoix(s, () => void choisir(), () => refermer(), cle === 'temperature');
+    s.addEventListener('blur', () => setTimeout(refermer, 150));
+  }
+
+  corps.addEventListener('click', (e) => {
+    const cible = e.target as HTMLElement;
+    const tr = cible.closest<HTMLTableRowElement>('tr[data-i]');
+    if (!tr) return;
+    const i = Number(tr.dataset.i);
+    if (cible.matches('input[data-cocher]')) {
+      const on = (cible as HTMLInputElement).checked;
+      const a = derniere === null ? -1 : affichees.indexOf(derniere), b = affichees.indexOf(i);
+      // Maj + clic : toute la plage entre la case cliquée juste avant et celle-ci, dans l'ordre affiché (FR-4).
+      cocher(e.shiftKey && a >= 0 && b >= 0 ? affichees.slice(Math.min(a, b), Math.max(a, b) + 1) : [i], on);
+      derniere = i;
+      return;
+    }
+    const b = cible.closest<HTMLElement>('[data-classer]');
+    if (b) { ouvrirListe(b, i); return; }
+    // Story 18.7 : le nom ouvre la fiche dans le panneau (Ctrl ou Cmd + clic : dans un nouvel onglet, fiche ouverte).
+    const a = cible.closest<HTMLAnchorElement>('[data-ouvrir-fiche]');
+    if (a && !e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) { e.preventDefault(); void fiches.ouvrirFiche(lignes[i].id); }
+  });
+  /** Une ligne écrite par la fiche ou la création (story 18.7) : remplacée, ou ajoutée au tableau, sans recharger. */
+  function remettreLigne(l: LigneTableau) {
+    let i = parId.get(l.id);
+    retires.delete(l.id);
+    if (i === undefined) { i = lignes.length; lignes.push(l); index.push(indexer(l)); dates.push(dateDe(l)); parId.set(l.id, i); }
+    else { lignes[i] = l; index[i] = indexer(l); dates[i] = dateDe(l); }
+    html[i] = undefined;
+    valeurs.clear();
+    total = actifs();
+    compterVues();
+    afficherVues();
+    afficher();
+  }
+  const fiches = brancherFiche({ categories: reglages.categories, surLigne: remettreLigne, annoncer: (t) => montrer(t) });
+  /** Un contact qui n'existe plus (création annulée depuis la barre « Nouveaux ») sort du tableau sans recharger. */
+  function retirerLigne(id: string) {
+    retires.add(id);
+    coches.delete(id);
+    valeurs.clear();
+    total = actifs();
+    compterVues();
+    afficherVues();
+    afficher();
+  }
+  brancherNouveaux({ fiches, surLigne: remettreLigne, retirer: retirerLigne, montrer });
+  $<HTMLButtonElement>('[data-nouveau-contact]').addEventListener('click', () => fiches.ouvrirCreation());
+  const ficheDemandee = new URL(location.href).searchParams.get('fiche');
+  if (ficheDemandee && /^[0-9A-HJKMNP-TV-Z]{26}$/.test(ficheDemandee)) void fiches.ouvrirFiche(ficheDemandee);
+  document.addEventListener('click', (e) => { if (!menuColonnes.contains(e.target as Node)) menuColonnes.open = false; });
+  compterVues();
+  afficherVues();
+  afficher();
+</script>
+
+<style is:global>
+  /* Mise en page de la maquette : colonne des vues à gauche, tableau sur toute la largeur restante. Classes globales :
+     les lignes du tableau sont écrites par l'îlot, hors du gabarit. */
+  /* Barre « Nouveaux » (story 18.11, maquette) : une ligne repliée, dépliée en cartes. */
+  .nv { margin: 0 0 10px; }
+  .nv-barre { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; border: 1px solid var(--avt-galet); background: #fff; border-radius: 12px; padding: 10px 14px; cursor: pointer; font: inherit; color: inherit; text-align: left; }
+  .nv-barre:focus-visible, .nv-carte button:focus-visible { outline: 2px solid var(--avt-klein); outline-offset: 2px; }
+  .nv-barre.vide { cursor: default; color: var(--avt-text-muted); }
+  .nv-pastille { background: var(--avt-terra); color: #fff; border-radius: 999px; min-width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; padding: 0 6px; font-variant-numeric: tabular-nums; }
+  .nv-barre.vide .nv-pastille { background: var(--avt-galet); color: var(--avt-brun); }
+  .nv-src { color: var(--avt-text-muted); font-size: 13px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nv-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; margin-top: 10px; }
+  .nv-liste[hidden] { display: none; }
+  .nv-carte { border: 1px solid var(--avt-galet); background: #fff; border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .nv-tete { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--avt-text-muted); }
+  .nv-badge { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--avt-brume); color: var(--avt-klein); }
+  .nv-badge[data-s=leedflow] { background: var(--avt-galet); color: var(--avt-brun); }
+  .nv-badge[data-s=portail] { background: #f6e3da; color: var(--avt-terra-deep); }
+  .nv-nom { font-weight: 600; overflow-wrap: anywhere; }
+  .nv-coord { font-weight: 400; color: var(--avt-text-muted); font-size: 13.5px; }
+  .nv-txt { font-size: 14px; margin: 0; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  /* E-mail de portail à lire à la main (story 18.12) : tout le texte, lignes gardées, défilant au-delà de 14 lignes. */
+  .nv-txt.nv-lire { display: block; -webkit-line-clamp: unset; white-space: pre-wrap; max-height: 21em; overflow-y: auto; background: var(--avt-brume); padding: 8px 10px; border-radius: 8px; font-size: 13px; }
+  .nv-info, .nv-auto { font-size: 13px; color: var(--avt-text-muted); }
+  .nv-dej { font-size: 13px; background: #fbf1e3; color: #7a4a12; padding: 6px 8px; border-radius: 8px; }
+  .nv-alerte { font-size: 13px; background: #fbe9e7; color: #8a2a1c; padding: 6px 8px; border-radius: 8px; }
+  .nv-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+  .nv-btns .ct-btn { min-height: 40px; }
+  .nv-vide { color: var(--avt-text-muted); font-size: 14px; margin: 0; }
+  .ct-tete { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+  .ct-tete h1 { font-size: 28px; margin: 0; }
+  .ct-page { display: grid; grid-template-columns: 1fr; gap: 20px; align-items: start; }
+  @media (min-width: 900px) { .ct-page { grid-template-columns: 210px minmax(0, 1fr); } }
+  .ct-cote { display: flex; flex-direction: column; gap: 18px; }
+  .ct-bloc { background: #fff; border: 1px solid var(--avt-galet); border-radius: 12px; padding: 14px; }
+  .ct-gerer { display: inline-block; margin-top: 8px; font-size: 13px; color: var(--avt-klein); padding: 4px 8px; }
+  .ct-bloc h3 { margin: 0 0 8px; font-family: var(--avt-font-text); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--avt-text-muted); font-weight: 500; }
+  .ct-vue { display: flex; justify-content: space-between; width: 100%; background: none; border: 0; padding: 6px 8px; border-radius: 8px; text-align: left; font: inherit; font-size: 14px; color: inherit; cursor: default; }
+  .ct-vue.actif { background: var(--avt-brume); color: var(--avt-klein); font-weight: 500; }
+  .ct-vue small { color: var(--avt-text-muted); font-variant-numeric: tabular-nums; font-size: 13px; }
+  .ct-principal { min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+  .ct-outils { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .ct-outils input[type=search] { flex: 1 1 260px; min-width: 0; min-height: 40px; padding: 8px 14px; border: 1px solid var(--avt-galet); border-radius: 999px; background: #fff; font: inherit; font-size: 15px; color: var(--avt-brun); }
+  .ct-outils input[type=search]:focus-visible, .ct-menu summary:focus-visible, .ct-table th button:focus-visible { outline: 2px solid var(--avt-klein); outline-offset: 2px; }
+  .ct-menu { position: relative; }
+  .ct-menu summary { list-style: none; min-height: 40px; display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: 1px solid var(--avt-galet); border-radius: 999px; background: #fff; cursor: pointer; font-size: 14px; }
+  .ct-menu summary::-webkit-details-marker { display: none; }
+  .ct-menu summary::after { content: '▾'; font-size: 12px; }
+  .ct-menu-liste { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; background: #fff; border: 1px solid var(--avt-galet); border-radius: 10px; padding: 8px; min-width: 210px; box-shadow: 0 8px 24px rgba(0, 0, 0, .12); display: flex; flex-direction: column; }
+  .ct-col { display: flex; align-items: center; gap: 2px; }
+  .ct-col label { flex: 1; }
+  .ct-col-b { border: 0; background: none; color: var(--avt-brun); font: inherit; font-size: 11px; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; }
+  .ct-col-b:hover:not(:disabled) { background: var(--avt-galet); }
+  .ct-col-b:disabled { opacity: .25; cursor: default; }
+  .ct-menu-liste label { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 6px; font-size: 14px; cursor: pointer; }
+  .ct-menu-liste label:hover { background: var(--avt-galet); }
+  .ct-menu-liste input { width: 16px; height: 16px; accent-color: var(--avt-klein); }
+  .ct-actifs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; min-height: 24px; }
+  .ct-total { color: var(--avt-text-muted); font-variant-numeric: tabular-nums; margin-left: auto; font-size: 14px; }
+  .ct-boite { overflow: auto; max-height: calc(100vh - 230px); min-height: 240px; background: #fff; border: 1px solid var(--avt-galet); border-radius: 12px; }
+  .ct-table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  .ct-table th, .ct-table td { padding: 8px 8px; border-bottom: 1px solid var(--avt-galet); text-align: left; white-space: nowrap; vertical-align: middle; }
+  .ct-table th { position: sticky; top: 0; z-index: 1; background: #fff; padding: 0; }
+  .ct-table th button { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 4px; width: 100%; padding: 10px 8px; font-family: var(--avt-font-text); font-weight: 500; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--avt-text-muted); cursor: pointer; }
+  .ct-table th[aria-sort=ascending] button, .ct-table th[aria-sort=descending] button { color: var(--avt-brun); }
+  .ct-fleche { font-size: 10px; }
+  .ct-table tbody tr:hover td { background: var(--avt-ecru); }
+  .ct-nom a { font-weight: 500; color: var(--avt-brun); }
+  .ct-num { font-variant-numeric: tabular-nums; color: var(--avt-text-muted); }
+  .ct-src { font-size: 12.5px; color: var(--avt-text-muted); }
+  .ct-coupe { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+  .ct-mail { max-width: 220px; }
+  .ct-vide { color: var(--avt-disabled); }
+  .ct-plus { font-size: 11.5px; color: var(--avt-klein); background: var(--avt-brume); border-radius: 6px; padding: 0 5px; }
+  .ct-pastille { display: inline-block; background: var(--avt-galet); border-radius: 999px; padding: 2px 9px; font-size: 12.5px; }
+  .ct-pastille.aq { background: transparent; border: 1px dashed var(--avt-galet); color: var(--avt-text-muted); }
+  .ct-pastille.t-chaud, .ct-pastille.t-en_vente, .ct-pastille.t-recherche_active { background: var(--avt-terra-deep); color: #fff; }
+  .ct-pastille.t-tiede { background: #e9cdb8; color: var(--avt-brun); }
+  .ct-pastille.t-froid { background: #dfe3ea; color: var(--avt-brun); }
+  .ct-pastille.t-avec_anne { background: var(--avt-klein); color: #fff; }
+  .ct-pastille.t-termine { background: transparent; border: 1px solid var(--avt-galet); color: var(--avt-text-muted); }
+  .ct-accord { font-size: 12.5px; }
+  .ct-accord.accord, .ct-accord.client { color: #2E6B3F; }
+  .ct-accord.desinscrit { color: var(--avt-terra-deep); }
+  .ct-accord.sans_accord { color: var(--avt-text-muted); }
+  .ct-etat { font-size: 12px; border-radius: 999px; padding: 2px 8px; }
+  .ct-etat.av { background: #FBF0D9; color: #8A5A00; }
+  .ct-etat.ok { color: #2E6B3F; }
+  .ct-attente { padding: 24px !important; color: var(--avt-text-muted); white-space: normal !important; }
+  /* Story 18.5 : filtres, pastilles des filtres actifs, vues enregistrées, fenêtre du nom d'une vue, message d'annulation. */
+  .ct-filtres { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .ct-filtres select, .ct-filtres input { min-height: 36px; padding: 6px 12px; border: 1px solid var(--avt-galet); border-radius: 999px; background: #fff; font: inherit; font-size: 13.5px; color: var(--avt-brun); max-width: 190px; }
+  .ct-filtres input { flex: 0 1 180px; min-width: 0; }
+  .ct-filtres select:focus-visible, .ct-filtres input:focus-visible, .ct-chip:focus-visible, .ct-vue:focus-visible, .ct-vue-x:focus-visible, .ct-btn:focus-visible { outline: 2px solid var(--avt-klein); outline-offset: 2px; }
+  .ct-pastilles { display: contents; }
+  .ct-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; border: 1px solid var(--avt-galet); background: #fff; border-radius: 999px; padding: 3px 10px; font: inherit; font-size: 13px; color: var(--avt-brun); cursor: pointer; }
+  .ct-chip:hover { border-color: var(--avt-text-muted); }
+  .ct-chip span { color: var(--avt-text-muted); font-size: 11px; }
+  .ct-chip-tout { border-style: dashed; color: var(--avt-text-muted); }
+  .ct-vue { cursor: pointer; align-items: center; gap: 8px; }
+  .ct-vue span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ct-vue:hover { background: var(--avt-galet); }
+  .ct-vue.actif:hover { background: var(--avt-brume); }
+  .ct-vue-l { position: relative; }
+  /* Revue de code 18.5 : invisibles, les boutons ✎ et × ne reçoivent pas de clic (ils restent atteignables au clavier) ;
+     sur un écran tactile (pas de survol), toujours visibles, à côté du compteur et non par-dessus. */
+  .ct-vue-gestes { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); display: flex; gap: 2px; opacity: 0; pointer-events: none; }
+  .ct-vue-l:hover .ct-vue-gestes, .ct-vue-gestes:focus-within { opacity: 1; pointer-events: auto; }
+  @media (hover: hover) { .ct-vue-l:hover .ct-vue small, .ct-vue-l:focus-within .ct-vue small { visibility: hidden; } }
+  @media (hover: none) {
+    .ct-vue-l { display: flex; align-items: center; gap: 2px; }
+    .ct-vue-gestes { position: static; transform: none; opacity: 1; pointer-events: auto; }
+  }
+  .ct-vue-invalide, .ct-vue-invalide small, .ct-a-refaire { color: var(--avt-terra-deep) !important; }
+  .ct-vue-x { border: 0; background: #fff; color: var(--avt-text-muted); font: inherit; font-size: 15px; line-height: 1; width: 26px; height: 26px; border-radius: 6px; cursor: pointer; }
+  .ct-vue-x:hover { background: var(--avt-galet); color: var(--avt-brun); }
+  .ct-btn { min-height: 36px; border: 1px solid var(--avt-galet); background: #fff; border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 13.5px; color: var(--avt-brun); cursor: pointer; }
+  .ct-btn:hover { border-color: var(--avt-text-muted); }
+  .ct-btn.bleu { background: var(--avt-klein); border-color: var(--avt-klein); color: #fff; }
+  .ct-nouvelle { width: 100%; margin-top: 8px; }
+  .ct-dialogue { border: 0; border-radius: 14px; padding: 22px; max-width: 460px; width: calc(100% - 32px); box-shadow: 0 16px 48px rgba(0, 0, 0, .2); }
+  .ct-dialogue::backdrop { background: rgba(20, 16, 12, .45); }
+  .ct-dialogue form { display: flex; flex-direction: column; gap: 12px; }
+  .ct-dialogue h2 { margin: 0; font-size: 22px; }
+  .ct-champ { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--avt-text-muted); }
+  .ct-champ input { font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--avt-galet); border-radius: 8px; color: var(--avt-brun); }
+  .ct-erreur { margin: 0; color: var(--avt-terra-deep); font-size: 14px; }
+  .ct-boutons { display: flex; gap: 8px; justify-content: flex-end; }
+  .ct-toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 20px; z-index: 50; background: var(--avt-brun); color: #fff; padding: 10px 18px; border-radius: 999px; display: flex; gap: 14px; align-items: center; font-size: 14px; max-width: calc(100% - 32px); }
+  .ct-toast[hidden] { display: none; }
+  .ct-toast button { background: none; border: 0; color: #f3c3ad; font: inherit; font-weight: 600; cursor: pointer; min-height: 32px; }
+  /* Story 18.6 : cases à cocher, barre d'actions groupées (sombre, collée en haut, comme la maquette), classement en ligne. */
+  .ct-case { width: 34px; padding-left: 12px !important; padding-right: 4px !important; user-select: none; }
+  .ct-case input { width: 17px; height: 17px; margin: 0; accent-color: var(--avt-klein); cursor: pointer; vertical-align: middle; }
+  .ct-table th.ct-case { padding: 0 4px 0 12px; }
+  .ct-table tbody tr.ct-sel td { background: var(--avt-brume); }
+  .ct-lot { position: sticky; top: 0; z-index: 5; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; background: var(--avt-brun); color: #fff; padding: 10px 14px; border-radius: 12px; }
+  .ct-lot[hidden] { display: none; }
+  .ct-lot strong { font-weight: 500; margin-right: 4px; }
+  .ct-lot select, .ct-lot .ct-btn { background: transparent; color: #fff; border: 1px solid rgba(255, 255, 255, .4); min-height: 36px; border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 13.5px; }
+  .ct-lot select option { color: var(--avt-brun); }
+  .ct-lot select:focus-visible, .ct-lot .ct-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .ct-lot :disabled { opacity: .5; }
+  .ct-lot-fin { margin-left: auto; }
+  .ct-classer { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 3px; cursor: pointer; border-radius: 999px; min-height: 26px; }
+  .ct-classer:focus-visible { outline: 2px solid var(--avt-klein); outline-offset: 2px; }
+  .ct-chevron { font-size: 10px; color: var(--avt-text-muted); opacity: 0; }
+  tr:hover .ct-chevron, .ct-classer:focus-visible .ct-chevron { opacity: 1; }
+  .ct-liste { font: inherit; font-size: 13px; padding: 3px 6px; border: 1px solid var(--avt-klein); border-radius: 8px; background: #fff; color: var(--avt-brun); max-width: 190px; }
+  @media (hover: none) { .ct-chevron { opacity: 1; } }
+  /* Story 18.7 : panneau de la fiche, à droite, sur toute la hauteur ; fenêtre « Nouveau contact ». */
+  .ct-nouveau { min-height: 40px; padding: 8px 18px; font-size: 14.5px; }
+  .ct-creation { max-width: 560px; }
+  .ct-creation textarea, .fc-panneau textarea { font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--avt-galet); border-radius: 8px; color: var(--avt-brun); width: 100%; box-sizing: border-box; }
+  .ct-champ select { font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--avt-galet); border-radius: 8px; color: var(--avt-brun); background: #fff; }
+  .ct-champ select:disabled, .ct-champ input:disabled { background: var(--avt-ecru); color: var(--avt-text-muted); }
+  .fc-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px 14px; align-items: start; }
+  .fc-case { display: flex; gap: 8px; align-items: center; min-height: 40px; font-size: 14px; }
+  .fc-case input { width: 18px; height: 18px; accent-color: var(--avt-klein); }
+  .fc-panneau { margin: 0 0 0 auto; height: 100vh; max-height: 100vh; width: min(620px, 100vw); max-width: 100vw; border: 0; padding: 0; box-shadow: -12px 0 40px rgba(0, 0, 0, .18); background: var(--avt-ecru, #faf7f2); box-sizing: border-box; }
+  .fc-panneau::backdrop { background: rgba(20, 16, 12, .35); }
+  .fc-corps { display: flex; flex-direction: column; gap: 14px; padding: 20px 22px 28px; }
+  .fc-tete { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .fc-tete h2 { margin: 0 0 6px; font-size: 26px; overflow-wrap: anywhere; }
+  .fc-tete h2:focus { outline: none; }
+  .fc-pastilles { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .fc-fermer { border: 0; background: #fff; font-size: 26px; line-height: 1; width: 40px; height: 40px; border-radius: 999px; cursor: pointer; color: var(--avt-brun); flex: none; }
+  .fc-fermer:focus-visible, .fc-lien:focus-visible { outline: 2px solid var(--avt-klein); outline-offset: 2px; }
+  .fc-bloc { background: #fff; border: 1px solid var(--avt-galet); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .fc-bloc h3 { margin: 0; font-family: var(--avt-font-text); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--avt-text-muted); font-weight: 500; }
+  .fc-bloc p { margin: 0; }
+  .fc-suivi { flex-direction: row; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; background: var(--avt-brume); border-color: var(--avt-brume); }
+  .fc-liste { display: flex; flex-direction: column; gap: 6px; }
+  .fc-liste input { font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--avt-galet); border-radius: 8px; color: var(--avt-brun); }
+  .fc-lien { all: unset; cursor: pointer; color: var(--avt-klein); font-size: 13.5px; min-height: 28px; display: inline-flex; align-items: center; }
+  .fc-boutons { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .fc-boutons.gauche { justify-content: flex-start; }
+  .fc-ligne { display: flex; gap: 8px 10px; flex-wrap: wrap; align-items: flex-end; }
+  .fc-ligne .ct-champ { flex: 0 1 150px; }
+  .fc-ligne .fc-large { flex: 1 1 200px; }
+  .fc-muet { color: var(--avt-text-muted); font-size: 13px; }
+  .fc-message { margin: 0; padding: 10px 12px; border-radius: 10px; background: #E6F0E8; color: #1F4D2C; font-size: 14px; }
+  .fc-message.erreur { background: #FBE9E2; color: var(--avt-terra-deep); }
+  .fc-deux { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .fc-simple { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+  .fc-demande { border-left: 3px solid var(--avt-galet); padding-left: 10px; }
+  .fc-texte { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; }
+  .fc-historique { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .fc-historique li.fc-note .fc-texte { background: var(--avt-ecru); border-radius: 8px; padding: 6px 10px; }
+  .fc-pied { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: space-between; }
 </style>

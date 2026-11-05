@@ -17,5 +17,5 @@ export const POST: APIRoute = async ({ request, redirect }) => {
   const contact = await deciderTache(envEspace, id, choix === 'accepter', compte);
   if (!contact) return new Response('Tâche inconnue ou déjà traitée', { status: 404 });
   const m = choix === 'accepter' ? 'tache-acceptee' : 'tache-ignoree';
-  return redirect(f.get('retour') === 'fiche' ? `/contacts/fiche?id=${contact}&m=${m}` : `/?m=${m}`, 303);
+  return redirect(f.get('retour') === 'fiche' ? `/contacts/fiche?id=${contact}&m=${m}` : `/aujourdhui?m=${m}`, 303);
 };

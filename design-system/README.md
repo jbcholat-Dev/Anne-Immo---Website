@@ -23,6 +23,8 @@ Bundle prêt à pousser vers un projet **Design System** du compte claude.ai/des
 | `infographies/pieces.html` | Pièces des infographies : cartes trois tons, pilules, « Le piège », traits, conseil d'Anne, bulle | Infographies |
 | `assets/*.svg` | 16 SVG : 6 logos primaires sans sous-titre + 4 `*-descripteur*` + 4 `lockup-exp-*` (copies de `Identité Visuelle/Charte/Logos/`) + 2 logos eXp officiels Black/White | — |
 
+Règle logo eXp (2026-11-02, story 8.25) : les fichiers eXp ont **3 unités de marge en haut et en bas** de leur cadre (`viewBox` `0 -3 … 150`). Le jambage du « p » touche le bas du dessin : sans cette marge, il est rogné dès que la hauteur affichée est arrondie. Ne jamais remettre le cadre au ras du dessin.
+
 Règle logo (2026-09-22) : **sans sous-titre par défaut** ; la version avec descripteur seulement au-dessus du seuil de lisibilité (charte § 2.3), jamais sur le site.
 
 ## Procédure de push (une fois l'autorisation faite)

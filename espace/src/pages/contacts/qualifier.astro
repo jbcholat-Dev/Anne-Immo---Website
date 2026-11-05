@@ -10,13 +10,12 @@
 import Espace from '../../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { telLisible } from '@site/server/recherche';
-import { CANAUX_ORIGINE, LIBELLES_ETAPES } from '@site/server/contacts';
+import { CANAUX_ORIGINE } from '@site/server/contacts';
 import { actionsAuChoix, rattacherAction } from '../../server/actions';
 import { pourSite as env } from '../../server/env';
 import { ULID } from '../../server/formulaires';
 import {
-  aujourdhui, corrigerQualification, echeance, FINANCEMENTS, libelleOrigine, lireContact, MOTIFS_PERTE, parisVersUtc, plusTard, qualifier, QUESTIONS, RECHERCHE_ACHETEUR, CRITERES_ACHETEUR, CRITERES_TAPES, type Issue, type Reponses,
-} from '../../server/pipeline';
+  aujourdhui, corrigerQualification, echeance, FINANCEMENTS, libelleOrigine, lireContact, MOTIFS_PERTE, parisVersUtc, plusTard, qualifier, QUESTIONS, RECHERCHE_ACHETEUR, CRITERES_ACHETEUR, CRITERES_TAPES, type Issue, type Reponses, libelleEtape } from '../../server/pipeline';
 import { resumeHtml } from '../../server/leedflow';
 
 export const prerender = false;
@@ -26,7 +25,7 @@ const id = Astro.url.searchParams.get('id') ?? '';
 const fiche = /^[0-9A-HJKMNP-TV-Z]{26}$/.test(id) ? await lireContact(env, id) : null;
 if (!fiche) return new Response('Contact inconnu', { status: 404 });
 const { contact: c, passage, prescripteur, historique } = fiche;
-const actions = await actionsAuChoix(env, c.canal);
+const actions = c.canal ? await actionsAuChoix(env, c.canal) : [];
 // Le dernier appel ou message vocal relevé par Leedflow qui porte un résumé (titre sur la première ligne, résumé ensuite).
 const dernierAppel = historique.find((e) => e.source === 'leedflow' && !(e.texte ?? '').startsWith('SMS') && (e.texte ?? '').includes('\n'));
 const [titreAppel, ...resteAppel] = (dernierAppel?.texte ?? '').split('\n');
@@ -160,7 +159,7 @@ const issues = [
     )}
 
     {enCours ? (
-      <p class="e-muet" data-en-cours>Seules les réponses sont corrigées : l'étape ({LIBELLES_ETAPES[c.etape]}) et la prochaine action ne changent pas. Pour noter ce qui s'est passé et avancer, utilisez <a href={`/contacts/suite?id=${c.id}`}>Noter la suite</a>.</p>
+      <p class="e-muet" data-en-cours>Seules les réponses sont corrigées : l'étape ({libelleEtape(c.etape)}) et la prochaine action ne changent pas. Pour noter ce qui s'est passé et avancer, utilisez <a href={`/contacts/suite?id=${c.id}`}>Noter la suite</a>.</p>
     ) : <>
     <h2>Et maintenant ?</h2>
     <fieldset class="e-pastilles e-issues" data-issues>

@@ -1,7 +1,7 @@
 ---
 story: 17.1
 epic: 17 — Programme ambassadeurs
-statut: review
+statut: done
 date: 2026-11-01
 origine: idée de JB du 2026-11-01 (fil « [Site] Page ambassadeurs du QR code »)
 ---
@@ -86,6 +86,6 @@ Le mot d'Anne (« Vous savez comment je travaille… ») est une proposition : A
 
 ## Ce qui reste
 
-- Accord de JB sur la maquette et sur les quatre choix ci-dessus (adresse, deux cases, recommandation hors formulaire, professionnels hors programme).
+- ~~Accord de JB sur la maquette et les quatre choix~~ : donné le 2026-11-05 (« OK, c'est parfait », construction demandée au plus vite).
 - Relecture du texte par Anne, en particulier « mes plus belles ventes ont commencé par « Appelle Anne de ma part » ».
 - Accord d'eXp France (bloque l'ouverture, pas la construction sur l'aperçu).

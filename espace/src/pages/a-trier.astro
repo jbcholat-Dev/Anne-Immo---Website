@@ -46,9 +46,9 @@ const vide: Record<Filtre, string> = {
 };
 const autres = (c: Categorie | null) => (Object.keys(CATEGORIES) as Categorie[]).filter((k) => k !== c);
 ---
-<Espace titre="Numéros à trier" actif="aujourdhui">
+<Espace titre="Numéros à trier" actif="a-trier">
   <div>
-    <div class="e-muet"><a href="/">Aujourd'hui</a></div>
+    <div class="e-muet"><a href="/aujourdhui">Aujourd'hui</a></div>
     <h1>Numéros à trier</h1>
     <div class="e-muet">Les numéros qui ont appelé ou écrit, vus par Leedflow, et qui ne sont pas encore des contacts.</div>
   </div>

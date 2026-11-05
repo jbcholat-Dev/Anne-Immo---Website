@@ -2,18 +2,23 @@
 // Barre de navigation (D-2, D-6 variante A, D-17, D-21) : fixe dès le premier pixel, réduite au défilement, jamais masquée.
 // Desktop : réseaux · filet · symbole seul | Accueil · À propos ▾ (Qui suis-je ? · Ma méthode · Cible · Réseau eXp) · Réalisations · Vendre · Acheter · Contact · FR EN.
 // Mobile : symbole + bouton menu ; menu plein écran, Accueil puis « À propos » en accordéon (libellé cliquable + chevron).
+// Partenaires et Actualités (D-46, ticket n° 153) entre Acheter et Contact : toujours sur l'aperçu, sur le site public dès qu'une fiche est publiée.
 // « Accueil » en toutes lettres (D-28, retour d'aperçu n° 3) : le logo seul ne suffisait pas à dire « revenir à l'accueil ».
 import Logo from './Logo.astro';
 import { t, r, bascule, type Lang, type RouteKey } from '../i18n';
 import { reseaux } from '../config/site';
+import { rubriquesVisibles } from '../lib/contenu';
 interface Props { lang?: Lang; courante?: RouteKey; sombre?: boolean }
 const { lang = 'fr', courante, sombre = false } = Astro.props;
 const d = t(lang);
 const autre: Lang = lang === 'fr' ? 'en' : 'fr';
+const rubriques = await rubriquesVisibles();
 const entrees: { key: RouteKey; label: string }[] = [
   { key: 'realisation', label: d.nav.realisation },
   { key: 'vendre', label: d.nav.vendre },
   { key: 'acheter', label: d.nav.acheter },
+  ...(rubriques.partenaires ? [{ key: 'partenaires' as const, label: d.nav.partenaires }] : []),
+  ...(rubriques.actualites ? [{ key: 'actualites' as const, label: d.nav.actualites }] : []),
   { key: 'contact', label: d.nav.contact },
 ];
 const sous: { key: RouteKey; label: string }[] = [
@@ -26,7 +31,7 @@ const sous: { key: RouteKey; label: string }[] = [
 const surAccueil = courante === 'accueil' && !/404/.test(Astro.url.pathname);
 const estCourante = (k: RouteKey) => courante === k || (k === 'apropos' && ['qui', 'methode', 'cible', 'reseau'].includes(courante ?? ''));
 ---
-<header class="nav" data-nav data-sombre={sombre ? '1' : undefined}>
+<header class="nav" data-nav data-sombre={sombre ? '1' : undefined} data-rubriques={rubriques.partenaires || rubriques.actualites ? '1' : undefined}>
   <div class="nav-int">
     <div class="nav-gauche">
       {reseaux.length > 0 && <>
@@ -175,6 +180,16 @@ const estCourante = (k: RouteKey) => courante === k || (k === 'apropos' && ['qui
   @media (min-width: 900px) and (max-width: 1099px) {
     .nav-desktop, .nav[data-reduit] .nav-desktop { gap: 22px; }
     .nav-gauche { gap: 14px; }
+  }
+  /* Avec Partenaires et Actualités (D-46), les entrées ne tiennent plus à côté des réseaux sous 1 180 px :
+     les réseaux restent dans le pied de page et le menu du téléphone. Les libellés ne se coupent jamais. */
+  .nav-lien { white-space: nowrap; }
+  @media (min-width: 900px) and (max-width: 1179px) {
+    .nav[data-rubriques] .nav-reseaux, .nav[data-rubriques] .nav-filet { display: none; }
+  }
+  @media (min-width: 900px) and (max-width: 999px) {
+    .nav[data-rubriques] .nav-desktop, .nav[data-rubriques][data-reduit] .nav-desktop { gap: 16px; font-size: 13.5px; }
+    .nav[data-rubriques] .nav-int { padding: 0 22px 0 16px; }
   }
 
   /* Replis : « réduire la transparence » demandé, ou navigateur sans flou d'arrière-plan → surfaces pleines */

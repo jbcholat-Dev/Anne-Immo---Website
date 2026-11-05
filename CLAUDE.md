@@ -82,7 +82,9 @@ node scripts/ecrans.mjs        # signale tout débordement ou bouton trop petit,
 node scripts/e2e-diagnostic.mjs # diagnostic de bout en bout sur le serveur local (préalable : site/README.md)
 node scripts/e2e-rendez-vous.mjs # webhook Cal.com et agenda de /contact sur le serveur local (même préalable)
 node scripts/e2e-guide.mjs     # guide par lien signé, séquence et désabonnement sur le serveur local (même préalable)
+node scripts/e2e-rubriques.mjs # onglets Partenaires et Actualités (D-46) : deux constructions publiques avec fiches d'essai, retirées ensuite ; refaire npm run build après
 node scripts/e2e-gestion.mjs   # espace de gestion /gestion, droits RGPD et purge, avec une imitation de Cloudflare Access (même préalable)
+node scripts/e2e-migration-0018.mjs # répète la migration 0018 sur une base locale neuve à part : rien de perdu, reprise, relance, garde de construction de l'espace (aucun préalable)
 node scripts/maquette-emails.mjs # fait partir les 12 e-mails aux prospects sur le serveur local, vérifie leur mise en forme et les capture dans site/.verif/emails (même préalable)
 node scripts/email-logo.mjs    # refait le logo joint aux e-mails (site/src/server/email-logo.png) depuis le logo de la charte
 node scripts/rapport-gabarit.mjs  # refait le gabarit du rapport PDF du diagnostic après un changement de ses textes (story 10.10), puis npm run build
@@ -92,7 +94,9 @@ node scripts/guide-pdf.mjs     # refait le PDF du guide (site/prive/guide.pdf) d
 cd ../espace           # l'espace d'Anne (story 13.3)
 npm install && npm run build && npm run check
 node scripts/e2e-espace.mjs    # site et espace sur la même base locale : accès, relance, Modelo, droits RGPD (préalable en tête du fichier)
+node scripts/maquette-espace.mjs <dossier>  # recopie chaque page de l'espace, sur ordinateur et avec des contacts fictifs, en écrans de la maquette (story 13.34, même préalable)
 node scripts/claude-espace.mjs actions  # accès de Claude à l'espace : actions marketing et bilan, jamais les contacts (réglages : RUNBOOK § 4 sexies)
+node scripts/claude-import.mjs apercu <fichier> --genre <genre>  # import de contacts par Claude (story 18.9) : aperçu sans écriture, seulement des nombres à l'écran ; puis importer <fichier> … --empreinte <e> --oui, ou annuler <lot> --oui ; jamais sur les vrais fichiers avant la validation de la fiche légale (RUNBOOK § 4 sexies)
 ```
 
 ## 5. Règles de contenu et de sécurité

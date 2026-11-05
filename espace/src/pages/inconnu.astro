@@ -20,7 +20,7 @@ const m = Astro.url.searchParams.get('m') ?? '';
 const message = m === 'pro' ? 'Numéro classé Pro.' : m === 'a_trier' ? 'Numéro remis à trier.' : m === 'prive' || m === 'demarchage' ? `Numéro classé ${CATEGORIES[m]} : ses échanges sont effacés.` : '';
 const autres = (Object.keys(CATEGORIES) as Categorie[]).filter((k) => k !== n.categorie);
 ---
-<Espace titre={nomLF || n.telephone} actif="aujourdhui">
+<Espace titre={nomLF || n.telephone} actif="a-trier">
   <div>
     <div class="e-muet"><a href="/a-trier">Numéros à trier</a></div>
     <h1 style="overflow-wrap:anywhere">{nomLF || n.telephone}</h1>
