@@ -1,6 +1,6 @@
 # Story 18.18 : envoyer le modèle ambassadeur depuis l'espace
 
-Epic 18 (le carnet de contacts). Statut : review. Date : 2026-11-05. Origine : demande de JB dans le fil « [Com] Campagne de parrainage », transmise au fil « Retours espace » ; décision de JB du 2026-11-05 (carte « Oui, comme proposé »).
+Epic 18 (le carnet de contacts). Statut : done (PR #247 fusionnée le 2026-11-05, commit bf66036). Date : 2026-11-05. Origine : demande de JB dans le fil « [Com] Campagne de parrainage », transmise au fil « Retours espace » ; décision de JB du 2026-11-05 (carte « Oui, comme proposé »).
 
 ## Objectif
 
@@ -42,7 +42,7 @@ Choix à valider par JB : les proches ont `envoi_groupe_permis = 0` par défaut,
 ## Ce qui reste
 
 - JB : créer le sous-domaine d'envoi `nouvelles.annevialtissot.fr` dans Resend (RUNBOOK § 4 sexies) ; Claude pose ensuite `EXPEDITEUR_CAMPAGNES` par une PR. D'ici là, rien ne part en production.
-- Revue de code (story 9.8) avant fusion.
+- Revue de code faite (section ci-dessous), PR #247 fusionnée le 2026-11-05.
 - Verso de la carte remplacé le 2026-11-05 par la version corrigée du fil Parrainage (seulement « jusqu’à 1 500 € », règle de JB du 2026-11-05) : 600 x 388, 37 Ko.
 
 ## Revue de code
