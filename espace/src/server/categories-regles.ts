@@ -138,3 +138,22 @@ export function remplirMessage(texte: string, prenom: string | null | undefined)
   if (p) return t.split(CHAMP_PRENOM).join(p);
   return t.split(CHAMP_PRENOM).join('').replace(/[ \t]+([,.!?;:])/g, '$1').replace(/[ \t]{2,}/g, ' ');
 }
+
+// ——— Formule d'appel d'un e-mail (story 18.18) ———
+// Tirée de la catégorie, sans champ en plus : on s'adresse par le prénom aux proches, aux anciens clients et à toutes les
+// catégories de départ ou ajoutées, sauf aux relations lointaines (`lointains`), à qui l'on écrit « Madame/Monsieur Nom ».
+// Les contacts n'ont pas de civilité en base : sans elle, la formule lointaine est « Bonjour Prénom Nom ». La catégorie est
+// reconnue par son identifiant (fixe), jamais par son nom, que l'on peut changer.
+export const CATEGORIES_FORMELLES: readonly string[] = ['lointains'];
+/** Le jeton de la formule dans le texte d'une campagne, à côté de [Prénom]. */
+export const JETON_FORMULE = '[Formule]';
+
+/** « Bonjour Claire », « Bonjour Madame Martin » (civilité connue) ou « Bonjour Claire Martin » ; « Bonjour » sans nom. Sans virgule : le texte la porte. */
+export function formuleAppel(categorieId: string | null | undefined, prenom: string | null | undefined, nom: string | null | undefined, civilite?: 'madame' | 'monsieur' | null): string {
+  const p = (prenom ?? '').trim(), n = (nom ?? '').trim();
+  if (categorieId && CATEGORIES_FORMELLES.includes(categorieId)) {
+    if (civilite && n) return `Bonjour ${civilite === 'madame' ? 'Madame' : 'Monsieur'} ${n}`;
+    return `Bonjour${[p, n].filter(Boolean).map((x) => ` ${x}`).join('')}`;
+  }
+  return p ? `Bonjour ${p}` : 'Bonjour';
+}

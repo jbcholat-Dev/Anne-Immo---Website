@@ -72,6 +72,8 @@
 // (menu, liste, aperçu avec un prénom d'exemple, enregistrement, renommage, retrait refusé puis accepté, flèches).
 // Revue de code 18.7 : premier e-mail changé (accord noté retiré, accord du site « à reconfirmer »), coordonnée d'une
 // personne en opposition refusée à la correction, remise en place d'une vue plafonnée.
+// Story 18.18 : envoi d'un modèle ambassadeur depuis l'espace (liste cochée, vue, formule selon la catégorie, verso joint,
+// dernier contact et événement, « Écrire » puis « Envoyé », colonne et filtre Ambassadeur).
 // Story 18.11 : barre « Nouveaux » (/api/nouveaux : demande du site avec son message, Vu, Écarter, Ranger et leur annulation,
 // second geste refusé, annulation trop tardive ; numéros inconnus de Leedflow, une ligne par numéro, Ignorer, Ajouter à sa
 // fiche, Ajouter aux contacts, chacun annulé, numéro ajouté à une fiche qui ne revient plus, opposition, 400, 403, 413) ;
@@ -310,6 +312,159 @@ try {
   const NUM = String(Date.now()).slice(-6); // chiffres propres à cet essai, pour des numéros qui ne se croisent pas d'un essai à l'autre
   const TEL = `06 12 ${NUM.slice(0, 2)} ${NUM.slice(2, 4)} ${NUM.slice(4)}`;
   const TEL164 = `+33${TEL.replace(/\s/g, '').slice(1)}`;
+  const { chromium } = await import('../../site/node_modules/playwright/index.mjs');
+  const nav = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+  const JETON_C = jetonAcces({ email: undefined, common_name: 'essai-claude.access' });
+  // Story 18.18 : envoyer un modèle (ambassadeur) depuis l'espace. Liste cochée (un contact sans accord est écarté), formule
+  // d'appel selon la catégorie, image jointe, dernier contact et événement écrits, état « Contacté » ; vue enregistrée ;
+  // « Écrire » (mailto) puis « Envoyé » pour un contact sans envoi groupé ; colonne Ambassadeur et son filtre.
+  // Lancé seul avec E2E_1818_SEUL=1 (après le démarrage des serveurs) pour répéter ce bloc sans les ~25 minutes du reste.
+  async function bloc1818() {
+    sql(`DELETE FROM campagne_destinataire WHERE campagne_id IN (SELECT id FROM campagne WHERE nom LIKE 'Essai 1818%')`);
+    sql(`DELETE FROM campagne WHERE nom LIKE 'Essai 1818%'`);
+    sql(`DELETE FROM vue WHERE nom LIKE 'Essai 1818%'`);
+    const M = Object.fromEntries(['1', '2', '3', '4', '5', '6'].map((l) => [l, `01KF18${l}${NUM}${'0'.repeat(13)}`]));
+    const q = (v) => (v === null ? 'NULL' : `'${v}'`);
+    const ligneM = (l, prenom, nom, mail, cat, projet, { accord = false, inscrit = null, ecarte = null } = {}) =>
+      `(${[M[l], '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', prenom, `${nom}${NUM}`, `${mail}1818+${ESSAI}@example.com`, cat, projet, accord ? '2026-10-02T08:00:00Z' : null, accord ? 'anne' : null, inscrit, ecarte].map(q).join(', ')})`;
+    sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, email, categorie_id, projet, email_accord_le, email_accord_source, ambassadeur_inscrit_le, ecarte_le) VALUES
+      ${[ligneM('1', 'Camille', 'Proche', 'camille', 'anciens_clients', 'ambassadeur', { accord: true }), ligneM('2', 'Léa', 'Durand', 'lea', 'lointains', 'ambassadeur', { accord: true }),
+        ligneM('3', 'Paul', 'Sansaccord', 'paul', 'anciens_clients', 'ambassadeur'), ligneM('4', 'Inès', 'Proche', 'ines', 'proches', 'ambassadeur'),
+        ligneM('5', 'Jade', 'Inscrite', 'jade', 'anciens_clients', 'a_qualifier', { inscrit: '2026-10-05T08:00:00Z' }),
+        ligneM('6', 'Rémi', 'Ecarte', 'remi', 'anciens_clients', 'ambassadeur', { accord: true, ecarte: '2026-10-06T08:00:00Z' })].join(',\n      ')}`);
+    const apiC = async (methode, chemin, corps) => {
+      const x = await appeler(`${E}/api/campagnes${chemin}`, { method: methode, redirect: 'manual', headers: { 'cf-access-jwt-assertion': JETON, ...(methode === 'POST' ? { 'Content-Type': 'application/json' } : {}), Origin: E }, body: corps === undefined ? undefined : JSON.stringify(corps) });
+      let d = null; try { d = await x.json(); } catch {}
+      return { status: x.status, d };
+    };
+    const ficheJ = async (id) => (await (await appeler(`${E}/api/fiche?id=${id}`, { headers: avecJeton() })).json()).fiche;
+    const ligneAccueil = async (id) => JSON.parse((await (await appeler(`${E}/`, { headers: avecJeton() })).text()).split('id="ct-donnees">')[1].split('</script>')[0]).find((l) => l.id === id);
+
+    // Le modèle : une campagne marquée « modèle », avec [Formule] et le verso de la carte.
+    let r1 = await page('/campagnes', { quoi: 'creer', nom: 'Essai 1818 modèle ambassadeur' });
+    const modele = /id=([0-9A-Z]{26})/.exec(r1.headers.get('location') ?? '')?.[1];
+    r1 = await page(`/campagnes?id=${modele}`, [['quoi', 'enregistrer'], ['nom', 'Essai 1818 modèle ambassadeur'], ['objet', 'Votre carte ambassadeur'],
+      ['texte', '[Formule],\n\nAvec un mot de **recommandation**, vous aidez vos proches.'], ['bouton_libelle', 'Voir le programme'], ['bouton_lien', 'https://annevialtissot.fr/parrainage?c=email'],
+      ['mode', 'filtres'], ['verso', 'on'], ['modele', 'on'], ['commune', ''], ['parcours', ''], ['canal', ''], ['etapes', 'a_qualifier']]);
+    const pm = await apiC('GET', '?modeles=1');
+    constat(r1.headers.get('location') === `/campagnes?id=${modele}&m=enregistree` && pm.d?.modeles?.some((m) => m.id === modele && m.verso === true),
+      '18.18 : une campagne marquée « modèle » est proposée avec l\'option du verso de la carte');
+
+    // Etat avant envoi : colonne Ambassadeur.
+    constat((await ligneAccueil(M[1]))?.ambassadeur_etat === 'a_contacter' && (await ligneAccueil(M[5]))?.ambassadeur_etat === 'inscrit' && (await ligneAccueil(M[5]))?.projet === 'a_qualifier',
+      '18.18 : état ambassadeur « À contacter » (projet ambassadeur) et « Inscrit » (inscription faite, quel que soit le projet)');
+
+    // Cases cochées : 5 contacts, un seul peut recevoir (accord + catégorie qui le permet + non écarté).
+    const sansAuth = await appeler(`${E}/api/campagnes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const claude = await appeler(`${E}/api/campagnes?modeles=1`, { headers: avecJeton(jetonAcces({ email: undefined, common_name: 'essai-claude.access' })) });
+    constat(sansAuth.status === 403 && claude.status === 403, '18.18 : /api/campagnes refusé sans jeton et avec le jeton de Claude');
+    const cree = await apiC('POST', '', { modele, ids: [M[1], M[2], M[3], M[4], M[6]] });
+    const kA = cree.d?.id;
+    const hA = (await (await appeler(`${E}/campagnes?id=${kA}`, { headers: avecJeton() })).text()).replaceAll('&#39;', "'");
+    constat(cree.status === 201 && /id="?/.test(hA) && hA.includes('data-recoivent="1"') && hA.includes('data-ecartes="Catégorie sans envoi groupé"') && hA.includes(`data-ecartes="Pas d'accord pour recevoir vos e-mails"`)
+      && hA.includes('data-ecartes="Contact écarté du tableau"') && hA.includes('Les 5 contacts cochés') && hA.includes('cid:verso-carte') === false,
+      '18.18 : liste cochée : 1 destinataire ; sans accord, catégorie sans envoi groupé et contact écarté sont écartés avec la raison');
+    constat((await apiC('POST', '', { ids: ['x'] })).status === 400 && (await apiC('POST', '', { modele: 'pas-un-modele' })).status === 400 && (await apiC('POST', '', {})).status === 400,
+      '18.18 : /api/campagnes refuse une liste ou un modèle mal formés, et une demande sans destinataire');
+    const copie = sql(`SELECT objet, texte, filtres FROM campagne WHERE id = '${kA}'`)[0];
+    constat(copie.objet === 'Votre carte ambassadeur' && copie.texte.startsWith('[Formule],') && JSON.parse(copie.filtres).verso === true && JSON.parse(copie.filtres).modele === false && JSON.parse(copie.filtres).ids.length === 5,
+      '18.18 : la campagne préparée reprend objet, texte et verso du modèle, sans devenir un modèle elle-même');
+    const avantEnvoi = recus.length;
+    const essai = await page(`/campagnes?id=${kA}`, [['quoi', 'lancer'], ['confirme', 'oui']]);
+    const destA = () => Object.fromEntries(sql(`SELECT contact_id, statut FROM campagne_destinataire WHERE campagne_id = '${kA}'`).map((d) => [d.contact_id, d.statut]));
+    constat(essai.headers.get('location') === `/campagnes?id=${kA}&m=lancee` && JSON.stringify(Object.keys(destA())) === JSON.stringify([M[1]]), '18.18 : l\'envoi fige la liste sur la seule personne qui peut la recevoir');
+    for (let i = 0; i < 40 && destA()[M[1]] !== 'envoye'; i++) { await appeler(`${E}/cdn-cgi/handler/scheduled`); await pause(500); }
+    const mA = recus.slice(avantEnvoi).find((m) => m.idempotence === `campagne:${kA}:${M[1]}`);
+    constat(!!mA && mA.html.includes('Camille,') && !mA.html.includes('Camille Proche') && mA.html.includes('cid:verso-carte') && mA.attachments?.some((a) => a.content_id === 'verso-carte' && a.content_type === 'image/jpeg')
+      && mA.attachments?.some((a) => a.content_id === 'logo') && mA.text.includes('Bonjour Camille,') && !mA.text.includes('[Formule]'),
+      '18.18 : ancien client : « Bonjour Camille », verso de la carte joint par content-id avec le logo');
+    const evA = sql(`SELECT texte, donnees, par FROM contact_evenement WHERE contact_id = '${M[1]}' AND source_id = 'campagne:${kA}:${M[1]}'`)[0];
+    const cA = sql(`SELECT dernier_contact_le, dernier_contact_canal, last_activity_at FROM contact WHERE id = '${M[1]}'`)[0];
+    const dA = JSON.parse(evA?.donnees ?? '{}');
+    constat(cA.dernier_contact_canal === 'email' && Date.now() - Date.parse(cA.dernier_contact_le) < 120_000 && cA.last_activity_at === '2026-10-01T08:00:00Z'
+      && evA?.texte.includes('Essai 1818 modèle ambassadeur') && evA.texte.includes('Votre carte ambassadeur') && dA.avant.dernier_contact_le === null && dA.apres.dernier_contact_canal === 'email',
+      '18.18 : après l\'e-mail, dernier contact (aujourd\'hui, e-mail) et événement avec nom de la campagne et objet, avant-image gardée, activité inchangée');
+    const fA = await ficheJ(M[1]);
+    constat(fA.ambassadeur_etat === 'contacte' && fA.envoi_groupe === true && fA.historique.some((e) => e.type === 'email' && e.texte.includes('Votre carte ambassadeur')) && (await ligneAccueil(M[1])).ambassadeur_etat === 'contacte',
+      '18.18 : l\'événement est lisible sur la fiche, état ambassadeur « Contacté » dans la fiche et le tableau');
+
+    // Formule d'une relation lointaine : « Bonjour Prénom Nom » ; ouverte à l'envoi groupé le temps de l'essai.
+    sql(`UPDATE categorie SET envoi_groupe_permis = 1 WHERE id = 'lointains'`);
+    const kB = (await apiC('POST', '', { modele, ids: [M[2]] })).d?.id;
+    const avantB = recus.length;
+    await page(`/campagnes?id=${kB}`, [['quoi', 'lancer'], ['confirme', 'oui']]);
+    for (let i = 0; i < 40 && !recus.slice(avantB).some((m) => m.idempotence === `campagne:${kB}:${M[2]}`); i++) { await appeler(`${E}/cdn-cgi/handler/scheduled`); await pause(500); }
+    sql(`UPDATE categorie SET envoi_groupe_permis = 0 WHERE id = 'lointains'`);
+    const mB = recus.slice(avantB).find((m) => m.idempotence === `campagne:${kB}:${M[2]}`);
+    constat(!!mB && mB.text.includes(`Bonjour Léa Durand${NUM},`) && mB.html.includes(`Bonjour Léa Durand${NUM},`), '18.18 : relation lointaine : « Bonjour Prénom Nom » (pas de civilité en base)');
+
+    // Vue enregistrée : états ambassadeur combinables, inscrite sans accord écartée.
+    sql(`INSERT INTO vue (id, nom, ordre, filtre, created_at, maj_le) VALUES ('01KF18V${NUM}${'0'.repeat(13)}', 'Essai 1818 ambassadeurs', 99, '{"ambassadeur_etat":["inscrit","contacte"],"categorie_id":["anciens_clients"]}', '2026-11-05T08:00:00.000Z', '2026-11-05T08:00:00.000Z')`);
+    const vueId = `01KF18V${NUM}${'0'.repeat(13)}`;
+    const kV = (await apiC('POST', '', { modele, vue: vueId })).d?.id;
+    const hV = (await (await appeler(`${E}/campagnes?id=${kV}`, { headers: avecJeton() })).text()).replaceAll('&#39;', "'");
+    constat(hV.includes('data-recoivent="1"') && hV.includes(`value="${vueId}" selected`) && hV.includes(`data-ecartes="Pas d'accord pour recevoir vos e-mails"`) && !hV.includes('data-probleme'),
+      '18.18 : vue enregistrée (états « inscrit » et « contacté ») : 1 destinataire, l\'inscrite sans accord est écartée');
+    sql(`UPDATE vue SET filtre = '{"categorie_id":["disparue"]}' WHERE id = '${vueId}'`);
+    const hV2 = await (await appeler(`${E}/campagnes?id=${kV}`, { headers: avecJeton() })).text();
+    constat(hV2.includes('data-probleme') && hV2.includes('data-recoivent="0"'), '18.18 : vue devenue invalide : aucun destinataire, jamais élargie');
+    constat((await page(`/campagnes?id=${kV}`, [['quoi', 'lancer'], ['confirme', 'oui']])).status === 200 && sql(`SELECT statut FROM campagne WHERE id = '${kV}'`)[0].statut === 'brouillon', '18.18 : une vue invalide ne peut pas être envoyée');
+
+    // Sans droit à l'envoi groupé : « Écrire » (mailto) puis « Envoyé ».
+    const fI = await ficheJ(M[4]);
+    constat(fI.envoi_groupe === false && fI.ambassadeur_etat === 'a_contacter' && (await ficheJ(M[3])).envoi_groupe === false, '18.18 : la fiche dit si le contact peut recevoir un envoi groupé (proche sans accord : non)');
+    const ec = await apiC('GET', `?modele=${modele}&contact=${M[4]}`);
+    constat(ec.status === 200 && ec.d.a === `ines1818+${ESSAI}@example.com` && ec.d.objet === 'Votre carte ambassadeur' && ec.d.texte.startsWith('Bonjour Inès,') && ec.d.texte.includes('recommandation') && ec.d.texte.includes('https://annevialtissot.fr/parrainage?c=email') && !ec.d.texte.includes('[Formule]'),
+      '18.18 : « Écrire » : objet et texte du modèle avec la formule remplie, adresse du contact');
+    const ecL = await apiC('GET', `?modele=${modele}&contact=${M[2]}`);
+    constat(ecL.d?.texte.startsWith(`Bonjour Léa Durand${NUM},`), '18.18 : « Écrire » à une relation lointaine : « Bonjour Prénom Nom »');
+    const avantMain = sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${M[4]}'`)[0].n;
+    constat(sql(`SELECT dernier_contact_le FROM contact WHERE id = '${M[4]}'`)[0].dernier_contact_le === null, '18.18 : « Écrire » seul n\'écrit rien');
+    const env1 = await appeler(`${E}/api/fiche`, { method: 'POST', headers: { 'cf-access-jwt-assertion': JETON, 'Content-Type': 'application/json', Origin: E },
+      body: JSON.stringify({ id: M[4], contact: { jour: auj, canal: 'email', note: `Modèle « ${ec.d.modele} » envoyé à la main : ${ec.d.objet}`, envoi_modele: ec.d.modele } }) });
+    const fI2 = await ficheJ(M[4]);
+    constat(env1.status === 200 && fI2.dernier_contact_canal === 'email' && !!fI2.dernier_contact_le && fI2.ambassadeur_etat === 'contacte' && fI2.historique.length === avantMain + 1
+      && fI2.historique[0].texte.includes('envoyé à la main') && fI2.historique[0].texte.includes('Votre carte ambassadeur'),
+      '18.18 : « Envoyé » : dernier contact (e-mail, aujourd\'hui), trace « envoyé à la main » sur la fiche, état « Contacté »');
+    const mauvais = await appeler(`${E}/api/fiche`, { method: 'POST', headers: { 'cf-access-jwt-assertion': JETON, 'Content-Type': 'application/json', Origin: E }, body: JSON.stringify({ id: M[4], contact: { jour: auj, canal: 'email', envoi_modele: 3 } }) });
+    constat(mauvais.status === 400, '18.18 : un nom de modèle qui n\'est pas un texte est refusé');
+
+    // Fiche dans le navigateur : colonne et filtre, bloc « Écrire », puis « Envoyé ».
+    const ctx = await nav.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
+    const o = await ctx.newPage();
+    await o.goto(`${E}/?fiche=${M[3]}`);
+    await o.waitForSelector('[data-fiche-ecrire]');
+    await o.waitForFunction(() => document.querySelector('[data-ecrire-lien]')?.getAttribute('aria-disabled') === null);
+    const href = await o.getAttribute('[data-ecrire-lien]', 'href');
+    constat(href?.startsWith(`mailto:paul1818+${ESSAI}@example.com?subject=`) && decodeURIComponent(href).includes('Bonjour Paul,') && !(await o.isDisabled('[data-ecrire-envoye]')),
+      '18.18 : sur la fiche, « Écrire » ouvre un mailto: avec objet et texte (formule remplie)');
+    await o.click('[data-ecrire-envoye]');
+    await o.waitForSelector('[data-fiche-ambassadeur="contacte"]');
+    constat(sql(`SELECT dernier_contact_canal FROM contact WHERE id = '${M[3]}'`)[0].dernier_contact_canal === 'email' && (await o.textContent('[data-fiche-historique]')).includes('envoyé à la main'),
+      '18.18 : « Envoyé » depuis le navigateur : pastille « Ambassadeur : Contacté » et trace dans l\'historique');
+    await o.goto(`${E}/?fiche=${M[1]}`);
+    await o.waitForSelector('[data-fiche-ambassadeur]');
+    constat(await o.locator('[data-fiche-ecrire]').count() === 0, '18.18 : un contact qui peut recevoir un envoi groupé n\'a pas le bloc « Écrire »');
+    await o.goto(`${E}/`);
+    await o.waitForSelector('[data-lignes] tr[data-contact]');
+    await o.fill('[data-recherche]', `Proche${NUM}`); await o.waitForTimeout(300);
+    const enteteAmb = await o.locator('th', { hasText: 'Ambassadeur' }).count();
+    const pastilleAmb = await o.locator(`tr[data-contact="${M[1]}"] [data-ambassadeur="contacte"]`).count();
+    // Tri : À contacter, Contacté, Inscrit.
+    await o.fill('[data-recherche]', `1818`); await o.waitForTimeout(100);
+    await o.fill('[data-recherche]', ''); await o.waitForTimeout(100);
+    await o.click('th button:has-text("Ambassadeur")'); await o.waitForTimeout(300);
+    const ordreEtats = await o.$$eval('[data-lignes] tr[data-contact] [data-ambassadeur]', (l) => l.map((e) => e.getAttribute('data-ambassadeur')));
+    const rang = { a_contacter: 0, contacte: 1, inscrit: 2 };
+    constat(enteteAmb === 1 && pastilleAmb === 1 && ordreEtats.length > 2 && ordreEtats.every((e, i) => i === 0 || rang[ordreEtats[i - 1]] <= rang[e]),
+      `18.18 : colonne Ambassadeur (pastille et libellé) triable : À contacter, Contacté, Inscrit (${ordreEtats.join(',')})`);
+    await o.screenshot({ path: path.join(OUT, 'espace-colonne-ambassadeur-1280.png') });
+    await o.selectOption('[data-filtre=autres]', 'ambassadeur_etat:inscrit'); await o.waitForTimeout(300);
+    const filtres = await o.$$eval('[data-lignes] tr[data-contact] [data-ambassadeur]', (l) => [...new Set(l.map((e) => e.getAttribute('data-ambassadeur')))]);
+    constat(filtres.length === 1 && filtres[0] === 'inscrit', '18.18 : le filtre « État ambassadeur » ne garde que les inscrits');
+    await ctx.close();
+  }
+  if (process.env.E2E_1818_SEUL) { await bloc1818(); await nav.close(); throw new Error(echecs ? 'E2E_1818_SEUL : échecs' : 'E2E_1818_SEUL : terminé') }
   r = await page('/ajouter', { quoi: 'contact', prenom: 'Bea', nom: `Boitage${ESSAI}`, telephone: TEL, canal: 'boitage', parcours: 'vendeur' });
   constat(r.status === 200 && (await r.text()).includes('data-erreur') && sql(`SELECT count(*) AS n FROM contact WHERE telephone = '${TEL164}'`)[0].n === 0,
     'saisie : boîtage sans passage refusé, rien enregistré, la saisie reste affichée');
@@ -1865,8 +2020,6 @@ try {
 
   // Story 18.4 : la page Contacts, page d'accueil. Un contact du carnet hors suivi avec un autre numéro, un lien de profil
   // et une entreprise ; un contact écarté.
-  const { chromium } = await import('../../site/node_modules/playwright/index.mjs');
-  const nav = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   const C4 = `01KFC4${NUM}${'0'.repeat(14)}`, ECART = `01KFEC${NUM}${'0'.repeat(14)}`, TEL4 = `+33634${NUM}`, TEL4B = `+33633${NUM}`;
   const telLisible = (t) => `0${t.slice(3)}`.replace(/(\d{2})(?=\d)/g, '$1 ');
   const ENT4 = `Fromagerie${NUM}`, PROFIL4 = `https://www.linkedin.com/in/essai-${NUM}`;
@@ -2843,6 +2996,7 @@ try {
     await o.screenshot({ path: path.join(OUT, 'espace-fiche-suivi-1280.png') });
     await ctx.close();
   }
+  await bloc1818();
   // Story 18.8 : catégories et méthodes, par /api/categories puis dans la page /categories. Les catégories de départ sont
   // remises comme avant à la fin (nom, ordre, méthode), les catégories d'essai retirées (marque « E188 » dans le nom).
   const ancienne8 = sql(`SELECT id FROM categorie WHERE nom LIKE '%E188%'`).map((c) => `'${c.id}'`).join(',');

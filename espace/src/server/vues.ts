@@ -5,7 +5,7 @@
 // Une vue = { nom, filtre } ; un filtre = un objet JSON dont chaque clé est dans VOCABULAIRE. Les clés à plusieurs
 // valeurs (catégorie, projet…) gardent un contact qui a l'une d'elles ; des clés différentes se combinent (et).
 import {
-  ACCORDS, PROJETS, SOURCES, TEMPERATURES, libelleMois, libelleSource, sansAccents, type Accord, type IndexLigne, type LigneTableau,
+  ACCORDS, ETATS_AMBASSADEUR, PROJETS, SOURCES, TEMPERATURES, libelleMois, libelleSource, sansAccents, type Accord, type EtatAmbassadeur, type IndexLigne, type LigneTableau,
 } from './tableau-colonnes';
 
 /** Un filtre de vue, dans le vocabulaire d'AD-27 (plus `ambassadeur`, migration 0018, et `a_rappeler`, FR-16). */
@@ -29,6 +29,8 @@ export interface Filtre {
   recherche?: string;
   /** Inscrit au programme ou de projet ambassadeur (AD-22) ; « oui » seulement (AD-27 amendé, revue de code 18.5). */
   ambassadeur?: 'oui';
+  /** Etat ambassadeur (story 18.18) : inscrit, contacté ou à contacter ; plusieurs possibles. Ne concerne que les contacts de projet ambassadeur ou inscrits. */
+  ambassadeur_etat?: EtatAmbassadeur[];
   /** La date « à rappeler le » est arrivée (aujourd'hui ou avant, heure de Paris). */
   a_rappeler?: 'oui';
 }
@@ -63,6 +65,7 @@ export const VOCABULAIRE: Record<CleFiltre, Regle> = {
   pipeline: { choix: ['dans', 'hors'] },
   recherche: { texte: 100 },
   ambassadeur: { choix: ['oui'] },
+  ambassadeur_etat: { liste: (v) => v in ETATS_AMBASSADEUR },
   a_rappeler: { choix: ['oui'] },
 };
 
@@ -125,7 +128,7 @@ export const aujourdhuiParis = (maintenant = new Date()) =>
 export function preparerFiltre(f: Filtre, maintenant = new Date()): (l: LigneTableau, x: IndexLigne) => boolean {
   const ensemble = (l?: string[]) => (l?.length ? new Set(l) : null);
   const cat = ensemble(f.categorie_id), proj = ensemble(f.projet), temp = ensemble(f.temperature), src = ensemble(f.source);
-  const acc = ensemble(f.accord), villes = f.ville?.length ? new Set(f.ville.map((v) => sansAccents(v).trim())) : null;
+  const etatsAmb = ensemble(f.ambassadeur_etat), acc = ensemble(f.accord), villes = f.ville?.length ? new Set(f.ville.map((v) => sansAccents(v).trim())) : null;
   const lieux = f.lieu?.length ? new Set(f.lieu.map((v) => sansAccents(v).trim())) : null, mois = ensemble(f.mois);
   const ent = f.entreprise_contient ? sansAccents(f.entreprise_contient) : '';
   const ecartes = f.ecarte === 'oui';
@@ -149,6 +152,7 @@ export function preparerFiltre(f: Filtre, maintenant = new Date()): (l: LigneTab
     if (limite !== null && x.dernier !== null && x.dernier >= limite) return false; // jours AAAA-MM-JJ : l'ordre du texte est celui des dates
     if (f.pipeline && l.suivi !== (f.pipeline === 'dans')) return false;
     if (f.ambassadeur && !(l.ambassadeur_inscrit || l.projet === 'ambassadeur')) return false;
+    if (etatsAmb && !(l.ambassadeur_etat && etatsAmb.has(l.ambassadeur_etat))) return false;
     if (f.a_rappeler && !(l.a_rappeler_le && l.a_rappeler_le.slice(0, 10) <= jour)) return false;
     return true;
   };
@@ -160,7 +164,7 @@ export interface Pastille { cle: CleFiltre; valeur: string | null; libelle: stri
 export const LIBELLES_CLES: Record<CleFiltre, string> = {
   categorie_id: 'Catégorie', projet: 'Projet', temperature: 'Température', source: 'Source', entreprise_contient: 'Entreprise contient',
   ville: 'Ville', lieu: 'Lieu de rencontre', mois: 'Mois de rencontre', verifie: 'État', ecarte: 'État', accord: 'Accord e-mail', dernier_contact: 'Dernier contact', pipeline: 'Suivi des ventes',
-  recherche: 'Recherche', ambassadeur: 'Ambassadeurs', a_rappeler: 'À rappeler',
+  recherche: 'Recherche', ambassadeur: 'Ambassadeurs', ambassadeur_etat: 'Ambassadeur', a_rappeler: 'À rappeler',
 };
 
 /** Les pastilles d'un filtre, dans l'ordre du vocabulaire. `categories` : id → nom. La recherche a sa propre case. */
@@ -186,6 +190,7 @@ export function pastilles(f: Filtre, categories: ReadonlyMap<string, string>): P
       : `Dernier contact : ${DUREES.find((x) => x.jours === d)?.libelle ?? `plus de ${d} jours`}` });
   }
   if (f.pipeline) p.push({ cle: 'pipeline', valeur: null, libelle: f.pipeline === 'dans' ? 'Dans le suivi des ventes' : 'Hors suivi des ventes' });
+  liste('ambassadeur_etat', f.ambassadeur_etat, (v) => ETATS_AMBASSADEUR[v as EtatAmbassadeur] ?? v);
   if (f.ambassadeur) p.push({ cle: 'ambassadeur', valeur: null, libelle: 'Ambassadeurs' });
   if (f.a_rappeler) p.push({ cle: 'a_rappeler', valeur: null, libelle: 'À rappeler' });
   return p;

@@ -21,7 +21,7 @@ import Espace from '../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { pourSite as env } from '../server/env';
 import { lireCategories, lireTableau } from '../server/tableau';
-import { ACCORDS, COLONNES, PROJETS, TEMPERATURES, TEMPERATURES_CHOIX } from '../server/tableau-colonnes';
+import { ACCORDS, COLONNES, ETATS_AMBASSADEUR, PROJETS, TEMPERATURES, TEMPERATURES_CHOIX } from '../server/tableau-colonnes';
 import { DUREES } from '../server/vues';
 import { listerVues } from '../server/vues-base';
 import { lireNouveaux } from '../server/nouveaux';
@@ -98,6 +98,7 @@ const donneesNouveaux = enJson(nouveaux);
         <select data-filtre="autres" aria-label="Autres filtres"><option value="">Autres filtres</option>
           <optgroup label="Accord e-mail">{Object.entries(ACCORDS).map(([k, v]) => <option value={`accord:${k}`}>{v || 'Sans e-mail'}</option>)}</optgroup>
           <optgroup label="Suivi des ventes"><option value="pipeline:dans">Dans le suivi</option><option value="pipeline:hors">Hors suivi</option></optgroup>
+          <optgroup label="État ambassadeur">{Object.entries(ETATS_AMBASSADEUR).map(([k, v]) => <option value={`ambassadeur_etat:${k}`}>{v}</option>)}</optgroup>
           <optgroup label="Autres"><option value="ambassadeur:oui">Ambassadeurs</option><option value="a_rappeler:oui">À rappeler</option></optgroup>
         </select>
       </div>
@@ -108,6 +109,7 @@ const donneesNouveaux = enJson(nouveaux);
         <select data-lot-action="projet" aria-label="Changer le projet des contacts cochés"><option value="">Projet…</option>{Object.entries(PROJETS).map(([k, v]) => <option value={k}>{v}</option>)}</select>
         <select data-lot-action="temperature" aria-label="Changer la température des contacts cochés"><option value="">Température…</option>{TEMPERATURES_CHOIX.map((k) => <option value={k}>{TEMPERATURES[k]}</option>)}<option value="aucune">Effacer la température</option></select>
         <button type="button" class="ct-btn" data-lot-verifie>Marquer vérifié</button>
+        <button type="button" class="ct-btn" data-lot-modele>Envoyer un modèle</button>
         <button type="button" class="ct-btn" data-lot-ecarter>Écarter</button>
         <button type="button" class="ct-btn ct-lot-fin" data-lot-aucun>Désélectionner</button>
       </div>
@@ -127,6 +129,16 @@ const donneesNouveaux = enJson(nouveaux);
       <label class="ct-champ">Nom de la vue<input name="nom" maxlength="60" autocomplete="off" required /></label>
       <p class="ct-erreur" data-dialogue-erreur role="alert" hidden></p>
       <div class="ct-boutons"><button type="button" class="ct-btn" data-dialogue-annuler>Annuler</button><button type="submit" class="ct-btn bleu">Enregistrer</button></div>
+    </form>
+  </dialog>
+  <dialog class="ct-dialogue" data-dialogue-modele aria-labelledby="ct-modele-titre">
+    <form method="dialog" data-form-modele>
+      <h2 id="ct-modele-titre">Envoyer un modèle</h2>
+      <p class="e-muet" data-modele-intro></p>
+      <label class="ct-champ">Modèle<select name="modele" data-modele-choix></select></label>
+      <p class="e-muet">Vous relirez le message, vous vous enverrez un essai, puis vous confirmerez : rien ne part d'ici. Seuls les contacts avec accord ou anciens clients le reçoivent ; les autres sont écartés, avec la raison.</p>
+      <p class="ct-erreur" data-modele-erreur role="alert" hidden></p>
+      <div class="ct-boutons"><button type="button" class="ct-btn" data-modele-annuler>Annuler</button><button type="submit" class="ct-btn bleu">Préparer l'envoi</button></div>
     </form>
   </dialog>
   <dialog class="fc-panneau" data-fiche aria-labelledby="fc-titre"><div class="fc-corps" data-fiche-corps></div></dialog>
@@ -163,7 +175,7 @@ const donneesNouveaux = enJson(nouveaux);
   // contacts, de vues, de catégories, villes) passe par `esc` avant d'entrer dans le HTML, ou par textContent / value.
   import { telLisible } from '@site/server/recherche';
   import {
-    ACCORDS, CANAUX_CONTACT, COLONNES, PROJETS, PROJETS_AVEC_TEMPERATURE, TEMPERATURES, TEMPERATURES_CHOIX, indexer,
+    ACCORDS, CANAUX_CONTACT, COLONNES, ETATS_AMBASSADEUR, PROJETS, PROJETS_AVEC_TEMPERATURE, TEMPERATURES, TEMPERATURES_CHOIX, indexer, etatAmbassadeur,
     libelleMois, libelleRencontres, libelleSource, preparerRecherche, temperaturePermise, valeurTri, type CleColonne, type LigneTableau,
   } from '../server/tableau-colonnes';
   import { ajouter, pastilles, preparerFiltre, retirer, type CleFiltre, type Filtre, type Vue } from '../server/vues';
@@ -261,6 +273,7 @@ const donneesNouveaux = enJson(nouveaux);
       case 'profil': return `<td>${l.profils.length ? l.profils.map((p) => `<a href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">${esc(reseau(p.reseau))}</a>`).join(' ') : vide}</td>`;
       case 'dernier': return `<td class="ct-num">${l.dernier_le ? `${esc(dates[i])}${l.dernier_canal ? ` · ${esc(CANAUX_CONTACT[l.dernier_canal] ?? l.dernier_canal)}` : ''}` : '<span class="ct-vide">jamais</span>'}</td>`;
       case 'accord': return `<td>${l.accord === 'sans_email' ? vide : `<span class="ct-accord ${esc(l.accord)}">${esc(ACCORDS[l.accord])}</span>`}</td>`;
+      case 'ambassadeur': return `<td>${l.ambassadeur_etat ? `<span class="ct-pastille amb-${esc(l.ambassadeur_etat)}" data-ambassadeur="${esc(l.ambassadeur_etat)}">${esc(ETATS_AMBASSADEUR[l.ambassadeur_etat])}</span>` : vide}</td>`;
       case 'verifie': return `<td>${l.ecarte ? '<span class="ct-etat">écarté</span>' : l.verifie ? '<span class="ct-etat ok">✓ vérifié</span>' : '<span class="ct-etat av">à vérifier</span>'}</td>`;
       default: return '<td></td>';
     }
@@ -610,6 +623,7 @@ const donneesNouveaux = enJson(nouveaux);
       const i = parId.get(x.id);
       if (i === undefined) continue;
       Object.assign(lignes[i], { categorie_id: x.categorie_id, categorie: x.categorie, projet: x.projet, temperature: x.temperature, verifie: x.verifie, ecarte: x.ecarte });
+      lignes[i].ambassadeur_etat = etatAmbassadeur(x.projet, lignes[i].ambassadeur_inscrit, lignes[i].ambassadeur_contacte);
       html[i] = undefined;
     }
     valeurs.clear();
@@ -677,6 +691,39 @@ const donneesNouveaux = enJson(nouveaux);
   boutonEcarter.addEventListener('click', () => {
     const revenir = filtre.ecarte === 'oui';
     void lot({ ecarte: !revenir }, revenir ? 'revenus dans le tableau' : 'écartés (filtre « Écartés » pour les revoir)');
+  });
+  // Story 18.18 : « Envoyer un modèle » aux contacts cochés. Crée un brouillon de campagne (jamais d'envoi d'ici) puis ouvre sa page.
+  const dialogueModele = $<HTMLDialogElement>('[data-dialogue-modele]');
+  const formModele = $<HTMLFormElement>('[data-form-modele]');
+  const erreurModele = $<HTMLElement>('[data-modele-erreur]');
+  $<HTMLButtonElement>('[data-lot-modele]').addEventListener('click', async () => {
+    erreurModele.hidden = true;
+    $<HTMLElement>('[data-modele-intro]').textContent = `${pluriel(coches.size, 'contact coché')} : le message sera préparé pour eux.`;
+    const choix = $<HTMLSelectElement>('[data-modele-choix]');
+    choix.innerHTML = '<option value="">Chargement…</option>';
+    dialogueModele.showModal();
+    try {
+      const r = await fetch('/api/campagnes?modeles=1');
+      const d = await r.json() as { modeles?: { id: string; nom: string; objet: string }[] };
+      const l = d.modeles ?? [];
+      choix.innerHTML = (l.length ? '' : '<option value="">Aucun modèle</option>') + '<option value="">Un message à écrire moi-même</option>' + l.map((m) => `<option value="${esc(m.id)}">${esc(m.nom)}${m.objet ? ` : ${esc(m.objet)}` : ''}</option>`).join('');
+      if (l.length) choix.value = l[0].id;
+    } catch { choix.innerHTML = '<option value="">Un message à écrire moi-même</option>'; }
+  });
+  $<HTMLButtonElement>('[data-modele-annuler]').addEventListener('click', () => dialogueModele.close());
+  formModele.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const bouton = formModele.querySelector<HTMLButtonElement>('button[type=submit]')!;
+    if (bouton.disabled || !coches.size) return;
+    bouton.disabled = true;
+    try {
+      const modele = String(new FormData(formModele).get('modele') ?? '');
+      const r = await fetch('/api/campagnes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [...coches], ...(modele ? { modele } : {}) }) });
+      const d = await r.json().catch(() => ({})) as { id?: string; error?: { message: string } };
+      if (r.ok && d.id) { location.href = `/campagnes?id=${d.id}`; return; }
+      erreurModele.textContent = d.error?.message ?? `Erreur ${r.status}`; erreurModele.hidden = false;
+    } catch { erreurModele.textContent = 'Pas de connexion : réessayez.'; erreurModele.hidden = false; }
+    bouton.disabled = false;
   });
   $<HTMLButtonElement>('[data-lot-aucun]').addEventListener('click', () => { coches.clear(); html = []; derniere = null; peindreCoches(); });
 
@@ -848,6 +895,10 @@ const donneesNouveaux = enJson(nouveaux);
   .ct-pastille.t-tiede { background: #e9cdb8; color: var(--avt-brun); }
   .ct-pastille.t-froid { background: #dfe3ea; color: var(--avt-brun); }
   .ct-pastille.t-avec_anne { background: var(--avt-klein); color: #fff; }
+  /* Etat ambassadeur (story 18.18) : la charte n'a ni vert ni ambre ; le vert est celui de « accord » ci-dessous, l'ambre un fond clair du même registre que le tiède. */
+  .ct-pastille.amb-inscrit { background: #2E6B3F; color: #fff; }
+  .ct-pastille.amb-contacte { background: #F0DDA8; color: var(--avt-brun); }
+  .ct-pastille.amb-a_contacter { background: transparent; border: 1px solid var(--avt-galet); color: var(--avt-text-muted); }
   .ct-pastille.t-termine { background: transparent; border: 1px solid var(--avt-galet); color: var(--avt-text-muted); }
   .ct-accord { font-size: 12.5px; }
   .ct-accord.accord, .ct-accord.client { color: #2E6B3F; }

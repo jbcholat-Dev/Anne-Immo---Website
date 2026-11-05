@@ -4,7 +4,7 @@
 // tableau par `surLigne`, sans recharger. Tout texte venu des données passe par `esc` avant d'entrer dans le HTML.
 import { telLisible } from '@site/server/recherche';
 import {
-  CANAUX_CONTACT, PROJETS, PROJETS_AVEC_TEMPERATURE, TEMPERATURES, TEMPERATURES_CHOIX, temperaturePermise, type LigneTableau,
+  CANAUX_CONTACT, ETATS_AMBASSADEUR, PROJETS, PROJETS_AVEC_TEMPERATURE, TEMPERATURES, TEMPERATURES_CHOIX, temperaturePermise, type LigneTableau,
 } from '../server/tableau-colonnes';
 import type { Fiche } from '../server/fiche';
 
@@ -77,7 +77,7 @@ export function brancherFiche(r: Reglages) {
           <div class="fc-pastilles">${f.categorie ? `<span class="ct-pastille">${esc(f.categorie)}</span>` : '<span class="ct-pastille aq">à ranger</span>'}
             <span class="ct-pastille">${esc(PROJETS[f.projet] ?? f.projet)}</span>${f.temperature ? `<span class="ct-pastille t-${esc(f.temperature)}">${esc(tempTexte)}</span>` : ''}
             ${f.ecarte_le ? '<span class="ct-etat">écarté</span>' : f.verifie_le ? '<span class="ct-etat ok">✓ vérifié</span>' : '<span class="ct-etat av">à vérifier</span>'}
-            ${f.ambassadeur_inscrit_le ? '<span class="ct-pastille">Inscrit ambassadeur</span>' : ''}</div>
+            ${f.ambassadeur_etat ? `<span class="ct-pastille amb-${esc(f.ambassadeur_etat)}" data-fiche-ambassadeur="${esc(f.ambassadeur_etat)}">Ambassadeur : ${esc(ETATS_AMBASSADEUR[f.ambassadeur_etat])}</span>` : ''}</div>
         </div>
         <button type="button" class="fc-fermer" data-fiche-fermer aria-label="Fermer la fiche">×</button>
       </header>
@@ -120,6 +120,13 @@ export function brancherFiche(r: Reglages) {
         </form>
         <p class="fc-muet">Un appel reçu, une rencontre : un contact fait en dehors d'une séance.</p>
       </section>
+      ${!f.envoi_groupe && f.emails.length ? `<section class="fc-bloc" data-fiche-ecrire>
+        <h3>Écrire à la main</h3>
+        <p class="fc-muet">${f.accord.statut === 'desinscrit' ? 'Cette personne ne veut plus d\'e-mails groupés : un message personnel reste possible, à vous d\'en juger.' : 'Pas d\'envoi groupé pour ce contact (pas d\'accord noté, ou catégorie sans envoi groupé) : le message s\'ouvre dans votre messagerie, vous l\'envoyez vous-même.'}</p>
+        <label class="ct-champ">Modèle<select data-ecrire-modele><option value="">Chargement…</option></select></label>
+        <div class="fc-boutons gauche"><a class="ct-btn bleu" data-ecrire-lien aria-disabled="true" href="#">Écrire</a><button type="button" class="ct-btn" data-ecrire-envoye disabled>Envoyé</button></div>
+        <p class="fc-muet">« Écrire » ouvre le message prêt dans votre messagerie ; une fois envoyé, « Envoyé » note le dernier contact et la trace sur cette fiche.</p>
+      </section>` : ''}
       <form class="fc-bloc" data-fiche-note>
         <h3>Ajouter une note</h3>
         <textarea name="note" rows="2" maxlength="2000" aria-label="Note" placeholder="Une idée, ce qu'il faut retenir"></textarea>
@@ -137,7 +144,45 @@ export function brancherFiche(r: Reglages) {
       </footer>`;
     const projet = corps.querySelector<HTMLSelectElement>('select[name=projet]')!;
     const temp = corps.querySelector<HTMLSelectElement>('[data-fiche-temperature]');
+    brancherEcrire();
     projet.addEventListener('change', () => { if (temp) { const v = temp.value; temp.innerHTML = options(temperatures(projet.value), temperaturePermise(v || null, projet.value) ? v : ''); } });
+  }
+
+  /** Story 18.18 : « Écrire » (mailto: prêt, formule remplie) puis « Envoyé » (dernier contact + trace), pour un contact sans envoi groupé. */
+  let ecrireModele = '';
+  let ecrireNom = '', ecrireObjet = '';
+  function brancherEcrire() {
+    const bloc = corps.querySelector<HTMLElement>('[data-fiche-ecrire]');
+    if (!bloc || !fiche) return;
+    const choix = bloc.querySelector<HTMLSelectElement>('[data-ecrire-modele]')!;
+    const lien = bloc.querySelector<HTMLAnchorElement>('[data-ecrire-lien]')!;
+    const envoye = bloc.querySelector<HTMLButtonElement>('[data-ecrire-envoye]')!;
+    const id = fiche.id;
+    const preparer = async () => {
+      ecrireModele = choix.value;
+      lien.setAttribute('aria-disabled', 'true'); lien.setAttribute('href', '#'); envoye.disabled = true;
+      if (!ecrireModele) return;
+      try {
+        const r = await fetch(`/api/campagnes?modele=${encodeURIComponent(ecrireModele)}&contact=${encodeURIComponent(id)}`);
+        const d = await r.json() as { ok?: boolean; a?: string; objet?: string; texte?: string; modele?: string };
+        if (!r.ok || !d.a || fiche?.id !== id || choix.value !== ecrireModele) return;
+        ecrireNom = d.modele ?? ''; ecrireObjet = d.objet ?? '';
+        lien.setAttribute('href', `mailto:${d.a}?subject=${encodeURIComponent(d.objet ?? '')}&body=${encodeURIComponent((d.texte ?? '').replace(/\n/g, '\r\n'))}`);
+        lien.removeAttribute('aria-disabled');
+        envoye.disabled = false;
+      } catch {}
+    };
+    fetch('/api/campagnes?modeles=1').then((r) => r.json()).then((d: { modeles?: { id: string; nom: string }[] }) => {
+      const l = d.modeles ?? [];
+      choix.innerHTML = l.length ? l.map((m) => `<option value="${esc(m.id)}">${esc(m.nom)}</option>`).join('') : '<option value="">Aucun modèle : marquez une campagne « modèle »</option>';
+      void preparer();
+    }).catch(() => { choix.innerHTML = '<option value="">Modèles indisponibles</option>'; });
+    choix.addEventListener('change', () => void preparer());
+    lien.addEventListener('click', (e) => { if (lien.getAttribute('aria-disabled') === 'true') e.preventDefault(); });
+    envoye.addEventListener('click', () => {
+      if (!ecrireModele) return;
+      void ecrire({ contact: { jour: aujourdhui(), canal: 'email', note: `Modèle « ${ecrireNom} » envoyé à la main : ${ecrireObjet}`, envoi_modele: ecrireNom || 'modèle' } }, 'Noté : dernier contact aujourd\'hui, par e-mail, avec le modèle envoyé.');
+    });
   }
 
   /** Applique une réponse d'écriture : fiche, ligne du tableau, message. */
