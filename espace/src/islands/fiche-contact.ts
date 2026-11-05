@@ -167,7 +167,7 @@ export function brancherFiche(r: Reglages) {
         const d = await r.json() as { ok?: boolean; a?: string; objet?: string; texte?: string; modele?: string };
         if (!r.ok || !d.a || fiche?.id !== id || choix.value !== ecrireModele) return;
         ecrireNom = d.modele ?? ''; ecrireObjet = d.objet ?? '';
-        lien.setAttribute('href', `mailto:${d.a}?subject=${encodeURIComponent(d.objet ?? '')}&body=${encodeURIComponent((d.texte ?? '').replace(/\n/g, '\r\n'))}`);
+        lien.setAttribute('href', `mailto:${d.a.replace(/[^A-Za-z0-9@.+_'!$*=\/^`{|}~-]/g, encodeURIComponent)}?subject=${encodeURIComponent(d.objet ?? '')}&body=${encodeURIComponent((d.texte ?? '').replace(/\n/g, '\r\n'))}`);
         lien.removeAttribute('aria-disabled');
         envoye.disabled = false;
       } catch {}

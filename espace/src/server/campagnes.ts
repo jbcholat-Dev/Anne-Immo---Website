@@ -16,7 +16,7 @@ import { journal } from '@site/server/journal';
 import { lienDesinscriptionContact, urlSite } from '@site/server/liens';
 import { ulid } from '@site/server/ulid';
 import { etatEmail, peutRecevoirCampagne, RAISONS_ECART, SQL_ACCORD, type DonneesAccord } from './accord';
-import { formuleAppel, JETON_FORMULE } from './categories-regles';
+import { formuleAppel, JETON_FORMULE, nomPourEmail } from './categories-regles';
 import { lireTableau } from './tableau';
 import { indexer, preparerRecherche } from './tableau-colonnes';
 import { preparerFiltre } from './vues';
@@ -203,7 +203,7 @@ export async function selectionner(env: EnvSite, f: Filtres): Promise<Selection>
     const e = etatEmail(r);
     const p = { id: r.id, prenom: r.prenom, nom: r.nom, email: r.email };
     // Revue de code 18.8 : la méthode de la catégorie restreint (jamais n'élargit) : « pas d'envoi groupé » écarte tous ses contacts, accord ou non.
-    const raison = mode !== 'filtres' && r.ecarte ? RAISON_ECARTE : !r.envoi_groupe ? RAISON_CATEGORIE : peutRecevoirCampagne(e) ? null : RAISONS_ECART[e.statut as keyof typeof RAISONS_ECART];
+    const raison = r.ecarte ? RAISON_ECARTE : !r.envoi_groupe ? RAISON_CATEGORIE : peutRecevoirCampagne(e) ? null : RAISONS_ECART[e.statut as keyof typeof RAISONS_ECART];
     if (!raison) recoivent.push(p);
     else parRaison.set(raison, [...(parRaison.get(raison) ?? []), p]);
   }
@@ -240,8 +240,8 @@ const ALT_VERSO = 'Verso de la carte ambassadeur d\'Anne VIAL-TISSOT';
  * `formule` (story 18.18) : « Bonjour Claire », tirée de la catégorie (`formuleAppel`) ; à défaut, celle d'un prénom.
  */
 export function corps(env: EnvSite, c: Pick<Campagne, 'nom' | 'texte' | 'bouton_libelle' | 'bouton_lien'>, prenom: string | null, formule?: string): string {
-  const p = (prenom ?? '').trim();
-  const texte = c.texte.split(JETON_FORMULE).join(formule ?? formuleAppel(null, p, null)).replace(/\[Prénom\]/g, p).replace(/^(Bonjour|Hello) ,/m, '$1,').trim();
+  const p = nomPourEmail(prenom);
+  const texte = c.texte.split(JETON_FORMULE).join(formule ?? formuleAppel(null, p, null)).replace(/\[Prénom\]/g, () => p).replace(/^(Bonjour|Hello) ,/m, '$1,').trim();
   const lien = lienBouton(env, c);
   return c.bouton_libelle && lien ? `${texte}\n\n[${c.bouton_libelle.replace(/[[\]]/g, '')}](${lien})` : texte;
 }
@@ -360,8 +360,8 @@ async function envoyerA(env: EnvSite, c: Campagne, d: ADestinataire): Promise<bo
   // La personne a pu se désinscrire, perdre son accord ou changer d'adresse depuis le lancement.
   // Revue de code 18.8 : ou être passée dans une catégorie sans envoi groupé.
   const accord = await env.DB.prepare(`SELECT ${SQL_ACCORD}, ${SQL_ENVOI_GROUPE} AS envoi_groupe, c.nom, c.categorie_id, c.ecarte_le IS NOT NULL AS ecarte FROM contact c WHERE c.id = ?1`).bind(d.contact_id).first<DonneesAccord & { envoi_groupe: number; nom: string | null; categorie_id: string | null; ecarte: number }>();
-  // Story 18.18 : pour une liste cochée ou une vue, un contact écarté du tableau depuis le lancement ne reçoit plus rien.
-  const ecarte = !!accord?.ecarte && modeDe(lireFiltres(c.filtres)) !== 'filtres';
+  // Story 18.18 (revue de code) : un contact écarté du tableau depuis le lancement ne reçoit plus rien, quel que soit le choix des destinataires.
+  const ecarte = !!accord?.ecarte;
   const etat = accord ? etatEmail(accord) : null;
   if (!accord || !etat || ecarte || !accord.envoi_groupe || !peutRecevoirCampagne(etat) || accord.email !== d.email) {
     const raison = !accord || !etat ? 'contact effacé' : ecarte ? RAISON_ECARTE.toLowerCase() : !accord.envoi_groupe ? RAISON_CATEGORIE.toLowerCase() : etat.statut !== 'accord' && etat.statut !== 'client' ? RAISONS_ECART[etat.statut].toLowerCase() : 'adresse changée';
@@ -450,6 +450,8 @@ export async function ecritureAMain(env: EnvSite, modeleId: string, contactId: s
     .first<{ prenom: string | null; nom: string | null; email: string | null; categorie_id: string | null }>();
   if (!k) return { erreur: 'Contact inconnu.' };
   if (!k.email) return { erreur: 'Ce contact n\'a pas d\'adresse e-mail.' };
+  // Revue de code 18.18 : l'adresse vient d'un formulaire public et entre dans un lien mailto: (« ?bcc=… » ou une virgule y ajouteraient un destinataire).
+  if (/[,;?&#%<>"\\\s]/.test(k.email)) return { erreur: 'Cette adresse e-mail est inhabituelle : écrivez-lui depuis votre messagerie.' };
   const md = corps(env, c, k.prenom, formuleAppel(k.categorie_id, k.prenom, k.nom));
   return { a: k.email, objet: c.objet, texte: `${enTexte(md)}\n\n${SIGNATURE_TEXTE}`, modele: c.nom };
 }

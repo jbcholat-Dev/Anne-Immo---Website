@@ -148,9 +148,15 @@ export const CATEGORIES_FORMELLES: readonly string[] = ['lointains'];
 /** Le jeton de la formule dans le texte d'une campagne, à côté de [Prénom]. */
 export const JETON_FORMULE = '[Formule]';
 
+/**
+ * Revue de code 18.18 : un prénom ou un nom vient d'un formulaire public ; entré tel quel dans le Markdown d'un e-mail, un
+ * `[texte](adresse)` ou un saut de ligne y ferait un lien ou un paragraphe. On retire les marques du Markdown et les sauts.
+ */
+export const nomPourEmail = (v: string | null | undefined): string => (v ?? '').replace(/[[\]()*<>`\\]/g, '').replace(/\s+/g, ' ').trim();
+
 /** « Bonjour Claire », « Bonjour Madame Martin » (civilité connue) ou « Bonjour Claire Martin » ; « Bonjour » sans nom. Sans virgule : le texte la porte. */
 export function formuleAppel(categorieId: string | null | undefined, prenom: string | null | undefined, nom: string | null | undefined, civilite?: 'madame' | 'monsieur' | null): string {
-  const p = (prenom ?? '').trim(), n = (nom ?? '').trim();
+  const p = nomPourEmail(prenom), n = nomPourEmail(nom);
   if (categorieId && CATEGORIES_FORMELLES.includes(categorieId)) {
     if (civilite && n) return `Bonjour ${civilite === 'madame' ? 'Madame' : 'Monsieur'} ${n}`;
     return `Bonjour${[p, n].filter(Boolean).map((x) => ` ${x}`).join('')}`;
