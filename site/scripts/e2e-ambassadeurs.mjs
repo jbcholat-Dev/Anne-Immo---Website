@@ -83,6 +83,16 @@ try {
   constat(sql(`SELECT count(*) AS n FROM lead WHERE source = 'ambassadeur' AND (email = '${claire.email}' OR telephone = '${e164(1)}')`)[0].n === 1 && recus.length === avant,
     'aucune nouvelle demande, aucun e-mail de plus');
 
+  // 4 bis. Seconde inscription avec la case « nouvelles » : l'accord est ajouté, la date d'activité ne bouge pas (revue de code).
+  const paul = { prenom: 'Lucie', nom: 'Nouvelles', email: `lucie+${ESSAI}@example.com`, telephone: tel(9) };
+  await poster('ambassadeurs', { submission_id: sid(), ...paul, reglement: 'on' });
+  const [p1] = sql(`SELECT id, newsletter_opt_in_at, last_activity_at FROM lead WHERE email = '${paul.email}'`);
+  await pause(1100);
+  r = await poster('ambassadeurs', { submission_id: sid(), ...paul, reglement: 'on', newsletter: 'on' });
+  const [p2] = sql(`SELECT newsletter_opt_in_at, last_activity_at FROM lead WHERE id = '${p1.id}'`);
+  constat(r.deja === true && !p1.newsletter_opt_in_at && p2.newsletter_opt_in_at && p2.last_activity_at === p1.last_activity_at,
+    'seconde inscription avec « nouvelles » : accord ajouté, date d\'activité inchangée');
+
   // 5. Une vendeuse déjà connue s'inscrit : même contact, marque posée, projet inchangé.
   const s2 = sid();
   const marie = { prenom: 'Marie', nom: 'Vendeuse', email: `marie+${ESSAI}@example.com`, telephone: tel(4) };

@@ -240,7 +240,7 @@ Charte v3 (D-31, 2026-10-08) : Gilda Display (titres, une seule graisse) et Jost
 - **Seconde inscription** (même e-mail ou même téléphone) : rien n'est écrit ni envoyé, la page affiche « Vous êtes déjà ambassadeur ». La première inscription garde la preuve de l'antériorité (règlement, article 4).
 - **E-mails** : « Bienvenue parmi mes ambassadeurs » à l'inscrit (lien du règlement, numéro d'Anne), « Nouvel ambassadeur » à Anne.
 - **Espace d'Anne** : `rattacherLead` (story 18.3) pose la marque `contact.ambassadeur_inscrit_le` / `ambassadeur_reglement` sur le contact de même téléphone ou e-mail, sans changer projet, catégorie ni étape ; un contact neuf entre dans le carnet hors suivi, avec une carte « Nouveaux ».
-- **Migration 0022** : reconstruit `lead` (SQLite ne sait pas élargir un CHECK). Tant qu'elle n'est pas relue, elle vit dans `migrations-a-relire/`, que ni la construction ni `wrangler` ne lisent : une migration de `migrations/` part sur la vraie base dès le push. Jusque-là, une inscription sur l'aperçu échoue proprement (« L'inscription n'a pas abouti »).
+- **Migration 0022** : reconstruit `lead` (SQLite ne sait pas élargir un CHECK). Tant qu'elle n'est pas relue, elle vit dans `migrations-a-relire/`, que ni la construction ni `wrangler` ne lisent : une migration de `migrations/` part sur la vraie base dès le push. Jusque-là, seule l'inscription ambassadeur échoue proprement (« L'inscription n'a pas abouti ») : les autres formulaires n'écrivent pas les colonnes du règlement et marchent sur l'ancienne table (revue de code du 2026-11-05).
 
 ## Écarts assumés avec la maquette / les briefs
 

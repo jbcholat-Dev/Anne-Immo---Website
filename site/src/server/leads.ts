@@ -3,7 +3,7 @@
 // (générée par la page) rend le renvoi sans effet : la deuxième fois, rien n'est écrit et on retrouve le premier lead.
 import type { EnvSite } from './env';
 import type { Diagnostic } from './diagnostic';
-import type { LeadFormulaire } from './schema';
+import { REGLEMENT_AMBASSADEURS, type LeadFormulaire } from './schema';
 import { lignesSequence } from './sequence';
 import { ulid } from './ulid';
 
@@ -31,19 +31,21 @@ export const CANAUX: Record<LeadFormulaire['source'], string[]> = {
 export async function ecrireLead(env: EnvSite, lead: LeadFormulaire, submissionId: string, isTest: boolean, diag: Diagnostic | null = null): Promise<Ecriture> {
   const id = ulid();
   const maintenant = new Date().toISOString();
+  // Les colonnes du règlement (migration 0022) ne sont nommées que pour un ambassadeur : les autres formulaires gardent
+  // la requête d'avant, et marchent donc même sur une base où 0022 n'est pas encore passée (revue de code 17.2).
+  const ambassadeur = lead.source === 'ambassadeur';
   const insertion = env.DB.prepare(
     `INSERT INTO lead (id, submission_id, created_at, last_activity_at, lang, source, email, privacy_accepted_at,
        newsletter_opt_in_at, utm, is_test, prenom, nom, telephone, message, projet, commune_bien, type_bien,
-       token, answers, scores, band, orientation, rdv_start, reglement_version, reglement_accepte_le)
-     VALUES (?1, ?2, ?3, ?3, ?4, ?5, ?6, ?3, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23,
-       CASE WHEN ?23 IS NOT NULL THEN ?3 END)
+       token, answers, scores, band, orientation, rdv_start${ambassadeur ? ', reglement_version, reglement_accepte_le' : ''})
+     VALUES (?1, ?2, ?3, ?3, ?4, ?5, ?6, ?3, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22${ambassadeur ? ', ?23, ?3' : ''})
      ON CONFLICT (submission_id) DO NOTHING`,
   ).bind(
     id, submissionId, maintenant, lead.lang, lead.source, lead.email,
     lead.newsletter ? maintenant : null, lead.utm, isTest ? 1 : 0,
     lead.prenom, lead.nom, lead.telephone, lead.message, lead.projet, lead.commune_bien, lead.type_bien,
     diag?.token ?? null, diag?.answers ?? null, diag?.scores ?? null, diag?.band ?? null, diag?.orientation ?? null,
-    lead.rdv_start ?? null, lead.reglement_version ?? null,
+    lead.rdv_start ?? null, ...(ambassadeur ? [lead.reglement_version ?? REGLEMENT_AMBASSADEURS] : []),
   );
   const envois = CANAUX[lead.source].map((canal) =>
     env.DB.prepare(
@@ -76,6 +78,11 @@ export async function ambassadeurInscrit(env: EnvSite, lead: LeadFormulaire, sub
      ORDER BY created_at LIMIT 1`,
   ).bind(lead.email, lead.telephone, isTest ? 1 : 0, submissionId).first<{ id: string }>();
   if (!ligne) return null;
-  await env.DB.prepare('UPDATE lead SET last_activity_at = ?2 WHERE id = ?1').bind(ligne.id, new Date().toISOString()).run();
+  // Pas de mise à jour de `last_activity_at` : une demande anonyme ne doit pas repousser la purge des données d'une
+  // personne (revue de code 17.2). Seul l'accord pour les nouvelles, s'il est donné cette fois, est ajouté.
+  if (lead.newsletter) {
+    await env.DB.prepare('UPDATE lead SET newsletter_opt_in_at = ?2 WHERE id = ?1 AND newsletter_opt_in_at IS NULL')
+      .bind(ligne.id, new Date().toISOString()).run();
+  }
   return ligne.id;
 }

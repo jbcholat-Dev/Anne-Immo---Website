@@ -13,7 +13,8 @@
 
 PRAGMA defer_foreign_keys = true;
 
--- Relance après un arrêt à mi-chemin.
+-- Relance après un arrêt à mi-chemin. D1 passe un fichier de migration d'un bloc (tout ou rien) : un arrêt après
+-- `DROP TABLE lead` ne peut pas laisser `_sauve_lead_delivery` comme seule copie (revue de code 17.2, comme 0018 et 0020).
 DROP TABLE IF EXISTS _sauve_lead_delivery;
 DROP TABLE IF EXISTS lead_neuf;
 

@@ -35,7 +35,19 @@ JB va envoyer des e-mails avec le lien de la page ambassadeurs : la page doit ex
 
 ## Revue de code
 
-À faire dans une session neuve (story 9.8), en particulier la migration 0022 avant son passage dans `migrations/`.
+2026-11-05, PR #246, commit 4a757b2 relu par une session neuve (`bmad-code-review`). Verdict sur la migration 0022 : sûre à appliquer (27 colonnes copiées dans l'ordre, 5 index, seule `lead_delivery` référence `lead`, compatible avec le code actuel de `main`).
+
+1. Les autres formulaires écrivaient les colonnes du règlement, donc tombaient tous si le code partait avant 0022 : corrigé (commit suivant), les colonnes ne sont nommées que pour un ambassadeur ; README corrigé.
+2. « Déjà ambassadeur » révèle qu'une adresse est inscrite, et la seconde inscription repoussait la purge : en partie corrigé, `last_activity_at` n'est plus touché. Le message reste : JB l'a demandé (story 17.1), Turnstile et la limite de fréquence passent avant.
+3. Un téléphone partagé (couple) fait dire « déjà inscrit » à la seconde personne : écarté pour l'instant, la règle « une inscription par e-mail ou téléphone » vient de JB (story 17.1) ; à revoir s'il y a des cas.
+4. La case « nouvelles » cochée à la seconde inscription était perdue : corrigé, l'accord est ajouté s'il manquait (essai 4 bis).
+5. Deux envois simultanés de deux onglets peuvent créer deux inscriptions : écarté, cas rare et sans perte (le contact reste unique côté espace).
+6. Relance de 0022 après un arrêt à mi-chemin : écarté, D1 passe un fichier d'un bloc ; note ajoutée en tête de la migration.
+7. Sans JavaScript, `/ambassadeur` perd `?c=` : écarté, un téléphone qui lit un QR code a JavaScript.
+8. Lien du règlement sans `www` : écarté, comme les autres liens des e-mails (l'adresse sans `www` renvoie).
+9. `?c=` ne remplace pas un vrai `utm_source` : écarté, c'est la règle voulue (story 5.4).
+
+Après corrections : `npm run check` 0 erreur, `npm run build` au vert, `e2e-migration-0022` réussi, `e2e-ambassadeurs` réussi (35 vérifications).
 
 ## Ce qui reste
 
