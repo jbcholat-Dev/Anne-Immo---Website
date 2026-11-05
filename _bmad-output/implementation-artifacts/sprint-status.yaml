@@ -277,6 +277,13 @@ development_status:
   20-5-noter-un-resultat: backlog
   20-6-bilan: backlog
   epic-20-retrospective: optional
+
+  epic-17: in-progress
+  17-1-maquette-et-cadrage-de-la-page-ambassadeurs: done   # maquette https://claude.ai/artifact/JRzaQnTFGuTM83oyuFdHby, validée par JB le 2026-11-05
+  17-2-page-ambassadeurs-et-formulaire: in-progress   # 2026-11-05 : demandée « au plus vite » par JB
+  17-3-arrivee-de-l-ambassadeur-dans-l-espace: backlog
+  17-4-ouverture-du-programme: backlog   # attend l'accord d'eXp France (fil parrainage)
+  epic-17-retrospective: optional
 action_items:
   - id: "epic-1-retro-item-1-ajouter-node-scripts-ecrans-mjs-à-la-déf"
     epic: 1
