@@ -74,6 +74,8 @@
 // personne en opposition refusée à la correction, remise en place d'une vue plafonnée.
 // Story 18.18 : envoi d'un modèle ambassadeur depuis l'espace (liste cochée, vue, formule selon la catégorie, verso joint,
 // dernier contact et événement, « Écrire » puis « Envoyé », colonne et filtre Ambassadeur).
+// Story 18.19 : tableau du boîtage (/api/boitage, onglet « Boîtage » de /actions : ajout, tri par date, modification en place, refus,
+// coût et ancien passage gardés, 1280 px sans défilement horizontal).
 // Story 18.11 : barre « Nouveaux » (/api/nouveaux : demande du site avec son message, Vu, Écarter, Ranger et leur annulation,
 // second geste refusé, annulation trop tardive ; numéros inconnus de Leedflow, une ligne par numéro, Ignorer, Ajouter à sa
 // fiche, Ajouter aux contacts, chacun annulé, numéro ajouté à une fiche qui ne revient plus, opposition, 400, 403, 413) ;
@@ -464,6 +466,170 @@ try {
     constat(filtres.length === 1 && filtres[0] === 'inscrit', '18.18 : le filtre « État ambassadeur » ne garde que les inscrits');
     await ctx.close();
   }
+  // Story 18.19 (ticket n° 249) : tableau du boîtage (onglet « Boîtage » de /actions, /api/boitage). Ligne ajoutée (colonnes
+  // neuves, secteur rempli « ville · quartier »), triée par date décroissante, modifiée, relances, coût et ancien passage gardés,
+  // refus (type de bien inconnu, date mal formée ou future, relance avant le passage, champ inconnu, jeton absent ou de Claude),
+  // puis la page à 1280 px (colonnes dans l'ordre, ajout et modification en place, pas de défilement horizontal).
+  // Lancé seul avec E2E_1819_SEUL=1 (après le démarrage des serveurs).
+  async function bloc1819() {
+    const P = 'E1819';
+    const nettoyer = () => sql(`DELETE FROM passage_boitage WHERE secteur LIKE '${P}%' OR ville LIKE '${P}%'`);
+    nettoyer();
+    const jourDe = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
+    const J = { ancien: jourDe(-20), milieu: jourDe(-5), recent: jourDe(-1), futur: jourDe(3) };
+    const bt = async (methode, jeton, corps, brut) => {
+      const x = await appeler(`${E}/api/boitage`, { method: methode, redirect: 'manual', headers: { 'cf-access-jwt-assertion': jeton, ...(methode === 'POST' ? { 'Content-Type': 'application/json' } : {}), Origin: E }, body: methode === 'POST' ? (brut ?? JSON.stringify(corps)) : undefined });
+      let d = null; try { d = await x.json(); } catch {}
+      return { status: x.status, d };
+    };
+    const ligneSql = (id) => sql(`SELECT * FROM passage_boitage WHERE id = '${id}'`)[0];
+
+    // Un passage d'avant la migration (noté sur /ajouter : secteur seul, avec son coût) : gardé tel quel et lisible dans le tableau.
+    sql(`INSERT INTO passage_boitage (id, created_at, secteur, fait_le, mots, cout_centimes) VALUES ('01KF1900000000000000000001', '2026-01-01T00:00:00Z', '${P} Ancien secteur', '${J.ancien}', 80, 4500)`);
+    let r = await bt('GET', JETON);
+    const ancien = r.d?.lignes?.find((l) => l.id === '01KF1900000000000000000001');
+    constat(r.status === 200 && ancien?.ville === `${P} Ancien secteur` && ancien.quartier === null && ancien.flyers === 80,
+      '18.19 : un passage d\'avant (secteur seul) apparaît dans le tableau, son secteur en guise de ville');
+
+    // Ajout complet puis ajout minimal.
+    r = await bt('POST', JETON, { ajouter: { fait_le: J.milieu, ville: `${P} Thonon`, quartier: 'Rives', type_bien: 'maison', flyers: 300, message: '12', r1: jourDe(2), r2: jourDe(9), commentaire: 'Boîtes pleines <b>côté lac</b>' } });
+    const complet = r.d?.id; const c1 = complet ? ligneSql(complet) : null;
+    constat(r.status === 201 && c1?.secteur === `${P} Thonon · Rives` && c1.ville === `${P} Thonon` && c1.quartier === 'Rives' && c1.type_bien === 'maison' && c1.mots === 300 && c1.message === '12'
+      && c1.r1 === jourDe(2) && c1.r2 === jourDe(9) && c1.commentaire === 'Boîtes pleines <b>côté lac</b>' && c1.fait_le === J.milieu && c1.cout_centimes === null && c1.is_test === 0,
+      '18.19 : ligne ajoutée (colonnes neuves remplies, flyers dans mots, secteur « ville · quartier »)');
+    r = await bt('POST', JETON, { ajouter: { fait_le: J.recent, ville: `${P} Annemasse`, quartier: '', type_bien: '', flyers: null } });
+    const mini = r.d?.id; const c2 = mini ? ligneSql(mini) : null;
+    constat(r.status === 201 && c2?.secteur === `${P} Annemasse` && c2.quartier === null && c2.type_bien === null && c2.mots === null && c2.r1 === null,
+      '18.19 : ligne minimale (date et ville seulement) : secteur = la ville, le reste vide');
+    r = await bt('POST', JETON, { ajouter: { fait_le: J.ancien, ville: `${P} Evian`, type_bien: 'appartement', flyers: 0 } });
+    const evian = r.d?.id;
+    constat(r.status === 201 && ligneSql(evian)?.mots === 0 && ligneSql(evian)?.type_bien === 'appartement', '18.19 : zéro flyer accepté (0 n\'est pas « vide »), appartement accepté');
+
+    // Tri par date décroissante.
+    r = await bt('GET', JETON);
+    const miens = (r.d?.lignes ?? []).filter((l) => l.ville.startsWith(P));
+    const dates = miens.map((l) => l.fait_le);
+    constat(miens.length === 4 && dates.every((d, i) => i === 0 || dates[i - 1] >= d) && miens[0].id === mini,
+      `18.19 : lignes triées par date décroissante (${dates.join(' > ')})`);
+
+    // Modification : champs changés, le reste intact ; le secteur suit la ville et le quartier ; coût conservé.
+    r = await bt('POST', JETON, { id: complet, corriger: { flyers: 450, type_bien: 'appartement', r2: '', commentaire: 'Refait' } });
+    const c3 = ligneSql(complet);
+    constat(r.status === 200 && r.d?.ligne?.flyers === 450 && c3.mots === 450 && c3.type_bien === 'appartement' && c3.r2 === null && c3.commentaire === 'Refait'
+      && c3.r1 === jourDe(2) && c3.message === '12' && c3.secteur === `${P} Thonon · Rives`, '18.19 : modification partielle (flyers, type, R2 effacé, commentaire), le reste intact');
+    r = await bt('POST', JETON, { id: complet, corriger: { quartier: 'Vallon' } });
+    constat(r.status === 200 && ligneSql(complet).secteur === `${P} Thonon · Vallon`, '18.19 : changer le quartier remet le secteur à jour');
+    r = await bt('POST', JETON, { id: complet, corriger: { quartier: null } });
+    constat(r.status === 200 && ligneSql(complet).secteur === `${P} Thonon` && ligneSql(complet).quartier === null, '18.19 : quartier effacé : le secteur redevient la ville');
+    r = await bt('POST', JETON, { id: '01KF1900000000000000000001', corriger: { commentaire: 'Vieux passage' } });
+    const a2 = ligneSql('01KF1900000000000000000001');
+    constat(r.status === 200 && a2.cout_centimes === 4500 && a2.secteur === `${P} Ancien secteur` && a2.ville === null && a2.commentaire === 'Vieux passage',
+      '18.19 : corriger un ancien passage ne touche ni son coût ni son secteur (ville restée vide)');
+    constat((await appeler(`${E}/bilan`, { headers: avecJeton() })).status === 200
+      && sql(`SELECT sum(coalesce(cout_centimes, 0)) AS c FROM passage_boitage WHERE secteur = '${P} Ancien secteur'`)[0].c === 4500, '18.19 : le bilan s\'ouvre et le coût du boîtage est resté');
+
+    // Refus : rien n'est écrit.
+    const avant = sql(`SELECT count(*) AS n, group_concat(coalesce(mots, 'x') || coalesce(type_bien, '-') || coalesce(r1, '-') || coalesce(r2, '-') || fait_le) AS h FROM passage_boitage`)[0];
+    const bon = { fait_le: J.milieu, ville: `${P} Refus` };
+    const cas = [
+      ['type de bien inconnu', { ajouter: { ...bon, type_bien: 'villa' } }], ['type de bien en majuscule', { ajouter: { ...bon, type_bien: 'Maison' } }],
+      ['date mal formée (jj/mm/aaaa)', { ajouter: { ...bon, fait_le: '05/11/2026' } }], ['date impossible', { ajouter: { ...bon, fait_le: '2026-02-31' } }],
+      ['date dans le futur', { ajouter: { ...bon, fait_le: J.futur } }], ['date absente', { ajouter: { ville: `${P} Refus` } }], ['ville absente', { ajouter: { fait_le: J.milieu } }],
+      ['ville vide', { ajouter: { ...bon, ville: '   ' } }], ['ville trop longue', { ajouter: { ...bon, ville: 'V'.repeat(81) } }],
+      ['R1 mal formée', { ajouter: { ...bon, r1: '12-11-2026' } }], ['R2 avant R1', { ajouter: { ...bon, r1: jourDe(5), r2: jourDe(2) } }], ['R1 avant le passage', { ajouter: { ...bon, r1: J.ancien } }],
+      ['flyers négatif', { ajouter: { ...bon, flyers: -1 } }], ['flyers décimal', { ajouter: { ...bon, flyers: 1.5 } }], ['flyers en texte', { ajouter: { ...bon, flyers: '300' } }], ['flyers énorme', { ajouter: { ...bon, flyers: 1e7 } }],
+      ['message trop long', { ajouter: { ...bon, message: 'm'.repeat(41) } }], ['message qui n\'est pas un texte', { ajouter: { ...bon, message: 12 } }], ['champ inconnu', { ajouter: { ...bon, secteur: 'Autre' } }],
+      ['corriger : type inconnu', { id: complet, corriger: { type_bien: 'chalet' } }], ['corriger : date mal formée', { id: complet, corriger: { fait_le: 'hier' } }], ['corriger : date future', { id: complet, corriger: { fait_le: J.futur } }],
+      ['corriger : R2 avant R1', { id: complet, corriger: { r2: jourDe(-30) } }], ['corriger : ville vidée', { id: complet, corriger: { ville: '' } }], ['corriger : rien', { id: complet, corriger: {} }],
+      ['corriger : champ inconnu', { id: complet, corriger: { cout_centimes: 1 } }], ['deux gestes', { ajouter: bon, id: complet, corriger: { message: '1' } }], ['identifiant invalide', { id: 'x', corriger: { message: '1' } }],
+    ];
+    const refus = [];
+    for (const [nom, corps] of cas) { const x = await bt('POST', JETON, corps); if (x.status !== 400 || x.d?.ok !== false) refus.push(`${nom} ${x.status}`); }
+    const apres = sql(`SELECT count(*) AS n, group_concat(coalesce(mots, 'x') || coalesce(type_bien, '-') || coalesce(r1, '-') || coalesce(r2, '-') || fait_le) AS h FROM passage_boitage`)[0];
+    constat(refus.length === 0 && apres.n === avant.n && apres.h === avant.h, `18.19 : ${cas.length} saisies invalides refusées en 400, rien d'écrit${refus.length ? ` (acceptées à tort : ${refus.join(', ')})` : ''}`);
+    r = await bt('POST', JETON, { id: '01KF1900000000000000000009', corriger: { message: '1' } });
+    const texteJson = await bt('POST', JETON, null, 'pas du json');
+    const autreType = await appeler(`${E}/api/boitage`, { method: 'POST', headers: { 'cf-access-jwt-assertion': JETON, 'Content-Type': 'text/plain', Origin: E }, body: JSON.stringify({ ajouter: bon }) });
+    constat(r.status === 404 && texteJson.status === 400 && autreType.status === 400, '18.19 : passage inconnu 404 ; corps illisible, pas en JSON 400');
+    const sans = await appeler(`${E}/api/boitage`, { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: E }, body: JSON.stringify({ ajouter: bon }) });
+    const sansGet = await appeler(`${E}/api/boitage`, { redirect: 'manual' });
+    const clau = await bt('POST', JETON_C, { ajouter: bon });
+    const clauGet = await bt('GET', JETON_C);
+    constat(sans.status === 403 && sansGet.status === 403 && clau.status === 403 && clauGet.status === 403 && sql(`SELECT count(*) AS n FROM passage_boitage WHERE ville = '${P} Refus'`)[0].n === 0,
+      `18.19 : /api/boitage refusé sans jeton et avec le jeton de Claude (403), rien écrit (${[sans, sansGet, clau, clauGet].map((x) => x.status).join(', ')})`);
+
+    const trop = await bt('POST', JETON, null, JSON.stringify({ ajouter: { ...bon, commentaire: 'x'.repeat(21000) } }));
+    constat(trop.status === 413 && sql(`SELECT count(*) AS n FROM passage_boitage WHERE ville = '${P} Refus'`)[0].n === 0, '18.19 : une demande de plus de 20 000 caractères est refusée (413)');
+
+    // La page, à 1280 px : colonnes dans l'ordre, ajout, modification en place, pas de défilement horizontal.
+    const ctx = await nav.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
+    const o = await ctx.newPage();
+    const erreursPage = []; o.on('pageerror', (e) => erreursPage.push(e.message));
+    await o.goto(`${E}/actions`);
+    constat(await o.locator('[data-onglet-boitage]').count() === 1 && await o.locator('[data-actions], [data-action-form]').count() >= 1 && await o.locator('[data-boitage]').count() === 0,
+      '18.19 : /actions garde ses actions ; l\'onglet « Boîtage » y mène');
+    await o.goto(`${E}/actions?onglet=boitage`);
+    await o.waitForSelector('[data-bt-ajout]');
+    const entetes = await o.$$eval('[data-bt-tableau] thead th', (t) => t.map((x) => x.textContent.trim()));
+    constat(entetes.slice(0, 9).join('|') === 'Date|Ville|Quartier|Type de bien|Flyers|Message|R1|R2|Commentaires' && entetes.length === 10,
+      `18.19 : colonnes dans l'ordre demandé (${entetes.slice(0, 9).join(', ')}) plus la colonne des boutons`);
+    const lignesPage = await o.$$eval('[data-bt-lignes] tr[data-bt-ligne]', (t) => t.map((x) => [x.dataset.btLigne, x.children[1].textContent]));
+    constat(lignesPage.length >= 4 && lignesPage.findIndex(([, v]) => v === `${P} Annemasse`) < lignesPage.findIndex(([, v]) => v === `${P} Thonon`) && lignesPage.findIndex(([, v]) => v === `${P} Thonon`) < lignesPage.findIndex(([, v]) => v === `${P} Evian`),
+      '18.19 : la page montre les lignes du plus récent au plus ancien');
+    const lecturePage = await o.$$eval('[data-bt-lignes] tr[data-bt-ligne]', (t, ville) => t.filter((x) => x.children[1].textContent === ville).map((x) => [...x.children].map((c) => c.textContent.trim())), `${P} Thonon`);
+    constat(lecturePage[0]?.[7] === '—' && lecturePage[0]?.[5] === '12' && lecturePage[0]?.[2] === '—', '18.19 : une valeur vide se lit « — », le numéro de message est affiché');
+
+    // Ajout par la ligne du haut (Entrée valide). Date, ville, quartier et type restent pour le passage suivant.
+    const ligneAjout = o.locator('[data-bt-ajout]');
+    await ligneAjout.locator('[name=fait_le]').fill(J.milieu);
+    await ligneAjout.locator('[name=ville]').fill(`${P} Sciez`);
+    await ligneAjout.locator('[name=quartier]').fill('Chavannex');
+    await ligneAjout.locator('[name=type_bien]').selectOption('maison');
+    await ligneAjout.locator('[name=flyers]').fill('220');
+    await ligneAjout.locator('[name=message]').fill('7');
+    await ligneAjout.locator('[name=commentaire]').fill('<img src=x onerror=window.__xss=1>');
+    await ligneAjout.locator('[name=commentaire]').press('Enter');
+    await o.waitForSelector(`[data-bt-ligne] td:text-is("${P} Sciez")`);
+    const sciez = sql(`SELECT * FROM passage_boitage WHERE ville = '${P} Sciez'`)[0];
+    const reste = await o.evaluate(() => ({ ville: document.querySelector('[data-bt-ajout] [name=ville]').value, flyers: document.querySelector('[data-bt-ajout] [name=flyers]').value, xss: window.__xss === 1, img: document.querySelectorAll('[data-bt-lignes] img').length }));
+    constat(sciez?.mots === 220 && sciez.message === '7' && sciez.secteur === `${P} Sciez · Chavannex` && reste.ville === `${P} Sciez` && reste.flyers === '' && !reste.xss && reste.img === 0,
+      '18.19 : ajout par la ligne du haut ; ville gardée pour le suivant, flyers vidés ; le texte saisi n\'est jamais interprété comme du HTML');
+    // Erreur affichée dans la page sans rien perdre.
+    await ligneAjout.locator('[name=ville]').fill('');
+    await ligneAjout.locator('[data-bt-enregistrer]').click();
+    await o.waitForSelector('[data-bt-erreur]:not([hidden])');
+    constat((await o.textContent('[data-bt-erreur]')).includes('ville') && await ligneAjout.locator('[name=flyers]').count() === 1 && sql(`SELECT count(*) AS n FROM passage_boitage WHERE ville LIKE '${P}%'`)[0].n === 4,
+      '18.19 : sans ville, le message s\'affiche dans la page et rien n\'est écrit');
+    await ligneAjout.locator('[name=ville]').fill(`${P} Sciez`);
+
+    // Modification en place.
+    const idEvian = evian;
+    await o.locator(`[data-bt-ligne="${idEvian}"] [data-bt-modifier]`).click();
+    await o.waitForSelector(`[data-bt-edition="${idEvian}"]`);
+    const edition = o.locator(`[data-bt-edition="${idEvian}"]`);
+    constat(await edition.locator('[name=type_bien]').inputValue() === 'appartement' && await edition.locator('[name=flyers]').inputValue() === '0' && await o.locator('[data-bt-edition]').count() === 1,
+      '18.19 : « Modifier » ouvre la ligne en place avec ses valeurs');
+    await edition.locator('[name=flyers]').fill('125');
+    await edition.locator('[name=r1]').fill(jourDe(0));
+    await edition.locator('[name=commentaire]').fill('Deuxième passage');
+    await edition.locator('[data-bt-enregistrer]').click();
+    await o.waitForSelector(`[data-bt-ligne="${idEvian}"]`);
+    const apresEdition = ligneSql(idEvian);
+    constat(apresEdition.mots === 125 && apresEdition.r1 === jourDe(0) && apresEdition.commentaire === 'Deuxième passage' && await o.locator('[data-bt-edition]').count() === 0
+      && (await o.textContent(`[data-bt-ligne="${idEvian}"]`)).includes('Deuxième passage'), '18.19 : modification enregistrée en place, la ligne redevient lisible');
+    await o.locator(`[data-bt-ligne="${idEvian}"] [data-bt-modifier]`).click();
+    await o.locator(`[data-bt-edition="${idEvian}"] [name=commentaire]`).fill('Ne doit pas partir');
+    await o.locator(`[data-bt-edition="${idEvian}"] [name=commentaire]`).press('Escape');
+    constat(ligneSql(idEvian).commentaire === 'Deuxième passage' && await o.locator('[data-bt-edition]').count() === 0, '18.19 : Échap annule la modification, rien n\'est écrit');
+
+    const largeur = await o.evaluate(() => ({ boite: document.querySelector('.bt-boite').scrollWidth - document.querySelector('.bt-boite').clientWidth, page: document.documentElement.scrollWidth - window.innerWidth }));
+    constat(largeur.boite <= 0 && largeur.page <= 0, `18.19 : pas de défilement horizontal à 1280 px (tableau ${largeur.boite}, page ${largeur.page})`);
+    await o.screenshot({ path: path.join(OUT, 'espace-boitage-1280.png'), fullPage: true });
+    constat(erreursPage.length === 0, `18.19 : aucune erreur JavaScript dans la page${erreursPage.length ? ` (${erreursPage[0]})` : ''}`);
+    await ctx.close();
+    nettoyer();
+  }
+  if (process.env.E2E_1819_SEUL) { await bloc1819(); await nav.close(); throw new Error(echecs ? 'E2E_1819_SEUL : échecs' : 'E2E_1819_SEUL : terminé') }
   if (process.env.E2E_1818_SEUL) { await bloc1818(); await nav.close(); throw new Error(echecs ? 'E2E_1818_SEUL : échecs' : 'E2E_1818_SEUL : terminé') }
   r = await page('/ajouter', { quoi: 'contact', prenom: 'Bea', nom: `Boitage${ESSAI}`, telephone: TEL, canal: 'boitage', parcours: 'vendeur' });
   constat(r.status === 200 && (await r.text()).includes('data-erreur') && sql(`SELECT count(*) AS n FROM contact WHERE telephone = '${TEL164}'`)[0].n === 0,
@@ -2997,6 +3163,7 @@ try {
     await ctx.close();
   }
   await bloc1818();
+  await bloc1819();
   // Story 18.8 : catégories et méthodes, par /api/categories puis dans la page /categories. Les catégories de départ sont
   // remises comme avant à la fin (nom, ordre, méthode), les catégories d'essai retirées (marque « E188 » dans le nom).
   const ancienne8 = sql(`SELECT id FROM categorie WHERE nom LIKE '%E188%'`).map((c) => `'${c.id}'`).join(',');
