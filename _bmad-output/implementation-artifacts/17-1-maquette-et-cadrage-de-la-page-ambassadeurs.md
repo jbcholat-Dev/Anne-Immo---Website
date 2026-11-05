@@ -37,6 +37,7 @@ Le mot d'Anne (« Vous savez comment je travaille… ») est une proposition : A
 - **Adresse** : `annevialtissot.fr/ambassadeurs`. L'adresse `/ambassadeur` (déjà prévue pour les premiers QR codes, `?c=carte`) y renvoie, donc aucun code imprimé n'est perdu. Le paramètre `c` dit d'où vient l'inscrit (`carte`, `email`, `whatsapp`…) et suit la règle des origines de campagne (story 5.4, AD-11).
 - **Vocabulaire** (fil parrainage) : « remerciement », jamais « commission » ; toujours « jusqu'à 1 500 € », jamais « jusqu'à 5 % » seul (on lirait 5 % du prix de vente) ; « offert », jamais « gratuit ».
 - **Texte (choix de JB, 2026-11-01)** : Anne parle à la première personne sur toute la page. Le haut de page suit la méthode « avant, après, le lien » : « Votre ami vend sa maison. Vous, vous partez en voyage. » Cinq variantes ont été comparées (une méthode chacune), voir le journal du document de référence « [Anne] Méthode d'écriture » : https://claude.ai/artifact/QqJ4ADLBHt5y9H8cJf4GHJ.
+- **Texte revu (choix de JB, 2026-11-05)** : titre « Tu connais un bon agent immobilier ? » (méthode problème, gêne, solution), suivi du texte « accroche, histoire, offre » : « Mes plus belles ventes ont commencé par une phrase : « Appelle Anne de ma part. » Une voisine, un ancien client, un ami d'ami. Ces personnes m'ont fait confiance. Aujourd'hui, je veux les remercier comme il se doit. Présentez-moi un proche qui vend. Si la vente se fait : jusqu'à 1 500 € pour vous. » Il remplace « Votre ami vend sa maison… » sur la page (le dépliant et le flyer gardent leur titre). La maquette ne garde que cette version, sur téléphone et sur ordinateur. Anne doit confirmer la phrase sur ses ventes.
 - **Règlement v1 validé par JB le 2026-11-02** (fil parrainage) : https://claude.ai/artifact/NWDwwi4pgoaqbJyuqNM1z8. Remerciement de 5 % des honoraires HT de l'agence tels qu'ils figurent dans l'acte, plafonné à 1 500 €, versé par Anne ; bulletin en ligne seulement (cette page). La story 17.2 publie ce texte sur `/ambassadeurs/reglement` avec sa version (`v1`), celle que garde `lead.reglement_version`.
 - **Champs** : prénom, nom, téléphone, e-mail, tous obligatoires (demande de JB).
 - **Deux cases séparées** :
@@ -86,5 +87,5 @@ Le mot d'Anne (« Vous savez comment je travaille… ») est une proposition : A
 ## Ce qui reste
 
 - Accord de JB sur la maquette et sur les quatre choix ci-dessus (adresse, deux cases, recommandation hors formulaire, professionnels hors programme).
-- Relecture du mot d'Anne par Anne.
+- Relecture du texte par Anne, en particulier « mes plus belles ventes ont commencé par « Appelle Anne de ma part » ».
 - Accord d'eXp France (bloque l'ouverture, pas la construction sur l'aperçu).
