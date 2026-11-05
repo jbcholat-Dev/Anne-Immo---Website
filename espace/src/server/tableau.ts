@@ -4,14 +4,18 @@
 // Story 18.5 : la date « à rappeler le » et la marque ambassadeur (filtres d'AD-27), et la liste des catégories.
 import type { EnvSite } from '@site/server/env';
 import { etatEmail, SQL_ACCORD, type DonneesAccord } from './accord';
-import { rencontresDe, suiviEnCours, type LigneTableau } from './tableau-colonnes';
+import { etatAmbassadeur, rencontresDe, suiviEnCours, type LigneTableau } from './tableau-colonnes';
 
 interface LigneContact extends DonneesAccord {
   id: string; prenom: string | null; nom: string | null; telephone: string | null; entreprise: string | null;
   categorie_id: string | null; categorie: string | null; projet: string; temperature: string | null; commune: string | null;
   dernier_contact_le: string | null; dernier_contact_canal: string | null; verifie_le: string | null; ecarte_le: string | null;
-  a_rappeler_le: string | null; ambassadeur_inscrit_le: string | null;
+  a_rappeler_le: string | null; ambassadeur_inscrit_le: string | null; modele_envoye: number;
 }
+
+/** 1 si un modèle a déjà été envoyé au contact (story 18.18) : un événement de sa fiche porte `envoi_modele` (json_valid d'abord : un texte qui n'est pas du JSON ne doit pas faire échouer la lecture). */
+export const SQL_MODELE_ENVOYE = `EXISTS (SELECT 1 FROM contact_evenement m WHERE m.contact_id = c.id AND m.type IN ('email', 'note')
+  AND CASE WHEN json_valid(m.donnees) THEN json_type(m.donnees, '$.envoi_modele') END IS NOT NULL)`;
 
 /** Une adresse de profil n'est gardée que si elle commence par http(s) : jamais de lien « javascript: » dans la page. */
 const LIEN_WEB = /^https?:\/\/[^\s"'<>]+$/i;
@@ -23,7 +27,7 @@ export async function lireTableau(env: EnvSite, id?: string): Promise<LigneTable
   const [contacts, coordonnees, sources] = await env.DB.batch([
     lier(env.DB.prepare(
       `SELECT c.id, c.prenom, c.nom, c.telephone, c.entreprise, c.categorie_id, k.nom AS categorie, c.projet, c.temperature, c.commune,
-         c.dernier_contact_le, c.dernier_contact_canal, c.verifie_le, c.ecarte_le, c.a_rappeler_le, c.ambassadeur_inscrit_le, ${SQL_ACCORD}
+         c.dernier_contact_le, c.dernier_contact_canal, c.verifie_le, c.ecarte_le, c.a_rappeler_le, c.ambassadeur_inscrit_le, ${SQL_MODELE_ENVOYE} AS modele_envoye, ${SQL_ACCORD}
        FROM contact c LEFT JOIN categorie k ON k.id = c.categorie_id${seul}`,
     )),
     lier(env.DB.prepare(`SELECT contact_id, type, reseau, valeur FROM contact_coordonnee${seulFille} ORDER BY id`)),
@@ -58,6 +62,7 @@ export async function lireTableau(env: EnvSite, id?: string): Promise<LigneTable
       dernier_le: c.dernier_contact_le, dernier_canal: c.dernier_contact_canal,
       accord: etatEmail(c).statut, verifie: !!c.verifie_le, ecarte: !!c.ecarte_le, suivi: c.etape !== null, en_cours: suiviEnCours(c.etape),
       a_rappeler_le: c.a_rappeler_le, ambassadeur_inscrit: !!c.ambassadeur_inscrit_le,
+      ambassadeur_etat: etatAmbassadeur(c.projet, !!c.ambassadeur_inscrit_le, !!c.modele_envoye), ambassadeur_contacte: !!c.modele_envoye,
     };
   });
 }

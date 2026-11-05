@@ -507,19 +507,25 @@ export async function ajouterNote(env: EnvSite, id: string, texte: string, par: 
   return !!ev.meta.changes;
 }
 
-export interface ContactNote { jour: string; canal: (typeof CANAUX_DERNIER)[number]; note: string | null }
+export interface ContactNote {
+  jour: string; canal: (typeof CANAUX_DERNIER)[number]; note: string | null;
+  /** Story 18.18 : nom du modèle envoyé à la main (bouton « Envoyé » de la fiche) ; marque l'événement `envoi_modele` (état « Contacté » des ambassadeurs). */
+  envoi_modele?: string | null;
+}
 
 /** Lit un contact fait (date AAAA-MM-JJ passée ou du jour, en jours de Paris ; canal fermé ; note facultative) ; ou l'erreur. */
 export function lireContactNote(brut: unknown): ContactNote | string {
   if (!brut || typeof brut !== 'object' || Array.isArray(brut)) return 'Contact attendu.';
   const d = brut as Record<string, unknown>;
-  if (Object.keys(d).some((k) => !['jour', 'canal', 'note'].includes(k))) return 'Champ inconnu.';
+  if (Object.keys(d).some((k) => !['jour', 'canal', 'note', 'envoi_modele'].includes(k))) return 'Champ inconnu.';
   if (typeof d.jour !== 'string' || !jourValide(d.jour) || d.jour < '2000-01-01') return 'Date invalide.';
   if (d.jour > jourParisDe()) return 'La date est dans le futur : notez un contact déjà fait.';
   if (typeof d.canal !== 'string' || !(CANAUX_DERNIER as readonly string[]).includes(d.canal)) return 'Canal inconnu.';
   if (d.note !== undefined && d.note !== null && typeof d.note !== 'string') return 'Note : texte attendu.';
   const note = typeof d.note === 'string' ? d.note.trim().slice(0, 2000) : '';
-  return { jour: d.jour, canal: d.canal as ContactNote['canal'], note: note || null };
+  if (d.envoi_modele !== undefined && d.envoi_modele !== null && (typeof d.envoi_modele !== 'string' || !d.envoi_modele.trim() || d.envoi_modele.length > 200)) return 'Modèle : un nom de 1 à 200 caractères est attendu.';
+  const envoi_modele = typeof d.envoi_modele === 'string' ? d.envoi_modele.trim() : null;
+  return { jour: d.jour, canal: d.canal as ContactNote['canal'], note: note || null, ...(envoi_modele ? { envoi_modele } : {}) };
 }
 
 const CANAUX_LISIBLES: Record<string, string> = { whatsapp: 'WhatsApp', sms: 'SMS', email: 'E-mail', appel: 'Appel', rencontre: 'Rencontre', autre: 'Autre' };
@@ -554,7 +560,7 @@ export async function noterContact(env: EnvSite, id: string, c: ContactNote, par
   const [ev] = await env.DB.batch([
     env.DB.prepare(`INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, donnees, par)
        SELECT ?1, ?2, 'note', 'anne', ?3, ?4, ?5, ?6 FROM contact WHERE id = ?1 ${gardeEv}`)
-      .bind(id, maintenant, `${lot}.${id}`, texte, JSON.stringify({ avant, apres, lot, [origine]: { jour: c.jour, canal: c.canal } }), par,
+      .bind(id, maintenant, `${lot}.${id}`, texte, JSON.stringify({ avant, apres, lot, [origine]: { jour: c.jour, canal: c.canal }, ...(c.envoi_modele ? { envoi_modele: c.envoi_modele } : {}) }), par,
         ...(remplace ? [le, etat.dernier_contact_le] : [])),
     remplace
       ? env.DB.prepare(`UPDATE contact SET dernier_contact_le = ?2, dernier_contact_canal = ?3, last_activity_at = ?4 WHERE id = ?1 AND ${ecrit}`)

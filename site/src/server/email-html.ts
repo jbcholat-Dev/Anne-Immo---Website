@@ -132,6 +132,8 @@ export interface Habillage {
   apercu?: string;
   /** Pied en petit (désabonnement de la séquence), en Markdown. */
   pied?: string;
+  /** Une image dans le corps, après le texte et avant la signature (story 18.18 : verso de la carte ambassadeur). `src` : `cid:…` d'une pièce jointe, ou adresse de données pour l'aperçu. */
+  image?: { src: string; alt: string };
 }
 
 const SIGNATURE = {
@@ -172,6 +174,7 @@ ${h.apercu ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;co
 <img src="${logo}" width="200" height="47" alt="Anne VIAL-TISSOT" style="display:block;border:0;width:200px;height:auto;">
 <table role="presentation" width="48" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0 32px;"><tr><td height="2" bgcolor="${C.terra}" style="height:2px;line-height:2px;font-size:0;background:${C.terra};">&nbsp;</td></tr></table>
 ${corps}
+${h.image ? `<img src="${echapper(h.image.src)}" width="536" alt="${echapper(h.image.alt)}" style="display:block;border:0;width:100%;max-width:536px;height:auto;margin:8px 0 0;">` : ''}
 <p style="margin:32px 0 0;font-family:${SERIF};font-size:20px;line-height:1.3;color:${C.brun};">Anne VIAL-TISSOT</p>
 <p style="margin:4px 0 0;font-family:${SANS};font-size:14px;line-height:1.5;color:${C.muet};">${s.role}<br>${s.zone}<br><a href="https://annevialtissot.fr" style="${styleLien}">www.annevialtissot.fr</a></p>
 ${pied}
