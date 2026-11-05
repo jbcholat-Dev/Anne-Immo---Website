@@ -239,7 +239,7 @@ development_status:
   16-2-video-espace-acheteur: done
   epic-16-retrospective: optional
   # Nouvelle version de l'espace d'Anne (refonte BMAD du 2026-11-01) : _bmad-output/planning-artifacts/epics-espace-anne-2026-11-01.md
-  epic-18: done   # le carnet de contacts (livraison 1), 18.18 fusionnée le 2026-11-05 (PR #247)
+  epic-18: in-progress   # le carnet de contacts (livraison 1) ; rouvert le 2026-11-05 par 18.19 (ticket n° 249)
   18-1-leedflow-ne-range-un-appel-que-sur-un-contact-suivi: done   # 2026-11-01, PR #225
   18-2-nouvelle-base-du-carnet-migration-0018: done   # 2026-11-02, PR #226
   18-3-demandes-du-site-et-droits-sur-le-nouveau-carnet: done   # 2026-11-02, PR #226, avec les corrections de la revue 18.2
@@ -261,6 +261,7 @@ development_status:
   18-16-projet-sponsoring: done   # 2026-11-05, ticket n° 243, PR #244
   18-17-rencontre-et-reprise-edb: done   # 2026-11-05, PR #244, onglet EDB repassé (lot 01M6NF9S4BYJF4PXC3RFFWMZ26)
   18-18-envoi-ambassadeur-depuis-l-espace: done   # 2026-11-05, PR #247 ; envoi en production après le sous-domaine nouvelles.annevialtissot.fr (JB)
+  18-19-tableau-du-boitage: review   # 2026-11-05, ticket n° 249
   epic-18-retrospective: optional   # non faite : décision JB « Finir économe » du 2026-11-02
 
   epic-19: backlog   # les séances et les campagnes (livraison 2) ; en pause (décision JB 2026-11-02)

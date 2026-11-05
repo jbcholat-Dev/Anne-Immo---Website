@@ -3,6 +3,9 @@
 // canal, ses dates et son coût, et ce qu'elle a rapporté : contacts rattachés, rendez-vous, mandats, coût par contact.
 // /actions liste et ajoute ; /actions?id=… modifie ou supprime. Les contacts sont rattachés d'office par la base quand
 // une seule action de leur canal est en cours à leur arrivée, sinon à la qualification ou sur leur fiche.
+// Story 18.19 (ticket n° 249) : l'onglet « Boîtage » (/actions?onglet=boitage) est le tableau des passages de flyers d'Anne
+// (date, ville, quartier, type de bien, flyers, message, R1, R2, commentaires), avec une ligne d'ajout rapide et la
+// modification d'une ligne en place ; il écrit par /api/boitage.
 import Espace from '../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { CANAUX_ORIGINE } from '@site/server/contacts';
@@ -10,12 +13,14 @@ import { actionDuFormulaire, coutRetenu, enregistrerAction, euros, lireAction, l
 import { pourSite as env } from '../server/env';
 import { champ, ULID } from '../server/formulaires';
 import { aujourdhui, echeance } from '../server/pipeline';
+import { listerBoitage, TYPES_BIEN } from '../server/boitage';
 
 export const prerender = false;
 const compte = Astro.request.headers.get(ENTETE_COMPTE);
 if (!compte) return new Response('Accès refusé', { status: 403 });
 
 const id = Astro.url.searchParams.get('id') ?? '';
+const boitage = !id && Astro.url.searchParams.get('onglet') === 'boitage';
 const enCours = ULID.test(id) ? await lireAction(env, id) : null;
 if (id && !enCours) return new Response('Action inconnue', { status: 404 });
 
@@ -37,7 +42,9 @@ if (Astro.request.method === 'POST') {
   }
 }
 
-const actions = enCours ? [] : await listerActions(env);
+const actions = enCours || boitage ? [] : await listerActions(env);
+const lignesBoitage = boitage ? await listerBoitage(env) : [];
+const donneesBoitage = JSON.stringify({ lignes: lignesBoitage, aujourdhui: aujourdhui(), types: TYPES_BIEN }).replace(/</g, '\\u003c');
 const m = Astro.url.searchParams.get('m') ?? '';
 const message = { ajoutee: 'Action notée.', modifiee: 'Action modifiée.', supprimee: 'Action supprimée ; ses contacts restent, sans action.' }[m] ?? '';
 const enEuros = (c: number | null | undefined) => (c === null || c === undefined ? '' : String(c / 100).replace('.', ','));
@@ -45,12 +52,18 @@ const valeur = (k: string, defaut: string | null | undefined) => saisi[k] ?? def
 const total = actions.reduce((t, a) => t + (coutRetenu(a) ?? 0), 0);
 const dates = (a: { debut: string; fin: string | null }) => (a.fin ? `du ${echeance(a.debut)} au ${echeance(a.fin)}` : `depuis le ${echeance(a.debut)}`);
 ---
-<Espace titre={enCours ? enCours.nom : 'Prospection'} actif="actions">
+<Espace titre={enCours ? enCours.nom : boitage ? 'Boîtage' : 'Prospection'} actif="actions" large={boitage}>
   <div>
     <div class="e-muet">{enCours ? <a href="/actions">Prospection</a> : <a href="/bilan">Bilan</a>}</div>
-    <h1>{enCours ? enCours.nom : 'Ce que je dépense, et ce que ça rapporte'}</h1>
+    <h1>{enCours ? enCours.nom : boitage ? 'Le boîtage' : 'Ce que je dépense, et ce que ça rapporte'}</h1>
     {enCours && <div class="e-muet">{CANAUX_ORIGINE[enCours.canal]} · {dates(enCours)}{enCours.auteur === 'claude' ? ' · créée par Claude' : ''}</div>}
   </div>
+  {!enCours && (
+    <nav class="bt-onglets" aria-label="Prospection">
+      <a href="/actions" aria-current={boitage ? undefined : 'page'}>Actions</a>
+      <a href="/actions?onglet=boitage" aria-current={boitage ? 'page' : undefined} data-onglet-boitage>Boîtage</a>
+    </nav>
+  )}
   {message && <p class="e-message" role="status" data-message>{message}</p>}
   {erreur && <p class="e-message" role="alert" data-erreur>{erreur}</p>}
 
@@ -61,7 +74,27 @@ const dates = (a: { debut: string; fin: string | null }) => (a.fin ? `du ${echea
     </section>
   )}
 
-  {!enCours && (
+  {boitage && (
+    <section data-boitage>
+      <p class="e-muet" style="margin:0 0 10px">Un passage par ligne, du plus récent au plus ancien. La première ligne sert à en ajouter un ; « Modifier » ouvre une ligne pour la corriger. R1 et R2 : les dates de vos deux relances.</p>
+      <p class="e-message" role="alert" data-bt-erreur hidden></p>
+      <p class="e-message" role="status" data-bt-statut hidden></p>
+      <div class="bt-boite">
+        <table class="bt-table" data-bt-tableau>
+          <thead>
+            <tr><th>Date</th><th>Ville</th><th>Quartier</th><th>Type de bien</th><th class="bt-n">Flyers</th><th>Message</th><th>R1</th><th>R2</th><th>Commentaires</th><th><span class="bt-cache">Actions</span></th></tr>
+          </thead>
+          <tbody data-bt-lignes><tr><td colspan="10" class="bt-attente">Chargement du tableau…</td></tr></tbody>
+        </table>
+      </div>
+      <noscript><p class="e-message">Le tableau a besoin de JavaScript.</p></noscript>
+      <datalist id="bt-villes"></datalist>
+      <datalist id="bt-quartiers"></datalist>
+      <script type="application/json" id="bt-donnees" set:html={donneesBoitage}></script>
+    </section>
+  )}
+
+  {!enCours && !boitage && (
     <section class="e-carte" data-actions>
       <h2>Mes actions</h2>
       {actions.length === 0 ? <p class="e-muet">Aucune action notée pour l'instant. Notez la première ci-dessous.</p> : (
@@ -84,7 +117,7 @@ const dates = (a: { debut: string; fin: string | null }) => (a.fin ? `du ${echea
     </section>
   )}
 
-  <form method="post" class="e-carte" data-action-form>
+  {!boitage && <form method="post" class="e-carte" data-action-form>
     <h2>{enCours ? 'Modifier' : 'Noter une action'}</h2>
     <div class="e-champs">
       <label class="e-champ large">Nom<input name="nom" value={valeur('nom', enCours?.nom)} required maxlength="120" placeholder="Flyers Margencel, publicité Facebook de mars…" autocomplete="off" /></label>
@@ -101,7 +134,7 @@ const dates = (a: { debut: string; fin: string | null }) => (a.fin ? `du ${echea
     </div>
     <p class="e-muet" style="margin:0">Un contact qui arrive pendant l'action, sur le même canal, y est rattaché tout seul s'il n'y a qu'une action de ce canal en cours. Sinon, vous la choisissez en le qualifiant.</p>
     <div><button class="e-bouton" type="submit">{enCours ? 'Enregistrer' : "Noter l'action"}</button></div>
-  </form>
+  </form>}
 
   {enCours && (
     <form method="post" class="e-carte" data-supprimer>
@@ -111,6 +144,198 @@ const dates = (a: { debut: string; fin: string | null }) => (a.fin ? `du ${echea
     </form>
   )}
 </Espace>
+
+<script>
+  // Tableau du boîtage (story 18.19) : dessiné ici à partir des données de la page, écrit par /api/boitage. Les textes saisis
+  // ne passent jamais par innerHTML. La première ligne ajoute un passage (date, ville, quartier et type de bien restent pour
+  // le suivant : on dépose souvent plusieurs fois dans le même quartier) ; « Modifier » ouvre une ligne en place.
+  interface Ligne { id: string; fait_le: string; ville: string; quartier: string | null; type_bien: string | null; flyers: number | null; message: string | null; r1: string | null; r2: string | null; commentaire: string | null }
+  const brut = document.getElementById('bt-donnees');
+  const corps = document.querySelector<HTMLTableSectionElement>('[data-bt-lignes]');
+  const zoneErreur = document.querySelector<HTMLElement>('[data-bt-erreur]');
+  const zoneStatut = document.querySelector<HTMLElement>('[data-bt-statut]');
+  if (brut && corps && zoneErreur) {
+    const donnees = JSON.parse(brut.textContent ?? '{}') as { lignes: Ligne[]; aujourdhui: string; types: Record<string, string> };
+    let lignes = donnees.lignes;
+    let enEdition: string | null = null;
+    let memoire: Record<string, string> = { fait_le: donnees.aujourdhui, ville: '', quartier: '', type_bien: '' };
+    const jour = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+    const joli = (d: string) => jour.format(new Date(`${d}T00:00:00Z`));
+
+    const el = <K extends keyof HTMLElementTagNameMap>(nom: K, classe = '', texte = '') => {
+      const e = document.createElement(nom);
+      if (classe) e.className = classe;
+      if (texte) e.textContent = texte;
+      return e;
+    };
+    const cellule = (classe = '') => el('td', classe);
+    const lecture = (valeur: string | null, classe = '') => {
+      const c = cellule(classe);
+      if (valeur) c.textContent = valeur;
+      else { c.className = `${classe} bt-vide`.trim(); c.textContent = '—'; c.setAttribute('aria-label', 'vide'); }
+      return c;
+    };
+
+    /** Les listes de suggestions : les villes et quartiers déjà notés. */
+    const suggestions = () => {
+      const remplir = (id: string, valeurs: (string | null)[]) => {
+        const l = document.getElementById(id);
+        if (l) l.replaceChildren(...[...new Set(valeurs.filter((v): v is string => !!v))].sort((a, b) => a.localeCompare(b, 'fr')).map((v) => { const o = el('option'); o.value = v; return o; }));
+      };
+      remplir('bt-villes', lignes.map((l) => l.ville));
+      remplir('bt-quartiers', lignes.map((l) => l.quartier));
+    };
+
+    const entree = (nom: string, titre: string, valeur: string, type = 'text'): HTMLInputElement | HTMLSelectElement => {
+      if (nom === 'type_bien') {
+        const s = el('select');
+        s.name = nom; s.setAttribute('aria-label', titre);
+        for (const [v, t] of [['', '—'], ...Object.entries(donnees.types)]) { const o = el('option'); o.value = v; o.textContent = t; o.selected = v === valeur; s.append(o); }
+        return s;
+      }
+      const i = el('input');
+      i.name = nom; i.type = type; i.value = valeur; i.autocomplete = 'off'; i.setAttribute('aria-label', titre);
+      if (type === 'date' && nom === 'fait_le') i.max = donnees.aujourdhui;
+      if (nom === 'ville') { i.setAttribute('list', 'bt-villes'); i.maxLength = 80; i.required = true; }
+      if (nom === 'quartier') { i.setAttribute('list', 'bt-quartiers'); i.maxLength = 80; }
+      if (nom === 'message') i.maxLength = 40;
+      if (nom === 'commentaire') i.maxLength = 1000;
+      if (nom === 'flyers') { i.min = '0'; i.max = '999999'; i.inputMode = 'numeric'; }
+      return i;
+    };
+
+    const montrerErreur = (t: string) => { zoneErreur.textContent = t; zoneErreur.hidden = !t; if (t && zoneStatut) zoneStatut.hidden = true; };
+    const montrerStatut = (t: string) => { if (zoneStatut) { zoneStatut.textContent = t; zoneStatut.hidden = !t; } if (t) zoneErreur.hidden = true; };
+
+    const envoyer = async (corpsJson: unknown): Promise<{ ok: boolean; lignes?: Ligne[]; error?: { message: string } }> => {
+      try {
+        const r = await fetch('/api/boitage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpsJson) });
+        return await r.json();
+      } catch { return { ok: false, error: { message: 'Le tableau ne répond pas : vérifiez la connexion et recommencez.' } }; }
+    };
+
+    /** Lit les champs d'une ligne ouverte. */
+    const lire = (tr: HTMLTableRowElement) => {
+      const v = (nom: string) => (tr.querySelector<HTMLInputElement | HTMLSelectElement>(`[name=${nom}]`)?.value ?? '').trim();
+      return { fait_le: v('fait_le'), ville: v('ville'), quartier: v('quartier'), type_bien: v('type_bien'), flyers: v('flyers') === '' ? null : Number(v('flyers')),
+        message: v('message'), r1: v('r1'), r2: v('r2'), commentaire: v('commentaire') };
+    };
+
+    const COLONNES: [string, string, string][] = [['fait_le', 'Date', 'date'], ['ville', 'Ville', 'text'], ['quartier', 'Quartier', 'text'], ['type_bien', 'Type de bien', 'select'],
+      ['flyers', 'Flyers', 'number'], ['message', 'Message', 'text'], ['r1', 'R1', 'date'], ['r2', 'R2', 'date'], ['commentaire', 'Commentaires', 'text']];
+
+    /** Ligne de champs, pour l'ajout (valeurs gardées du précédent) comme pour la modification. */
+    const ligneChamps = (valeurs: Record<string, string>, ajout: boolean, ligne?: Ligne) => {
+      const tr = el('tr', ajout ? 'bt-ajout' : 'bt-edition');
+      if (ajout) tr.dataset.btAjout = ''; else tr.dataset.btEdition = ligne!.id;
+      for (const [nom, titre, type] of COLONNES) {
+        const c = cellule(nom === 'flyers' ? 'bt-n' : '');
+        c.append(entree(nom, `${titre}${ajout ? ' du nouveau passage' : ''}`, valeurs[nom] ?? '', type));
+        tr.append(c);
+      }
+      const actions = cellule('bt-actions');
+      const bouton = (t: string, classe: string) => { const b = el('button', `bt-btn ${classe}`.trim(), t); b.type = 'button'; return b; };
+      const enregistrer = bouton(ajout ? 'Ajouter' : 'Enregistrer', 'bleu');
+      enregistrer.dataset.btEnregistrer = '';
+      actions.append(enregistrer);
+      if (!ajout) { const annuler = bouton('Annuler', ''); annuler.dataset.btAnnuler = ''; actions.append(annuler); }
+      tr.append(actions);
+
+      let enCoursEnvoi = false;
+      const valider = async () => {
+        if (enCoursEnvoi) return; // Entrée tenue ou double clic : un seul passage ajouté
+        enCoursEnvoi = true;
+        enregistrer.disabled = true;
+        const champs = lire(tr);
+        const d = await envoyer(ajout ? { ajouter: champs } : { id: ligne!.id, corriger: champs });
+        enregistrer.disabled = false;
+        enCoursEnvoi = false;
+        if (!d.ok || !d.lignes) { montrerErreur(d.error?.message ?? 'Le passage n\'a pas été enregistré.'); return; }
+        lignes = d.lignes;
+        enEdition = null;
+        if (ajout) memoire = { fait_le: champs.fait_le, ville: champs.ville, quartier: champs.quartier, type_bien: champs.type_bien };
+        montrerStatut(ajout ? 'Passage ajouté.' : 'Passage modifié.');
+        dessiner();
+        if (ajout) corps.querySelector<HTMLElement>('[data-bt-ajout] [name=flyers]')?.focus();
+      };
+      enregistrer.addEventListener('click', valider);
+      tr.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.isComposing && !e.repeat && (e.target as HTMLElement).tagName !== 'BUTTON') { e.preventDefault(); void valider(); }
+        if (e.key === 'Escape' && !ajout) { enEdition = null; montrerErreur(''); dessiner(); }
+      });
+      tr.querySelector<HTMLElement>('[data-bt-annuler]')?.addEventListener('click', () => { enEdition = null; montrerErreur(''); dessiner(); });
+      return tr;
+    };
+
+    const ligneLecture = (l: Ligne) => {
+      const tr = el('tr');
+      tr.dataset.btLigne = l.id;
+      const date = cellule('bt-date'); date.textContent = joli(l.fait_le);
+      const type = lecture(l.type_bien ? donnees.types[l.type_bien] ?? l.type_bien : null);
+      const flyers = lecture(l.flyers === null ? null : new Intl.NumberFormat('fr-FR').format(l.flyers), 'bt-n');
+      const r = (d: string | null) => { const c = lecture(d ? joli(d) : null, 'bt-date'); return c; };
+      const commentaire = lecture(l.commentaire, 'bt-comm');
+      const actions = cellule('bt-actions');
+      const modifier = el('button', 'bt-btn', 'Modifier');
+      modifier.type = 'button'; modifier.dataset.btModifier = '';
+      modifier.setAttribute('aria-label', `Modifier le passage du ${joli(l.fait_le)}, ${l.ville}`);
+      modifier.addEventListener('click', () => { enEdition = l.id; montrerErreur(''); dessiner(); corps.querySelector<HTMLElement>('[data-bt-edition] [name=ville]')?.focus(); });
+      actions.append(modifier);
+      tr.append(date, lecture(l.ville), lecture(l.quartier), type, flyers, lecture(l.message), r(l.r1), r(l.r2), commentaire, actions);
+      return tr;
+    };
+
+    const dessiner = () => {
+      suggestions();
+      const lot: HTMLTableRowElement[] = [ligneChamps(memoire, true)];
+      if (lignes.length === 0) {
+        const vide = el('tr'); const c = el('td', 'bt-attente', 'Aucun passage noté pour l\'instant : la ligne du haut sert à le faire.'); c.colSpan = 10; vide.append(c); lot.push(vide);
+      }
+      for (const l of lignes) {
+        lot.push(l.id === enEdition
+          ? ligneChamps({ fait_le: l.fait_le, ville: l.ville, quartier: l.quartier ?? '', type_bien: l.type_bien ?? '', flyers: l.flyers === null ? '' : String(l.flyers),
+              message: l.message ?? '', r1: l.r1 ?? '', r2: l.r2 ?? '', commentaire: l.commentaire ?? '' }, false, l)
+          : ligneLecture(l));
+      }
+      corps.replaceChildren(...lot);
+    };
+    dessiner();
+  }
+</script>
+
+<style is:global>
+  .bt-onglets { display: flex; gap: 8px; }
+  .bt-onglets a { padding: 8px 16px; border-radius: 999px; border: 1px solid var(--avt-galet); background: #fff; color: var(--avt-text-muted); font-size: 15px; }
+  .bt-onglets a[aria-current=page] { background: var(--avt-brun); border-color: var(--avt-brun); color: var(--avt-ecru); }
+  .bt-onglets a:focus-visible { outline: 2px solid var(--avt-klein); outline-offset: 2px; }
+  .bt-boite { overflow-x: auto; background: #fff; border: 1px solid var(--avt-galet); border-radius: 12px; }
+  .bt-table { border-collapse: collapse; width: 100%; min-width: 980px; table-layout: fixed; font-size: 13.5px; }
+  .bt-table th, .bt-table td { padding: 8px 6px; border-bottom: 1px solid var(--avt-galet); text-align: left; vertical-align: middle; overflow-wrap: anywhere; }
+  .bt-table th { padding: 10px 6px; font-weight: 500; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--avt-text-muted); background: #fff; }
+  .bt-table th:nth-child(1), .bt-table th:nth-child(7), .bt-table th:nth-child(8) { width: 132px; }
+  .bt-table th:nth-child(2), .bt-table th:nth-child(3) { width: 118px; }
+  .bt-table th:nth-child(4) { width: 118px; }
+  .bt-table th:nth-child(5) { width: 74px; }
+  .bt-table th:nth-child(6) { width: 80px; }
+  .bt-table th:nth-child(10) { width: 108px; }
+  .bt-table tbody tr:last-child td { border-bottom: 0; }
+  .bt-table tbody tr[data-bt-ligne]:hover td { background: var(--avt-ecru); }
+  .bt-n { text-align: right !important; font-variant-numeric: tabular-nums; }
+  .bt-date { white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .bt-vide { color: var(--avt-disabled); }
+  .bt-attente { color: var(--avt-text-muted); padding: 18px 12px; }
+  .bt-ajout td, .bt-edition td { background: var(--avt-ecru); }
+  .bt-table input, .bt-table select { width: 100%; box-sizing: border-box; min-height: 34px; padding: 4px 6px; border: 1px solid var(--avt-galet); border-radius: 6px; background: #fff; font: inherit; font-size: 13.5px; color: var(--avt-brun); }
+  .bt-table input:focus-visible, .bt-table select:focus-visible, .bt-btn:focus-visible { outline: 2px solid var(--avt-klein); outline-offset: 1px; }
+  .bt-table input[type=number] { text-align: right; }
+  .bt-actions .bt-btn { display: block; width: 100%; }
+  .bt-actions .bt-btn + .bt-btn { margin-top: 4px; }
+  .bt-btn { min-height: 34px; border: 1px solid var(--avt-galet); background: #fff; border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 13.5px; color: var(--avt-brun); cursor: pointer; }
+  .bt-btn:hover:not(:disabled) { border-color: var(--avt-text-muted); }
+  .bt-btn:disabled { opacity: .5; cursor: default; }
+  .bt-btn.bleu { background: var(--avt-klein); border-color: var(--avt-klein); color: #fff; }
+  .bt-cache { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
 
 <style>
   .a-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
