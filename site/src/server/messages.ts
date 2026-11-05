@@ -214,7 +214,7 @@ export function confirmerProspect(l: LigneLead, lienGuide: string | null = null,
     return auProspect('Bienvenue parmi mes ambassadeurs', [
       bonjour(l), '',
       'Merci de rejoindre mon programme ambassadeurs.', '',
-      "Le principe est simple. Un proche pense à vendre sa maison, son appartement ou un terrain ? Présentez-le-moi, avec son accord. Si la vente se fait avec moi, je vous remercie : **jusqu'à 1 500 €**, en virement ou en carte cadeau voyage.", '',
+      "Le principe est simple. Un proche pense à vendre sa maison, son appartement ou un terrain ? Présentez-le-moi, avec son accord. Si la vente se fait avec moi, je vous remercie : **jusqu'à 1 500 €**. Vous choisissez la forme : un virement ou une carte cadeau.", '',
       `Pour me le présenter, répondez à cet e-mail ou envoyez-moi un message au ${TELEPHONE_ANNE} : son prénom, son numéro, et deux mots sur son projet. Je fais le reste.`, '',
       `Vous avez accepté la version ${saisie(l.reglement_version ?? '1').replace(/^v/, '')} du règlement le ${le}. Vous pouvez le relire à tout moment :`, '',
       '[Lire le règlement](https://annevialtissot.fr/ambassadeurs/reglement)',
