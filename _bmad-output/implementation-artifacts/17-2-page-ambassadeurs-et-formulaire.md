@@ -51,7 +51,7 @@ Après corrections : `npm run check` 0 erreur, `npm run build` au vert, `e2e-mig
 
 ## Ce qui reste
 
-- ~~Décision de JB sur la reconstruction de `lead`~~ : accord le 2026-11-07 (« accord reçu »), 0022 passée dans `migrations/`. Reste : vérifier la vraie base après la construction, essai sur l'aperçu, fusion par JB.
+- ~~Décision de JB sur la reconstruction de `lead`~~ : accord le 2026-11-07 (« accord reçu »), 0022 passée dans `migrations/`, appliquée à la base d'aperçu par la construction de la branche (journal Cloudflare du 2026-11-07 : « 0022-lead-ambassadeur.sql », 17 commandes, succès). L'aperçu de la branche est derrière Cloudflare Access : l'essai en ligne se fait sur l'aperçu de test après la fusion. Reste : fusion par JB (la vraie base reçoit 0022 à la construction de `main`), puis essai d'une inscription sur l'aperçu de test.
 - Anne : confirmer « Mes plus belles ventes ont commencé par « Appelle Anne de ma part » », et l'adresse de l'organisateur dans le règlement (Sciez dans les mentions légales, Thonon dans le document).
 - Choix proposé à JB : un contact « à qualifier » qui s'inscrit passe-t-il en projet « ambassadeur » ?
 - Story 17.4 : ouverture (indexation, page Confidentialité, durée de conservation de 3 ans) après l'accord d'eXp France.
