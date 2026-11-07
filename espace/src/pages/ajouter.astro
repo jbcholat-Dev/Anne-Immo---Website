@@ -129,6 +129,7 @@ const date = (d: string) => new Intl.DateTimeFormat('fr-FR', { day: 'numeric', m
   <form method="post" class="e-carte" id="passage" data-passage>
     <input type="hidden" name="quoi" value="passage" />
     <h2>Un passage de boîtage</h2>
+    <p class="e-muet" style="margin:0">Pour le détail (ville, quartier, type de bien, message, relances, commentaires), le <a href="/actions?onglet=boitage">tableau du boîtage</a>.</p>
     <div class="e-champs">
       <label class="e-champ">Secteur<input name="secteur" list="secteurs" value={saisi.quoi === 'passage' ? saisi.secteur : ''} placeholder="Sciez-Chavannex" autocomplete="off" /></label>
       <datalist id="secteurs">{secteurs.map((s) => <option value={s} />)}</datalist>
