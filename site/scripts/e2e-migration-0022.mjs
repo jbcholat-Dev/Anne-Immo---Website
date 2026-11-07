@@ -5,7 +5,7 @@
 // remet `lead.contact_id` à NULL, effacer une demande efface ses envois), puis `ambassadeur` accepté avec son règlement,
 // refusé sans, règlement refusé sur une autre source, source inconnue toujours refusée. Vérifie aussi la relance après
 // un arrêt à mi-chemin (copie `_sauve_lead_delivery` laissée).
-// Tant qu'elle n'est pas relue, la migration vit dans migrations-a-relire/ (une migration poussée dans migrations/ part
+// La migration a vécu dans migrations-a-relire/ jusqu'à sa relecture (une migration poussée dans migrations/ part
 // tout de suite sur la vraie base). Le script la cherche dans migrations/ puis dans migrations-a-relire/.
 // Lancer depuis site/ : `node scripts/e2e-migration-0022.mjs` (aucun préalable).
 import { execFileSync } from 'node:child_process';

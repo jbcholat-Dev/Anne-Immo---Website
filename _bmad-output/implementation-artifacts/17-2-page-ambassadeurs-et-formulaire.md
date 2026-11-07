@@ -21,7 +21,7 @@ JB va envoyer des e-mails avec le lien de la page ambassadeurs : la page doit ex
 
 ## Ce qui est fait
 
-- `site/migrations-a-relire/0022-lead-ambassadeur.sql` : reconstruction de `lead`, `ambassadeur` dans la liste de `source`, colonnes `reglement_version` et `reglement_accepte_le`, deux CHECK de cohérence (règlement obligatoire pour un ambassadeur, interdit ailleurs). Hors de `migrations/` tant qu'elle n'est pas relue.
+- `site/migrations/0022-lead-ambassadeur.sql` (dans `migrations-a-relire/` jusqu'à l'accord de JB du 2026-11-07) : reconstruction de `lead`, `ambassadeur` dans la liste de `source`, colonnes `reglement_version` et `reglement_accepte_le`, deux CHECK de cohérence (règlement obligatoire pour un ambassadeur, interdit ailleurs). Hors de `migrations/` tant qu'elle n'est pas relue.
 - Serveur : source `ambassadeur` (`schema.ts`, une seule case obligatoire règlement + confidentialité, origine `?c=` gardée en `utm_source`), écriture (`leads.ts` : colonnes du règlement, pas de séquence de conseils, `ambassadeurInscrit` pour la seconde inscription), `capture.ts` (« déjà ambassadeur » sans rien écrire ni envoyer), route `/api/ambassadeurs`, e-mails (`messages.ts` : bienvenue à l'inscrit, « Nouvel ambassadeur » à Anne).
 - Pages : `/ambassadeurs` (téléphone et ordinateur, formulaire, confirmation avec WhatsApp et SMS vers Anne, « déjà ambassadeur »), `/ambassadeurs/reglement` (v1), `/ambassadeur` qui renvoie avec `?c=`. Non indexées.
 - `formulaires.ts` : événement `avt:reponse` (la page lit `deja`). `liens.mjs` ignore les liens `sms:`. `ecrans.mjs` et `verif.mjs` couvrent les deux pages.
@@ -51,7 +51,7 @@ Après corrections : `npm run check` 0 erreur, `npm run build` au vert, `e2e-mig
 
 ## Ce qui reste
 
-- Décision de JB sur la reconstruction de `lead` ; relecture ; puis passage de 0022 dans `migrations/` (elle part alors sur la vraie base) et essai sur l'aperçu.
+- ~~Décision de JB sur la reconstruction de `lead`~~ : accord le 2026-11-07 (« accord reçu »), 0022 passée dans `migrations/`. Reste : vérifier la vraie base après la construction, essai sur l'aperçu, fusion par JB.
 - Anne : confirmer « Mes plus belles ventes ont commencé par « Appelle Anne de ma part » », et l'adresse de l'organisateur dans le règlement (Sciez dans les mentions légales, Thonon dans le document).
 - Choix proposé à JB : un contact « à qualifier » qui s'inscrit passe-t-il en projet « ambassadeur » ?
 - Story 17.4 : ouverture (indexation, page Confidentialité, durée de conservation de 3 ans) après l'accord d'eXp France.

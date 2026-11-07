@@ -4,8 +4,8 @@
 // règlement obligatoire, renvoi sans doublon, seconde inscription (même e-mail ou même téléphone) sans nouvelle demande,
 // rattachement au contact (nouveau contact hors suivi, ou contact existant marqué sans changer son projet), puis la page dans
 // un navigateur (téléphone et ordinateur, formulaire, confirmation, « déjà ambassadeur », renvoi de /ambassadeur, noindex).
-// Préalable : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local`. Tant que la
-// migration 0022 est dans migrations-a-relire/, le script l'applique lui-même à la base locale si elle manque.
+// Préalable : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local`. Si la
+// migration 0022 manque à la base locale, le script l'applique lui-même.
 // Lancer : `node scripts/e2e-ambassadeurs.mjs`. Captures dans .verif/ambassadeurs/.
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
