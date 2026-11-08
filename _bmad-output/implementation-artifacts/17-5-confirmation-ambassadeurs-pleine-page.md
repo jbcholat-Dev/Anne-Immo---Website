@@ -1,7 +1,7 @@
 ---
 story: 17.5
 epic: 17 — Programme ambassadeurs
-statut: review
+statut: done
 date: 2026-11-08
 origine: retour de JB du 2026-11-08 sur l'aperçu de test (deux captures)
 ---
@@ -35,6 +35,11 @@ Après l'inscription, le message « Bienvenue parmi les ambassadeurs » ne rempl
 5. Deux défilements doux à la suite, attente fixe dans l'essai : corrigé, remontée immédiate et attente de `scrollY < 5`.
 6. URL écrite à la main dans la fiche : corrigé (adresse du site depuis la configuration). Nom, titre et organisation restent écrits dans le fichier : `identite` n'a pas ces champs séparés ; écarté.
 
+## Mise en ligne (2026-11-08)
+
+- PR #253 fusionnée par JB (commit e3c4b0f) ; constructions de main et de l'aperçu de test au vert.
+- Contrôlé sur annevialtissot.fr : `/ambassadeurs` porte la confirmation en pleine page ; `/anne-vial-tissot.vcf` répond 200, `text/vcard; charset=utf-8`, ligne `TEL;TYPE=CELL:+33671991754`.
+
 ## Ce qui reste
 
-- Fusion par JB, contrôle sur l'aperçu de test ; essai du lien « Enregistrer mon numéro » sur un iPhone et un Android.
+- JB : une inscription d'essai sur l'aperçu de test ; essai du lien « Enregistrer mon numéro » sur un iPhone et un Android.
