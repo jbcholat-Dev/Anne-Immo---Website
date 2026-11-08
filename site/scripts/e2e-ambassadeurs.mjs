@@ -129,6 +129,11 @@ try {
     await page.locator('[data-confirmation="ambassadeurs"]').waitFor({ state: 'visible', timeout: 15000 });
     constat(await page.locator('[data-titre-neuf]').isVisible() && (await page.locator('[data-titre-neuf]').textContent())?.includes('Paul'), `${nom} : confirmation « Bienvenue parmi les ambassadeurs, Paul »`);
     constat((await page.locator('a[href^="https://wa.me/33671991754"]').count()) === 1 && (await page.locator('a[href^="sms:+33671991754"]').count()) === 1, `${nom} : boutons WhatsApp et SMS vers Anne`);
+    await page.waitForTimeout(400);
+    const plein = await page.evaluate(() => ({ cache: document.querySelector('[data-amb-page]')?.hidden === true, haut: window.scrollY < 5, form: !!document.querySelector('form[data-formulaire="ambassadeurs"]')?.offsetParent }));
+    constat(plein.cache && plein.haut && !plein.form, `${nom} : la confirmation remplace la page et s'affiche en haut (retour de JB du 2026-11-08)`);
+    const vcf = await (await fetch(`${U}/anne-vial-tissot.vcf`)).text();
+    constat((await page.locator('a[href="/anne-vial-tissot.vcf"]').isVisible()) && vcf.startsWith('BEGIN:VCARD') && vcf.includes('TEL;TYPE=CELL:+33671991754'), `${nom} : lien « Enregistrer mon numéro » vers la fiche contact d'Anne`);
     await page.screenshot({ path: path.join(OUT, `confirmation-${nom}.png`), fullPage: false });
     const [lp] = sql(`SELECT utm FROM lead WHERE email = '${email}'`);
     constat(lp?.utm === '{"utm_source":"flyer"}', `${nom} : origine du flyer gardée (${lp?.utm})`);
