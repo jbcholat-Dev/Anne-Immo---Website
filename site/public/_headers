@@ -11,3 +11,8 @@
 # Polices du site autorisées hors du site : les e-mails envoyés aux prospects les appellent (story 10.9).
 /fonts/*
   Access-Control-Allow-Origin: *
+
+# Fiche contact d'Anne (story 17.5) : servie en vCard UTF-8 ; sans Content-Disposition, l'iPhone ouvre l'aperçu
+# « Ajouter aux contacts » au lieu de ranger le fichier dans Fichiers.
+/anne-vial-tissot.vcf
+  Content-Type: text/vcard; charset=utf-8

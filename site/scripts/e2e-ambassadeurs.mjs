@@ -113,7 +113,7 @@ try {
     await imiterTurnstile(page);
     await page.goto(`${U}/ambassadeurs?c=flyer`);
     constat(await page.locator('meta[name="robots"][content*="noindex"]').count() === 1, `${nom} : page non indexée`);
-    constat((await page.locator('h1').textContent())?.includes('Tu connais un bon agent immobilier'), `${nom} : titre de la maquette`);
+    constat((await page.locator('.am-haut h1').textContent())?.includes('Tu connais un bon agent immobilier'), `${nom} : titre de la maquette`);
     const largeur = await page.evaluate(() => document.documentElement.scrollWidth);
     constat(largeur <= vue.width, `${nom} : pas de défilement horizontal (${largeur} px)`);
     await page.screenshot({ path: path.join(OUT, `page-${nom}.png`), fullPage: true });
@@ -129,10 +129,12 @@ try {
     await page.locator('[data-confirmation="ambassadeurs"]').waitFor({ state: 'visible', timeout: 15000 });
     constat(await page.locator('[data-titre-neuf]').isVisible() && (await page.locator('[data-titre-neuf]').textContent())?.includes('Paul'), `${nom} : confirmation « Bienvenue parmi les ambassadeurs, Paul »`);
     constat((await page.locator('a[href^="https://wa.me/33671991754"]').count()) === 1 && (await page.locator('a[href^="sms:+33671991754"]').count()) === 1, `${nom} : boutons WhatsApp et SMS vers Anne`);
-    await page.waitForTimeout(400);
+    await page.waitForFunction(() => window.scrollY < 5, null, { timeout: 5000 }).catch(() => {});
     const plein = await page.evaluate(() => ({ cache: document.querySelector('[data-amb-page]')?.hidden === true, haut: window.scrollY < 5, form: !!document.querySelector('form[data-formulaire="ambassadeurs"]')?.offsetParent }));
     constat(plein.cache && plein.haut && !plein.form, `${nom} : la confirmation remplace la page et s'affiche en haut (retour de JB du 2026-11-08)`);
-    const vcf = await (await fetch(`${U}/anne-vial-tissot.vcf`)).text();
+    const rv = await fetch(`${U}/anne-vial-tissot.vcf`);
+    const vcf = await rv.text();
+    constat(/text\/vcard;\s*charset=utf-8/i.test(rv.headers.get('content-type') ?? ''), `${nom} : fiche contact servie en vCard UTF-8 (${rv.headers.get('content-type')})`);
     constat((await page.locator('a[href="/anne-vial-tissot.vcf"]').isVisible()) && vcf.startsWith('BEGIN:VCARD') && vcf.includes('TEL;TYPE=CELL:+33671991754'), `${nom} : lien « Enregistrer mon numéro » vers la fiche contact d'Anne`);
     await page.screenshot({ path: path.join(OUT, `confirmation-${nom}.png`), fullPage: false });
     const [lp] = sql(`SELECT utm FROM lead WHERE email = '${email}'`);

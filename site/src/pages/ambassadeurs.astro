@@ -99,11 +99,11 @@ const questions = [
   </section>
   </div>
 
-  <section class="am-fini" data-confirmation="ambassadeurs" hidden aria-live="polite">
+  <section class="am-fini" data-confirmation="ambassadeurs" hidden>
     <div class="am-fini-dedans">
       <p class="am-etiquette">C'est fait</p>
-      <h2 class="am-fini-titre" data-titre-neuf>Bienvenue parmi les ambassadeurs, <span class="am-bleu" data-champ="prenom"></span>.</h2>
-      <h2 class="am-fini-titre" data-titre-deja hidden>Vous êtes déjà ambassadeur, <span class="am-bleu" data-champ="prenom"></span>.</h2>
+      <h1 class="am-fini-titre" data-titre-neuf>Bienvenue parmi les ambassadeurs, <span class="am-bleu" data-champ="prenom"></span>.</h1>
+      <h1 class="am-fini-titre" data-titre-deja hidden>Vous êtes déjà ambassadeur, <span class="am-bleu" data-champ="prenom"></span>.</h1>
       <svg class="am-trait" width="200" height="14" viewBox="0 0 160 12" aria-hidden="true"><path d="M2 8 C40 2 90 10 158 5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" /></svg>
       <p data-texte-neuf>J'ai bien reçu votre inscription. Le règlement vient de partir à <strong data-champ="email"></strong>.</p>
       <p data-texte-deja hidden>Votre inscription est déjà enregistrée : vous n'avez rien à refaire.</p>
@@ -115,7 +115,7 @@ const questions = [
           <a href={sms} class="btn btn-secondaire">M'envoyer un SMS</a>
         </div>
       </div>
-      <a href="/anne-vial-tissot.vcf" class="am-lien" download>Enregistrer mon numéro dans votre téléphone →</a>
+      <a href="/anne-vial-tissot.vcf" class="am-lien">Enregistrer mon numéro dans votre téléphone →</a>
       <p class="texte-muet am-plus-tard">Pas de nom en tête pour l'instant ? Je reste joignable au même numéro : <a href={telephone.lien}>{telephone.affiche}</a>.</p>
     </div>
   </section>
@@ -136,7 +136,7 @@ const questions = [
       // Retour de JB (2026-11-08) : la confirmation remplace toute la page, comme l'écran 2 de la maquette, pour qu'on ne
       // la manque pas. L'îlot affiche ensuite la confirmation et la centre ; on remonte en haut juste après.
       document.querySelector<HTMLElement>('[data-amb-page]')?.setAttribute('hidden', '');
-      requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo({ top: 0 })));
+      requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' })));
     });
   }
 </script>

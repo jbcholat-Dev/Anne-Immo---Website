@@ -21,13 +21,20 @@ Après l'inscription, le message « Bienvenue parmi les ambassadeurs » ne rempl
 
 ## Ce qui est vérifié (2026-11-08, en local)
 
-- `node scripts/e2e-ambassadeurs.mjs` : essai réussi, 39 vérifications (captures `site/.verif/ambassadeurs/confirmation-telephone.png` et `-ordinateur.png`).
+- `node scripts/e2e-ambassadeurs.mjs` : essai réussi, 41 vérifications après la revue (captures `site/.verif/ambassadeurs/confirmation-telephone.png` et `-ordinateur.png`).
 - `npm run check` : 0 erreur ; `npm run build` au vert ; `node scripts/liens.mjs` : 32 pages, 2 331 liens, 0 cassé ; `node scripts/ecrans.mjs` : aucun signalement.
 
 ## Revue de code
 
-À faire en session neuve (story 9.8).
+2026-11-08, PR #253, commit a496b80, relu en session neuve (`bmad-code-review`). Vérifié sans défaut : la page n'est masquée qu'après une réponse réussie, le cas « déjà inscrit », la fiche contact construite en fichier fixe, aucun effet sur les autres pages.
+
+1. Les en-têtes posés dans `anne-vial-tissot.vcf.ts` sont perdus en sortie statique (servi en `text/x-vcard` sans jeu de caractères, accents abîmés) : corrigé, `Content-Type: text/vcard; charset=utf-8` dans `public/_headers`, vérifié par l'essai.
+2. `aria-live` sur la section qui reçoit aussi le focus (double lecture possible) : corrigé, retiré.
+3. Plus de titre de niveau 1 une fois la page masquée : corrigé, les titres de la confirmation sont des `h1` (un seul visible à la fois).
+4. Attribut `download` : sur iPhone, le fichier irait dans Fichiers au lieu de « Ajouter aux contacts » : corrigé, `download` et `Content-Disposition` retirés. À confirmer sur un vrai iPhone.
+5. Deux défilements doux à la suite, attente fixe dans l'essai : corrigé, remontée immédiate et attente de `scrollY < 5`.
+6. URL écrite à la main dans la fiche : corrigé (adresse du site depuis la configuration). Nom, titre et organisation restent écrits dans le fichier : `identite` n'a pas ces champs séparés ; écarté.
 
 ## Ce qui reste
 
-- Revue, fusion par JB, contrôle sur l'aperçu de test.
+- Fusion par JB, contrôle sur l'aperçu de test ; essai du lien « Enregistrer mon numéro » sur un iPhone et un Android.
