@@ -1,7 +1,7 @@
 ---
 story: 17.2
 epic: 17 — Programme ambassadeurs
-statut: in-progress
+statut: done
 date: 2026-11-05
 origine: JB, 2026-11-05 (« il faut qu'on implémente ça le plus rapidement possible »)
 ---
@@ -49,9 +49,16 @@ JB va envoyer des e-mails avec le lien de la page ambassadeurs : la page doit ex
 
 Après corrections : `npm run check` 0 erreur, `npm run build` au vert, `e2e-migration-0022` réussi, `e2e-ambassadeurs` réussi (35 vérifications).
 
+## Mise en ligne (2026-11-08)
+
+- PR #246 fusionnée dans `main` le 2026-11-08 sur la demande de JB (« OK, fusionne »), commit 3ef5a97.
+- Les deux premières constructions de `main` et de l'aperçu ont échoué avant toute modification : le téléchargement de `ffmpeg-static` depuis GitHub répondait 504 (panne extérieure). Construction relancée par l'API Cloudflare quand le téléchargement est revenu (10 h 38 UTC).
+- Journal de la construction de `main` : « lancement : PRODUCTION … base anne-leads », `0022-lead-ambassadeur.sql` appliquée à `59b15fb0-…` (17 commandes, ✅).
+- https://annevialtissot.fr/ambassadeurs, `/ambassadeurs/reglement` et `/ambassadeur?c=carte` répondent 200 ; la page porte `noindex`. `/` et `/contact` répondent 200. Aperçu de test reconstruit avec succès.
+
 ## Ce qui reste
 
-- ~~Décision de JB sur la reconstruction de `lead`~~ : accord le 2026-11-07 (« accord reçu »), 0022 passée dans `migrations/`, appliquée à la base d'aperçu par la construction de la branche (journal Cloudflare du 2026-11-07 : « 0022-lead-ambassadeur.sql », 17 commandes, succès). L'aperçu de la branche est derrière Cloudflare Access : l'essai en ligne se fait sur l'aperçu de test après la fusion. Reste : fusion par JB (la vraie base reçoit 0022 à la construction de `main`), puis essai d'une inscription sur l'aperçu de test.
+- ~~Décision de JB sur la reconstruction de `lead`~~ : accord le 2026-11-07 (« accord reçu »), 0022 passée dans `migrations/`, appliquée à la base d'aperçu par la construction de la branche (journal Cloudflare du 2026-11-07 : « 0022-lead-ambassadeur.sql », 17 commandes, succès). L'aperçu de la branche est derrière Cloudflare Access : l'essai en ligne se fait sur l'aperçu de test après la fusion. Fait le 2026-11-08 (voir « Mise en ligne »). Reste : essai d'une inscription par JB sur l'aperçu de test.
 - Anne : confirmer « Mes plus belles ventes ont commencé par « Appelle Anne de ma part » », et l'adresse de l'organisateur dans le règlement (Sciez dans les mentions légales, Thonon dans le document).
 - Choix proposé à JB : un contact « à qualifier » qui s'inscrit passe-t-il en projet « ambassadeur » ?
 - Story 17.4 : ouverture (indexation, page Confidentialité, durée de conservation de 3 ans) après l'accord d'eXp France.
