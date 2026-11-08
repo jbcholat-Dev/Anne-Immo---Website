@@ -9,7 +9,7 @@ for (const f of pages) {
   const html = fs.readFileSync(f, 'utf8'); const mesIds = ids(html);
   for (const m of html.matchAll(/href="([^"]+)"/g)) {
     const h = m[1]; n++;
-    if (/^(https?:|mailto:|tel:)/.test(h)) continue;
+    if (/^(https?:|mailto:|tel:|sms:)/.test(h)) continue;
     const [chemin, ancre] = h.split('#');
     const cible = chemin ? chemin.replace(/\?.*$/, '') : null;
     if (cible && !existe(cible)) { ko++; console.log(`✗ ${path.relative(DIST, f)} → ${h} (page absente)`); continue; }

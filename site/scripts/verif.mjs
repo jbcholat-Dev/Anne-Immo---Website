@@ -77,7 +77,7 @@ if (pagesDemandees) {
   await captureScroll('/', 390, 844, [0, 900, 1500, 2200], 'mobile');
   await capturePleine('/', 390, 844, 'mobile-pleine');
   await capturePleine('/', 1440, 900, 'desktop-mouvement-reduit', { reduit: true });
-  const autres = ['/realisation', '/realisation/appartement-cascade-2024', '/a-propos', '/vendre', '/acheter', '/diagnostic', '/diagnostic/questions', '/diagnostic/resultats', '/contact', '/guide', '/mentions-legales', '/confidentialite', '/cookies', '/en', '/en/track-record', '/404', '/partenaires', '/actualites'];
+  const autres = ['/realisation', '/realisation/appartement-cascade-2024', '/a-propos', '/vendre', '/acheter', '/diagnostic', '/diagnostic/questions', '/diagnostic/resultats', '/contact', '/guide', '/mentions-legales', '/confidentialite', '/cookies', '/en', '/en/track-record', '/404', '/partenaires', '/actualites', '/ambassadeurs', '/ambassadeurs/reglement'];
   for (const v of autres) {
     if (!fs.existsSync(path.join(DIST, v === '/404' ? '404.html' : v.replace(/^\//, '') + '.html')) && !fs.existsSync(path.join(DIST, v.replace(/^\//, ''), 'index.html'))) continue;
     await capturePleine(v, 1440, 900, 'desktop');

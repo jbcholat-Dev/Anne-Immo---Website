@@ -8,7 +8,7 @@ import { evaluer, type Diagnostic } from './diagnostic';
 import { enProduction, envSite } from './env';
 import { empreinte, journal } from './journal';
 import { lienGuide } from './liens';
-import { ecrireLead } from './leads';
+import { ambassadeurInscrit, ecrireLead } from './leads';
 import { valider, type SourceFormulaire } from './schema';
 import { ULID } from './ulid';
 import { champPiege, frequence, turnstile } from './verification';
@@ -69,6 +69,19 @@ export async function traiterCapture(source: SourceFormulaire, { request, locals
   }
 
   const isTest = !enProduction(env);
+  // Ambassadeur déjà inscrit (story 17.2) : rien de plus n'est écrit ni envoyé, la page le lui dit.
+  if (source === 'ambassadeur') {
+    try {
+      const deja = await ambassadeurInscrit(env, verdict.lead, submissionId, isTest);
+      if (deja) {
+        journal('ambassadeur_deja_inscrit', { lead: deja, test: isTest });
+        return Response.json({ ok: true, deja: true }, { headers: ENTETES });
+      }
+    } catch (e) {
+      journal('base_indisponible', { source, erreur: String(e).slice(0, 200) });
+      return refus('BASE_INDISPONIBLE');
+    }
+  }
   let ecriture;
   try {
     ecriture = await ecrireLead(env, verdict.lead, submissionId, isTest, diag);

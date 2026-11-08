@@ -1,0 +1,10 @@
+---
+// /ambassadeur (sans s) : l'adresse des premiers QR codes imprimés renvoie vers /ambassadeurs en gardant `?c=…`
+// (story 17.2). Le site est statique : le renvoi se fait dans la page, avec un lien visible si le script ne tourne pas.
+import Base from '../layouts/Base.astro';
+---
+<Base titre="Programme ambassadeurs — Anne VIAL-TISSOT" noindex>
+  <script slot="head" is:inline>location.replace('/ambassadeurs' + location.search + location.hash);</script>
+  <noscript slot="head"><meta http-equiv="refresh" content="0; url=/ambassadeurs" /></noscript>
+  <main style="padding:48px 20px;font-size:16px"><p><a href="/ambassadeurs">Programme ambassadeurs d'Anne VIAL-TISSOT</a></p></main>
+</Base>
