@@ -283,7 +283,7 @@ development_status:
   epic-17: in-progress
   17-1-maquette-et-cadrage-de-la-page-ambassadeurs: done   # maquette https://claude.ai/artifact/JRzaQnTFGuTM83oyuFdHby, validée par JB le 2026-11-05
   17-2-page-ambassadeurs-et-formulaire: done   # 2026-11-08 : PR #246 fusionnée, migration 0022 sur la vraie base, page en ligne (non indexée)
-  17-5-confirmation-ambassadeurs-pleine-page: review   # 2026-11-08 : retour de JB, confirmation en pleine page comme la maquette
+  17-5-confirmation-ambassadeurs-pleine-page: done   # 2026-11-08 : retour de JB, confirmation en pleine page comme la maquette
   17-3-arrivee-de-l-ambassadeur-dans-l-espace: backlog
   17-4-ouverture-du-programme: backlog   # attend l'accord d'eXp France (fil parrainage)
   epic-17-retrospective: optional
