@@ -1,7 +1,7 @@
 ---
 story: 8.28
 epic: 8 — Structure et visuel
-statut: review
+statut: done
 date: 2026-11-09
 ---
 
@@ -34,5 +34,5 @@ Le design system interdisait « eXp accolé au symbole seul ». Trois options pr
 - À écarter : accessibilité (un seul « eXp France » annoncé), libellé non traduit (nom de marque), erreur 500 de /en/404 en local (outil de développement, sans lien), pas d'autre usage de `cls-1`.
 
 ## Ce qui reste
-- Accord de JB pour fusionner.
+- Fusion : accord de JB le 2026-11-09 à 20 h 16 (« Ok »), PR n° 262 fusionnée (commit 2b469ac).
 - Artefact Design System (claude.ai) : reporter l'exception D-50.
