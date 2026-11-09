@@ -1,5 +1,5 @@
 ---
-// § 1.1 Ouverture (D-1, D-19, D-10) : vidéo drone plein cadre (900 px dans la maquette ; hauteur de l’écran moins la bande des avis depuis la story 8.26), voile, bloc nom + positionnement + CTA posé en bas (84 px).
+// § 1.1 Ouverture (D-1, D-19, D-10) : vidéo drone plein cadre (900 px dans la maquette ; hauteur de l’écran depuis la story 8.26), voile, bloc nom + positionnement + CTA posé en bas (84 px).
 // A-01 réelle (story 8.3, D-27) : le montage d'Anne (52 s depuis le 2026-10-05, story 7.15) tourne en boucle, sans son ; le poster est sa première image, affichée
 // pendant le chargement ; le <picture> derrière est le repli (mouvement réduit, échec de chargement, économie de données).
 // Sur téléphone, les boutons sont posés en bas de l'écran pour dégager le visage d'Anne (retour de JB du 2026-10-12, story 8.19).
@@ -54,12 +54,13 @@ const videoDispo = fs.existsSync(path.resolve(process.cwd(), 'public/video/ouver
   .hero-contenu { position: absolute; left: var(--marge); right: var(--marge); bottom: 84px; max-width: 760px; }
   .hero h1 { font-size: 96px; letter-spacing: .02em; line-height: 1; color: var(--avt-ecru); white-space: nowrap; }
   @media (min-width: 900px) {
-    /* Ordinateur (story 8.26, retour de JB du 2026-11-09) : l'ouverture et la bande des avis Immodvisor remplissent ensemble
-       l'écran visible (enveloppe .ouverture-ecran dans les pages d'accueil, global.css). Sur un portable (1280 × 630 visibles),
-       la hauteur fixe de 900 px cachait la fin du nom et les deux boutons. Le texte suit la hauteur de l'ouverture : il reste
-       posé en bas, en proportion, jamais au milieu de l'image. --h-ouv estime cette hauteur (écran visible moins la bande
-       des avis, environ 100 px). Les unités cqh (hauteur du bloc) valent 0 dans Chrome quand la hauteur vient de flex : écartées. */
-    .hero { flex: 1 1 auto; height: auto; min-height: 440px; --h-ouv: max(440px, 100vh - 100px); --h-ouv: max(440px, 100svh - 100px); }
+    /* Ordinateur (story 8.26, décision de JB du 2026-11-09) : l'ouverture remplit exactement l'écran visible, la vidéo seule ;
+       la bande des avis Immodvisor vient juste en dessous. Sur un portable (1280 × 630 visibles), la hauteur fixe de 900 px
+       cachait la fin du nom et les deux boutons. Le texte suit la hauteur de l'écran (--h-ouv) : il reste posé en bas,
+       en proportion, jamais au milieu de l'image. 100svh = hauteur visible avec les barres du navigateur. */
+    .hero { height: 100vh; height: 100svh; min-height: 440px; --h-ouv: max(440px, 100vh); }
+    /* svh seulement là où il est connu : une variable invalide annulerait toutes les tailles (revue de code, constat 1). */
+    @supports (height: 100svh) { .hero { --h-ouv: max(440px, 100svh); } }
     .hero-contenu { bottom: clamp(28px, calc(var(--h-ouv) * 0.095), 84px); }
     .hero h1 { font-size: clamp(52px, calc(var(--h-ouv) * 0.11), 96px); }
     .hero-nom :global(.hero-signature) { top: calc(100% + clamp(8px, calc(var(--h-ouv) * 0.016), 14px)); }

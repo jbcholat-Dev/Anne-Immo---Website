@@ -14,10 +14,8 @@ import { hero } from '../config/site';
 const d = await dicoAccueil('fr');
 ---
 <Page titre={d.accueil.titre_page} description={d.accueil.description} lang="fr" courante="accueil" sombre sansPadding ogImage={image(hero.poster)!.jpg}>
-  <div class="ouverture-ecran">
-    <Hero lang="fr" />
-    <BandePreuve lang="fr" />
-  </div>
+  <Hero lang="fr" />
+  <BandePreuve lang="fr" />
   <Pile lang="fr" />
   <Anne lang="fr" />
   <Methode lang="fr" />

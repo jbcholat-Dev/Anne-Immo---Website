@@ -59,9 +59,6 @@ figure, blockquote { margin: 0; }
 
 /* Page — la nav est fixe dès le premier pixel ; les pages sans hero réservent sa hauteur */
 .page-int { padding-top: calc(var(--nav-h) + 14px); } /* + l'écart au-dessus de la barre en verre (D-42) */
-/* Accueil sur ordinateur (story 8.26) : l'ouverture (Hero) et la bande des avis (BandePreuve) occupent ensemble tout l'écran visible ;
-   l'ouverture prend la hauteur qui reste. 100svh = hauteur visible avec les barres du navigateur. Téléphone : règles du Hero. */
-@media (min-width: 900px) { .ouverture-ecran { display: flex; flex-direction: column; min-height: 100vh; min-height: 100svh; } }
 .conteneur { padding-left: var(--marge); padding-right: var(--marge); }
 main { display: block; }
 
