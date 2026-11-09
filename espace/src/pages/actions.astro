@@ -4,7 +4,7 @@
 // /actions liste et ajoute ; /actions?id=… modifie ou supprime. Les contacts sont rattachés d'office par la base quand
 // une seule action de leur canal est en cours à leur arrivée, sinon à la qualification ou sur leur fiche.
 // Story 18.19 (ticket n° 249) : l'onglet « Boîtage » (/actions?onglet=boitage) est le tableau des passages de flyers d'Anne
-// (date, ville, quartier, type de bien, flyers, message, R1, R2, commentaires), avec une ligne d'ajout rapide et la
+// (date, ville, quartier, type de bien, flyers, message, R1 et R2 en nombres de rendez-vous, commentaires), avec une ligne d'ajout rapide et la
 // modification d'une ligne en place ; il écrit par /api/boitage.
 import Espace from '../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
@@ -76,13 +76,13 @@ const dates = (a: { debut: string; fin: string | null }) => (a.fin ? `du ${echea
 
   {boitage && (
     <section data-boitage>
-      <p class="e-muet" style="margin:0 0 10px">Un passage par ligne, du plus récent au plus ancien. La première ligne sert à en ajouter un ; « Modifier » ouvre une ligne pour la corriger. R1 et R2 : les dates de vos deux relances.</p>
+      <p class="e-muet" style="margin:0 0 10px">Un passage par ligne, du plus récent au plus ancien. La première ligne sert à en ajouter un ; « Modifier » ouvre une ligne pour la corriger. R1 et R2 : le nombre de premiers et de seconds rendez-vous que ce passage a amenés (leurs dates sont sur la fiche de chaque contact).</p>
       <p class="e-message" role="alert" data-bt-erreur hidden></p>
       <p class="e-message" role="status" data-bt-statut hidden></p>
       <div class="bt-boite">
         <table class="bt-table" data-bt-tableau>
           <thead>
-            <tr><th>Date</th><th>Ville</th><th>Quartier</th><th>Type de bien</th><th class="bt-n">Flyers</th><th>Message</th><th>R1</th><th>R2</th><th>Commentaires</th><th><span class="bt-cache">Actions</span></th></tr>
+            <tr><th>Date</th><th>Ville</th><th>Quartier</th><th>Type de bien</th><th class="bt-n">Flyers</th><th>Message</th><th title="Nombre de premiers rendez-vous">R1</th><th title="Nombre de seconds rendez-vous">R2</th><th>Commentaires</th><th><span class="bt-cache">Actions</span></th></tr>
           </thead>
           <tbody data-bt-lignes><tr><td colspan="10" class="bt-attente">Chargement du tableau…</td></tr></tbody>
         </table>
@@ -149,7 +149,7 @@ const dates = (a: { debut: string; fin: string | null }) => (a.fin ? `du ${echea
   // Tableau du boîtage (story 18.19) : dessiné ici à partir des données de la page, écrit par /api/boitage. Les textes saisis
   // ne passent jamais par innerHTML. La première ligne ajoute un passage (date, ville, quartier et type de bien restent pour
   // le suivant : on dépose souvent plusieurs fois dans le même quartier) ; « Modifier » ouvre une ligne en place.
-  interface Ligne { id: string; fait_le: string; ville: string; quartier: string | null; type_bien: string | null; flyers: number | null; message: string | null; r1: string | null; r2: string | null; commentaire: string | null }
+  interface Ligne { id: string; fait_le: string; ville: string; quartier: string | null; type_bien: string | null; flyers: number | null; message: string | null; r1: number | null; r2: number | null; commentaire: string | null }
   const brut = document.getElementById('bt-donnees');
   const corps = document.querySelector<HTMLTableSectionElement>('[data-bt-lignes]');
   const zoneErreur = document.querySelector<HTMLElement>('[data-bt-erreur]');
@@ -201,6 +201,7 @@ const dates = (a: { debut: string; fin: string | null }) => (a.fin ? `du ${echea
       if (nom === 'message') i.maxLength = 40;
       if (nom === 'commentaire') i.maxLength = 1000;
       if (nom === 'flyers') { i.min = '0'; i.max = '999999'; i.inputMode = 'numeric'; }
+      if (nom === 'r1' || nom === 'r2') { i.min = '0'; i.max = '9999'; i.step = '1'; i.inputMode = 'numeric'; }
       return i;
     };
 
@@ -218,18 +219,18 @@ const dates = (a: { debut: string; fin: string | null }) => (a.fin ? `du ${echea
     const lire = (tr: HTMLTableRowElement) => {
       const v = (nom: string) => (tr.querySelector<HTMLInputElement | HTMLSelectElement>(`[name=${nom}]`)?.value ?? '').trim();
       return { fait_le: v('fait_le'), ville: v('ville'), quartier: v('quartier'), type_bien: v('type_bien'), flyers: v('flyers') === '' ? null : Number(v('flyers')),
-        message: v('message'), r1: v('r1'), r2: v('r2'), commentaire: v('commentaire') };
+        message: v('message'), r1: v('r1') === '' ? null : Number(v('r1')), r2: v('r2') === '' ? null : Number(v('r2')), commentaire: v('commentaire') };
     };
 
     const COLONNES: [string, string, string][] = [['fait_le', 'Date', 'date'], ['ville', 'Ville', 'text'], ['quartier', 'Quartier', 'text'], ['type_bien', 'Type de bien', 'select'],
-      ['flyers', 'Flyers', 'number'], ['message', 'Message', 'text'], ['r1', 'R1', 'date'], ['r2', 'R2', 'date'], ['commentaire', 'Commentaires', 'text']];
+      ['flyers', 'Flyers', 'number'], ['message', 'Message', 'text'], ['r1', 'R1', 'number'], ['r2', 'R2', 'number'], ['commentaire', 'Commentaires', 'text']];
 
     /** Ligne de champs, pour l'ajout (valeurs gardées du précédent) comme pour la modification. */
     const ligneChamps = (valeurs: Record<string, string>, ajout: boolean, ligne?: Ligne) => {
       const tr = el('tr', ajout ? 'bt-ajout' : 'bt-edition');
       if (ajout) tr.dataset.btAjout = ''; else tr.dataset.btEdition = ligne!.id;
       for (const [nom, titre, type] of COLONNES) {
-        const c = cellule(nom === 'flyers' ? 'bt-n' : '');
+        const c = cellule(nom === 'flyers' || nom === 'r1' || nom === 'r2' ? 'bt-n' : '');
         c.append(entree(nom, `${titre}${ajout ? ' du nouveau passage' : ''}`, valeurs[nom] ?? '', type));
         tr.append(c);
       }
@@ -273,7 +274,7 @@ const dates = (a: { debut: string; fin: string | null }) => (a.fin ? `du ${echea
       const date = cellule('bt-date'); date.textContent = joli(l.fait_le);
       const type = lecture(l.type_bien ? donnees.types[l.type_bien] ?? l.type_bien : null);
       const flyers = lecture(l.flyers === null ? null : new Intl.NumberFormat('fr-FR').format(l.flyers), 'bt-n');
-      const r = (d: string | null) => { const c = lecture(d ? joli(d) : null, 'bt-date'); return c; };
+      const r = (n: number | null) => lecture(n === null ? null : new Intl.NumberFormat('fr-FR').format(n), 'bt-n');
       const commentaire = lecture(l.commentaire, 'bt-comm');
       const actions = cellule('bt-actions');
       const modifier = el('button', 'bt-btn', 'Modifier');
@@ -294,7 +295,7 @@ const dates = (a: { debut: string; fin: string | null }) => (a.fin ? `du ${echea
       for (const l of lignes) {
         lot.push(l.id === enEdition
           ? ligneChamps({ fait_le: l.fait_le, ville: l.ville, quartier: l.quartier ?? '', type_bien: l.type_bien ?? '', flyers: l.flyers === null ? '' : String(l.flyers),
-              message: l.message ?? '', r1: l.r1 ?? '', r2: l.r2 ?? '', commentaire: l.commentaire ?? '' }, false, l)
+              message: l.message ?? '', r1: l.r1 === null ? '' : String(l.r1), r2: l.r2 === null ? '' : String(l.r2), commentaire: l.commentaire ?? '' }, false, l)
           : ligneLecture(l));
       }
       corps.replaceChildren(...lot);
@@ -312,7 +313,8 @@ const dates = (a: { debut: string; fin: string | null }) => (a.fin ? `du ${echea
   .bt-table { border-collapse: collapse; width: 100%; min-width: 980px; table-layout: fixed; font-size: 13.5px; }
   .bt-table th, .bt-table td { padding: 8px 6px; border-bottom: 1px solid var(--avt-galet); text-align: left; vertical-align: middle; overflow-wrap: anywhere; }
   .bt-table th { padding: 10px 6px; font-weight: 500; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--avt-text-muted); background: #fff; }
-  .bt-table th:nth-child(1), .bt-table th:nth-child(7), .bt-table th:nth-child(8) { width: 132px; }
+  .bt-table th:nth-child(1) { width: 132px; }
+  .bt-table th:nth-child(7), .bt-table th:nth-child(8) { width: 64px; text-align: right; }
   .bt-table th:nth-child(2), .bt-table th:nth-child(3) { width: 118px; }
   .bt-table th:nth-child(4) { width: 118px; }
   .bt-table th:nth-child(5) { width: 74px; }

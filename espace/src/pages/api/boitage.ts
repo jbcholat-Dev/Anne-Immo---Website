@@ -1,4 +1,4 @@
-// Tableau du boîtage (story 18.19, ticket n° 249), pour l'onglet « Boîtage » de /actions. Toute écriture passe par
+// Tableau du boîtage (story 18.19, ticket n° 249 ; R1 et R2 en nombres : story 18.20, tickets n° 256 à 258), pour l'onglet « Boîtage » de /actions. Toute écriture passe par
 // `server/boitage`. Mêmes contrôles que /api/categories : réservé à Anne et JB (en-tête du compte posé par worker.ts après
 // Cloudflare Access), jeton de service de Claude refusé (403) ; corps en JSON seulement, 20 000 caractères au plus (413).
 // Chaque réponse réussie renvoie la liste à jour (`lignes`, du plus récent au plus ancien).
@@ -6,13 +6,14 @@
 //   POST /api/boitage { ajouter: { fait_le, ville, quartier?, type_bien?, flyers?, message?, r1?, r2?, commentaire? } }
 //        → 201 { ok, id, ligne, lignes } ; 400 date absente ou future, ville absente, valeur hors vocabulaire, champ inconnu
 //   POST /api/boitage { id, corriger: { …les champs à changer… } }
-//        → 200 { ok, ligne, lignes } ; 404 passage inconnu ; 400 sinon (une relance avant le passage ou R2 avant R1 : 400 'ordre')
-// type_bien ∈ { maison, appartement } ; flyers : entier de 0 à 999 999 ; r1 et r2 : dates AAAA-MM-JJ ; un champ facultatif vide
+//        → 200 { ok, ligne, lignes } ; 404 passage inconnu ; 400 sinon (valeur hors vocabulaire)
+// type_bien ∈ { maison, appartement } ; flyers : entier de 0 à 999 999 ; r1 et r2 : le nombre de premiers et de seconds
+// rendez-vous, entiers de 0 à 9 999 (leurs dates sont sur la fiche de chaque contact) ; un champ facultatif vide
 // ('' ou null) l'efface. `secteur` (obligatoire en base) est tenu à jour : « ville · quartier » ou la ville seule.
 // Réponses `{ ok, ... }` ou `{ ok: false, error: { code, message } }`.
 import type { APIRoute } from 'astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
-import { ajouterBoitage, corrigerBoitage, incoherence, listerBoitage, lireBoitage, verifierBoitage, type ChampsBoitage } from '../../server/boitage';
+import { ajouterBoitage, corrigerBoitage, listerBoitage, lireBoitage, verifierBoitage, type ChampsBoitage } from '../../server/boitage';
 import { COMPTE_CLAUDE, pourSite as env } from '../../server/env';
 import { ULID } from '../../server/formulaires';
 
@@ -46,8 +47,6 @@ export const POST: APIRoute = async ({ request }) => {
     const c = verifierBoitage(d.ajouter, true);
     if (typeof c === 'string') return erreur(400, 'champ', c);
     const complet: ChampsBoitage = { quartier: null, type_bien: null, flyers: null, message: null, r1: null, r2: null, commentaire: null, ...c } as ChampsBoitage;
-    const ordre = incoherence(complet);
-    if (ordre) return erreur(400, 'ordre', ordre);
     const id = await ajouterBoitage(env, complet);
     return json({ ok: true, id, ligne: await lireBoitage(env, id), lignes: await listerBoitage(env) }, 201);
   }
@@ -59,6 +58,5 @@ export const POST: APIRoute = async ({ request }) => {
   if (Object.keys(c).length === 0) return erreur(400, 'champ', 'Rien à corriger.');
   const r = await corrigerBoitage(env, d.id, c);
   if (r === null) return erreur(404, 'passage', 'Passage inconnu');
-  if (typeof r === 'string') return erreur(400, 'ordre', r);
   return json({ ok: true, ligne: r, lignes: await listerBoitage(env) });
 };

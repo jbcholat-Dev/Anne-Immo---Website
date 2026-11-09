@@ -325,13 +325,7 @@ export async function saisirContact(env: EnvSite, p: Personne, o: Origine, note:
   return { id, existant: false };
 }
 
-/** Passage de boîtage : un secteur, une date, un nombre de mots déposés, et ce qu'ils ont coûté (centimes, story 13.17). */
-export async function noterPassage(env: EnvSite, secteur: string, fait_le: string, mots: number | null, cout_centimes: number | null = null): Promise<string> {
-  const id = ulid();
-  await env.DB.prepare('INSERT INTO passage_boitage (id, created_at, secteur, fait_le, mots, cout_centimes) VALUES (?1, ?2, ?3, ?4, ?5, ?6)')
-    .bind(id, new Date().toISOString(), secteur, fait_le, mots, cout_centimes).run();
-  return id;
-}
+// Un passage de boîtage s'écrit par `server/boitage` (`ajouterBoitage`, depuis la story 18.20 : /ajouter et le tableau du boîtage).
 
 /** Les derniers passages, avec le nombre de contacts qu'ils ont amenés. */
 export async function listerPassages(env: EnvSite, limite = 30): Promise<Passage[]> {

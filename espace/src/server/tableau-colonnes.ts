@@ -41,6 +41,9 @@ export interface LigneTableau {
   en_cours: boolean;
   /** Date « à rappeler le » (AAAA-MM-JJ, FR-16), ou null. */
   a_rappeler_le: string | null;
+  /** Dates du premier et du second rendez-vous (R1, R2, story 18.20), AAAA-MM-JJ, ou null. */
+  r1_le: string | null;
+  r2_le: string | null;
   /** Inscrit au programme ambassadeurs (marque à part du projet, glossaire du PRD). */
   ambassadeur_inscrit: boolean;
   /** Etat ambassadeur (story 18.18) : null si le contact n'est ni de projet « ambassadeur » ni inscrit. */
@@ -61,7 +64,7 @@ export function etatAmbassadeur(projet: string, inscrit: boolean, modeleEnvoye: 
   return modeleEnvoye ? 'contacte' : 'a_contacter';
 }
 
-export type CleColonne = 'nom' | 'entreprise' | 'categorie' | 'projet' | 'temperature' | 'sources' | 'rencontre' | 'ville' | 'telephone' | 'email' | 'profil' | 'dernier' | 'accord' | 'ambassadeur' | 'verifie';
+export type CleColonne = 'nom' | 'entreprise' | 'categorie' | 'projet' | 'temperature' | 'sources' | 'rencontre' | 'ville' | 'telephone' | 'email' | 'profil' | 'dernier' | 'accord' | 'ambassadeur' | 'r1' | 'r2' | 'verifie';
 
 /** Les colonnes de FR-1, dans l'ordre affiché. Le nom ne se masque pas. */
 export const COLONNES: { cle: CleColonne; libelle: string; masquable: boolean }[] = [
@@ -79,6 +82,8 @@ export const COLONNES: { cle: CleColonne; libelle: string; masquable: boolean }[
   { cle: 'profil', libelle: 'Profil', masquable: true },
   { cle: 'dernier', libelle: 'Dernier contact', masquable: true },
   { cle: 'accord', libelle: 'Accord e-mail', masquable: true },
+  { cle: 'r1', libelle: 'R1', masquable: true },
+  { cle: 'r2', libelle: 'R2', masquable: true },
   { cle: 'verifie', libelle: 'État', masquable: true },
 ];
 
@@ -215,6 +220,8 @@ export function valeurTri(l: LigneTableau, cle: CleColonne): string | number | n
     case 'dernier': return l.dernier_le;
     case 'accord': return l.accord === 'sans_email' ? null : ORDRE_ACCORD.indexOf(l.accord);
     case 'ambassadeur': return l.ambassadeur_etat ? ORDRE_AMBASSADEUR.indexOf(l.ambassadeur_etat) : null;
+    case 'r1': return l.r1_le;
+    case 'r2': return l.r2_le;
     case 'verifie': return l.ecarte ? 2 : l.verifie ? 1 : 0;
   }
 }

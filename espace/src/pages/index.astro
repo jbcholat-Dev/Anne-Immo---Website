@@ -192,6 +192,8 @@ const donneesNouveaux = enJson(nouveaux);
   const index = lignes.map(indexer);
   const dateDe = (l: LigneTableau) => l.dernier_le ? new Date(l.dernier_le).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' }) : '';
   const dates = lignes.map(dateDe);
+  /** « 2026-11-09 » → « 9 nov. 2026 » (dates de rendez-vous R1 et R2, story 18.20). */
+  const jourCourt = (d: string) => new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${d}T00:00:00Z`));
   /** Story 18.11 : contacts supprimés depuis le chargement (« Ajouter aux contacts » annulé) : plus jamais affichés ni comptés. */
   const retires = new Set<string>();
   const actifs = () => lignes.filter((x) => !x.ecarte && !retires.has(x.id)).length;
@@ -272,6 +274,7 @@ const donneesNouveaux = enJson(nouveaux);
       case 'email': return `<td class="ct-coupe ct-mail" title="${esc(l.emails.join(', '))}">${l.emails.length ? esc(l.emails[0]) + plus(l.emails, (e) => e) : vide}</td>`;
       case 'profil': return `<td>${l.profils.length ? l.profils.map((p) => `<a href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">${esc(reseau(p.reseau))}</a>`).join(' ') : vide}</td>`;
       case 'dernier': return `<td class="ct-num">${l.dernier_le ? `${esc(dates[i])}${l.dernier_canal ? ` · ${esc(CANAUX_CONTACT[l.dernier_canal] ?? l.dernier_canal)}` : ''}` : '<span class="ct-vide">jamais</span>'}</td>`;
+      case 'r1': case 'r2': { const d = cle === 'r1' ? l.r1_le : l.r2_le; return `<td class="ct-num">${d ? esc(jourCourt(d)) : vide}</td>`; }
       case 'accord': return `<td>${l.accord === 'sans_email' ? vide : `<span class="ct-accord ${esc(l.accord)}">${esc(ACCORDS[l.accord])}</span>`}</td>`;
       case 'ambassadeur': return `<td>${l.ambassadeur_etat ? `<span class="ct-pastille amb-${esc(l.ambassadeur_etat)}" data-ambassadeur="${esc(l.ambassadeur_etat)}">${esc(ETATS_AMBASSADEUR[l.ambassadeur_etat])}</span>` : vide}</td>`;
       case 'verifie': return `<td>${l.ecarte ? '<span class="ct-etat">écarté</span>' : l.verifie ? '<span class="ct-etat ok">✓ vérifié</span>' : '<span class="ct-etat av">à vérifier</span>'}</td>`;

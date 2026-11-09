@@ -99,6 +99,8 @@ export function brancherFiche(r: Reglages) {
           <label class="ct-champ">Température${f.en_cours ? `<input value="${esc(tempTexte)}" disabled title="Suit l'étape du suivi des ventes" /><input type="hidden" name="temperature-fixe" />` : `<select name="temperature" data-fiche-temperature>${options(temperatures(f.projet), f.temperature)}</select>`}</label>
           <label class="ct-champ">Appel autorisé<select name="appel_autorise">${options([['', `Selon la catégorie (${appelRegle})`], ['oui', 'Oui, pour cette personne'], ['non', 'Non, ne pas l\'appeler']], f.appel_autorise === null ? '' : f.appel_autorise ? 'oui' : 'non')}</select></label>
           <label class="ct-champ">À rappeler le<input type="date" name="a_rappeler_le" value="${esc(f.a_rappeler_le)}" /></label>
+          <label class="ct-champ">R1 (premier rendez-vous)<input type="date" name="r1_le" value="${esc(f.r1_le)}" /></label>
+          <label class="ct-champ">R2 (second rendez-vous)<input type="date" name="r2_le" value="${esc(f.r2_le)}" /></label>
         </div>
         ${f.profils.length ? `<p class="fc-muet">Profils : ${f.profils.map((p) => `<a href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">${esc(p.reseau ? RESEAUX[p.reseau.toLowerCase()] ?? p.reseau : 'Profil')}</a>`).join(' · ')}</p>` : ''}
         <div class="fc-boutons"><button type="submit" class="ct-btn bleu" data-fiche-enregistrer>Enregistrer</button></div>
@@ -220,6 +222,7 @@ export function brancherFiche(r: Reglages) {
     const appel = v('appel_autorise') === '' ? null : v('appel_autorise') === 'oui';
     if (appel !== f.appel_autorise) c.appel_autorise = appel;
     if ((v('a_rappeler_le') || null) !== f.a_rappeler_le) c.a_rappeler_le = v('a_rappeler_le') || null;
+    for (const k of ['r1_le', 'r2_le'] as const) if ((v(k) || null) !== f[k]) c[k] = v(k) || null;
     return c;
   }
 

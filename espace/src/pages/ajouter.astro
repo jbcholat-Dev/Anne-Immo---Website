@@ -10,9 +10,10 @@ import { CANAUX_ORIGINE } from '@site/server/contacts';
 import { envEspace, pourSite as env } from '../server/env';
 import { rattacherInconnus } from '../server/leedflow';
 import {
-  aujourdhui, creerPrescripteur, estCanal, lirePassage, lirePrescripteur, listerPassages, listerPrescripteurs, noterPassage, personne, saisirContact,
+  aujourdhui, creerPrescripteur, estCanal, lirePassage, lirePrescripteur, listerPassages, listerPrescripteurs, personne, saisirContact,
   type Origine,
 } from '../server/pipeline';
+import { ajouterBoitage, listerVilles, verifierBoitage, type ChampsBoitage } from '../server/boitage';
 import { lireEuros } from '../server/actions';
 
 export const prerender = false;
@@ -30,15 +31,18 @@ if (Astro.request.method === 'POST') {
   const f = await Astro.request.formData();
   saisi = Object.fromEntries([...f.entries()].map(([k, v]) => [k, typeof v === 'string' ? v : '']));
   if (saisi.quoi === 'passage') {
-    const secteur = (saisi.secteur ?? '').trim().slice(0, 80);
-    const date = /^\d{4}-\d{2}-\d{2}$/.test(saisi.fait_le ?? '') ? saisi.fait_le : '';
-    const mots = /^\d{1,6}$/.test(saisi.mots ?? '') ? Number(saisi.mots) : null;
+    // Story 18.20 (tickets n° 256 à 258) : le même chemin que le tableau du boîtage (`server/boitage`), donc les mêmes
+    // contrôles ; seul le coût des flyers n'existe qu'ici.
+    const nombre = (k: string) => (saisi[k] ?? '').trim() === '' ? null : /^\d{1,6}$/.test(saisi[k].trim()) ? Number(saisi[k].trim()) : NaN;
+    const [flyers, r1, r2] = [nombre('flyers'), nombre('r1'), nombre('r2')];
     const cout = lireEuros(saisi.cout ?? '');
-    if (!secteur) erreur = 'Indiquez le secteur du passage.';
+    const champs = { fait_le: saisi.fait_le ?? '', ville: saisi.ville ?? '', quartier: saisi.quartier ?? '', flyers, r1, r2, commentaire: saisi.commentaire ?? '' };
+    const v = Number.isNaN(flyers) || Number.isNaN(r1) || Number.isNaN(r2) ? 'Flyers, R1 et R2 sont des nombres entiers.' : verifierBoitage(champs, true);
+    if (typeof v === 'string') erreur = v;
     else if (cout === undefined) erreur = 'Le coût ne semble pas valable (en euros, par exemple 45 ou 39,90).';
-    else if (!date || date > aujourdhui()) erreur = 'Indiquez la date du passage (pas dans le futur).';
     else {
-      await noterPassage(env, secteur, date, mots, cout ?? null);
+      const complet: ChampsBoitage = { quartier: null, type_bien: null, flyers: null, message: null, r1: null, r2: null, commentaire: null, ...v } as ChampsBoitage;
+      await ajouterBoitage(env, complet, cout ?? null);
       return Astro.redirect('/ajouter?m=passage#passage', 303);
     }
   } else {
@@ -73,8 +77,7 @@ if (Astro.request.method === 'POST') {
   }
 }
 
-const [passages, prescripteurs] = await Promise.all([listerPassages(env, 20), listerPrescripteurs(env)]);
-const secteurs = [...new Set(passages.map((p) => p.secteur))];
+const [passages, prescripteurs, villes] = await Promise.all([listerPassages(env, 20), listerPrescripteurs(env), listerVilles(env)]);
 const canalChoisi = saisi.canal ?? '';
 const date = (d: string) => new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${d}T00:00:00Z`));
 ---
@@ -107,7 +110,7 @@ const date = (d: string) => new Intl.DateTimeFormat('fr-FR', { day: 'numeric', m
       <label class="e-champ large" data-si="boitage">Quel passage de boîtage ?
         <select name="passage_id">
           <option value="">Choisir…</option>
-          {passages.map((p) => <option value={p.id} selected={saisi.passage_id === p.id}>{p.secteur}, {date(p.fait_le)}{p.mots ? ` · ${p.mots} mots` : ''}</option>)}
+          {passages.map((p) => <option value={p.id} selected={saisi.passage_id === p.id}>{p.secteur}, {date(p.fait_le)}{p.mots ? ` · ${p.mots} flyers` : ''}</option>)}
         </select>
         {passages.length === 0 && <span class="e-muet">Aucun passage noté : notez-le d'abord plus bas.</span>}
       </label>
@@ -129,18 +132,22 @@ const date = (d: string) => new Intl.DateTimeFormat('fr-FR', { day: 'numeric', m
   <form method="post" class="e-carte" id="passage" data-passage>
     <input type="hidden" name="quoi" value="passage" />
     <h2>Un passage de boîtage</h2>
-    <p class="e-muet" style="margin:0">Pour le détail (ville, quartier, type de bien, message, relances, commentaires), le <a href="/actions?onglet=boitage">tableau du boîtage</a>.</p>
+    <p class="e-muet" style="margin:0">Pour le type de bien et le numéro de message, ou pour corriger un passage, le <a href="/actions?onglet=boitage">tableau du boîtage</a>.</p>
     <div class="e-champs">
-      <label class="e-champ">Secteur<input name="secteur" list="secteurs" value={saisi.quoi === 'passage' ? saisi.secteur : ''} placeholder="Sciez-Chavannex" autocomplete="off" /></label>
-      <datalist id="secteurs">{secteurs.map((s) => <option value={s} />)}</datalist>
       <label class="e-champ">Date<input name="fait_le" type="date" max={aujourdhui()} value={saisi.quoi === 'passage' ? saisi.fait_le : aujourdhui()} /></label>
-      <label class="e-champ">Mots déposés (facultatif)<input name="mots" type="number" min="0" inputmode="numeric" value={saisi.quoi === 'passage' ? saisi.mots : ''} /></label>
+      <label class="e-champ">Ville<input name="ville" list="villes" value={saisi.quoi === 'passage' ? saisi.ville : ''} placeholder="Sciez" maxlength="80" required autocomplete="off" /></label>
+      <datalist id="villes">{villes.map((s) => <option value={s} />)}</datalist>
+      <label class="e-champ">Quartier (facultatif)<input name="quartier" value={saisi.quoi === 'passage' ? saisi.quartier : ''} placeholder="Chavannex" maxlength="80" autocomplete="off" /></label>
+      <label class="e-champ">Nombre de flyers (facultatif)<input name="flyers" type="number" min="0" max="999999" inputmode="numeric" value={saisi.quoi === 'passage' ? saisi.flyers : ''} /></label>
       <label class="e-champ">Coût des mots (€, facultatif)<input name="cout" inputmode="decimal" value={saisi.quoi === 'passage' ? saisi.cout : ''} placeholder="45" autocomplete="off" /></label>
+      <label class="e-champ">R1, premiers rendez-vous (facultatif)<input name="r1" type="number" min="0" max="9999" inputmode="numeric" value={saisi.quoi === 'passage' ? saisi.r1 : ''} /></label>
+      <label class="e-champ">R2, seconds rendez-vous (facultatif)<input name="r2" type="number" min="0" max="9999" inputmode="numeric" value={saisi.quoi === 'passage' ? saisi.r2 : ''} /></label>
+      <label class="e-champ large">Commentaires (facultatif)<textarea name="commentaire" rows="2" maxlength="1000">{saisi.quoi === 'passage' ? saisi.commentaire : ''}</textarea></label>
     </div>
     <div><button class="e-bouton second" type="submit">Noter le passage</button></div>
     {passages.length > 0 && (
       <ul class="e-muet" data-passages>
-        {passages.slice(0, 5).map((p) => <li>{p.secteur}, {date(p.fait_le)}{p.mots ? ` · ${p.mots} mots` : ''} · {p.contacts} contact(s)</li>)}
+        {passages.slice(0, 5).map((p) => <li>{p.secteur}, {date(p.fait_le)}{p.mots ? ` · ${p.mots} flyers` : ''} · {p.contacts} contact(s)</li>)}
       </ul>
     )}
   </form>
