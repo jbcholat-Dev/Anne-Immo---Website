@@ -139,14 +139,14 @@ const titrePage = `Vente · ${typeCourt} à ${story.data.commune} — Anne VIAL-
   .story-photo { height: 640px; background: var(--avt-galet); overflow: hidden; }
   .story-photo :global(picture), .story-photo :global(img) { width: 100%; height: 100%; }
   .story-photo :global(img) { object-fit: cover; }
-  .story-corps { padding: 72px var(--marge) 0; display: grid; grid-template-columns: 360px 1fr; gap: 80px; }
+  .story-corps { padding: calc(72 * var(--px-h)) var(--marge) 0; display: grid; grid-template-columns: 360px 1fr; gap: 80px; }
   .story-contexte { display: flex; flex-direction: column; gap: 22px; font-size: 15px; }
   .story-contexte .chapeau-muet { margin-bottom: 6px; }
   .story-retour { font-size: 14px; }
   .story-texte { max-width: 64ch; }
-  .story-texte h1 { font-size: 64px; line-height: 1.05; margin-bottom: 36px; }
+  .story-texte h1 { font-size: calc(64 * var(--px-h)); line-height: 1.05; margin-bottom: 36px; }
   .story-texte h2.chapeau { font-family: var(--avt-font-text); margin: 0 0 14px; }
-  .recit { font-size: 17px; line-height: 1.7; margin-bottom: 48px; }
+  .recit { font-size: 17px; line-height: 1.7; margin-bottom: calc(48 * var(--px-h)); }
   .recit :global(h2) { font-size: 26px; margin: 32px 0 12px; }
   /* Titre du récit écrit par Anne (« # » dans son texte), rendu en sous-titre pour garder un seul grand titre par page (story 11.7). */
   .recit :global(h2.titre-recit) { font-size: 30px; line-height: 1.2; margin: 0 0 24px; }
@@ -155,15 +155,15 @@ const titrePage = `Vente · ${typeCourt} à ${story.data.commune} — Anne VIAL-
   .recit :global(ul), .recit :global(ol) { padding-left: 20px; margin: 0 0 16px; display: flex; flex-direction: column; gap: 6px; }
   .recit :global(strong) { font-weight: 500; }
   .recit :global(em) { font-style: italic; }
-  .temoignages { display: flex; flex-direction: column; gap: 24px; margin-bottom: 56px; }
-  .story-galerie { padding: 0 var(--marge) 80px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .temoignages { display: flex; flex-direction: column; gap: 24px; margin-bottom: calc(56 * var(--px-h)); }
+  .story-galerie { padding: 0 var(--marge) calc(80 * var(--px-h)); display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
   .story-galerie-photo { height: 220px; border-radius: 12px; overflow: hidden; background: var(--avt-galet); }
   .story-galerie-photo :global(picture), .story-galerie-photo :global(img) { width: 100%; height: 100%; }
   .story-galerie-photo :global(img) { object-fit: cover; }
   /* Largeurs intermédiaires (900 à 1199 px, sans artboard) : colonnes proportionnelles, sinon le texte déborde (story 8.2) */
   @media (min-width: 900px) and (max-width: 1199px) {
     .story-corps { grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: 48px; }
-    .story-texte h1 { font-size: 48px; }
+    .story-texte h1 { font-size: calc(48 * var(--px-h)); }
   }
   @media (max-width: 899px) {
     .story-photo { height: 300px; }

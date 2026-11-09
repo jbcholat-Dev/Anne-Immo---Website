@@ -72,12 +72,12 @@ import { REGLEMENT_AMBASSADEURS } from '../../server/schema';
   </article>
 </Page>
 <style>
-  .rg { max-width: 68ch; margin: 0 auto; padding: 32px 20px calc(72 * var(--px-h)); font-size: 16px; line-height: 1.7; }
+  .rg { max-width: 68ch; margin: 0 auto; padding: 32px 20px 72px; font-size: 16px; line-height: 1.7; }
   .rg h1 { font-size: 34px; line-height: 1.15; margin: 8px 0 4px; }
   .rg h2 { font-size: 22px; margin: 32px 0 8px; }
   .rg ul, .rg ol { padding-left: 1.2em; }
   .rg strong { font-weight: 500; }
   .rg-retour { margin: 0; font-size: 15px; }
   .rg-fin { margin-top: 32px; }
-  @media (min-width: 900px) { .rg { padding: 72px 20px 96px; } .rg h1 { font-size: 44px; } }
+  @media (min-width: 900px) { .rg { padding: calc(72 * var(--px-h)) 20px calc(96 * var(--px-h)); } .rg h1 { font-size: calc(44 * var(--px-h)); } }
 </style>

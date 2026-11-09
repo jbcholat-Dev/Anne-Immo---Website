@@ -145,7 +145,7 @@ const questions = [
 <style>
   .am-etiquette { margin: 0; font-size: 13px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--avt-klein); }
   .am-bleu { color: var(--avt-klein); }
-  .am-haut { padding: calc(104 * var(--px-h)) 20px 40px; display: flex; flex-direction: column; gap: 32px; }
+  .am-haut { padding: 104px 20px 40px; display: flex; flex-direction: column; gap: 32px; }
   .am-texte { display: flex; flex-direction: column; gap: 16px; }
   .am-sur { display: flex; align-items: center; gap: 12px; }
   .am-sur :global(.am-pastille), .am-sur :global(.am-pastille img) { width: 56px; height: 56px; border-radius: 999px; object-fit: cover; object-position: 62% 22%; display: block; }
@@ -167,14 +167,14 @@ const questions = [
   .am-gauche { display: flex; flex-direction: column; gap: 16px; }
   .am-merci { background: var(--avt-brume); border-radius: 12px; padding: 22px 20px; display: flex; flex-direction: column; gap: 8px; }
   .am-merci p { margin: 0; font-size: 15px; }
-  .am-montant { font-family: var(--avt-font-display); font-size: calc(40 * var(--px-h)) !important; line-height: 1.05; color: var(--avt-klein); }
+  .am-montant { font-family: var(--avt-font-display); font-size: 40px !important; line-height: 1.05; color: var(--avt-klein); }
   .am-donnees { margin: 0; font-size: 14px; }
   .am-droite form { display: flex; flex-direction: column; gap: 14px; }
   .am-droite h2 { margin: 0 0 4px; font-size: 30px; line-height: 1.2; }
   .am-champs { display: grid; grid-template-columns: 1fr; gap: 12px; }
   .am-bouton { align-self: stretch; min-height: 56px; }
   [data-amb-page][hidden], .am-fini[hidden], .am-fini [hidden] { display: none; }
-  .am-fini { padding: calc(104 * var(--px-h)) 20px calc(64 * var(--px-h)); min-height: 80vh; }
+  .am-fini { padding: 104px 20px 64px; min-height: 80vh; }
   .am-fini-dedans { max-width: 640px; display: flex; flex-direction: column; gap: 16px; outline: none; }
   .am-fini-titre { margin: 0; font-size: 34px; line-height: 1.14; }
   .am-fini-dedans > p { margin: 0; font-size: 17px; line-height: 1.6; }
@@ -185,16 +185,16 @@ const questions = [
   .am-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
   .am-actions .btn { justify-content: center; }
   .am-plus-tard { margin-top: 24px !important; font-size: 15px !important; }
-  .am-faq { padding: 8px 20px calc(56 * var(--px-h)); display: flex; flex-direction: column; gap: 14px; }
+  .am-faq { padding: 8px 20px 56px; display: flex; flex-direction: column; gap: 14px; }
   .am-grille { display: grid; grid-template-columns: 1fr; gap: 14px; }
   .am-q { border-top: 1px solid rgba(38, 32, 26, .12); padding-top: 14px; }
   .am-q-titre { margin: 0; font-weight: 500; }
   .am-q .texte-muet { margin: 4px 0 0; font-size: 15px; }
   .am-lien { font-size: 15px; color: var(--avt-klein); }
   @media (min-width: 900px) {
-    .am-haut { padding: 160px 120px 88px; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 72px; align-items: center; }
+    .am-haut { padding: calc(160 * var(--px-h)) 120px calc(88 * var(--px-h)); display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 72px; align-items: center; }
     .am-sur :global(.am-pastille) { display: none; }
-    .am-haut h1 { font-size: 56px; line-height: 1.1; }
+    .am-haut h1 { font-size: calc(56 * var(--px-h)); line-height: 1.1; }
     .am-trait { width: 200px; height: 14px; }
     .am-texte > p { font-size: 19px; max-width: 560px; }
     .am-appel { flex-direction: row; align-items: center; gap: 20px; margin-top: 8px; }
@@ -204,23 +204,23 @@ const questions = [
     .am-legende { position: absolute; left: -32px; bottom: 32px; background: var(--avt-ecru); border-radius: 16px; padding: 16px 22px; box-shadow: 0 8px 24px rgba(38, 32, 26, .12); }
     .am-legende p { margin: 0; font-size: 14px; color: var(--avt-text-muted); }
     .am-legende .am-legende-nom { font-family: var(--avt-font-display); font-size: 20px; color: var(--avt-brun); }
-    .am-etapes { padding: 72px 120px; gap: 10px; }
-    .am-etapes h2 { font-size: 40px; }
+    .am-etapes { padding: calc(72 * var(--px-h)) 120px; gap: 10px; }
+    .am-etapes h2 { font-size: calc(40 * var(--px-h)); }
     .am-etapes ol { margin-top: 26px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; }
     .am-etapes li { flex-direction: column; gap: 12px; border-top: 1px solid rgba(38, 32, 26, .12); padding-top: 24px; }
     .am-num { width: 44px; height: 44px; font-size: 22px; }
     .am-etape-titre { font-size: 19px; }
-    .am-inscription { padding: 88px 120px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 72px; align-items: start; }
+    .am-inscription { padding: calc(88 * var(--px-h)) 120px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 72px; align-items: start; }
     .am-merci { border-radius: 16px; padding: 32px; }
     .am-merci p { font-size: 16px; }
-    .am-montant { font-size: 56px !important; }
+    .am-montant { font-size: calc(56 * var(--px-h)) !important; }
     .am-donnees { font-size: 16px; }
-    .am-droite h2 { font-size: 40px; }
+    .am-droite h2 { font-size: calc(40 * var(--px-h)); }
     .am-champs { grid-template-columns: 1fr 1fr; gap: 16px; }
     .am-bouton { align-self: flex-start; padding: 0 36px; }
-    .am-faq { padding: 0 120px 88px; gap: 24px; }
-    .am-fini { padding: 168px 120px 96px; }
-    .am-fini-titre { font-size: 56px; line-height: 1.1; }
+    .am-faq { padding: 0 120px calc(88 * var(--px-h)); gap: 24px; }
+    .am-fini { padding: calc(168 * var(--px-h)) 120px calc(96 * var(--px-h)); }
+    .am-fini-titre { font-size: calc(56 * var(--px-h)); line-height: 1.1; }
     .am-fini-dedans > p { font-size: 19px; }
     .am-carte { padding: 32px; }
     .am-carte h3 { font-size: 32px; }

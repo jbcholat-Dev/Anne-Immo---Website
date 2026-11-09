@@ -65,7 +65,7 @@ const erreurs = ['Le prix fixé sans comparables', 'Le dossier incomplet au comp
   /* Largeurs intermédiaires (900 à 1399 px, sans artboard) : colonnes proportionnelles, sinon le texte déborde (story 8.2) */
   @media (min-width: 900px) and (max-width: 1399px) {
     .g-corps { grid-template-columns: minmax(0, 280px) minmax(0, 1fr) minmax(0, 400px); gap: 48px; }
-    .g-texte h1 { font-size: 44px; }
+    .g-texte h1 { font-size: calc(44 * var(--px-h)); }
   }
   @media (min-width: 900px) and (max-width: 1099px) {
     .g-corps { grid-template-columns: minmax(0, 1fr) minmax(0, 380px); }

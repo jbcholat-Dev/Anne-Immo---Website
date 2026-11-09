@@ -93,7 +93,7 @@ const note = String(inst.note).replace('.', ',');
   /* Largeurs intermédiaires (900 à 1199 px, sans artboard) : colonnes proportionnelles, sinon le texte déborde (story 8.2) */
   @media (min-width: 900px) and (max-width: 1199px) {
     .dl-offre { grid-template-columns: minmax(0, 1fr) minmax(0, 360px); gap: 48px; }
-    .dl-offre h1 { font-size: 48px; }
+    .dl-offre h1 { font-size: calc(48 * var(--px-h)); }
     .dl-image { height: 540px; padding: 32px; }
   }
   @media (max-width: 899px) {

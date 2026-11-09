@@ -40,4 +40,4 @@ Sur ordinateur, l'ouverture avait une hauteur fixe de 900 px (maquette D-1), ave
 - Limite : Safari non testé (moteur absent du conteneur).
 
 ## Ce qui reste
-- Accord de JB pour fusionner (PR qui change le site).
+- Accord de JB pour fusionner : donné le 2026-11-09 à 16 h 04.

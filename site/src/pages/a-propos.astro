@@ -248,13 +248,13 @@ for (const rg of methode.rangs) {
   /* Largeurs intermédiaires (900 à 1199 px, sans artboard) : colonnes proportionnelles, sinon le texte déborde (story 8.2) */
   @media (min-width: 900px) and (max-width: 1199px) {
     .ap-colonnes { gap: 32px; }
-    .ap-colonnes .ap-rang h3 { font-size: 36px; }
+    .ap-colonnes .ap-rang h3 { font-size: calc(36 * var(--px-h)); }
     .ap-colonnes .ap-rang h4 { font-size: 28px; }
     .ap-etape-tete h4 { font-size: 26px; }
     .ap-etapes .ap-rang { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; }
     .ap-qui { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; }
     .ap-portrait :global(.ap-portrait-reserve) { height: 520px; }
-    .ap-nom { font-size: 48px; }
+    .ap-nom { font-size: calc(48 * var(--px-h)); }
   }
   @media (max-width: 899px) {
     .ap-tete { padding: 48px var(--marge-m) 28px; }
