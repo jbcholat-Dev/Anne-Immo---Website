@@ -1,7 +1,7 @@
 ---
 story: 8.27
 epic: 8 — Structure et visuel
-statut: review
+statut: done
 date: 2026-11-09
 ---
 
@@ -40,3 +40,5 @@ Ce n'est pas un réglage du PC. Le portable de JB affiche à 150 % (réglage Win
 - Accord de JB pour fusionner : donné le 2026-11-09 à 16 h 04 (« Tu veux fusionner »).
 - Plus tard, à la demande de JB : reprendre le comportement du design selon les écrans (« cohérent, réactif »), au-delà de cette correction.
 - Règle pour la suite : tout nouveau grand titre ou grand espace s'écrit en `calc(N * var(--px-h))`.
+
+- Fusion : PR n° 260 fusionnée le 2026-11-09 (commit 8e7ce02) sur l'accord de JB.

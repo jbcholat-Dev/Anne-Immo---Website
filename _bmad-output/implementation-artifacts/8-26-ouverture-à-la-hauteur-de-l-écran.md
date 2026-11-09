@@ -1,7 +1,7 @@
 ---
 story: 8.26
 epic: 8 — Structure et visuel
-statut: review
+statut: done
 date: 2026-11-09
 ---
 
@@ -41,3 +41,5 @@ Sur ordinateur, l'ouverture avait une hauteur fixe de 900 px (maquette D-1), ave
 
 ## Ce qui reste
 - Accord de JB pour fusionner : donné le 2026-11-09 à 16 h 04.
+
+- Fusion : PR n° 260 fusionnée le 2026-11-09 (commit 8e7ce02) sur l'accord de JB.
