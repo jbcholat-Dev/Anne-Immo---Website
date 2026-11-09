@@ -15,11 +15,11 @@ import { r } from '../../i18n';
   </div>
 </Page>
 <style>
-  .tr-tete { padding: 96px var(--marge) 40px; }
-  .tr-tete h1 { font-size: 72px; margin-bottom: 16px; }
+  .tr-tete { padding: calc(96 * var(--px-h)) var(--marge) 40px; }
+  .tr-tete h1 { font-size: calc(72 * var(--px-h)); margin-bottom: 16px; }
   .tr-tete p { font-size: 18px; line-height: 1.6; max-width: 56ch; }
-  .tr-vide { padding: 0 var(--marge) 120px; max-width: 52ch; }
-  .tr-vide h2 { font-size: 44px; margin-bottom: 14px; }
+  .tr-vide { padding: 0 var(--marge) calc(120 * var(--px-h)); max-width: 52ch; }
+  .tr-vide h2 { font-size: calc(44 * var(--px-h)); margin-bottom: 14px; }
   .tr-vide p { font-size: 15px; line-height: 1.6; margin-bottom: 24px; }
   .tr-vide-boutons { display: flex; gap: 12px; flex-wrap: wrap; }
   @media (max-width: 899px) {

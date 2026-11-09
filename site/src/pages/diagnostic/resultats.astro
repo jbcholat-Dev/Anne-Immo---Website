@@ -110,13 +110,13 @@ const rapport = r ? await lienRapport(envSite, r.id) : null;
   </script>
 </Quiz>
 <style is:global>
-  .rs-expire { max-width: 560px; margin: 0 auto; padding: 48px var(--marge-m) 80px; display: flex; flex-direction: column; gap: 14px; }
+  .rs-expire { max-width: 560px; margin: 0 auto; padding: calc(48 * var(--px-h)) var(--marge-m) calc(80 * var(--px-h)); display: flex; flex-direction: column; gap: 14px; }
   .rs-expire h1 { font-size: 28px; }
   .rs-expire p { font-size: 15px; line-height: 1.5; }
   .rs-refaire { text-align: center; font-size: 15px; }
-  .rs-tete { padding: 64px var(--marge) 56px; display: grid; grid-template-columns: 420px 1fr; gap: 96px; align-items: center; border-bottom: 1px solid rgba(38, 32, 26, .1); }
+  .rs-tete { padding: calc(64 * var(--px-h)) var(--marge) calc(56 * var(--px-h)); display: grid; grid-template-columns: 420px 1fr; gap: 96px; align-items: center; border-bottom: 1px solid rgba(38, 32, 26, .1); }
   .rs-score { display: flex; align-items: baseline; gap: 8px; }
-  .rs-score b { font-family: var(--avt-font-display); font-weight: 400; font-size: 160px; line-height: .9; }
+  .rs-score b { font-family: var(--avt-font-display); font-weight: 400; font-size: calc(160 * var(--px-h)); line-height: .9; }
   .rs-score span { font-size: 24px; }
   .rs-pastille { display: inline-block; border-radius: 999px; padding: 8px 16px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; font-weight: 500; margin-bottom: 18px; }
   .rs-profil-texte { font-family: var(--avt-font-display); font-size: 34px; line-height: 1.3; max-width: 30ch; }
@@ -129,11 +129,11 @@ const rapport = r ? await lienRapport(envSite, r.id) : null;
   [data-ton="brun"] .rs-score b { color: var(--avt-brun); }
   [data-ton="brun"] .rs-barre > div { background-color: var(--avt-brun); }
   [data-ton="brun"] .rs-pastille { background: var(--avt-brun); color: var(--avt-ecru); }
-  .rs-axes { padding: 56px var(--marge); display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; }
+  .rs-axes { padding: calc(56 * var(--px-h)) var(--marge); display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; }
   .rs-axe { display: flex; flex-direction: column; gap: 18px; }
   .rs-axe .chapeau { margin-bottom: 8px; }
   .rs-sous { display: flex; align-items: baseline; gap: 8px; }
-  .rs-sous b { font-family: var(--avt-font-display); font-weight: 400; font-size: 48px; line-height: 1; }
+  .rs-sous b { font-family: var(--avt-font-display); font-weight: 400; font-size: calc(48 * var(--px-h)); line-height: 1; }
   .rs-sous span { font-size: 15px; color: var(--avt-text-muted); }
   .rs-barre { height: 4px; background: var(--avt-galet); border-radius: 2px; margin-top: 8px; }
   .rs-barre > div { height: 100%; border-radius: 2px; }
@@ -142,22 +142,22 @@ const rapport = r ? await lienRapport(envSite, r.id) : null;
   .rs-impact .chapeau-muet { margin-bottom: 6px; }
   .rs-impact p { font-size: 15px; line-height: 1.5; }
   .rs-sortie { margin: 0 var(--marge) 40px; background: var(--avt-klein); color: var(--avt-ecru); border-radius: 16px; padding: 56px; display: grid; grid-template-columns: 1fr auto; gap: 48px; align-items: center; }
-  .rs-sortie h2 { font-size: 40px; color: var(--avt-ecru); margin-bottom: 16px; }
+  .rs-sortie h2 { font-size: calc(40 * var(--px-h)); color: var(--avt-ecru); margin-bottom: 16px; }
   .rs-sortie p { font-size: 17px; line-height: 1.6; max-width: 60ch; }
   .rs-sortie-boutons { display: flex; flex-direction: column; gap: 12px; }
-  .rs-guide { margin: 0 var(--marge) 96px; display: flex; align-items: center; justify-content: space-between; gap: 32px; border: 1px solid var(--filet-brun-fort); border-radius: 16px; padding: 28px 36px; }
+  .rs-guide { margin: 0 var(--marge) calc(96 * var(--px-h)); display: flex; align-items: center; justify-content: space-between; gap: 32px; border: 1px solid var(--filet-brun-fort); border-radius: 16px; padding: 28px 36px; }
   .rs-guide-int { display: flex; align-items: center; gap: 24px; }
   .rs-guide-couv { width: 64px; height: 84px; background: var(--avt-galet); border-radius: 4px; flex: none; }
   .rs-guide-titre { font-family: var(--avt-font-display); font-size: 26px; }
   .rs-guide-sous { font-size: 14px; color: var(--avt-text-muted); }
-  .rs-sequence { margin: 0 var(--marge) 96px; display: flex; align-items: center; justify-content: space-between; gap: 32px; border: 1px solid var(--filet-brun-fort); border-radius: 16px; padding: 28px 36px; font-size: 16px; line-height: 1.5; }
+  .rs-sequence { margin: 0 var(--marge) calc(96 * var(--px-h)); display: flex; align-items: center; justify-content: space-between; gap: 32px; border: 1px solid var(--filet-brun-fort); border-radius: 16px; padding: 28px 36px; font-size: 16px; line-height: 1.5; }
   .rs-sequence p { max-width: 60ch; }
   .rs-rapport { margin-bottom: 40px; }
   .rs-guide:has(+ .rs-sequence) { margin-bottom: 24px; }
   .rs-guide-image { height: auto; aspect-ratio: 953 / 1348; object-fit: cover; background: none; box-shadow: 0 1px 2px rgba(38, 32, 26, .08), 0 6px 16px rgba(38, 32, 26, .12); }
   .rs-rapport .rs-guide-couv { background: var(--avt-klein); border-left: 4px solid var(--avt-terra); }
   .rs-rapport .rs-guide-sous { max-width: 52ch; margin-top: 4px; }
-  .rs-etats { margin: 0 var(--marge) 96px; display: flex; flex-direction: column; gap: 14px; max-width: 560px; }
+  .rs-etats { margin: 0 var(--marge) calc(96 * var(--px-h)); display: flex; flex-direction: column; gap: 14px; max-width: 560px; }
   .rs-etat-sequence { border: 1px solid var(--filet-brun-fort); border-radius: 14px; padding: 18px 20px; font-size: 14.5px; line-height: 1.5; }
   @media (max-width: 899px) {
     .rs-tete { padding: 24px var(--marge-m) 28px; display: block; border-bottom: 0; }

@@ -14,8 +14,8 @@ import { r } from '../i18n';
   </div>
 </Page>
 <style>
-  .p404 { padding: 120px var(--marge) 160px; max-width: 64ch; }
-  .p404 h1 { font-size: 56px; line-height: 1.1; margin-bottom: 16px; }
+  .p404 { padding: calc(120 * var(--px-h)) var(--marge) calc(160 * var(--px-h)); max-width: 64ch; }
+  .p404 h1 { font-size: calc(56 * var(--px-h)); line-height: 1.1; margin-bottom: 16px; }
   .p404 p { font-size: 17px; line-height: 1.6; margin-bottom: 28px; }
   .p404-boutons { display: flex; gap: 12px; flex-wrap: wrap; }
   @media (max-width: 899px) { .p404 { padding: 64px var(--marge-m) 80px; } .p404 h1 { font-size: 40px; } }

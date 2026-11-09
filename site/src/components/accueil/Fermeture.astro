@@ -23,9 +23,9 @@ const d = await dicoAccueil(lang);
   .parler { position: relative; overflow: hidden; background: var(--avt-ecru); }
   .parler-vague { position: relative; height: 96px; }
   .parler-vague svg { position: absolute; left: 0; top: 0; width: 100%; height: 96px; fill: var(--avt-klein); }
-  .parler-bande { position: relative; background: var(--avt-klein); color: var(--avt-ecru); padding: 44px var(--marge) 84px; text-align: center; }
+  .parler-bande { position: relative; background: var(--avt-klein); color: var(--avt-ecru); padding: 44px var(--marge) calc(84 * var(--px-h)); text-align: center; }
   .parler-int { max-width: 640px; margin: 0 auto; }
-  .parler h2 { font-size: 52px; color: var(--avt-ecru); margin-bottom: 12px; }
+  .parler h2 { font-size: calc(52 * var(--px-h)); color: var(--avt-ecru); margin-bottom: 12px; }
   .parler p { font-size: 17px; margin-bottom: 30px; }
   .parler-boutons { display: flex; gap: 16px; justify-content: center; }
   @media (max-width: 899px) {

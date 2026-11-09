@@ -19,7 +19,7 @@ const note = String(inst.note).replace('.', ',');
 <style>
   .preuve { display: flex; align-items: center; gap: 32px; padding: 26px var(--marge); background: var(--avt-klein); color: var(--avt-ecru); }
   .preuve-note { display: flex; align-items: baseline; gap: 8px; flex: none; }
-  .preuve-note b { font-family: var(--avt-font-display); font-weight: 400; font-size: 44px; font-variant-numeric: tabular-nums; line-height: 1; }
+  .preuve-note b { font-family: var(--avt-font-display); font-weight: 400; font-size: calc(44 * var(--px-h)); font-variant-numeric: tabular-nums; line-height: 1; }
   .preuve-note span { font-size: 15px; color: var(--avt-text-on-dark-muted); }
   .preuve-extrait { flex: 1; font-size: 15.5px; line-height: 1.55; max-width: 64ch; }
   .preuve-auteur { color: var(--avt-text-on-dark-muted); font-size: 13.5px; }

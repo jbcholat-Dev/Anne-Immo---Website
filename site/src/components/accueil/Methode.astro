@@ -29,14 +29,14 @@ const refrain = d.refrain ?? ['No bad surprises.', 'No file left dragging.', 'Sa
   <a href={r('methode', lang)} class="lien seulement-mobile methode-lien-m">{d.accueil.methode_lien}</a>
 </section>
 <style>
-  .methode { position: relative; background: var(--avt-ecru); padding: 100px var(--marge) 110px; }
-  .methode-tete { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 48px; gap: 24px; }
-  .methode-tete h2 { font-size: 48px; }
-  .piliers { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; margin-bottom: 96px; }
+  .methode { position: relative; background: var(--avt-ecru); padding: calc(100 * var(--px-h)) var(--marge) calc(110 * var(--px-h)); }
+  .methode-tete { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: calc(48 * var(--px-h)); gap: 24px; }
+  .methode-tete h2 { font-size: calc(48 * var(--px-h)); }
+  .piliers { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; margin-bottom: calc(96 * var(--px-h)); }
   .pilier { border-top: 1px solid var(--avt-brun); padding-top: 20px; }
   .pilier .chapeau { margin-bottom: 12px; }
   .pilier p { font-size: 17px; line-height: 1.6; }
-  .refrain { font-family: var(--avt-font-display); font-size: 64px; line-height: 1.15; max-width: 22ch; }
+  .refrain { font-family: var(--avt-font-display); font-size: calc(64 * var(--px-h)); line-height: 1.15; max-width: 22ch; }
   .refrain div { color: var(--avt-placeholder); transition: color .6s ease; }
   .refrain div[data-on] { color: var(--avt-brun); }
   html:not([data-js]) .refrain div { color: var(--avt-brun); }

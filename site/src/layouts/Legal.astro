@@ -23,16 +23,16 @@ const pages: { key: RouteKey; label: string }[] = [
   </div>
 </Page>
 <style>
-  .legal { padding: 72px var(--marge) 96px; display: grid; grid-template-columns: 280px 1fr; gap: 96px; align-items: start; }
+  .legal { padding: calc(72 * var(--px-h)) var(--marge) calc(96 * var(--px-h)); display: grid; grid-template-columns: 280px 1fr; gap: 96px; align-items: start; }
   .legal-nav { position: sticky; top: calc(var(--nav-h) + 24px); display: flex; flex-direction: column; gap: 12px; font-size: 15px; }
   .legal-nav a { color: var(--avt-brun); }
   .legal-nav a[aria-current="page"] { color: var(--avt-klein); font-weight: 500; }
   .legal-corps { max-width: 68ch; font-size: 16px; line-height: 1.7; }
   .legal-lockup { margin-bottom: 28px; }
-  .legal-corps h1 { font-size: 56px; margin-bottom: 36px; }
+  .legal-corps h1 { font-size: calc(56 * var(--px-h)); margin-bottom: 36px; }
   .legal-corps :global(h2) { font-family: var(--avt-font-text); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--avt-klein); font-weight: 500; margin: 0 0 10px; }
   .legal-corps :global(h2 + p), .legal-corps :global(p) { margin: 0 0 28px; }
-  .legal-corps :global(h2.espace) { margin-top: 48px; }
+  .legal-corps :global(h2.espace) { margin-top: calc(48 * var(--px-h)); }
   .legal-corps :global(.a-completer) { background: var(--avt-galet); padding: 2px 8px; border-radius: 4px; font-size: 13px; letter-spacing: .04em; }
   .legal-corps :global(.finalites) { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 14px; line-height: 1.5; margin-bottom: 16px; }
   .legal-corps :global(.finalites > div) { background: var(--avt-galet); border-radius: 10px; padding: 14px; }

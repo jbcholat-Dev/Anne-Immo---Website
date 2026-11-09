@@ -34,9 +34,9 @@ const contexte = (x: (typeof liste)[number]) => [roleLibelle(x.a, lang), x.story
   <div class="avis-tous"><a href={inst.url_fiche} rel="noopener" target="_blank">{d.accueil.avis_tous.replace('{n}', String(inst.nombre_avis))}</a></div>
 </section>
 <style>
-  .avis { position: relative; background: var(--avt-brume); padding: 96px var(--marge); }
-  .avis-tete { margin: 0 0 48px; }
-  .avis-tete h2 { font-size: 40px; }
+  .avis { position: relative; background: var(--avt-brume); padding: calc(96 * var(--px-h)) var(--marge); }
+  .avis-tete { margin: 0 0 calc(48 * var(--px-h)); }
+  .avis-tete h2 { font-size: calc(40 * var(--px-h)); }
   .avis-note { font-size: 14px; margin-top: 10px; }
   .avis-grille { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; align-items: start; }
   .avis-photo { height: 220px; background: var(--avt-galet); }

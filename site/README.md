@@ -244,6 +244,10 @@ Charte v3 (D-31, 2026-10-08) : Gilda Display (titres, une seule graisse) et Jost
 
 ## Écarts assumés avec la maquette / les briefs
 
+- **Titres et espaces sur portable** (story 8.27, 2026-11-09) : la maquette fixe les grands titres (36 à 160 px) et les grands espaces verticaux (48 px et plus) pour un écran de 1440 × 900. Sur un ordinateur de moins de 800 px de haut (portable à 150 % dans Windows), ils sont réduits en proportion, jusqu'à 70 %, par le réglage `--px-h` de `global.css`. Écrans de 800 px de haut ou plus et téléphone : identiques à la maquette. Tout nouveau grand titre ou grand espace s'écrit `calc(N * var(--px-h))`.
+
+- **Hauteur de l'ouverture de l'accueil** (story 8.26, 2026-11-09) : la maquette (D-1) fixait l'ouverture à 900 px sur ordinateur. Sur un portable, le nom et les boutons sortaient de l'écran. Décision de JB : l'ouverture remplit exactement l'écran visible, la vidéo seule (440 px au moins), et le texte suit la hauteur (nom de 52 à 96 px). La bande des avis vient juste en dessous. Téléphone inchangé.
+
 - **Programme ambassadeurs** (story 17.2, 2026-11-05) : la maquette montrait deux cases (règlement, puis confidentialité en note) ; la page a une seule case obligatoire qui porte le règlement et la politique de confidentialité, avec la phrase du bulletin (« majeur, pas un professionnel de l'immobilier »). Le règlement publié lit l'organisateur dans `src/config/site.ts` (AD-13) : son adresse est celle des mentions légales (Sciez), pas celle du document (Thonon), à confirmer par Anne ; l'article 4 ne cite plus de bulletin papier, qui n'existe pas. Le champ « Commune » facultatif du bulletin n'est pas repris (quatre champs, demande de JB).
 
 - **Partenaires et Actualités** (story 8.21, D-46, ticket n° 153) : deux pages absentes de la maquette, demandées par Anne, mises en page comme l'index des réalisations. Entre 900 et 1 179 px, les icônes des réseaux quittent la barre pour que les huit entrées tiennent sur une ligne.

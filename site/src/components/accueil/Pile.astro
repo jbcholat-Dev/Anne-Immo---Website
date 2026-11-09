@@ -73,14 +73,14 @@ function premierePhrase(texte: string) {
 </section>
 
 <style>
-  .ventes { position: relative; background: var(--avt-ecru); padding: 120px 0 0; }
-  .ventes-tete { display: flex; align-items: baseline; justify-content: space-between; padding: 0 var(--marge); margin-bottom: 56px; gap: 24px; }
-  .ventes-tete h2 { font-size: 56px; }
-  .pile { position: relative; padding: 0 var(--marge) 60px; }
-  .carte { position: sticky; top: calc(var(--nav-h) + 24px); height: 600px; margin-bottom: 30px; display: grid; grid-template-columns: 1fr 1.25fr; gap: 48px; background: var(--avt-galet); border-radius: 16px; padding: 48px 56px; z-index: 1; }
+  .ventes { position: relative; background: var(--avt-ecru); padding: calc(120 * var(--px-h)) 0 0; }
+  .ventes-tete { display: flex; align-items: baseline; justify-content: space-between; padding: 0 var(--marge); margin-bottom: calc(56 * var(--px-h)); gap: 24px; }
+  .ventes-tete h2 { font-size: calc(56 * var(--px-h)); }
+  .pile { position: relative; padding: 0 var(--marge) calc(60 * var(--px-h)); }
+  .carte { position: sticky; top: calc(var(--nav-h) + 24px); height: 600px; margin-bottom: 30px; display: grid; grid-template-columns: 1fr 1.25fr; gap: 48px; background: var(--avt-galet); border-radius: 16px; padding: calc(48 * var(--px-h)) 56px; z-index: 1; }
   .carte-texte { display: flex; flex-direction: column; justify-content: flex-end; gap: 18px; }
   .carte-etiquette { margin-bottom: -6px; }
-  .carte h3 { font-size: 44px; }
+  .carte h3 { font-size: calc(44 * var(--px-h)); }
   .carte-phrase { font-size: 18px; line-height: 1.55; max-width: 38ch; }
   .carte-citation { font-size: 14.5px; line-height: 1.5; max-width: 38ch; border-left: 2px solid var(--avt-terra); padding-left: 12px; color: var(--avt-brun); }
   .carte-citation span { color: var(--avt-text-muted); }
