@@ -20,7 +20,21 @@ Anne invite ses contacts au programme ambassadeur avec 3 modèles d'e-mail : « 
 
 ## Ce qui est vérifié
 
-Voir la PR : `npm run build` (fichiers copiés dans `dist/emails/ambassadeur/`). Après fusion : les 3 adresses répondent 200, puis envoi d'essai vers Gmail par JB.
+2026-11-09, en local : `npm run build` au vert, les 3 fichiers sont dans `dist/client/emails/ambassadeur/` ; `npm run check` : 0 erreur ; `node scripts/liens.mjs` : 32 pages, 2 331 liens, 0 cassé. `npm run verif` et `ecrans.mjs` non concernés (aucune page changée).
+
+Page à copier (bibliothèque du projet, hors dépôt) : les 3 boutons « Copier ce modèle » testés dans Chromium, le contenu copié garde les 2 images et le lien `/ambassadeurs?c=email`.
+
+Après fusion : les 3 adresses répondent 200, puis envoi d'essai vers Gmail par JB.
+
+## Revue de code
+
+2026-11-09, PR #255, commit c14a9cb, relu en session neuve (`bmad-code-review`). Vérifié sans défaut : `/emails/*` est servi comme fichier fixe (hors `run_worker_first`), hors Access, aucun en-tête de `_headers` ne gêne le relais d'images de Gmail, poids raisonnables, scripts de vérification non touchés.
+
+1. Fichiers sans utilisateur dans le site, donc à risque d'être supprimés au ménage : corrigé, règle « ne jamais renommer ni supprimer » et emplacement de la page à copier notés dans `site/README.md`.
+2. Story sans vérifications ni section « Revue de code » : corrigé (cette section et la précédente).
+3. Gmail garde les images en cache : écarté, l'ordre est déjà prévu (adresses en 200, puis essai) et un changement d'image prendra un nouveau nom (constat 1).
+4. Texte du bouton dans l'image seulement : écarté pour l'instant, écart déjà noté ; un bouton HTML est possible plus tard.
+5. PNG allégeables : écarté, 80 Ko suffisent.
 
 ## Ce qui reste
 
