@@ -15,8 +15,10 @@ import { hero } from '../../config/site';
 const d = t('en');
 ---
 <Page titre={d.accueil.titre_page} description={d.accueil.description} lang="en" courante="accueil" sombre sansPadding ogImage={image(hero.poster)!.jpg}>
-  <Hero lang="en" />
-  <BandePreuve lang="en" />
+  <div class="ouverture-ecran">
+    <Hero lang="en" />
+    <BandePreuve lang="en" />
+  </div>
   <Anne lang="en" />
   <Methode lang="en" />
   <Avis lang="en" />

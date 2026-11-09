@@ -244,6 +244,8 @@ Charte v3 (D-31, 2026-10-08) : Gilda Display (titres, une seule graisse) et Jost
 
 ## Écarts assumés avec la maquette / les briefs
 
+- **Hauteur de l'ouverture de l'accueil** (story 8.26, 2026-11-09) : la maquette (D-1) fixait l'ouverture à 900 px sur ordinateur. Sur un portable, le nom et les boutons sortaient de l'écran. Désormais, l'ouverture et la bande des avis remplissent ensemble l'écran visible (`.ouverture-ecran`, 440 px au moins pour l'ouverture), et le texte suit la hauteur (nom de 52 à 96 px). Téléphone inchangé.
+
 - **Programme ambassadeurs** (story 17.2, 2026-11-05) : la maquette montrait deux cases (règlement, puis confidentialité en note) ; la page a une seule case obligatoire qui porte le règlement et la politique de confidentialité, avec la phrase du bulletin (« majeur, pas un professionnel de l'immobilier »). Le règlement publié lit l'organisateur dans `src/config/site.ts` (AD-13) : son adresse est celle des mentions légales (Sciez), pas celle du document (Thonon), à confirmer par Anne ; l'article 4 ne cite plus de bulletin papier, qui n'existe pas. Le champ « Commune » facultatif du bulletin n'est pas repris (quatre champs, demande de JB).
 
 - **Partenaires et Actualités** (story 8.21, D-46, ticket n° 153) : deux pages absentes de la maquette, demandées par Anne, mises en page comme l'index des réalisations. Entre 900 et 1 179 px, les icônes des réseaux quittent la barre pour que les huit entrées tiennent sur une ligne.
