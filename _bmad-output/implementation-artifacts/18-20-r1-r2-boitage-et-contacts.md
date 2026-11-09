@@ -55,7 +55,7 @@ Donc : dans le boîtage, R1 et R2 sont des **nombres** (combien de premiers et d
 Le 2026-11-09, PR #259, commit relu 6d8e57f (`git diff 6d8e57f~1..6d8e57f`), session neuve qui n'a pas écrit le code. Aucun défaut réel trouvé : rien à corriger dans le code, le commit « Espace 18.20 (revue) » ne porte que cette section.
 
 - SQL dynamique de `corrigerBoitage` : écarté : les noms de colonnes viennent d'une table fixe, `verifierBoitage` refuse toute clé hors liste avant (donc ni `__proto__` ni `constructor`), les valeurs sont liées.
-- Validation de r1 et r2 du boîtage (entiers de 0 à 9 999, JSON et formulaire /ajouter) : écarté : un texte, un décimal, un négatif et 10 000 sont refusés des deux côtés ; l'e-mail de la saisie /ajouter passe par le même `verifierBoitage`.
+- Validation de r1 et r2 du boîtage (entiers de 0 à 9 999, JSON et formulaire /ajouter) : écarté : un texte, un décimal, un négatif et 10 000 sont refusés des deux côtés ; la saisie /ajouter passe par le même `verifierBoitage`.
 - Dates r1_le et r2_le de la fiche : écarté : `jourValide` refuse les dates impossibles, l'ordre R2 après R1 est contrôlé sur les valeurs finales (y compris une date seule contre celle déjà en base), refus 400 « ordre », rien d'écrit.
 - Accès : écarté : `/api/boitage` et `/api/fiche` refusent toujours le jeton de Claude (403, vérifié par l'essai) ; r1_le et r2_le ne figurent ni dans les outils d'import ni dans les réponses de Claude.
 - Migration 0024 : écarté : quatre `ADD COLUMN` facultatifs avec CHECK (NULL passe), aucune reconstruction de table ni donnée touchée, anciennes colonnes r1 et r2 conservées ; appliquée sans erreur sur une base locale.
