@@ -10,8 +10,12 @@ import Logo from './Logo.astro';
 import expNoir from '../../../design-system/assets/eXp_Logo_Black.svg?raw';
 import expBlanc from '../../../design-system/assets/eXp_Logo_White.svg?raw';
 // Les deux fichiers nomment leur couleur « cls-1 » dans une feuille de style interne : renommée par version, sinon la seconde repeint la première.
-const expSvg = (svg: string, cls: string) => svg.replace(/<\?xml[^>]*>\s*/g, '').replace(/cls-1/g, `${cls}-c`).replace(/<svg id="Logo"/, `<svg class="nav-exp ${cls}" aria-hidden="true" focusable="false"`);
-if (!expSvg(expNoir, '').includes('class="nav-exp')) throw new Error('Nav : balise <svg> du logo eXp non reconnue');
+const expSvg = (svg: string, cls: string) => {
+  const out = svg.replace(/<\?xml[^>]*>\s*/g, '').replace(/\bcls-1\b/g, `${cls}-c`).replace(/<svg id="Logo"/, `<svg class="nav-exp ${cls}" aria-hidden="true" focusable="false"`);
+  // Garde de construction (revue de code) : si un fichier eXp change d'en-tête ou de classes, on arrête plutôt que d'afficher un logo sans taille ou mal colorié.
+  if (!out.includes(`class="nav-exp ${cls}"`) || / id=/.test(out) || /cls-/.test(out) || !out.includes(`${cls}-c`)) throw new Error(`Nav : logo eXp (${cls}) non reconnu, vérifier design-system/assets/eXp_Logo_*.svg`);
+  return out;
+};
 import { t, r, bascule, type Lang, type RouteKey } from '../i18n';
 import { reseaux } from '../config/site';
 import { rubriquesVisibles } from '../lib/contenu';
@@ -129,11 +133,14 @@ const estCourante = (k: RouteKey) => courante === k || (k === 'apropos' && ['qui
   .nav-logo-svg { transition: width .35s ease, height .35s ease; }
   /* eXp à côté du symbole (D-50) : hauteur du dessin eXp ≈ 0,8 du symbole, trait de 1 px de la hauteur d'eXp, écart d'un demi-« e ». */
   .nav-exp-bloc { display: inline-flex; align-items: center; gap: 10px; flex: none; margin-left: -6px; }
-  .nav-exp-trait { width: 1px; height: 26px; background: currentColor; opacity: .55; }
+  .nav-exp-trait { width: 1px; height: 26px; background: currentColor; opacity: .55; transition: height .35s ease; }
   .nav-exp-bloc :global(.nav-exp) { height: 30px; width: calc(30px * 277.4 / 150); display: block; transition: height .35s ease, width .35s ease; }
-  .nav-exp-bloc :global(.nav-exp-blanc) { display: none; }
-  .nav[data-sombre]:not([data-reduit]) .nav-exp-bloc :global(.nav-exp-blanc) { display: block; }
-  .nav[data-sombre]:not([data-reduit]) .nav-exp-bloc :global(.nav-exp-noir) { display: none; }
+  /* Les deux versions sont superposées et s'échangent en fondu, au rythme du fond de la barre (0,35 s). */
+  .nav-exp-bloc { position: relative; }
+  .nav-exp-bloc :global(.nav-exp-noir), .nav-exp-bloc :global(.nav-exp-blanc) { transition: opacity .35s ease, height .35s ease, width .35s ease; }
+  .nav-exp-bloc :global(.nav-exp-blanc) { position: absolute; right: 0; top: 50%; transform: translateY(-50%); opacity: 0; }
+  .nav[data-sombre]:not([data-reduit]) .nav-exp-bloc :global(.nav-exp-blanc) { opacity: 1; }
+  .nav[data-sombre]:not([data-reduit]) .nav-exp-bloc :global(.nav-exp-noir) { opacity: 0; }
   .nav[data-reduit] .nav-exp-bloc :global(.nav-exp) { height: 25px; width: calc(25px * 277.4 / 150); }
   .nav[data-reduit] .nav-exp-trait { height: 22px; }
   .menu-mobile-marque { display: inline-flex; align-items: center; gap: 10px; }
