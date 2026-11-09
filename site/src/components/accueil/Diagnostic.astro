@@ -19,12 +19,12 @@ const d = await dicoAccueil(lang);
   </div>
 </section>
 <style>
-  .diag { position: relative; background: var(--avt-ecru); padding: 120px var(--marge); display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
-  .diag h2 { font-size: 48px; margin-bottom: 20px; }
+  .diag { position: relative; background: var(--avt-ecru); padding: calc(120 * var(--px-h)) var(--marge); display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+  .diag h2 { font-size: calc(48 * var(--px-h)); margin-bottom: 20px; }
   .diag-texte { font-size: 17px; line-height: 1.6; margin-bottom: 28px; max-width: 44ch; }
   .diag-livrables { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
   .diag-livrable { background: var(--avt-galet); border-radius: 12px; padding: 24px; min-height: 150px; display: flex; flex-direction: column; justify-content: space-between; }
-  .diag-livrable b { font-family: var(--avt-font-display); font-weight: 400; font-size: 40px; color: var(--avt-klein); line-height: 1; }
+  .diag-livrable b { font-family: var(--avt-font-display); font-weight: 400; font-size: calc(40 * var(--px-h)); color: var(--avt-klein); line-height: 1; }
   .diag-livrable span { font-size: 14px; }
   @media (max-width: 899px) {
     .diag { padding: 64px var(--marge-m); grid-template-columns: 1fr; gap: 28px; }

@@ -17,6 +17,10 @@
   --nav-h-mobile: 64px;
   --marge: max(64px, calc((100vw - 1312px) / 2)); /* marge latérale desktop (maquette 1440) ; au-delà de 1440 px, le contenu reste à 1312 px et se centre (D-36, ticket n° 65) */
   --marge-m: 20px;          /* marge latérale mobile (maquette 390) */
+  /* Pixel « suivant la hauteur » (story 8.27) : vaut 1px sur un écran de 800 px de haut ou plus, et sur téléphone.
+     Sur un portable moins haut (ex. 1280 × 630 à 150 % dans Windows), il descend jusqu'à 0,7px. Les grands titres et
+     les grands espaces s'écrivent calc(84 * var(--px-h)) : 84 px sur grand écran, moins sur un portable. Texte courant inchangé. */
+  --px-h: 1px;
   --ease-titre: cubic-bezier(.44, 0, .56, 1);
   --ease-bloc: cubic-bezier(.22, 1, .36, 1);
   --filet-brun: rgba(38, 32, 26, .08);
@@ -25,6 +29,8 @@
   --voile-ecru: rgba(247, 242, 234, .86);
   --avt-font-main: 'Caveat', 'Segoe Print', cursive; /* notes manuscrites (D-42) */
 }
+@media (min-width: 900px) { :root { --px-h: clamp(.7px, calc(100vh / 800), 1px); } }
+
 
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }

@@ -50,31 +50,31 @@ const x = await textes('acheter');
   <div class="ac-cta"><a href={`${r('contact')}?projet=achat#ecrire`} class="btn btn-primaire">{x.bouton}</a></div>
 </Page>
 <style>
-  .ac-tete { padding: 88px var(--marge) 40px; }
+  .ac-tete { padding: calc(88 * var(--px-h)) var(--marge) 40px; }
   .ac-tete-rang { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
-  .ac-tete h1 { font-size: 84px; line-height: 1; }
+  .ac-tete h1 { font-size: calc(84 * var(--px-h)); line-height: 1; }
   .ac-tete p { font-size: 19px; line-height: 1.6; max-width: 56ch; }
-  .ac-profils { padding: 0 var(--marge) 96px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+  .ac-profils { padding: 0 var(--marge) calc(96 * var(--px-h)); display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
   .ac-profils section { border-top: 1px solid var(--avt-brun); padding-top: 24px; }
   .ac-profils h2 { font-family: var(--avt-font-text); margin-bottom: 12px; }
-  .ac-profils h3 { font-size: 36px; margin-bottom: 14px; }
+  .ac-profils h3 { font-size: calc(36 * var(--px-h)); margin-bottom: 14px; }
   .ac-profils p { font-size: 17px; line-height: 1.7; max-width: 52ch; }
-  .ac-recherche { background: var(--avt-brume); padding: 96px var(--marge); }
-  .ac-recherche h2 { font-size: 52px; margin-bottom: 16px; }
-  .ac-recherche-intro { font-size: 17px; line-height: 1.6; margin-bottom: 56px; max-width: 58ch; }
+  .ac-recherche { background: var(--avt-brume); padding: calc(96 * var(--px-h)) var(--marge); }
+  .ac-recherche h2 { font-size: calc(52 * var(--px-h)); margin-bottom: 16px; }
+  .ac-recherche-intro { font-size: 17px; line-height: 1.6; margin-bottom: calc(56 * var(--px-h)); max-width: 58ch; }
   .ac-temps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; }
   .ac-temp { display: flex; flex-direction: column; gap: 12px; }
-  .ac-num { font-family: var(--avt-font-display); font-size: 44px; line-height: 1; color: var(--avt-terra); }
+  .ac-num { font-family: var(--avt-font-display); font-size: calc(44 * var(--px-h)); line-height: 1; color: var(--avt-terra); }
   .ac-temp h3 { font-size: 28px; margin-bottom: 12px; }
   .ac-temp p { font-size: 16px; line-height: 1.6; }
-  .ac-espace { padding-top: 96px; }
-  .ac-avis { padding: 96px var(--marge) 0; }
-  .ac-avis h2 { font-size: 40px; margin-bottom: 10px; }
+  .ac-espace { padding-top: calc(96 * var(--px-h)); }
+  .ac-avis { padding: calc(96 * var(--px-h)) var(--marge) 0; }
+  .ac-avis h2 { font-size: calc(40 * var(--px-h)); margin-bottom: 10px; }
   .ac-avis-intro { font-size: 15px; color: var(--avt-text-muted); margin-bottom: 40px; max-width: 64ch; }
   .ac-avis-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: stretch; }
   .ac-avis-lien { margin-top: 10px; font-size: 14.5px; }
   .ac-avis-tous { margin-top: 32px; font-size: 13.5px; }
-  .ac-cta { padding: 56px var(--marge) 96px; }
+  .ac-cta { padding: calc(56 * var(--px-h)) var(--marge) calc(96 * var(--px-h)); }
   @media (max-width: 899px) {
     .ac-tete { padding: 40px var(--marge-m) 24px; }
     .ac-tete-rang { margin-bottom: 14px; }

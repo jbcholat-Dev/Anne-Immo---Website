@@ -77,8 +77,8 @@ if (campagne) Object.assign(T, {
   </section>
 </Page>
 <style>
-  .ds { max-width: 620px; margin: 0 auto; padding: 96px var(--marge-m) 120px; display: flex; flex-direction: column; gap: 20px; align-items: flex-start; }
-  .ds h1 { font-size: 44px; line-height: 1.1; }
+  .ds { max-width: 620px; margin: 0 auto; padding: calc(96 * var(--px-h)) var(--marge-m) calc(120 * var(--px-h)); display: flex; flex-direction: column; gap: 20px; align-items: flex-start; }
+  .ds h1 { font-size: calc(44 * var(--px-h)); line-height: 1.1; }
   .ds form { display: flex; flex-direction: column; gap: 20px; align-items: flex-start; }
   .ds p { font-size: 17px; line-height: 1.6; }
   @media (max-width: 899px) { .ds { padding: 48px var(--marge-m) 72px; } .ds h1 { font-size: 32px; } }

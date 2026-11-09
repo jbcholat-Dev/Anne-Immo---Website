@@ -36,10 +36,10 @@ const liste = await Promise.all((await partenaires()).map(async (p) => ({ p, log
   )}
 </Page>
 <style>
-  .index-tete { padding: 96px var(--marge) 40px; }
-  .index-tete h1 { font-size: 72px; margin-bottom: 16px; }
+  .index-tete { padding: calc(96 * var(--px-h)) var(--marge) 40px; }
+  .index-tete h1 { font-size: calc(72 * var(--px-h)); margin-bottom: 16px; }
   .index-tete p { font-size: 18px; line-height: 1.6; max-width: 56ch; }
-  .partenaires { padding: 0 var(--marge) 120px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px 40px; }
+  .partenaires { padding: 0 var(--marge) calc(120 * var(--px-h)); display: grid; grid-template-columns: 1fr 1fr; gap: 48px 40px; }
   .partenaire { display: grid; grid-template-columns: auto 1fr; gap: 24px; align-items: start; }
   .partenaire-logo { width: 120px; height: 120px; border-radius: 12px; overflow: hidden; background: var(--avt-galet); }
   .partenaire-logo :global(picture), .partenaire-logo :global(img) { width: 100%; height: 100%; }
@@ -48,8 +48,8 @@ const liste = await Promise.all((await partenaires()).map(async (p) => ({ p, log
   .partenaire-activite { font-size: 14px; color: var(--avt-text-muted); margin-bottom: 12px; }
   .partenaire-texte { font-size: 16px; line-height: 1.6; margin-bottom: 12px; }
   .partenaire-texte :global(p) { margin: 0 0 10px; }
-  .index-vide { padding: 0 var(--marge) 120px; max-width: 48ch; }
-  .index-vide h2 { font-size: 44px; margin-bottom: 14px; }
+  .index-vide { padding: 0 var(--marge) calc(120 * var(--px-h)); max-width: 48ch; }
+  .index-vide h2 { font-size: calc(44 * var(--px-h)); margin-bottom: 14px; }
   .index-vide p { font-size: 15px; line-height: 1.6; margin-bottom: 24px; }
   @media (max-width: 899px) {
     .index-tete { padding: 48px var(--marge-m) 28px; }

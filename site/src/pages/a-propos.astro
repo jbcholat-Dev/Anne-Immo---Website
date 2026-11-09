@@ -156,21 +156,21 @@ for (const rg of methode.rangs) {
 </script>
 
 <style>
-  .ap-tete { padding: 88px var(--marge) 40px; }
-  .ap-tete h1 { font-size: 84px; line-height: 1; margin-bottom: 18px; }
+  .ap-tete { padding: calc(88 * var(--px-h)) var(--marge) 40px; }
+  .ap-tete h1 { font-size: calc(84 * var(--px-h)); line-height: 1; margin-bottom: 18px; }
   .ap-tete p { font-size: 19px; line-height: 1.6; max-width: 56ch; }
   .ap-repere { position: sticky; top: calc(var(--nav-h) + 10px); z-index: 4; background: rgba(247, 242, 234, .94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-top: 1px solid var(--filet-brun); border-bottom: 1px solid var(--filet-brun); padding: 0 var(--marge); }
   .ap-repere nav { display: flex; gap: 36px; font-size: 15px; }
   .ap-repere a { color: var(--avt-brun); padding: 20px 0; border-bottom: 2.5px solid transparent; }
   .ap-repere a[aria-current] { color: var(--avt-klein); border-bottom-color: var(--avt-terra); font-weight: 500; }
   section { scroll-margin-top: calc(var(--nav-h) + 78px); }
-  .ap-qui { padding: 72px var(--marge) 96px; display: grid; grid-template-columns: 520px 1fr; gap: 96px; align-items: start; }
+  .ap-qui { padding: calc(72 * var(--px-h)) var(--marge) calc(96 * var(--px-h)); display: grid; grid-template-columns: 520px 1fr; gap: 96px; align-items: start; }
   .ap-portrait { position: sticky; top: calc(var(--nav-h) + 24px); display: flex; flex-direction: column; gap: 18px; }
   .ap-portrait :global(.ap-portrait-reserve) { height: 660px; }
   .ap-langues { font-size: 13.5px; letter-spacing: .1em; color: var(--avt-text-muted); }
   .ap-zone { font-size: 14px; }
   .ap-texte { max-width: 62ch; font-size: 17px; line-height: 1.75; }
-  .ap-nom { font-size: 64px; line-height: 1.02; margin-bottom: 53px; }
+  .ap-nom { font-size: calc(64 * var(--px-h)); line-height: 1.02; margin-bottom: calc(53 * var(--px-h)); }
   /* Ligne signature sous le nom de famille, comme dans le logo (ticket n° 143). */
   .ap-nom-famille { position: relative; display: inline-block; white-space: nowrap; }
   .ap-nom-famille :global(.ap-signature) { position: absolute; left: 0; top: calc(100% + 8px); width: 100% !important; height: 9px !important; }
@@ -193,11 +193,11 @@ for (const rg of methode.rangs) {
   .ap-methode { border-top: 1px solid var(--filet-brun-fort); padding-top: 8px; }
   .ap-video { margin: 0 var(--marge); background: var(--avt-galet); border-radius: 16px; padding: 40px 48px; }
   .ap-video video { width: 100%; border-radius: 12px; margin-top: 18px; }
-  .ap-methode-tete { padding: 96px var(--marge) 80px; }
-  .ap-methode-tete h2 { font-size: 64px; line-height: 1.02; margin-bottom: 20px; }
+  .ap-methode-tete { padding: calc(96 * var(--px-h)) var(--marge) calc(80 * var(--px-h)); }
+  .ap-methode-tete h2 { font-size: calc(64 * var(--px-h)); line-height: 1.02; margin-bottom: 20px; }
   .ap-methode-sous { font-size: 22px; line-height: 1.4; color: var(--avt-klein); font-weight: 500; margin-bottom: 18px; }
   .ap-methode-intro { font-size: 19px; line-height: 1.6; max-width: 48ch; }
-  .ap-piliers { padding: 0 var(--marge) 96px; display: flex; flex-direction: column; gap: 64px; }
+  .ap-piliers { padding: 0 var(--marge) calc(96 * var(--px-h)); display: flex; flex-direction: column; gap: 64px; }
   .ap-rang { display: grid; grid-template-columns: 320px 1fr; gap: 80px; }
   .ap-rang-centre { grid-template-columns: minmax(320px, 420px) 1fr; align-items: center; }
   .ap-rang-centre .ap-boutons { margin-top: 24px; }
@@ -216,7 +216,7 @@ for (const rg of methode.rangs) {
   .ap-acteurs li { padding: 9px 0; border-top: 1px solid var(--filet-brun); font-size: 15.5px; line-height: 1.4; margin: 0 !important; }
   .ap-acteurs li:last-child { border-bottom: 1px solid var(--filet-brun); }
   .ap-acteur { font-weight: 500; }
-  .ap-etapes .ap-rang { position: relative; display: grid; grid-template-columns: 420px minmax(0, 1fr); gap: 80px; padding-bottom: 56px; }
+  .ap-etapes .ap-rang { position: relative; display: grid; grid-template-columns: 420px minmax(0, 1fr); gap: 80px; padding-bottom: calc(56 * var(--px-h)); }
   .ap-etapes .ap-etape-tete { align-items: flex-start; gap: 24px; margin: 0; }
   .ap-etapes .ap-num { width: 56px; height: 56px; border-radius: 50%; background: var(--avt-klein); color: var(--avt-ecru); display: grid; place-items: center; font-size: 22px; position: relative; z-index: 1; }
   .ap-etapes .ap-etape-tete h4 { padding-top: 8px; }
@@ -224,24 +224,24 @@ for (const rg of methode.rangs) {
   .ap-etapes .ap-rang:not(:last-child)::after { content: ''; position: absolute; left: 23px; bottom: 8px; width: 8px; height: 8px; border-right: 1.5px solid var(--avt-terra); border-bottom: 1.5px solid var(--avt-terra); transform: rotate(45deg); }
   .ap-etapes .ap-acteurs { grid-template-columns: 1fr 1fr; column-gap: 32px !important; }
   .ap-etapes .ap-acteurs li:nth-last-child(2) { border-bottom: 1px solid var(--filet-brun); }
-  .ap-rang h3 { font-size: 44px; }
+  .ap-rang h3 { font-size: calc(44 * var(--px-h)); }
   .ap-rang h4 { font-size: 34px; }
-  .ap-concretement h3 { font-size: 44px; }
+  .ap-concretement h3 { font-size: calc(44 * var(--px-h)); }
   .ap-rang-texte { max-width: 64ch; font-size: 17px; line-height: 1.7; }
   .ap-rang-texte p + p { margin-top: 16px; }
   .ap-avant-grille { margin-bottom: 20px; }
   .ap-coordonne { font-weight: 500; color: var(--avt-klein); }
-  .ap-cible { background: var(--avt-brume); padding: 96px var(--marge); }
+  .ap-cible { background: var(--avt-brume); padding: calc(96 * var(--px-h)) var(--marge); }
   .ap-cible-tete { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
-  .ap-cible h2 { font-size: 48px; }
+  .ap-cible h2 { font-size: calc(48 * var(--px-h)); }
   .ap-cible-intro { font-size: 17px; line-height: 1.6; margin-bottom: 40px; max-width: 58ch; }
   .ap-cibles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; }
   .ap-cibles div { border-top: 1px solid var(--avt-brun); padding-top: 18px; }
   .ap-cibles h3 { font-family: var(--avt-font-text); margin: 0 0 10px; }
   .ap-cibles p { font-size: 16px; line-height: 1.6; }
   .ap-cibles .ap-md :global(p) { margin-bottom: 0; }
-  .ap-reseau { padding: 96px var(--marge); display: grid; grid-template-columns: 320px 1fr; gap: 80px; border-bottom: 1px solid var(--filet-brun); }
-  .ap-reseau h2 { font-size: 48px; }
+  .ap-reseau { padding: calc(96 * var(--px-h)) var(--marge); display: grid; grid-template-columns: 320px 1fr; gap: 80px; border-bottom: 1px solid var(--filet-brun); }
+  .ap-reseau h2 { font-size: calc(48 * var(--px-h)); }
   .ap-reseau-texte { max-width: 64ch; font-size: 17px; line-height: 1.7; }
   .ap-reseau-texte :global(h3) { font-size: 28px; margin: 28px 0 10px; }
   .ap-espace { height: 96px; }

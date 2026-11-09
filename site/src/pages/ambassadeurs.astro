@@ -145,7 +145,7 @@ const questions = [
 <style>
   .am-etiquette { margin: 0; font-size: 13px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--avt-klein); }
   .am-bleu { color: var(--avt-klein); }
-  .am-haut { padding: 104px 20px 40px; display: flex; flex-direction: column; gap: 32px; }
+  .am-haut { padding: calc(104 * var(--px-h)) 20px 40px; display: flex; flex-direction: column; gap: 32px; }
   .am-texte { display: flex; flex-direction: column; gap: 16px; }
   .am-sur { display: flex; align-items: center; gap: 12px; }
   .am-sur :global(.am-pastille), .am-sur :global(.am-pastille img) { width: 56px; height: 56px; border-radius: 999px; object-fit: cover; object-position: 62% 22%; display: block; }
@@ -167,14 +167,14 @@ const questions = [
   .am-gauche { display: flex; flex-direction: column; gap: 16px; }
   .am-merci { background: var(--avt-brume); border-radius: 12px; padding: 22px 20px; display: flex; flex-direction: column; gap: 8px; }
   .am-merci p { margin: 0; font-size: 15px; }
-  .am-montant { font-family: var(--avt-font-display); font-size: 40px !important; line-height: 1.05; color: var(--avt-klein); }
+  .am-montant { font-family: var(--avt-font-display); font-size: calc(40 * var(--px-h)) !important; line-height: 1.05; color: var(--avt-klein); }
   .am-donnees { margin: 0; font-size: 14px; }
   .am-droite form { display: flex; flex-direction: column; gap: 14px; }
   .am-droite h2 { margin: 0 0 4px; font-size: 30px; line-height: 1.2; }
   .am-champs { display: grid; grid-template-columns: 1fr; gap: 12px; }
   .am-bouton { align-self: stretch; min-height: 56px; }
   [data-amb-page][hidden], .am-fini[hidden], .am-fini [hidden] { display: none; }
-  .am-fini { padding: 104px 20px 64px; min-height: 80vh; }
+  .am-fini { padding: calc(104 * var(--px-h)) 20px calc(64 * var(--px-h)); min-height: 80vh; }
   .am-fini-dedans { max-width: 640px; display: flex; flex-direction: column; gap: 16px; outline: none; }
   .am-fini-titre { margin: 0; font-size: 34px; line-height: 1.14; }
   .am-fini-dedans > p { margin: 0; font-size: 17px; line-height: 1.6; }
@@ -185,7 +185,7 @@ const questions = [
   .am-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
   .am-actions .btn { justify-content: center; }
   .am-plus-tard { margin-top: 24px !important; font-size: 15px !important; }
-  .am-faq { padding: 8px 20px 56px; display: flex; flex-direction: column; gap: 14px; }
+  .am-faq { padding: 8px 20px calc(56 * var(--px-h)); display: flex; flex-direction: column; gap: 14px; }
   .am-grille { display: grid; grid-template-columns: 1fr; gap: 14px; }
   .am-q { border-top: 1px solid rgba(38, 32, 26, .12); padding-top: 14px; }
   .am-q-titre { margin: 0; font-weight: 500; }
