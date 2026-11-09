@@ -45,7 +45,21 @@ Donc : dans le boîtage, R1 et R2 sont des **nombres** (combien de premiers et d
 
 ## Ce qui reste
 
-- Revue de code (`bmad-code-review`, session neuve, CLAUDE.md § 2, story 9.8) : la PR touche `espace/src/` ; à faire avant de la sortir du brouillon.
+- Revue de code (`bmad-code-review`, session neuve, CLAUDE.md § 2, story 9.8) : faite le 2026-11-09, voir ci-dessous ; la PR peut sortir du brouillon.
 - Mise en ligne : la migration 0024 part sur la base de production à la construction de `main` ; elle est additive, sans risque pour les données existantes.
 - Anne : vérifier que les libellés lui conviennent, et dire si elle veut un filtre sur R1/R2 dans Contacts ou ces dates sur l'ancienne fiche de suivi.
 - Pistes, non demandées : rendez-vous par passage dans le bilan du boîtage, contacts « R1 sans R2 ».
+
+## Revue de code
+
+Le 2026-11-09, PR #259, commit relu 6d8e57f (`git diff 6d8e57f~1..6d8e57f`), session neuve qui n'a pas écrit le code. Aucun défaut réel trouvé : rien à corriger dans le code, le commit « Espace 18.20 (revue) » ne porte que cette section.
+
+- SQL dynamique de `corrigerBoitage` : écarté : les noms de colonnes viennent d'une table fixe, `verifierBoitage` refuse toute clé hors liste avant (donc ni `__proto__` ni `constructor`), les valeurs sont liées.
+- Validation de r1 et r2 du boîtage (entiers de 0 à 9 999, JSON et formulaire /ajouter) : écarté : un texte, un décimal, un négatif et 10 000 sont refusés des deux côtés ; l'e-mail de la saisie /ajouter passe par le même `verifierBoitage`.
+- Dates r1_le et r2_le de la fiche : écarté : `jourValide` refuse les dates impossibles, l'ordre R2 après R1 est contrôlé sur les valeurs finales (y compris une date seule contre celle déjà en base), refus 400 « ordre », rien d'écrit.
+- Accès : écarté : `/api/boitage` et `/api/fiche` refusent toujours le jeton de Claude (403, vérifié par l'essai) ; r1_le et r2_le ne figurent ni dans les outils d'import ni dans les réponses de Claude.
+- Migration 0024 : écarté : quatre `ADD COLUMN` facultatifs avec CHECK (NULL passe), aucune reconstruction de table ni donnée touchée, anciennes colonnes r1 et r2 conservées ; appliquée sans erreur sur une base locale.
+- /ajouter (formulaire contact, choix du passage) : écarté : le choix du passage lit toujours `secteur` (tenu à jour), seul le libellé « mots » devient « flyers » ; le coût reste saisi uniquement ici.
+- Tableau des contacts (tri, masquage, ordre gardé dans le navigateur) : écarté : dates ISO triées comme du texte, vides toujours en fin, nouvelles colonnes ajoutées à la fin d'un ordre déjà gardé.
+- Avant-image AD-29 : écarté : r1_le et r2_le sont dans l'état lu, la garde de concurrence et le libellé de l'événement ; comme « à rappeler le », ils ne sont pas annulables par la pile d'annulation de classement, ce qui est voulu.
+- Vérifications : `cd espace && npm run build && npm run check` : 0 erreur ; `E2E_1820_SEUL=1 node scripts/e2e-espace.mjs` : tous les constats verts (la seule « échec » est l'arrêt volontaire du mode seul).
