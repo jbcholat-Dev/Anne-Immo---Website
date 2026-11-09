@@ -126,7 +126,7 @@ development_status:
   8-25-logo-exp-le-p-n-est-plus-rogné: done   # 2026-11-02, PR n° 228 fusionnée sur l'accord de JB, retour de JB : jambage du « p » d'eXp rogné ; marge de 3 unités dans les cadres des SVG eXp
   8-26-ouverture-à-la-hauteur-de-l-écran: done   # 2026-11-09, PR n° 260 fusionnée (accord de JB), retour de JB : sur un portable, nom coupé et boutons invisibles ; l'ouverture (vidéo seule) = hauteur de l'écran, décision de JB ; revue de code faite
   8-27-pages-à-l-échelle-des-écrans-de-portable: done   # 2026-11-09, PR n° 260 fusionnée (accord de JB), retour de JB sur /vendre : grands titres et espaces suivent la hauteur de l'écran (--px-h) ; grands écrans et téléphone identiques au pixel près
-  8-28-logo-exp-dans-la-barre-de-navigation: review   # 2026-11-09, demande de JB : symbole + eXp dans la barre (D-50)
+  8-28-logo-exp-dans-la-barre-de-navigation: done   # 2026-11-09, PR n° 262 fusionnée (accord de JB), demande de JB : symbole + eXp dans la barre (D-50)
   epic-8-retrospective: optional
 
   epic-9: in-progress
