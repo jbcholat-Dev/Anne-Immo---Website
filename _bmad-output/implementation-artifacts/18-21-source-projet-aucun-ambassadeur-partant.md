@@ -12,7 +12,7 @@ Epic 18 (le carnet de contacts). Statut : review. Date : 2026-11-10. Origine : t
 
 ## Décisions (prises par le fil, à relire par JB et Anne)
 
-- **Projet « Aucun »** (n° 266) : valeur `aucun` de `contact.projet`, libellé « Aucun », placée juste après « À qualifier » dans toutes les listes. Pas de température (comme « à qualifier » et « ambassadeur ») : le CHECK de cohérence la range avec eux. Une nouvelle demande du site ne remplace pas ce projet (le code ne remplace que « à qualifier » et « ambassadeur »).
+- **Projet « Aucun »** (n° 266) : valeur `aucun` de `contact.projet`, libellé « Aucun », placée juste après « À qualifier » dans toutes les listes. Pas de température (comme « à qualifier » et « ambassadeur ») : le CHECK de cohérence la range avec eux. Une demande de vente ou d'achat envoyée depuis le site par un contact du carnet « Aucun » lui donne le projet de la demande, comme pour « à qualifier » et « ambassadeur » (revue de code).
 - **Source = origine d'affaires, stockée dans `contact.canal`** (n° 265) : pas de nouvelle colonne, la colonne existante `canal` (qui sert déjà au bilan par canal) devient ce que la colonne « Source » du tableau montre et modifie. Six choix, dans l'ordre d'Anne : Pige (`pige`, nouveau), Boîtage (`boitage`), Portails d'annonce (`portail`), Reco (`recommandation`), Évènementiel (`evenement`), Autres (`autre`), plus un choix vide « Aucune ». Les canaux `site`, `reseaux`, `rencontre` restent valables en base : un contact qui en a un le garde et l'affiche (Site, Réseaux, Rencontre) tant qu'Anne ne le change pas, mais ils ne sont plus proposés.
 - **Les sources d'import quittent le tableau** (Téléphone, LinkedIn, Fichier de suivi, Saisie à la main, Animations EDB…) : elles restent visibles sur la fiche seulement, en une petite ligne « Importé depuis : … ». Le filtre « Source » filtre le canal.
 - **Vues enregistrées** : la clé de filtre `source` (sources d'import) disparaît du vocabulaire, remplacée par `canal`. Une vue enregistrée avec l'ancienne clé n'est pas lue de travers : elle est signalée « à refaire » (mécanisme existant : « un filtre n'est plus reconnu », filtre vide, aucun contact) et la page s'ouvre sans erreur. Écrire une vue avec l'ancienne clé est refusé (400).
@@ -43,9 +43,19 @@ Epic 18 (le carnet de contacts). Statut : review. Date : 2026-11-10. Origine : t
 - Régressions : `E2E_1820_SEUL=1` (54 constats verts, 0 rouge) et `E2E_1819_SEUL=1` (53 constats verts, 0 rouge) ; la ligne finale « 1 échec(s) » de ces blocs seuls est l'erreur volontaire « terminé » qui arrête l'essai, comme avant.
 - Essai complet de 25 minutes non rejoué (consigne : blocs seuls) : il contient les deux constats adaptés (18.5 filtre Source, 18.7 création à la main).
 
+## Revue de code
+
+2026-11-10, `bmad-code-review` en session neuve, commit 63daee4 relu (diff aea829b..63daee4), avant tout envoi sur GitHub. Aucun constat bloquant. Répétition de 0025, constructions et vérifications rejouées par le relecteur : au vert.
+
+1. Relance de 0025 après un arrêt juste après `DROP TABLE contact` : écarté, défaut hérité de 0020 ; D1 applique chaque fichier de migration d'un seul bloc, et la consigne interdit `--remote` à la main (l'export de production avant l'envoi reste conseillé, voir « Ce qui reste »).
+2. Un contact « Aucun » qui fait une demande de vente ou d'achat depuis le site gardait « Aucun » sans projet : corrigé (`site/src/server/contacts.ts`, « aucun » ajouté aux projets remplacés par la demande ; la température suit).
+3. Changer la source garde l'action marketing liée (`action_id`) : écarté, la source est l'origine d'affaires choisie par Anne ; l'action garde la trace de la campagne ; le changement est annulable (AD-29).
+4. « Partant » du même vert qu'« Inscrit » : écarté, c'est ce que demande le ticket n° 264 ; le libellé les distingue.
+5. « Pige » proposé aussi par /contacts/fiche, le filtre des campagnes et le bilan : écarté, sans effet (aucune action ne porte ce canal, le CHECK l'accepte) ; /ajouter le veut.
+6. Vues enregistrées sur l'ancienne clé `source` : écarté, déjà écrit (« à refaire », aucun contact gardé, rien ne part en campagne).
+
 ## Ce qui reste
 
 - **JB : accord écrit avant tout `push`** de la migration 0025 (elle reconstruit `contact`). Conseillé : un export de la base de production juste avant (RUNBOOK), puis pousser sur une branche, laisser la construction Cloudflare appliquer la migration, vérifier sur l'aperçu le nombre de contacts avant / après.
-- Revue de code (`bmad-code-review`, session neuve, CLAUDE.md § 2, story 9.8) : non faite ; la PR reste en brouillon d'ici là.
 - Anne : vérifier les libellés (« Aucune » pour le choix vide, « Autres » au pluriel comme elle l'a écrit, « Partant »), et dire si les contacts aux anciens canaux (Site, Réseaux, Rencontre) doivent être reclassés d'office.
 - Pistes, non demandées : action groupée « source » ou « partant » sur les cases cochées ; « pige » comme canal des actions marketing (demanderait de reconstruire `action_marketing`) ; reclasser les anciens canaux.
