@@ -4,7 +4,7 @@
 // de service de Claude refusé (403) ; corps en JSON seulement, 20 000 caractères au plus (413).
 //   GET  /api/fiche?id=…                                  → 200 { ok, fiche }            ; 404 contact inconnu
 //   POST /api/fiche { id, corriger: { prenom?, nom?, entreprise?, commune?, telephones?, emails?, categorie_id?, projet?,
-//                     temperature?, verifie?, ecarte?, appel_autorise?, a_rappeler_le?, r1_le?, r2_le? } }
+//                     temperature?, verifie?, ecarte?, appel_autorise?, a_rappeler_le?, r1_le?, r2_le?, canal?, partant? } }
 //        → 200 { ok, fiche, ligne, changes, ignore } ; 409 { error: { code: 'existant' }, existant: { id, nom } } (téléphone ou
 //          e-mail d'un autre contact) ; 409 'modifie' (contact changé entre la lecture et l'écriture)
 //   POST /api/fiche { id, note: "…" }                     → 200 { ok, fiche, ligne }
@@ -16,6 +16,8 @@
 // Revue de code 18.7 : une correction qui ajoute un téléphone ou un e-mail d'une personne en opposition → 409 'opposition' ;
 // sans LIEN_SECRET et avec une liste d'opposition non vide, création et ajout de coordonnée → 503 'opposition_indisponible'.
 // Story 18.20 : r1_le et r2_le, dates AAAA-MM-JJ (ou null pour effacer) du premier et du second rendez-vous ; R2 avant R1 → 400 'ordre'.
+// Story 18.21 : projet « aucun » (sans température) ; canal = la source (pige, boitage, portail, recommandation, evenement, autre, ou null) ;
+// partant = ambassadeur « partant » (true : daté d'aujourd'hui, false : retiré). La fiche renvoie aussi `canal` et `ambassadeur_partant_le`.
 // 400 pour toute valeur hors vocabulaire. Réponses `{ ok, ... }` ou `{ ok: false, error: { code, message } }`.
 import type { APIRoute } from 'astro';
 import { ENTETE_COMPTE } from '@site/server/acces';

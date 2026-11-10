@@ -25,7 +25,7 @@ import { empreinteOpposition } from '@site/server/opposition';
 import { e164, emailValide } from '@site/server/schema';
 import { journal } from '@site/server/journal';
 import { accordImport, noterAccord, retraitAccordImport, retraitAccordNote } from './accord';
-import { PROJETS, PROJETS_DU_SUIVI, TEMPERATURES_CHOIX, suiviEnCours, temperaturePermise } from './tableau-colonnes';
+import { CANAUX_SOURCE_CHOIX, PROJETS, PROJETS_DU_SUIVI, TEMPERATURES_CHOIX, suiviEnCours, temperaturePermise } from './tableau-colonnes';
 
 /** Au plus 2 000 contacts par lot (le classement de départ se fait par vues de quelques centaines). */
 export const MAX_LOT = 2000;
@@ -42,14 +42,18 @@ export interface Changements {
   verifie?: boolean;
   /** true : écarter ; false : faire revenir. */
   ecarte?: boolean;
+  /** Source = origine d'affaires (`contact.canal`, story 18.21, ticket n° 265) : l'un des six choix d'Anne, ou null pour l'effacer. */
+  canal?: string | null;
+  /** Ambassadeur « partant » (story 18.21, ticket n° 264) : true = noté aujourd'hui (la date déjà notée est gardée), false = retiré. Posé à la main seulement. */
+  partant?: boolean;
   /** Interne (story 18.15, retrait d'une catégorie) : changer la catégorie sans marquer vérifié. Jamais lu de l'API. */
   sansVerifier?: boolean;
 }
 
 /** Les colonnes de classement, telles qu'en base. */
-interface Classement { categorie_id: string | null; projet: string; temperature: string | null; verifie_le: string | null; ecarte_le: string | null }
+interface Classement { categorie_id: string | null; projet: string; temperature: string | null; verifie_le: string | null; ecarte_le: string | null; canal: string | null; ambassadeur_partant_le: string | null }
 type Colonne = keyof Classement;
-const COLONNES: Colonne[] = ['categorie_id', 'projet', 'temperature', 'verifie_le', 'ecarte_le'];
+const COLONNES: Colonne[] = ['categorie_id', 'projet', 'temperature', 'verifie_le', 'ecarte_le', 'canal', 'ambassadeur_partant_le'];
 interface Etat extends Classement { id: string; etape: string | null }
 
 /** Lit la liste des identifiants : 1 à 2 000 ULID, doublons retirés ; ou le message d'erreur. */
@@ -75,9 +79,12 @@ export function lireChangements(brut: unknown, categories: ReadonlySet<string>):
       case 'temperature':
         if (v !== null && !(typeof v === 'string' && (TEMPERATURES_CHOIX as readonly string[]).includes(v))) return 'Température inconnue ou réservée au suivi des ventes.';
         ch.temperature = v as string | null; break;
-      case 'verifie': case 'ecarte':
+      case 'verifie': case 'ecarte': case 'partant':
         if (typeof v !== 'boolean') return `${cle} : vrai ou faux attendu.`;
         ch[cle] = v; break;
+      case 'canal':
+        if (v !== null && !(typeof v === 'string' && CANAUX_SOURCE_CHOIX.some(([k]) => k === v))) return 'Source inconnue.';
+        ch.canal = v as string | null; break;
       default: return `Changement inconnu : ${cle.slice(0, 40)}`;
     }
   }
@@ -90,11 +97,13 @@ export function lireChangements(brut: unknown, categories: ReadonlySet<string>):
  * demandée ne s'applique pas à ce contact (projet sans température ou incompatible, ou contact suivi).
  */
 export function appliquer(e: Etat, ch: Changements, maintenant: string): { apres: Classement; ignore: boolean } {
-  const a: Classement = { categorie_id: e.categorie_id, projet: e.projet, temperature: e.temperature, verifie_le: e.verifie_le, ecarte_le: e.ecarte_le };
+  const a: Classement = { categorie_id: e.categorie_id, projet: e.projet, temperature: e.temperature, verifie_le: e.verifie_le, ecarte_le: e.ecarte_le, canal: e.canal, ambassadeur_partant_le: e.ambassadeur_partant_le };
   let ignore = false;
   if (ch.categorie_id !== undefined) { a.categorie_id = ch.categorie_id; if (!ch.sansVerifier) a.verifie_le ??= maintenant; }
   if (ch.verifie !== undefined) a.verifie_le = ch.verifie ? a.verifie_le ?? maintenant : null;
   if (ch.ecarte !== undefined) a.ecarte_le = ch.ecarte ? a.ecarte_le ?? maintenant : null;
+  if (ch.canal !== undefined) a.canal = ch.canal;
+  if (ch.partant !== undefined) a.ambassadeur_partant_le = ch.partant ? a.ambassadeur_partant_le ?? jourParisDe(Date.parse(maintenant)) : null;
   if (ch.projet !== undefined) {
     a.projet = ch.projet;
     if (!temperaturePermise(a.temperature, a.projet)) a.temperature = null;
@@ -110,7 +119,7 @@ export function appliquer(e: Etat, ch: Changements, maintenant: string): { apres
 }
 
 /** Une ligne du tableau après écriture : de quoi la page se met à jour sans recharger. */
-export interface LigneClassee { id: string; categorie_id: string | null; categorie: string | null; projet: string; temperature: string | null; verifie: boolean; ecarte: boolean }
+export interface LigneClassee { id: string; categorie_id: string | null; categorie: string | null; projet: string; temperature: string | null; verifie: boolean; ecarte: boolean; canal: string | null; ambassadeur_partant: boolean }
 
 /** `garde` : `etape` et les colonnes telles que lues avant le lot ; l'écriture n'a lieu que si le contact n'a pas changé depuis. */
 interface Ecriture { id: string; avant: Partial<Classement>; apres: Partial<Classement>; garde: Partial<Classement> & { etape: string | null } }
@@ -155,17 +164,17 @@ async function effaces(env: EnvSite, ids: string[]): Promise<number> {
 
 async function lireEtats(env: EnvSite, ids: string[]): Promise<Etat[]> {
   return (await env.DB.prepare(
-    `SELECT id, categorie_id, projet, temperature, verifie_le, ecarte_le, etape FROM contact WHERE id IN (SELECT value FROM json_each(?1))`,
+    `SELECT id, categorie_id, projet, temperature, verifie_le, ecarte_le, canal, ambassadeur_partant_le, etape FROM contact WHERE id IN (SELECT value FROM json_each(?1))`,
   ).bind(JSON.stringify(ids)).all<Etat>()).results;
 }
 
 async function lignes(env: EnvSite, ids: string[]): Promise<LigneClassee[]> {
   if (!ids.length) return [];
   const r = await env.DB.prepare(
-    `SELECT c.id, c.categorie_id, k.nom AS categorie, c.projet, c.temperature, c.verifie_le, c.ecarte_le
+    `SELECT c.id, c.categorie_id, k.nom AS categorie, c.projet, c.temperature, c.verifie_le, c.ecarte_le, c.canal, c.ambassadeur_partant_le
      FROM contact c LEFT JOIN categorie k ON k.id = c.categorie_id WHERE c.id IN (SELECT value FROM json_each(?1))`,
   ).bind(JSON.stringify(ids)).all<Classement & { id: string; categorie: string | null }>();
-  return r.results.map((c) => ({ id: c.id, categorie_id: c.categorie_id, categorie: c.categorie, projet: c.projet, temperature: c.temperature, verifie: !!c.verifie_le, ecarte: !!c.ecarte_le }));
+  return r.results.map((c) => ({ id: c.id, categorie_id: c.categorie_id, categorie: c.categorie, projet: c.projet, temperature: c.temperature, verifie: !!c.verifie_le, ecarte: !!c.ecarte_le, canal: c.canal, ambassadeur_partant: !!c.ambassadeur_partant_le }));
 }
 
 /** Résumé lisible d'un lot, gardé dans l'historique du contact. */
@@ -176,6 +185,8 @@ function resume(ch: Changements): string {
   if (ch.temperature !== undefined) p.push('température');
   if (ch.verifie !== undefined) p.push(ch.verifie ? 'vérifié' : 'à vérifier');
   if (ch.ecarte !== undefined) p.push(ch.ecarte ? 'écarté' : 'revenu');
+  if (ch.canal !== undefined) p.push('source');
+  if (ch.partant !== undefined) p.push(ch.partant ? 'ambassadeur partant' : 'ambassadeur non partant');
   return `Classement : ${p.join(', ')}`;
 }
 
@@ -334,7 +345,7 @@ export function lireCorrection(brut: unknown, categories: ReadonlySet<string>): 
     } else if (cle === 'r1_le' || cle === 'r2_le') {
       if (v !== null && !(typeof v === 'string' && jourValide(v))) return `Date de ${cle === 'r1_le' ? 'R1 (premier rendez-vous)' : 'R2 (second rendez-vous)'} invalide.`;
       c[cle] = v as string | null;
-    } else if (['categorie_id', 'projet', 'temperature', 'verifie', 'ecarte'].includes(cle)) {
+    } else if (['categorie_id', 'projet', 'temperature', 'verifie', 'ecarte', 'canal', 'partant'].includes(cle)) {
       classement[cle] = v;
     } else return `Champ inconnu : ${cle.slice(0, 40)}`;
   }
@@ -383,6 +394,7 @@ const LIBELLES_FICHE: Record<string, string> = {
   prenom: 'prénom', nom: 'nom', entreprise: 'entreprise', commune: 'ville', telephones: 'téléphones', emails: 'e-mails',
   categorie_id: 'catégorie', projet: 'projet', temperature: 'température', verifie_le: 'vérifié', ecarte_le: 'écarté',
   appel_autorise: 'appel autorisé', a_rappeler_le: 'à rappeler le', r1_le: 'R1 (premier rendez-vous)', r2_le: 'R2 (second rendez-vous)',
+  canal: 'source', ambassadeur_partant_le: 'ambassadeur partant',
 };
 
 /**
@@ -395,7 +407,7 @@ const LIBELLES_FICHE: Record<string, string> = {
 export async function corrigerFiche(env: EnvSite, id: string, corr: Correction, par: string, extra: Record<string, string | number> = {}): Promise<ResultatCorrection | null> {
   const [e, sec, site] = await env.DB.batch([
     env.DB.prepare(`SELECT id, prenom, nom, entreprise, commune, telephone, email, categorie_id, projet, temperature, verifie_le, ecarte_le,
-      appel_autorise, a_rappeler_le, r1_le, r2_le, etape, email_accord_le FROM contact WHERE id = ?1`).bind(id),
+      appel_autorise, a_rappeler_le, r1_le, r2_le, canal, ambassadeur_partant_le, etape, email_accord_le FROM contact WHERE id = ?1`).bind(id),
     env.DB.prepare(`SELECT type, valeur FROM contact_coordonnee WHERE contact_id = ?1 AND type IN ('telephone', 'email') ORDER BY id`).bind(id),
     // Revue de code 18.8 : l'accord du site ne vaut que pour la demande faite avec l'adresse du contact.
     env.DB.prepare('SELECT max(l.newsletter_opt_in_at) AS le FROM lead l JOIN contact c ON c.id = l.contact_id WHERE l.contact_id = ?1 AND lower(l.email) = lower(c.email)').bind(id),
@@ -412,6 +424,7 @@ export async function corrigerFiche(env: EnvSite, id: string, corr: Correction, 
     prenom: etat.prenom, nom: etat.nom, entreprise: etat.entreprise, commune: etat.commune, ...avantListes,
     categorie_id: etat.categorie_id, projet: etat.projet, temperature: etat.temperature, verifie_le: etat.verifie_le, ecarte_le: etat.ecarte_le,
     appel_autorise: etat.appel_autorise, a_rappeler_le: etat.a_rappeler_le, r1_le: etat.r1_le, r2_le: etat.r2_le,
+    canal: etat.canal, ambassadeur_partant_le: etat.ambassadeur_partant_le,
   };
   const apresTout: Record<string, Valeur> = {
     ...avantTout, ...cl,
@@ -453,7 +466,7 @@ export async function corrigerFiche(env: EnvSite, id: string, corr: Correction, 
   const colonnes: [string, Valeur][] = changes.filter((k) => k !== 'telephones' && k !== 'emails').map((k) => [k, apresTout[k]]);
   if (changes.includes('telephones')) colonnes.push(['telephone', tels[0] ?? null]);
   if (changes.includes('emails')) colonnes.push(['email', mails[0] ?? null]);
-  const lus: [string, Valeur][] = (['prenom', 'nom', 'entreprise', 'commune', 'telephone', 'email', 'categorie_id', 'projet', 'temperature', 'verifie_le', 'ecarte_le', 'appel_autorise', 'a_rappeler_le', 'r1_le', 'r2_le', 'etape'] as const)
+  const lus: [string, Valeur][] = (['prenom', 'nom', 'entreprise', 'commune', 'telephone', 'email', 'categorie_id', 'projet', 'temperature', 'verifie_le', 'ecarte_le', 'appel_autorise', 'a_rappeler_le', 'r1_le', 'r2_le', 'canal', 'ambassadeur_partant_le', 'etape'] as const)
     .map((k) => [k, etat[k] as Valeur]);
   const garde = JSON.stringify(Object.fromEntries(lus));
   const gardeSql = lus.map(([k]) => `${k} IS json_extract(?2, '$.${k}')`).join(' AND ');

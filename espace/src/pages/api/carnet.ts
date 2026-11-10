@@ -3,11 +3,13 @@
 // Anne et JB (en-tête du compte posé par worker.ts après le contrôle Cloudflare Access) ; le jeton de service de Claude
 // est refusé (403). Corps en JSON seulement (un formulaire d'un autre site ne peut pas l'envoyer sans l'accord du
 // navigateur), 200 000 caractères au plus. Réponses `{ ok, ... }` ou `{ ok: false, error: { code, message } }`.
-//   POST /api/carnet { ids: [...], changements: { categorie_id?, projet?, temperature?, verifie?, ecarte? } }
+//   POST /api/carnet { ids: [...], changements: { categorie_id?, projet?, temperature?, verifie?, ecarte?, canal?, partant? } }
 //        → 200 { ok, lot, touches, ignores, inchanges, inconnus, lignes }   (lot null si rien n'a changé)
 //   POST /api/carnet { annuler: "<lot>" } → 200 { ok, lot, rendus, gardes, lignes } ; 404 pour un lot inconnu
 // 400 pour toute valeur hors vocabulaire (catégorie absente de la table, projet ou température inconnus, « avec Anne »
 // et « terminé » réservés au suivi des ventes), plus de 2 000 identifiants ou un identifiant mal formé.
+// Story 18.21 : `canal` = la source (pige, boitage, portail, recommandation, evenement, autre, ou null pour l'effacer ; 400 pour toute
+// autre valeur) ; `partant` = ambassadeur « partant » (true : noté aujourd'hui, false : retiré). Chaque changement a son événement avec avant-image.
 import type { APIRoute } from 'astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { annulerLot, classer, lireChangements, lireIds } from '../../server/carnet';

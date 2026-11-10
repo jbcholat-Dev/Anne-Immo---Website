@@ -20,7 +20,8 @@ export interface LigneTableau {
   categorie: string | null;
   projet: string;
   temperature: string | null;
-  sources: string[];
+  /** Origine d'affaires d'Anne (story 18.21, ticket n° 265) : `contact.canal` (pige, boîtage, portail, recommandation, évènement, autre ; site, réseaux et rencontre pour les anciens contacts), ou null. Les sources d'import (`contact_source`) ne sont plus dans le tableau : elles sont sur la fiche. */
+  canal: string | null;
   /** Rencontres (animation EDB…) : lieu et mois de `contact_source` (story 18.17), la plus récente d'abord. */
   rencontres: Rencontre[];
   ville: string | null;
@@ -46,6 +47,8 @@ export interface LigneTableau {
   r2_le: string | null;
   /** Inscrit au programme ambassadeurs (marque à part du projet, glossaire du PRD). */
   ambassadeur_inscrit: boolean;
+  /** Ambassadeur « partant » (story 18.21, ticket n° 264) : Anne a noté à la main qu'il la préviendrait, sans inscription sur le site. */
+  ambassadeur_partant: boolean;
   /** Etat ambassadeur (story 18.18) : null si le contact n'est ni de projet « ambassadeur » ni inscrit. */
   ambassadeur_etat: EtatAmbassadeur | null;
   /** Un modèle lui a déjà été envoyé (sert à recalculer l'état quand le projet change dans le tableau). */
@@ -53,18 +56,22 @@ export interface LigneTableau {
 }
 
 /**
- * Inscrit : `ambassadeur_inscrit_le` renseigné (inscription faite sur le site). Contacté : pas inscrit, mais un modèle lui a
- * été envoyé (e-mail groupé ou « Envoyé » de la fiche : un événement porte `envoi_modele`). À contacter : ni l'un ni l'autre.
+ * Inscrit : `ambassadeur_inscrit_le` renseigné (inscription faite sur le site). Partant (story 18.21, ticket n° 264) :
+ * `ambassadeur_partant_le` renseigné, noté à la main par Anne (« m'a dit qu'il me préviendrait ») ; il rend le contact
+ * visible comme ambassadeur même si son projet est autre. Contacté : ni l'un ni l'autre, mais un modèle lui a été envoyé
+ * (e-mail groupé ou « Envoyé » de la fiche : un événement porte `envoi_modele`). À contacter : rien de tout cela.
+ * L'ordre de priorité : inscrit, partant, contacté, à contacter.
  */
-export type EtatAmbassadeur = 'inscrit' | 'contacte' | 'a_contacter';
-export const ETATS_AMBASSADEUR: Record<EtatAmbassadeur, string> = { inscrit: 'Inscrit', contacte: 'Contacté', a_contacter: 'À contacter' };
-export function etatAmbassadeur(projet: string, inscrit: boolean, modeleEnvoye: boolean): EtatAmbassadeur | null {
+export type EtatAmbassadeur = 'inscrit' | 'partant' | 'contacte' | 'a_contacter';
+export const ETATS_AMBASSADEUR: Record<EtatAmbassadeur, string> = { inscrit: 'Inscrit', partant: 'Partant', contacte: 'Contacté', a_contacter: 'À contacter' };
+export function etatAmbassadeur(projet: string, inscrit: boolean, modeleEnvoye: boolean, partant = false): EtatAmbassadeur | null {
   if (inscrit) return 'inscrit';
+  if (partant) return 'partant';
   if (projet !== 'ambassadeur') return null;
   return modeleEnvoye ? 'contacte' : 'a_contacter';
 }
 
-export type CleColonne = 'nom' | 'entreprise' | 'categorie' | 'projet' | 'temperature' | 'sources' | 'rencontre' | 'ville' | 'telephone' | 'email' | 'profil' | 'dernier' | 'accord' | 'ambassadeur' | 'r1' | 'r2' | 'verifie';
+export type CleColonne = 'nom' | 'entreprise' | 'categorie' | 'projet' | 'temperature' | 'canal' | 'rencontre' | 'ville' | 'telephone' | 'email' | 'profil' | 'dernier' | 'accord' | 'ambassadeur' | 'r1' | 'r2' | 'verifie';
 
 /** Les colonnes de FR-1, dans l'ordre affiché. Le nom ne se masque pas. */
 export const COLONNES: { cle: CleColonne; libelle: string; masquable: boolean }[] = [
@@ -74,7 +81,7 @@ export const COLONNES: { cle: CleColonne; libelle: string; masquable: boolean }[
   { cle: 'projet', libelle: 'Projet', masquable: true },
   { cle: 'ambassadeur', libelle: 'Ambassadeur', masquable: true },
   { cle: 'temperature', libelle: 'Température', masquable: true },
-  { cle: 'sources', libelle: 'Source', masquable: true },
+  { cle: 'canal', libelle: 'Source', masquable: true },
   { cle: 'rencontre', libelle: 'Rencontre', masquable: true },
   { cle: 'ville', libelle: 'Ville', masquable: true },
   { cle: 'telephone', libelle: 'Téléphone', masquable: true },
@@ -88,7 +95,7 @@ export const COLONNES: { cle: CleColonne; libelle: string; masquable: boolean }[
 ];
 
 export const PROJETS: Record<string, string> = {
-  a_qualifier: 'À qualifier', vendeur: 'Vendeur', acheteur: 'Acheteur', vendeur_acheteur: 'Vendeur et acheteur', ambassadeur: 'Ambassadeur',
+  a_qualifier: 'À qualifier', aucun: 'Aucun', vendeur: 'Vendeur', acheteur: 'Acheteur', vendeur_acheteur: 'Vendeur et acheteur', ambassadeur: 'Ambassadeur',
   sponsoring: 'Sponsoring', // story 18.16 (ticket n° 243) : futurs collaborateurs qu'Anne recrute dans le réseau eXp
 };
 export const TEMPERATURES: Record<string, string> = {
@@ -98,7 +105,7 @@ export const TEMPERATURES: Record<string, string> = {
 export const TEMPERATURES_CHOIX = ['froid', 'tiede', 'chaud', 'en_vente', 'recherche_active'] as const;
 /** Les projets du suivi des ventes (pipeline vendeur et acheteur) : leur température « avec Anne » ou « terminé » suit l'étape (AD-24). */
 export const PROJETS_DU_SUIVI: readonly string[] = ['vendeur', 'acheteur', 'vendeur_acheteur'];
-/** Les projets qui ont une température (FR-4) ; à qualifier et ambassadeur n'en ont pas. Sponsoring en a une (froid, tiède, chaud), sans suivi des ventes (18.16). */
+/** Les projets qui ont une température (FR-4) ; à qualifier, aucun (story 18.21, ticket n° 266 : pas de projet) et ambassadeur n'en ont pas. Sponsoring en a une (froid, tiède, chaud), sans suivi des ventes (18.16). */
 export const PROJETS_AVEC_TEMPERATURE: readonly string[] = [...PROJETS_DU_SUIVI, 'sponsoring'];
 /** Une température est-elle permise pour ce projet (CHECK des migrations 0018 et 0020, AD-24) ? null l'est toujours. */
 export function temperaturePermise(t: string | null, projet: string): boolean {
@@ -117,7 +124,19 @@ export const CANAUX_CONTACT: Record<string, string> = {
 export const ACCORDS: Record<Accord, string> = {
   accord: 'Accord', client: 'Ancien client', sans_accord: 'Sans accord', desinscrit: 'Désinscrit', sans_email: '',
 };
-/** Les sources écrites dans `contact_source` (migration 0018), en mots d'Anne ; une source inconnue s'affiche telle quelle. */
+/**
+ * Les choix de la colonne « Source » (story 18.21, ticket n° 265), dans l'ordre d'Anne : l'origine d'affaires du contact,
+ * écrite dans `contact.canal`. Une valeur vide efface l'origine.
+ */
+export const CANAUX_SOURCE_CHOIX: [string, string][] = [
+  ['pige', 'Pige'], ['boitage', 'Boîtage'], ['portail', "Portails d'annonce"], ['recommandation', 'Reco'], ['evenement', 'Évènementiel'], ['autre', 'Autres'],
+];
+/** Les anciens canaux (site, réseaux, rencontre) : gardés et affichés tant qu'Anne ne les change pas, mais plus proposés. */
+export const CANAUX_SOURCE_ANCIENS: Record<string, string> = { site: 'Site', reseaux: 'Réseaux', rencontre: 'Rencontre' };
+export const CANAUX_SOURCE: Record<string, string> = { ...Object.fromEntries(CANAUX_SOURCE_CHOIX), ...CANAUX_SOURCE_ANCIENS };
+export const libelleCanalSource = (c: string | null) => (c ? CANAUX_SOURCE[c] ?? c : '');
+
+/** Les sources d'import écrites dans `contact_source` (migration 0018), en mots d'Anne ; une source inconnue s'affiche telle quelle. Visibles sur la fiche seulement (story 18.21). */
 export const SOURCES: Record<string, string> = {
   espace: 'Espace', site: 'Site', portail: 'Portail', leedflow: 'Leedflow', telephone: 'Téléphone', linkedin: 'LinkedIn',
   edb: 'Animations EDB', suivi: 'Fichier de suivi', saisie: 'Saisie à la main',
@@ -200,8 +219,10 @@ export function preparerRecherche(q: string): (x: IndexLigne) => boolean {
 /** Ordre de tri des valeurs fermées (dans l'ordre des listes ci-dessus). */
 const ORDRE_PROJET = Object.keys(PROJETS), ORDRE_TEMP = Object.keys(TEMPERATURES), ORDRE_ACCORD: Accord[] = ['accord', 'client', 'sans_accord', 'desinscrit'];
 
-/** Tri de la colonne Ambassadeur (JB) : À contacter, Contacté, Inscrit ; les contacts sans état, en fin de liste. */
-const ORDRE_AMBASSADEUR: EtatAmbassadeur[] = ['a_contacter', 'contacte', 'inscrit'];
+/** Tri de la colonne Ambassadeur (JB) : À contacter, Contacté, Partant, Inscrit ; les contacts sans état, en fin de liste. */
+const ORDRE_AMBASSADEUR: EtatAmbassadeur[] = ['a_contacter', 'contacte', 'partant', 'inscrit'];
+/** Tri de la colonne Source : l'ordre des choix d'Anne, puis les anciens canaux. */
+const ORDRE_CANAL = [...CANAUX_SOURCE_CHOIX.map(([k]) => k), ...Object.keys(CANAUX_SOURCE_ANCIENS)];
 
 /** La valeur de tri d'une ligne pour une colonne ; null = vide, toujours en fin de liste. */
 export function valeurTri(l: LigneTableau, cle: CleColonne): string | number | null {
@@ -211,7 +232,7 @@ export function valeurTri(l: LigneTableau, cle: CleColonne): string | number | n
     case 'categorie': return l.categorie || null;
     case 'projet': return ORDRE_PROJET.indexOf(l.projet);
     case 'temperature': return l.temperature ? ORDRE_TEMP.indexOf(l.temperature) : null;
-    case 'sources': return l.sources.length ? libelleSource(l.sources[0]) : null;
+    case 'canal': return l.canal ? (ORDRE_CANAL.includes(l.canal) ? ORDRE_CANAL.indexOf(l.canal) : ORDRE_CANAL.length) : null;
     case 'rencontre': return l.rencontres[0]?.mois ?? null;
     case 'ville': return l.ville || null;
     case 'telephone': return l.telephones[0] ?? null;

@@ -5,7 +5,7 @@
 // Une vue = { nom, filtre } ; un filtre = un objet JSON dont chaque clé est dans VOCABULAIRE. Les clés à plusieurs
 // valeurs (catégorie, projet…) gardent un contact qui a l'une d'elles ; des clés différentes se combinent (et).
 import {
-  ACCORDS, ETATS_AMBASSADEUR, PROJETS, SOURCES, TEMPERATURES, libelleMois, libelleSource, sansAccents, type Accord, type EtatAmbassadeur, type IndexLigne, type LigneTableau,
+  ACCORDS, CANAUX_SOURCE, ETATS_AMBASSADEUR, PROJETS, TEMPERATURES, libelleCanalSource, libelleMois, sansAccents, type Accord, type EtatAmbassadeur, type IndexLigne, type LigneTableau,
 } from './tableau-colonnes';
 
 /** Un filtre de vue, dans le vocabulaire d'AD-27 (plus `ambassadeur`, migration 0018, et `a_rappeler`, FR-16). */
@@ -13,7 +13,8 @@ export interface Filtre {
   categorie_id?: string[];
   projet?: string[];
   temperature?: string[];
-  source?: string[];
+  /** Source = origine d'affaires du contact, `contact.canal` (story 18.21, ticket n° 265). L'ancienne clé `source` (sources d'import) n'existe plus : une vue enregistrée qui l'utilisait est signalée invalide par `vues-base`, jamais lue de travers. */
+  canal?: string[];
   entreprise_contient?: string;
   ville?: string[];
   /** Lieu de rencontre (« Publier ») et mois de rencontre (« AAAA-MM »), story 18.17 : avec les deux, une même rencontre doit avoir les deux. */
@@ -29,7 +30,7 @@ export interface Filtre {
   recherche?: string;
   /** Inscrit au programme ou de projet ambassadeur (AD-22) ; « oui » seulement (AD-27 amendé, revue de code 18.5). */
   ambassadeur?: 'oui';
-  /** Etat ambassadeur (story 18.18) : inscrit, contacté ou à contacter ; plusieurs possibles. Ne concerne que les contacts de projet ambassadeur ou inscrits. */
+  /** Etat ambassadeur (story 18.18) : inscrit, partant, contacté ou à contacter ; plusieurs possibles. Ne concerne que les contacts de projet ambassadeur ou inscrits. */
   ambassadeur_etat?: EtatAmbassadeur[];
   /** La date « à rappeler le » est arrivée (aujourd'hui ou avant, heure de Paris). */
   a_rappeler?: 'oui';
@@ -53,7 +54,7 @@ export const VOCABULAIRE: Record<CleFiltre, Regle> = {
   categorie_id: { liste: (v) => ID_CATEGORIE.test(v) },
   projet: { liste: (v) => v in PROJETS },
   temperature: { liste: (v) => v in TEMPERATURES },
-  source: { liste: (v) => v in SOURCES },
+  canal: { liste: (v) => v in CANAUX_SOURCE },
   entreprise_contient: { texte: 80 },
   ville: { liste: (v) => v.trim().length > 0 && v.length <= 80 && !/[\u0000-\u001f]/.test(v) },
   lieu: { liste: (v) => v.trim().length > 0 && v.length <= 80 && !/[\u0000-\u001f]/.test(v) },
@@ -127,7 +128,7 @@ export const aujourdhuiParis = (maintenant = new Date()) =>
  */
 export function preparerFiltre(f: Filtre, maintenant = new Date()): (l: LigneTableau, x: IndexLigne) => boolean {
   const ensemble = (l?: string[]) => (l?.length ? new Set(l) : null);
-  const cat = ensemble(f.categorie_id), proj = ensemble(f.projet), temp = ensemble(f.temperature), src = ensemble(f.source);
+  const cat = ensemble(f.categorie_id), proj = ensemble(f.projet), temp = ensemble(f.temperature), canaux = ensemble(f.canal);
   const etatsAmb = ensemble(f.ambassadeur_etat), acc = ensemble(f.accord), villes = f.ville?.length ? new Set(f.ville.map((v) => sansAccents(v).trim())) : null;
   const lieux = f.lieu?.length ? new Set(f.lieu.map((v) => sansAccents(v).trim())) : null, mois = ensemble(f.mois);
   const ent = f.entreprise_contient ? sansAccents(f.entreprise_contient) : '';
@@ -141,7 +142,7 @@ export function preparerFiltre(f: Filtre, maintenant = new Date()): (l: LigneTab
     if (cat && !(l.categorie_id && cat.has(l.categorie_id))) return false;
     if (proj && !proj.has(l.projet)) return false;
     if (temp && !(l.temperature && temp.has(l.temperature))) return false;
-    if (src && !l.sources.some((s) => src.has(s))) return false;
+    if (canaux && !(l.canal && canaux.has(l.canal))) return false;
     if (ent && !x.entreprise.includes(ent)) return false;
     if (villes && !villes.has(x.ville)) return false;
     // Story 18.17 : lieu et mois de rencontre se lisent sur une même rencontre (« EDB Publier, décembre 2024 »).
@@ -151,7 +152,7 @@ export function preparerFiltre(f: Filtre, maintenant = new Date()): (l: LigneTab
     if (f.dernier_contact === 'jamais' && l.dernier_le) return false;
     if (limite !== null && x.dernier !== null && x.dernier >= limite) return false; // jours AAAA-MM-JJ : l'ordre du texte est celui des dates
     if (f.pipeline && l.suivi !== (f.pipeline === 'dans')) return false;
-    if (f.ambassadeur && !(l.ambassadeur_inscrit || l.projet === 'ambassadeur')) return false;
+    if (f.ambassadeur && !(l.ambassadeur_inscrit || l.ambassadeur_partant || l.projet === 'ambassadeur')) return false;
     if (etatsAmb && !(l.ambassadeur_etat && etatsAmb.has(l.ambassadeur_etat))) return false;
     if (f.a_rappeler && !(l.a_rappeler_le && l.a_rappeler_le.slice(0, 10) <= jour)) return false;
     return true;
@@ -162,7 +163,7 @@ export function preparerFiltre(f: Filtre, maintenant = new Date()): (l: LigneTab
 export interface Pastille { cle: CleFiltre; valeur: string | null; libelle: string }
 
 export const LIBELLES_CLES: Record<CleFiltre, string> = {
-  categorie_id: 'Catégorie', projet: 'Projet', temperature: 'Température', source: 'Source', entreprise_contient: 'Entreprise contient',
+  categorie_id: 'Catégorie', projet: 'Projet', temperature: 'Température', canal: 'Source', entreprise_contient: 'Entreprise contient',
   ville: 'Ville', lieu: 'Lieu de rencontre', mois: 'Mois de rencontre', verifie: 'État', ecarte: 'État', accord: 'Accord e-mail', dernier_contact: 'Dernier contact', pipeline: 'Suivi des ventes',
   recherche: 'Recherche', ambassadeur: 'Ambassadeurs', ambassadeur_etat: 'Ambassadeur', a_rappeler: 'À rappeler',
 };
@@ -176,7 +177,7 @@ export function pastilles(f: Filtre, categories: ReadonlyMap<string, string>): P
   liste('categorie_id', f.categorie_id, (v) => categories.get(v) ?? v);
   liste('projet', f.projet, (v) => PROJETS[v] ?? v);
   liste('temperature', f.temperature, (v) => TEMPERATURES[v] ?? v);
-  liste('source', f.source, libelleSource);
+  liste('canal', f.canal, libelleCanalSource);
   if (f.entreprise_contient) p.push({ cle: 'entreprise_contient', valeur: null, libelle: `Entreprise contient : ${f.entreprise_contient}` });
   liste('ville', f.ville, (v) => v);
   liste('lieu', f.lieu, (v) => v);

@@ -12,6 +12,7 @@
 // fiche et liste des contacts, import .csv et .xlsx (aperçu, doublons, personnes connues complétées, consentement).
 // Story 13.5 : page « Aujourd'hui » (nouveaux d'abord, rappels dus et en retard, réveils, boîtage à refaire, prescripteurs).
 // Story 18.20 : R1 et R2 (premier et second rendez-vous) : nombres dans le boîtage (/ajouter et tableau), dates sur chaque fiche contact et colonnes de la page Contacts.
+// Story 18.21 : projet « Aucun », colonne « Source » = canal (six choix, tableau et fiche), sources d'import sur la fiche, ambassadeur « Partant » (fiche et tableau, vert, tri, filtre), jeton de Claude refusé.
 // Story 13.13 : bilan par canal recalculé depuis la base, boîtage par secteur, motifs de perte, délai de rappel.
 // Story 13.14 : prescripteurs (recommandés, mandats, relance due sur Aujourd'hui, échange noté, ajout).
 // Story 13.15 : acheteurs actifs (critères, « aussi vendeur », vendeurs en sommeil du secteur, lettre sur Aujourd'hui).
@@ -805,6 +806,307 @@ try {
     constat(!/r1_le|r2_le/.test(sources), '18.20 : les outils d\'import ne nomment ni r1_le ni r2_le');
     nettoyer();
   }
+  // Story 18.21 (tickets n° 264 à 266) : projet « Aucun » (sans température), colonne « Source » = origine d'affaires (`contact.canal`)
+  // changée par une liste de six choix dans le tableau et sur la fiche, sources d'import sur la fiche seulement, ambassadeur « Partant »
+  // noté à la main (fiche et pastille du tableau), vert, trié et filtré ; jeton de Claude refusé ; l'import n'écrit rien de tout cela.
+  // Lancé seul avec E2E_1821_SEUL=1 (après le démarrage des serveurs).
+  async function bloc1821() {
+    const P = 'E1821';
+    const ids = Array.from({ length: 9 }, (_, i) => `01KF21${String(i + 1).padStart(2, '0')}${NUM}${'0'.repeat(12)}`);
+    const [A, B, E5, Q1, Q2, Q3, Q4, V1, V2] = ids;
+    const nettoyer = () => { sql(`DELETE FROM contact WHERE id IN (${ids.map((i) => `'${i}'`).join(',')})`); sql(`DELETE FROM vue WHERE nom LIKE '${P}%'`); };
+    nettoyer();
+    const jourParis = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    const nomDe = (n) => `Sourcea${P}${NUM}${n}`;
+    const ins = (id, n, cols) => sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, commune, categorie_id, telephone${Object.keys(cols).map((k) => `, ${k}`).join('')}) VALUES
+      ('${id}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Sam', '${nomDe(n)}', '${P}-ville', 'edb', '+3366${NUM}${n}'${Object.values(cols).map((v) => `, ${v === null ? 'NULL' : `'${v}'`}`).join('')})`);
+    ins(A, 1, { projet: 'vendeur', temperature: 'chaud', canal: 'site' });
+    ins(B, 2, { projet: 'a_qualifier' });
+    ins(E5, 3, { projet: 'vendeur', temperature: 'chaud' });
+    ins(Q1, 4, { projet: 'ambassadeur' });
+    ins(Q2, 5, { projet: 'ambassadeur' });
+    ins(Q3, 6, { projet: 'ambassadeur', ambassadeur_partant_le: '2026-11-01' });
+    ins(Q4, 7, { projet: 'ambassadeur', ambassadeur_inscrit_le: '2026-10-05T08:00:00Z', ambassadeur_reglement: 'v1' });
+    ins(V1, 8, { projet: 'vendeur' });
+    ins(V2, 9, { projet: 'acheteur', ambassadeur_inscrit_le: '2026-10-05T08:00:00Z', ambassadeur_reglement: 'v1' });
+    // Q2 est « contacté » : un modèle lui a été envoyé (événement qui porte envoi_modele).
+    sql(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees, par) VALUES ('${Q2}', '2026-10-20T08:00:00Z', 'email', 'anne', 'Modèle envoyé', '{"envoi_modele":"essai"}', 'anne@example.com')`);
+    // A garde ses sources d'import (visibles sur la fiche seulement).
+    sql(`INSERT INTO contact_source (contact_id, source, a) VALUES ('${A}', 'telephone', '2026-10-01T08:00:00Z'), ('${A}', 'linkedin', '2026-10-02T08:00:00Z')`);
+    const api = async (route, corps, jeton = JETON) => {
+      const y = await appeler(`${E}/api/${route}`, { method: 'POST', redirect: 'manual', headers: { 'cf-access-jwt-assertion': jeton, 'Content-Type': 'application/json', Origin: E }, body: JSON.stringify(corps) });
+      let d = null; try { d = await y.json(); } catch {}
+      return { status: y.status, d };
+    };
+    const fiche = (id, corriger, jeton) => api('fiche', { id, corriger }, jeton);
+    const carnet = (idsL, changements, jeton) => api('carnet', { ids: idsL, changements }, jeton);
+    const ligne = (id) => sql(`SELECT * FROM contact WHERE id = '${id}'`)[0];
+    const evDernier = (id) => { const e = sql(`SELECT type, source, donnees, par FROM contact_evenement WHERE contact_id = '${id}' ORDER BY id DESC LIMIT 1`)[0]; return e ? { ...e, d: JSON.parse(e.donnees) } : null; };
+    const nEv = (id) => sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${id}'`)[0].n;
+    const refusee = (q) => { try { sql(q); return false; } catch { return true; } };
+
+    // 1. La base (migration 0025) : « aucun » sans température, « pige » en canal, nouvelle colonne en dates.
+    constat(!refusee(`UPDATE contact SET projet = 'aucun' WHERE id = '${V1}'`) && refusee(`UPDATE contact SET temperature = 'froid' WHERE id = '${V1}'`) && !refusee(`UPDATE contact SET projet = 'vendeur' WHERE id = '${V1}'`),
+      '18.21 : la base accepte le projet « aucun » mais pas avec une température');
+    constat(!refusee(`UPDATE contact SET canal = 'pige' WHERE id = '${V1}'`) && refusee(`UPDATE contact SET canal = 'telephone' WHERE id = '${V1}'`) && !refusee(`UPDATE contact SET canal = NULL WHERE id = '${V1}'`)
+      && !refusee(`UPDATE contact SET ambassadeur_partant_le = '2026-11-10' WHERE id = '${V1}'`) && refusee(`UPDATE contact SET ambassadeur_partant_le = 'oui' WHERE id = '${V1}'`) && !refusee(`UPDATE contact SET ambassadeur_partant_le = NULL WHERE id = '${V1}'`),
+      '18.21 : la base accepte le canal « pige » et une date « partant » (pas un texte), refuse un canal inconnu');
+
+    // 2. Projet « Aucun » (ticket 266) : par la fiche et par le carnet, sans température.
+    let r = await fiche(B, { projet: 'aucun' });
+    let e = evDernier(B);
+    constat(r.status === 200 && ligne(B).projet === 'aucun' && ligne(B).temperature === null && r.d.ligne.projet === 'aucun' && e.type === 'classement' && e.d.avant.projet === 'a_qualifier' && e.d.apres.projet === 'aucun' && !!e.par,
+      '18.21 : projet « Aucun » posé depuis la fiche, avant-image gardée');
+    r = await fiche(E5, { projet: 'aucun' });
+    constat(r.status === 200 && ligne(E5).projet === 'aucun' && ligne(E5).temperature === null && evDernier(E5).d.avant.temperature === 'chaud' && evDernier(E5).d.apres.temperature === null,
+      '18.21 : un contact vendeur « chaud » passé à « Aucun » perd sa température (gardée dans l\'avant-image)');
+    const nE5 = nEv(E5);
+    r = await carnet([E5], { temperature: 'chaud' });
+    constat(r.status === 200 && r.d.touches === 0 && r.d.ignores === 1 && ligne(E5).temperature === null && nEv(E5) === nE5, '18.21 : pas de température pour « Aucun » : demande ignorée, rien d\'écrit (carnet)');
+    r = await fiche(E5, { temperature: 'froid' });
+    constat(r.status === 200 && r.d.ignore === true && ligne(E5).temperature === null, '18.21 : pas de température pour « Aucun » : demande ignorée (fiche)');
+    r = await carnet([V1], { projet: 'aucun' });
+    constat(r.status === 200 && r.d.touches === 1 && ligne(V1).projet === 'aucun', '18.21 : projet « Aucun » posé par le carnet (lot)');
+    r = await carnet([V1], { projet: 'vendeur' });
+    r = await carnet([V1], { projet: 'sponsorise' });
+    constat(r.status === 400 && ligne(V1).projet === 'vendeur', '18.21 : un projet inconnu reste refusé (400)');
+    r = await fiche(E5, { projet: 'vendeur' });
+
+    // 3. Source = canal (ticket 265) : les six choix, l'effacement, le refus du reste.
+    const CHOIX = ['pige', 'boitage', 'portail', 'recommandation', 'evenement', 'autre'];
+    const mal = [];
+    for (const c of CHOIX) {
+      const n0 = nEv(B);
+      const y = await carnet([B], { canal: c });
+      const ev = evDernier(B);
+      if (y.status !== 200 || y.d.touches !== 1 || ligne(B).canal !== c || y.d.lignes[0].canal !== c || ev.type !== 'classement' || ev.d.apres.canal !== c || nEv(B) !== n0 + 1 || !ev.par) mal.push(c);
+    }
+    constat(mal.length === 0 && evDernier(B).d.avant.canal === 'evenement', `18.21 : les six choix de la source (pige, boîtage, portail, reco, évènementiel, autre) s'écrivent dans canal, chacun avec son événement et son avant-image${mal.length ? ` (à revoir : ${mal.join(', ')})` : ''}`);
+    r = await carnet([B], { canal: null });
+    constat(r.status === 200 && ligne(B).canal === null && evDernier(B).d.avant.canal === 'autre', '18.21 : la source s\'efface (valeur vide)');
+    const avantB = JSON.stringify(ligne(B)), nB = nEv(B);
+    const refus = [];
+    for (const [nom, c] of [['telephone', 'telephone'], ['ancien canal site', 'site'], ['ancien canal reseaux', 'reseaux'], ['rencontre', 'rencontre'], ['vide', ''], ['nombre', 3], ['liste', ['pige']], ['majuscule', 'Pige'], ['injection', "pige'; DROP TABLE contact;--"]]) {
+      const y = await carnet([B], { canal: c });
+      if (y.status !== 400) refus.push(`${nom} ${y.status}`);
+      const z = await fiche(B, { canal: c });
+      if (z.status !== 400) refus.push(`fiche ${nom} ${z.status}`);
+    }
+    constat(refus.length === 0 && JSON.stringify(ligne(B)) === avantB && nEv(B) === nB, `18.21 : un canal hors des six choix est refusé en 400 (carnet et fiche), rien n'est écrit${refus.length ? ` (acceptés à tort : ${refus.join(', ')})` : ''}`);
+    r = await fiche(B, { canal: 'pige' });
+    constat(r.status === 200 && ligne(B).canal === 'pige' && r.d.fiche.canal === 'pige' && r.d.ligne.canal === 'pige', '18.21 : « pige » accepté par la fiche, renvoyé par la fiche et par la ligne');
+    // Annuler un lot de source.
+    r = await carnet([B], { canal: 'boitage' });
+    const lot = r.d.lot;
+    const an = await api('carnet', { annuler: lot });
+    constat(an.status === 200 && an.d.rendus === 1 && ligne(B).canal === 'pige', '18.21 : annuler un changement de source remet la source d\'avant');
+    // Un ancien canal (site) se garde tant qu'Anne ne le change pas : corriger autre chose ne le touche pas.
+    r = await fiche(A, { entreprise: 'Laiterie 1821' });
+    constat(r.status === 200 && ligne(A).canal === 'site' && ligne(A).entreprise === 'Laiterie 1821', '18.21 : un contact au canal « site » le garde quand on corrige autre chose');
+    // Le formulaire /ajouter propose « Pige » ; une action marketing ne le propose pas (son canal est limité par la base).
+    const hA = await (await appeler(`${E}/ajouter`, { headers: avecJeton() })).text();
+    const hAct = await (await appeler(`${E}/actions`, { headers: avecJeton() })).text();
+    constat(/name="canal" value="pige"/.test(hA) && !/<option value="pige"/.test(hAct) && /<option value="boitage"/.test(hAct), '18.21 : /ajouter propose « Pige » ; le formulaire des actions marketing ne le propose pas');
+    r = await page('/ajouter', { quoi: 'contact', prenom: 'Pia', nom: `Pige${P}${NUM}`, telephone: `06 63 ${NUM.slice(0, 2)} ${NUM.slice(2, 4)} ${NUM.slice(4, 6)}`, canal: 'pige', parcours: 'vendeur' });
+    const pige = sql(`SELECT canal FROM contact WHERE nom = 'Pige${P}${NUM}'`)[0];
+    constat(r.status === 200 || r.status === 303 ? pige?.canal === 'pige' : false, '18.21 : un contact créé par /ajouter avec la pige a le canal « pige »');
+    sql(`DELETE FROM contact WHERE nom = 'Pige${P}${NUM}'`);
+    // Actions marketing : « pige » refusé par la validation.
+    constat(refusee(`INSERT INTO action_marketing (id, created_at, maj_le, nom, canal, debut) VALUES ('AMX1821', 'a', 'a', 'Essai pige', 'pige', '2026-11-01')`), '18.21 : la base refuse « pige » comme canal d\'une action marketing (inchangé)');
+
+    // 4. Ambassadeur « Partant » (ticket 264) : fiche et API.
+    r = await fiche(Q1, { partant: true });
+    e = evDernier(Q1);
+    constat(r.status === 200 && ligne(Q1).ambassadeur_partant_le === jourParis && r.d.fiche.ambassadeur_etat === 'partant' && r.d.ligne.ambassadeur_etat === 'partant' && r.d.ligne.ambassadeur_partant === true && r.d.fiche.ambassadeur_partant_le === jourParis
+      && e.type === 'classement' && e.d.avant.ambassadeur_partant_le === null && e.d.apres.ambassadeur_partant_le === jourParis && !!e.par && ligne(Q1).projet === 'ambassadeur' && ligne(Q1).ambassadeur_inscrit_le === null,
+      '18.21 : « partant » noté sur la fiche, daté d\'aujourd\'hui, sans inscription ; avant-image gardée');
+    r = await fiche(Q1, { partant: true });
+    constat(r.status === 200 && r.d.changes.length === 0 && ligne(Q1).ambassadeur_partant_le === jourParis, '18.21 : le noter deux fois ne change rien (la date reste)');
+    r = await fiche(Q1, { partant: false });
+    constat(r.status === 200 && ligne(Q1).ambassadeur_partant_le === null && r.d.fiche.ambassadeur_etat === 'a_contacter' && evDernier(Q1).d.avant.ambassadeur_partant_le === jourParis, '18.21 : « partant » retiré : l\'état redevient « à contacter », avant-image gardée');
+    r = await fiche(Q2, { partant: true });
+    constat(r.status === 200 && r.d.fiche.ambassadeur_etat === 'partant', '18.21 : partant l\'emporte sur contacté');
+    r = await fiche(Q2, { partant: false });
+    constat(r.d.fiche.ambassadeur_etat === 'contacte', '18.21 : partant retiré : contacté revient');
+    r = await fiche(V2, { partant: true });
+    constat(r.d.fiche.ambassadeur_etat === 'inscrit' && ligne(V2).ambassadeur_partant_le === jourParis, '18.21 : inscrit l\'emporte sur partant (la date est quand même gardée)');
+    await fiche(V2, { partant: false });
+    // Contact qui n'est pas de projet ambassadeur : permis, et il devient visible comme ambassadeur.
+    r = await fiche(V1, { partant: true });
+    constat(r.status === 200 && r.d.fiche.ambassadeur_etat === 'partant' && ligne(V1).projet === 'vendeur' && r.d.ligne.ambassadeur_etat === 'partant', '18.21 : un contact d\'un autre projet peut être noté partant : il apparaît comme ambassadeur, son projet ne change pas');
+    const avantQ = JSON.stringify(ligne(Q3)), nQ = nEv(Q3);
+    const refusP = [];
+    for (const v of ['oui', 1, null, 'true', ['x']]) { const y = await fiche(Q3, { partant: v }); if (y.status !== 400) refusP.push(`fiche ${JSON.stringify(v)} ${y.status}`); const z = await carnet([Q3], { partant: v }); if (z.status !== 400) refusP.push(`carnet ${JSON.stringify(v)} ${z.status}`); }
+    constat(refusP.length === 0 && JSON.stringify(ligne(Q3)) === avantQ && nEv(Q3) === nQ, `18.21 : « partant » veut vrai ou faux (400 sinon), rien d'écrit${refusP.length ? ` (à revoir : ${refusP.join(', ')})` : ''}`);
+    // Jeton de Claude : refusé partout.
+    const avantC = JSON.stringify([ligne(Q3), ligne(B)]);
+    const clau = [await fiche(Q3, { partant: false }, JETON_C), await carnet([Q3], { partant: false }, JETON_C), await fiche(B, { canal: 'autre' }, JETON_C), await carnet([B], { canal: 'autre' }, JETON_C), await fiche(B, { projet: 'aucun' }, JETON_C)];
+    constat(clau.every((y) => y.status === 403) && JSON.stringify([ligne(Q3), ligne(B)]) === avantC, '18.21 : le jeton de service de Claude ne peut écrire ni source, ni « partant », ni projet (403)');
+    const lectureC = await appeler(`${E}/api/fiche?id=${B}`, { headers: avecJeton(JETON_C) });
+    constat(lectureC.status === 403, '18.21 : ni lire la fiche (403)');
+
+    // 5. La page Contacts.
+    const ctx = await nav.newContext({ viewport: { width: 1440, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
+    const o = await ctx.newPage();
+    const erreursPage = []; o.on('pageerror', (x) => erreursPage.push(x.message));
+    await o.goto(`${E}/`);
+    const attendre = () => o.waitForSelector('[data-lignes][data-complet]', { state: 'attached' });
+    await attendre();
+    const rech = async (t) => { await o.fill('[data-recherche]', t); await o.waitForTimeout(400); await attendre(); };
+    const ordre = async () => o.$$eval('[data-lignes] tr[data-contact]', (t) => t.map((x) => x.dataset.contact));
+    const entetes = await o.$$eval('[data-entetes] th', (t) => t.map((x) => x.textContent.replace(/[▲▼]/g, '').trim()));
+    const iSource = entetes.indexOf('Source');
+    constat(iSource > 0 && await o.locator('[data-trier=canal]').count() === 1, `18.21 : la colonne « Source » est dans le tableau, triable (${entetes.join(', ')})`);
+    // Le projet « Aucun » est juste après « À qualifier » dans le filtre.
+    const optsProjet = await o.$$eval('[data-filtre=projet] option', (t) => t.map((x) => x.textContent.trim()));
+    const iQ = optsProjet.indexOf('À qualifier');
+    constat(iQ > 0 && optsProjet[iQ + 1] === 'Aucun', `18.21 : « Aucun » est juste après « À qualifier » dans la liste des projets (${optsProjet.join(', ')})`);
+    await rech(`${P}${NUM}`);
+    const cell = async (id, i) => (await o.locator(`tr[data-contact="${id}"] td`).nth(i).innerText()).replace(/[▾\s]+/g, ' ').trim();
+    constat((await cell(A, iSource)) === 'Site' && (await cell(B, iSource)) === 'Pige' && (await cell(V1, iSource)) === '—',
+      `18.21 : la colonne Source montre le canal : « Site » pour un ancien canal, « Pige », « — » sans canal (${await cell(A, iSource)} / ${await cell(B, iSource)} / ${await cell(V1, iSource)})`);
+    const txtA = await o.locator(`tr[data-contact="${A}"]`).innerText();
+    constat(!/Téléphone|LinkedIn/.test(txtA), '18.21 : les sources d\'import (Téléphone, LinkedIn) ne sont plus dans le tableau');
+    // La liste de la source : les six choix dans l'ordre, plus le choix vide.
+    await o.click(`tr[data-contact="${B}"] [data-classer=canal]`);
+    const choix = await o.$$eval('select[data-liste=canal] option', (t) => t.map((x) => [x.value, x.textContent.trim(), x.disabled]));
+    constat(JSON.stringify(choix.map((c) => c[1])) === JSON.stringify(['Aucune', 'Pige', 'Boîtage', "Portails d'annonce", 'Reco', 'Évènementiel', 'Autres']) && JSON.stringify(choix.map((c) => c[0])) === JSON.stringify(['', 'pige', 'boitage', 'portail', 'recommandation', 'evenement', 'autre']),
+      `18.21 : la liste de la source propose exactement Pige, Boîtage, Portails d'annonce, Reco, Évènementiel, Autres (et « Aucune ») dans cet ordre (${choix.map((c) => c[1]).join(', ')})`);
+    const n0 = nEv(B);
+    await o.selectOption('select[data-liste=canal]', 'recommandation');
+    await o.waitForFunction((id) => document.querySelector(`tr[data-contact="${id}"]`)?.textContent.includes('Reco'), B);
+    e = evDernier(B);
+    constat(ligne(B).canal === 'recommandation' && nEv(B) === n0 + 1 && e.type === 'classement' && e.d.avant.canal === 'pige' && e.d.apres.canal === 'recommandation' && (await cell(B, iSource)).includes('Reco'),
+      '18.21 : choisir « Reco » dans la cellule écrit canal et un événement avec avant-image, la ligne suit sans recharger');
+    // Choix vide : efface.
+    await o.click(`tr[data-contact="${B}"] [data-classer=canal]`);
+    await o.selectOption('select[data-liste=canal]', '');
+    await o.waitForFunction((id) => !document.querySelector(`tr[data-contact="${id}"]`)?.textContent.includes('Reco'), B);
+    constat(ligne(B).canal === null && (await cell(B, iSource)) === '—', '18.21 : « Aucune » efface la source depuis le tableau');
+    // Un ancien canal : affiché, non choisissable ; Entrée sans rien changer n'écrit rien.
+    await o.click(`tr[data-contact="${A}"] [data-classer=canal]`);
+    const choixA = await o.$$eval('select[data-liste=canal] option', (t) => t.map((x) => [x.value, x.textContent.trim(), x.disabled, x.selected]));
+    const nA = nEv(A);
+    await o.keyboard.press('Enter');
+    await o.waitForTimeout(500);
+    constat(choixA[0][1] === 'Site' && choixA[0][2] && choixA[0][3] && choixA.length === 8 && ligne(A).canal === 'site' && nEv(A) === nA, '18.21 : un ancien canal (Site) reste affiché dans la liste, non choisissable ; Entrée sans choix n\'écrit rien');
+    await rech(`${P}${NUM}`);
+    // Filtre « Source » (canal) et vue enregistrée.
+    await o.selectOption('[data-filtre=canal]', 'site'); await attendre();
+    const filtreSite = await ordre();
+    const pastilleSource = (await o.locator('[data-pastilles] [data-retirer]').allInnerTexts()).some((t) => t.includes('Source : Site'));
+    constat(filtreSite.length === 1 && filtreSite[0] === A && pastilleSource, '18.21 : le filtre « Source » filtre sur le canal (pastille « Source : Site »)');
+    const optsFiltre = await o.$$eval('[data-filtre=canal] option', (t) => t.map((x) => x.textContent.trim()));
+    constat(JSON.stringify(optsFiltre.slice(0, 7)) === JSON.stringify(['Source', 'Pige', 'Boîtage', "Portails d'annonce", 'Reco', 'Évènementiel', 'Autres']) && optsFiltre.includes('Site') && !optsFiltre.includes('Téléphone') && !optsFiltre.includes('LinkedIn'),
+      `18.21 : le filtre « Source » propose les six choix (puis les anciens canaux présents), plus les sources d'import (${optsFiltre.join(', ')})`);
+    await o.click('[data-retirer="canal"][data-valeur="site"]'); await attendre();
+    // Vue enregistrée avec l'ancienne clé « source » : signalée, jamais une erreur.
+    sql(`INSERT INTO vue (id, nom, ordre, filtre, created_at, maj_le) VALUES ('01KF21VUE${NUM}00000000000000', '${P} ancienne', 998, '{"source":["telephone"]}', '2026-11-01T00:00:00Z', '2026-11-01T00:00:00Z')`);
+    const vueNeuve = await api('vues', { nom: `${P} nouvelle`, filtre: { canal: ['pige', 'autre'] } });
+    const vueAncienne = await api('vues', { nom: `${P} vieille cle`, filtre: { source: ['telephone'] } });
+    const hP = await (await appeler(`${E}/`, { headers: avecJeton() })).text();
+    const reglagesJson = JSON.parse(hP.match(/id="ct-reglages"[^>]*>([\s\S]*?)<\/script>/)[1]);
+    const vAnc = reglagesJson.vues.find((v) => v.nom === `${P} ancienne`), vNeuve = reglagesJson.vues.find((v) => v.nom === `${P} nouvelle`);
+    constat(vueAncienne.status === 400 && vueNeuve.status === 201 && !!vAnc?.invalide && JSON.stringify(vAnc.filtre) === '{}' && JSON.stringify(vNeuve?.filtre) === '{"canal":["pige","autre"]}',
+      `18.21 : une vue avec l'ancienne clé « source » est refusée à l'écriture et signalée invalide à la lecture (filtre vide, pas d'erreur) ; la nouvelle clé « canal » s'enregistre (${vueAncienne.status}, ${vueNeuve.status}, ${vAnc?.invalide})`);
+    await o.reload(); await attendre();
+    constat(await o.locator('[data-vue].ct-vue-invalide').count() >= 1 && erreursPage.length === 0, '18.21 : la page s\'ouvre avec la vue à l\'ancienne clé, signalée « à refaire », sans erreur JavaScript');
+    await rech(`${P}${NUM}`);
+
+    // Ambassadeur : pastille, couleur, tri, filtre, changement dans la cellule.
+    const iAmb = entetes.indexOf('Ambassadeur');
+    const pastilleAmb = async (id) => o.locator(`tr[data-contact="${id}"] [data-ambassadeur]`).first();
+    const vert = 'rgb(46, 107, 63)';
+    const fond = async (id) => (await pastilleAmb(id)).evaluate((x) => getComputedStyle(x).backgroundColor);
+    constat(await (await pastilleAmb(Q3)).getAttribute('data-ambassadeur') === 'partant' && (await (await pastilleAmb(Q3)).innerText()).trim() === 'Partant' && await fond(Q3) === vert && await fond(Q4) === vert
+      && await fond(Q1) !== vert && await fond(Q2) !== vert, '18.21 : « Partant » s\'affiche en vert comme « Inscrit » ; « À contacter » et « Contacté » ne le sont pas');
+    constat(await o.locator(`tr[data-contact="${V1}"] [data-ambassadeur]`).count() === 1 && (await (await pastilleAmb(V1)).innerText()).trim() === 'Partant', '18.21 : le contact d\'un autre projet noté partant montre la pastille « Partant »');
+    await fiche(V1, { partant: false });
+    // Tri : À contacter, Contacté, Partant, Inscrit.
+    await o.reload(); await attendre(); await rech(`${P}${NUM}`);
+    await o.click('[data-trier=ambassadeur]'); await o.waitForTimeout(250); await attendre();
+    const asc = (await ordre()).filter((x) => [Q1, Q2, Q3, Q4].includes(x));
+    await o.click('[data-trier=ambassadeur]'); await o.waitForTimeout(250); await attendre();
+    const desc = (await ordre()).filter((x) => [Q1, Q2, Q3, Q4].includes(x));
+    constat(JSON.stringify(asc) === JSON.stringify([Q1, Q2, Q3, Q4]) && JSON.stringify(desc) === JSON.stringify([Q4, Q3, Q2, Q1]), '18.21 : tri de la colonne Ambassadeur : À contacter, Contacté, Partant, Inscrit (puis l\'inverse)');
+    // Filtre « État ambassadeur : Partant ».
+    const optsAmb = await o.$$eval('[data-filtre=autres] optgroup[label="État ambassadeur"] option', (t) => t.map((x) => x.textContent.trim()));
+    await o.selectOption('[data-filtre=autres]', 'ambassadeur_etat:partant'); await attendre();
+    const fp = await ordre();
+    const pastP = (await o.locator('[data-pastilles] [data-retirer]').allInnerTexts()).some((t) => t.includes('Ambassadeur : Partant'));
+    constat(optsAmb.includes('Partant') && fp.length === 1 && fp[0] === Q3 && pastP, `18.21 : le filtre « État ambassadeur » accepte « Partant » (${optsAmb.join(', ')})`);
+    await o.click('[data-retirer="ambassadeur_etat"][data-valeur="partant"]'); await attendre();
+    // Changer dans la cellule : noter partant, puis retirer.
+    await o.click(`tr[data-contact="${Q1}"] [data-classer=ambassadeur]`);
+    const choixAmb = await o.$$eval('select[data-liste=ambassadeur] option', (t) => t.map((x) => x.textContent.trim()));
+    await o.selectOption('select[data-liste=ambassadeur]', 'partant');
+    await o.waitForFunction((id) => document.querySelector(`tr[data-contact="${id}"] [data-ambassadeur]`)?.getAttribute('data-ambassadeur') === 'partant', Q1);
+    e = evDernier(Q1);
+    constat(JSON.stringify(choixAmb) === JSON.stringify(['Partant', 'Pas partant']) && ligne(Q1).ambassadeur_partant_le === jourParis && e.d.apres.ambassadeur_partant_le === jourParis && e.d.avant.ambassadeur_partant_le === null && await fond(Q1) === vert,
+      '18.21 : la pastille du tableau se change (Partant / Pas partant) : daté d\'aujourd\'hui, événement avec avant-image, vert tout de suite');
+    await o.click(`tr[data-contact="${Q1}"] [data-classer=ambassadeur]`);
+    await o.selectOption('select[data-liste=ambassadeur]', 'non_partant');
+    await o.waitForFunction((id) => document.querySelector(`tr[data-contact="${id}"] [data-ambassadeur]`)?.getAttribute('data-ambassadeur') === 'a_contacter', Q1);
+    constat(ligne(Q1).ambassadeur_partant_le === null, '18.21 : « Pas partant » dans le tableau retire la marque (« à contacter » revient)');
+    // Contact sans état ambassadeur : la cellule vide est aussi cliquable.
+    await o.click(`tr[data-contact="${V1}"] [data-classer=ambassadeur]`);
+    await o.selectOption('select[data-liste=ambassadeur]', 'partant');
+    await o.waitForFunction((id) => document.querySelector(`tr[data-contact="${id}"] [data-ambassadeur]`)?.getAttribute('data-ambassadeur') === 'partant', V1);
+    constat(ligne(V1).ambassadeur_partant_le === jourParis && ligne(V1).projet === 'vendeur', '18.21 : « partant » depuis la cellule d\'un contact sans état ambassadeur : permis, projet inchangé');
+    await fiche(V1, { partant: false });
+
+    // La fiche : source, partant, sources d'import.
+    await rech(`${P}${NUM}`);
+    await o.click(`tr[data-contact="${A}"] [data-ouvrir-fiche]`);
+    await o.waitForSelector('[data-fiche-form]');
+    const importe = (await o.textContent('[data-fiche-sources]')) ?? '';
+    const selFiche = await o.$$eval('[data-fiche-canal] option', (t) => t.map((x) => [x.value, x.textContent.trim(), x.disabled]));
+    constat(/Importé depuis/.test(importe) && importe.includes('Téléphone') && importe.includes('LinkedIn') && selFiche[0][1] === 'Site' && selFiche[0][2] && selFiche.length === 8,
+      `18.21 : la fiche montre « Importé depuis : Téléphone, LinkedIn » et la source « Site » (ancien canal, non choisissable) (${importe.trim()})`);
+    await o.fill('[data-fiche-form] input[name=entreprise]', 'Laiterie 1821 bis');
+    await o.click('[data-fiche-enregistrer]');
+    await o.waitForSelector('[data-fiche-message]:not(.erreur)');
+    constat(ligne(A).canal === 'site' && ligne(A).entreprise === 'Laiterie 1821 bis', '18.21 : enregistrer la fiche sans toucher à la source garde l\'ancien canal');
+    await o.selectOption('[data-fiche-canal]', 'pige');
+    await o.click('[data-fiche-enregistrer]');
+    await o.waitForSelector('[data-fiche-message]:not(.erreur)');
+    e = evDernier(A);
+    await o.waitForTimeout(200);
+    constat(ligne(A).canal === 'pige' && e.d.avant.canal === 'site' && e.d.apres.canal === 'pige' && (await cell(A, iSource)).includes('Pige'), '18.21 : changer la source depuis la fiche écrit canal (avant-image « site »), la ligne suit');
+    await o.selectOption('[data-fiche-canal]', '');
+    await o.click('[data-fiche-enregistrer]');
+    await o.waitForSelector('[data-fiche-message]:not(.erreur)');
+    constat(ligne(A).canal === null, '18.21 : « Aucune » sur la fiche efface la source');
+    // Partant par la fiche (case), puis retiré.
+    await o.click('[data-fiche-fermer]').catch(() => {});
+    await o.click(`tr[data-contact="${Q1}"] [data-ouvrir-fiche]`);
+    await o.waitForSelector('[data-fiche-form]');
+    const caseP = o.locator('[data-fiche-partant] input[name=partant]');
+    const libP = (await o.textContent('[data-fiche-partant]')) ?? '';
+    await caseP.check();
+    await o.click('[data-fiche-enregistrer]');
+    await o.waitForSelector('[data-fiche-message]:not(.erreur)');
+    await o.waitForTimeout(200);
+    const pastFiche = await o.getAttribute('[data-fiche-ambassadeur]', 'data-fiche-ambassadeur');
+    constat(/préviendrait/.test(libP) && ligne(Q1).ambassadeur_partant_le === jourParis && pastFiche === 'partant' && (await pastilleAmb(Q1)) !== null && (await (await pastilleAmb(Q1)).getAttribute('data-ambassadeur')) === 'partant',
+      '18.21 : la case « M\'a dit qu\'il me préviendrait » de la fiche note « partant » daté d\'aujourd\'hui, la pastille et la ligne du tableau suivent');
+    await o.locator('[data-fiche-partant] input[name=partant]').uncheck();
+    await o.click('[data-fiche-enregistrer]');
+    await o.waitForSelector('[data-fiche-message]:not(.erreur)');
+    constat(ligne(Q1).ambassadeur_partant_le === null && await o.locator('[data-fiche-partant] input[name=partant]').isChecked() === false, '18.21 : décocher la case retire « partant »');
+    const largeur = await o.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    constat(largeur <= 0 && erreursPage.length === 0, `18.21 : pas de défilement horizontal de la page à 1440 px ni d'erreur JavaScript${erreursPage.length ? ` (${erreursPage[0]})` : ''}`);
+    await o.screenshot({ path: path.join(OUT, 'espace-contacts-source-partant-1440.png') });
+    await ctx.close();
+
+    // 6. L'import (claude-import) n'écrit ni la source, ni « partant », ni le projet « aucun » ; sa table est toujours utilisable.
+    const sources = ['scripts/claude-import.mjs', 'src/server/import.ts'].map((f) => fs.readFileSync(path.join(ICI, f), 'utf8')).join('\n');
+    const colImport = fs.readFileSync(path.join(ICI, 'src/server/carnet.ts'), 'utf8').match(/const COLONNES_IMPORT[^\n]*\n?[^\n]*/)?.[0] ?? '';
+    constat(!/ambassadeur_partant|\bpartant\b/.test(sources) && !/\bcanal\b/.test(sources) && !/canal|partant/.test(colImport), '18.21 : les outils d\'import ne nomment ni canal, ni « partant » (ils ne peuvent écrire ni l\'un ni l\'autre)');
+    sql(`DELETE FROM vue WHERE nom LIKE '${P}%'`);
+    nettoyer();
+  }
+  if (process.env.E2E_1821_SEUL) { await bloc1821(); await nav.close(); throw new Error(echecs ? 'E2E_1821_SEUL : échecs' : 'E2E_1821_SEUL : terminé') }
   if (process.env.E2E_1820_SEUL) { await bloc1820(); await nav.close(); throw new Error(echecs ? 'E2E_1820_SEUL : échecs' : 'E2E_1820_SEUL : terminé') }
   if (process.env.E2E_1819_SEUL) { await bloc1819(); await nav.close(); throw new Error(echecs ? 'E2E_1819_SEUL : échecs' : 'E2E_1819_SEUL : terminé') }
   if (process.env.E2E_1818_SEUL) { await bloc1818(); await nav.close(); throw new Error(echecs ? 'E2E_1818_SEUL : échecs' : 'E2E_1818_SEUL : terminé') }
@@ -2485,6 +2787,7 @@ try {
   sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, commune, categorie_id, telephone, etape, parcours, prochaine_action_le, dernier_contact_le, dernier_contact_canal) VALUES
        ('${F4}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Flore', 'Filtrequatre${NUM}', '${VILLE5}', 'proches', '+33653${NUM}', 'premier_rdv', 'vendeur', '2026-12-01', '${ilYa(10)}', 'appel')`);
   sql(`INSERT INTO contact_source (contact_id, source, a) VALUES ('${F1}', 'site', '2026-10-01T08:00:00Z')`);
+  sql(`UPDATE contact SET canal = 'site' WHERE id = '${F1}'`); // story 18.21 : la « Source » du tableau est le canal
   // Story 18.17 : F1 a rencontré Anne à Publier en décembre 2024 ; F2 à Publier en février 2025 et à Margencel en décembre 2024.
   // Lieux propres à cet essai (la base locale garde les essais d'avant) ; les mois d'avant sont retirés pour que le filtre « mois » seul reste exact.
   const PUB5 = `Publier${NUM}`, MARG5 = `Margencel${NUM}`;
@@ -2515,7 +2818,8 @@ try {
     l = await retirerP('projet', 'acheteur'); l = await retirerP('categorie_id', 'edb');
     essais.push(['pastilles retirées', memes(l, [F1, F2, F4])]);
     l = await choisir('temperature', 'tiede'); essais.push(['température', memes(l, [F2])]); await retirerP('temperature', 'tiede');
-    l = await choisir('source', 'site'); essais.push(['source', memes(l, [F1])]); await retirerP('source', 'site');
+    // Story 18.21 : le filtre « Source » filtre sur le canal d'origine du contact (plus sur les sources d'import).
+    l = await choisir('canal', 'site'); essais.push(['source (canal)', memes(l, [F1])]); await retirerP('canal', 'site');
     await o.fill('[data-filtre-texte=entreprise_contient]', `laiterie${NUM}`); await o.waitForTimeout(300); await attendre();
     l = await ids(); essais.push(['entreprise contient', memes(l, [F1])]); await retirerP('entreprise_contient');
     essais.push(['case entreprise vidée', (await o.inputValue('[data-filtre-texte=entreprise_contient]')) === '']);
@@ -3126,7 +3430,7 @@ try {
     const nc = x.d?.id ? c7(x.d.id) : null;
     constat(x.status === 201 && nc && !!nc.verifie_le && nc.etape === null && nc.canal === null && nc.categorie_id === 'partenaires' && nc.temperature === 'tiede'
       && sql(`SELECT source FROM contact_source WHERE contact_id = '${x.d.id}'`).map((s) => s.source).join() === 'saisie'
-      && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${x.d.id}' AND type IN ('creation', 'note')`)[0].n === 2 && x.d.ligne.sources.includes('saisie'),
+      && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${x.d.id}' AND type IN ('creation', 'note')`)[0].n === 2 && !('sources' in x.d.ligne) && (await appeler(`${E}/api/fiche?id=${x.d.id}`, { headers: avecJeton() }).then((y) => y.json())).fiche.sources.some((z) => z.source === 'saisie'),
       '18.7 : « + Nouveau contact » crée un contact vérifié, hors suivi, source « saisie à la main », avec sa note');
     const d1 = await apiFiche({ creer: { nom: 'Doublon', telephone: `07 74 ${NUM.slice(0, 2)} ${NUM.slice(2, 4)} ${NUM.slice(4, 6)}`.replace(/^07/, '06'), categorie_id: 'proches' } });
     const d2 = await apiFiche({ creer: { nom: 'Doublon', email: KEX2.toUpperCase(), categorie_id: 'proches' } });

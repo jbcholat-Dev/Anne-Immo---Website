@@ -88,7 +88,7 @@ const donneesNouveaux = enJson(nouveaux);
         <select data-filtre="categorie_id" aria-label="Filtrer par catégorie"><option value="">Catégorie</option>{categories.map((c) => <option value={c.id}>{c.nom}</option>)}</select>
         <select data-filtre="projet" aria-label="Filtrer par projet"><option value="">Projet</option>{Object.entries(PROJETS).map(([k, v]) => <option value={k}>{v}</option>)}</select>
         <select data-filtre="temperature" aria-label="Filtrer par température"><option value="">Température</option>{Object.entries(TEMPERATURES).map(([k, v]) => <option value={k}>{v}</option>)}</select>
-        <select data-filtre="source" aria-label="Filtrer par source"><option value="">Source</option></select>
+        <select data-filtre="canal" aria-label="Filtrer par source"><option value="">Source</option></select>
         <select data-filtre="ville" aria-label="Filtrer par ville"><option value="">Ville</option></select>
         <select data-filtre="lieu" aria-label="Filtrer par lieu de rencontre"><option value="">Lieu de rencontre</option></select>
         <select data-filtre="mois" aria-label="Filtrer par mois de rencontre"><option value="">Mois de rencontre</option></select>
@@ -175,8 +175,8 @@ const donneesNouveaux = enJson(nouveaux);
   // contacts, de vues, de catégories, villes) passe par `esc` avant d'entrer dans le HTML, ou par textContent / value.
   import { telLisible } from '@site/server/recherche';
   import {
-    ACCORDS, CANAUX_CONTACT, COLONNES, ETATS_AMBASSADEUR, PROJETS, PROJETS_AVEC_TEMPERATURE, TEMPERATURES, TEMPERATURES_CHOIX, indexer, etatAmbassadeur,
-    libelleMois, libelleRencontres, libelleSource, preparerRecherche, temperaturePermise, valeurTri, type CleColonne, type LigneTableau,
+    ACCORDS, CANAUX_CONTACT, CANAUX_SOURCE_ANCIENS, CANAUX_SOURCE_CHOIX, COLONNES, ETATS_AMBASSADEUR, PROJETS, PROJETS_AVEC_TEMPERATURE, TEMPERATURES, TEMPERATURES_CHOIX, indexer, etatAmbassadeur,
+    libelleCanalSource, libelleMois, libelleRencontres, preparerRecherche, temperaturePermise, valeurTri, type CleColonne, type LigneTableau,
   } from '../server/tableau-colonnes';
   import { ajouter, pastilles, preparerFiltre, retirer, type CleFiltre, type Filtre, type Vue } from '../server/vues';
   import { brancherFiche } from '../islands/fiche-contact';
@@ -267,7 +267,8 @@ const donneesNouveaux = enJson(nouveaux);
         if (l.en_cours || !PROJETS_AVEC_TEMPERATURE.includes(l.projet)) return `<td>${p || vide}</td>`;
         return `<td>${classer('temperature', p || pastille('à préciser', 'aq'), 'Changer la température')}</td>`;
       }
-      case 'sources': return `<td class="ct-src">${l.sources.length ? esc(l.sources.map(libelleSource).join(' + ')) : vide}</td>`;
+      // Story 18.21 (ticket n° 265) : la source est l'origine d'affaires d'Anne (`contact.canal`), changée dans la cellule ; les sources d'import sont sur la fiche.
+      case 'canal': return `<td class="ct-src">${classer('canal', l.canal ? esc(libelleCanalSource(l.canal)) : vide, 'Changer la source')}</td>`;
       case 'rencontre': { const t = libelleRencontres(l.rencontres); return `<td class="ct-coupe" title="${esc(t)}">${t ? esc(t) : vide}</td>`; }
       case 'ville': return `<td>${l.ville ? esc(l.ville) : vide}</td>`;
       case 'telephone': return `<td class="ct-num">${l.telephones.length ? esc(telLisible(l.telephones[0])) + plus(l.telephones, telLisible) : vide}</td>`;
@@ -276,7 +277,8 @@ const donneesNouveaux = enJson(nouveaux);
       case 'dernier': return `<td class="ct-num">${l.dernier_le ? `${esc(dates[i])}${l.dernier_canal ? ` · ${esc(CANAUX_CONTACT[l.dernier_canal] ?? l.dernier_canal)}` : ''}` : '<span class="ct-vide">jamais</span>'}</td>`;
       case 'r1': case 'r2': { const d = cle === 'r1' ? l.r1_le : l.r2_le; return `<td class="ct-num">${d ? esc(jourCourt(d)) : vide}</td>`; }
       case 'accord': return `<td>${l.accord === 'sans_email' ? vide : `<span class="ct-accord ${esc(l.accord)}">${esc(ACCORDS[l.accord])}</span>`}</td>`;
-      case 'ambassadeur': return `<td>${l.ambassadeur_etat ? `<span class="ct-pastille amb-${esc(l.ambassadeur_etat)}" data-ambassadeur="${esc(l.ambassadeur_etat)}">${esc(ETATS_AMBASSADEUR[l.ambassadeur_etat])}</span>` : vide}</td>`;
+      // Story 18.21 (ticket n° 264) : la pastille se change dans la cellule (partant / pas partant), aussi pour un contact sans état.
+      case 'ambassadeur': return `<td>${classer('ambassadeur', l.ambassadeur_etat ? `<span class="ct-pastille amb-${esc(l.ambassadeur_etat)}" data-ambassadeur="${esc(l.ambassadeur_etat)}">${esc(ETATS_AMBASSADEUR[l.ambassadeur_etat])}</span>` : vide, 'Noter ou retirer « partant »')}</td>`;
       case 'verifie': return `<td>${l.ecarte ? '<span class="ct-etat">écarté</span>' : l.verifie ? '<span class="ct-etat ok">✓ vérifié</span>' : '<span class="ct-etat av">à vérifier</span>'}</td>`;
       default: return '<td></td>';
     }
@@ -373,11 +375,11 @@ const donneesNouveaux = enJson(nouveaux);
   let vueInvalide: string | null = null;
   const changerFiltre = (f: Filtre) => { filtre = f; vueActive = null; vueInvalide = null; afficher(); };
 
-  // Choix des sources et des villes : celles des contacts chargés, dans l'ordre alphabétique.
+  // Choix de la source (les six choix d'Anne dans son ordre, puis les anciens canaux présents) et des villes (celles des contacts chargés, par ordre alphabétique).
   const remplir = (cle: string, valeursChoix: [string, string][]) => {
     $<HTMLSelectElement>(`[data-filtre=${cle}]`).insertAdjacentHTML('beforeend', valeursChoix.map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join(''));
   };
-  remplir('source', [...new Set(lignes.flatMap((l) => l.sources))].map((s): [string, string] => [s, libelleSource(s)]).sort((a, b) => comparer(a[1], b[1])));
+  remplir('canal', [...CANAUX_SOURCE_CHOIX, ...Object.entries(CANAUX_SOURCE_ANCIENS).filter(([k]) => lignes.some((l) => l.canal === k))]);
   const villes = new Map<string, string>();
   for (const l of lignes) { const v = l.ville?.trim(); if (v && !villes.has(v.toLowerCase())) villes.set(v.toLowerCase(), v); }
   remplir('ville', [...villes.values()].sort(comparer).map((v): [string, string] => [v, v]));
@@ -610,8 +612,8 @@ const donneesNouveaux = enJson(nouveaux);
     if (t.matches('[data-tout]')) cocher(affichees, t.checked);
   });
 
-  type Changements = { categorie_id?: string; projet?: string; temperature?: string | null; verifie?: boolean; ecarte?: boolean };
-  type LigneClassee = Pick<LigneTableau, 'id' | 'categorie_id' | 'categorie' | 'projet' | 'temperature' | 'verifie' | 'ecarte'>;
+  type Changements = { categorie_id?: string; projet?: string; temperature?: string | null; verifie?: boolean; ecarte?: boolean; canal?: string | null; partant?: boolean };
+  type LigneClassee = Pick<LigneTableau, 'id' | 'categorie_id' | 'categorie' | 'projet' | 'temperature' | 'verifie' | 'ecarte' | 'canal' | 'ambassadeur_partant'>;
   type Reponse = { ok: boolean; error?: { message: string }; lot?: string | null; touches?: number; ignores?: number; inchanges?: number; rendus?: number; gardes?: number; lignes?: LigneClassee[] };
   async function carnet(corpsJson: unknown): Promise<Reponse> {
     try {
@@ -625,8 +627,8 @@ const donneesNouveaux = enJson(nouveaux);
     for (const x of l) {
       const i = parId.get(x.id);
       if (i === undefined) continue;
-      Object.assign(lignes[i], { categorie_id: x.categorie_id, categorie: x.categorie, projet: x.projet, temperature: x.temperature, verifie: x.verifie, ecarte: x.ecarte });
-      lignes[i].ambassadeur_etat = etatAmbassadeur(x.projet, lignes[i].ambassadeur_inscrit, lignes[i].ambassadeur_contacte);
+      Object.assign(lignes[i], { categorie_id: x.categorie_id, categorie: x.categorie, projet: x.projet, temperature: x.temperature, verifie: x.verifie, ecarte: x.ecarte, canal: x.canal, ambassadeur_partant: x.ambassadeur_partant });
+      lignes[i].ambassadeur_etat = etatAmbassadeur(x.projet, lignes[i].ambassadeur_inscrit, lignes[i].ambassadeur_contacte, x.ambassadeur_partant);
       html[i] = undefined;
     }
     valeurs.clear();
@@ -661,6 +663,8 @@ const donneesNouveaux = enJson(nouveaux);
   }
   const libelleChangement = (cle: string, v: string) => cle === 'categorie_id' ? `rangé dans « ${nomsCategories.get(v) ?? v} », vérifié`
     : cle === 'projet' ? `projet « ${PROJETS[v] ?? v} »${PROJETS_AVEC_TEMPERATURE.includes(v) ? '' : ', température effacée'}`
+    : cle === 'canal' ? (v ? `source « ${libelleCanalSource(v)} »` : 'source effacée')
+    : cle === 'ambassadeur' ? (v === 'partant' ? 'noté partant (il la préviendra)' : 'plus noté partant')
     : v === 'aucune' ? 'température effacée' : `température « ${TEMPERATURES[v] ?? v} »`;
   /** Une action groupée : sur tous les contacts cochés ; les cases se vident si elle réussit. */
   async function lot(ch: Changements, detail: string) {
@@ -735,13 +739,18 @@ const donneesNouveaux = enJson(nouveaux);
     const l = lignes[i], cle = b.dataset.classer!;
     const options: [string, string][] = cle === 'categorie_id' ? reglages.categories.map((c) => [c.id, c.nom])
       : cle === 'projet' ? Object.entries(PROJETS)
+      // Story 18.21 : la source propose exactement les six choix d'Anne et « Aucune » ; un ancien canal (site, réseaux, rencontre) reste affiché, non choisissable.
+      : cle === 'canal' ? [['', 'Aucune'], ...CANAUX_SOURCE_CHOIX]
+      : cle === 'ambassadeur' ? [['partant', 'Partant'], ['non_partant', 'Pas partant']]
       : [['', 'à préciser'], ...TEMPERATURES_CHOIX.filter((t) => temperaturePermise(t, l.projet)).map((t): [string, string] => [t, TEMPERATURES[t]])];
-    const actuelle = cle === 'categorie_id' ? l.categorie_id : cle === 'projet' ? l.projet : l.temperature ?? '';
+    const ancien = cle === 'canal' && l.canal && !CANAUX_SOURCE_CHOIX.some(([k]) => k === l.canal) ? l.canal : null;
+    const actuelle = cle === 'categorie_id' ? l.categorie_id : cle === 'projet' ? l.projet : cle === 'canal' ? l.canal ?? '' : cle === 'ambassadeur' ? (l.ambassadeur_partant ? 'partant' : 'non_partant') : l.temperature ?? '';
     const s = document.createElement('select');
     s.className = 'ct-liste';
     s.dataset.liste = cle;
-    s.setAttribute('aria-label', `${cle === 'categorie_id' ? 'Catégorie' : cle === 'projet' ? 'Projet' : 'Température'} de ${nomDe(l)}`);
+    s.setAttribute('aria-label', `${cle === 'categorie_id' ? 'Catégorie' : cle === 'projet' ? 'Projet' : cle === 'canal' ? 'Source' : cle === 'ambassadeur' ? 'Ambassadeur partant' : 'Température'} de ${nomDe(l)}`);
     s.innerHTML = (cle === 'categorie_id' && !l.categorie_id ? '<option value="" selected disabled>Choisir…</option>' : '')
+      + (ancien ? `<option value="${esc(ancien)}" selected disabled>${esc(libelleCanalSource(ancien))}</option>` : '')
       + options.map(([v, t]) => `<option value="${esc(v)}"${v === actuelle ? ' selected' : ''}>${esc(t)}</option>`).join('');
     b.replaceWith(s);
     s.focus();
@@ -756,12 +765,14 @@ const donneesNouveaux = enJson(nouveaux);
       fini = true;
       const v = s.value;
       s.disabled = true;
-      const ch: Changements = cle === 'temperature' ? { temperature: v || null } : { [cle]: v };
+      // Rien à écrire si le choix est la valeur déjà là (Entrée sur une liste ouverte sans rien changer).
+      if ((cle === 'canal' || cle === 'ambassadeur') && v === actuelle) { fini = false; refermer(); return; }
+      const ch: Changements = cle === 'temperature' ? { temperature: v || null } : cle === 'canal' ? { canal: v || null } : cle === 'ambassadeur' ? { partant: v === 'partant' } : { [cle]: v };
       const ok = await envoyer([l.id], ch, `${nomDe(l)}, ${cle === 'temperature' && !v ? 'température effacée' : libelleChangement(cle, v)}`);
       if (!ok) { fini = false; refermer(); }
     };
     // « À préciser » (température vide) se choisit aussi.
-    surChoix(s, () => void choisir(), () => refermer(), cle === 'temperature');
+    surChoix(s, () => void choisir(), () => refermer(), cle === 'temperature' || cle === 'canal');
     s.addEventListener('blur', () => setTimeout(refermer, 150));
   }
 
@@ -899,7 +910,7 @@ const donneesNouveaux = enJson(nouveaux);
   .ct-pastille.t-froid { background: #dfe3ea; color: var(--avt-brun); }
   .ct-pastille.t-avec_anne { background: var(--avt-klein); color: #fff; }
   /* Etat ambassadeur (story 18.18) : la charte n'a ni vert ni ambre ; le vert est celui de « accord » ci-dessous, l'ambre un fond clair du même registre que le tiède. */
-  .ct-pastille.amb-inscrit { background: #2E6B3F; color: #fff; }
+  .ct-pastille.amb-inscrit, .ct-pastille.amb-partant { background: #2E6B3F; color: #fff; } /* Story 18.21 : « partant » (noté à la main) est vert comme « inscrit » */
   .ct-pastille.amb-contacte { background: #F0DDA8; color: var(--avt-brun); }
   .ct-pastille.amb-a_contacter { background: transparent; border: 1px solid var(--avt-galet); color: var(--avt-text-muted); }
   .ct-pastille.t-termine { background: transparent; border: 1px solid var(--avt-galet); color: var(--avt-text-muted); }

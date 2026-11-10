@@ -8,7 +8,7 @@
 // modification d'une ligne en place ; il écrit par /api/boitage.
 import Espace from '../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
-import { CANAUX_ORIGINE } from '@site/server/contacts';
+import { CANAUX_ACTION, CANAUX_ORIGINE } from '@site/server/contacts';
 import { actionDuFormulaire, coutRetenu, enregistrerAction, euros, lireAction, listerActions, parUnite, supprimerAction } from '../server/actions';
 import { pourSite as env } from '../server/env';
 import { champ, ULID } from '../server/formulaires';
@@ -123,7 +123,7 @@ const dates = (a: { debut: string; fin: string | null }) => (a.fin ? `du ${echea
       <label class="e-champ large">Nom<input name="nom" value={valeur('nom', enCours?.nom)} required maxlength="120" placeholder="Flyers Margencel, publicité Facebook de mars…" autocomplete="off" /></label>
       <label class="e-champ">Canal
         <select name="canal" required>
-          {Object.entries(CANAUX_ORIGINE).map(([k, t]) => <option value={k} selected={valeur('canal', enCours?.canal) === k}>{t}</option>)}
+          {Object.entries(CANAUX_ACTION).map(([k, t]) => <option value={k} selected={valeur('canal', enCours?.canal) === k}>{t}</option>)}
         </select>
       </label>
       <label class="e-champ">Début<input type="date" name="debut" required value={valeur('debut', enCours?.debut ?? aujourdhui())} /></label>

@@ -263,6 +263,7 @@ development_status:
   18-18-envoi-ambassadeur-depuis-l-espace: done   # 2026-11-05, PR #247 ; envoi en production après le sous-domaine nouvelles.annevialtissot.fr (JB)
   18-19-tableau-du-boitage: done   # 2026-11-05, ticket n° 249, PR #250
   18-20-r1-r2-boitage-et-contacts: review   # 2026-11-09, tickets n° 256 à 258 : R1 et R2 = rendez-vous (nombres dans le boîtage, dates sur les contacts)
+  18-21-source-projet-aucun-ambassadeur-partant: review   # 2026-11-10, tickets n° 264 à 266 : ambassadeur « partant » (vert), Source = canal en liste, projet « Aucun » ; migration 0025 reconstruit `contact`, NE PAS POUSSER sans l'accord écrit de JB
   epic-18-retrospective: optional   # non faite : décision JB « Finir économe » du 2026-11-02
 
   epic-19: backlog   # les séances et les campagnes (livraison 2) ; en pause (décision JB 2026-11-02)

@@ -33,6 +33,7 @@ export const LIBELLES_ETAPES: Record<Etape, string> = {
 
 /** Les canaux d'origine (CAP-12 v7) ; le bilan du lundi (story 13.13) compte par canal. */
 export const CANAUX_ORIGINE = {
+  pige: 'Pige', // story 18.21 (migration 0025, ticket n° 265) : origine d'affaires d'Anne ; pas un canal d'action marketing (voir CANAUX_ACTION)
   boitage: 'Boîtage',
   recommandation: 'Recommandation',
   evenement: 'Événement',
@@ -43,6 +44,8 @@ export const CANAUX_ORIGINE = {
   autre: 'Autre',
 } as const;
 export type Canal = keyof typeof CANAUX_ORIGINE;
+/** Les canaux qu'une action marketing peut porter : ceux de `CANAUX_ORIGINE` sauf « pige » (le CHECK de `action_marketing`, migration 0010, ne le connaît pas). */
+export const CANAUX_ACTION: Record<string, string> = Object.fromEntries(Object.entries(CANAUX_ORIGINE).filter(([k]) => k !== 'pige'));
 
 /** Action posée sur tout nouveau contact : le rappeler pour le qualifier, dès son arrivée. */
 export const ACTION_QUALIFIER = 'Rappeler pour qualifier';
