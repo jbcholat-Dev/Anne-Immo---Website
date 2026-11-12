@@ -19,8 +19,14 @@ export interface Fiche {
   categorie_id: string | null; categorie: string | null; appel_permis_categorie: boolean | null;
   projet: string; temperature: string | null; verifie_le: string | null; ecarte_le: string | null;
   appel_autorise: boolean | null; a_rappeler_le: string | null;
+  /** Dates du premier et du second rendez-vous (R1, R2, story 18.20), AAAA-MM-JJ. */
+  r1_le: string | null; r2_le: string | null;
   dernier_contact_le: string | null; dernier_contact_canal: string | null;
   ambassadeur_inscrit_le: string | null;
+  /** Date (AAAA-MM-JJ) où Anne a noté « m'a dit qu'il me préviendrait » (story 18.21, ticket n° 264), ou null. */
+  ambassadeur_partant_le: string | null;
+  /** Origine d'affaires (`contact.canal`, story 18.21, ticket n° 265), ou null. */
+  canal: string | null;
   /** Etat ambassadeur (story 18.18) : null si ni de projet ambassadeur ni inscrit. */
   ambassadeur_etat: EtatAmbassadeur | null;
   /** Peut recevoir un envoi groupé : accord ou ancien client, et catégorie qui le permet (story 18.18). Sinon la fiche propose « Écrire » à la main. */
@@ -42,16 +48,16 @@ export interface Fiche {
 interface Ligne extends DonneesAccord {
   id: string; created_at: string; prenom: string | null; nom: string | null; entreprise: string | null; commune: string | null; telephone: string | null;
   categorie_id: string | null; categorie: string | null; appel_permis: number | null; projet: string; temperature: string | null;
-  verifie_le: string | null; ecarte_le: string | null; appel_autorise: number | null; a_rappeler_le: string | null;
-  dernier_contact_le: string | null; dernier_contact_canal: string | null; ambassadeur_inscrit_le: string | null; envoi_groupe_permis: number | null; modele_envoye: number;
+  verifie_le: string | null; ecarte_le: string | null; appel_autorise: number | null; a_rappeler_le: string | null; r1_le: string | null; r2_le: string | null;
+  dernier_contact_le: string | null; dernier_contact_canal: string | null; ambassadeur_inscrit_le: string | null; ambassadeur_partant_le: string | null; canal: string | null; envoi_groupe_permis: number | null; modele_envoye: number;
   prochaine_action: string | null; prochaine_action_le: string | null;
 }
 
 export async function lireFiche(env: EnvSite, id: string): Promise<Fiche | null> {
   const [c, coords, sources, demandes, historique] = await env.DB.batch([
     env.DB.prepare(`SELECT c.id, c.created_at, c.prenom, c.nom, c.entreprise, c.commune, c.telephone, c.categorie_id, k.nom AS categorie, k.appel_permis, k.envoi_groupe_permis, ${SQL_MODELE_ENVOYE} AS modele_envoye,
-        c.projet, c.temperature, c.verifie_le, c.ecarte_le, c.appel_autorise, c.a_rappeler_le, c.dernier_contact_le, c.dernier_contact_canal,
-        c.ambassadeur_inscrit_le, c.prochaine_action, c.prochaine_action_le, ${SQL_ACCORD}
+        c.projet, c.temperature, c.verifie_le, c.ecarte_le, c.appel_autorise, c.a_rappeler_le, c.r1_le, c.r2_le, c.dernier_contact_le, c.dernier_contact_canal,
+        c.ambassadeur_inscrit_le, c.ambassadeur_partant_le, c.canal, c.prochaine_action, c.prochaine_action_le, ${SQL_ACCORD}
       FROM contact c LEFT JOIN categorie k ON k.id = c.categorie_id WHERE c.id = ?1`).bind(id),
     env.DB.prepare('SELECT type, reseau, valeur FROM contact_coordonnee WHERE contact_id = ?1 ORDER BY id').bind(id),
     env.DB.prepare('SELECT source, a, lieu, mois FROM contact_source WHERE contact_id = ?1 ORDER BY a, id').bind(id),
@@ -69,12 +75,12 @@ export async function lireFiche(env: EnvSite, id: string): Promise<Fiche | null>
     profils: coords.results.filter((x) => x.type === 'profil' && LIEN_WEB.test(x.valeur)).map((x) => ({ reseau: x.reseau, url: x.valeur })),
     categorie_id: l.categorie_id, categorie: l.categorie, appel_permis_categorie: l.appel_permis === null ? null : !!l.appel_permis,
     projet: l.projet, temperature: l.temperature, verifie_le: l.verifie_le, ecarte_le: l.ecarte_le,
-    appel_autorise: l.appel_autorise === null ? null : !!l.appel_autorise, a_rappeler_le: l.a_rappeler_le,
-    dernier_contact_le: l.dernier_contact_le, dernier_contact_canal: l.dernier_contact_canal, ambassadeur_inscrit_le: l.ambassadeur_inscrit_le,
+    appel_autorise: l.appel_autorise === null ? null : !!l.appel_autorise, a_rappeler_le: l.a_rappeler_le, r1_le: l.r1_le, r2_le: l.r2_le,
+    dernier_contact_le: l.dernier_contact_le, dernier_contact_canal: l.dernier_contact_canal, ambassadeur_inscrit_le: l.ambassadeur_inscrit_le, ambassadeur_partant_le: l.ambassadeur_partant_le, canal: l.canal,
     etape: l.etape, etape_libelle: l.etape ? LIBELLES_ETAPES[l.etape as Etape] ?? l.etape : null, en_cours: suiviEnCours(l.etape),
     prochaine_action: l.prochaine_action, prochaine_action_le: l.prochaine_action_le,
     accord: etatEmail(l),
-    ambassadeur_etat: etatAmbassadeur(l.projet, !!l.ambassadeur_inscrit_le, !!l.modele_envoye),
+    ambassadeur_etat: etatAmbassadeur(l.projet, !!l.ambassadeur_inscrit_le, !!l.modele_envoye, !!l.ambassadeur_partant_le),
     envoi_groupe: peutRecevoirCampagne(etatEmail(l)) && l.envoi_groupe_permis !== 0,
     sources: sources.results.filter((s) => !vus.has(s.source) && vus.add(s.source)).map((s) => ({ source: s.source, libelle: libelleSource(s.source), a: s.a })),
     rencontres: rencontresDe(sources.results).map(libelleRencontre).filter(Boolean),

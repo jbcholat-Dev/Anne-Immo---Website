@@ -4,7 +4,7 @@
 // tableau par `surLigne`, sans recharger. Tout texte venu des données passe par `esc` avant d'entrer dans le HTML.
 import { telLisible } from '@site/server/recherche';
 import {
-  CANAUX_CONTACT, ETATS_AMBASSADEUR, PROJETS, PROJETS_AVEC_TEMPERATURE, TEMPERATURES, TEMPERATURES_CHOIX, temperaturePermise, type LigneTableau,
+  CANAUX_CONTACT, CANAUX_SOURCE_CHOIX, ETATS_AMBASSADEUR, PROJETS, PROJETS_AVEC_TEMPERATURE, TEMPERATURES, TEMPERATURES_CHOIX, temperaturePermise, libelleCanalSource, type LigneTableau,
 } from '../server/tableau-colonnes';
 import type { Fiche } from '../server/fiche';
 
@@ -97,9 +97,14 @@ export function brancherFiche(r: Reglages) {
           <label class="fc-case"><input type="checkbox" name="verifie"${f.verifie_le ? ' checked' : ''} /> Catégorie vérifiée</label>
           <label class="ct-champ">Projet<select name="projet">${options(Object.entries(PROJETS), f.projet)}</select></label>
           <label class="ct-champ">Température${f.en_cours ? `<input value="${esc(tempTexte)}" disabled title="Suit l'étape du suivi des ventes" /><input type="hidden" name="temperature-fixe" />` : `<select name="temperature" data-fiche-temperature>${options(temperatures(f.projet), f.temperature)}</select>`}</label>
+          <label class="ct-champ">Source<select name="canal" data-fiche-canal>${f.canal && !CANAUX_SOURCE_CHOIX.some(([k]) => k === f.canal) ? `<option value="${esc(f.canal)}" selected disabled>${esc(libelleCanalSource(f.canal))}</option>` : ''}${options([['', 'Aucune'], ...CANAUX_SOURCE_CHOIX], f.canal)}</select></label>
+          <label class="fc-case" data-fiche-partant><input type="checkbox" name="partant"${f.ambassadeur_partant_le ? ' checked' : ''} /> M'a dit qu'il me préviendrait${f.ambassadeur_partant_le ? ` <span class="fc-muet">(noté le ${esc(jour(f.ambassadeur_partant_le))})</span>` : ''}</label>
           <label class="ct-champ">Appel autorisé<select name="appel_autorise">${options([['', `Selon la catégorie (${appelRegle})`], ['oui', 'Oui, pour cette personne'], ['non', 'Non, ne pas l\'appeler']], f.appel_autorise === null ? '' : f.appel_autorise ? 'oui' : 'non')}</select></label>
           <label class="ct-champ">À rappeler le<input type="date" name="a_rappeler_le" value="${esc(f.a_rappeler_le)}" /></label>
+          <label class="ct-champ">R1 (premier rendez-vous)<input type="date" name="r1_le" value="${esc(f.r1_le)}" /></label>
+          <label class="ct-champ">R2 (second rendez-vous)<input type="date" name="r2_le" value="${esc(f.r2_le)}" /></label>
         </div>
+        ${f.sources.length ? `<p class="fc-muet" data-fiche-sources>Importé depuis : ${f.sources.map((x) => `${esc(x.libelle)} (${esc(jour(x.a))})`).join(', ')}</p>` : ''}
         ${f.profils.length ? `<p class="fc-muet">Profils : ${f.profils.map((p) => `<a href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">${esc(p.reseau ? RESEAUX[p.reseau.toLowerCase()] ?? p.reseau : 'Profil')}</a>`).join(' · ')}</p>` : ''}
         <div class="fc-boutons"><button type="submit" class="ct-btn bleu" data-fiche-enregistrer>Enregistrer</button></div>
       </form>
@@ -133,7 +138,7 @@ export function brancherFiche(r: Reglages) {
         <div class="fc-boutons"><button type="submit" class="ct-btn">Ajouter la note</button></div>
       </form>
       <section class="fc-bloc fc-deux">
-        <div><h3>Sources</h3><ul class="fc-simple" data-fiche-sources>${f.sources.map((s) => `<li>${esc(s.libelle)} <span class="fc-muet">${esc(jour(s.a))}</span></li>`).join('') || '<li class="fc-muet">—</li>'}</ul>${f.rencontres.length ? `<h3>Rencontres</h3><ul class="fc-simple" data-fiche-rencontres>${f.rencontres.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}</div>
+        <div>${f.rencontres.length ? `<h3>Rencontres</h3><ul class="fc-simple" data-fiche-rencontres>${f.rencontres.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}</div>
         <div><h3>Séances</h3><ul class="fc-simple" data-fiche-seances>${f.seances.map((s) => `<li>${esc(s.nom)}</li>`).join('') || '<li class="fc-muet">Aucune séance pour l\'instant.</li>'}</ul></div>
       </section>
       ${f.demandes.length ? `<section class="fc-bloc" data-fiche-demandes><h3>Demandes reçues du site</h3>${f.demandes.map((d) => `<div class="fc-demande"><div class="fc-muet">${esc(d.libelle)} · ${esc(quand(d.created_at))}${d.type_bien || d.commune_bien ? ` · ${esc([d.type_bien, d.commune_bien].filter(Boolean).join(', '))}` : ''}</div>${d.message ? `<div class="fc-texte">${esc(d.message)}</div>` : ''}</div>`).join('')}</section>` : ''}
@@ -216,10 +221,14 @@ export function brancherFiche(r: Reglages) {
     if (v('categorie_id') && v('categorie_id') !== f.categorie_id) c.categorie_id = v('categorie_id');
     if (d.has('verifie') !== !!f.verifie_le && c.categorie_id === undefined) c.verifie = d.has('verifie');
     if (v('projet') !== f.projet) c.projet = v('projet');
+    // Story 18.21 : la source (un ancien canal affiché désactivé n'est pas envoyé : il reste tel quel) et « m'a dit qu'il me préviendrait ».
+    if (d.has('canal') && (v('canal') || null) !== f.canal) c.canal = v('canal') || null;
+    if (d.has('partant') !== !!f.ambassadeur_partant_le) c.partant = d.has('partant');
     if (d.has('temperature') && (v('temperature') || null) !== (temperaturePermise(f.temperature, v('projet')) ? f.temperature : null)) c.temperature = v('temperature') || null;
     const appel = v('appel_autorise') === '' ? null : v('appel_autorise') === 'oui';
     if (appel !== f.appel_autorise) c.appel_autorise = appel;
     if ((v('a_rappeler_le') || null) !== f.a_rappeler_le) c.a_rappeler_le = v('a_rappeler_le') || null;
+    for (const k of ['r1_le', 'r2_le'] as const) if ((v(k) || null) !== f[k]) c[k] = v(k) || null;
     return c;
   }
 

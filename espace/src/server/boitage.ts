@@ -1,10 +1,12 @@
 // Tableau du boîtage (story 18.19, ticket n° 249) : un passage de boîtage vu comme une ligne d'un tableau, avec les colonnes
-// qu'Anne tient dans son classeur : date, ville, quartier, type de bien, flyers, numéro de message, relances R1 et R2,
-// commentaires. Même table que les passages de /ajouter (`passage_boitage`, migrations 0007, 0010 et 0023) : « date » est
-// `fait_le`, « flyers » est `mots`. `secteur` reste obligatoire (bilan par secteur, boîtage à refaire, choix du passage à la
-// saisie d'un contact) : il est tenu à jour ici, « ville · quartier » ou la ville seule. Le coût du passage (`cout_centimes`)
-// n'est ni lu ni écrit ici : il reste saisi sur /ajouter.
-// Hypothèse à confirmer par Anne : R1 et R2 sont les dates des deux relances (second passage ou rappel), pas des résultats.
+// qu'Anne tient dans son classeur : date, ville, quartier, type de bien, flyers, numéro de message, R1 et R2, commentaires.
+// Même table que les passages de /ajouter (`passage_boitage`, migrations 0007, 0010, 0023 et 0024) : « date » est `fait_le`,
+// « flyers » est `mots`. `secteur` reste obligatoire (bilan par secteur, boîtage à refaire, choix du passage à la saisie d'un
+// contact) : il est tenu à jour ici, « ville · quartier » ou la ville seule.
+// Story 18.20 (tickets n° 256 à 258) : R1 et R2 sont le NOMBRE de premiers et de seconds rendez-vous qu'un passage a amenés
+// (`r1_nb`, `r2_nb`, entiers de 0 à 9999), et non des dates de relance comme 18.19 l'avait cru ; les anciennes colonnes
+// `r1` et `r2` de la migration 0023 ne sont plus lues ni écrites. La date de chaque rendez-vous vit sur la fiche du contact
+// (`contact.r1_le`, `contact.r2_le`). Le coût du passage (`cout_centimes`) n'est pas un champ du tableau : seul /ajouter le fournit, à `ajouterBoitage`.
 import type { EnvSite } from '@site/server/env';
 import { ulid } from '@site/server/ulid';
 import { aujourdhui } from './pipeline';
@@ -20,8 +22,10 @@ export interface LigneBoitage {
   type_bien: TypeBien | null;
   flyers: number | null;
   message: string | null;
-  r1: string | null;
-  r2: string | null;
+  /** Nombre de premiers rendez-vous amenés par ce passage. */
+  r1: number | null;
+  /** Nombre de seconds rendez-vous. */
+  r2: number | null;
   commentaire: string | null;
 }
 export type ChampsBoitage = Omit<LigneBoitage, 'id'>;
@@ -75,22 +79,14 @@ export function verifierBoitage(d: Record<string, unknown>, complet: boolean): P
   }
   for (const k of ['r1', 'r2'] as const) {
     if (d[k] === undefined) continue;
-    if (!vide(d[k]) && !estDate(d[k])) return `La date de ${k.toUpperCase()} ne semble pas valable.`;
-    sortie[k] = vide(d[k]) ? null : d[k] as string;
+    if (!vide(d[k]) && !(typeof d[k] === 'number' && Number.isInteger(d[k]) && (d[k] as number) >= 0 && (d[k] as number) <= 9999)) return `${k.toUpperCase()} est un nombre entier de rendez-vous, de 0 à 9 999.`;
+    sortie[k] = vide(d[k]) ? null : d[k] as number;
   }
   return sortie;
 }
 
-/** Une relance ne précède ni le passage ni la relance précédente ; renvoie le message d'erreur, sinon null. */
-export function incoherence(c: Pick<ChampsBoitage, 'fait_le' | 'r1' | 'r2'>): string | null {
-  if (c.r1 && c.r1 < c.fait_le) return 'R1 est avant la date du passage.';
-  if (c.r2 && c.r2 < c.fait_le) return 'R2 est avant la date du passage.';
-  if (c.r1 && c.r2 && c.r2 < c.r1) return 'R2 est avant R1.';
-  return null;
-}
-
 // Un passage noté sur /ajouter n'a pas de ville : son secteur en tient lieu.
-const SELECTION = `SELECT id, fait_le, coalesce(ville, secteur) AS ville, quartier, type_bien, mots AS flyers, message, r1, r2, commentaire FROM passage_boitage`;
+const SELECTION = `SELECT id, fait_le, coalesce(ville, secteur) AS ville, quartier, type_bien, mots AS flyers, message, r1_nb AS r1, r2_nb AS r2, commentaire FROM passage_boitage`;
 
 /** Les passages, du plus récent au plus ancien. */
 export async function listerBoitage(env: EnvSite): Promise<LigneBoitage[]> {
@@ -98,34 +94,37 @@ export async function listerBoitage(env: EnvSite): Promise<LigneBoitage[]> {
   return results;
 }
 
+/** Les villes déjà notées (suggestions de /ajouter) ; un passage d'avant 18.19, sans ville, donne son secteur. */
+export async function listerVilles(env: EnvSite): Promise<string[]> {
+  const { results } = await env.DB.prepare('SELECT DISTINCT coalesce(ville, secteur) AS ville FROM passage_boitage ORDER BY 1 LIMIT 200').all<{ ville: string }>();
+  return results.map((r) => r.ville);
+}
+
 export async function lireBoitage(env: EnvSite, id: string): Promise<LigneBoitage | null> {
   return env.DB.prepare(`${SELECTION} WHERE id = ?1`).bind(id).first<LigneBoitage>();
 }
 
-/** Ajoute un passage (champs déjà vérifiés en mode complet). Renvoie son id. */
-export async function ajouterBoitage(env: EnvSite, c: ChampsBoitage): Promise<string> {
+/** Ajoute un passage (champs déjà vérifiés en mode complet) ; `coutCentimes` : le coût des flyers, saisi sur /ajouter. Renvoie son id. */
+export async function ajouterBoitage(env: EnvSite, c: ChampsBoitage, coutCentimes: number | null = null): Promise<string> {
   const id = ulid();
   await env.DB.prepare(
-    `INSERT INTO passage_boitage (id, created_at, secteur, fait_le, mots, ville, quartier, type_bien, message, r1, r2, commentaire)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)`,
-  ).bind(id, new Date().toISOString(), secteurDe(c.ville, c.quartier), c.fait_le, c.flyers, c.ville, c.quartier, c.type_bien, c.message, c.r1, c.r2, c.commentaire).run();
+    `INSERT INTO passage_boitage (id, created_at, secteur, fait_le, mots, ville, quartier, type_bien, message, r1_nb, r2_nb, commentaire, cout_centimes)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)`,
+  ).bind(id, new Date().toISOString(), secteurDe(c.ville, c.quartier), c.fait_le, c.flyers, c.ville, c.quartier, c.type_bien, c.message, c.r1, c.r2, c.commentaire, coutCentimes).run();
   return id;
 }
 
 /**
- * Corrige un passage : seuls les champs présents changent. Renvoie la ligne à jour, `null` si le passage n'existe pas, ou le
- * message d'erreur si le résultat serait incohérent (relance avant le passage).
+ * Corrige un passage : seuls les champs présents changent. Renvoie la ligne à jour, ou `null` si le passage n'existe pas.
  */
-export async function corrigerBoitage(env: EnvSite, id: string, patch: Partial<ChampsBoitage>): Promise<LigneBoitage | null | string> {
+export async function corrigerBoitage(env: EnvSite, id: string, patch: Partial<ChampsBoitage>): Promise<LigneBoitage | null> {
   const avant = await lireBoitage(env, id);
   if (!avant) return null;
   const { id: _, ...courant } = avant;
   const apres: ChampsBoitage = { ...courant, ...patch };
-  const refus = incoherence(apres);
-  if (refus) return refus;
   // Seuls les champs reçus sont écrits : corriger un ancien passage (sans ville) ne lui en invente pas une. Le secteur suit la
   // ville et le quartier quand l'un des deux est touché.
-  const colonne = { fait_le: 'fait_le', ville: 'ville', quartier: 'quartier', type_bien: 'type_bien', flyers: 'mots', message: 'message', r1: 'r1', r2: 'r2', commentaire: 'commentaire' } as const;
+  const colonne = { fait_le: 'fait_le', ville: 'ville', quartier: 'quartier', type_bien: 'type_bien', flyers: 'mots', message: 'message', r1: 'r1_nb', r2: 'r2_nb', commentaire: 'commentaire' } as const;
   const cles = (Object.keys(patch) as (keyof ChampsBoitage)[]).filter((k) => k in colonne);
   const colonnes = cles.map((k, i) => `${colonne[k]} = ?${i + 2}`);
   const valeurs: unknown[] = cles.map((k) => patch[k]);

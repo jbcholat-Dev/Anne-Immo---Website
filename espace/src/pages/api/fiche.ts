@@ -4,7 +4,7 @@
 // de service de Claude refusé (403) ; corps en JSON seulement, 20 000 caractères au plus (413).
 //   GET  /api/fiche?id=…                                  → 200 { ok, fiche }            ; 404 contact inconnu
 //   POST /api/fiche { id, corriger: { prenom?, nom?, entreprise?, commune?, telephones?, emails?, categorie_id?, projet?,
-//                     temperature?, verifie?, ecarte?, appel_autorise?, a_rappeler_le? } }
+//                     temperature?, verifie?, ecarte?, appel_autorise?, a_rappeler_le?, r1_le?, r2_le?, canal?, partant? } }
 //        → 200 { ok, fiche, ligne, changes, ignore } ; 409 { error: { code: 'existant' }, existant: { id, nom } } (téléphone ou
 //          e-mail d'un autre contact) ; 409 'modifie' (contact changé entre la lecture et l'écriture)
 //   POST /api/fiche { id, note: "…" }                     → 200 { ok, fiche, ligne }
@@ -15,10 +15,13 @@
 //        → 201 { ok, id, ligne } ; 409 'existant' (proposer d'ouvrir le contact existant) ; 409 'opposition'
 // Revue de code 18.7 : une correction qui ajoute un téléphone ou un e-mail d'une personne en opposition → 409 'opposition' ;
 // sans LIEN_SECRET et avec une liste d'opposition non vide, création et ajout de coordonnée → 503 'opposition_indisponible'.
+// Story 18.20 : r1_le et r2_le, dates AAAA-MM-JJ (ou null pour effacer) du premier et du second rendez-vous ; R2 avant R1 → 400 'ordre'.
+// Story 18.21 : projet « aucun » (sans température) ; canal = la source (pige, boitage, portail, recommandation, evenement, autre, ou null) ;
+// partant = ambassadeur « partant » (true : daté d'aujourd'hui, false : retiré). La fiche renvoie aussi `canal` et `ambassadeur_partant_le`.
 // 400 pour toute valeur hors vocabulaire. Réponses `{ ok, ... }` ou `{ ok: false, error: { code, message } }`.
 import type { APIRoute } from 'astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
-import { ajouterNote, corrigerFiche, creerContact, lireContactNote, lireCorrection, lireSaisie, noterContact } from '../../server/carnet';
+import { ajouterNote, corrigerFiche, creerContact, REFUS_ORDRE_RDV, lireContactNote, lireCorrection, lireSaisie, noterContact } from '../../server/carnet';
 import { noterAccord, noterRefus } from '../../server/accord';
 import { COMPTE_CLAUDE, envEspace, pourSite as env } from '../../server/env';
 import { lireFiche } from '../../server/fiche';
@@ -83,13 +86,14 @@ export const POST: APIRoute = async ({ request }) => {
 
   if (geste === 'corriger') {
     const c = lireCorrection(d.corriger, await idsCategories(env));
-    if (typeof c === 'string') return erreur(400, 'correction', c);
+    if (typeof c === 'string') return erreur(400, c === REFUS_ORDRE_RDV ? 'ordre' : 'correction', c);
     const r = await corrigerFiche(env, id, c, compte);
     if (!r) return erreur(404, 'contact', 'Contact inconnu');
     if (!r.ok) {
       if ('conflit' in r) return erreur(409, 'existant', `Ce téléphone ou cet e-mail est déjà celui de ${r.conflit.nom} : rien n'a été changé.`, { existant: r.conflit });
       if ('opposition' in r) return erreur(409, 'opposition', 'Ce téléphone ou cet e-mail est celui d\'une personne qui a demandé l\'effacement de ses données : rien n\'a été changé.');
       if ('indisponible' in r) return erreur(503, 'opposition_indisponible', INDISPONIBLE);
+      if (r.refus === REFUS_ORDRE_RDV) return erreur(400, 'ordre', r.refus);
       return erreur(r.refus.startsWith('Il faut') ? 400 : 409, r.refus.startsWith('Il faut') ? 'correction' : 'modifie', r.refus);
     }
     // Un nouveau numéro principal peut avoir des appels déjà relevés par Leedflow (contact du suivi seulement, AD-32).

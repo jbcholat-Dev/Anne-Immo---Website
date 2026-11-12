@@ -10,7 +10,7 @@ interface LigneContact extends DonneesAccord {
   id: string; prenom: string | null; nom: string | null; telephone: string | null; entreprise: string | null;
   categorie_id: string | null; categorie: string | null; projet: string; temperature: string | null; commune: string | null;
   dernier_contact_le: string | null; dernier_contact_canal: string | null; verifie_le: string | null; ecarte_le: string | null;
-  a_rappeler_le: string | null; ambassadeur_inscrit_le: string | null; modele_envoye: number;
+  a_rappeler_le: string | null; r1_le: string | null; r2_le: string | null; ambassadeur_inscrit_le: string | null; ambassadeur_partant_le: string | null; canal: string | null; modele_envoye: number;
 }
 
 /** 1 si un modèle a déjà été envoyé au contact (story 18.18) : un événement de sa fiche porte `envoi_modele` (json_valid d'abord : un texte qui n'est pas du JSON ne doit pas faire échouer la lecture). */
@@ -27,7 +27,7 @@ export async function lireTableau(env: EnvSite, id?: string): Promise<LigneTable
   const [contacts, coordonnees, sources] = await env.DB.batch([
     lier(env.DB.prepare(
       `SELECT c.id, c.prenom, c.nom, c.telephone, c.entreprise, c.categorie_id, k.nom AS categorie, c.projet, c.temperature, c.commune,
-         c.dernier_contact_le, c.dernier_contact_canal, c.verifie_le, c.ecarte_le, c.a_rappeler_le, c.ambassadeur_inscrit_le, ${SQL_MODELE_ENVOYE} AS modele_envoye, ${SQL_ACCORD}
+         c.dernier_contact_le, c.dernier_contact_canal, c.verifie_le, c.ecarte_le, c.a_rappeler_le, c.r1_le, c.r2_le, c.ambassadeur_inscrit_le, c.ambassadeur_partant_le, c.canal, ${SQL_MODELE_ENVOYE} AS modele_envoye, ${SQL_ACCORD}
        FROM contact c LEFT JOIN categorie k ON k.id = c.categorie_id${seul}`,
     )),
     lier(env.DB.prepare(`SELECT contact_id, type, reseau, valeur FROM contact_coordonnee${seulFille} ORDER BY id`)),
@@ -42,12 +42,8 @@ export async function lireTableau(env: EnvSite, id?: string): Promise<LigneTable
     else if (LIEN_WEB.test(k.valeur)) a.profils.push({ reseau: k.reseau, url: k.valeur });
     autres.set(k.contact_id, a);
   }
-  const parContact = new Map<string, string[]>();
   const rencontres = new Map<string, { source: string; lieu: string | null; mois: string | null }[]>();
   for (const s of sources.results) {
-    const l = parContact.get(s.contact_id) ?? [];
-    if (!l.includes(s.source)) l.push(s.source);
-    parContact.set(s.contact_id, l);
     if (s.lieu || s.mois) rencontres.set(s.contact_id, [...(rencontres.get(s.contact_id) ?? []), s]);
   }
 
@@ -55,14 +51,14 @@ export async function lireTableau(env: EnvSite, id?: string): Promise<LigneTable
     const a = autres.get(c.id);
     return {
       id: c.id, prenom: c.prenom, nom: c.nom, entreprise: c.entreprise, categorie_id: c.categorie_id, categorie: c.categorie,
-      projet: c.projet, temperature: c.temperature, sources: parContact.get(c.id) ?? [], rencontres: rencontresDe(rencontres.get(c.id) ?? []), ville: c.commune,
+      projet: c.projet, temperature: c.temperature, canal: c.canal, rencontres: rencontresDe(rencontres.get(c.id) ?? []), ville: c.commune,
       telephones: [c.telephone, ...(a?.telephones ?? [])].filter((t): t is string => !!t),
       emails: [c.email, ...(a?.emails ?? [])].filter((e): e is string => !!e),
       profils: a?.profils ?? [],
       dernier_le: c.dernier_contact_le, dernier_canal: c.dernier_contact_canal,
       accord: etatEmail(c).statut, verifie: !!c.verifie_le, ecarte: !!c.ecarte_le, suivi: c.etape !== null, en_cours: suiviEnCours(c.etape),
-      a_rappeler_le: c.a_rappeler_le, ambassadeur_inscrit: !!c.ambassadeur_inscrit_le,
-      ambassadeur_etat: etatAmbassadeur(c.projet, !!c.ambassadeur_inscrit_le, !!c.modele_envoye), ambassadeur_contacte: !!c.modele_envoye,
+      a_rappeler_le: c.a_rappeler_le, r1_le: c.r1_le, r2_le: c.r2_le, ambassadeur_inscrit: !!c.ambassadeur_inscrit_le, ambassadeur_partant: !!c.ambassadeur_partant_le,
+      ambassadeur_etat: etatAmbassadeur(c.projet, !!c.ambassadeur_inscrit_le, !!c.modele_envoye, !!c.ambassadeur_partant_le), ambassadeur_contacte: !!c.modele_envoye,
     };
   });
 }

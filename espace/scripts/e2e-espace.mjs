@@ -11,6 +11,8 @@
 // Story 13.7 : passage de boîtage, saisie à la main (origine exigée, numéro connu = fiche complétée, prescripteur créé),
 // fiche et liste des contacts, import .csv et .xlsx (aperçu, doublons, personnes connues complétées, consentement).
 // Story 13.5 : page « Aujourd'hui » (nouveaux d'abord, rappels dus et en retard, réveils, boîtage à refaire, prescripteurs).
+// Story 18.20 : R1 et R2 (premier et second rendez-vous) : nombres dans le boîtage (/ajouter et tableau), dates sur chaque fiche contact et colonnes de la page Contacts.
+// Story 18.21 : projet « Aucun », colonne « Source » = canal (six choix, tableau et fiche), sources d'import sur la fiche, ambassadeur « Partant » (fiche et tableau, vert, tri, filtre), jeton de Claude refusé.
 // Story 13.13 : bilan par canal recalculé depuis la base, boîtage par secteur, motifs de perte, délai de rappel.
 // Story 13.14 : prescripteurs (recommandés, mandats, relance due sur Aujourd'hui, échange noté, ajout).
 // Story 13.15 : acheteurs actifs (critères, « aussi vendeur », vendeurs en sommeil du secteur, lettre sur Aujourd'hui).
@@ -308,7 +310,7 @@ try {
   });
   const auj = new Intl.DateTimeFormat('fr-CA', { timeZone: 'Europe/Paris' }).format(new Date());
   const SECTEUR = `Sciez-${ESSAI}`;
-  r = await page('/ajouter', { quoi: 'passage', secteur: SECTEUR, fait_le: auj, mots: '150' });
+  r = await page('/ajouter', { quoi: 'passage', ville: SECTEUR, fait_le: auj, flyers: '150' });
   const passage = sql(`SELECT id, mots FROM passage_boitage WHERE secteur = '${SECTEUR}'`)[0];
   constat(r.status === 303 && r.headers.get('location') === '/ajouter?m=passage#passage' && passage?.mots === 150, 'passage de boîtage noté (secteur, date, 150 mots)');
   const NUM = String(Date.now()).slice(-6); // chiffres propres à cet essai, pour des numéros qui ne se croisent pas d'un essai à l'autre
@@ -467,8 +469,8 @@ try {
     await ctx.close();
   }
   // Story 18.19 (ticket n° 249) : tableau du boîtage (onglet « Boîtage » de /actions, /api/boitage). Ligne ajoutée (colonnes
-  // neuves, secteur rempli « ville · quartier »), triée par date décroissante, modifiée, relances, coût et ancien passage gardés,
-  // refus (type de bien inconnu, date mal formée ou future, relance avant le passage, champ inconnu, jeton absent ou de Claude),
+  // neuves, secteur rempli « ville · quartier »), triée par date décroissante, modifiée, R1 et R2 en nombres (18.20), coût et ancien passage gardés,
+  // refus (type de bien inconnu, date mal formée ou future, R1 en date, champ inconnu, jeton absent ou de Claude),
   // puis la page à 1280 px (colonnes dans l'ordre, ajout et modification en place, pas de défilement horizontal).
   // Lancé seul avec E2E_1819_SEUL=1 (après le démarrage des serveurs).
   async function bloc1819() {
@@ -492,14 +494,14 @@ try {
       '18.19 : un passage d\'avant (secteur seul) apparaît dans le tableau, son secteur en guise de ville');
 
     // Ajout complet puis ajout minimal.
-    r = await bt('POST', JETON, { ajouter: { fait_le: J.milieu, ville: `${P} Thonon`, quartier: 'Rives', type_bien: 'maison', flyers: 300, message: '12', r1: jourDe(2), r2: jourDe(9), commentaire: 'Boîtes pleines <b>côté lac</b>' } });
+    r = await bt('POST', JETON, { ajouter: { fait_le: J.milieu, ville: `${P} Thonon`, quartier: 'Rives', type_bien: 'maison', flyers: 300, message: '12', r1: 3, r2: 1, commentaire: 'Boîtes pleines <b>côté lac</b>' } });
     const complet = r.d?.id; const c1 = complet ? ligneSql(complet) : null;
     constat(r.status === 201 && c1?.secteur === `${P} Thonon · Rives` && c1.ville === `${P} Thonon` && c1.quartier === 'Rives' && c1.type_bien === 'maison' && c1.mots === 300 && c1.message === '12'
-      && c1.r1 === jourDe(2) && c1.r2 === jourDe(9) && c1.commentaire === 'Boîtes pleines <b>côté lac</b>' && c1.fait_le === J.milieu && c1.cout_centimes === null && c1.is_test === 0,
+      && c1.r1_nb === 3 && c1.r2_nb === 1 && c1.r1 === null && c1.r2 === null && c1.commentaire === 'Boîtes pleines <b>côté lac</b>' && c1.fait_le === J.milieu && c1.cout_centimes === null && c1.is_test === 0,
       '18.19 : ligne ajoutée (colonnes neuves remplies, flyers dans mots, secteur « ville · quartier »)');
     r = await bt('POST', JETON, { ajouter: { fait_le: J.recent, ville: `${P} Annemasse`, quartier: '', type_bien: '', flyers: null } });
     const mini = r.d?.id; const c2 = mini ? ligneSql(mini) : null;
-    constat(r.status === 201 && c2?.secteur === `${P} Annemasse` && c2.quartier === null && c2.type_bien === null && c2.mots === null && c2.r1 === null,
+    constat(r.status === 201 && c2?.secteur === `${P} Annemasse` && c2.quartier === null && c2.type_bien === null && c2.mots === null && c2.r1_nb === null,
       '18.19 : ligne minimale (date et ville seulement) : secteur = la ville, le reste vide');
     r = await bt('POST', JETON, { ajouter: { fait_le: J.ancien, ville: `${P} Evian`, type_bien: 'appartement', flyers: 0 } });
     const evian = r.d?.id;
@@ -515,8 +517,8 @@ try {
     // Modification : champs changés, le reste intact ; le secteur suit la ville et le quartier ; coût conservé.
     r = await bt('POST', JETON, { id: complet, corriger: { flyers: 450, type_bien: 'appartement', r2: '', commentaire: 'Refait' } });
     const c3 = ligneSql(complet);
-    constat(r.status === 200 && r.d?.ligne?.flyers === 450 && c3.mots === 450 && c3.type_bien === 'appartement' && c3.r2 === null && c3.commentaire === 'Refait'
-      && c3.r1 === jourDe(2) && c3.message === '12' && c3.secteur === `${P} Thonon · Rives`, '18.19 : modification partielle (flyers, type, R2 effacé, commentaire), le reste intact');
+    constat(r.status === 200 && r.d?.ligne?.flyers === 450 && c3.mots === 450 && c3.type_bien === 'appartement' && c3.r2_nb === null && c3.commentaire === 'Refait'
+      && c3.r1_nb === 3 && c3.message === '12' && c3.secteur === `${P} Thonon · Rives`, '18.19 : modification partielle (flyers, type, R2 effacé, commentaire), le reste intact');
     r = await bt('POST', JETON, { id: complet, corriger: { quartier: 'Vallon' } });
     constat(r.status === 200 && ligneSql(complet).secteur === `${P} Thonon · Vallon`, '18.19 : changer le quartier remet le secteur à jour');
     r = await bt('POST', JETON, { id: complet, corriger: { quartier: null } });
@@ -529,23 +531,23 @@ try {
       && sql(`SELECT sum(coalesce(cout_centimes, 0)) AS c FROM passage_boitage WHERE secteur = '${P} Ancien secteur'`)[0].c === 4500, '18.19 : le bilan s\'ouvre et le coût du boîtage est resté');
 
     // Refus : rien n'est écrit.
-    const avant = sql(`SELECT count(*) AS n, group_concat(coalesce(mots, 'x') || coalesce(type_bien, '-') || coalesce(r1, '-') || coalesce(r2, '-') || fait_le) AS h FROM passage_boitage`)[0];
+    const avant = sql(`SELECT count(*) AS n, group_concat(coalesce(mots, 'x') || coalesce(type_bien, '-') || coalesce(r1_nb, '-') || coalesce(r2_nb, '-') || fait_le) AS h FROM passage_boitage`)[0];
     const bon = { fait_le: J.milieu, ville: `${P} Refus` };
     const cas = [
       ['type de bien inconnu', { ajouter: { ...bon, type_bien: 'villa' } }], ['type de bien = propriété héritée d\'un objet (toString)', { ajouter: { ...bon, type_bien: 'toString' } }], ['type de bien en majuscule', { ajouter: { ...bon, type_bien: 'Maison' } }],
       ['date mal formée (jj/mm/aaaa)', { ajouter: { ...bon, fait_le: '05/11/2026' } }], ['date impossible', { ajouter: { ...bon, fait_le: '2026-02-31' } }],
       ['date dans le futur', { ajouter: { ...bon, fait_le: J.futur } }], ['date absente', { ajouter: { ville: `${P} Refus` } }], ['ville absente', { ajouter: { fait_le: J.milieu } }],
       ['ville vide', { ajouter: { ...bon, ville: '   ' } }], ['ville trop longue', { ajouter: { ...bon, ville: 'V'.repeat(81) } }],
-      ['R1 mal formée', { ajouter: { ...bon, r1: '12-11-2026' } }], ['R2 avant R1', { ajouter: { ...bon, r1: jourDe(5), r2: jourDe(2) } }], ['R1 avant le passage', { ajouter: { ...bon, r1: J.ancien } }],
+      ['R1 en date (ancien format)', { ajouter: { ...bon, r1: jourDe(2) } }], ['R2 négatif', { ajouter: { ...bon, r2: -1 } }],
       ['flyers négatif', { ajouter: { ...bon, flyers: -1 } }], ['flyers décimal', { ajouter: { ...bon, flyers: 1.5 } }], ['flyers en texte', { ajouter: { ...bon, flyers: '300' } }], ['flyers énorme', { ajouter: { ...bon, flyers: 1e7 } }],
       ['message trop long', { ajouter: { ...bon, message: 'm'.repeat(41) } }], ['message qui n\'est pas un texte', { ajouter: { ...bon, message: 12 } }], ['champ inconnu', { ajouter: { ...bon, secteur: 'Autre' } }],
       ['corriger : type inconnu', { id: complet, corriger: { type_bien: 'chalet' } }], ['corriger : date mal formée', { id: complet, corriger: { fait_le: 'hier' } }], ['corriger : date future', { id: complet, corriger: { fait_le: J.futur } }],
-      ['corriger : R2 avant R1', { id: complet, corriger: { r2: jourDe(-30) } }], ['corriger : ville vidée', { id: complet, corriger: { ville: '' } }], ['corriger : rien', { id: complet, corriger: {} }],
+      ['corriger : R2 en date', { id: complet, corriger: { r2: jourDe(-30) } }], ['corriger : ville vidée', { id: complet, corriger: { ville: '' } }], ['corriger : rien', { id: complet, corriger: {} }],
       ['corriger : champ inconnu', { id: complet, corriger: { cout_centimes: 1 } }], ['deux gestes', { ajouter: bon, id: complet, corriger: { message: '1' } }], ['identifiant invalide', { id: 'x', corriger: { message: '1' } }],
     ];
     const refus = [];
     for (const [nom, corps] of cas) { const x = await bt('POST', JETON, corps); if (x.status !== 400 || x.d?.ok !== false) refus.push(`${nom} ${x.status}`); }
-    const apres = sql(`SELECT count(*) AS n, group_concat(coalesce(mots, 'x') || coalesce(type_bien, '-') || coalesce(r1, '-') || coalesce(r2, '-') || fait_le) AS h FROM passage_boitage`)[0];
+    const apres = sql(`SELECT count(*) AS n, group_concat(coalesce(mots, 'x') || coalesce(type_bien, '-') || coalesce(r1_nb, '-') || coalesce(r2_nb, '-') || fait_le) AS h FROM passage_boitage`)[0];
     constat(refus.length === 0 && apres.n === avant.n && apres.h === avant.h, `18.19 : ${cas.length} saisies invalides refusées en 400, rien d'écrit${refus.length ? ` (acceptées à tort : ${refus.join(', ')})` : ''}`);
     r = await bt('POST', JETON, { id: '01KF1900000000000000000009', corriger: { message: '1' } });
     const texteJson = await bt('POST', JETON, null, 'pas du json');
@@ -577,7 +579,7 @@ try {
     constat(lignesPage.length >= 4 && lignesPage.findIndex(([, v]) => v === `${P} Annemasse`) < lignesPage.findIndex(([, v]) => v === `${P} Thonon`) && lignesPage.findIndex(([, v]) => v === `${P} Thonon`) < lignesPage.findIndex(([, v]) => v === `${P} Evian`),
       '18.19 : la page montre les lignes du plus récent au plus ancien');
     const lecturePage = await o.$$eval('[data-bt-lignes] tr[data-bt-ligne]', (t, ville) => t.filter((x) => x.children[1].textContent === ville).map((x) => [...x.children].map((c) => c.textContent.trim())), `${P} Thonon`);
-    constat(lecturePage[0]?.[7] === '—' && lecturePage[0]?.[5] === '12' && lecturePage[0]?.[2] === '—', '18.19 : une valeur vide se lit « — », le numéro de message est affiché');
+    constat(lecturePage[0]?.[6] === '3' && lecturePage[0]?.[7] === '—' && lecturePage[0]?.[5] === '12' && lecturePage[0]?.[2] === '—', '18.19 : une valeur vide se lit « — », le numéro de message est affiché');
 
     // Ajout par la ligne du haut (Entrée valide). Date, ville, quartier et type restent pour le passage suivant.
     const ligneAjout = o.locator('[data-bt-ajout]');
@@ -610,12 +612,12 @@ try {
     constat(await edition.locator('[name=type_bien]').inputValue() === 'appartement' && await edition.locator('[name=flyers]').inputValue() === '0' && await o.locator('[data-bt-edition]').count() === 1,
       '18.19 : « Modifier » ouvre la ligne en place avec ses valeurs');
     await edition.locator('[name=flyers]').fill('125');
-    await edition.locator('[name=r1]').fill(jourDe(0));
+    await edition.locator('[name=r1]').fill('2');
     await edition.locator('[name=commentaire]').fill('Deuxième passage');
     await edition.locator('[data-bt-enregistrer]').click();
     await o.waitForSelector(`[data-bt-ligne="${idEvian}"]`);
     const apresEdition = ligneSql(idEvian);
-    constat(apresEdition.mots === 125 && apresEdition.r1 === jourDe(0) && apresEdition.commentaire === 'Deuxième passage' && await o.locator('[data-bt-edition]').count() === 0
+    constat(apresEdition.mots === 125 && apresEdition.r1_nb === 2 && apresEdition.commentaire === 'Deuxième passage' && await o.locator('[data-bt-edition]').count() === 0
       && (await o.textContent(`[data-bt-ligne="${idEvian}"]`)).includes('Deuxième passage'), '18.19 : modification enregistrée en place, la ligne redevient lisible');
     await o.locator(`[data-bt-ligne="${idEvian}"] [data-bt-modifier]`).click();
     await o.locator(`[data-bt-edition="${idEvian}"] [name=commentaire]`).fill('Ne doit pas partir');
@@ -629,6 +631,522 @@ try {
     await ctx.close();
     nettoyer();
   }
+  // Story 18.20 (tickets n° 256 à 258) : R1 et R2 sont des rendez-vous. Passage noté sur /ajouter (ville, quartier, flyers, R1, R2,
+  // commentaire) qui arrive dans le tableau du boîtage avec le secteur « ville · quartier » ; /api/boitage : R1 et R2 en nombres
+  // (une date, un négatif, 10000 refusés) ; fiche d'un contact : dates R1 et R2 posées, R2 avant R1 refusé, effacées, étape
+  // du suivi intacte ; page Contacts : colonnes R1 et R2 affichées, triées et masquables.
+  // Lancé seul avec E2E_1820_SEUL=1 (après le démarrage des serveurs).
+  async function bloc1820() {
+    const P = 'E1820';
+    const nettoyer = () => { sql(`DELETE FROM passage_boitage WHERE secteur LIKE '${P}%' OR ville LIKE '${P}%'`); sql(`DELETE FROM contact WHERE id IN ('01KF2000000000000000000001', '01KF2000000000000000000002')`); };
+    nettoyer();
+    const jourDe = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
+    const bt = async (corps) => {
+      const x = await appeler(`${E}/api/boitage`, { method: 'POST', redirect: 'manual', headers: { 'cf-access-jwt-assertion': JETON, 'Content-Type': 'application/json', Origin: E }, body: JSON.stringify(corps) });
+      let d = null; try { d = await x.json(); } catch {}
+      return { status: x.status, d };
+    };
+
+    // 1. /ajouter : le formulaire du passage écrit par le même chemin que le tableau.
+    let r = await page('/ajouter', { quoi: 'passage', fait_le: auj, ville: `${P} Sciez`, quartier: 'Chavannex', flyers: '400', cout: '39,90', r1: '3', r2: '1', commentaire: 'Boîtes <b>pleines</b>' });
+    const p1 = sql(`SELECT * FROM passage_boitage WHERE ville = '${P} Sciez'`)[0];
+    constat(r.status === 303 && r.headers.get('location') === '/ajouter?m=passage#passage' && p1?.secteur === `${P} Sciez · Chavannex` && p1.quartier === 'Chavannex' && p1.mots === 400
+      && p1.cout_centimes === 3990 && p1.r1_nb === 3 && p1.r2_nb === 1 && p1.r1 === null && p1.r2 === null && p1.commentaire === 'Boîtes <b>pleines</b>' && p1.fait_le === auj,
+      '18.20 : /ajouter (ville, quartier, flyers, coût, R1, R2, commentaire) écrit un passage complet, secteur « ville · quartier »');
+    r = await page('/ajouter', { quoi: 'passage', fait_le: auj, ville: `${P} Anthy` });
+    const p2 = sql(`SELECT * FROM passage_boitage WHERE ville = '${P} Anthy'`)[0];
+    constat(r.status === 303 && p2?.secteur === `${P} Anthy` && p2.quartier === null && p2.mots === null && p2.r1_nb === null && p2.r2_nb === null && p2.commentaire === null && p2.cout_centimes === null,
+      '18.20 : /ajouter avec la ville seule : secteur = la ville, le reste vide');
+    // Refus : la saisie reste affichée, rien n'est écrit.
+    const avant = sql(`SELECT count(*) AS n FROM passage_boitage`)[0].n;
+    const refus = [];
+    for (const [nom, champs, texte] of [
+      ['sans ville', { fait_le: auj, ville: ' ', r1: '2' }, 'ville'], ['R1 négatif', { fait_le: auj, ville: `${P} X`, r1: '-1' }, 'nombres entiers'], ['R2 de 10000', { fait_le: auj, ville: `${P} X`, r2: '10000' }, 'R2'],
+      ['R1 décimal', { fait_le: auj, ville: `${P} X`, r1: '1.5' }, 'nombres entiers'], ['date future', { fait_le: jourDe(3), ville: `${P} X` }, 'futur'], ['coût illisible', { fait_le: auj, ville: `${P} X`, cout: 'beaucoup' }, 'coût'],
+    ]) {
+      r = await page('/ajouter', { quoi: 'passage', flyers: '5', commentaire: 'garde-moi', ...champs });
+      const h = await r.text();
+      if (r.status !== 200 || !h.includes('data-erreur') || !h.toLowerCase().includes(texte.toLowerCase()) || !h.includes('garde-moi')) refus.push(nom);
+    }
+    constat(refus.length === 0 && sql(`SELECT count(*) AS n FROM passage_boitage`)[0].n === avant, `18.20 : saisies invalides de /ajouter refusées avec un message, la saisie gardée, rien d'écrit${refus.length ? ` (à revoir : ${refus.join(', ')})` : ''}`);
+    r = await appeler(`${E}/ajouter`, { headers: avecJeton() });
+    const h = await r.text();
+    constat(h.includes('name="ville"') && h.includes('name="quartier"') && h.includes('name="flyers"') && h.includes('name="r1"') && h.includes('name="r2"') && h.includes('name="commentaire"') && !h.includes('name="secteur"') && !h.includes('name="mots"')
+      && h.includes(`value="${P} Sciez"`) && h.includes('Nombre de flyers'), '18.20 : le formulaire du passage a Ville, Quartier, Nombre de flyers, R1, R2 et Commentaires (plus de « Secteur »), les villes connues en suggestion');
+
+    // 2. Le tableau du boîtage les montre, avec R1 et R2 en nombres.
+    let x = await appeler(`${E}/api/boitage`, { headers: avecJeton() });
+    const lignes = (await x.json()).lignes;
+    const l1 = lignes.find((l) => l.ville === `${P} Sciez`);
+    constat(l1?.quartier === 'Chavannex' && l1.flyers === 400 && l1.r1 === 3 && l1.r2 === 1 && l1.commentaire === 'Boîtes <b>pleines</b>', '18.20 : le passage de /ajouter est dans le tableau du boîtage (R1 3, R2 1)');
+
+    // 3. /api/boitage : nombres acceptés, dates et hors bornes refusés.
+    r = await bt({ ajouter: { fait_le: auj, ville: `${P} Evian`, r1: 0, r2: 9999 } });
+    const ev = r.d?.id ? sql(`SELECT * FROM passage_boitage WHERE id = '${r.d.id}'`)[0] : null;
+    constat(r.status === 201 && ev?.r1_nb === 0 && ev.r2_nb === 9999 && r.d.ligne.r1 === 0 && r.d.ligne.r2 === 9999, '18.20 : /api/boitage accepte R1 = 0 et R2 = 9999 (0 n\'est pas « vide »)');
+    r = await bt({ id: ev.id, corriger: { r1: 12, r2: '' } });
+    const ev2 = sql(`SELECT * FROM passage_boitage WHERE id = '${ev.id}'`)[0];
+    constat(r.status === 200 && ev2.r1_nb === 12 && ev2.r2_nb === null && r.d.ligne.r2 === null, '18.20 : corriger R1 en nombre et vider R2');
+    const avantApi = sql(`SELECT count(*) AS n, group_concat(coalesce(r1_nb, '-') || coalesce(r2_nb, '-') || coalesce(r1, '-') || coalesce(r2, '-')) AS h FROM passage_boitage`)[0];
+    const bon = { fait_le: auj, ville: `${P} Refus` };
+    const cas = [
+      ['R1 en date', { ajouter: { ...bon, r1: jourDe(1) } }], ['R1 négatif', { ajouter: { ...bon, r1: -1 } }], ['R1 = 10000', { ajouter: { ...bon, r1: 10000 } }], ['R2 = 10000', { ajouter: { ...bon, r2: 10000 } }],
+      ['R1 décimal', { ajouter: { ...bon, r1: 1.5 } }], ['R1 en texte', { ajouter: { ...bon, r1: '3' } }], ['corriger : R1 en date', { id: ev.id, corriger: { r1: jourDe(-2) } }],
+      ['corriger : R2 négatif', { id: ev.id, corriger: { r2: -4 } }], ['corriger : R1 = 10000', { id: ev.id, corriger: { r1: 10000 } }], ['coût par l\'API', { ajouter: { ...bon, cout_centimes: 100 } }],
+    ];
+    const mal = [];
+    for (const [nom, corps] of cas) { const y = await bt(corps); if (y.status !== 400 || y.d?.ok !== false) mal.push(`${nom} ${y.status}`); }
+    const apresApi = sql(`SELECT count(*) AS n, group_concat(coalesce(r1_nb, '-') || coalesce(r2_nb, '-') || coalesce(r1, '-') || coalesce(r2, '-')) AS h FROM passage_boitage`)[0];
+    constat(mal.length === 0 && apresApi.n === avantApi.n && apresApi.h === avantApi.h, `18.20 : ${cas.length} valeurs de R1 / R2 refusées en 400 (date, négatif, 10000, décimal, texte), rien d'écrit${mal.length ? ` (acceptées à tort : ${mal.join(', ')})` : ''}`);
+
+    // 4. La fiche d'un contact : dates R1 et R2.
+    const C = '01KF2000000000000000000001', C2 = '01KF2000000000000000000002';
+    sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, commune, categorie_id, projet, temperature, telephone, etape, prochaine_action, prochaine_action_le) VALUES
+         ('${C}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Rose', 'Rdvun${NUM}', '${P}-ville', 'edb', 'vendeur', 'avec_anne', '+33652${NUM}', 'premier_rdv', 'Rappeler', '2026-12-01')`);
+    sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, commune, categorie_id, projet, telephone) VALUES
+         ('${C2}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Remi', 'Rdvdeux${NUM}', '${P}-ville', 'edb', 'vendeur', '+33653${NUM}')`);
+    const fiche = async (corps, id = null, methode = 'POST') => {
+      const y = await appeler(`${E}/api/fiche${id ? `?id=${id}` : ''}`, { method: methode, redirect: 'manual', headers: { 'cf-access-jwt-assertion': JETON, ...(methode === 'POST' ? { 'Content-Type': 'application/json' } : {}), Origin: E }, body: methode === 'POST' ? JSON.stringify(corps) : undefined });
+      let d = null; try { d = await y.json(); } catch {}
+      return { status: y.status, d };
+    };
+    const ligneC = (id) => sql(`SELECT * FROM contact WHERE id = '${id}'`)[0];
+    const evC = (id) => { const e = sql(`SELECT type, source, donnees, par FROM contact_evenement WHERE contact_id = '${id}' ORDER BY id DESC LIMIT 1`)[0]; return e ? { ...e, d: JSON.parse(e.donnees) } : null; };
+    const R1 = jourDe(-10), R2 = jourDe(-3);
+    r = await fiche({ id: C, corriger: { r1_le: R1, r2_le: R2 } });
+    const e1 = evC(C);
+    constat(r.status === 200 && ligneC(C).r1_le === R1 && ligneC(C).r2_le === R2 && r.d.fiche.r1_le === R1 && r.d.fiche.r2_le === R2 && r.d.ligne.r1_le === R1 && r.d.ligne.r2_le === R2
+      && e1.type === 'classement' && e1.source === 'anne' && !!e1.par && e1.d.avant.r1_le === null && e1.d.apres.r1_le === R1 && e1.d.apres.r2_le === R2
+      && ligneC(C).etape === 'premier_rdv' && ligneC(C).temperature === 'avec_anne' && ligneC(C).prochaine_action === 'Rappeler' && ligneC(C).last_activity_at === '2026-10-01T08:00:00Z',
+      '18.20 : dates R1 et R2 posées sur la fiche (avant-image gardée), étape, température et rappel du suivi intacts');
+    r = await fiche(null, C, 'GET');
+    constat(r.status === 200 && r.d.fiche.r1_le === R1 && r.d.fiche.r2_le === R2, '18.20 : GET /api/fiche renvoie r1_le et r2_le');
+    const avantC = JSON.stringify(ligneC(C)), nEv = sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${C}'`)[0].n;
+    const cas2 = [['R2 avant R1 (les deux)', { r1_le: R2, r2_le: R1 }, 'ordre'], ['R2 avant le R1 déjà noté', { r2_le: jourDe(-20) }, 'ordre'], ['R1 après le R2 déjà noté', { r1_le: jourDe(-1) }, 'ordre'],
+      ['date impossible', { r1_le: '2026-02-31' }, 'correction'], ['date mal formée', { r2_le: '12/11/2026' }, 'correction'], ['date en nombre', { r1_le: 20261112 }, 'correction']];
+    const mal2 = [];
+    for (const [nom, corriger, code] of cas2) {
+      const y = await fiche({ id: C, corriger });
+      if (y.status !== 400 || y.d?.error?.code !== code || (code === 'ordre' && !/R2.*R1/.test(y.d.error.message))) mal2.push(`${nom} ${y.status} ${y.d?.error?.code}`);
+    }
+    constat(mal2.length === 0 && JSON.stringify(ligneC(C)) === avantC && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${C}'`)[0].n === nEv,
+      `18.20 : R2 avant R1 et dates invalides refusés (400, message clair), contact et historique intacts${mal2.length ? ` (à revoir : ${mal2.join(', ')})` : ''}`);
+    r = await fiche({ id: C, corriger: { r1_le: R1, r2_le: R2 } });
+    constat(r.status === 200 && r.d.changes.length === 0, '18.20 : redire les mêmes dates ne change rien');
+    r = await fiche({ id: C, corriger: { r2_le: null } });
+    constat(r.status === 200 && ligneC(C).r2_le === null && ligneC(C).r1_le === R1 && evC(C).d.avant.r2_le === R2 && evC(C).d.apres.r2_le === null, '18.20 : effacer R2 garde R1, avant-image notée');
+    r = await fiche({ id: C, corriger: { r1_le: null } });
+    constat(r.status === 200 && ligneC(C).r1_le === null && ligneC(C).r2_le === null, '18.20 : effacer R1 aussi');
+    r = await fiche({ id: C2, corriger: { r2_le: R2 } });
+    constat(r.status === 200 && ligneC(C2).r2_le === R2 && ligneC(C2).r1_le === null, '18.20 : un R2 seul, sans R1, est permis');
+    r = await fiche({ id: C2, corriger: { r1_le: jourDe(-30) } });
+    constat(r.status === 200 && ligneC(C2).r1_le === jourDe(-30), '18.20 : R1 posé ensuite, avant le R2');
+    // Le jeton de Claude ne passe pas.
+    x = await appeler(`${E}/api/fiche`, { method: 'POST', headers: { 'cf-access-jwt-assertion': JETON_C, 'Content-Type': 'application/json', Origin: E }, body: JSON.stringify({ id: C, corriger: { r1_le: R1 } }) });
+    constat(x.status === 403 && ligneC(C).r1_le === null, '18.20 : le jeton de Claude ne peut pas écrire une date de rendez-vous (403)');
+    // On remet R1 et R2 pour la page.
+    await fiche({ id: C, corriger: { r1_le: R1, r2_le: R2 } });
+
+    // 5. La page Contacts : colonnes R1 et R2, tri, masquage ; la fiche dans le panneau.
+    const ctx = await nav.newContext({ viewport: { width: 1440, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
+    const o = await ctx.newPage();
+    const erreursPage = []; o.on('pageerror', (e) => erreursPage.push(e.message));
+    await o.goto(`${E}/`);
+    const attendre = () => o.waitForSelector('[data-lignes][data-complet]', { state: 'attached' });
+    await attendre();
+    await o.fill('[data-recherche]', `rdv`); await o.waitForTimeout(400); await attendre();
+    const entetes = await o.$$eval('[data-entetes] th', (t) => t.map((x) => x.textContent.replace(/[▲▼]/g, '').trim()));
+    const iR1 = entetes.indexOf('R1'), iR2 = entetes.indexOf('R2');
+    constat(iR1 > 0 && iR2 === iR1 + 1 && await o.locator('[data-trier=r1]').count() === 1 && await o.locator('[data-trier=r2]').count() === 1, `18.20 : colonnes R1 et R2 dans le tableau, triables (${entetes.join(', ')})`);
+    const court = (d) => new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${d}T00:00:00Z`));
+    const cellules = async (id) => o.$$eval(`tr[data-contact="${id}"] td`, (t) => t.map((x) => x.textContent.replace(/\s+/g, ' ').trim()));
+    const cA = await cellules(C), cB = await cellules(C2);
+    constat(cA[iR1] === court(R1) && cA[iR2] === court(R2) && cB[iR1] === court(jourDe(-30)) && cB[iR2] === court(R2) && (await o.locator(`tr[data-contact="${C}"] td`).nth(iR1).innerText()).includes(court(R1)),
+      `18.20 : la table montre les dates en français court (${cA[iR1]}, ${cA[iR2]})`);
+    // Tri par R1 : C2 (R1 plus ancien) avant C en croissant, après en décroissant ; un contact sans R1 reste en fin de liste.
+    const ordre = async () => o.$$eval('[data-lignes] tr[data-contact]', (t) => t.map((x) => x.dataset.contact));
+    await o.fill('[data-recherche]', `rdv`); await o.waitForTimeout(300);
+    await o.click('[data-trier=r1]'); await o.waitForTimeout(200); await attendre();
+    const asc = await ordre();
+    await o.click('[data-trier=r1]'); await o.waitForTimeout(200); await attendre();
+    const desc = await ordre();
+    constat(asc.indexOf(C2) >= 0 && asc.indexOf(C2) < asc.indexOf(C) && desc.indexOf(C) < desc.indexOf(C2), `18.20 : tri par R1, croissant puis décroissant (${court(jourDe(-30))} avant ${court(R1)})`);
+    // Masquer une colonne : elle disparaît du tableau.
+    await o.click('[data-colonnes] summary');
+    await o.uncheck('[data-colonnes-liste] input[value=r1]');
+    await o.waitForTimeout(200);
+    const sansR1 = await o.$$eval('[data-entetes] th', (t) => t.map((x) => x.textContent.replace(/[▲▼]/g, '').trim()));
+    constat(!sansR1.includes('R1') && sansR1.includes('R2'), '18.20 : la colonne R1 se masque depuis le menu Colonnes');
+    await o.check('[data-colonnes-liste] input[value=r1]');
+    // La fiche : champs de date, correction par le panneau, message clair pour R2 avant R1.
+    await o.click(`tr[data-contact="${C}"] [data-ouvrir-fiche]`);
+    await o.waitForSelector('[data-fiche-form]');
+    const champs = await o.$$eval('[data-fiche-form] input[type=date]', (t) => t.map((x) => [x.name, x.value]));
+    constat(champs.some(([n, v]) => n === 'r1_le' && v === R1) && champs.some(([n, v]) => n === 'r2_le' && v === R2) && (await o.textContent('[data-fiche-form]')).includes('R1 (premier rendez-vous)') && (await o.textContent('[data-fiche-form]')).includes('R2 (second rendez-vous)'),
+      '18.20 : la fiche a deux champs date « R1 (premier rendez-vous) » et « R2 (second rendez-vous) », avec les valeurs notées');
+    await o.fill('[data-fiche-form] input[name=r2_le]', jourDe(-40));
+    await o.click('[data-fiche-enregistrer]');
+    await o.waitForSelector('[data-fiche-message].erreur');
+    constat((await o.textContent('[data-fiche-message]')).includes('R2') && ligneC(C).r2_le === R2, '18.20 : dans la fiche, R2 avant R1 affiche un message clair et rien n\'est écrit');
+    await o.fill('[data-fiche-form] input[name=r2_le]', '');
+    await o.fill('[data-fiche-form] input[name=r1_le]', jourDe(-12));
+    await o.click('[data-fiche-enregistrer]');
+    await o.waitForSelector('[data-fiche-message]:not(.erreur)');
+    const apres = ligneC(C);
+    await o.waitForTimeout(200);
+    constat(apres.r1_le === jourDe(-12) && apres.r2_le === null && (await o.locator(`tr[data-contact="${C}"]`).innerText()).includes(court(jourDe(-12))),
+      '18.20 : enregistrer la fiche change R1, efface R2, et la ligne du tableau suit sans recharger');
+    const largeur = await o.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    constat(largeur <= 0 && erreursPage.length === 0, `18.20 : pas de défilement horizontal de la page à 1440 px ni d'erreur JavaScript${erreursPage.length ? ` (${erreursPage[0]})` : ''}`);
+    await o.screenshot({ path: path.join(OUT, 'espace-contacts-r1-r2-1440.png') });
+    await ctx.close();
+
+    // 6. L'import (claude-import) n'écrit pas ces colonnes : ni dans le code de l'import, ni dans celui des lots.
+    const sources = ['scripts/claude-import.mjs', 'src/server/import.ts'].map((f) => fs.readFileSync(path.join(ICI, f), 'utf8')).join('\n');
+    constat(!/r1_le|r2_le/.test(sources), '18.20 : les outils d\'import ne nomment ni r1_le ni r2_le');
+    nettoyer();
+  }
+  // Story 18.21 (tickets n° 264 à 266) : projet « Aucun » (sans température), colonne « Source » = origine d'affaires (`contact.canal`)
+  // changée par une liste de six choix dans le tableau et sur la fiche, sources d'import sur la fiche seulement, ambassadeur « Partant »
+  // noté à la main (fiche et pastille du tableau), vert, trié et filtré ; jeton de Claude refusé ; l'import n'écrit rien de tout cela.
+  // Lancé seul avec E2E_1821_SEUL=1 (après le démarrage des serveurs).
+  async function bloc1821() {
+    const P = 'E1821';
+    const ids = Array.from({ length: 9 }, (_, i) => `01KF21${String(i + 1).padStart(2, '0')}${NUM}${'0'.repeat(12)}`);
+    const [A, B, E5, Q1, Q2, Q3, Q4, V1, V2] = ids;
+    const nettoyer = () => { sql(`DELETE FROM contact WHERE id IN (${ids.map((i) => `'${i}'`).join(',')})`); sql(`DELETE FROM vue WHERE nom LIKE '${P}%'`); };
+    nettoyer();
+    const jourParis = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    const nomDe = (n) => `Sourcea${P}${NUM}${n}`;
+    const ins = (id, n, cols) => sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, commune, categorie_id, telephone${Object.keys(cols).map((k) => `, ${k}`).join('')}) VALUES
+      ('${id}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Sam', '${nomDe(n)}', '${P}-ville', 'edb', '+3366${NUM}${n}'${Object.values(cols).map((v) => `, ${v === null ? 'NULL' : `'${v}'`}`).join('')})`);
+    ins(A, 1, { projet: 'vendeur', temperature: 'chaud', canal: 'site' });
+    ins(B, 2, { projet: 'a_qualifier' });
+    ins(E5, 3, { projet: 'vendeur', temperature: 'chaud' });
+    ins(Q1, 4, { projet: 'ambassadeur' });
+    ins(Q2, 5, { projet: 'ambassadeur' });
+    ins(Q3, 6, { projet: 'ambassadeur', ambassadeur_partant_le: '2026-11-01' });
+    ins(Q4, 7, { projet: 'ambassadeur', ambassadeur_inscrit_le: '2026-10-05T08:00:00Z', ambassadeur_reglement: 'v1' });
+    ins(V1, 8, { projet: 'vendeur' });
+    ins(V2, 9, { projet: 'acheteur', ambassadeur_inscrit_le: '2026-10-05T08:00:00Z', ambassadeur_reglement: 'v1' });
+    // Q2 est « contacté » : un modèle lui a été envoyé (événement qui porte envoi_modele).
+    sql(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees, par) VALUES ('${Q2}', '2026-10-20T08:00:00Z', 'email', 'anne', 'Modèle envoyé', '{"envoi_modele":"essai"}', 'anne@example.com')`);
+    // A garde ses sources d'import (visibles sur la fiche seulement).
+    sql(`INSERT INTO contact_source (contact_id, source, a) VALUES ('${A}', 'telephone', '2026-10-01T08:00:00Z'), ('${A}', 'linkedin', '2026-10-02T08:00:00Z')`);
+    const api = async (route, corps, jeton = JETON) => {
+      const y = await appeler(`${E}/api/${route}`, { method: 'POST', redirect: 'manual', headers: { 'cf-access-jwt-assertion': jeton, 'Content-Type': 'application/json', Origin: E }, body: JSON.stringify(corps) });
+      let d = null; try { d = await y.json(); } catch {}
+      return { status: y.status, d };
+    };
+    const fiche = (id, corriger, jeton) => api('fiche', { id, corriger }, jeton);
+    const carnet = (idsL, changements, jeton) => api('carnet', { ids: idsL, changements }, jeton);
+    const ligne = (id) => sql(`SELECT * FROM contact WHERE id = '${id}'`)[0];
+    const evDernier = (id) => { const e = sql(`SELECT type, source, donnees, par FROM contact_evenement WHERE contact_id = '${id}' ORDER BY id DESC LIMIT 1`)[0]; return e ? { ...e, d: JSON.parse(e.donnees) } : null; };
+    const nEv = (id) => sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${id}'`)[0].n;
+    const refusee = (q) => { try { sql(q); return false; } catch { return true; } };
+
+    // 1. La base (migration 0025) : « aucun » sans température, « pige » en canal, nouvelle colonne en dates.
+    constat(!refusee(`UPDATE contact SET projet = 'aucun' WHERE id = '${V1}'`) && refusee(`UPDATE contact SET temperature = 'froid' WHERE id = '${V1}'`) && !refusee(`UPDATE contact SET projet = 'vendeur' WHERE id = '${V1}'`),
+      '18.21 : la base accepte le projet « aucun » mais pas avec une température');
+    constat(!refusee(`UPDATE contact SET canal = 'pige' WHERE id = '${V1}'`) && refusee(`UPDATE contact SET canal = 'telephone' WHERE id = '${V1}'`) && !refusee(`UPDATE contact SET canal = NULL WHERE id = '${V1}'`)
+      && !refusee(`UPDATE contact SET ambassadeur_partant_le = '2026-11-10' WHERE id = '${V1}'`) && refusee(`UPDATE contact SET ambassadeur_partant_le = 'oui' WHERE id = '${V1}'`) && !refusee(`UPDATE contact SET ambassadeur_partant_le = NULL WHERE id = '${V1}'`),
+      '18.21 : la base accepte le canal « pige » et une date « partant » (pas un texte), refuse un canal inconnu');
+
+    // 2. Projet « Aucun » (ticket 266) : par la fiche et par le carnet, sans température.
+    let r = await fiche(B, { projet: 'aucun' });
+    let e = evDernier(B);
+    constat(r.status === 200 && ligne(B).projet === 'aucun' && ligne(B).temperature === null && r.d.ligne.projet === 'aucun' && e.type === 'classement' && e.d.avant.projet === 'a_qualifier' && e.d.apres.projet === 'aucun' && !!e.par,
+      '18.21 : projet « Aucun » posé depuis la fiche, avant-image gardée');
+    r = await fiche(E5, { projet: 'aucun' });
+    constat(r.status === 200 && ligne(E5).projet === 'aucun' && ligne(E5).temperature === null && evDernier(E5).d.avant.temperature === 'chaud' && evDernier(E5).d.apres.temperature === null,
+      '18.21 : un contact vendeur « chaud » passé à « Aucun » perd sa température (gardée dans l\'avant-image)');
+    const nE5 = nEv(E5);
+    r = await carnet([E5], { temperature: 'chaud' });
+    constat(r.status === 200 && r.d.touches === 0 && r.d.ignores === 1 && ligne(E5).temperature === null && nEv(E5) === nE5, '18.21 : pas de température pour « Aucun » : demande ignorée, rien d\'écrit (carnet)');
+    r = await fiche(E5, { temperature: 'froid' });
+    constat(r.status === 200 && r.d.ignore === true && ligne(E5).temperature === null, '18.21 : pas de température pour « Aucun » : demande ignorée (fiche)');
+    r = await carnet([V1], { projet: 'aucun' });
+    constat(r.status === 200 && r.d.touches === 1 && ligne(V1).projet === 'aucun', '18.21 : projet « Aucun » posé par le carnet (lot)');
+    r = await carnet([V1], { projet: 'vendeur' });
+    r = await carnet([V1], { projet: 'sponsorise' });
+    constat(r.status === 400 && ligne(V1).projet === 'vendeur', '18.21 : un projet inconnu reste refusé (400)');
+    r = await fiche(E5, { projet: 'vendeur' });
+
+    // 3. Source = canal (ticket 265) : les six choix, l'effacement, le refus du reste.
+    const CHOIX = ['pige', 'boitage', 'portail', 'recommandation', 'evenement', 'autre'];
+    const mal = [];
+    for (const c of CHOIX) {
+      const n0 = nEv(B);
+      const y = await carnet([B], { canal: c });
+      const ev = evDernier(B);
+      if (y.status !== 200 || y.d.touches !== 1 || ligne(B).canal !== c || y.d.lignes[0].canal !== c || ev.type !== 'classement' || ev.d.apres.canal !== c || nEv(B) !== n0 + 1 || !ev.par) mal.push(c);
+    }
+    constat(mal.length === 0 && evDernier(B).d.avant.canal === 'evenement', `18.21 : les six choix de la source (pige, boîtage, portail, reco, évènementiel, autre) s'écrivent dans canal, chacun avec son événement et son avant-image${mal.length ? ` (à revoir : ${mal.join(', ')})` : ''}`);
+    r = await carnet([B], { canal: null });
+    constat(r.status === 200 && ligne(B).canal === null && evDernier(B).d.avant.canal === 'autre', '18.21 : la source s\'efface (valeur vide)');
+    const avantB = JSON.stringify(ligne(B)), nB = nEv(B);
+    const refus = [];
+    for (const [nom, c] of [['telephone', 'telephone'], ['ancien canal site', 'site'], ['ancien canal reseaux', 'reseaux'], ['rencontre', 'rencontre'], ['vide', ''], ['nombre', 3], ['liste', ['pige']], ['majuscule', 'Pige'], ['injection', "pige'; DROP TABLE contact;--"]]) {
+      const y = await carnet([B], { canal: c });
+      if (y.status !== 400) refus.push(`${nom} ${y.status}`);
+      const z = await fiche(B, { canal: c });
+      if (z.status !== 400) refus.push(`fiche ${nom} ${z.status}`);
+    }
+    constat(refus.length === 0 && JSON.stringify(ligne(B)) === avantB && nEv(B) === nB, `18.21 : un canal hors des six choix est refusé en 400 (carnet et fiche), rien n'est écrit${refus.length ? ` (acceptés à tort : ${refus.join(', ')})` : ''}`);
+    r = await fiche(B, { canal: 'pige' });
+    constat(r.status === 200 && ligne(B).canal === 'pige' && r.d.fiche.canal === 'pige' && r.d.ligne.canal === 'pige', '18.21 : « pige » accepté par la fiche, renvoyé par la fiche et par la ligne');
+    // Annuler un lot de source.
+    r = await carnet([B], { canal: 'boitage' });
+    const lot = r.d.lot;
+    const an = await api('carnet', { annuler: lot });
+    constat(an.status === 200 && an.d.rendus === 1 && ligne(B).canal === 'pige', '18.21 : annuler un changement de source remet la source d\'avant');
+    // Un ancien canal (site) se garde tant qu'Anne ne le change pas : corriger autre chose ne le touche pas.
+    r = await fiche(A, { entreprise: 'Laiterie 1821' });
+    constat(r.status === 200 && ligne(A).canal === 'site' && ligne(A).entreprise === 'Laiterie 1821', '18.21 : un contact au canal « site » le garde quand on corrige autre chose');
+    // Le formulaire /ajouter propose « Pige » ; une action marketing ne le propose pas (son canal est limité par la base).
+    const hA = await (await appeler(`${E}/ajouter`, { headers: avecJeton() })).text();
+    const hAct = await (await appeler(`${E}/actions`, { headers: avecJeton() })).text();
+    constat(/name="canal" value="pige"/.test(hA) && !/<option value="pige"/.test(hAct) && /<option value="boitage"/.test(hAct), '18.21 : /ajouter propose « Pige » ; le formulaire des actions marketing ne le propose pas');
+    r = await page('/ajouter', { quoi: 'contact', prenom: 'Pia', nom: `Pige${P}${NUM}`, telephone: `06 63 ${NUM.slice(0, 2)} ${NUM.slice(2, 4)} ${NUM.slice(4, 6)}`, canal: 'pige', parcours: 'vendeur' });
+    const pige = sql(`SELECT canal FROM contact WHERE nom = 'Pige${P}${NUM}'`)[0];
+    constat(r.status === 200 || r.status === 303 ? pige?.canal === 'pige' : false, '18.21 : un contact créé par /ajouter avec la pige a le canal « pige »');
+    sql(`DELETE FROM contact WHERE nom = 'Pige${P}${NUM}'`);
+    // Actions marketing : « pige » refusé par la validation.
+    constat(refusee(`INSERT INTO action_marketing (id, created_at, maj_le, nom, canal, debut) VALUES ('AMX1821', 'a', 'a', 'Essai pige', 'pige', '2026-11-01')`), '18.21 : la base refuse « pige » comme canal d\'une action marketing (inchangé)');
+
+    // 4. Ambassadeur « Partant » (ticket 264) : fiche et API.
+    r = await fiche(Q1, { partant: true });
+    e = evDernier(Q1);
+    constat(r.status === 200 && ligne(Q1).ambassadeur_partant_le === jourParis && r.d.fiche.ambassadeur_etat === 'partant' && r.d.ligne.ambassadeur_etat === 'partant' && r.d.ligne.ambassadeur_partant === true && r.d.fiche.ambassadeur_partant_le === jourParis
+      && e.type === 'classement' && e.d.avant.ambassadeur_partant_le === null && e.d.apres.ambassadeur_partant_le === jourParis && !!e.par && ligne(Q1).projet === 'ambassadeur' && ligne(Q1).ambassadeur_inscrit_le === null,
+      '18.21 : « partant » noté sur la fiche, daté d\'aujourd\'hui, sans inscription ; avant-image gardée');
+    r = await fiche(Q1, { partant: true });
+    constat(r.status === 200 && r.d.changes.length === 0 && ligne(Q1).ambassadeur_partant_le === jourParis, '18.21 : le noter deux fois ne change rien (la date reste)');
+    r = await fiche(Q1, { partant: false });
+    constat(r.status === 200 && ligne(Q1).ambassadeur_partant_le === null && r.d.fiche.ambassadeur_etat === 'a_contacter' && evDernier(Q1).d.avant.ambassadeur_partant_le === jourParis, '18.21 : « partant » retiré : l\'état redevient « à contacter », avant-image gardée');
+    r = await fiche(Q2, { partant: true });
+    constat(r.status === 200 && r.d.fiche.ambassadeur_etat === 'partant', '18.21 : partant l\'emporte sur contacté');
+    r = await fiche(Q2, { partant: false });
+    constat(r.d.fiche.ambassadeur_etat === 'contacte', '18.21 : partant retiré : contacté revient');
+    r = await fiche(V2, { partant: true });
+    constat(r.d.fiche.ambassadeur_etat === 'inscrit' && ligne(V2).ambassadeur_partant_le === jourParis, '18.21 : inscrit l\'emporte sur partant (la date est quand même gardée)');
+    await fiche(V2, { partant: false });
+    // Contact qui n'est pas de projet ambassadeur : permis, et il devient visible comme ambassadeur.
+    r = await fiche(V1, { partant: true });
+    constat(r.status === 200 && r.d.fiche.ambassadeur_etat === 'partant' && ligne(V1).projet === 'vendeur' && r.d.ligne.ambassadeur_etat === 'partant', '18.21 : un contact d\'un autre projet peut être noté partant : il apparaît comme ambassadeur, son projet ne change pas');
+    const avantQ = JSON.stringify(ligne(Q3)), nQ = nEv(Q3);
+    const refusP = [];
+    for (const v of ['oui', 1, null, 'true', ['x']]) { const y = await fiche(Q3, { partant: v }); if (y.status !== 400) refusP.push(`fiche ${JSON.stringify(v)} ${y.status}`); const z = await carnet([Q3], { partant: v }); if (z.status !== 400) refusP.push(`carnet ${JSON.stringify(v)} ${z.status}`); }
+    constat(refusP.length === 0 && JSON.stringify(ligne(Q3)) === avantQ && nEv(Q3) === nQ, `18.21 : « partant » veut vrai ou faux (400 sinon), rien d'écrit${refusP.length ? ` (à revoir : ${refusP.join(', ')})` : ''}`);
+    // Jeton de Claude : refusé partout.
+    const avantC = JSON.stringify([ligne(Q3), ligne(B)]);
+    const clau = [await fiche(Q3, { partant: false }, JETON_C), await carnet([Q3], { partant: false }, JETON_C), await fiche(B, { canal: 'autre' }, JETON_C), await carnet([B], { canal: 'autre' }, JETON_C), await fiche(B, { projet: 'aucun' }, JETON_C)];
+    constat(clau.every((y) => y.status === 403) && JSON.stringify([ligne(Q3), ligne(B)]) === avantC, '18.21 : le jeton de service de Claude ne peut écrire ni source, ni « partant », ni projet (403)');
+    const lectureC = await appeler(`${E}/api/fiche?id=${B}`, { headers: avecJeton(JETON_C) });
+    constat(lectureC.status === 403, '18.21 : ni lire la fiche (403)');
+
+    // 5. La page Contacts.
+    const ctx = await nav.newContext({ viewport: { width: 1440, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
+    const o = await ctx.newPage();
+    const erreursPage = []; o.on('pageerror', (x) => erreursPage.push(x.message));
+    await o.goto(`${E}/`);
+    const attendre = () => o.waitForSelector('[data-lignes][data-complet]', { state: 'attached' });
+    await attendre();
+    const rech = async (t) => { await o.fill('[data-recherche]', t); await o.waitForTimeout(400); await attendre(); };
+    const ordre = async () => o.$$eval('[data-lignes] tr[data-contact]', (t) => t.map((x) => x.dataset.contact));
+    const entetes = await o.$$eval('[data-entetes] th', (t) => t.map((x) => x.textContent.replace(/[▲▼]/g, '').trim()));
+    const iSource = entetes.indexOf('Source');
+    constat(iSource > 0 && await o.locator('[data-trier=canal]').count() === 1, `18.21 : la colonne « Source » est dans le tableau, triable (${entetes.join(', ')})`);
+    // Le projet « Aucun » est juste après « À qualifier » dans le filtre.
+    const optsProjet = await o.$$eval('[data-filtre=projet] option', (t) => t.map((x) => x.textContent.trim()));
+    const iQ = optsProjet.indexOf('À qualifier');
+    constat(iQ > 0 && optsProjet[iQ + 1] === 'Aucun', `18.21 : « Aucun » est juste après « À qualifier » dans la liste des projets (${optsProjet.join(', ')})`);
+    await rech(`${P}${NUM}`);
+    const cell = async (id, i) => (await o.locator(`tr[data-contact="${id}"] td`).nth(i).innerText()).replace(/[▾\s]+/g, ' ').trim();
+    constat((await cell(A, iSource)) === 'Site' && (await cell(B, iSource)) === 'Pige' && (await cell(V1, iSource)) === '—',
+      `18.21 : la colonne Source montre le canal : « Site » pour un ancien canal, « Pige », « — » sans canal (${await cell(A, iSource)} / ${await cell(B, iSource)} / ${await cell(V1, iSource)})`);
+    const txtA = await o.locator(`tr[data-contact="${A}"]`).innerText();
+    constat(!/Téléphone|LinkedIn/.test(txtA), '18.21 : les sources d\'import (Téléphone, LinkedIn) ne sont plus dans le tableau');
+    // La liste de la source : les six choix dans l'ordre, plus le choix vide.
+    await o.click(`tr[data-contact="${B}"] [data-classer=canal]`);
+    const choix = await o.$$eval('select[data-liste=canal] option', (t) => t.map((x) => [x.value, x.textContent.trim(), x.disabled]));
+    constat(JSON.stringify(choix.map((c) => c[1])) === JSON.stringify(['Aucune', 'Pige', 'Boîtage', "Portails d'annonce", 'Reco', 'Évènementiel', 'Autres']) && JSON.stringify(choix.map((c) => c[0])) === JSON.stringify(['', 'pige', 'boitage', 'portail', 'recommandation', 'evenement', 'autre']),
+      `18.21 : la liste de la source propose exactement Pige, Boîtage, Portails d'annonce, Reco, Évènementiel, Autres (et « Aucune ») dans cet ordre (${choix.map((c) => c[1]).join(', ')})`);
+    const n0 = nEv(B);
+    await o.selectOption('select[data-liste=canal]', 'recommandation');
+    await o.waitForFunction((id) => document.querySelector(`tr[data-contact="${id}"]`)?.textContent.includes('Reco'), B);
+    e = evDernier(B);
+    constat(ligne(B).canal === 'recommandation' && nEv(B) === n0 + 1 && e.type === 'classement' && e.d.avant.canal === 'pige' && e.d.apres.canal === 'recommandation' && (await cell(B, iSource)).includes('Reco'),
+      '18.21 : choisir « Reco » dans la cellule écrit canal et un événement avec avant-image, la ligne suit sans recharger');
+    // Choix vide : efface.
+    await o.click(`tr[data-contact="${B}"] [data-classer=canal]`);
+    await o.selectOption('select[data-liste=canal]', '');
+    await o.waitForFunction((id) => !document.querySelector(`tr[data-contact="${id}"]`)?.textContent.includes('Reco'), B);
+    constat(ligne(B).canal === null && (await cell(B, iSource)) === '—', '18.21 : « Aucune » efface la source depuis le tableau');
+    // Un ancien canal : affiché, non choisissable ; Entrée sans rien changer n'écrit rien.
+    await o.click(`tr[data-contact="${A}"] [data-classer=canal]`);
+    const choixA = await o.$$eval('select[data-liste=canal] option', (t) => t.map((x) => [x.value, x.textContent.trim(), x.disabled, x.selected]));
+    const nA = nEv(A);
+    await o.keyboard.press('Enter');
+    await o.waitForTimeout(500);
+    constat(choixA[0][1] === 'Site' && choixA[0][2] && choixA[0][3] && choixA.length === 8 && ligne(A).canal === 'site' && nEv(A) === nA, '18.21 : un ancien canal (Site) reste affiché dans la liste, non choisissable ; Entrée sans choix n\'écrit rien');
+    await rech(`${P}${NUM}`);
+    // Filtre « Source » (canal) et vue enregistrée.
+    await o.selectOption('[data-filtre=canal]', 'site'); await attendre();
+    const filtreSite = await ordre();
+    const pastilleSource = (await o.locator('[data-pastilles] [data-retirer]').allInnerTexts()).some((t) => t.includes('Source : Site'));
+    constat(filtreSite.length === 1 && filtreSite[0] === A && pastilleSource, '18.21 : le filtre « Source » filtre sur le canal (pastille « Source : Site »)');
+    const optsFiltre = await o.$$eval('[data-filtre=canal] option', (t) => t.map((x) => x.textContent.trim()));
+    constat(JSON.stringify(optsFiltre.slice(0, 7)) === JSON.stringify(['Source', 'Pige', 'Boîtage', "Portails d'annonce", 'Reco', 'Évènementiel', 'Autres']) && optsFiltre.includes('Site') && !optsFiltre.includes('Téléphone') && !optsFiltre.includes('LinkedIn'),
+      `18.21 : le filtre « Source » propose les six choix (puis les anciens canaux présents), plus les sources d'import (${optsFiltre.join(', ')})`);
+    await o.click('[data-retirer="canal"][data-valeur="site"]'); await attendre();
+    // Vue enregistrée avec l'ancienne clé « source » : signalée, jamais une erreur.
+    sql(`INSERT INTO vue (id, nom, ordre, filtre, created_at, maj_le) VALUES ('01KF21VUE${NUM}00000000000000', '${P} ancienne', 998, '{"source":["telephone"]}', '2026-11-01T00:00:00Z', '2026-11-01T00:00:00Z')`);
+    const vueNeuve = await api('vues', { nom: `${P} nouvelle`, filtre: { canal: ['pige', 'autre'] } });
+    const vueAncienne = await api('vues', { nom: `${P} vieille cle`, filtre: { source: ['telephone'] } });
+    const hP = await (await appeler(`${E}/`, { headers: avecJeton() })).text();
+    const reglagesJson = JSON.parse(hP.match(/id="ct-reglages"[^>]*>([\s\S]*?)<\/script>/)[1]);
+    const vAnc = reglagesJson.vues.find((v) => v.nom === `${P} ancienne`), vNeuve = reglagesJson.vues.find((v) => v.nom === `${P} nouvelle`);
+    constat(vueAncienne.status === 400 && vueNeuve.status === 201 && !!vAnc?.invalide && JSON.stringify(vAnc.filtre) === '{}' && JSON.stringify(vNeuve?.filtre) === '{"canal":["pige","autre"]}',
+      `18.21 : une vue avec l'ancienne clé « source » est refusée à l'écriture et signalée invalide à la lecture (filtre vide, pas d'erreur) ; la nouvelle clé « canal » s'enregistre (${vueAncienne.status}, ${vueNeuve.status}, ${vAnc?.invalide})`);
+    await o.reload(); await attendre();
+    constat(await o.locator('[data-vue].ct-vue-invalide').count() >= 1 && erreursPage.length === 0, '18.21 : la page s\'ouvre avec la vue à l\'ancienne clé, signalée « à refaire », sans erreur JavaScript');
+    await rech(`${P}${NUM}`);
+
+    // Ambassadeur : pastille, couleur, tri, filtre, changement dans la cellule.
+    const iAmb = entetes.indexOf('Ambassadeur');
+    const pastilleAmb = async (id) => o.locator(`tr[data-contact="${id}"] [data-ambassadeur]`).first();
+    const vert = 'rgb(46, 107, 63)';
+    const fond = async (id) => (await pastilleAmb(id)).evaluate((x) => getComputedStyle(x).backgroundColor);
+    constat(await (await pastilleAmb(Q3)).getAttribute('data-ambassadeur') === 'partant' && (await (await pastilleAmb(Q3)).innerText()).trim() === 'Partant' && await fond(Q3) === vert && await fond(Q4) === vert
+      && await fond(Q1) !== vert && await fond(Q2) !== vert, '18.21 : « Partant » s\'affiche en vert comme « Inscrit » ; « À contacter » et « Contacté » ne le sont pas');
+    constat(await o.locator(`tr[data-contact="${V1}"] [data-ambassadeur]`).count() === 1 && (await (await pastilleAmb(V1)).innerText()).trim() === 'Partant', '18.21 : le contact d\'un autre projet noté partant montre la pastille « Partant »');
+    await fiche(V1, { partant: false });
+    // Tri : À contacter, Contacté, Partant, Inscrit.
+    await o.reload(); await attendre(); await rech(`${P}${NUM}`);
+    await o.click('[data-trier=ambassadeur]'); await o.waitForTimeout(250); await attendre();
+    const asc = (await ordre()).filter((x) => [Q1, Q2, Q3, Q4].includes(x));
+    await o.click('[data-trier=ambassadeur]'); await o.waitForTimeout(250); await attendre();
+    const desc = (await ordre()).filter((x) => [Q1, Q2, Q3, Q4].includes(x));
+    constat(JSON.stringify(asc) === JSON.stringify([Q1, Q2, Q3, Q4]) && JSON.stringify(desc) === JSON.stringify([Q4, Q3, Q2, Q1]), '18.21 : tri de la colonne Ambassadeur : À contacter, Contacté, Partant, Inscrit (puis l\'inverse)');
+    // Filtre « État ambassadeur : Partant ».
+    const optsAmb = await o.$$eval('[data-filtre=autres] optgroup[label="État ambassadeur"] option', (t) => t.map((x) => x.textContent.trim()));
+    await o.selectOption('[data-filtre=autres]', 'ambassadeur_etat:partant'); await attendre();
+    const fp = await ordre();
+    const pastP = (await o.locator('[data-pastilles] [data-retirer]').allInnerTexts()).some((t) => t.includes('Ambassadeur : Partant'));
+    constat(optsAmb.includes('Partant') && fp.length === 1 && fp[0] === Q3 && pastP, `18.21 : le filtre « État ambassadeur » accepte « Partant » (${optsAmb.join(', ')})`);
+    await o.click('[data-retirer="ambassadeur_etat"][data-valeur="partant"]'); await attendre();
+    // Changer dans la cellule : noter partant, puis retirer.
+    await o.click(`tr[data-contact="${Q1}"] [data-classer=ambassadeur]`);
+    const choixAmb = await o.$$eval('select[data-liste=ambassadeur] option', (t) => t.map((x) => x.textContent.trim()));
+    await o.selectOption('select[data-liste=ambassadeur]', 'partant');
+    await o.waitForFunction((id) => document.querySelector(`tr[data-contact="${id}"] [data-ambassadeur]`)?.getAttribute('data-ambassadeur') === 'partant', Q1);
+    e = evDernier(Q1);
+    constat(JSON.stringify(choixAmb) === JSON.stringify(['Partant', 'Pas partant']) && ligne(Q1).ambassadeur_partant_le === jourParis && e.d.apres.ambassadeur_partant_le === jourParis && e.d.avant.ambassadeur_partant_le === null && await fond(Q1) === vert,
+      '18.21 : la pastille du tableau se change (Partant / Pas partant) : daté d\'aujourd\'hui, événement avec avant-image, vert tout de suite');
+    await o.click(`tr[data-contact="${Q1}"] [data-classer=ambassadeur]`);
+    await o.selectOption('select[data-liste=ambassadeur]', 'non_partant');
+    await o.waitForFunction((id) => document.querySelector(`tr[data-contact="${id}"] [data-ambassadeur]`)?.getAttribute('data-ambassadeur') === 'a_contacter', Q1);
+    constat(ligne(Q1).ambassadeur_partant_le === null, '18.21 : « Pas partant » dans le tableau retire la marque (« à contacter » revient)');
+    // Contact sans état ambassadeur : la cellule vide est aussi cliquable.
+    await o.click(`tr[data-contact="${V1}"] [data-classer=ambassadeur]`);
+    await o.selectOption('select[data-liste=ambassadeur]', 'partant');
+    await o.waitForFunction((id) => document.querySelector(`tr[data-contact="${id}"] [data-ambassadeur]`)?.getAttribute('data-ambassadeur') === 'partant', V1);
+    constat(ligne(V1).ambassadeur_partant_le === jourParis && ligne(V1).projet === 'vendeur', '18.21 : « partant » depuis la cellule d\'un contact sans état ambassadeur : permis, projet inchangé');
+    await fiche(V1, { partant: false });
+
+    // La fiche : source, partant, sources d'import.
+    await rech(`${P}${NUM}`);
+    await o.click(`tr[data-contact="${A}"] [data-ouvrir-fiche]`);
+    await o.waitForSelector('[data-fiche-form]');
+    const importe = (await o.textContent('[data-fiche-sources]')) ?? '';
+    const selFiche = await o.$$eval('[data-fiche-canal] option', (t) => t.map((x) => [x.value, x.textContent.trim(), x.disabled]));
+    constat(/Importé depuis/.test(importe) && importe.includes('Téléphone') && importe.includes('LinkedIn') && selFiche[0][1] === 'Site' && selFiche[0][2] && selFiche.length === 8,
+      `18.21 : la fiche montre « Importé depuis : Téléphone, LinkedIn » et la source « Site » (ancien canal, non choisissable) (${importe.trim()})`);
+    await o.fill('[data-fiche-form] input[name=entreprise]', 'Laiterie 1821 bis');
+    await o.click('[data-fiche-enregistrer]');
+    await o.waitForSelector('[data-fiche-message]:not(.erreur)');
+    constat(ligne(A).canal === 'site' && ligne(A).entreprise === 'Laiterie 1821 bis', '18.21 : enregistrer la fiche sans toucher à la source garde l\'ancien canal');
+    await o.selectOption('[data-fiche-canal]', 'pige');
+    await o.click('[data-fiche-enregistrer]');
+    await o.waitForSelector('[data-fiche-message]:not(.erreur)');
+    e = evDernier(A);
+    await o.waitForTimeout(200);
+    constat(ligne(A).canal === 'pige' && e.d.avant.canal === 'site' && e.d.apres.canal === 'pige' && (await cell(A, iSource)).includes('Pige'), '18.21 : changer la source depuis la fiche écrit canal (avant-image « site »), la ligne suit');
+    await o.selectOption('[data-fiche-canal]', '');
+    await o.click('[data-fiche-enregistrer]');
+    await o.waitForSelector('[data-fiche-message]:not(.erreur)');
+    constat(ligne(A).canal === null, '18.21 : « Aucune » sur la fiche efface la source');
+    // Partant par la fiche (case), puis retiré.
+    await o.click('[data-fiche-fermer]').catch(() => {});
+    await o.click(`tr[data-contact="${Q1}"] [data-ouvrir-fiche]`);
+    await o.waitForSelector('[data-fiche-form]');
+    const caseP = o.locator('[data-fiche-partant] input[name=partant]');
+    const libP = (await o.textContent('[data-fiche-partant]')) ?? '';
+    await caseP.check();
+    await o.click('[data-fiche-enregistrer]');
+    await o.waitForSelector('[data-fiche-message]:not(.erreur)');
+    await o.waitForTimeout(200);
+    const pastFiche = await o.getAttribute('[data-fiche-ambassadeur]', 'data-fiche-ambassadeur');
+    constat(/préviendrait/.test(libP) && ligne(Q1).ambassadeur_partant_le === jourParis && pastFiche === 'partant' && (await pastilleAmb(Q1)) !== null && (await (await pastilleAmb(Q1)).getAttribute('data-ambassadeur')) === 'partant',
+      '18.21 : la case « M\'a dit qu\'il me préviendrait » de la fiche note « partant » daté d\'aujourd\'hui, la pastille et la ligne du tableau suivent');
+    await o.locator('[data-fiche-partant] input[name=partant]').uncheck();
+    await o.click('[data-fiche-enregistrer]');
+    await o.waitForSelector('[data-fiche-message]:not(.erreur)');
+    constat(ligne(Q1).ambassadeur_partant_le === null && await o.locator('[data-fiche-partant] input[name=partant]').isChecked() === false, '18.21 : décocher la case retire « partant »');
+    const largeur = await o.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    constat(largeur <= 0 && erreursPage.length === 0, `18.21 : pas de défilement horizontal de la page à 1440 px ni d'erreur JavaScript${erreursPage.length ? ` (${erreursPage[0]})` : ''}`);
+    await o.screenshot({ path: path.join(OUT, 'espace-contacts-source-partant-1440.png') });
+    await ctx.close();
+
+    // 6. L'import (claude-import) n'écrit ni la source, ni « partant », ni le projet « aucun » ; sa table est toujours utilisable.
+    const sources = ['scripts/claude-import.mjs', 'src/server/import.ts'].map((f) => fs.readFileSync(path.join(ICI, f), 'utf8')).join('\n');
+    const colImport = fs.readFileSync(path.join(ICI, 'src/server/carnet.ts'), 'utf8').match(/const COLONNES_IMPORT[^\n]*\n?[^\n]*/)?.[0] ?? '';
+    constat(!/ambassadeur_partant|\bpartant\b/.test(sources) && !/\bcanal\b/.test(sources) && !/canal|partant/.test(colImport), '18.21 : les outils d\'import ne nomment ni canal, ni « partant » (ils ne peuvent écrire ni l\'un ni l\'autre)');
+    sql(`DELETE FROM vue WHERE nom LIKE '${P}%'`);
+    nettoyer();
+  }
+  // Story 18.22 (ticket n° 267) : filtre « Dernier contact : moins de 3 mois ». Lancé seul avec E2E_1822_SEUL=1.
+  async function bloc1822() {
+    const P = 'E1822';
+    const ids = Array.from({ length: 3 }, (_, i) => `01KF22${String(i + 1).padStart(2, '0')}${NUM}${'0'.repeat(12)}`);
+    const [R, V, J] = ids; // récent (10 jours), vieux (200 jours), jamais
+    const nettoyer = () => { sql(`DELETE FROM contact WHERE id IN (${ids.map((i) => `'${i}'`).join(',')})`); sql(`DELETE FROM vue WHERE nom LIKE '${P}%'`); };
+    nettoyer();
+    const ilYa = (j) => new Date(Date.now() - j * 86_400_000).toISOString();
+    const ins = (id, n, dernier) => sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, commune, categorie_id, projet, dernier_contact_le, dernier_contact_canal) VALUES
+      ('${id}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Sam', 'Recenta${P}${NUM}${n}', '${P}-ville', 'edb', 'a_qualifier', ${dernier ? `'${dernier}', 'appel'` : 'NULL, NULL'})`);
+    ins(R, 1, ilYa(10)); ins(V, 2, ilYa(200)); ins(J, 3, null);
+    const vue = async (filtre) => {
+      const y = await appeler(`${E}/api/vues`, { method: 'POST', redirect: 'manual', headers: { 'cf-access-jwt-assertion': JETON, 'Content-Type': 'application/json', Origin: E }, body: JSON.stringify({ nom: `${P} ${JSON.stringify(filtre)}`, filtre }) });
+      return y.status;
+    };
+    constat(await vue({ dernier_contact: -90 }) === 201 && await vue({ dernier_contact: -4000 }) === 400 && await vue({ dernier_contact: 0 }) === 400, '18.22 : une vue « moins de 3 mois » (-90) s\'enregistre ; 0 et hors bornes refusés (400)');
+    const ctx = await nav.newContext({ viewport: { width: 1440, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
+    const o = await ctx.newPage();
+    const erreursPage = []; o.on('pageerror', (x) => erreursPage.push(x.message));
+    await o.goto(`${E}/`);
+    const attendre = () => o.waitForSelector('[data-lignes][data-complet]', { state: 'attached' });
+    await attendre();
+    await o.fill('[data-recherche]', `${P}${NUM}`); await o.waitForTimeout(400); await attendre();
+    const ordre = async () => (await o.$$eval('[data-lignes] tr[data-contact]', (t) => t.map((x) => x.dataset.contact))).sort();
+    const opts = await o.$$eval('[data-filtre=dernier_contact] option', (t) => t.map((x) => [x.value, x.textContent.trim()]));
+    constat(JSON.stringify(opts.slice(0, 3)) === JSON.stringify([['', 'Dernier contact'], ['jamais', 'Jamais recontacté'], ['-90', 'Moins de 3 mois']]), `18.22 : le filtre Dernier contact propose « Moins de 3 mois » (${opts.map((x) => x[1]).join(', ')})`);
+    await o.selectOption('[data-filtre=dernier_contact]', '-90'); await o.waitForTimeout(300); await attendre();
+    const recents = await ordre();
+    const pastille = (await o.locator('[data-pastilles] [data-retirer]').allInnerTexts()).some((t) => t.includes('Dernier contact : moins de 3 mois'));
+    constat(JSON.stringify(recents) === JSON.stringify([R]) && pastille, `18.22 : « moins de 3 mois » ne garde que le contact récent, pas le vieux ni le jamais contacté (pastille « Dernier contact : moins de 3 mois ») (${recents.length})`);
+    await o.goto(`${E}/`); await attendre();
+    await o.fill('[data-recherche]', `${P}${NUM}`); await o.waitForTimeout(400); await attendre();
+    await o.selectOption('[data-filtre=dernier_contact]', '90'); await o.waitForTimeout(300); await attendre();
+    const vieux = await ordre();
+    constat(JSON.stringify(vieux) === JSON.stringify([V, J].sort()) && erreursPage.length === 0, `18.22 : « plus de 3 mois » ne change pas (vieux et jamais contactés) ; pas d'erreur JavaScript${erreursPage.length ? ` (${erreursPage[0]})` : ''}`);
+    await ctx.close();
+    nettoyer();
+  }
+  if (process.env.E2E_1822_SEUL) { await bloc1822(); await nav.close(); throw new Error(echecs ? 'E2E_1822_SEUL : échecs' : 'E2E_1822_SEUL : terminé') }
+  if (process.env.E2E_1821_SEUL) { await bloc1821(); await nav.close(); throw new Error(echecs ? 'E2E_1821_SEUL : échecs' : 'E2E_1821_SEUL : terminé') }
+  if (process.env.E2E_1820_SEUL) { await bloc1820(); await nav.close(); throw new Error(echecs ? 'E2E_1820_SEUL : échecs' : 'E2E_1820_SEUL : terminé') }
   if (process.env.E2E_1819_SEUL) { await bloc1819(); await nav.close(); throw new Error(echecs ? 'E2E_1819_SEUL : échecs' : 'E2E_1819_SEUL : terminé') }
   if (process.env.E2E_1818_SEUL) { await bloc1818(); await nav.close(); throw new Error(echecs ? 'E2E_1818_SEUL : échecs' : 'E2E_1818_SEUL : terminé') }
   r = await page('/ajouter', { quoi: 'contact', prenom: 'Bea', nom: `Boitage${ESSAI}`, telephone: TEL, canal: 'boitage', parcours: 'vendeur' });
@@ -1424,7 +1942,7 @@ try {
   r = await appeler(`${E}/contacts/fiche?id=${rita.id}`, { headers: avecJeton() });
   html = await r.text();
   constat(/data-action-contact[\s\S]*<option value="[^"]+" selected[^>]*>Essai Flyers/.test(html), 'fiche : l\'action du contact est préchoisie');
-  r = await page('/ajouter', { quoi: 'passage', secteur: `Essai-${ESSAI}`, fait_le: auj, cout: '45' });
+  r = await page('/ajouter', { quoi: 'passage', ville: `Essai-${ESSAI}`, fait_le: auj, cout: '45' });
   constat(sql(`SELECT cout_centimes FROM passage_boitage WHERE secteur = 'Essai-${ESSAI}'`)[0]?.cout_centimes === 4500, 'passage de boîtage avec son coût');
   r = await appeler(`${E}/bilan?p=semaine`, { headers: avecJeton() });
   html = (await r.text()).replace(/\u00a0/g, ' '); // les montants gardent une espace insécable avant « € »
@@ -2308,6 +2826,7 @@ try {
   sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, commune, categorie_id, telephone, etape, parcours, prochaine_action_le, dernier_contact_le, dernier_contact_canal) VALUES
        ('${F4}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Flore', 'Filtrequatre${NUM}', '${VILLE5}', 'proches', '+33653${NUM}', 'premier_rdv', 'vendeur', '2026-12-01', '${ilYa(10)}', 'appel')`);
   sql(`INSERT INTO contact_source (contact_id, source, a) VALUES ('${F1}', 'site', '2026-10-01T08:00:00Z')`);
+  sql(`UPDATE contact SET canal = 'site' WHERE id = '${F1}'`); // story 18.21 : la « Source » du tableau est le canal
   // Story 18.17 : F1 a rencontré Anne à Publier en décembre 2024 ; F2 à Publier en février 2025 et à Margencel en décembre 2024.
   // Lieux propres à cet essai (la base locale garde les essais d'avant) ; les mois d'avant sont retirés pour que le filtre « mois » seul reste exact.
   const PUB5 = `Publier${NUM}`, MARG5 = `Margencel${NUM}`;
@@ -2338,7 +2857,8 @@ try {
     l = await retirerP('projet', 'acheteur'); l = await retirerP('categorie_id', 'edb');
     essais.push(['pastilles retirées', memes(l, [F1, F2, F4])]);
     l = await choisir('temperature', 'tiede'); essais.push(['température', memes(l, [F2])]); await retirerP('temperature', 'tiede');
-    l = await choisir('source', 'site'); essais.push(['source', memes(l, [F1])]); await retirerP('source', 'site');
+    // Story 18.21 : le filtre « Source » filtre sur le canal d'origine du contact (plus sur les sources d'import).
+    l = await choisir('canal', 'site'); essais.push(['source (canal)', memes(l, [F1])]); await retirerP('canal', 'site');
     await o.fill('[data-filtre-texte=entreprise_contient]', `laiterie${NUM}`); await o.waitForTimeout(300); await attendre();
     l = await ids(); essais.push(['entreprise contient', memes(l, [F1])]); await retirerP('entreprise_contient');
     essais.push(['case entreprise vidée', (await o.inputValue('[data-filtre-texte=entreprise_contient]')) === '']);
@@ -2949,7 +3469,7 @@ try {
     const nc = x.d?.id ? c7(x.d.id) : null;
     constat(x.status === 201 && nc && !!nc.verifie_le && nc.etape === null && nc.canal === null && nc.categorie_id === 'partenaires' && nc.temperature === 'tiede'
       && sql(`SELECT source FROM contact_source WHERE contact_id = '${x.d.id}'`).map((s) => s.source).join() === 'saisie'
-      && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${x.d.id}' AND type IN ('creation', 'note')`)[0].n === 2 && x.d.ligne.sources.includes('saisie'),
+      && sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${x.d.id}' AND type IN ('creation', 'note')`)[0].n === 2 && !('sources' in x.d.ligne) && (await appeler(`${E}/api/fiche?id=${x.d.id}`, { headers: avecJeton() }).then((y) => y.json())).fiche.sources.some((z) => z.source === 'saisie'),
       '18.7 : « + Nouveau contact » crée un contact vérifié, hors suivi, source « saisie à la main », avec sa note');
     const d1 = await apiFiche({ creer: { nom: 'Doublon', telephone: `07 74 ${NUM.slice(0, 2)} ${NUM.slice(2, 4)} ${NUM.slice(4, 6)}`.replace(/^07/, '06'), categorie_id: 'proches' } });
     const d2 = await apiFiche({ creer: { nom: 'Doublon', email: KEX2.toUpperCase(), categorie_id: 'proches' } });
@@ -3164,6 +3684,9 @@ try {
   }
   await bloc1818();
   await bloc1819();
+  await bloc1820();
+  await bloc1821();
+  await bloc1822();
   // Story 18.8 : catégories et méthodes, par /api/categories puis dans la page /categories. Les catégories de départ sont
   // remises comme avant à la fin (nom, ordre, méthode), les catégories d'essai retirées (marque « E188 » dans le nom).
   const ancienne8 = sql(`SELECT id FROM categorie WHERE nom LIKE '%E188%'`).map((c) => `'${c.id}'`).join(',');

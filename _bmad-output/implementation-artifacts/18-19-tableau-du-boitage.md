@@ -2,6 +2,8 @@
 
 Epic 18 (le carnet de contacts). Statut : done (PR #250 fusionnée le 2026-11-05, commit 016c4ed ; migration 0023 appliquée par la construction). Date : 2026-11-05. Origine : ticket GitHub n° 249 « [Retour espace] », envoyé par Anne depuis la page /actions de l'espace.
 
+> Correction du 2026-11-09 (story 18.20, tickets n° 256 à 258) : l'hypothèse sur R1 et R2 ci-dessous était fausse. R1 et R2 sont le premier et le second rendez-vous : un nombre dans le tableau du boîtage, une date sur chaque fiche contact. Voir `18-20-r1-r2-boitage-et-contacts.md`.
+
 ## Objectif
 
 Anne dépose des flyers et tient son suivi dans un classeur. Sa demande : « Pour le boîtage je souhaiterais avoir un tableau avec les colonnes suivantes : date, ville, quartier, type de bien (maison ou appartement), nombre de flyers déposés, message (je renseigne un n° en fonction de mon classeur), R1, R2, commentaires ».

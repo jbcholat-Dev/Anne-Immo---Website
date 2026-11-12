@@ -4,7 +4,7 @@
 // la fiche. Écrit par les pages de l'espace et par l'accès de Claude (/api/claude/…), qui ne lit jamais un contact :
 // seulement des totaux. Montants en centimes d'euro.
 import type { EnvSite } from '@site/server/env';
-import { CANAUX_ORIGINE, type Canal } from '@site/server/contacts';
+import { CANAUX_ACTION, type Canal } from '@site/server/contacts';
 import { ulid } from '@site/server/ulid';
 import { aujourdhui } from './pipeline';
 
@@ -65,7 +65,7 @@ export function verifierAction(d: Record<string, unknown>): ChampsAction | strin
   const nom = texte(d.nom, 120);
   if (!nom) return "Donnez un nom à l'action.";
   const canal = texte(d.canal, 20);
-  if (!(canal in CANAUX_ORIGINE)) return 'Choisissez le canal.';
+  if (!Object.prototype.hasOwnProperty.call(CANAUX_ACTION, canal)) return 'Choisissez le canal.';
   if (!estDate(d.debut)) return 'Indiquez la date de début.';
   const fin = d.fin === null || d.fin === undefined || d.fin === '' ? null : d.fin;
   if (fin !== null && !estDate(fin)) return 'La date de fin ne semble pas valable.';
