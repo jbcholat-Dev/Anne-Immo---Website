@@ -1106,6 +1106,45 @@ try {
     sql(`DELETE FROM vue WHERE nom LIKE '${P}%'`);
     nettoyer();
   }
+  // Story 18.22 (ticket n° 267) : filtre « Dernier contact : moins de 3 mois ». Lancé seul avec E2E_1822_SEUL=1.
+  async function bloc1822() {
+    const P = 'E1822';
+    const ids = Array.from({ length: 3 }, (_, i) => `01KF22${String(i + 1).padStart(2, '0')}${NUM}${'0'.repeat(12)}`);
+    const [R, V, J] = ids; // récent (10 jours), vieux (200 jours), jamais
+    const nettoyer = () => { sql(`DELETE FROM contact WHERE id IN (${ids.map((i) => `'${i}'`).join(',')})`); sql(`DELETE FROM vue WHERE nom LIKE '${P}%'`); };
+    nettoyer();
+    const ilYa = (j) => new Date(Date.now() - j * 86_400_000).toISOString();
+    const ins = (id, n, dernier) => sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, commune, categorie_id, projet, dernier_contact_le, dernier_contact_canal) VALUES
+      ('${id}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Sam', 'Recenta${P}${NUM}${n}', '${P}-ville', 'edb', 'a_qualifier', ${dernier ? `'${dernier}', 'appel'` : 'NULL, NULL'})`);
+    ins(R, 1, ilYa(10)); ins(V, 2, ilYa(200)); ins(J, 3, null);
+    const vue = async (filtre) => {
+      const y = await appeler(`${E}/api/vues`, { method: 'POST', redirect: 'manual', headers: { 'cf-access-jwt-assertion': JETON, 'Content-Type': 'application/json', Origin: E }, body: JSON.stringify({ nom: `${P} ${JSON.stringify(filtre)}`, filtre }) });
+      return y.status;
+    };
+    constat(await vue({ dernier_contact: -90 }) === 201 && await vue({ dernier_contact: -4000 }) === 400 && await vue({ dernier_contact: 0 }) === 400, '18.22 : une vue « moins de 3 mois » (-90) s\'enregistre ; 0 et hors bornes refusés (400)');
+    const ctx = await nav.newContext({ viewport: { width: 1440, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
+    const o = await ctx.newPage();
+    const erreursPage = []; o.on('pageerror', (x) => erreursPage.push(x.message));
+    await o.goto(`${E}/`);
+    const attendre = () => o.waitForSelector('[data-lignes][data-complet]', { state: 'attached' });
+    await attendre();
+    await o.fill('[data-recherche]', `${P}${NUM}`); await o.waitForTimeout(400); await attendre();
+    const ordre = async () => (await o.$$eval('[data-lignes] tr[data-contact]', (t) => t.map((x) => x.dataset.contact))).sort();
+    const opts = await o.$$eval('[data-filtre=dernier_contact] option', (t) => t.map((x) => [x.value, x.textContent.trim()]));
+    constat(JSON.stringify(opts.slice(0, 3)) === JSON.stringify([['', 'Dernier contact'], ['jamais', 'Jamais recontacté'], ['-90', 'Moins de 3 mois']]), `18.22 : le filtre Dernier contact propose « Moins de 3 mois » (${opts.map((x) => x[1]).join(', ')})`);
+    await o.selectOption('[data-filtre=dernier_contact]', '-90'); await o.waitForTimeout(300); await attendre();
+    const recents = await ordre();
+    const pastille = (await o.locator('[data-pastilles] [data-retirer]').allInnerTexts()).some((t) => t.includes('Dernier contact : moins de 3 mois'));
+    constat(JSON.stringify(recents) === JSON.stringify([R]) && pastille, `18.22 : « moins de 3 mois » ne garde que le contact récent, pas le vieux ni le jamais contacté (pastille « Dernier contact : moins de 3 mois ») (${recents.length})`);
+    await o.goto(`${E}/`); await attendre();
+    await o.fill('[data-recherche]', `${P}${NUM}`); await o.waitForTimeout(400); await attendre();
+    await o.selectOption('[data-filtre=dernier_contact]', '90'); await o.waitForTimeout(300); await attendre();
+    const vieux = await ordre();
+    constat(JSON.stringify(vieux) === JSON.stringify([V, J].sort()) && erreursPage.length === 0, `18.22 : « plus de 3 mois » ne change pas (vieux et jamais contactés) ; pas d'erreur JavaScript${erreursPage.length ? ` (${erreursPage[0]})` : ''}`);
+    await ctx.close();
+    nettoyer();
+  }
+  if (process.env.E2E_1822_SEUL) { await bloc1822(); await nav.close(); throw new Error(echecs ? 'E2E_1822_SEUL : échecs' : 'E2E_1822_SEUL : terminé') }
   if (process.env.E2E_1821_SEUL) { await bloc1821(); await nav.close(); throw new Error(echecs ? 'E2E_1821_SEUL : échecs' : 'E2E_1821_SEUL : terminé') }
   if (process.env.E2E_1820_SEUL) { await bloc1820(); await nav.close(); throw new Error(echecs ? 'E2E_1820_SEUL : échecs' : 'E2E_1820_SEUL : terminé') }
   if (process.env.E2E_1819_SEUL) { await bloc1819(); await nav.close(); throw new Error(echecs ? 'E2E_1819_SEUL : échecs' : 'E2E_1819_SEUL : terminé') }
@@ -3646,6 +3685,8 @@ try {
   await bloc1818();
   await bloc1819();
   await bloc1820();
+  await bloc1821();
+  await bloc1822();
   // Story 18.8 : catégories et méthodes, par /api/categories puis dans la page /categories. Les catégories de départ sont
   // remises comme avant à la fin (nom, ordre, méthode), les catégories d'essai retirées (marque « E188 » dans le nom).
   const ancienne8 = sql(`SELECT id FROM categorie WHERE nom LIKE '%E188%'`).map((c) => `'${c.id}'`).join(',');

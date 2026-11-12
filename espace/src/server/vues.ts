@@ -42,8 +42,10 @@ const ID_CATEGORIE = /^(?:[a-z_]{1,40}|[0-9A-HJKMNP-TV-Z]{26})$/;
 const MAX_VALEURS = 30;
 
 /** Les durées proposées pour « dernier contact plus ancien que » ; toute durée de 1 à 3 650 jours est acceptée. */
+// Story 18.22 (ticket n° 267) : un nombre négatif se lit « moins de N jours » (contacté récemment), un positif « plus de
+// N jours » (pas contacté depuis).
 export const DUREES: { jours: number; libelle: string }[] = [
-  { jours: 30, libelle: 'plus d\'un mois' }, { jours: 90, libelle: 'plus de 3 mois' },
+  { jours: -90, libelle: 'moins de 3 mois' }, { jours: 30, libelle: 'plus d\'un mois' }, { jours: 90, libelle: 'plus de 3 mois' },
   { jours: 180, libelle: 'plus de 6 mois' }, { jours: 365, libelle: 'plus d\'un an' },
 ];
 
@@ -93,7 +95,7 @@ export function verifierFiltre(brut: unknown, categories?: ReadonlySet<string>):
       if (typeof valeur !== 'string' || !regle.choix.includes(valeur)) return `${cle} : valeur inconnue.`;
       sortie[cle] = valeur;
     } else {
-      if (valeur !== 'jamais' && !(Number.isInteger(valeur) && (valeur as number) >= 1 && (valeur as number) <= 3650)) return 'dernier_contact : « jamais » ou un nombre de jours (1 à 3 650) est attendu.';
+      if (valeur !== 'jamais' && !(Number.isInteger(valeur) && Math.abs(valeur as number) >= 1 && Math.abs(valeur as number) <= 3650)) return 'dernier_contact : « jamais » ou un nombre de jours (1 à 3 650, négatif pour « moins de ») est attendu.';
       sortie[cle] = valeur;
     }
   }
@@ -136,7 +138,8 @@ export function preparerFiltre(f: Filtre, maintenant = new Date()): (l: LigneTab
   const jour = aujourdhuiParis(maintenant);
   // Revue de code 18.5 : « plus ancien que N jours » se compte en jours de Paris : le jour de Paris du dernier contact
   // est avant (aujourd'hui à Paris − N jours).
-  const limite = typeof f.dernier_contact === 'number' ? moinsJours(jour, f.dernier_contact) : null;
+  const limite = typeof f.dernier_contact === 'number' ? moinsJours(jour, Math.abs(f.dernier_contact)) : null;
+  const recent = typeof f.dernier_contact === 'number' && f.dernier_contact < 0; // story 18.22 : « moins de N jours »
   return (l, x) => {
     if (l.ecarte !== ecartes) return false;
     if (cat && !(l.categorie_id && cat.has(l.categorie_id))) return false;
@@ -150,7 +153,8 @@ export function preparerFiltre(f: Filtre, maintenant = new Date()): (l: LigneTab
     if (f.verifie && l.verifie !== (f.verifie === 'oui')) return false;
     if (acc && !acc.has(l.accord)) return false;
     if (f.dernier_contact === 'jamais' && l.dernier_le) return false;
-    if (limite !== null && x.dernier !== null && x.dernier >= limite) return false; // jours AAAA-MM-JJ : l'ordre du texte est celui des dates
+    if (limite !== null && !recent && x.dernier !== null && x.dernier >= limite) return false; // jours AAAA-MM-JJ : l'ordre du texte est celui des dates
+    if (limite !== null && recent && !(x.dernier !== null && x.dernier >= limite)) return false; // jamais contacté : exclu
     if (f.pipeline && l.suivi !== (f.pipeline === 'dans')) return false;
     if (f.ambassadeur && !(l.ambassadeur_inscrit || l.ambassadeur_partant || l.projet === 'ambassadeur')) return false;
     if (etatsAmb && !(l.ambassadeur_etat && etatsAmb.has(l.ambassadeur_etat))) return false;
@@ -188,7 +192,7 @@ export function pastilles(f: Filtre, categories: ReadonlyMap<string, string>): P
   if (f.dernier_contact !== undefined) {
     const d = f.dernier_contact;
     p.push({ cle: 'dernier_contact', valeur: null, libelle: d === 'jamais' ? 'Jamais recontactés'
-      : `Dernier contact : ${DUREES.find((x) => x.jours === d)?.libelle ?? `plus de ${d} jours`}` });
+      : `Dernier contact : ${DUREES.find((x) => x.jours === d)?.libelle ?? (d < 0 ? `moins de ${-d} jours` : `plus de ${d} jours`)}` });
   }
   if (f.pipeline) p.push({ cle: 'pipeline', valeur: null, libelle: f.pipeline === 'dans' ? 'Dans le suivi des ventes' : 'Hors suivi des ventes' });
   liste('ambassadeur_etat', f.ambassadeur_etat, (v) => ETATS_AMBASSADEUR[v as EtatAmbassadeur] ?? v);
