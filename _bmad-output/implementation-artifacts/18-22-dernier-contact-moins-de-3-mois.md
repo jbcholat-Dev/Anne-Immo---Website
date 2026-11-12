@@ -19,7 +19,14 @@ Epic 18 (le carnet de contacts). Statut : review. Date : 2026-11-12. Origine : t
 - `espace` : `npm run build` et `npm run check` : 0 erreur.
 - `E2E_1822_SEUL=1 node scripts/e2e-espace.mjs` : 4 constats sur 4 (vue « -90 » acceptée, 0 et -4000 refusés ; liste du filtre ; « moins de 3 mois » ne garde que le contact d'il y a 10 jours, pas celui d'il y a 200 jours ni le jamais contacté ; « plus de 3 mois » inchangé, sans erreur JavaScript). La dernière ligne « 1 échec(s) » est l'arrêt voulu du mode bloc seul.
 
+## Revue de code
+
+2026-11-12, `bmad-code-review` en session neuve, commit aaea58c relu (diff 88deb88..aaea58c). Aucun constat bloquant. Les campagnes faites depuis une vue enregistrée passent par le même filtre (`campagnes.ts`, `idsDeVue`) : elles suivent « moins de 3 mois » sans autre changement. Limite de 90 jours exacte (jours de Paris des deux côtés).
+
+1. Commentaires de `vues.ts` qui ne parlaient que de « plus ancien que » : corrigé (commit suivant).
+2. Commentaire placé entre le JSDoc et `DUREES` : corrigé (fondu dans le JSDoc).
+3. L'essai complet appelle maintenant aussi `bloc1821` : écarté, gardé exprès (le bloc 18.21 manquait à l'essai complet) ; l'essai complet de 25 minutes n'a pas été rejoué, seulement les blocs seuls.
+
 ## Ce qui reste
 
-- Revue de code (`bmad-code-review`, session neuve).
 - Anne : dire si « moins de 3 mois » est bien ce qu'elle voulait (lecture déduite du ticket).

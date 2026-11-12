@@ -24,7 +24,8 @@ export interface Filtre {
   /** Absent ou « non » : les écartés sont masqués (FR-1) ; « oui » : seulement les écartés. */
   ecarte?: 'oui' | 'non';
   accord?: Accord[];
-  /** « jamais » : jamais recontacté ; un nombre de jours : dernier contact plus ancien (jamais recontacté compris). */
+  /** « jamais » : jamais recontacté ; un nombre de jours positif : dernier contact plus ancien (jamais recontacté compris) ;
+   *  négatif (story 18.22) : dernier contact dans les N derniers jours (jamais recontacté exclu). */
   dernier_contact?: 'jamais' | number;
   pipeline?: 'dans' | 'hors';
   recherche?: string;
@@ -41,9 +42,8 @@ const ACCORDS_CLES = Object.keys(ACCORDS) as Accord[];
 const ID_CATEGORIE = /^(?:[a-z_]{1,40}|[0-9A-HJKMNP-TV-Z]{26})$/;
 const MAX_VALEURS = 30;
 
-/** Les durées proposées pour « dernier contact plus ancien que » ; toute durée de 1 à 3 650 jours est acceptée. */
-// Story 18.22 (ticket n° 267) : un nombre négatif se lit « moins de N jours » (contacté récemment), un positif « plus de
-// N jours » (pas contacté depuis).
+/** Les durées proposées pour le filtre « dernier contact » ; toute durée de 1 à 3 650 jours est acceptée, positive
+ *  (« plus de N jours », pas contacté depuis) ou négative (« moins de N jours », contacté récemment ; story 18.22). */
 export const DUREES: { jours: number; libelle: string }[] = [
   { jours: -90, libelle: 'moins de 3 mois' }, { jours: 30, libelle: 'plus d\'un mois' }, { jours: 90, libelle: 'plus de 3 mois' },
   { jours: 180, libelle: 'plus de 6 mois' }, { jours: 365, libelle: 'plus d\'un an' },
