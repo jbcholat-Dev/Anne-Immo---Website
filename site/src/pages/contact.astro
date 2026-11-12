@@ -106,12 +106,12 @@ const x = await textes('contact');
   </script>
 </Page>
 <style>
-  .ct-tete { padding: 80px var(--marge) 32px; }
-  .ct-tete h1 { font-size: 72px; margin-bottom: 14px; }
+  .ct-tete { padding: calc(80 * var(--px-h)) var(--marge) 32px; }
+  .ct-tete h1 { font-size: calc(72 * var(--px-h)); margin-bottom: 14px; }
   .ct-tete p { font-size: 18px; line-height: 1.6; max-width: 56ch; }
   .ct-tete .ct-tel { margin-top: 12px; }
   .ct-tel a { white-space: nowrap; }
-  .ct-corps { padding: 32px var(--marge) 96px; display: grid; grid-template-columns: 1.15fr 1fr; gap: 64px; align-items: start; }
+  .ct-corps { padding: 32px var(--marge) calc(96 * var(--px-h)); display: grid; grid-template-columns: 1.15fr 1fr; gap: 64px; align-items: start; }
   .ct-rdv { background: var(--avt-galet); border-radius: 16px; padding: 36px; scroll-margin-top: calc(var(--nav-h) + 24px); }
   .ct-rdv h2 { font-size: 32px; margin-bottom: 6px; }
   .ct-agenda { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }

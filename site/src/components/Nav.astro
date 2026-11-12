@@ -1,10 +1,21 @@
 ---
 // Barre de navigation (D-2, D-6 variante A, D-17, D-21) : fixe dès le premier pixel, réduite au défilement, jamais masquée.
-// Desktop : réseaux · filet · symbole seul | Accueil · À propos ▾ (Qui suis-je ? · Ma méthode · Cible · Réseau eXp) · Réalisations · Vendre · Acheter · Contact · FR EN.
-// Mobile : symbole + bouton menu ; menu plein écran, Accueil puis « À propos » en accordéon (libellé cliquable + chevron).
+// Desktop : réseaux · filet · symbole + trait + eXp (D-50) | Accueil · À propos ▾ (Qui suis-je ? · Ma méthode · Cible · Réseau eXp) · Réalisations · Vendre · Acheter · Contact · FR EN.
+// Mobile : symbole + eXp + bouton menu ; menu plein écran, Accueil puis « À propos » en accordéon (libellé cliquable + chevron).
 // Partenaires et Actualités (D-46, ticket n° 153) entre Acheter et Contact : toujours sur l'aperçu, sur le site public dès qu'une fiche est publiée.
 // « Accueil » en toutes lettres (D-28, retour d'aperçu n° 3) : le logo seul ne suffisait pas à dire « revenir à l'accueil ».
 import Logo from './Logo.astro';
+// Story 8.28 (décision de JB du 2026-11-09, D-50) : le logo eXp officiel suit le symbole, séparé par un trait fin.
+// Fichiers du design system consommés tels quels (AD-17) : eXp Black sur la barre claire, eXp White sur la barre sombre de l'accueil.
+import expNoir from '../../../design-system/assets/eXp_Logo_Black.svg?raw';
+import expBlanc from '../../../design-system/assets/eXp_Logo_White.svg?raw';
+// Les deux fichiers nomment leur couleur « cls-1 » dans une feuille de style interne : renommée par version, sinon la seconde repeint la première.
+const expSvg = (svg: string, cls: string) => {
+  const out = svg.replace(/<\?xml[^>]*>\s*/g, '').replace(/\bcls-1\b/g, `${cls}-c`).replace(/<svg id="Logo"/, `<svg class="nav-exp ${cls}" aria-hidden="true" focusable="false"`);
+  // Garde de construction (revue de code) : si un fichier eXp change d'en-tête ou de classes, on arrête plutôt que d'afficher un logo sans taille ou mal colorié.
+  if (!out.includes(`class="nav-exp ${cls}"`) || / id=/.test(out) || /cls-/.test(out) || !out.includes(`${cls}-c`)) throw new Error(`Nav : logo eXp (${cls}) non reconnu, vérifier design-system/assets/eXp_Logo_*.svg`);
+  return out;
+};
 import { t, r, bascule, type Lang, type RouteKey } from '../i18n';
 import { reseaux } from '../config/site';
 import { rubriquesVisibles } from '../lib/contenu';
@@ -43,6 +54,7 @@ const estCourante = (k: RouteKey) => courante === k || (k === 'apropos' && ['qui
         <span class="nav-filet" aria-hidden="true"></span>
       </>}
       <a href={r('accueil', lang)} class="nav-logo" aria-label={d.nav.accueil}><Logo taille={38} class="nav-logo-svg" /></a>
+      <span class="nav-exp-bloc" role="img" aria-label="eXp France"><span class="nav-exp-trait" aria-hidden="true"></span><Fragment set:html={expSvg(expNoir, 'nav-exp-noir')} /><Fragment set:html={expSvg(expBlanc, 'nav-exp-blanc')} /></span>
     </div>
     <nav aria-label={d.nav.principale} class="nav-desktop">
       <a class="nav-lien" href={r('accueil', lang)} aria-current={surAccueil ? 'page' : undefined}>{d.nav.accueil}</a>
@@ -66,7 +78,7 @@ const estCourante = (k: RouteKey) => courante === k || (k === 'apropos' && ['qui
 
 <div class="menu-mobile" id="menu-mobile" data-menu-mobile hidden>
   <div class="menu-mobile-tete">
-    <a href={r('accueil', lang)} aria-label={d.nav.accueil}><Logo taille={32} /></a>
+    <span class="menu-mobile-marque"><a href={r('accueil', lang)} aria-label={d.nav.accueil}><Logo taille={32} /></a><span class="nav-exp-bloc" role="img" aria-label="eXp France"><span class="nav-exp-trait" aria-hidden="true"></span><Fragment set:html={expSvg(expNoir, 'nav-exp-noir')} /></span></span>
     <button type="button" class="menu-mobile-fermer" aria-label={d.nav.fermer} data-menu-fermer>×</button>
   </div>
   <nav class="menu-mobile-nav" aria-label={d.nav.principale}>
@@ -119,6 +131,20 @@ const estCourante = (k: RouteKey) => courante === k || (k === 'apropos' && ['qui
   .nav-filet { width: 1px; height: 28px; background: rgba(38, 32, 26, .15); }
   .nav-logo { display: block; color: inherit; }
   .nav-logo-svg { transition: width .35s ease, height .35s ease; }
+  /* eXp à côté du symbole (D-50) : hauteur du dessin eXp ≈ 0,8 du symbole, trait de 1 px de la hauteur d'eXp, écart d'un demi-« e ». */
+  .nav-exp-bloc { display: inline-flex; align-items: center; gap: 10px; flex: none; margin-left: -6px; }
+  .nav-exp-trait { width: 1px; height: 26px; background: currentColor; opacity: .55; transition: height .35s ease; }
+  .nav-exp-bloc :global(.nav-exp) { height: 30px; width: calc(30px * 277.4 / 150); display: block; transition: height .35s ease, width .35s ease; }
+  /* Les deux versions sont superposées et s'échangent en fondu, au rythme du fond de la barre (0,35 s). */
+  .nav-exp-bloc { position: relative; }
+  .nav-exp-bloc :global(.nav-exp-noir), .nav-exp-bloc :global(.nav-exp-blanc) { transition: opacity .35s ease, height .35s ease, width .35s ease; }
+  .nav-exp-bloc :global(.nav-exp-blanc) { position: absolute; right: 0; top: 50%; transform: translateY(-50%); opacity: 0; }
+  .nav[data-sombre]:not([data-reduit]) .nav-exp-bloc :global(.nav-exp-blanc) { opacity: 1; }
+  .nav[data-sombre]:not([data-reduit]) .nav-exp-bloc :global(.nav-exp-noir) { opacity: 0; }
+  .nav[data-reduit] .nav-exp-bloc :global(.nav-exp) { height: 25px; width: calc(25px * 277.4 / 150); }
+  .nav[data-reduit] .nav-exp-trait { height: 22px; }
+  .menu-mobile-marque { display: inline-flex; align-items: center; gap: 10px; }
+  .menu-mobile-marque .nav-exp-bloc :global(.nav-exp) { height: 25px; width: calc(25px * 277.4 / 150); }
   .nav-desktop { display: flex; align-items: center; gap: 32px; font-size: 14px; font-weight: 500; }
   .nav-lien { color: inherit; }
   .nav-lien:hover { text-decoration: none; color: var(--avt-klein); }
@@ -208,6 +234,8 @@ const estCourante = (k: RouteKey) => courante === k || (k === 'apropos' && ['qui
     .nav[data-reduit] { height: var(--nav-h-mobile); top: 10px; }
     .nav-reseaux, .nav-filet, .nav-desktop { display: none !important; }
     .nav-logo-svg, .nav[data-reduit] .nav-logo-svg { width: 32px; height: 32px; }
+    .nav-exp-bloc :global(.nav-exp), .nav[data-reduit] .nav-exp-bloc :global(.nav-exp) { height: 25px; width: calc(25px * 277.4 / 150); }
+    .nav-exp-trait, .nav[data-reduit] .nav-exp-trait { height: 22px; }
     .nav-burger { display: flex; }
   }
 </style>

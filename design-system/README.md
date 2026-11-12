@@ -25,6 +25,8 @@ Bundle prêt à pousser vers un projet **Design System** du compte claude.ai/des
 
 Règle logo eXp (2026-11-02, story 8.25) : les fichiers eXp ont **3 unités de marge en haut et en bas** de leur cadre (`viewBox` `0 -3 … 150`). Le jambage du « p » touche le bas du dessin : sans cette marge, il est rogné dès que la hauteur affichée est arrondie. Ne jamais remettre le cadre au ras du dessin.
 
+Règle barre de navigation (D-50, décision de JB du 2026-11-09, story 8.28) : dans la barre du site, le symbole seul est suivi d'un trait de 1 px puis du logo eXp officiel (Black sur la barre claire, White sur la barre sombre), à environ 0,8 de la hauteur du symbole. C'est la seule exception à « eXp jamais accolé au symbole seul » ; partout ailleurs, le logo combiné `lockup-exp-*`.
+
 Règle logo (2026-09-22) : **sans sous-titre par défaut** ; la version avec descripteur seulement au-dessus du seuil de lisibilité (charte § 2.3), jamais sur le site.
 
 ## Procédure de push (une fois l'autorisation faite)

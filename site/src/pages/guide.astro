@@ -45,9 +45,9 @@ const erreurs = ['Le prix fixé sans comparables', 'Le dossier incomplet au comp
   <script src="../islands/formulaires.ts"></script>
 </Page>
 <style>
-  .g-corps { padding: 80px var(--marge) 96px; display: grid; grid-template-columns: 420px 1fr 480px; gap: 72px; align-items: start; }
+  .g-corps { padding: calc(80 * var(--px-h)) var(--marge) calc(96 * var(--px-h)); display: grid; grid-template-columns: 420px 1fr 480px; gap: 72px; align-items: start; }
   .g-corps :global(.g-couv) { width: 100%; height: auto; border-radius: 6px; box-shadow: 0 1px 2px rgba(38, 32, 26, .08), 0 12px 32px rgba(38, 32, 26, .12); } /* A-10 : couverture du PDF (scripts/guide-pdf.mjs) */
-  .g-texte h1 { font-size: 56px; line-height: 1.05; margin-bottom: 20px; }
+  .g-texte h1 { font-size: calc(56 * var(--px-h)); line-height: 1.05; margin-bottom: 20px; }
   .g-intro { font-size: 17px; line-height: 1.6; margin-bottom: 24px; max-width: 44ch; }
   .g-texte ul { padding-left: 20px; font-size: 16px; line-height: 1.7; display: flex; flex-direction: column; gap: 4px; }
   .g-form { background: var(--avt-galet); border-radius: 16px; padding: 32px; display: flex; flex-direction: column; gap: 14px; }
@@ -65,7 +65,7 @@ const erreurs = ['Le prix fixé sans comparables', 'Le dossier incomplet au comp
   /* Largeurs intermédiaires (900 à 1399 px, sans artboard) : colonnes proportionnelles, sinon le texte déborde (story 8.2) */
   @media (min-width: 900px) and (max-width: 1399px) {
     .g-corps { grid-template-columns: minmax(0, 280px) minmax(0, 1fr) minmax(0, 400px); gap: 48px; }
-    .g-texte h1 { font-size: 44px; }
+    .g-texte h1 { font-size: calc(44 * var(--px-h)); }
   }
   @media (min-width: 900px) and (max-width: 1099px) {
     .g-corps { grid-template-columns: minmax(0, 1fr) minmax(0, 380px); }

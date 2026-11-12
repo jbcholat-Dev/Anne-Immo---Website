@@ -124,6 +124,9 @@ development_status:
   8-23-offert-plutôt-que-gratuit: done   # 2026-10-26, PR n° 204 fusionnée (JB) ; 2026-10-25, décision de JB : « offert », jamais « gratuit »
   8-24-section-infographies-du-design-system: done   # 2026-10-27, PR n° 210 fusionnée sur l'accord de JB : règle des infographies « schéma » (style Herubel, flux et échelle en référence) dans design-system/infographies/, D-49
   8-25-logo-exp-le-p-n-est-plus-rogné: done   # 2026-11-02, PR n° 228 fusionnée sur l'accord de JB, retour de JB : jambage du « p » d'eXp rogné ; marge de 3 unités dans les cadres des SVG eXp
+  8-26-ouverture-à-la-hauteur-de-l-écran: done   # 2026-11-09, PR n° 260 fusionnée (accord de JB), retour de JB : sur un portable, nom coupé et boutons invisibles ; l'ouverture (vidéo seule) = hauteur de l'écran, décision de JB ; revue de code faite
+  8-27-pages-à-l-échelle-des-écrans-de-portable: done   # 2026-11-09, PR n° 260 fusionnée (accord de JB), retour de JB sur /vendre : grands titres et espaces suivent la hauteur de l'écran (--px-h) ; grands écrans et téléphone identiques au pixel près
+  8-28-logo-exp-dans-la-barre-de-navigation: done   # 2026-11-09, PR n° 262 fusionnée (accord de JB), demande de JB : symbole + eXp dans la barre (D-50)
   epic-8-retrospective: optional
 
   epic-9: in-progress
@@ -287,6 +290,7 @@ development_status:
   17-1-maquette-et-cadrage-de-la-page-ambassadeurs: done   # maquette https://claude.ai/artifact/JRzaQnTFGuTM83oyuFdHby, validée par JB le 2026-11-05
   17-2-page-ambassadeurs-et-formulaire: done   # 2026-11-08 : PR #246 fusionnée, migration 0022 sur la vraie base, page en ligne (non indexée)
   17-5-confirmation-ambassadeurs-pleine-page: done   # 2026-11-08 : retour de JB, confirmation en pleine page comme la maquette
+  17-6-images-des-modeles-email-ambassadeur: review   # 2026-11-09 : images des 3 modèles d'e-mail pour le nouvel Outlook, à fusionner par JB
   17-3-arrivee-de-l-ambassadeur-dans-l-espace: backlog
   17-4-ouverture-du-programme: backlog   # attend l'accord d'eXp France (fil parrainage)
   epic-17-retrospective: optional

@@ -12,9 +12,9 @@ const { titre, texte, lang = 'fr', primaire = 'Démarrer le diagnostic', seconda
   </div>
 </div>
 <style>
-  .cta-fin { margin: 0 var(--marge) 96px; background: var(--avt-brume); border-radius: 16px; padding: 48px 56px; display: flex; align-items: center; justify-content: space-between; gap: 32px; }
+  .cta-fin { margin: 0 var(--marge) calc(96 * var(--px-h)); background: var(--avt-brume); border-radius: 16px; padding: calc(48 * var(--px-h)) 56px; display: flex; align-items: center; justify-content: space-between; gap: 32px; }
   .cta-fin-cadre { background: var(--avt-ecru); border: 1px solid var(--filet-brun-fort); }
-  .cta-fin h2 { font-size: 36px; margin-bottom: 8px; }
+  .cta-fin h2 { font-size: calc(36 * var(--px-h)); margin-bottom: 8px; }
   .cta-fin p { font-size: 16px; }
   .cta-fin-boutons { display: flex; gap: 14px; flex: none; }
   @media (max-width: 899px) {

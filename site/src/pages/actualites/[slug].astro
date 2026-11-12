@@ -23,10 +23,10 @@ const jour = a.data.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'l
   </article>
 </Page>
 <style>
-  .actu { padding: 96px var(--marge) 120px; max-width: calc(760px + 2 * var(--marge)); }
+  .actu { padding: calc(96 * var(--px-h)) var(--marge) calc(120 * var(--px-h)); max-width: calc(760px + 2 * var(--marge)); }
   .actu-retour { display: inline-block; margin-bottom: 28px; font-size: 14px; }
   .actu-date { font-size: 13px; color: var(--avt-text-muted); margin-bottom: 10px; }
-  .actu h1 { font-size: 56px; line-height: 1.1; margin-bottom: 32px; }
+  .actu h1 { font-size: calc(56 * var(--px-h)); line-height: 1.1; margin-bottom: 32px; }
   .actu-photo { border-radius: 12px; overflow: hidden; margin-bottom: 36px; }
   .actu-photo :global(picture), .actu-photo :global(img) { display: block; width: 100%; height: auto; }
   .recit { font-size: 17px; line-height: 1.7; }

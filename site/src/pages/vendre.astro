@@ -38,19 +38,19 @@ const x = await textes('vendre');
   <script src="../islands/formulaires.ts"></script>
 </Page>
 <style>
-  .v-tete { padding: 88px var(--marge) 40px; }
-  .v-tete h1 { font-size: 84px; line-height: 1; margin-bottom: 18px; }
+  .v-tete { padding: calc(88 * var(--px-h)) var(--marge) 40px; }
+  .v-tete h1 { font-size: calc(84 * var(--px-h)); line-height: 1; margin-bottom: 18px; }
   .v-tete p { font-size: 19px; line-height: 1.6; max-width: 56ch; }
-  .v-portes { padding: 32px var(--marge) 96px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: stretch; }
+  .v-portes { padding: 32px var(--marge) calc(96 * var(--px-h)); display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: stretch; }
   .v-porte { border-radius: 16px; padding: 44px 48px; display: flex; flex-direction: column; gap: 18px; align-items: flex-start; }
   .v-porte-brume { background: var(--avt-brume); }
   .v-porte-galet { background: var(--avt-galet); }
-  .v-porte h2 { font-size: 40px; }
+  .v-porte h2 { font-size: calc(40 * var(--px-h)); }
   .v-porte p { font-size: 17px; line-height: 1.6; max-width: 46ch; }
   .v-porte-cta { margin-top: auto; padding: 15px 30px; font-size: 15.5px; }
-  .v-estimation { background: var(--avt-galet); padding: 96px var(--marge); scroll-margin-top: calc(var(--nav-h) + 24px); }
+  .v-estimation { background: var(--avt-galet); padding: calc(96 * var(--px-h)) var(--marge); scroll-margin-top: calc(var(--nav-h) + 24px); }
   .v-estimation-tete { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
-  .v-estimation h2 { font-size: 52px; }
+  .v-estimation h2 { font-size: calc(52 * var(--px-h)); }
   .v-estimation-intro { font-size: 16.5px; line-height: 1.6; margin-bottom: 28px; max-width: 64ch; border-left: 2.5px solid var(--avt-terra); padding-left: 20px; }
   @media (max-width: 899px) {
     .v-tete { padding: 40px var(--marge-m) 24px; }

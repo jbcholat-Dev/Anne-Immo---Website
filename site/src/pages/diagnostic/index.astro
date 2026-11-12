@@ -59,11 +59,11 @@ const note = String(inst.note).replace('.', ',');
   garderCampagne(document, /^\/(?:en\/)?(?:diagnostic\/questions|guide|contact)\/?$/);
 </script>
 <style>
-  .dl-offre { padding: 80px var(--marge) 96px; display: grid; grid-template-columns: 1fr 520px; gap: 96px; align-items: center; }
+  .dl-offre { padding: calc(80 * var(--px-h)) var(--marge) calc(96 * var(--px-h)); display: grid; grid-template-columns: 1fr 520px; gap: 96px; align-items: center; }
   .dl-qui { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; font-size: 14.5px; color: var(--avt-text-muted); }
   .dl-qui b { font-weight: 500; color: var(--avt-brun); }
   .dl-qui :global(.dl-qui-portrait) { width: 44px; height: 44px; border-radius: 999px; flex: none; background: var(--avt-placeholder); font-size: 7px; padding: 0; }
-  .dl-offre h1 { font-size: 64px; line-height: 1.05; margin-bottom: 22px; }
+  .dl-offre h1 { font-size: calc(64 * var(--px-h)); line-height: 1.05; margin-bottom: 22px; }
   .dl-intro { font-size: 19px; line-height: 1.6; max-width: 52ch; margin-bottom: 32px; }
   .dl-livrables { list-style: none; margin-bottom: 36px; display: flex; flex-direction: column; gap: 14px; font-size: 17px; }
   .dl-livrables li { display: flex; gap: 14px; align-items: baseline; }
@@ -73,14 +73,14 @@ const note = String(inst.note).replace('.', ',');
   .dl-duree { font-size: 14.5px; color: var(--avt-text-muted); }
   .dl-transparence { font-size: 13.5px; line-height: 1.55; color: var(--avt-text-muted); max-width: 60ch; }
   .dl-image { height: 560px; display: flex; align-items: center; justify-content: center; padding: 40px; }
-  .dl-blocs { padding: 0 var(--marge) 80px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; }
+  .dl-blocs { padding: 0 var(--marge) calc(80 * var(--px-h)); display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; }
   .dl-bloc { background: var(--avt-galet); border-radius: 16px; padding: 32px; display: flex; flex-direction: column; gap: 16px; }
   .dl-bloc :global(.dl-portrait) { width: 72px; height: 72px; border-radius: 999px; background: var(--avt-placeholder); font-size: 9px; padding: 0; letter-spacing: .08em; }
   .dl-bloc h2 { font-size: 28px; }
   .dl-bloc p { font-size: 15.5px; line-height: 1.6; }
   .dl-langues { font-size: 12.5px; letter-spacing: .1em; color: var(--avt-text-muted); }
   .dl-note { display: flex; align-items: baseline; gap: 8px; }
-  .dl-note b { font-family: var(--avt-font-display); font-weight: 400; font-size: 44px; line-height: 1; }
+  .dl-note b { font-family: var(--avt-font-display); font-weight: 400; font-size: calc(44 * var(--px-h)); line-height: 1; }
   .dl-note span { font-size: 14px; color: var(--avt-text-muted); }
   .dl-vignette { display: flex; gap: 14px; align-items: center; margin-top: auto; }
   .dl-vignette-photo { width: 96px; height: 64px; border-radius: 8px; overflow: hidden; flex: none; background: var(--avt-placeholder); }
@@ -89,11 +89,11 @@ const note = String(inst.note).replace('.', ',');
   .dl-bloc-klein { background: var(--avt-klein); color: var(--avt-ecru); justify-content: space-between; }
   .dl-bloc-klein h2 { color: var(--avt-ecru); }
   .dl-bouton-klein { align-self: flex-start; }
-  .dl-sortie { padding: 0 var(--marge) 96px; font-size: 15px; }
+  .dl-sortie { padding: 0 var(--marge) calc(96 * var(--px-h)); font-size: 15px; }
   /* Largeurs intermédiaires (900 à 1199 px, sans artboard) : colonnes proportionnelles, sinon le texte déborde (story 8.2) */
   @media (min-width: 900px) and (max-width: 1199px) {
     .dl-offre { grid-template-columns: minmax(0, 1fr) minmax(0, 360px); gap: 48px; }
-    .dl-offre h1 { font-size: 48px; }
+    .dl-offre h1 { font-size: calc(48 * var(--px-h)); }
     .dl-image { height: 540px; padding: 32px; }
   }
   @media (max-width: 899px) {

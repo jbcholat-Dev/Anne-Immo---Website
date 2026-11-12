@@ -44,7 +44,7 @@ const legal: { key: RouteKey; label: string }[] = [
 </footer>
 
 <style>
-  .pied { background: var(--avt-brun); color: var(--avt-ecru); padding: 48px var(--marge) 32px; }
+  .pied { background: var(--avt-brun); color: var(--avt-ecru); padding: calc(48 * var(--px-h)) var(--marge) 32px; }
   .pied-colonnes { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 72px; margin-bottom: 40px; }
   .pied-nav { display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
   .pied-nav a { color: var(--avt-ecru); }
