@@ -1,6 +1,6 @@
 # Story 18.22 : filtre « Dernier contact : moins de 3 mois »
 
-Epic 18 (le carnet de contacts). Statut : review. Date : 2026-11-12. Origine : ticket GitHub d'Anne n° 267, « [Retour espace] », page Contacts (`/`).
+Epic 18 (le carnet de contacts). Statut : done. Date : 2026-11-12. Origine : ticket GitHub d'Anne n° 267, « [Retour espace] », page Contacts (`/`).
 
 ## Objectif
 
@@ -30,3 +30,7 @@ Epic 18 (le carnet de contacts). Statut : review. Date : 2026-11-12. Origine : t
 ## Ce qui reste
 
 - Anne : dire si « moins de 3 mois » est bien ce qu'elle voulait (lecture déduite du ticket).
+
+## Fusion
+
+2026-11-12 : PR n° 259 fusionnée dans main par Claude sur l'accord écrit de JB (« tu peux fusionner les PR »), commit de fusion 313e90f. Constructions du site et de l'espace sur main au vert.

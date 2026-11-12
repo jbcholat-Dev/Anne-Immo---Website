@@ -1,6 +1,6 @@
 # Story 18.21 : Source en liste, projet « Aucun », ambassadeur « Partant »
 
-Epic 18 (le carnet de contacts). Statut : review. Date : 2026-11-10. Origine : trois tickets GitHub d'Anne, « [Retour espace] », tous sur le tableau de la page Contacts (`/`).
+Epic 18 (le carnet de contacts). Statut : done. Date : 2026-11-10. Origine : trois tickets GitHub d'Anne, « [Retour espace] », tous sur le tableau de la page Contacts (`/`).
 
 > **ATTENTION : la migration 0025 reconstruit la table `contact`. Elle ne doit pas être poussée (sur aucune branche) avant l'accord écrit de JB.** Une migration poussée sur n'importe quelle branche est appliquée tout de suite à la base de production (RUNBOOK § 2 bis). Le commit de cette story est local ; la reconstruction a été répétée sur une base neuve à part (voir « Ce qui est vérifié »), mais c'est le geste le plus risqué du projet après 0018 et 0020 : il mérite le feu vert explicite de JB, et idéalement une copie de la base de production avant (`wrangler d1 export`, lecture seule).
 
@@ -59,3 +59,7 @@ Epic 18 (le carnet de contacts). Statut : review. Date : 2026-11-10. Origine : t
 - **JB : accord écrit avant tout `push`** de la migration 0025 (elle reconstruit `contact`). Conseillé : un export de la base de production juste avant (RUNBOOK), puis pousser sur une branche, laisser la construction Cloudflare appliquer la migration, vérifier sur l'aperçu le nombre de contacts avant / après.
 - Anne : vérifier les libellés (« Aucune » pour le choix vide, « Autres » au pluriel comme elle l'a écrit, « Partant »), et dire si les contacts aux anciens canaux (Site, Réseaux, Rencontre) doivent être reclassés d'office.
 - Pistes, non demandées : action groupée « source » ou « partant » sur les cases cochées ; « pige » comme canal des actions marketing (demanderait de reconstruire `action_marketing`) ; reclasser les anciens canaux.
+
+## Fusion
+
+2026-11-12 : PR n° 259 fusionnée dans main par Claude sur l'accord écrit de JB (« tu peux fusionner les PR »), commit de fusion 313e90f. Constructions du site et de l'espace sur main au vert. Migrations 0024 et 0025 appliquées à `anne-leads` par la construction de main (journal Cloudflare : ✅). Point de retour noté juste avant : 2026-11-12 21:27 UTC (RUNBOOK). Lecture après coup : le bilan de l'espace (jeton de Claude) répond et montre la ligne « Pige ».

@@ -1,6 +1,6 @@
 # Story 18.20 : R1 et R2, des rendez-vous (boîtage et contacts)
 
-Epic 18 (le carnet de contacts). Statut : review. Date : 2026-11-09. Origine : trois tickets GitHub d'Anne, « [Retour espace] » : n° 256 (page /ajouter, formulaire « Un passage de boîtage »), n° 257 (page /actions, onglet Boîtage), n° 258 (page Contacts).
+Epic 18 (le carnet de contacts). Statut : done. Date : 2026-11-09. Origine : trois tickets GitHub d'Anne, « [Retour espace] » : n° 256 (page /ajouter, formulaire « Un passage de boîtage »), n° 257 (page /actions, onglet Boîtage), n° 258 (page Contacts).
 
 ## Objectif
 
@@ -63,3 +63,7 @@ Le 2026-11-09, PR #259, commit relu 6d8e57f (`git diff 6d8e57f~1..6d8e57f`), ses
 - Tableau des contacts (tri, masquage, ordre gardé dans le navigateur) : écarté : dates ISO triées comme du texte, vides toujours en fin, nouvelles colonnes ajoutées à la fin d'un ordre déjà gardé.
 - Avant-image AD-29 : écarté : r1_le et r2_le sont dans l'état lu, la garde de concurrence et le libellé de l'événement ; comme « à rappeler le », ils ne sont pas annulables par la pile d'annulation de classement, ce qui est voulu.
 - Vérifications : `cd espace && npm run build && npm run check` : 0 erreur ; `E2E_1820_SEUL=1 node scripts/e2e-espace.mjs` : tous les constats verts (la seule « échec » est l'arrêt volontaire du mode seul).
+
+## Fusion
+
+2026-11-12 : PR n° 259 fusionnée dans main par Claude sur l'accord écrit de JB (« tu peux fusionner les PR »), commit de fusion 313e90f. Constructions du site et de l'espace sur main au vert.
