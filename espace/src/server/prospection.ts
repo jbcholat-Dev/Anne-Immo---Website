@@ -110,12 +110,74 @@ export function lireFormObjectifs(f: FormData): Objectifs | string {
   return o;
 }
 
-export async function enregistrerObjectifs(env: EnvSite, o: Objectifs, par: string): Promise<void> {
+/** Story 20.8 : le nom signé par le chief of staff (Claude, par son badge) sur ce qu'il écrit dans « Ma semaine ». */
+export const PAR_CHIEF = 'chief of staff';
+
+/**
+ * Enregistre les objectifs. Par Anne ou JB (la page) : toutes les clés, et les traces laissées par le chief of staff
+ * disparaissent (la valeur a été revue). Par le chief of staff : seulement les clés qui changent ; la valeur d'avant est
+ * gardée sous `avant:<clé>` (valeur, qui, quand), pour que la page la montre et qu'Anne puisse la remettre (AD-29).
+ */
+export async function enregistrerObjectifs(env: EnvSite, o: Partial<Objectifs>, par: string): Promise<CleObjectif[]> {
   const maintenant = new Date().toISOString();
-  await env.DB.batch(CLES_OBJECTIF.map((cle) => env.DB.prepare(
-    `INSERT INTO prospection_objectif (cle, valeur, par, maj_le) VALUES (?1, ?2, ?3, ?4)
-     ON CONFLICT (cle) DO UPDATE SET valeur = excluded.valeur, par = excluded.par, maj_le = excluded.maj_le`,
-  ).bind(cle, o[cle], par, maintenant)));
+  const chief = par === PAR_CHIEF;
+  const actuels = chief ? await lireReglages(env) : new Map<string, Reglage>();
+  const depart = objectifsDepart();
+  const cles = CLES_OBJECTIF.filter((cle) => o[cle] !== undefined && (!chief || o[cle] !== (actuels.get(cle)?.valeur ?? depart[cle])));
+  if (!cles.length) return [];
+  const lot = cles.flatMap((cle) => {
+    const ecrire = env.DB.prepare(
+      `INSERT INTO prospection_objectif (cle, valeur, par, maj_le) VALUES (?1, ?2, ?3, ?4)
+       ON CONFLICT (cle) DO UPDATE SET valeur = excluded.valeur, par = excluded.par, maj_le = excluded.maj_le`,
+    ).bind(cle, o[cle]!, par, maintenant);
+    if (!chief) return [env.DB.prepare('DELETE FROM prospection_objectif WHERE cle = ?1').bind(`avant:${cle}`), ecrire];
+    const avant = actuels.get(cle);
+    // Une seule trace par clé : la valeur d'Anne (ou de départ) d'avant la première retouche du chief of staff.
+    if (avant?.par === PAR_CHIEF && actuels.has(`avant:${cle}`)) return [ecrire];
+    return [env.DB.prepare(
+      `INSERT INTO prospection_objectif (cle, valeur, par, maj_le) VALUES (?1, ?2, ?3, ?4)
+       ON CONFLICT (cle) DO UPDATE SET valeur = excluded.valeur, par = excluded.par, maj_le = excluded.maj_le`,
+    ).bind(`avant:${cle}`, avant?.valeur ?? depart[cle], avant?.par ?? 'départ', avant?.maj_le ?? maintenant), ecrire];
+  });
+  await env.DB.batch(lot);
+  return cles;
+}
+
+export interface Reglage { valeur: number; par: string | null; maj_le: string }
+/** Les lignes de `prospection_objectif`, objectifs et traces `avant:` comprises. */
+export async function lireReglages(env: EnvSite): Promise<Map<string, Reglage>> {
+  const { results } = await env.DB.prepare('SELECT cle, valeur, par, maj_le FROM prospection_objectif').all<{ cle: string } & Reglage>();
+  return new Map(results.map((x) => [x.cle, { valeur: x.valeur, par: x.par, maj_le: x.maj_le }]));
+}
+
+/** Story 20.8 : objectifs envoyés par le chief of staff, en JSON : seulement les clés données, entiers de 0 à 99 999. */
+export function lireObjectifsJson(d: unknown): Partial<Objectifs> | string {
+  if (!d || typeof d !== 'object' || Array.isArray(d)) return 'Objectifs : un objet { clé: nombre } est attendu.';
+  const o: Partial<Objectifs> = {};
+  for (const [cle, v] of Object.entries(d)) {
+    if (!(CLES_OBJECTIF as string[]).includes(cle)) return `Objectif inconnu : ${cle.slice(0, 40)}. Clés : ${CLES_OBJECTIF.join(', ')}.`;
+    if (typeof v !== 'number' || !Number.isInteger(v) || v < 0 || v > 99999) return 'Chaque objectif est un nombre entier, de 0 à 99 999.';
+    o[cle as CleObjectif] = v;
+  }
+  if (!Object.keys(o).length) return 'Aucun objectif donné.';
+  return o;
+}
+
+/** Story 20.8 : une saisie du chief of staff en JSON, lue par les mêmes règles que celles de la page. */
+export function lireSaisieJson(d: Record<string, unknown>): Saisie | string {
+  const f = new FormData();
+  for (const k of ['quoi', 'canal', 'jour', 'quantite', 'ville', 'note', 'type_lead']) {
+    const v = d[k];
+    if (typeof v === 'string' || (typeof v === 'number' && Number.isFinite(v))) f.set(k, String(v));
+  }
+  return lireSaisie(f);
+}
+
+/** Story 20.8 : le chief of staff ne retire que ce qu'il a lui-même noté ; la saisie d'Anne n'est jamais touchée. */
+export async function retirerSaisieDe(env: EnvSite, genre: 'effort' | 'resultat', id: string, par: string): Promise<boolean> {
+  const table = genre === 'effort' ? 'prospection_effort' : 'resultat';
+  const r = await env.DB.prepare(`DELETE FROM ${table} WHERE id = ?1 AND par = ?2`).bind(id, par).run();
+  return r.meta.changes === 1;
 }
 
 // ---- Saisies ----
@@ -160,7 +222,9 @@ export function lireSaisie(f: FormData): Saisie | string {
 export async function enregistrerSaisie(env: EnvSite, s: Saisie, par: string): Promise<string> {
   const maintenant = new Date().toISOString();
   if (s.quoi === 'effort' && s.canal === 'boitage') {
-    return ajouterBoitage(env, { fait_le: s.jour, ville: s.ville ?? '', quartier: null, type_bien: null, flyers: s.quantite, message: null, r1: null, r2: null, commentaire: s.note });
+    return ajouterBoitage(env, { fait_le: s.jour, ville: s.ville ?? '', quartier: null, type_bien: null, flyers: s.quantite, message: null, r1: null, r2: null,
+      // Story 20.8 : un passage noté par le chief of staff le dit dans son commentaire (la table du boîtage n'a pas de colonne « par »).
+      commentaire: par === PAR_CHIEF ? 'Noté par le chief of staff' : s.note });
   }
   const id = ulid();
   if (s.quoi === 'effort') {

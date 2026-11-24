@@ -1375,6 +1375,95 @@ try {
     await ctx.close();
     nettoyer();
   }
+  // Story 20.8 : le chief of staff (badge de Claude) écrit dans « Ma semaine » : objectifs (la valeur d'avant reste visible),
+  // efforts, leads et rendez-vous signés « chief of staff » ; il ne retire que ses lignes ; aucun lieu ni précision ne lui
+  // est renvoyé. Lancé seul avec E2E_2008_SEUL=1.
+  async function bloc2008() {
+    const P = 'E2008';
+    const L = '2025-03-10', D = '2025-03-16';
+    const objectifsAvant = sql(`SELECT cle, valeur, par, maj_le FROM prospection_objectif`);
+    const nettoyer = () => {
+      sql(`DELETE FROM prospection_effort WHERE jour BETWEEN '${L}' AND '${D}' AND par IN ('anne@example.com', 'chief of staff')`);
+      sql(`DELETE FROM resultat WHERE le BETWEEN '${L}' AND '${D}' AND par IN ('anne@example.com', 'chief of staff')`);
+      sql(`DELETE FROM passage_boitage WHERE ville LIKE '${P}%'`);
+    };
+    const remettre = () => {
+      sql(`DELETE FROM prospection_objectif`);
+      for (const x of objectifsAvant) sql(`INSERT INTO prospection_objectif (cle, valeur, par, maj_le) VALUES ('${x.cle}', ${Number(x.valeur)}, ${x.par === null ? 'NULL' : `'${String(x.par).replace(/'/g, "''")}'`}, '${x.maj_le}')`);
+    };
+    nettoyer();
+    sql(`DELETE FROM prospection_objectif`);
+    const cos = async (corps) => {
+      const r = await appeler(`${E}/api/claude/prospection`, { method: 'POST', headers: avecJeton(JETON_C, { 'Content-Type': 'application/json' }), body: JSON.stringify(corps) });
+      return { status: r.status, d: await r.json().catch(() => ({})) };
+    };
+    const lire = async () => (await (await appeler(`${E}/api/claude/prospection?s=${L}`, { headers: avecJeton(JETON_C) })).json());
+    // 1. Objectifs : Anne règle 12 cartes ; le chief of staff passe à 15 puis 16, et les rendez-vous à 4 ; la valeur d'Anne reste visible.
+    const tous = { rdv: '3', leads: '3', 'effort:boitage': '1500', 'effort:cartes': '12', 'effort:messages': '20', 'effort:reseaux': '7', 'effort:magasin': '0' };
+    await page('/semaine', { quoi: 'objectifs', ...tous });
+    let x = await cos({ quoi: 'objectifs', objectifs: { 'effort:cartes': 15, rdv: 4, leads: 3 } });
+    const x2 = await cos({ quoi: 'objectifs', objectifs: { 'effort:cartes': 16 } });
+    let g = await lire();
+    constat(x.status === 200 && JSON.stringify(x.d.changes) === '["rdv","effort:cartes"]' && x2.status === 200
+      && g.objectifs['effort:cartes'].valeur === 16 && g.objectifs['effort:cartes'].avant === 12 && g.objectifs['effort:cartes'].par === 'chief of staff'
+      && g.objectifs.rdv.avant === 3 && g.objectifs.leads.par === 'espace' && g.objectifs.leads.avant === undefined,
+      `20.8 : le chief of staff règle des objectifs ; seules les clés qui changent sont écrites ; la valeur d'Anne (12) reste gardée après deux retouches (${JSON.stringify(g.objectifs['effort:cartes'])})`);
+    // 2. Refus.
+    const refus = [];
+    for (const [nom, corps] of [
+      ['clé inconnue', { quoi: 'objectifs', objectifs: { toString: 3 } }],
+      ['objectif négatif', { quoi: 'objectifs', objectifs: { rdv: -1 } }],
+      ['objectif en texte', { quoi: 'objectifs', objectifs: { rdv: '3' } }],
+      ['champ note', { quoi: 'effort', canal: 'cartes', jour: L, quantite: 1, note: 'Chez Mme Dupont' }],
+      ['canal constructor', { quoi: 'effort', canal: 'constructor', jour: L, quantite: 1 }],
+      ['date future', { quoi: 'rdv', canal: 'cartes', jour: '2099-01-01', quantite: 1 }],
+      ['boîtage sans ville', { quoi: 'effort', canal: 'boitage', jour: L, quantite: 100 }],
+      ['retirer sans id', { quoi: 'retirer', genre: 'effort' }],
+      ['tableau', [1, 2]],
+    ]) { const r = await cos(corps); if (r.status !== 400 || !r.d.erreur) refus.push(nom); }
+    constat(refus.length === 0, `20.8 : 9 écritures invalides du chief of staff refusées (400)${refus.length ? ` (à revoir : ${refus.join(', ')})` : ''}`);
+    // 3. Saisies : effort, lead, rendez-vous, boîtage ; Anne note aussi.
+    const e1 = await cos({ quoi: 'effort', canal: 'cartes', jour: '2025-03-11', quantite: 4 });
+    const l1 = await cos({ quoi: 'lead', canal: 'reseaux', jour: '2025-03-12', quantite: 2, type_lead: 'diagnostic' });
+    const r1 = await cos({ quoi: 'rdv', canal: 'cartes', jour: '2025-03-13', quantite: 1 });
+    const b1 = await cos({ quoi: 'effort', canal: 'boitage', jour: '2025-03-12', quantite: 250, ville: `${P} Douvaine` });
+    await page('/semaine', { quoi: 'effort', canal: 'cartes', quantite: '2', jour: '2025-03-14', note: 'Marché' });
+    const anne = sql(`SELECT id FROM prospection_effort WHERE jour = '2025-03-14' AND par = 'anne@example.com'`)[0]?.id;
+    const pb = sql(`SELECT commentaire, mots FROM passage_boitage WHERE ville = '${P} Douvaine'`)[0];
+    constat(e1.status === 201 && l1.status === 201 && r1.status === 201 && b1.status === 201 && pb?.mots === 250 && pb.commentaire === 'Noté par le chief of staff'
+      && sql(`SELECT par FROM prospection_effort WHERE id = '${e1.d.id}'`)[0]?.par === 'chief of staff',
+      '20.8 : le chief of staff note un effort, un lead, un rendez-vous et un boîtage, signés « chief of staff »');
+    // 4. Retirer : la ligne d'Anne non, la sienne oui.
+    const ra = await cos({ quoi: 'retirer', genre: 'effort', id: anne });
+    const rc = await cos({ quoi: 'retirer', genre: 'resultat', id: r1.d.id });
+    constat(ra.status === 404 && sql(`SELECT count(*) AS n FROM prospection_effort WHERE id = '${anne}'`)[0].n === 1 && rc.status === 200 && sql(`SELECT count(*) AS n FROM resultat WHERE id = '${r1.d.id}'`)[0].n === 0,
+      '20.8 : le chief of staff retire sa ligne, jamais celle d\'Anne');
+    // 5. Lecture : lignes sans lieu, précision ni compte.
+    const brut = await (await appeler(`${E}/api/claude/prospection?s=${L}`, { headers: avecJeton(JETON_C) })).text();
+    g = JSON.parse(brut);
+    constat(g.lundi === L && g.notes.some((n) => n.id === anne && n.par === 'espace') && g.notes.some((n) => n.id === e1.d.id && n.par === 'chief of staff')
+      && !brut.includes('example.com') && !brut.includes('Marché') && !brut.includes('Douvaine'),
+      '20.8 : le chief of staff relit la semaine : nombres et signatures seulement, sans lieu, précision ni compte');
+    // 6. La page : la signature, la valeur d'avant ; Anne réenregistre, la trace part.
+    const ctx = await nav.newContext({ viewport: { width: 1440, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
+    const o = await ctx.newPage();
+    await o.goto(`${E}/semaine?s=${L}`);
+    const trace = (await o.textContent('[data-chief="effort:cartes"]'))?.replace(/\s+/g, ' ').trim();
+    const cartesP = (await o.textContent('[data-canal=cartes] [data-effort]'))?.replace(/\s+/g, ' ').trim();
+    const notesP = await o.textContent('[data-notes]');
+    await ctx.close();
+    await page('/semaine', { quoi: 'objectifs', ...tous, 'effort:cartes': '16', rdv: '4' });
+    const h = await (await appeler(`${E}/semaine?s=${L}`, { headers: avecJeton(JETON) })).text();
+    constat(trace?.startsWith('Réglé par le chief of staff le') && trace.includes('(avant : 12)') && cartesP === '6 sur 16 cartes données' && notesP.includes('chief of staff')
+      && !h.includes('data-chief=') && sql(`SELECT count(*) AS n FROM prospection_objectif WHERE cle LIKE 'avant:%'`)[0].n === 0,
+      `20.8 : la page montre « ${trace} » et les lignes du chief of staff ; quand Anne réenregistre, la trace part`);
+    constat((await cos({ quoi: 'objectifs', objectifs: { rdv: 4 } })).d.changes?.length === 0, '20.8 : un objectif inchangé n\'écrit rien');
+    const r403 = await appeler(`${E}/api/claude/prospection`, { headers: avecJeton(JETON) });
+    constat(r403.status === 403, `20.8 : /api/claude/prospection est fermé au compte d'Anne (${r403.status})`);
+    nettoyer();
+    remettre();
+  }
+  if (process.env.E2E_2008_SEUL) { await bloc2008(); await nav.close(); throw new Error(echecs ? 'E2E_2008_SEUL : échecs' : 'E2E_2008_SEUL : terminé') }
   if (process.env.E2E_1824_SEUL) { await bloc1824(); await nav.close(); throw new Error(echecs ? 'E2E_1824_SEUL : échecs' : 'E2E_1824_SEUL : terminé') }
   if (process.env.E2E_1822_SEUL) { await bloc1822(); await nav.close(); throw new Error(echecs ? 'E2E_1822_SEUL : échecs' : 'E2E_1822_SEUL : terminé') }
   if (process.env.E2E_1821_SEUL) { await bloc1821(); await nav.close(); throw new Error(echecs ? 'E2E_1821_SEUL : échecs' : 'E2E_1821_SEUL : terminé') }
@@ -3921,6 +4010,7 @@ try {
   await bloc1822();
   await bloc2007();
   await bloc1824();
+  await bloc2008();
   // Story 18.8 : catégories et méthodes, par /api/categories puis dans la page /categories. Les catégories de départ sont
   // remises comme avant à la fin (nom, ordre, méthode), les catégories d'essai retirées (marque « E188 » dans le nom).
   const ancienne8 = sql(`SELECT id FROM categorie WHERE nom LIKE '%E188%'`).map((c) => `'${c.id}'`).join(',');
