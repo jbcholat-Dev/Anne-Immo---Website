@@ -71,11 +71,13 @@ const donneesNouveaux = enJson(nouveaux);
       </div>
     </aside>
     <div class="ct-principal">
-      {brief && (
+      {/* Retour de JB (2026-11-24, « une énorme verrue au milieu ») : tout décidé, le brief n'est plus affiché du tout. */}
+      {brief && !(brief.prepare && !ouvertes) && (
         <section class="br" data-brief aria-labelledby="br-titre">
           <div class="br-tete">
-            <h2 id="br-titre">{brief.prepare ? `${brief.lignes.length} décision${brief.lignes.length > 1 ? 's' : ''} ce matin` : 'Brief du jour'}</h2>
-            <span class="br-sous">{jourBrief}{brief.prepare ? ` · ${ouvertes} à décider` : ''}{part !== null ? ` · ${part} % acceptées sur 4 semaines (${brief.part.acceptees} sur ${brief.part.decidees})` : ''}</span>
+            {/* Story 18.29 (retour de JB) : une ligne décidée disparaît. */}
+            <h2 id="br-titre" data-brief-titre>{!brief.prepare ? 'Brief du jour' : `${ouvertes} décision${ouvertes > 1 ? 's' : ''} à prendre`}</h2>
+            <span class="br-sous">{jourBrief}{part !== null ? ` · ${part} % acceptées sur 4 semaines` : ''}</span>
             <span class="br-phase" title="Phase 1 de la fiche de poste : JB relit le brief, Anne ne le voit pas encore et ne reçoit aucun e-mail.">Brouillon · visible par JB seul</span>
           </div>
           {brief.prepare ? (
@@ -905,8 +907,10 @@ const donneesNouveaux = enJson(nouveaux);
   .br-lignes { list-style: none; margin: 0; padding: 0; }
   .br-ligne { display: grid; grid-template-columns: 28px 1fr auto; gap: 4px 14px; padding: 12px 18px; border-bottom: 1px solid var(--avt-border, #ddd2c1); align-items: start; }
   .br-ligne:last-child { border-bottom: 0; }
-  .br-ligne[data-decision="accepte"] { background: #e4f0e8; }
-  .br-ligne[data-decision="plus_tard"], .br-ligne[data-decision="ecarte"] { opacity: .55; }
+  .br-ligne:not([data-decision=""]) { display: none; }
+  .br-info button { margin-left: 8px; }
+  /* Retour de JB : la dernière ligne décidée, il ne reste que « Annuler » ; au rechargement, plus de brief du tout. */
+  .br[data-tout-decide] .br-tete, .br[data-tout-decide] .br-lignes { display: none; }
   .br-num { font-family: var(--avt-font-display, Georgia, serif); font-size: 22px; line-height: 1.1; color: #002fa7; }
   .br-qui { font-weight: 600; }
   .br-etq { font-weight: 500; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; background: #e7edf9; color: #002fa7; border-radius: 999px; padding: 2px 8px; margin-left: 6px; white-space: nowrap; }

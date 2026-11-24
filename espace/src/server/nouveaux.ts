@@ -71,16 +71,23 @@ export const APPEL_TROP_COURT_S = 20;
 const RESUME_COURT = 40;
 
 /**
- * Story 18.24 : une carte de numéro inconnu se range dans « Sans suite » si ce numéro n'a laissé qu'un seul échange, sans
+ * Story 18.24 : une carte de numéro inconnu se range dans « Sans suite » si ce numéro n'a laissé qu'un échange (ou que des appels manqués sans message), sans
  * tâche, sans nom connu de Leedflow, qui n'est pas déjà dans les contacts, et si cet échange est reçu par Anne (un appel
  * qu'elle a passé n'est jamais rangé : revue de code 18.24) et :
  *   - un appel manqué sans message ;
  *   - un appel de moins de `APPEL_TROP_COURT_S` secondes, sans transcription qui dise quelque chose ;
  *   - un message vocal ou un SMS vide.
- * Un numéro qui rappelle (deux échanges ou plus) remonte de lui-même dans la barre. Renvoie la raison, ou null.
+ * Un numéro qui rappelle (deux échanges ou plus) remonte de lui-même dans la barre, sauf s'il n'a laissé que des appels
+ * manqués sans message (story 18.29). Renvoie la raison, ou null.
  */
 export function raisonDeRanger(n: Pick<NumeroInconnu, 'echanges' | 'taches' | 'prenom' | 'nom' | 'email'> | undefined, connu: boolean): string | null {
-  if (!n || connu || n.taches.length > 0 || n.echanges.length !== 1 || n.prenom || n.nom || n.email) return null;
+  if (!n || connu || n.taches.length > 0 || n.echanges.length === 0 || n.prenom || n.nom || n.email) return null;
+  // Story 18.29 (retour de JB du 2026-11-24) : un numéro qui n'a laissé que des appels manqués sans message, même plusieurs,
+  // se range aussi ; il remonte dès qu'il laisse un message ou qu'Anne lui parle.
+  if (n.echanges.length > 1) {
+    const tousVides = n.echanges.every((x) => x.sens === 'entrant' && x.manque && resumeVide(x.resume));
+    return tousVides ? `${n.echanges.length} appels manqués sans message` : null;
+  }
   const e = n.echanges[0];
   if (e.sens !== 'entrant') return null;
   const vide = resumeVide(e.resume);

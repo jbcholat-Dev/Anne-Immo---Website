@@ -1315,7 +1315,8 @@ try {
       ['manque', [['appel', true, 0, '']], '', 'Appel manqué sans message'],
       ['court', [['appel', false, 8, 'Allô ?']], '', 'Appel trop court'],
       ['sms', [['sms', false, null, '']], '', 'SMS vide'],
-      ['rappel', [['appel', true, 0, ''], ['appel', true, 0, '']], '', null],
+      // Story 18.29 : deux appels manqués sans message se rangent aussi.
+      ['rappel', [['appel', true, 0, ''], ['appel', true, 0, '']], '', '2 appels manqués sans message'],
       ['vrai', [['appel', false, 180, 'Veut vendre une maison à Sciez']], '', null],
       ['nomme', [['appel', true, 0, '']], 'Paula', null],
       ['sortant', [['appel', true, 0, '', 'sortant']], '', null],
@@ -1363,12 +1364,12 @@ try {
     await o.click('[data-nv-ranges] > summary');
     const visibleApres = await o.isVisible(`[data-nv-carte="${ids.manque}"] [data-nv-geste=ignorer]`);
     await o.screenshot({ path: path.join(OUT, 'espace-nouveaux-sans-suite.png'), fullPage: true });
-    constat(compte === cartes.length - nRangees && compteServeur === compte && src.includes(`${nRangees} sans suite`) && place.manque && place.court && place.sms && !place.rappel && !place.vrai && cacheAvant && visibleApres && erreurs.length === 0,
+    constat(compte === cartes.length - nRangees && compteServeur === compte && src.includes(`${nRangees} sans suite`) && place.manque && place.court && place.sms && place.rappel && !place.vrai && cacheAvant && visibleApres && erreurs.length === 0,
       `18.24 : la barre compte ${compte} à voir et « ${nRangees} sans suite » ; les rangées sont repliées en bas, avec leur bouton Ignorer (${JSON.stringify(place)})`);
-    // Le numéro rangé rappelle : il remonte.
-    sql(`INSERT INTO leedflow_inconnu (source_id, telephone, a, texte, donnees) VALUES ('appel:e1824-${NUM}-manque-1', '${T(0)}', '${new Date().toISOString()}', 'Appel manqué', '{"genre":"appel","sens":"entrant","manque":true,"duree":0}')`);
+    // Le numéro rangé rappelle et parle : il remonte (story 18.29 : un second appel manqué sans message ne suffit plus).
+    sql(`INSERT INTO leedflow_inconnu (source_id, telephone, a, texte, donnees) VALUES ('appel:e1824-${NUM}-manque-1', '${T(0)}', '${new Date().toISOString()}', 'Veut faire estimer sa maison', '{"genre":"appel","sens":"entrant","manque":false,"duree":90}')`);
     const apres = ((await (await appeler(`${E}/api/nouveaux`, { headers: avecJeton(JETON) })).json()).cartes ?? []).find((c) => c.id === ids.manque);
-    constat(apres && apres.rangee === null && apres.echanges === 2, '18.24 : un numéro rangé qui rappelle remonte dans la barre');
+    constat(apres && apres.rangee === null && apres.echanges === 2, '18.24 : un numéro rangé qui rappelle et parle remonte dans la barre');
     constat(sql(`SELECT count(*) AS n FROM leedflow_inconnu WHERE source_id LIKE '%:e1824-${NUM}-%'`)[0].n === 11
       && sql(`SELECT count(*) AS n FROM nouveau WHERE id IN (${Object.values(ids).map((x) => `'${x}'`).join(',')}) AND vu_le IS NULL`)[0].n === 9,
       '18.24 : rien n\'est effacé ni marqué vu par le tri');
@@ -2909,13 +2910,10 @@ try {
   const ninc = sql(`SELECT count(*) AS n FROM nouveau n JOIN lead l ON l.contact_id = n.contact_id WHERE l.id = 'ORPH${ESSAI}'`)[0].n;
   constat(ninc === 1, '18.3 : la demande rattachée par la tâche planifiée a aussi sa ligne « Nouveaux »');
 
-  // Inscription au programme ambassadeurs (epic 17) : le type de demande et ses colonnes n'existent pas encore dans `lead` ;
-  // l'essai les imite sur la base locale (colonnes ajoutées puis retirées, contrôle de la source suspendu pour l'insertion).
-  sql(`ALTER TABLE lead ADD COLUMN reglement_version TEXT`);
-  sql(`ALTER TABLE lead ADD COLUMN reglement_accepte_le TEXT`);
+  // Inscription au programme ambassadeurs (epic 17) : la migration 0022 a créé le type de demande et ses colonnes dans `lead`.
   try {
     const MAILA = `ambre+${ESSAI}@example.com`;
-    sql(`PRAGMA ignore_check_constraints = 1; INSERT INTO lead (id, submission_id, created_at, last_activity_at, lang, source, email, privacy_accepted_at, is_test, prenom, nom, telephone, reglement_version, reglement_accepte_le) VALUES
+    sql(`INSERT INTO lead (id, submission_id, created_at, last_activity_at, lang, source, email, privacy_accepted_at, is_test, prenom, nom, telephone, reglement_version, reglement_accepte_le) VALUES
       ('AMB1${ESSAI}', 'amb1-${ESSAI}', '2026-11-01T09:00:00Z', '2026-11-01T09:00:00Z', 'fr', 'ambassadeur', '${MAILD}', '2026-11-01T09:00:00Z', 1, 'Dora', 'Dorac${NUM}', NULL, 'v2026-11', '2026-11-01T09:00:00Z'),
       ('AMB2${ESSAI}', 'amb2-${ESSAI}', '2026-11-01T09:05:00Z', '2026-11-01T09:05:00Z', 'fr', 'ambassadeur', '${MAILA}', '2026-11-01T09:05:00Z', 1, 'Ambre', 'Nouvelle${NUM}', NULL, NULL, NULL)`);
     // Revue 18.3 : un projet différent du parcours de la demande (acheteur, Dora est entrée comme vendeuse), pour voir qu'il ne bouge pas.
@@ -2935,8 +2933,6 @@ try {
   } finally {
     sql(`DELETE FROM lead WHERE id IN ('AMB1${ESSAI}', 'AMB2${ESSAI}')`);
     sql(`UPDATE contact SET projet = 'vendeur' WHERE id = '${DSEC}'`);
-    sql(`ALTER TABLE lead DROP COLUMN reglement_version`);
-    sql(`ALTER TABLE lead DROP COLUMN reglement_accepte_le`);
   }
 
   // Revue 18.3 : un contact du carnet au projet « ambassadeur » qui demande une vente devient vendeur en entrant dans le suivi (AD-24).

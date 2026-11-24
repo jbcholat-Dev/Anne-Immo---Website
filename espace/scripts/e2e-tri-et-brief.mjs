@@ -241,10 +241,27 @@ try {
   // Le bouton de la page : Plus tard sur une ligne encore ouverte.
   const ouverte = pageJb.locator('.br-ligne[data-decision=""]').first();
   if (await ouverte.count()) {
+    const avant = await pageJb.locator('.br-ligne:visible').count();
+    const idL = await ouverte.getAttribute('data-brief-ligne');
     await ouverte.locator('[data-brief-geste="plus_tard"]').click();
-    await pageJb.waitForSelector('.br-ligne[data-decision="plus_tard"] [data-brief-annuler]:not([hidden])');
-    constat(true, 'page : « Plus tard » d\'un clic, bouton Annuler affiché');
-  }
+    await pageJb.waitForSelector('[data-brief-info] [data-brief-annuler]');
+    const cachee = await pageJb.locator('.br-ligne:visible').count() === avant - 1;
+    // Retour de JB (2026-11-24) : tout décidé, il ne reste que « Annuler » sous le brief ; au rechargement, le brief n'est plus là.
+    const derniere = avant === 1;
+    const repli = !derniere || (!(await pageJb.locator('.br-tete').isVisible()) && await pageJb.locator('[data-brief-info]').isVisible());
+    await pageJb.locator('[data-brief-info] [data-brief-annuler]').click();
+    await pageJb.waitForSelector(`[data-brief-ligne="${idL}"][data-decision=""]`);
+    const revenue = await pageJb.locator('.br-ligne:visible').count() === avant && await pageJb.locator('.br-tete').isVisible();
+    constat(cachee && repli && revenue, `page (story 18.29) : la ligne décidée disparaît, « Annuler » sous le brief la fait revenir${derniere ? ' ; la dernière décidée, seul « Annuler » reste' : ''}`);
+    if (derniere) {
+      await ouverte.locator('[data-brief-geste="plus_tard"]').click();
+      await pageJb.waitForSelector('[data-brief-info] [data-brief-annuler]');
+      await pageJb.reload();
+      constat(await pageJb.locator('[data-brief]').count() === 0 && await pageJb.locator('[data-nouveaux]').count() === 1,
+        'page (retour de JB) : tout décidé, le brief n\'est plus sur la page au rechargement, la barre « Nouveaux » reste');
+      constat((await (await brief({ annuler: idL })).json()).ok, 'remise à décider de la ligne pour la suite de l\'essai');
+    }
+  } else constat(false, 'page : une ligne du brief encore à décider');
   const tel390 = await nav.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, extraHTTPHeaders: pourJb() });
   await tel390.goto(`${E}/`);
   const deborde = await tel390.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
@@ -270,7 +287,7 @@ try {
   sql(`DELETE FROM brief_semaine WHERE lundi = '${lundi}'`);
   const textes = { bloque: 'Trois rendez-vous vendeurs reportés : le boîtage de Sciez n\'a rien donné.', decision: 'Garder le boîtage ou passer au porte-à-porte jeudi.' };
   constat((await deposer(textes, { ...avecJeton(), 'Content-Type': 'application/json' })).status === 403 && (await deposer(textes, { ...pourJb(), 'Content-Type': 'application/json' })).status === 403,
-    'brief de la semaine : dépôt refusé aux comptes d\'Anne et de JB (seul le jeton de Claude)');
+    `brief de la semaine : dépôt refusé aux comptes d'Anne et de JB (seul le jeton de Claude) (${(await deposer(textes, { ...avecJeton(), 'Content-Type': 'application/json' })).status}, ${(await deposer(textes, { ...pourJb(), 'Content-Type': 'application/json' })).status})`);
   let d1 = await deposer({ ...textes, semaine: jour });
   const r1 = await d1.json();
   constat(d1.status === 201 && r1.lundi === lundi && r1.remplace === false, `dépôt : semaine ramenée au lundi (${r1.lundi})`);

@@ -91,7 +91,7 @@ export function brancherNouveaux(r: Reglages) {
       liste.innerHTML = aVoir.map(carteHtml).join('')
         + (total > cartes.length ? `<p class="nv-vide">${total - cartes.length} autre(s) demande(s), plus anciennes : elles s'afficheront quand celles-ci seront traitées.</p>` : '')
         + (rangees.length ? `<details class="nv-ranges" data-nv-ranges${rangeesOuvertes ? ' open' : ''}>
-            <summary>${rangees.length} sans suite, rangé${rangees.length > 1 ? 's' : ''} ici : appels manqués sans message, appels trop courts, messages vides. Un numéro qui rappelle remonte.</summary>
+            <summary>${rangees.length} sans suite, rangé${rangees.length > 1 ? 's' : ''} ici : appels manqués sans message, appels trop courts, messages vides. Un numéro qui laisse un message, ou à qui vous parlez, remonte.</summary>
             <div class="nv-ranges-liste">${rangees.map(carteHtml).join('')}</div>
           </details>` : '');
       liste.querySelector<HTMLDetailsElement>('[data-nv-ranges]')?.addEventListener('toggle', (e) => { rangeesOuvertes = (e.target as HTMLDetailsElement).open; });
