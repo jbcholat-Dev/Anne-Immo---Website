@@ -24,7 +24,7 @@ Après un point avec JB, le chief of staff (Claude) dépose lui-même, sans ress
 
 ## Revue de code
 
-2026-11-24, skill `bmad-code-review` en session neuve, PR n° 274, commits 7960005 et a922db3 relus (18.27 et les corrections de 18.25 et 18.26). Corrections dans le commit qui suit ce suivi.
+2026-11-24, skill `bmad-code-review` en session neuve, PR n° 274, commits 7960005 et a922db3 relus (18.27 et les corrections de 18.25 et 18.26). Corrections : commit 8d6754b.
 
 - Une erreur 400 ou 413 propre à un texte bloquait le tri de toutes les cartes plus anciennes : corrigé, seules réseau, crédit épuisé, 401 à 404, 429 et 5xx sont des pannes ; les autres comptent comme un essai et le passage continue. Texte coupé par caractère, pas par moitié d'émoji.
 - Un numéro suivi d'un prix (« 06 12 34 56 78 - budget 350 000 € ») partait en clair : corrigé, les numéros à la forme sûre sont masqués d'abord (`server/telephones.ts`, partagé).
@@ -34,7 +34,9 @@ Après un point avec JB, le chief of staff (Claude) dépose lui-même, sans ress
 - Lien `/\hôte` accepté par l'îlot : corrigé. Numéro étranger mal masqué : corrigé (indicatif gardé). Deux commentaires nommaient la page Contacts : corrigés. `deposer-brief` sans texte : message clair.
 - Course entre lecture et dépôt sur `remplace` : écarté, elle ne change que le code 200 ou 201.
 
-Vérifié après corrections : `site` et `espace` build et check 0 erreur ; `e2e-tri-et-brief.mjs` et `e2e-gestion.mjs` (droits RGPD) tous bons.
+Vérifié après corrections et fusion de main (20.8) : `site` et `espace` build et check 0 erreur ; `e2e-tri-et-brief.mjs` et `e2e-gestion.mjs` (droits RGPD) tous bons ; `e2e-espace.mjs` : 298 constats bons, 0 en échec, puis arrêt sur un défaut ancien de l'essai lui-même (il ajoute à `lead` les colonnes du règlement ambassadeur, que la migration 0022 a déjà créées), sans lien avec ces stories.
+
+Corrections : commit 8d6754b.
 
 ## Ce qui reste
 
