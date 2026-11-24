@@ -244,3 +244,10 @@ Environnements inchangés (AD-19) : la branche de travail est construite sur l'a
 - **E-mail groupé depuis une séance (FR-17)** : reprend AD-21 le moment venu.
 - **Travail à plusieurs en même temps** : la dernière écriture l'emporte (hypothèse FR-6) ; pas de verrou.
 - **Glisser-déposer et poignée de durée** : HTML natif sans bibliothèque, à revoir seulement si le navigateur d'Anne pose problème.
+
+### AD-36 — Canaux de prospection : l'effort, les leads et les rendez-vous se notent par canal, sans rien saisir deux fois
+
+- **Décision du 2026-11-24** (story 20.7, demande de JB). Amende AD-33.
+- **Binds:** FR-21 à FR-25, AD-30, AD-33, AD-35
+- **Prevents:** des flyers comptés deux fois (page et tableau du boîtage) ; des chiffres de prospection qui sortent de l'espace avec des données personnelles
+- **Rule:** `server/prospection` est le seul écrivain de `prospection_effort`, `resultat` et `prospection_objectif` (migration 0026). Canaux fixes du code (AD-35) : boîtage, cartes, messages, réseaux, magasin ; hors canaux : site, autre. Le boîtage n'a pas de ligne d'effort : ses flyers sont `passage_boitage.mots`, écrits par `ajouterBoitage`. Les messages comptent aussi les événements `envoi_modele`. Les leads du site et des portails se lisent dans `nouveau` (une personne par période), jamais saisis. `resultat` porte `canal`, `type_lead` (direct, diagnostic) et `quantite` ; pas de contact tant que l'écran ne le demande pas (aucune donnée personnelle). Objectifs à la semaine ; mois × 46/12, année × 46, arrondis au-dessus. Claude ne lit que des totaux (`/api/claude/bilan`, clé `prospection`).

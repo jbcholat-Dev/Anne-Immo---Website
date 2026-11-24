@@ -10,11 +10,12 @@
 // téléphone reste (Aujourd'hui, Contacts, Ajouter, Bilan) ; son « Contacts » mène à la liste en cartes `/contacts`, avec
 // l'appel en un geste (revue de code 18.4) : le grand tableau est l'accueil sur ordinateur. Story 18.8 : « Catégories et
 // méthodes » en tête du menu. `large` : page sur toute la largeur (tableau des contacts).
+// Story 20.7 : « Ma semaine » (canaux de prospection) avant « Contacts » dans la barre du haut.
 import '@site/styles/global.css';
 import '../styles/pointeur.css';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import RetourApercu from '@site/components/RetourApercu.astro';
-type Actif = 'contacts' | 'aujourdhui' | 'suivis' | 'bilan' | 'prescripteurs' | 'acheteurs' | 'pipeline' | 'ajouter' | 'a-trier' | 'demandes' | 'actions' | 'campagnes' | 'categories';
+type Actif = 'semaine' | 'contacts' | 'aujourdhui' | 'suivis' | 'bilan' | 'prescripteurs' | 'acheteurs' | 'pipeline' | 'ajouter' | 'a-trier' | 'demandes' | 'actions' | 'campagnes' | 'categories';
 interface Props { titre: string; actif?: Actif; large?: boolean }
 const { titre, actif, large = false } = Astro.props;
 const compte = Astro.request.headers.get(ENTETE_COMPTE) ?? '';
@@ -34,7 +35,7 @@ const OUTILS: { cle: Actif | 'qualifier'; href: string; texte: string }[] = [
   { cle: 'a-trier', href: '/a-trier', texte: 'Numéros à trier' },
   { cle: 'demandes', href: '/gestion', texte: 'Demandes du site (gestion)' },
 ];
-const dansOutils = !!actif && actif !== 'contacts';
+const dansOutils = !!actif && actif !== 'contacts' && actif !== 'semaine';
 ---
 <!doctype html>
 <html lang="fr">
@@ -50,6 +51,7 @@ const dansOutils = !!actif && actif !== 'contacts';
     <header class="e-tete">
       <a href="/" class="e-marque">L'espace d'Anne</a>
       <nav class="e-menu-haut" aria-label="Menu">
+        <a href="/semaine" aria-current={actif === 'semaine' ? 'page' : undefined} data-menu-semaine>Ma semaine</a>
         <a href="/" aria-current={actif === 'contacts' ? 'page' : undefined}>Contacts</a>
         <details class="e-outils" data-outils>
           <summary class:list={{ actif: dansOutils }}>Autres outils</summary>
