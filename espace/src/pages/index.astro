@@ -71,11 +71,12 @@ const donneesNouveaux = enJson(nouveaux);
       </div>
     </aside>
     <div class="ct-principal">
-      {brief && (
+      {/* Retour de JB (2026-11-24, « une énorme verrue au milieu ») : tout décidé, le brief n'est plus affiché du tout. */}
+      {brief && !(brief.prepare && !ouvertes) && (
         <section class="br" data-brief aria-labelledby="br-titre">
           <div class="br-tete">
-            {/* Story 18.29 (retour de JB) : une ligne décidée disparaît ; tout décidé, le brief tient en une ligne. */}
-            <h2 id="br-titre" data-brief-titre>{!brief.prepare ? 'Brief du jour' : ouvertes ? `${ouvertes} décision${ouvertes > 1 ? 's' : ''} à prendre` : 'Brief du jour : tout est décidé'}</h2>
+            {/* Story 18.29 (retour de JB) : une ligne décidée disparaît. */}
+            <h2 id="br-titre" data-brief-titre>{!brief.prepare ? 'Brief du jour' : `${ouvertes} décision${ouvertes > 1 ? 's' : ''} à prendre`}</h2>
             <span class="br-sous">{jourBrief}{part !== null ? ` · ${part} % acceptées sur 4 semaines` : ''}</span>
             <span class="br-phase" title="Phase 1 de la fiche de poste : JB relit le brief, Anne ne le voit pas encore et ne reçoit aucun e-mail.">Brouillon · visible par JB seul</span>
           </div>
@@ -908,6 +909,8 @@ const donneesNouveaux = enJson(nouveaux);
   .br-ligne:last-child { border-bottom: 0; }
   .br-ligne:not([data-decision=""]) { display: none; }
   .br-info button { margin-left: 8px; }
+  /* Retour de JB : la dernière ligne décidée, il ne reste que « Annuler » ; au rechargement, plus de brief du tout. */
+  .br[data-tout-decide] .br-tete, .br[data-tout-decide] .br-lignes { display: none; }
   .br-num { font-family: var(--avt-font-display, Georgia, serif); font-size: 22px; line-height: 1.1; color: #002fa7; }
   .br-qui { font-weight: 600; }
   .br-etq { font-weight: 500; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; background: #e7edf9; color: #002fa7; border-radius: 999px; padding: 2px 8px; margin-left: 6px; white-space: nowrap; }

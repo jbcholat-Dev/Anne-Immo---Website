@@ -2913,7 +2913,7 @@ try {
   // Inscription au programme ambassadeurs (epic 17) : la migration 0022 a créé le type de demande et ses colonnes dans `lead`.
   try {
     const MAILA = `ambre+${ESSAI}@example.com`;
-    sql(`PRAGMA ignore_check_constraints = 1; INSERT INTO lead (id, submission_id, created_at, last_activity_at, lang, source, email, privacy_accepted_at, is_test, prenom, nom, telephone, reglement_version, reglement_accepte_le) VALUES
+    sql(`INSERT INTO lead (id, submission_id, created_at, last_activity_at, lang, source, email, privacy_accepted_at, is_test, prenom, nom, telephone, reglement_version, reglement_accepte_le) VALUES
       ('AMB1${ESSAI}', 'amb1-${ESSAI}', '2026-11-01T09:00:00Z', '2026-11-01T09:00:00Z', 'fr', 'ambassadeur', '${MAILD}', '2026-11-01T09:00:00Z', 1, 'Dora', 'Dorac${NUM}', NULL, 'v2026-11', '2026-11-01T09:00:00Z'),
       ('AMB2${ESSAI}', 'amb2-${ESSAI}', '2026-11-01T09:05:00Z', '2026-11-01T09:05:00Z', 'fr', 'ambassadeur', '${MAILA}', '2026-11-01T09:05:00Z', 1, 'Ambre', 'Nouvelle${NUM}', NULL, NULL, NULL)`);
     // Revue 18.3 : un projet différent du parcours de la demande (acheteur, Dora est entrée comme vendeuse), pour voir qu'il ne bouge pas.

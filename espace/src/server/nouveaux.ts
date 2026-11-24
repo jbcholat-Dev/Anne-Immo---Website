@@ -71,7 +71,7 @@ export const APPEL_TROP_COURT_S = 20;
 const RESUME_COURT = 40;
 
 /**
- * Story 18.24 : une carte de numéro inconnu se range dans « Sans suite » si ce numéro n'a laissé qu'un seul échange, sans
+ * Story 18.24 : une carte de numéro inconnu se range dans « Sans suite » si ce numéro n'a laissé qu'un échange (ou que des appels manqués sans message), sans
  * tâche, sans nom connu de Leedflow, qui n'est pas déjà dans les contacts, et si cet échange est reçu par Anne (un appel
  * qu'elle a passé n'est jamais rangé : revue de code 18.24) et :
  *   - un appel manqué sans message ;
