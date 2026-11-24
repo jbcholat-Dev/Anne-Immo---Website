@@ -26,6 +26,16 @@ Le RGPD permet de garder des coordonnées sans accord écrit quand on a un inté
 ## Ce que Claude voit
 Claude fait l'import depuis la conversation : il lit les fichiers pour préparer l'aperçu et les envoie à l'espace. Les fichiers passent donc par Anthropic, l'entreprise qui fait fonctionner Claude, comme toute pièce jointe d'une conversation. Une fois l'import fait, Claude n'a plus accès qu'à l'import, jamais à la lecture des contacts (règle de conduite inscrite dans l'architecture).
 
+## Ajout du 2026-11-24 : Claude lit Leedflow, pour un temps (décision de JB)
+
+JB a ouvert le 2026-11-24 l'API de Leedflow aux fils du projet Claude. Leedflow est le service qui résume les appels d'Anne. But : trier ce qui est arrivé depuis septembre et dire à Anne qui rappeler, tant que l'espace seul n'y suffit pas.
+
+- **Ce que Claude lit** : les appels, les messages vocaux, les tâches et les contacts de Leedflow, avec leurs résumés et leurs transcriptions. Lecture seule : Claude ne change rien dans Leedflow.
+- **Par où ça passe** : ces textes passent par Anthropic, comme toute pièce d'une conversation. Anthropic est donc destinataire, comme pour l'import des contacts.
+- **Ce qui est gardé** : rien de durable. Les données relevées restent dans le dossier de travail du fil, effacé avec lui. Aucun nom, numéro ni e-mail n'est écrit dans la mémoire du projet, dans Notion, dans les tableaux de bord ni dans le dépôt.
+- **Ce qui ne change pas** : la base de l'espace reste fermée à Claude.
+- **Fin** : proposée au 2026-12-31, à confirmer par JB. Pour couper : JB supprime la clé de l'environnement cloud.
+
 ## Ajout proposé le 2026-11-24 : des textes traités par l'API Claude (à valider par JB)
 
 JB a choisi le 2026-11-24 que l'espace trie lui-même les appels reçus par Leedflow, avec l'API Claude. L'API Claude est le service d'Anthropic qui permet à un programme d'interroger Claude. Cela ajoute un destinataire aux données : Anthropic, comme sous-traitant.
