@@ -43,15 +43,25 @@ export async function peutVoir(env: EnvEspace, compte: string | null): Promise<b
   return lecteurs.includes([...new Uint8Array(h)].map((b) => b.toString(16).padStart(2, '0')).join(''));
 }
 
-/** « Martine D. » : le prénom et l'initiale du nom ; sinon le nom seul, sinon le numéro. */
+/** Un numéro ou un e-mail masqué, pour le brief (revue de code 18.26) : « 06 •• •• •• 78 », « l•••@example.com ». */
+export function masque(v: string): string {
+  if (v.includes('@')) return `${v[0]}•••${v.slice(v.indexOf('@'))}`;
+  const lisible = telLisible(v);
+  return `${lisible.slice(0, 2)} •• •• •• ${lisible.replace(/\D/g, '').slice(-2)}`;
+}
+
+/** « Martine D. » : le prénom et l'initiale du nom ; sinon le nom seul, sinon le numéro ou l'e-mail masqué. */
 export function quiDe(prenom: string | null | undefined, nom: string | null | undefined, tel?: string | null): string {
   const p = (prenom ?? '').trim(), n = (nom ?? '').trim();
   if (p) return n ? `${p} ${n[0].toUpperCase()}.` : p;
-  return n || (tel ? telLisible(tel) : 'Sans nom');
+  return n || (tel ? masque(tel) : 'Sans nom');
 }
 
 /** L'heure de Paris, « HH:MM ». */
-const heureParis = (d = new Date()) => new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', hour12: false }).format(d);
+const heureParis = (d = new Date()) => new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(d);
+
+const lendemain = (jour: string) => new Date(Date.parse(`${jour}T12:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
+const jourDeParis = (instant: string) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(instant));
 
 interface Candidat { cle: string; genre: LigneBrief['genre']; qui: string; raison: string; action: string; lien: string; urgence: number; date: string }
 
@@ -67,15 +77,21 @@ async function candidats(envE: EnvEspace, jour: string): Promise<Candidat[]> {
         LEFT JOIN contact_evenement e ON e.id = n.evenement_id LEFT JOIN lead l ON e.source = 'site' AND l.id = e.source_id
       WHERE n.vu_le IS NULL AND n.source IN ('site', 'portail') AND c.ecarte_le IS NULL ORDER BY n.recu_le LIMIT 20`),
     // Cartes des numéros inconnus encore ouvertes (le tri dit lesquelles comptent).
+    // Une ligne par numéro : la carte la plus récente (revue de code 18.26 : choix stable d'un jour à l'autre). Les proches
+    // sont exclus par leur numéro principal comme par leurs autres numéros, comme pour le tri et les cartes.
     env.DB.prepare(`SELECT n.id, n.recu_le, i.telephone FROM nouveau n JOIN leedflow_inconnu i ON i.source_id = n.leedflow_inconnu_id
       WHERE n.vu_le IS NULL AND n.source = 'leedflow' AND i.telephone NOT IN (SELECT telephone FROM leedflow_ecarte)
         AND i.telephone NOT IN (SELECT telephone FROM contact WHERE telephone IS NOT NULL)
-      GROUP BY i.telephone ORDER BY n.recu_le DESC LIMIT 200`),
+        AND i.telephone NOT IN (SELECT valeur FROM contact_coordonnee WHERE type = 'telephone')
+        AND n.id = (SELECT n2.id FROM nouveau n2 JOIN leedflow_inconnu i2 ON i2.source_id = n2.leedflow_inconnu_id
+          WHERE i2.telephone = i.telephone AND n2.vu_le IS NULL AND n2.source = 'leedflow' ORDER BY n2.recu_le DESC, n2.id DESC LIMIT 1)
+      ORDER BY n.recu_le DESC LIMIT 200`),
     // Contacts suivis dont la prochaine action est due (aujourd'hui ou en retard), la plus ancienne d'abord.
-    env.DB.prepare(`SELECT id, prenom, nom, telephone, email, prochaine_action, substr(prochaine_action_le, 1, 10) AS le FROM contact
+    // prochaine_action_le est un jour, ou un instant en UTC : le jour de Paris est calculé plus bas (revue de code 18.26).
+    env.DB.prepare(`SELECT id, prenom, nom, telephone, email, prochaine_action, prochaine_action_le AS le FROM contact
       WHERE etape IS NOT NULL AND etape NOT IN ('perdu', 'vendu', 'acte_signe', 'en_sommeil') AND ecarte_le IS NULL
         AND prochaine_action_le IS NOT NULL AND substr(prochaine_action_le, 1, 10) <= ?1
-      ORDER BY prochaine_action_le LIMIT 20`).bind(jour),
+      ORDER BY prochaine_action_le LIMIT 40`).bind(lendemain(jour)),
   ]);
   const liste: Candidat[] = [];
   for (const d of demandes.results as { id: string; source: string; recu_le: string; prenom: string | null; nom: string | null; telephone: string | null; email: string | null; contact_id: string; genre_site: string | null }[]) {
@@ -93,12 +109,14 @@ async function candidats(envE: EnvEspace, jour: string): Promise<Candidat[]> {
     if (!p || ORDRE[p.classement] > 3) continue;
     const date = p.echeance ?? r.recu_le.slice(0, 10);
     liste.push({
-      cle: `nouveau:${r.id}`, genre: 'appel', qui: `${telLisible(r.telephone)} · ${CLASSEMENTS[p.classement]}`, date,
+      cle: `nouveau:${r.id}`, genre: 'appel', qui: `${masque(r.telephone)} · ${CLASSEMENTS[p.classement]}`, date,
       urgence: (date <= jour ? 0 : 2) + ORDRE[p.classement] / 10, raison: p.raison,
       action: p.echeance && p.echeance > jour ? `${p.action} avant le ${echeance(p.echeance)}` : p.action, lien: '/?nouveaux=1',
     });
   }
   for (const c of relances.results as { id: string; prenom: string | null; nom: string | null; telephone: string | null; email: string | null; prochaine_action: string | null; le: string }[]) {
+    c.le = c.le.length > 10 ? jourDeParis(c.le) : c.le;
+    if (c.le > jour) continue;
     const retard = c.le < jour;
     liste.push({
       cle: `contact:${c.id}`, genre: 'relance', qui: quiDe(c.prenom, c.nom, c.telephone ?? c.email), date: c.le, urgence: retard ? 1 : 1.5,

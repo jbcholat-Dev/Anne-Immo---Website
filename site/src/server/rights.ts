@@ -103,9 +103,15 @@ export async function exporterContact(env: EnvSite, id: string, compte: string) 
   const demandes = [];
   for (const l of leads) demandes.push(await demandeLisible(env, l));
   const [fiche] = await fichesLisibles(env, [contact]);
+  // Stories 18.25 et 18.26 : ce que le brief du jour et le tri par l'API Claude en ont gardé.
+  const { telephones } = await coordonneesDe(env, [id]);
+  const [brief, tri] = await env.DB.batch([
+    env.DB.prepare(`SELECT jour, qui, raison, action, decision FROM brief_ligne WHERE cle = ?1 ORDER BY jour`).bind(`contact:${id}`),
+    env.DB.prepare(`SELECT classement, action, echeance, raison, trie_le FROM tri_ia WHERE telephone IN (SELECT value FROM json_each(?1))`).bind(JSON.stringify(telephones)),
+  ]);
   const maintenant = new Date().toISOString();
   await noter(env, 'acces', String(contact.email ?? contact.telephone ?? id), leads.length, compte);
-  return { responsable: RESPONSABLE, exporte_le: maintenant, contact: fiche, demandes };
+  return { responsable: RESPONSABLE, exporte_le: maintenant, contact: fiche, demandes, brief_du_jour: brief.results, tri_des_appels: tri.results };
 }
 
 /** Téléphones et e-mails de ces contacts, principaux et autres (story 18.3) : pour Leedflow et l'opposition. */
@@ -157,6 +163,13 @@ function effacementDesContacts(env: EnvSite, ids: string[], telephones: string[]
   const I = JSON.stringify(ids), T = JSON.stringify(telephones);
   const DE = 'IN (SELECT value FROM json_each(?1))';
   return [
+    // Stories 18.25 et 18.26 (revue de code) : le brief du jour (lignes du contact, de ses cartes et des cartes de ses
+    // numéros) et les propositions du tri par l'API Claude pour ses numéros, avant les cartes dont dépend leur clé.
+    env.DB.prepare(`DELETE FROM brief_ligne WHERE cle IN (SELECT 'contact:' || value FROM json_each(?1))
+      OR cle IN (SELECT 'nouveau:' || id FROM nouveau WHERE contact_id ${DE})
+      OR cle IN (SELECT 'nouveau:' || n.id FROM nouveau n JOIN leedflow_inconnu i ON i.source_id = n.leedflow_inconnu_id
+        WHERE i.telephone IN (SELECT value FROM json_each(?2)))`).bind(I, T),
+    env.DB.prepare(`DELETE FROM tri_ia WHERE telephone ${DE}`).bind(T),
     env.DB.prepare(`DELETE FROM nouveau WHERE contact_id ${DE}`).bind(I),
     env.DB.prepare(`DELETE FROM contact_evenement WHERE contact_id ${DE}`).bind(I),
     env.DB.prepare(`DELETE FROM contact_coordonnee WHERE contact_id ${DE}`).bind(I),

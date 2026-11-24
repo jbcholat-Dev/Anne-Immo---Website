@@ -15,6 +15,7 @@ import {
   bornes, CANAUX_PROSPECTION, CLES_OBJECTIF, enregistrerObjectifs, enregistrerSaisie, jourCourt, jourDemande, jourParis, LIBELLES_CANAL, libellePeriode,
   dansListe, lireFormObjectifs, lireObjectifs, lirePeriode, lireSaisie, nombre, objectifsDepart, partAtteinte, PERIODES_PAGE, retirerSaisie, TYPES_LEAD, voisine, type Periode,
 } from '../server/prospection';
+import { lireBriefSemaine } from '../server/brief-semaine';
 
 export const prerender = false;
 const compte = Astro.request.headers.get(ENTETE_COMPTE);
@@ -77,6 +78,8 @@ const tete = [
   { cle: 'leads', titre: 'Leads', fait: sem.total.leads, vise: sem.objectifs.leads, def: "personnes entrées en contact avec Anne, d'une manière ou d'une autre", fleche: 'selon le taux de chaque canal' },
 ];
 const QUOI = { effort: 'Effort', lead: 'Lead', rdv: 'Rendez-vous', recommandation: 'Recommandation', mandat: 'Mandat' } as const;
+// Story 18.27 : le brief de la semaine déposé par le chief of staff, en deux lignes sous le titre (semaine seulement).
+const briefS = periode === 'semaine' ? await lireBriefSemaine(env, sem.lundi) : null;
 // Couleur de chaque canal, reprise du canevas de l'espace (maquette https://claude.ai/artifact/FUmUuJZTnjf3pG7HJWXH7Z, écran Accueil).
 const COULEURS: Record<string, string> = { boitage: 'var(--avt-terra-deep)', cartes: 'var(--avt-klein)', messages: 'var(--avt-klein)', reseaux: '#2E6B3F', magasin: 'var(--avt-terra-deep)' };
 const qui = (par: string | null) => (par ? par.split('@')[0] : '');
@@ -101,6 +104,12 @@ const qui = (par: string | null) => (par ? par.split('@')[0] : '');
 
   {message && <p class="e-message" role="status" data-message>{message}</p>}
   {erreur && <p class="e-message" role="alert" data-erreur>{erreur}</p>}
+  {briefS && (
+    <div class="s-brief" data-brief-semaine title={`Déposé par le ${briefS.signe}`}>
+      <p><b>Ce qui bloque :</b> {briefS.bloque}</p>
+      <p><b>À décider :</b> {briefS.decision}</p>
+    </div>
+  )}
 
   <div class="s-pile" data-tete>
     {tete.map((t) => {
@@ -234,6 +243,9 @@ const qui = (par: string | null) => (par ? par.split('@')[0] : '');
 <style>
   .s-tete { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px; }
   .s-tete h1 { margin: 0; }
+  .s-brief { margin: 10px 0 4px; font-size: 15px; }
+  .s-brief p { margin: 2px 0; }
+  .s-brief b { font-weight: 600; color: var(--avt-terra-deep); }
   .s-dates { font-size: 0.6em; font-weight: 400; color: var(--avt-text-muted); white-space: nowrap; }
   .s-nav { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
   .s-fleches { display: flex; gap: 6px; }

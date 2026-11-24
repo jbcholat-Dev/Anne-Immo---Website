@@ -26,7 +26,7 @@ import { DUREES } from '../server/vues';
 import { listerVues } from '../server/vues-base';
 import { lireNouveaux } from '../server/nouveaux';
 import { envEspace } from '../server/env';
-import { BRIEF_MAX, DECISIONS, lireBrief, peutVoir } from '../server/brief';
+import { DECISIONS, lireBrief, peutVoir } from '../server/brief';
 
 export const prerender = false;
 if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
@@ -101,7 +101,7 @@ const donneesNouveaux = enJson(nouveaux);
           ) : (
             <div class="br-vide">Le brief se prépare chaque jour à 7 h 30. <button type="button" class="ct-btn" data-brief-preparer>Préparer maintenant</button></div>
           )}
-          <p class="br-info" data-brief-info aria-live="polite">Accepter ouvre la fiche : le geste reste à faire sur la fiche. {BRIEF_MAX} décisions au plus par jour.</p>
+          <p class="br-info" data-brief-info aria-live="polite"></p>
         </section>
       )}
       <section class="nv" data-nouveaux aria-label="Nouvelles demandes">
@@ -915,6 +915,7 @@ const donneesNouveaux = enJson(nouveaux);
   .br-btns { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: flex-end; }
   .br-etat { font-size: 13px; font-weight: 500; color: #2f6b4a; }
   .br-vide { padding: 14px 18px; font-size: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .br-info:empty { display: none; }
   .br-info { margin: 0; padding: 8px 18px; font-size: 12px; color: var(--avt-text-muted); background: #f7f2ea; }
   @media (max-width: 760px) { .br-ligne { grid-template-columns: 24px 1fr; } .br-btns { grid-column: 2; justify-content: flex-start; } }
   /* Story 18.25 : proposition du tri par l'API Claude, affichée seulement. */

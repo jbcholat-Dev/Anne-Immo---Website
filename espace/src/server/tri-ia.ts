@@ -79,6 +79,8 @@ export function valider(brut: unknown, jour = aujourdhui()): Proposition | null 
   let echeance: string | null = null;
   if (o.echeance !== null && o.echeance !== undefined) {
     if (typeof o.echeance !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(o.echeance)) return null;
+    // Une date du calendrier (revue de code 18.25 : pas de 30 février).
+    if (Number.isNaN(Date.parse(`${o.echeance}T12:00:00Z`)) || new Date(`${o.echeance}T12:00:00Z`).toISOString().slice(0, 10) !== o.echeance) return null;
     // Une date passée devient aujourd'hui ; au-delà de 60 jours, la proposition n'a pas de sens.
     echeance = o.echeance < jour ? jour : o.echeance;
     if (echeance > plusTard(60)) return null;
@@ -100,7 +102,15 @@ export function masquer(texte: string, n: Pick<NumeroInconnu, 'prenom' | 'nom' |
   for (const mot of [n.prenom, n.nom].filter((m) => m && m.length >= 2)) t = t.replace(motif(mot), '[nom]');
   return t
     .replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, '[e-mail]')
-    .replace(/(\+|00)?\d[\d .-]{7,}\d/g, '[téléphone]');
+    .replace(/(\+|00)?\d[\d .-]{7,}\d/g, telephoneOuPas);
+}
+
+/** Revue de code 18.25 : une date ou un prix ne sont pas des téléphones ; il faut au moins 9 chiffres. */
+function telephoneOuPas(m: string, _p: string | undefined, a: number, texte: string): string {
+  const suite = texte.slice(a + m.length, a + m.length + 8);
+  if (/^\s*(€|euros?\b|k€|eur\b|chf\b|m²|m2\b)/i.test(suite)) return m;
+  if (/^\d{4}-\d{2}-\d{2}$|^\d{1,2}[./-]\d{1,2}[./-]\d{2,4}$/.test(m)) return m;
+  return m.replace(/\D/g, '').length >= 9 ? '[téléphone]' : m;
 }
 
 const GENRES: Record<string, string> = { SMS: 'SMS', Message: 'Message vocal', Appel: 'Appel' };
@@ -123,7 +133,7 @@ async function empreinteDe(texte: string): Promise<string> {
 }
 
 /** Demande la proposition à l'API. Renvoie null (avec la raison) si la réponse ne sert pas. */
-async function demander(env: EnvEspace, texte: string): Promise<{ p: Proposition | null; erreur: string | null }> {
+async function demander(env: EnvEspace, texte: string): Promise<{ p: Proposition | null; erreur: string | null; modele?: string }> {
   const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, baseURL: env.ANTHROPIC_URL || undefined, maxRetries: 1, timeout: 60_000 });
   const r = await client.beta.messages.create({
     model: MODELE_TRI,
@@ -135,14 +145,16 @@ async function demander(env: EnvEspace, texte: string): Promise<{ p: Proposition
     system: CONSIGNES_TRI,
     messages: [{ role: 'user', content: texte }],
   });
-  if (r.stop_reason === 'refusal') return { p: null, erreur: 'refus' };
-  if (r.stop_reason === 'max_tokens') return { p: null, erreur: 'trop_long' };
+  // Le modèle qui a répondu (le repli peut en choisir un autre, revue de code 18.25).
+  const modele = typeof r.model === 'string' && r.model ? r.model : MODELE_TRI;
+  if (r.stop_reason === 'refusal') return { p: null, erreur: 'refus', modele };
+  if (r.stop_reason === 'max_tokens') return { p: null, erreur: 'trop_long', modele };
   const bloc = r.content.find((b) => b.type === 'text');
-  if (!bloc || bloc.type !== 'text') return { p: null, erreur: 'vide' };
+  if (!bloc || bloc.type !== 'text') return { p: null, erreur: 'vide', modele };
   let brut: unknown;
-  try { brut = JSON.parse(bloc.text); } catch { return { p: null, erreur: 'json' }; }
+  try { brut = JSON.parse(bloc.text); } catch { return { p: null, erreur: 'json', modele }; }
   const p = valider(brut);
-  return p ? { p, erreur: null } : { p: null, erreur: 'format' };
+  return p ? { p, erreur: null, modele } : { p: null, erreur: 'format', modele };
 }
 
 /** Les numéros des cartes ouvertes : ni classés, ni portés par un contact du carnet. Le texte de chacun dit ensuite s'il est à
@@ -180,7 +192,7 @@ export async function trierNouveaux(env: EnvEspace): Promise<void> {
     // Même texte déjà trié (rien de neuf depuis), ou déjà en échec trop de fois : on n'envoie pas.
     if (d && d.empreinte === empreinte && (!d.erreur || d.essais >= ESSAIS_MAX)) continue;
     const precedents = d && d.empreinte === empreinte ? d.essais : 0;
-    let res: { p: Proposition | null; erreur: string | null };
+    let res: { p: Proposition | null; erreur: string | null; modele?: string };
     try { res = await demander(env, texte); }
     catch (e) {
       res = { p: null, erreur: e instanceof Anthropic.APIError ? `api_${e.status ?? 'reseau'}` : 'reseau' };
@@ -188,20 +200,25 @@ export async function trierNouveaux(env: EnvEspace): Promise<void> {
     const maintenant = new Date().toISOString();
     const p = res.p;
     // Une panne (réseau, surcharge, limite de débit, erreur du service) ne compte pas comme un essai : le texte sera renvoyé
-    // quand l'API répondra. Une réponse inutilisable (refus, hors format) ou une demande refusée (4xx) compte.
-    const panne = res.erreur === 'reseau' || res.erreur === 'api_reseau' || res.erreur === 'api_429' || /^api_5\d\d$/.test(res.erreur ?? '');
+    // quand l'API répondra. Revue de code 18.25 : toute erreur de l'API compte comme une panne, y compris un crédit épuisé
+    // (400), une clé refusée (401, 403) ou un modèle introuvable (404) ; seule une réponse inutilisable du modèle (refus,
+    // hors format, vide, trop longue) compte comme un essai.
+    const panne = res.erreur === 'reseau' || /^api_/.test(res.erreur ?? '');
     const essais = panne ? Math.max(precedents, 0) : precedents + 1;
     await env.DB.prepare(
       `INSERT INTO tri_ia (telephone, empreinte, classement, action, echeance, raison, parcours, qualification, modele, trie_le, essais, erreur)
        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)
        ON CONFLICT (telephone) DO UPDATE SET empreinte = excluded.empreinte, essais = excluded.essais, erreur = excluded.erreur, trie_le = excluded.trie_le,
-         classement = coalesce(excluded.classement, tri_ia.classement), action = coalesce(excluded.action, tri_ia.action),
-         echeance = CASE WHEN excluded.classement IS NULL THEN tri_ia.echeance ELSE excluded.echeance END,
-         raison = coalesce(excluded.raison, tri_ia.raison),
-         parcours = CASE WHEN excluded.classement IS NULL THEN tri_ia.parcours ELSE excluded.parcours END,
-         qualification = coalesce(excluded.qualification, tri_ia.qualification), modele = excluded.modele`,
+         -- Revue de code 18.25 : un échec sur le même texte garde la proposition ; sur un texte nouveau, elle est effacée
+         -- (elle ne dit plus ce que disent les échanges).
+         classement = CASE WHEN excluded.classement IS NOT NULL THEN excluded.classement WHEN excluded.empreinte = tri_ia.empreinte THEN tri_ia.classement END,
+         action = CASE WHEN excluded.classement IS NOT NULL THEN excluded.action WHEN excluded.empreinte = tri_ia.empreinte THEN tri_ia.action END,
+         echeance = CASE WHEN excluded.classement IS NOT NULL THEN excluded.echeance WHEN excluded.empreinte = tri_ia.empreinte THEN tri_ia.echeance END,
+         raison = CASE WHEN excluded.classement IS NOT NULL THEN excluded.raison WHEN excluded.empreinte = tri_ia.empreinte THEN tri_ia.raison END,
+         parcours = CASE WHEN excluded.classement IS NOT NULL THEN excluded.parcours WHEN excluded.empreinte = tri_ia.empreinte THEN tri_ia.parcours END,
+         qualification = CASE WHEN excluded.classement IS NOT NULL THEN excluded.qualification WHEN excluded.empreinte = tri_ia.empreinte THEN tri_ia.qualification END, modele = excluded.modele`,
     ).bind(tel, empreinte, p?.classement ?? null, p?.action ?? null, p?.echeance ?? null, p?.raison ?? null, p?.parcours ?? null,
-      p ? JSON.stringify(p.qualification) : null, MODELE_TRI, maintenant, essais, res.erreur).run();
+      p ? JSON.stringify(p.qualification) : null, res.modele ?? MODELE_TRI, maintenant, essais, res.erreur).run();
     if (p) bilan.tries++; else bilan.echecs++;
     // Une panne de l'API ou un crédit coupé : inutile d'insister pendant ce passage.
     if (panne) { journal('tri_ia_panne', { detail: res.erreur }); break; }

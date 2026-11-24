@@ -8,6 +8,8 @@
 // Story 18.26 (brief du jour) : visible du seul compte de BRIEF_LECTEURS (page et API), préparé à la demande et une seule
 // fois par jour, 3 sources (demande du site, appel trié, relance en retard), jamais un proche ni une carte non triée,
 // décisions Accepter / Plus tard / Écarter et annulation, rien d'écrit sur la fiche, ligne écartée non reprise, part acceptée.
+// Story 18.27 (brief de la semaine) : déposé et relu par le jeton de Claude seulement, ramené au lundi, remplacé par un
+// nouveau dépôt, e-mail ou téléphone refusés, affiché en 2 lignes sur « Ma semaine » pour Anne et JB.
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
 // dans espace/ : `npm run build`. Lancer depuis espace/ : `node scripts/e2e-tri-et-brief.mjs`.
 import { spawn } from 'node:child_process';
@@ -99,7 +101,7 @@ sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, categor
   ('${PROCHE}', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z', 'Paul', 'Proche', 'proches', 'aucun', '${T.proche}')`);
 
 const reglages = path.join(os.tmpdir(), `essai-${ESSAI}-espace.vars`);
-fs.writeFileSync(reglages, [`ACCESS_EQUIPE=${equipe}`, 'ACCESS_AUD=essai-aud', 'LIEN_SECRET=essai',
+fs.writeFileSync(reglages, [`ACCESS_EQUIPE=${equipe}`, 'ACCESS_AUD=essai-aud', 'ACCESS_CLAUDE_ID=essai-claude.access', 'LIEN_SECRET=essai',
   `LEEDFLOW_API_KEY=${LF.cle}`, `LEEDFLOW_URL=http://localhost:${PORT_IMIT}`,
   'TRI_IA=oui', `BRIEF_LECTEURS=${createHash('sha256').update('jb@example.com').digest('hex')}`, 'ANTHROPIC_API_KEY=essai-cle-claude', `ANTHROPIC_URL=http://localhost:${PORT_IMIT}`].join('\n'));
 const journalEspace = path.join(os.tmpdir(), `e2e-${ESSAI}-espace.log`);
@@ -248,11 +250,49 @@ try {
   const demain = new Date(Date.parse(`${jour}T12:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
   sql(`DELETE FROM brief_ligne WHERE jour = '${demain}'`);
   // Préparation pour demain, faite directement en base par la même règle : on rejoue la préparation en décalant le jour.
+  sql(`DELETE FROM brief_ligne WHERE jour = '${hier}'`);
   sql(`UPDATE brief_ligne SET jour = '${hier}' WHERE jour = '${jour}'`);
   const p3 = await (await brief({ preparer: true })).json();
   const nouvelles = sql(`SELECT * FROM brief_ligne WHERE jour = '${jour}'`);
   constat(p3.ok && !nouvelles.some((l) => l.cle === lApp.cle) && nouvelles.some((l) => l.cle === lRel.cle), 'jour suivant : la ligne écartée n\'est pas reprise, la relance toujours due revient');
   sql(`DELETE FROM brief_ligne WHERE jour IN ('${hier}', '${jour}') AND cle LIKE 'contact:01TR1A%'`);
+
+  // 6. Brief de la semaine (story 18.27), déposé par le jeton de Claude.
+  const JETON_C = jetonAcces({ email: undefined, common_name: 'essai-claude.access' });
+  const pourClaude = { 'cf-access-jwt-assertion': JETON_C, 'Content-Type': 'application/json' };
+  const deposer = (corps, entetes = pourClaude) => appeler(`${E}/api/claude/brief`, { method: 'POST', redirect: 'manual', headers: entetes, body: JSON.stringify(corps) });
+  const jourJ = new Date(`${jour}T12:00:00Z`).getUTCDay();
+  const lundi = new Date(Date.parse(`${jour}T12:00:00Z`) + (jourJ === 0 ? -6 : 1 - jourJ) * 86_400_000).toISOString().slice(0, 10);
+  sql(`DELETE FROM brief_semaine WHERE lundi = '${lundi}'`);
+  const textes = { bloque: 'Trois rendez-vous vendeurs reportés : le boîtage de Sciez n\'a rien donné.', decision: 'Garder le boîtage ou passer au porte-à-porte jeudi.' };
+  constat((await deposer(textes, { ...avecJeton(), 'Content-Type': 'application/json' })).status === 403 && (await deposer(textes, { ...pourJb(), 'Content-Type': 'application/json' })).status === 403,
+    'brief de la semaine : dépôt refusé aux comptes d\'Anne et de JB (seul le jeton de Claude)');
+  let d1 = await deposer({ ...textes, semaine: jour });
+  const r1 = await d1.json();
+  constat(d1.status === 201 && r1.lundi === lundi && r1.remplace === false, `dépôt : semaine ramenée au lundi (${r1.lundi})`);
+  const d2 = await deposer({ bloque: 'Le point qui bloque, version 2.', decision: textes.decision });
+  const r2 = await d2.json();
+  const enBase = sql(`SELECT * FROM brief_semaine WHERE lundi = '${lundi}'`);
+  constat(d2.status === 200 && r2.remplace === true && enBase.length === 1 && enBase[0].bloque === 'Le point qui bloque, version 2.' && enBase[0].signe === 'chief of staff',
+    'nouveau dépôt de la même semaine : remplace l\'ancien, signé « chief of staff »');
+  const refus = await Promise.all([
+    deposer({ bloque: 'Rappeler le 06 12 34 56 78', decision: 'x' }), deposer({ bloque: 'x', decision: 'Écrire à quelqu\'un@example.com' }),
+    deposer({ bloque: '', decision: 'x' }), deposer({ bloque: 'x'.repeat(401), decision: 'x' }), deposer({ ...textes, semaine: '2026-02-30' }),
+  ]);
+  constat(refus.every((r) => r.status === 400), `téléphone, e-mail, texte vide ou trop long, date fausse : refusés (${refus.map((r) => r.status).join(', ')})`);
+  const lu = await (await appeler(`${E}/api/claude/brief?s=${jour}`, { redirect: 'manual', headers: pourClaude })).json();
+  constat(lu.brief?.decision === textes.decision && lu.brief.lundi === lundi, 'relecture par la même commande : le brief de la semaine revient');
+  for (const [qui, entetes] of [['Anne', avecJeton()], ['JB', pourJb()]]) {
+    const h = await (await appeler(`${E}/semaine`, { headers: entetes })).text();
+    const lignesBrief = (h.match(/<div class="s-brief"[\s\S]*?<\/div>/)?.[0].match(/<p\b/g) ?? []).length;
+    constat(h.includes('Le point qui bloque, version 2.') && h.includes(textes.decision) && lignesBrief === 2, `« Ma semaine » de ${qui} : le brief de la semaine en 2 lignes`);
+  }
+  const autre = await (await appeler(`${E}/semaine?s=2026-01-05`, { headers: avecJeton() })).text();
+  const contacts = await (await appeler(`${E}/`, { headers: avecJeton() })).text();
+  constat(!autre.includes('data-brief-semaine') && !contacts.includes('version 2.'), 'ni sur une autre semaine, ni sur la page Contacts');
+  const pageA = await nav.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 2, extraHTTPHeaders: avecJeton() });
+  await pageA.goto(`${E}/semaine`);
+  await pageA.screenshot({ path: path.join(OUT, 'brief-semaine.png'), clip: { x: 0, y: 0, width: 1440, height: 420 } });
   await nav.close();
 } finally {
   try { process.kill(-espace.pid); } catch {}
