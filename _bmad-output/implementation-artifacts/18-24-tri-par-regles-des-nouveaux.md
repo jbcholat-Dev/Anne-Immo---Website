@@ -22,19 +22,28 @@ Sur la capture de JB, 16 cartes sur 28 de la barre « Nouveaux » sont du bruit 
 
 - Seuil « trop court » fixé à 20 secondes (choix par défaut, à confirmer par JB).
 - Un numéro dont Leedflow connaît le nom ou l'e-mail n'est jamais rangé, même après un seul appel manqué : quelqu'un l'a identifié.
+- Au-delà des 200 cartes lues, les plus anciennes sont toutes comptées « à voir » (revue, constat 3).
+- Une carte qui remonte garde la date de son premier appel (comportement de la story 18.11 ; revue, constat 6).
 - Le compteur ne compte plus les cartes rangées : un « 9 » peut devenir « 3 · 6 sans suite ».
 
 ## Ce qui est vérifié
 
 - `espace` : `npm run build` et `npm run check` : 0 erreur (2026-11-24).
-- `E2E_1824_SEUL=1 node scripts/e2e-espace.mjs` (2026-11-24) : 4 constats sur 4 : appel manqué sans message, appel de 8 s et SMS vide rangés ; numéro qui rappelle, vrai appel de 3 min et numéro nommé par Leedflow non rangés ; compteur et « 3 sans suite » ; cartes rangées repliées en bas, bouton Ignorer présent une fois dépliées ; un numéro rangé qui rappelle remonte ; rien d'effacé ni de marqué vu. Aucune erreur JavaScript. L'essai complet n'a pas été rejoué (les lignes d'essai existantes n'ont ni genre ni durée, donc ne sont jamais rangées).
+- `E2E_1824_SEUL=1 node scripts/e2e-espace.mjs` (2026-11-24) : 4 constats sur 4 (rejoué après la revue) : appel manqué sans message, appel de 8 s, SMS vide et message vocal vide rangés ; numéro qui rappelle, vrai appel de 3 min, numéro nommé par Leedflow, appel passé par Anne et appel de 15 s qui dit quelque chose non rangés ; compteur identique côté serveur et page ; compteur et « 3 sans suite » ; cartes rangées repliées en bas, bouton Ignorer présent une fois dépliées ; un numéro rangé qui rappelle remonte ; rien d'effacé ni de marqué vu. Aucune erreur JavaScript. L'essai complet n'a pas été rejoué (les lignes d'essai existantes n'ont ni genre ni durée, donc ne sont jamais rangées).
 - Capture : `espace/.verif/espace-nouveaux-sans-suite.png`.
 
 ## Revue de code
 
-(à faire en session neuve avant de proposer la PR à JB)
+Revue du 2026-11-24, skill `bmad-code-review` en session neuve, commit relu 0c52e46. Corrections dans le commit qui suit.
+
+1. Appels passés par Anne triés comme reçus : corrigé. Seul un échange reçu (`sens` entrant) est rangé ; un rappel d'Anne fait remonter la carte (assumé : elle s'en occupe déjà).
+2. Appel court qui contient une vraie demande rangé : corrigé. « Trop court » exige aussi une transcription de moins de 40 caractères.
+3. Compteur différent avant le chargement du script : corrigé (même calcul côté serveur). Au-delà de 200 cartes : écarté, noté dans les écarts.
+4. Ligne repliée rouverte d'office après sa disparition : corrigé.
+5. Titre de la ligne repliée trop petit au doigt : corrigé (44 px).
+6. Date de la carte = premier appel : écarté : comportement d'avant cette story (18.11), noté dans les écarts.
 
 ## Ce qui reste
 
-- Revue de code, PR, accord de JB, fusion.
+- PR après la fusion de la PR n° 269 (choix de JB du 2026-11-24), accord de JB, fusion.
 - Tri par l'API Claude (fil chief of staff), quand la clé sera posée.

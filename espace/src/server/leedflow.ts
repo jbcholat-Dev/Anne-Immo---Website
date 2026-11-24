@@ -453,6 +453,8 @@ export interface EchangeInconnu {
   a: string; titre: string; resume: string; tache: boolean; echeance: string | null; manque: boolean;
   /** Story 18.24 : genre (appel, vocal, sms) et durée en secondes, pour le tri par règles de la barre « Nouveaux ». */
   genre: string | null; duree: number | null;
+  /** Entrant (reçu par Anne) ou sortant (passé par Anne) ; null pour une tâche ou une ligne ancienne. */
+  sens: string | null;
 }
 export interface NumeroInconnu {
   telephone: string; prenom: string; nom: string; email: string; dernier: string; echanges: EchangeInconnu[]; taches: EchangeInconnu[];
@@ -482,7 +484,8 @@ function grouper(lignes: LigneInconnu[], categories: Map<string, Categorie> = ne
     const tache = l.source_id.startsWith('tache:');
     const [titre, ...reste] = (l.texte ?? '').split('\n');
     (tache ? n.taches : n.echanges).push({ a: l.a, titre: tache ? (d.tache ?? titre) : titre, resume: reste.join('\n').trim(), tache, echeance: d.echeance ?? null, manque: d.manque === true,
-      genre: typeof d.genre === 'string' ? d.genre : null, duree: typeof d.duree === 'number' ? d.duree : null });
+      genre: typeof d.genre === 'string' ? d.genre : null, duree: typeof d.duree === 'number' ? d.duree : null,
+      sens: typeof d.sens === 'string' ? d.sens : null });
   }
   for (const n of parNumero.values()) n.silencieux = n.taches.length === 0 && n.echanges.length > 0 && n.echanges.every((e) => e.manque);
   return [...parNumero.values()];

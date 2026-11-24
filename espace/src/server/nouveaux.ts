@@ -64,21 +64,25 @@ export interface CarteNouveau {
 
 /** En dessous, un appel décroché est « trop court » pour être une vraie demande (une erreur, un raccroché). */
 export const APPEL_TROP_COURT_S = 20;
+/** Un appel trop court n'est rangé que si sa transcription tient en moins de tant de caractères (« Allô ? ») : revue de code 18.24. */
+const RESUME_COURT = 40;
 
 /**
  * Story 18.24 : une carte de numéro inconnu se range dans « Sans suite » si ce numéro n'a laissé qu'un seul échange, sans
- * tâche, sans nom connu de Leedflow, qui n'est pas déjà dans les contacts, et si cet échange est :
+ * tâche, sans nom connu de Leedflow, qui n'est pas déjà dans les contacts, et si cet échange est reçu par Anne (un appel
+ * qu'elle a passé n'est jamais rangé : revue de code 18.24) et :
  *   - un appel manqué sans message ;
- *   - un appel de moins de `APPEL_TROP_COURT_S` secondes ;
+ *   - un appel de moins de `APPEL_TROP_COURT_S` secondes, sans transcription qui dise quelque chose ;
  *   - un message vocal ou un SMS vide.
  * Un numéro qui rappelle (deux échanges ou plus) remonte de lui-même dans la barre. Renvoie la raison, ou null.
  */
 export function raisonDeRanger(n: Pick<NumeroInconnu, 'echanges' | 'taches' | 'prenom' | 'nom' | 'email'> | undefined, connu: boolean): string | null {
   if (!n || connu || n.taches.length > 0 || n.echanges.length !== 1 || n.prenom || n.nom || n.email) return null;
   const e = n.echanges[0];
+  if (e.sens !== 'entrant') return null;
   const vide = !e.resume.trim();
   if (e.manque && vide) return 'Appel manqué sans message';
-  if (e.genre === 'appel' && !e.manque && e.duree !== null && e.duree < APPEL_TROP_COURT_S) return 'Appel trop court';
+  if (e.genre === 'appel' && !e.manque && e.duree !== null && e.duree < APPEL_TROP_COURT_S && e.resume.trim().length < RESUME_COURT) return 'Appel trop court';
   if ((e.genre === 'vocal' || e.genre === 'sms') && vide) return e.genre === 'sms' ? 'SMS vide' : 'Message vocal vide';
   return null;
 }

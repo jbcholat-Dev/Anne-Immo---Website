@@ -75,6 +75,7 @@ export function brancherNouveaux(r: Reglages) {
     const aVoir = cartes.filter((c) => !c.rangee);
     const rangees = cartes.filter((c) => c.rangee);
     const nAVoir = total - rangees.length;
+    if (!rangees.length) rangeesOuvertes = false;
     compte.textContent = String(nAVoir);
     barre.classList.toggle('vide', vide);
     barre.setAttribute('aria-expanded', String(ouvert && !vide));

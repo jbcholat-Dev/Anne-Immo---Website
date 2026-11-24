@@ -65,7 +65,7 @@ const donneesNouveaux = enJson(nouveaux);
     <div class="ct-principal">
       <section class="nv" data-nouveaux aria-label="Nouvelles demandes">
         <button type="button" class="nv-barre" data-nv-barre aria-expanded="false" aria-controls="nv-liste">
-          <span class="nv-pastille" data-nv-compte>{nouveaux.total}</span><strong>Nouveaux</strong><span class="nv-src" data-nv-src></span><span class="nv-chev" aria-hidden="true">▾</span>
+          <span class="nv-pastille" data-nv-compte>{nouveaux.total - nouveaux.cartes.filter((c) => c.rangee).length}</span><strong>Nouveaux</strong><span class="nv-src" data-nv-src></span><span class="nv-chev" aria-hidden="true">▾</span>
         </button>
         <div class="nv-liste" id="nv-liste" data-nv-liste hidden></div>
       </section>
@@ -860,7 +860,7 @@ const donneesNouveaux = enJson(nouveaux);
   .nv-vide { color: var(--avt-text-muted); font-size: 14px; margin: 0; }
   /* Story 18.24 : la ligne repliée des cartes sans suite, sur toute la largeur, sous les autres. */
   .nv-ranges { grid-column: 1 / -1; border: 1px dashed var(--avt-galet); border-radius: 12px; padding: 10px 14px; background: var(--avt-brume); }
-  .nv-ranges > summary { cursor: pointer; font-size: 14px; color: var(--avt-text-muted); min-height: 24px; }
+  .nv-ranges > summary { cursor: pointer; font-size: 14px; color: var(--avt-text-muted); min-height: 44px; display: flex; align-items: center; gap: 6px; }
   .nv-ranges-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; margin-top: 10px; }
   .nv-raison { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: #fff; color: var(--avt-text-muted); border: 1px solid var(--avt-galet); }
   .ct-tete { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
