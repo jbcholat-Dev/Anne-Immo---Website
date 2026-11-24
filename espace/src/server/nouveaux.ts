@@ -21,7 +21,7 @@ import type { EnvSite } from '@site/server/env';
 import { trouver } from '@site/server/contacts';
 import type { EnvEspace } from './env';
 import { annulerCreation, annulerLot, classer, corrigerFiche, creerContact, lireCorrection, type Correction, type Saisie } from './carnet';
-import { ANNULATION_MS, classerDepuisNouveaux, declasserDepuisNouveaux, extrait, resumesInconnus, type NumeroInconnu } from './leedflow';
+import { ANNULATION_MS, classerDepuisNouveaux, declasserDepuisNouveaux, extrait, resumesInconnus, resumeVide, type NumeroInconnu } from './leedflow';
 import { annulerSuiviParGeste, suivreParGeste } from './pipeline';
 import { PORTAILS, type Portail } from './portails';
 import { CLASSEMENTS, propositionsDe } from './tri-ia';
@@ -69,12 +69,6 @@ export interface CarteNouveau {
 export const APPEL_TROP_COURT_S = 20;
 /** Un appel trop court n'est rangé que si sa transcription tient en moins de tant de caractères (« Allô ? ») : revue de code 18.24. */
 const RESUME_COURT = 40;
-/**
- * Le résumé que Leedflow écrit quand le correspondant n'a rien laissé (« Le correspondant n'a pas laissé de message ») :
- * il compte comme un résumé vide (retour de JB du 2026-11-24, « un mur de 94 nouveaux »).
- */
-const RESUME_SANS_MESSAGE = /^(le correspondant |l'appelant )?n['’]a pas laiss[ée] de message\.?$|^(pas de|aucun) message( laiss[ée])?\.?$/i;
-const resumeVide = (r: string) => { const t = r.trim(); return !t || RESUME_SANS_MESSAGE.test(t); };
 
 /**
  * Story 18.24 : une carte de numéro inconnu se range dans « Sans suite » si ce numéro n'a laissé qu'un seul échange, sans
@@ -91,8 +85,9 @@ export function raisonDeRanger(n: Pick<NumeroInconnu, 'echanges' | 'taches' | 'p
   if (e.sens !== 'entrant') return null;
   const vide = resumeVide(e.resume);
   if (e.manque && vide) return 'Appel manqué sans message';
-  if (e.genre === 'appel' && !e.manque && e.duree !== null && e.duree < APPEL_TROP_COURT_S && e.resume.trim().length < RESUME_COURT) return 'Appel trop court';
-  if ((e.genre === 'vocal' || e.genre === 'sms') && vide) return e.genre === 'sms' ? 'SMS vide' : 'Message vocal vide';
+  if (e.genre === 'appel' && !e.manque && e.duree !== null && e.duree < APPEL_TROP_COURT_S && (vide || e.resume.trim().length < RESUME_COURT)) return 'Appel trop court';
+  // Un SMS n'est vide que sans texte : « Pas de message » écrit par une personne reste un vrai SMS (revue de code 18.28).
+  if ((e.genre === 'vocal' && vide) || (e.genre === 'sms' && !e.resume.trim())) return e.genre === 'sms' ? 'SMS vide' : 'Message vocal vide';
   return null;
 }
 
@@ -158,7 +153,7 @@ export async function lireNouveaux(envE: EnvEspace): Promise<{ total: number; ca
         id: l.id, source: 'leedflow', recu_le: l.recu_le, origine: 'Leedflow',
         titre: dernier?.titre || (r?.taches.length ? 'Tâche détectée par Leedflow' : 'Appel reçu'),
         contact_id: null, nom: r ? nomDe(r.prenom || null, r.nom || null) : null, telephone: tel, email: r?.email || null,
-        texte: dernier ? court(extrait(dernier.resume)) ?? 'Pas de résumé (appel sans message).' : court(r?.taches[0]?.titre),
+        texte: dernier ? (resumeVide(dernier.resume) ? 'Pas de résumé (appel sans message).' : court(extrait(dernier.resume))) ?? 'Pas de résumé (appel sans message).' : court(r?.taches[0]?.titre),
         annonce: null, connu, prerempli: r ? { prenom: r.prenom || null, nom: r.nom || null, email: r.email || null } : null,
         echanges: (r?.echanges.length ?? 0) + (r?.taches.length ?? 0), ecarte: false,
         gestes: connu ? ['rattacher', 'ignorer'] : ['ajouter', 'ignorer'],

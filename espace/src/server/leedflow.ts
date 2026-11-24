@@ -707,6 +707,17 @@ export function resumeHtml(md: string): string {
   return sortie.join('');
 }
 
+/**
+ * Story 18.28 (retour de JB du 2026-11-24, « un mur de 94 nouveaux ») : le texte que Leedflow écrit quand le correspondant
+ * n'a rien laissé (« Le correspondant n'a pas laissé de message ») compte comme un résumé vide. Le texte est d'abord
+ * débarrassé du Markdown, des espaces en trop et de la ponctuation finale (revue de code 18.28).
+ */
+const SANS_MESSAGE = /^(?:(?:le correspondant|l['’]appelant|la personne) )?(?:n['’]a (?:pas laiss[ée] de|laiss[ée] aucun)|pas de|aucun) message(?: vocal)?(?: laiss[ée])?$/i;
+export function resumeVide(texte: string | null): boolean {
+  const t = extrait(texte).normalize('NFC').replace(/[\s.!…]+$/u, '');
+  return !t || SANS_MESSAGE.test(t);
+}
+
 /** Un extrait en texte simple, sans les marques du Markdown, pour une carte. */
 export function extrait(texte: string | null): string {
   return (texte ?? '').replace(/^#{1,6}\s+/gm, '').replace(/[*_`>]+/g, '').replace(/\s+/g, ' ').trim();

@@ -53,7 +53,7 @@ const LF = {
       transcription: `Martine Durand appelle pour vendre sa maison à Sciez dans 3 mois, sans agence. Elle demande une estimation. Rappeler Martine au 06 12 34 56 78 ou martine.durand${suffixe}@example.com.` },
     { id: `m${suffixe}`, created: maintenant - 3_000_000, customer: T.manque, direction: 'inbound', missed: true },
     // Le texte que Leedflow écrit pour un appel manqué sans message (retour de JB du 2026-11-24).
-    { id: `s${suffixe}`, created: maintenant - 2_900_000, customer: T.sansMessage, direction: 'inbound', missed: true, transcription: 'Le correspondant n\'a pas laissé de message' },
+    { id: `s${suffixe}`, created: maintenant - 2_900_000, customer: T.sansMessage, direction: 'inbound', missed: true, transcription: '**Le correspondant n’a pas laissé de message.**' },
     { id: `p${suffixe}`, created: maintenant - 2_000_000, customer: T.proche, direction: 'inbound', duration: 600, transcription: 'Discussion familiale sur le repas de dimanche.' },
     { id: `f${suffixe}`, created: maintenant - 1_500_000, customer: T.format, direction: 'inbound', duration: 60, transcription: 'Question sur un appartement à Thonon. RÉPONSE-HORS-FORMAT' },
     { id: `n${suffixe}`, created: maintenant - 1_000_000, customer: T.panne, direction: 'inbound', duration: 60, transcription: 'Un acheteur cherche un T3 à Évian. PANNE' },
