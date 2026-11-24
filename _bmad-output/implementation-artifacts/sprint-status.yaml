@@ -290,6 +290,7 @@ development_status:
   20-5-noter-un-resultat: backlog
   20-6-bilan: backlog
   20-7-canaux-de-prospection-ma-semaine: done   # 2026-11-24, demande de JB : page « Ma semaine », migration 0026 ; PR n° 269 fusionnée par JB le 2026-11-24
+  20-8-chief-of-staff-ecrit-ma-semaine: done   # 2026-11-24, demande de JB : le chief of staff écrit objectifs et efforts dans « Ma semaine » (/api/claude/prospection) ; PR n° 275 fusionnée par JB le 2026-11-24
   epic-20-retrospective: optional
 
   epic-17: in-progress

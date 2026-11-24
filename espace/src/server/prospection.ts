@@ -110,12 +110,96 @@ export function lireFormObjectifs(f: FormData): Objectifs | string {
   return o;
 }
 
-export async function enregistrerObjectifs(env: EnvSite, o: Objectifs, par: string): Promise<void> {
+/** Story 20.8 : le nom signé par le chief of staff (Claude, par son badge) sur ce qu'il écrit dans « Ma semaine ». */
+export const PAR_CHIEF = 'chief of staff';
+/** Le commentaire d'un passage de boîtage noté par le chief of staff : sa signature (la table n'a pas de colonne « par »). */
+const NOTE_CHIEF = 'Noté par le chief of staff';
+
+/**
+ * Enregistre les objectifs. Par Anne ou JB (la page) : toutes les clés, et les traces laissées par le chief of staff
+ * disparaissent (la valeur a été revue). Par le chief of staff : seulement les clés qui changent ; la valeur d'avant est
+ * gardée sous `avant:<clé>` (valeur, qui, quand), pour que la page la montre et qu'Anne puisse la remettre (AD-29).
+ */
+export async function enregistrerObjectifs(env: EnvSite, o: Partial<Objectifs>, par: string): Promise<CleObjectif[]> {
   const maintenant = new Date().toISOString();
-  await env.DB.batch(CLES_OBJECTIF.map((cle) => env.DB.prepare(
-    `INSERT INTO prospection_objectif (cle, valeur, par, maj_le) VALUES (?1, ?2, ?3, ?4)
-     ON CONFLICT (cle) DO UPDATE SET valeur = excluded.valeur, par = excluded.par, maj_le = excluded.maj_le`,
-  ).bind(cle, o[cle], par, maintenant)));
+  const chief = par === PAR_CHIEF;
+  const actuels = chief ? await lireReglages(env) : new Map<string, Reglage>();
+  const depart = objectifsDepart();
+  // Seules les clés qui changent sont écrites, par la page comme par le chief of staff : un objectif réglé par le chief of
+  // staff qu'Anne ne touche pas garde sa signature et sa trace (revue de code 20.8).
+  const avantTout = chief ? actuels : await lireReglages(env);
+  const cles = CLES_OBJECTIF.filter((cle) => o[cle] !== undefined && o[cle] !== (avantTout.get(cle)?.valeur ?? depart[cle]));
+  if (!cles.length) return [];
+  const lot = cles.flatMap((cle) => {
+    const ecrire = env.DB.prepare(
+      `INSERT INTO prospection_objectif (cle, valeur, par, maj_le) VALUES (?1, ?2, ?3, ?4)
+       ON CONFLICT (cle) DO UPDATE SET valeur = excluded.valeur, par = excluded.par, maj_le = excluded.maj_le`,
+    ).bind(cle, o[cle]!, par, maintenant);
+    if (!chief) return [env.DB.prepare('DELETE FROM prospection_objectif WHERE cle = ?1').bind(`avant:${cle}`), ecrire];
+    const avant = actuels.get(cle);
+    const trace = actuels.get(`avant:${cle}`);
+    // Retour à la valeur d'avant : la trace part et la valeur reprend la signature d'avant (revue de code 20.8).
+    if (avant?.par === PAR_CHIEF && trace && trace.valeur === o[cle]) {
+      return [env.DB.prepare('DELETE FROM prospection_objectif WHERE cle = ?1').bind(`avant:${cle}`),
+        trace.par === 'départ' ? env.DB.prepare('DELETE FROM prospection_objectif WHERE cle = ?1').bind(cle)
+          : env.DB.prepare('UPDATE prospection_objectif SET valeur = ?2, par = ?3, maj_le = ?4 WHERE cle = ?1').bind(cle, trace.valeur, trace.par, trace.maj_le)];
+    }
+    // Une seule trace par clé : la valeur d'Anne (ou de départ) d'avant la première retouche du chief of staff.
+    if (avant?.par === PAR_CHIEF && actuels.has(`avant:${cle}`)) return [ecrire];
+    return [env.DB.prepare(
+      `INSERT INTO prospection_objectif (cle, valeur, par, maj_le) VALUES (?1, ?2, ?3, ?4)
+       ON CONFLICT (cle) DO UPDATE SET valeur = excluded.valeur, par = excluded.par, maj_le = excluded.maj_le`,
+    ).bind(`avant:${cle}`, avant?.valeur ?? depart[cle], avant?.par ?? 'départ', avant?.maj_le ?? maintenant), ecrire];
+  });
+  await env.DB.batch(lot);
+  return cles;
+}
+
+export interface Reglage { valeur: number; par: string | null; maj_le: string }
+/** Les lignes de `prospection_objectif`, objectifs et traces `avant:` comprises. */
+export async function lireReglages(env: EnvSite): Promise<Map<string, Reglage>> {
+  const { results } = await env.DB.prepare('SELECT cle, valeur, par, maj_le FROM prospection_objectif').all<{ cle: string } & Reglage>();
+  return new Map(results.map((x) => [x.cle, { valeur: x.valeur, par: x.par, maj_le: x.maj_le }]));
+}
+
+/** Story 20.8 : objectifs envoyés par le chief of staff, en JSON : seulement les clés données, entiers de 0 à 99 999. */
+export function lireObjectifsJson(d: unknown): Partial<Objectifs> | string {
+  if (!d || typeof d !== 'object' || Array.isArray(d)) return 'Objectifs : un objet { clé: nombre } est attendu.';
+  const o: Partial<Objectifs> = {};
+  for (const [cle, v] of Object.entries(d)) {
+    if (!(CLES_OBJECTIF as string[]).includes(cle)) return `Objectif inconnu : ${cle.slice(0, 40)}. Clés : ${CLES_OBJECTIF.join(', ')}.`;
+    if (typeof v !== 'number' || !Number.isInteger(v) || v < 0 || v > 99999) return 'Chaque objectif est un nombre entier, de 0 à 99 999.';
+    o[cle as CleObjectif] = v;
+  }
+  if (!Object.keys(o).length) return 'Aucun objectif donné.';
+  return o;
+}
+
+/** Story 20.8 : une saisie du chief of staff en JSON, lue par les mêmes règles que celles de la page. */
+const CHAMPS_JSON = ['quoi', 'canal', 'jour', 'quantite', 'ville', 'type_lead'];
+/** Un nom de commune : lettres, espaces, tirets, apostrophes, 40 caractères au plus ; ni chiffre, ni « chez », ni civilité. */
+const COMMUNE = /^[\p{L}][\p{L}' \-·]{0,39}$/u;
+const PAS_UNE_COMMUNE = /\b(chez|m|mr|mme|mlle|monsieur|madame|famille)\b/iu;
+export function lireSaisieJson(d: Record<string, unknown>): Saisie | string {
+  const inconnu = Object.keys(d).find((k) => !CHAMPS_JSON.includes(k));
+  if (inconnu) return `Champ inconnu : ${inconnu.slice(0, 40)}. Champs : ${CHAMPS_JSON.join(', ')}.`;
+  // Story 20.8 : la ville du boîtage est le seul texte que le chief of staff écrit ; ce doit être un nom de commune, pas un nom de personne.
+  if (d.ville !== undefined && (typeof d.ville !== 'string' || !COMMUNE.test(d.ville.trim()) || PAS_UNE_COMMUNE.test(d.ville))) {
+    return 'Ville : un nom de commune seulement (lettres, espaces, tirets, 40 caractères au plus), jamais un nom de personne.';
+  }
+  const f = new FormData();
+  for (const k of CHAMPS_JSON) {
+    const v = d[k];
+    if (typeof v === 'string' || (typeof v === 'number' && Number.isFinite(v))) f.set(k, String(v));
+  }
+  return lireSaisie(f);
+}
+
+/** Story 20.8 : le chief of staff ne retire que ce qu'il a lui-même noté ; la saisie d'Anne n'est jamais touchée. */
+export async function retirerSaisieDe(env: EnvSite, genre: 'effort' | 'resultat', id: string, par: string): Promise<boolean> {
+  const table = genre === 'effort' ? 'prospection_effort' : 'resultat';
+  const r = await env.DB.prepare(`DELETE FROM ${table} WHERE id = ?1 AND par = ?2`).bind(id, par).run();
+  return r.meta.changes === 1;
 }
 
 // ---- Saisies ----
@@ -160,7 +244,9 @@ export function lireSaisie(f: FormData): Saisie | string {
 export async function enregistrerSaisie(env: EnvSite, s: Saisie, par: string): Promise<string> {
   const maintenant = new Date().toISOString();
   if (s.quoi === 'effort' && s.canal === 'boitage') {
-    return ajouterBoitage(env, { fait_le: s.jour, ville: s.ville ?? '', quartier: null, type_bien: null, flyers: s.quantite, message: null, r1: null, r2: null, commentaire: s.note });
+    return ajouterBoitage(env, { fait_le: s.jour, ville: s.ville ?? '', quartier: null, type_bien: null, flyers: s.quantite, message: null, r1: null, r2: null,
+      // Story 20.8 : un passage noté par le chief of staff le dit dans son commentaire (la table du boîtage n'a pas de colonne « par »).
+      commentaire: par === PAR_CHIEF ? NOTE_CHIEF : s.note });
   }
   const id = ulid();
   if (s.quoi === 'effort') {
@@ -277,8 +363,8 @@ export async function lirePeriode(env: EnvSite, periode: Periode, jour: string):
       .bind(lundi, dimanche).all<{ id: string; canal: string; jour: string; quantite: number; note: string | null; par: string | null }>(),
     env.DB.prepare('SELECT id, type, canal, type_lead, le, quantite, par FROM resultat WHERE le BETWEEN ?1 AND ?2 ORDER BY le DESC, created_at DESC')
       .bind(lundi, dimanche).all<{ id: string; type: Note['quoi']; canal: string; type_lead: TypeLead | null; le: string; quantite: number; par: string | null }>(),
-    env.DB.prepare('SELECT id, fait_le, coalesce(ville, secteur) AS ville, mots FROM passage_boitage WHERE fait_le BETWEEN ?1 AND ?2 ORDER BY fait_le DESC, created_at DESC')
-      .bind(lundi, dimanche).all<{ id: string; fait_le: string; ville: string; mots: number | null }>(),
+    env.DB.prepare('SELECT id, fait_le, coalesce(ville, secteur) AS ville, mots, commentaire FROM passage_boitage WHERE fait_le BETWEEN ?1 AND ?2 ORDER BY fait_le DESC, created_at DESC')
+      .bind(lundi, dimanche).all<{ id: string; fait_le: string; ville: string; mots: number | null; commentaire: string | null }>(),
     // Messages ambassadeur : les modèles envoyés (à la main ou groupés) aux seuls ambassadeurs (projet « ambassadeur », inscrits
     // ou partants, comme le tableau des ambassadeurs) ; une campagne aux acheteurs ne compte pas (revue de code 20.7).
     // Le LIKE écarte vite les autres événements avant la lecture du JSON.
@@ -313,7 +399,7 @@ export async function lirePeriode(env: EnvSite, periode: Periode, jour: string):
   const boitage = parCanal.get('boitage')!;
   for (const p of passages.results) {
     boitage.effort += p.mots ?? 0;
-    notes.push({ genre: 'boitage', id: p.id, canal: 'boitage', jour: p.fait_le, quoi: 'effort', quantite: p.mots ?? 0, detail: p.ville, par: null });
+    notes.push({ genre: 'boitage', id: p.id, canal: 'boitage', jour: p.fait_le, quoi: 'effort', quantite: p.mots ?? 0, detail: p.ville, par: p.commentaire === NOTE_CHIEF ? PAR_CHIEF : null });
   }
   const messages = parCanal.get('messages')!;
   for (const e of envois.results) if (dans(jourParis(new Date(e.a)))) { messages.effort++; messages.effortAuto++; }
