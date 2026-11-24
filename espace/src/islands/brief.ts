@@ -37,7 +37,7 @@ export function brancherBrief() {
     ligne.querySelectorAll<HTMLElement>('[data-brief-geste]').forEach((x) => { x.hidden = !!decision; });
     ligne.querySelector<HTMLElement>('[data-brief-annuler]')!.hidden = !decision;
     dire(r.message ?? '');
-    if (decision === 'accepte' && r.lien && /^\/(?!\/)/.test(r.lien)) location.assign(r.lien);
+    if (decision === 'accepte' && r.lien && /^\/(?![\/\\])/.test(r.lien)) location.assign(r.lien);
   });
   // Lien « /?nouveaux=1 » d'une ligne d'appel : la barre « Nouveaux » s'ouvre.
   if (new URLSearchParams(location.search).get('nouveaux') === '1') document.querySelector<HTMLButtonElement>('[data-nv-barre]')?.click();

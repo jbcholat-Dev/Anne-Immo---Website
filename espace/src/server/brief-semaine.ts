@@ -1,16 +1,16 @@
 // Brief de la semaine (story 18.27, demande de JB du 2026-11-24) : après un point avec JB, le chief of staff (Claude)
 // dépose lui-même, par son jeton de service (/api/claude/brief), deux textes courts pour la semaine : « le point qui
-// bloque » et « la décision à prendre ». Ils s'affichent en tête de la page Contacts, pour Anne et pour JB, signés
-// « chief of staff ». Un nouveau dépôt pour la même semaine remplace l'ancien. Rien d'autre n'est écrit.
+// bloque » et « la décision à prendre ». Ils s'affichent en 2 lignes sous le titre de « Ma semaine », pour Anne
+// et pour JB. Un nouveau dépôt pour la même semaine remplace l'ancien. Rien d'autre n'est écrit.
 // Texte de pilotage seulement : aucun nom de contact. Le code refuse un e-mail ou un numéro de téléphone.
 import type { EnvSite } from '@site/server/env';
 import { jourParis, lundiDe } from './prospection';
+import { contientTelephone } from './telephones';
 
 export const SIGNATURE = 'chief of staff';
 export const TEXTE_MAX = 400;
 const JOUR = /^\d{4}-\d{2}-\d{2}$/;
 const EMAIL = /[^\s@]+@[^\s@]+\.[^\s@]+/;
-const TELEPHONE = /(\+|00)?\d[\d .-]{7,}\d/;
 
 export interface BriefSemaine { lundi: string; bloque: string; decision: string; signe: string; depose_le: string }
 
@@ -32,7 +32,7 @@ export function verifierDepot(d: Record<string, unknown>): string | { lundi: str
     const v = typeof d[cle] === 'string' ? (d[cle] as string).replace(/\s+/g, ' ').trim() : '';
     if (!v) return `Texte manquant : ${libelle} (« ${cle} »)`;
     if (v.length > TEXTE_MAX) return `Texte trop long : ${libelle} (${TEXTE_MAX} caractères au plus)`;
-    if (EMAIL.test(v) || TELEPHONE.test(v)) return `Texte refusé : ${libelle} contient un e-mail ou un téléphone (texte de pilotage seulement)`;
+    if (EMAIL.test(v) || contientTelephone(v)) return `Texte refusé : ${libelle} contient un e-mail ou un téléphone (texte de pilotage seulement)`;
     textes[cle] = v;
   }
   return { lundi, bloque: textes.bloque, decision: textes.decision };

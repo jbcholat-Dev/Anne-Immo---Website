@@ -106,7 +106,11 @@ export async function exporterContact(env: EnvSite, id: string, compte: string) 
   // Stories 18.25 et 18.26 : ce que le brief du jour et le tri par l'API Claude en ont gardé.
   const { telephones } = await coordonneesDe(env, [id]);
   const [brief, tri] = await env.DB.batch([
-    env.DB.prepare(`SELECT jour, qui, raison, action, decision FROM brief_ligne WHERE cle = ?1 ORDER BY jour`).bind(`contact:${id}`),
+    // Revue de code 18.27 : les mêmes lignes que l'effacement (contact, ses cartes, les cartes de ses numéros).
+    env.DB.prepare(`SELECT jour, qui, raison, action, decision FROM brief_ligne WHERE cle = 'contact:' || ?1
+      OR cle IN (SELECT 'nouveau:' || id FROM nouveau WHERE contact_id = ?1)
+      OR cle IN (SELECT 'nouveau:' || n.id FROM nouveau n JOIN leedflow_inconnu i ON i.source_id = n.leedflow_inconnu_id
+        WHERE i.telephone IN (SELECT value FROM json_each(?2))) ORDER BY jour`).bind(id, JSON.stringify(telephones)),
     env.DB.prepare(`SELECT classement, action, echeance, raison, trie_le FROM tri_ia WHERE telephone IN (SELECT value FROM json_each(?1))`).bind(JSON.stringify(telephones)),
   ]);
   const maintenant = new Date().toISOString();

@@ -46,8 +46,9 @@ export async function peutVoir(env: EnvEspace, compte: string | null): Promise<b
 /** Un numéro ou un e-mail masqué, pour le brief (revue de code 18.26) : « 06 •• •• •• 78 », « l•••@example.com ». */
 export function masque(v: string): string {
   if (v.includes('@')) return `${v[0]}•••${v.slice(v.indexOf('@'))}`;
-  const lisible = telLisible(v);
-  return `${lisible.slice(0, 2)} •• •• •• ${lisible.replace(/\D/g, '').slice(-2)}`;
+  const lisible = telLisible(v), fin = lisible.replace(/\D/g, '').slice(-2);
+  // Un numéro étranger garde son indicatif (+41 •• •• •• 67), un numéro français ses deux premiers chiffres.
+  return lisible.startsWith('+') ? `${lisible.slice(0, 3)} •• •• •• ${fin}` : `${lisible.slice(0, 2)} •• •• •• ${fin}`;
 }
 
 /** « Martine D. » : le prénom et l'initiale du nom ; sinon le nom seul, sinon le numéro ou l'e-mail masqué. */

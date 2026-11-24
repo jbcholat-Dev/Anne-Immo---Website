@@ -18,6 +18,7 @@ import type { EnvEspace } from './env';
 import { resumesInconnus, type NumeroInconnu } from './leedflow';
 import { raisonDeRanger } from './nouveaux';
 import { aujourdhui, plusTard, QUESTIONS, type Reponses } from './pipeline';
+import { masquerTelephones } from './telephones';
 import { CONSIGNES_TRI, QUESTIONS_TRI } from './tri-ia-consignes';
 
 /** Le modèle : le meilleur adapté au tri, dans le crédit mensuel (décision de JB du 2026-11-24, AD-37). */
@@ -100,17 +101,8 @@ export function masquer(texte: string, n: Pick<NumeroInconnu, 'prenom' | 'nom' |
   const motif = (m: string) => new RegExp(`(?<![\\p{L}\\p{N}])${m.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}])`, 'giu');
   let t = n.email ? texte.replace(motif(n.email), '[e-mail]') : texte;
   for (const mot of [n.prenom, n.nom].filter((m) => m && m.length >= 2)) t = t.replace(motif(mot), '[nom]');
-  return t
-    .replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, '[e-mail]')
-    .replace(/(\+|00)?\d[\d .-]{7,}\d/g, telephoneOuPas);
-}
-
-/** Revue de code 18.25 : une date ou un prix ne sont pas des téléphones ; il faut au moins 9 chiffres. */
-function telephoneOuPas(m: string, _p: string | undefined, a: number, texte: string): string {
-  const suite = texte.slice(a + m.length, a + m.length + 8);
-  if (/^\s*(€|euros?\b|k€|eur\b|chf\b|m²|m2\b)/i.test(suite)) return m;
-  if (/^\d{4}-\d{2}-\d{2}$|^\d{1,2}[./-]\d{1,2}[./-]\d{2,4}$/.test(m)) return m;
-  return m.replace(/\D/g, '').length >= 9 ? '[téléphone]' : m;
+  // Revue de code 18.25 : les numéros d'abord sous leur forme sûre, puis les autres suites de chiffres, ni dates ni prix.
+  return masquerTelephones(t.replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, '[e-mail]'));
 }
 
 const GENRES: Record<string, string> = { SMS: 'SMS', Message: 'Message vocal', Appel: 'Appel' };
@@ -121,7 +113,8 @@ export function texteEnvoye(n: NumeroInconnu, jour = aujourdhui()): string | nul
   const echanges = [...n.echanges, ...n.taches].sort((a, b) => (a.a < b.a ? 1 : -1)).slice(0, ECHANGES_MAX);
   if (!echanges.some((e) => e.resume.trim() || e.tache)) return null;
   const lignes = echanges.reverse().map((e) => {
-    const resume = masquer((e.resume || '').slice(0, RESUME_MAX), n).trim();
+    // Coupé par caractère, pas par moitié d'émoji (revue de code 18.25 : un texte mal formé serait refusé par l'API).
+    const resume = masquer(Array.from(e.resume || '').slice(0, RESUME_MAX).join(''), n).trim();
     return `- ${e.a.slice(0, 10)} · ${genreDe(e.titre, e.tache)} · ${masquer(e.titre, n)}${e.echeance ? ` · échéance ${e.echeance.slice(0, 10)}` : ''}\n  ${resume || '(pas de résumé)'}`;
   });
   return `Aujourd'hui : ${jour}.\nÉchanges avec ce numéro, du plus ancien au plus récent :\n${lignes.join('\n')}`;
@@ -195,15 +188,17 @@ export async function trierNouveaux(env: EnvEspace): Promise<void> {
     let res: { p: Proposition | null; erreur: string | null; modele?: string };
     try { res = await demander(env, texte); }
     catch (e) {
-      res = { p: null, erreur: e instanceof Anthropic.APIError ? `api_${e.status ?? 'reseau'}` : 'reseau' };
+      // Un crédit épuisé revient en 400 : il est reconnu à son message, sans rien en garder d'autre.
+      res = { p: null, erreur: !(e instanceof Anthropic.APIError) ? 'reseau'
+        : e.status === 400 && /credit|billing|balance/i.test(e.message) ? 'api_credit' : `api_${e.status ?? 'reseau'}` };
     }
     const maintenant = new Date().toISOString();
     const p = res.p;
     // Une panne (réseau, surcharge, limite de débit, erreur du service) ne compte pas comme un essai : le texte sera renvoyé
-    // quand l'API répondra. Revue de code 18.25 : toute erreur de l'API compte comme une panne, y compris un crédit épuisé
-    // (400), une clé refusée (401, 403) ou un modèle introuvable (404) ; seule une réponse inutilisable du modèle (refus,
-    // hors format, vide, trop longue) compte comme un essai.
-    const panne = res.erreur === 'reseau' || /^api_/.test(res.erreur ?? '');
+    // quand l'API répondra. Revues de code 18.25 : une panne, c'est le réseau, un crédit épuisé, une clé refusée (401, 403),
+    // un modèle introuvable (404), une limite (429) ou une erreur du service (5xx) ; elle arrête le passage. Une autre
+    // erreur de l'API (400, 413…) tient à ce texte : elle compte comme un essai et le passage continue.
+    const panne = /^(reseau|api_reseau|api_credit|api_40[1234]|api_429|api_5\d\d)$/.test(res.erreur ?? '');
     const essais = panne ? Math.max(precedents, 0) : precedents + 1;
     await env.DB.prepare(
       `INSERT INTO tri_ia (telephone, empreinte, classement, action, echeance, raison, parcours, qualification, modele, trie_le, essais, erreur)
