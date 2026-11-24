@@ -40,7 +40,17 @@ Anne a 95 cartes dans « Nouveaux ». Les règles de 18.24 rangent le bruit. Pou
 
 ## Revue de code
 
-À faire : skill `bmad-code-review` en session neuve, avant de proposer la PR à JB.
+2026-11-24, skill `bmad-code-review` en session neuve, PR n° 274, commit 252ebcf relu (18.25 et 18.26 ensemble).
+
+- Crédit coupé ou clé refusée comptés comme essais, tri bloqué pour de bon : corrigé (7960005), toute erreur de l'API est une panne.
+- Proposition et brief gardés après l'effacement d'un contact ou le classement Privé/Démarchage : corrigé (7960005), `rights.ts` et `nettoyerIgnores` effacent `tri_ia` et `brief_ligne` ; ajoutés au droit d'accès.
+- Dates et prix masqués comme des téléphones : corrigé (7960005), 9 chiffres au moins, ni date ni montant.
+- Ancienne proposition montrée après un nouvel échec sur un texte nouveau : corrigé (7960005), effacée.
+- Échéance impossible (30 février) acceptée : corrigé (7960005).
+- Modèle noté au lieu de celui qui a répondu : corrigé (7960005).
+- Noms cités dans un résumé non masqués : écarté, écart déjà assumé dans cette story.
+- Passages qui se chevauchent : écarté, 10 appels au plus, délai de 60 s, arrêt à la première panne.
+- Import circulaire `nouveaux.ts` / `tri-ia.ts` : écarté, symboles lus seulement dans les fonctions.
 
 ## Ce qui reste
 

@@ -34,12 +34,23 @@ Anne commence sa journée par 3 à 5 décisions, 7 au plus, en tête de l'espace
 ## Ce qui est vérifié
 
 - `espace` : `npm run build` et `npm run check` : 0 erreur (2026-11-24).
-- `node scripts/e2e-tri-et-brief.mjs` (2026-11-24), partie 18.26 : 18 constats bons sur 18 (sources, ordre, accès réservé, décisions, annulation, lendemain).
+- `node scripts/e2e-tri-et-brief.mjs` (2026-11-24, refait après les corrections), partie 18.26 : 18 constats bons sur 18 (sources, ordre, accès réservé, décisions, annulation, lendemain).
 - Captures : `espace/.verif/tri-ia/brief-ordinateur.png`, `brief-telephone.png`.
 
 ## Revue de code
 
-À faire : skill `bmad-code-review` en session neuve, avant de proposer la PR à JB.
+2026-11-24, skill `bmad-code-review` en session neuve, PR n° 274, commit 252ebcf relu (18.25 et 18.26 ensemble).
+
+- Un numéro rangé comme autre numéro d'un proche restait dans le brief : corrigé (7960005), `contact_coordonnee` exclu comme pour le tri et les cartes.
+- `qui` gardait le numéro ou l'e-mail en clair : corrigé (7960005), masqué (« 06 •• •• •• 78 »).
+- Relance due comparée au jour UTC : corrigé (7960005), jour de Paris.
+- Carte choisie au hasard pour un numéro à plusieurs cartes : corrigé (7960005), la plus récente.
+- Lien de redirection `//…` accepté par l'îlot : corrigé (7960005).
+- Heure « 24:xx » possible : corrigé (7960005), `hourCycle: 'h23'`.
+- Empreinte d'adresse devinable : écarté, elle ne donne aucun accès (Cloudflare Access garde l'espace).
+- Deux préparations en même temps : écarté, les contraintes d'unicité bornent à 7 lignes sans doublon.
+
+Allègement (JB, 2026-11-24, « l'espace est déjà surchargé ») : le bandeau d'aide sous le brief est retiré ; il ne sert plus qu'aux messages après un geste.
 
 ## Ce qui reste
 
