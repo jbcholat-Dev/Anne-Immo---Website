@@ -7,6 +7,10 @@
 //   node scripts/claude-espace.mjs actions
 //   node scripts/claude-espace.mjs bilan mois   (avec l'entonnoir du diagnostic par campagne, story 10.12)
 //   node scripts/claude-espace.mjs bilan semaine 2026-11-23   (story 20.7 : `prospection`, canaux de « Ma semaine » de cette semaine et de la précédente)
+//   node scripts/claude-espace.mjs semaine 2026-11-23   (story 20.8 : objectifs et lignes notées de « Ma semaine », sans lieu ni précision)
+//   node scripts/claude-espace.mjs objectifs '{"rdv":3,"effort:cartes":12}'   (le chief of staff règle des objectifs ; la valeur d'avant reste visible)
+//   node scripts/claude-espace.mjs noter '{"quoi":"effort","canal":"cartes","jour":"2026-11-24","quantite":4}'   (aussi lead, rdv ; boîtage : "ville")
+//   node scripts/claude-espace.mjs retirer effort|resultat 01J…   (seulement une ligne notée par le chief of staff)
 //   node scripts/claude-espace.mjs creer '{"nom":"Pub Facebook novembre","canal":"reseaux","debut":"2026-11-01","budget_centimes":15000}'
 //   node scripts/claude-espace.mjs modifier 01J… '{"nom":"Pub Facebook novembre","canal":"reseaux","debut":"2026-11-01","cout_centimes":13240}'
 const BASE = (process.env.ESPACE_URL ?? 'https://espace.annevialtissot.fr').replace(/\/+$/, '');
@@ -25,6 +29,10 @@ const appel = async (chemin, options = {}) => {
 };
 if (commande === 'actions') await appel('/api/claude/actions');
 else if (commande === 'bilan') await appel(`/api/claude/bilan?p=${encodeURIComponent(a ?? 'mois')}${b ? `&s=${encodeURIComponent(b)}` : ''}`);
+else if (commande === 'semaine') await appel(`/api/claude/prospection${a ? `?s=${encodeURIComponent(a)}` : ''}`);
+else if (commande === 'objectifs') await appel('/api/claude/prospection', { method: 'POST', body: JSON.stringify({ quoi: 'objectifs', objectifs: JSON.parse(a) }) });
+else if (commande === 'noter') await appel('/api/claude/prospection', { method: 'POST', body: JSON.stringify(JSON.parse(a)) });
+else if (commande === 'retirer') await appel('/api/claude/prospection', { method: 'POST', body: JSON.stringify({ quoi: 'retirer', genre: a, id: b }) });
 else if (commande === 'creer') await appel('/api/claude/actions', { method: 'POST', body: JSON.stringify(JSON.parse(a)) });
 else if (commande === 'modifier') await appel('/api/claude/actions', { method: 'POST', body: JSON.stringify({ ...JSON.parse(b), id: a }) });
-else { console.error('Commandes : actions | bilan [semaine|mois|trimestre] [AAAA-MM-JJ] | creer <json> | modifier <id> <json>'); process.exit(2); }
+else { console.error('Commandes : actions | bilan [semaine|mois|trimestre] [AAAA-MM-JJ] | semaine [AAAA-MM-JJ] | objectifs <json> | noter <json> | retirer effort|resultat <id> | creer <json> | modifier <id> <json>'); process.exit(2); }

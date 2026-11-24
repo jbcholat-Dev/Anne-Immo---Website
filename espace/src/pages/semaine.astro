@@ -12,7 +12,7 @@ import { ENTETE_COMPTE } from '@site/server/acces';
 import { pourSite as env } from '../server/env';
 import { ULID } from '../server/formulaires';
 import {
-  bornes, CANAUX_PROSPECTION, CLES_OBJECTIF, enregistrerObjectifs, enregistrerSaisie, jourCourt, jourDemande, jourParis, LIBELLES_CANAL, libellePeriode,
+  bornes, CANAUX_PROSPECTION, CLES_OBJECTIF, enregistrerObjectifs, enregistrerSaisie, jourCourt, lireReglages, PAR_CHIEF, jourDemande, jourParis, LIBELLES_CANAL, libellePeriode,
   dansListe, lireFormObjectifs, lireObjectifs, lirePeriode, lireSaisie, nombre, objectifsDepart, partAtteinte, PERIODES_PAGE, retirerSaisie, TYPES_LEAD, voisine, type Periode,
 } from '../server/prospection';
 
@@ -71,6 +71,10 @@ const message = { effort: 'Effort noté.', lead: 'Lead noté.', rdv: 'Rendez-vou
 const depart = objectifsDepart();
 // Le formulaire des objectifs règle la semaine, quelle que soit la période affichée.
 const semaine = periode === 'semaine' ? sem.objectifs : await lireObjectifs(env);
+// Story 20.8 : un objectif réglé par le chief of staff le dit, avec la valeur d'avant, dans le bloc replié des objectifs
+// seulement (JB, 2026-11-24 : l'espace est déjà chargé ; rien de plus en vue).
+const reglages = await lireReglages(env);
+const parChief = (cle: string) => { const r = reglages.get(cle); return r?.par === PAR_CHIEF ? { le: jourCourt(jourParis(new Date(r.maj_le))), avant: reglages.get(`avant:${cle}`)?.valeur } : null; };
 const val = (k: string, defaut: string) => saisi[k] ?? defaut;
 const tete = [
   { cle: 'rdv', titre: 'Rendez-vous', fait: sem.total.rdv, vise: sem.objectifs.rdv, def: '', fleche: '9 leads directs sur 10, 1 diagnostic sur 4' },
@@ -222,7 +226,7 @@ const qui = (par: string | null) => (par ? par.split('@')[0] : '');
         {CLES_OBJECTIF.map((cle) => {
           const canal = cle.startsWith('effort:') ? (cle.slice(7) as keyof typeof CANAUX_PROSPECTION) : null;
           const nom = cle === 'rdv' ? 'Rendez-vous' : cle === 'leads' ? 'Leads' : `${CANAUX_PROSPECTION[canal!].libelle} (${CANAUX_PROSPECTION[canal!].unite})`;
-          return <label class="e-champ">{nom}<input name={cle} inputmode="numeric" required value={saisi[cle] ?? String(semaine[cle])} autocomplete="off" /><span class="e-muet">Départ : {nombre(depart[cle])}</span></label>;
+          return <label class="e-champ">{nom}<input name={cle} inputmode="numeric" required value={saisi[cle] ?? String(semaine[cle])} autocomplete="off" /><span class="e-muet">Départ : {nombre(depart[cle])}</span>{(() => { const c = parChief(cle); return c && <span class="e-muet s-chief" data-chief={cle}>Réglé par le chief of staff le {c.le}{c.avant !== undefined && <> (avant : {nombre(c.avant)})</>}</span>; })()}</label>;
         })}
       </div>
       <p class="e-muet" style="margin:0">Objectifs par semaine. Le mois en vaut 46/12 et l'année 46, arrondis au-dessus. Départ : modèle de JB du 8 novembre. 0 = pas d'objectif.</p>
