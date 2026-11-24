@@ -25,6 +25,7 @@ import { empreinteOpposition } from '@site/server/opposition';
 import { e164, emailValide } from '@site/server/schema';
 import { journal } from '@site/server/journal';
 import { accordImport, noterAccord, retraitAccordImport, retraitAccordNote } from './accord';
+import { fusionnerCriteres, lireCriteres, verifierBornes, type Criteres, type SaisieCriteres } from './criteres';
 import { CANAUX_SOURCE_CHOIX, PROJETS, PROJETS_DU_SUIVI, TEMPERATURES_CHOIX, suiviEnCours, temperaturePermise } from './tableau-colonnes';
 
 /** Au plus 2 000 contacts par lot (le classement de départ se fait par vues de quelques centaines). */
@@ -291,6 +292,8 @@ export interface Correction extends Changements {
   /** Dates du premier et du second rendez-vous (R1, R2 ; story 18.20), AAAA-MM-JJ, ou null pour les effacer. Aucune étape du suivi n'en dépend. */
   r1_le?: string | null;
   r2_le?: string | null;
+  /** Critères de recherche d'un acheteur (story 18.30, ticket n° 284), déjà validés par `lireCriteres` : fusionnés dans `contact.qualification`. */
+  criteres?: SaisieCriteres;
 }
 
 /** Le refus d'un second rendez-vous daté avant le premier (400 côté API). */
@@ -345,6 +348,10 @@ export function lireCorrection(brut: unknown, categories: ReadonlySet<string>): 
     } else if (cle === 'r1_le' || cle === 'r2_le') {
       if (v !== null && !(typeof v === 'string' && jourValide(v))) return `Date de ${cle === 'r1_le' ? 'R1 (premier rendez-vous)' : 'R2 (second rendez-vous)'} invalide.`;
       c[cle] = v as string | null;
+    } else if (cle === 'criteres') {
+      const l = lireCriteres(v);
+      if (typeof l === 'string') return l;
+      c.criteres = l;
     } else if (['categorie_id', 'projet', 'temperature', 'verifie', 'ecarte', 'canal', 'partant'].includes(cle)) {
       classement[cle] = v;
     } else return `Champ inconnu : ${cle.slice(0, 40)}`;
@@ -365,6 +372,7 @@ interface EtatFiche extends Etat {
   telephone: string | null; email: string | null; appel_autorise: number | null; a_rappeler_le: string | null;
   r1_le: string | null; r2_le: string | null;
   email_accord_le: string | null;
+  qualification: string | null;
 }
 type Valeur = string | number | null | string[];
 
@@ -394,7 +402,7 @@ const LIBELLES_FICHE: Record<string, string> = {
   prenom: 'prénom', nom: 'nom', entreprise: 'entreprise', commune: 'ville', telephones: 'téléphones', emails: 'e-mails',
   categorie_id: 'catégorie', projet: 'projet', temperature: 'température', verifie_le: 'vérifié', ecarte_le: 'écarté',
   appel_autorise: 'appel autorisé', a_rappeler_le: 'à rappeler le', r1_le: 'R1 (premier rendez-vous)', r2_le: 'R2 (second rendez-vous)',
-  canal: 'source', ambassadeur_partant_le: 'ambassadeur partant',
+  canal: 'source', ambassadeur_partant_le: 'ambassadeur partant', qualification: 'critères de recherche',
 };
 
 /**
@@ -407,7 +415,7 @@ const LIBELLES_FICHE: Record<string, string> = {
 export async function corrigerFiche(env: EnvSite, id: string, corr: Correction, par: string, extra: Record<string, string | number> = {}): Promise<ResultatCorrection | null> {
   const [e, sec, site] = await env.DB.batch([
     env.DB.prepare(`SELECT id, prenom, nom, entreprise, commune, telephone, email, categorie_id, projet, temperature, verifie_le, ecarte_le,
-      appel_autorise, a_rappeler_le, r1_le, r2_le, canal, ambassadeur_partant_le, etape, email_accord_le FROM contact WHERE id = ?1`).bind(id),
+      appel_autorise, a_rappeler_le, r1_le, r2_le, canal, ambassadeur_partant_le, etape, email_accord_le, qualification FROM contact WHERE id = ?1`).bind(id),
     env.DB.prepare(`SELECT type, valeur FROM contact_coordonnee WHERE contact_id = ?1 AND type IN ('telephone', 'email') ORDER BY id`).bind(id),
     // Revue de code 18.8 : l'accord du site ne vaut que pour la demande faite avec l'adresse du contact.
     env.DB.prepare('SELECT max(l.newsletter_opt_in_at) AS le FROM lead l JOIN contact c ON c.id = l.contact_id WHERE l.contact_id = ?1 AND lower(l.email) = lower(c.email)').bind(id),
@@ -424,10 +432,21 @@ export async function corrigerFiche(env: EnvSite, id: string, corr: Correction, 
     prenom: etat.prenom, nom: etat.nom, entreprise: etat.entreprise, commune: etat.commune, ...avantListes,
     categorie_id: etat.categorie_id, projet: etat.projet, temperature: etat.temperature, verifie_le: etat.verifie_le, ecarte_le: etat.ecarte_le,
     appel_autorise: etat.appel_autorise, a_rappeler_le: etat.a_rappeler_le, r1_le: etat.r1_le, r2_le: etat.r2_le,
-    canal: etat.canal, ambassadeur_partant_le: etat.ambassadeur_partant_le,
+    canal: etat.canal, ambassadeur_partant_le: etat.ambassadeur_partant_le, qualification: etat.qualification,
   };
+  // Story 18.30 : les critères sont fusionnés dans la qualification existante (les autres réponses y restent) ; sans
+  // changement réel, la valeur lue est gardée telle quelle (pas d'événement pour un simple réordonnancement).
+  let qualificationApres: string | null = etat.qualification;
+  if (corr.criteres) {
+    let existant: Criteres = {};
+    try { const j = etat.qualification ? JSON.parse(etat.qualification) : {}; if (j && typeof j === 'object' && !Array.isArray(j)) existant = j; } catch {}
+    const fusion = fusionnerCriteres(existant, corr.criteres);
+    const refusBornes = verifierBornes(fusion);
+    if (refusBornes) return { ok: false, refus: refusBornes };
+    if (JSON.stringify(fusion) !== JSON.stringify(existant)) qualificationApres = JSON.stringify(fusion);
+  }
   const apresTout: Record<string, Valeur> = {
-    ...avantTout, ...cl,
+    ...avantTout, ...cl, qualification: qualificationApres,
     ...(corr.prenom !== undefined ? { prenom: corr.prenom } : {}), ...(corr.nom !== undefined ? { nom: corr.nom } : {}),
     ...(corr.entreprise !== undefined ? { entreprise: corr.entreprise } : {}), ...(corr.commune !== undefined ? { commune: corr.commune } : {}),
     ...(corr.telephones !== undefined ? { telephones: corr.telephones } : {}), ...(corr.emails !== undefined ? { emails: corr.emails } : {}),
@@ -466,7 +485,7 @@ export async function corrigerFiche(env: EnvSite, id: string, corr: Correction, 
   const colonnes: [string, Valeur][] = changes.filter((k) => k !== 'telephones' && k !== 'emails').map((k) => [k, apresTout[k]]);
   if (changes.includes('telephones')) colonnes.push(['telephone', tels[0] ?? null]);
   if (changes.includes('emails')) colonnes.push(['email', mails[0] ?? null]);
-  const lus: [string, Valeur][] = (['prenom', 'nom', 'entreprise', 'commune', 'telephone', 'email', 'categorie_id', 'projet', 'temperature', 'verifie_le', 'ecarte_le', 'appel_autorise', 'a_rappeler_le', 'r1_le', 'r2_le', 'canal', 'ambassadeur_partant_le', 'etape'] as const)
+  const lus: [string, Valeur][] = (['prenom', 'nom', 'entreprise', 'commune', 'telephone', 'email', 'categorie_id', 'projet', 'temperature', 'verifie_le', 'ecarte_le', 'appel_autorise', 'a_rappeler_le', 'r1_le', 'r2_le', 'canal', 'ambassadeur_partant_le', 'qualification', 'etape'] as const)
     .map((k) => [k, etat[k] as Valeur]);
   const garde = JSON.stringify(Object.fromEntries(lus));
   const gardeSql = lus.map(([k]) => `${k} IS json_extract(?2, '$.${k}')`).join(' AND ');

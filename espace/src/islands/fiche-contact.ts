@@ -7,6 +7,7 @@ import {
   CANAUX_CONTACT, CANAUX_SOURCE_CHOIX, ETATS_AMBASSADEUR, PROJETS, PROJETS_AVEC_TEMPERATURE, TEMPERATURES, TEMPERATURES_CHOIX, temperaturePermise, libelleCanalSource, type LigneTableau,
 } from '../server/tableau-colonnes';
 import type { Fiche } from '../server/fiche';
+import { budgetAGarder, surfaceAGarder, CHOIX_CRITERES, CLES_CRITERES, FINANCEMENTS_CRITERES, NOMBRES_CRITERES, resumeCriteres, TEXTES_CRITERES, valeursFormulaire } from '../server/criteres';
 
 /** Une création préremplie (story 18.11) : valeurs des champs, et l'envoi par la barre « Nouveaux ». */
 export interface Prerempli { valeurs: Record<string, string | null>; envoyer: (saisie: Record<string, unknown>) => Promise<Reponse> }
@@ -45,6 +46,9 @@ export function brancherFiche(r: Reglages) {
   let fiche: Fiche | null = null;
   let message: { texte: string; erreur: boolean; existant?: { id: string; nom: string } } | null = null;
   let occupe = false;
+  // Story 18.30 : le bloc « Ce qu'il cherche » (résumé, ou formulaire de critères quand `edition`), avec la saisie gardée si l'enregistrement est refusé.
+  let edition = false;
+  let brouillon: Record<string, string> | null = null;
 
   const categories: [string, string][] = r.categories.map((c) => [c.id, c.nom]);
   const temperatures = (projet: string): [string, string][] => [['', PROJETS_AVEC_TEMPERATURE.includes(projet) ? 'À préciser' : '—'],
@@ -59,6 +63,51 @@ export function brancherFiche(r: Reglages) {
   const liste = (nom: string, valeurs: string[], type: string, libelle: string) => `<div class="fc-liste" data-liste-${nom}>
       ${(valeurs.length ? valeurs : ['']).map((v, i) => `<input name="${nom}" type="${type}" value="${esc(v)}" aria-label="${esc(libelle)} ${i + 1}" autocomplete="off" />`).join('')}
       <button type="button" class="fc-lien" data-ajouter-${nom}>+ ${nom === 'telephone' ? 'un autre numéro' : 'une autre adresse'}</button></div>`;
+
+  /** Story 18.30 : les critères de recherche d'un acheteur, en résumé lisible ou en formulaire. */
+  const estAcheteur = (f: Fiche) => f.projet === 'acheteur' || f.projet === 'vendeur_acheteur' || f.parcours === 'acheteur';
+  const TITRES_CHOIX: Record<string, string> = { types: 'Type de bien', pieces: 'Pièces', exterieur: 'Extérieur', stationnement: 'Stationnement' };
+  function blocRecherche(f: Fiche): string {
+    if (!estAcheteur(f)) return '';
+    if (!edition) {
+      const { ligne, lignes } = resumeCriteres(f.recherche);
+      return `<section class="fc-bloc fc-recherche" data-fiche-recherche>
+        <div class="fc-recherche-tete"><h3>Ce qu'il cherche</h3><button type="button" class="ct-btn" data-recherche-modifier>Modifier les critères</button></div>
+        ${ligne || lignes.length ? `${ligne ? `<p class="fc-recherche-ligne" data-recherche-ligne>${esc(ligne)}</p>` : ''}
+          ${lignes.length ? `<ul class="fc-simple fc-recherche-liste" data-recherche-lignes>${lignes.map((l) => `<li data-recherche-${esc(l.cle)}><strong>${esc(l.titre)}</strong> : ${esc(l.valeur)}</li>`).join('')}</ul>` : ''}`
+          : '<p class="fc-muet" data-recherche-vide>Aucun critère noté pour l\'instant. Notez ce qu\'il cherche : type de bien, surface, budget, secteur.</p>'}
+      </section>`;
+    }
+    const v = brouillon ?? valeursFormulaire(f.recherche);
+    const ancien = brouillon ? '' : budgetAGarder(f.recherche);
+    const ancienneSurface = brouillon ? '' : surfaceAGarder(f.recherche);
+    const choix = (cle: keyof typeof CHOIX_CRITERES) => {
+      const coches = (v[cle] ?? '').split(', ');
+      return `<fieldset class="fc-choix" data-recherche-choix="${cle}"><legend>${esc(TITRES_CHOIX[cle])}</legend>${(CHOIX_CRITERES[cle] as readonly string[]).map((o) => `<label class="fc-case"><input type="checkbox" name="c_${cle}" value="${esc(o)}"${coches.includes(o) ? ' checked' : ''} /> ${esc(o)}</label>`).join('')}</fieldset>`;
+    };
+    const nombre = (id: string) => { const n = NOMBRES_CRITERES.find((x) => x.id === id)!; return `<label class="ct-champ">${esc(n.titre)}<input name="c_${id}" inputmode="numeric" value="${esc(v[id])}" autocomplete="off" maxlength="20" /></label>`; };
+    const texte = (id: string, lignes = 0) => { const t = TEXTES_CRITERES.find((x) => x.id === id)!; return `<label class="ct-champ">${esc(t.titre)}${lignes ? `<textarea name="c_${id}" rows="${lignes}" maxlength="${t.max}">${esc(v[id])}</textarea>` : `<input name="c_${id}" value="${esc(v[id])}" maxlength="${t.max}" autocomplete="off" />`}</label>`; };
+    return `<form class="fc-bloc fc-recherche fc-form" data-recherche-form>
+      <h3>Ce qu'il cherche</h3>
+      ${choix('types')}
+      <div class="fc-grille">${nombre('surface_min')}${nombre('surface_max')}${nombre('chambres_min')}${nombre('terrain_min')}${nombre('terrain_max')}</div>
+      <div class="fc-grille">${nombre('budget_min')}${nombre('budget_max')}</div>
+      ${ancien ? `<p class="fc-muet" data-recherche-ancien>Budget noté avant : ${esc(ancien)}. Il reste tant que vous ne saisissez pas de montant.</p>` : ''}
+      ${ancienneSurface ? `<p class="fc-muet" data-recherche-surface-ancienne>Surface notée avant : ${esc(ancienneSurface)}. Elle reste tant que vous ne saisissez pas de surface.</p>` : ''}
+      ${texte('secteur')}
+      ${texte('indispensable', 2)}${texte('apprecie', 2)}${texte('redhibitoire', 2)}
+      ${choix('pieces')}${choix('exterieur')}${choix('stationnement')}
+      ${texte('autres')}
+      <label class="ct-champ">Financement<select name="c_financement">${options([['', 'Pas noté'], ...FINANCEMENTS_CRITERES.map((x): [string, string] => [x, x])], v.financement ?? '')}</select></label>
+      <div class="fc-boutons"><button type="button" class="ct-btn" data-recherche-annuler>Annuler</button><button type="submit" class="ct-btn bleu" data-recherche-enregistrer>Enregistrer les critères</button></div>
+    </form>`;
+  }
+  /** Ce que le formulaire de critères contient : toutes les clés, les cases cochées réunies en « A, B ». */
+  function lireFormRecherche(form: HTMLFormElement): Record<string, string> {
+    const d = new FormData(form), sortie: Record<string, string> = {};
+    for (const cle of CLES_CRITERES) sortie[cle] = (cle in CHOIX_CRITERES ? d.getAll(`c_${cle}`).map(String).join(', ') : String(d.get(`c_${cle}`) ?? '')).trim();
+    return sortie;
+  }
 
   function rendre() {
     const f = fiche!;
@@ -82,6 +131,7 @@ export function brancherFiche(r: Reglages) {
         <button type="button" class="fc-fermer" data-fiche-fermer aria-label="Fermer la fiche">×</button>
       </header>
       ${message ? `<p class="fc-message${message.erreur ? ' erreur' : ''}" role="${message.erreur ? 'alert' : 'status'}" data-fiche-message>${esc(message.texte)}${message.existant ? ` <button type="button" class="fc-lien" data-ouvrir="${esc(message.existant.id)}">Ouvrir la fiche de ${esc(message.existant.nom)}</button>` : ''}</p>` : ''}
+      ${blocRecherche(f)}
       ${f.etape ? `<section class="fc-bloc fc-suivi" data-fiche-suivi><strong>Suivi des ventes : ${esc(f.etape_libelle)}</strong>${f.prochaine_action ? ` · ${esc(f.prochaine_action)}${f.prochaine_action_le ? `, ${esc(jour(f.prochaine_action_le))}` : ''}` : ''}
         <a href="/contacts/fiche?id=${esc(f.id)}" data-fiche-suivi-lien>Ouvrir sa fiche de suivi</a></section>` : ''}
       <form class="fc-bloc fc-form" data-fiche-form>
@@ -198,8 +248,8 @@ export function brancherFiche(r: Reglages) {
     rendre();
     corps.querySelector('[data-fiche-message]')?.scrollIntoView({ block: 'nearest' });
   }
-  async function ecrire(corpsJson: Record<string, unknown>, ok: string) {
-    if (occupe || !fiche) return;
+  async function ecrire(corpsJson: Record<string, unknown>, ok: string): Promise<Reponse | null> {
+    if (occupe || !fiche) return null;
     occupe = true;
     corps.querySelectorAll<HTMLButtonElement>('button[type=submit], [data-accord], [data-fiche-ecarter]').forEach((b) => { b.disabled = true; });
     const x = await appeler('POST', { id: fiche.id, ...corpsJson });
@@ -207,6 +257,7 @@ export function brancherFiche(r: Reglages) {
     // Contact changé entre-temps : la fiche est relue avant de laisser recommencer.
     if (x.error?.code === 'modifie') { const y = await appeler('GET', undefined, fiche.id); if (y.fiche) x.fiche = y.fiche; }
     recevoir(x, ok);
+    return x;
   }
 
   /** La correction : seuls les champs changés depuis la lecture sont envoyés. */
@@ -239,6 +290,18 @@ export function brancherFiche(r: Reglages) {
       const c = correction(form);
       if (!Object.keys(c).length) { message = { texte: 'Rien n\'a changé.', erreur: false }; rendre(); return; }
       void ecrire({ corriger: c }, 'Fiche enregistrée, gardée dans l\'historique.');
+    } else if (form.matches('[data-recherche-form]')) {
+      // Story 18.30 : seuls les critères changés sont envoyés ; refusé, la saisie reste dans le formulaire.
+      const lu = lireFormRecherche(form), avant = valeursFormulaire(fiche!.recherche);
+      const c: Record<string, string> = {};
+      for (const cle of CLES_CRITERES) if ((lu[cle] ?? '') !== (avant[cle] ?? '')) c[cle] = lu[cle] ?? '';
+      // Les deux bornes d'une fourchette partent ensemble (un ancien budget lu en deux montants ne perd pas sa seconde borne).
+      for (const [a, b] of [['surface_min', 'surface_max'], ['terrain_min', 'terrain_max'], ['budget_min', 'budget_max']]) if (a in c || b in c) { c[a] = lu[a] ?? ''; c[b] = lu[b] ?? ''; }
+      if (!Object.keys(c).length) { edition = false; brouillon = null; message = { texte: 'Rien n\'a changé.', erreur: false }; rendre(); return; }
+      brouillon = lu;
+      void ecrire({ corriger: { criteres: c } }, 'Critères enregistrés, gardés dans l\'historique.').then((x) => {
+        if (x?.ok) { edition = false; brouillon = null; rendre(); }
+      });
     } else if (form.matches('[data-fiche-note]')) {
       const note = String(new FormData(form).get('note') ?? '').trim();
       if (note) void ecrire({ note }, 'Note ajoutée.');
@@ -261,18 +324,20 @@ export function brancherFiche(r: Reglages) {
       return;
     }
     if (t.closest('[data-fiche-fermer]')) { panneau.close(); return; }
+    if (t.closest('[data-recherche-modifier]')) { edition = true; brouillon = null; rendre(); corps.querySelector<HTMLElement>('[data-recherche-form] input:not([type=checkbox])')?.focus(); return; }
+    if (t.closest('[data-recherche-annuler]')) { edition = false; brouillon = null; rendre(); return; }
     const ouvrir = t.closest<HTMLElement>('[data-ouvrir]');
     if (ouvrir) { void ouvrirFiche(ouvrir.dataset.ouvrir!); return; }
     const accord = t.closest<HTMLElement>('[data-accord]');
     if (accord) { void ecrire({ accord: accord.dataset.accord }, accord.dataset.accord === 'oui' ? 'Accord noté : elle ou il recevra vos campagnes.' : accord.dataset.accord === 'retirer' ? 'Accord retiré.' : 'Noté : plus d\'e-mails groupés.'); return; }
     if (t.closest('[data-fiche-ecarter]') && fiche) void ecrire({ corriger: { ecarte: !fiche.ecarte_le } }, fiche.ecarte_le ? 'Contact revenu dans le tableau.' : 'Contact écarté (filtre « Écartés » pour le revoir).');
   });
-  panneau.addEventListener('close', () => { fiche = null; majUrl(null); });
+  panneau.addEventListener('close', () => { fiche = null; edition = false; brouillon = null; majUrl(null); });
   // Un clic sur le fond (hors du panneau) le ferme.
   panneau.addEventListener('click', (e) => { if (e.target === panneau) panneau.close(); });
 
   async function ouvrirFiche(id: string) {
-    message = null;
+    message = null; edition = false; brouillon = null;
     corps.innerHTML = '<p class="fc-muet">Chargement de la fiche…</p>';
     if (!panneau.open) panneau.showModal();
     const x = await appeler('GET', undefined, id);

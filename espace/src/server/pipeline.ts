@@ -9,6 +9,7 @@ import { e164, emailValide } from '@site/server/schema';
 import { filtreRecherche } from '@site/server/recherche';
 import { ulid } from '@site/server/ulid';
 import { corrigerFiche, enOpposition } from './carnet';
+import { budgetLisible, chambresLisible, ligneBien, surfaceLisible, terrainLisible } from './criteres';
 
 export const aujourdhui = () => new Intl.DateTimeFormat('fr-CA', { timeZone: 'Europe/Paris' }).format(new Date());
 const texte = (v: unknown, max = 200) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
@@ -476,20 +477,22 @@ export const CRITERES_TAPES = [
   { id: 'autres', titre: 'Autres critères' },
 ] as const;
 export const FINANCEMENTS = ['Vérifié', 'À vérifier', 'Après sa vente'] as const;
-type CleAcheteur = (typeof RECHERCHE_ACHETEUR)[number]['id'] | (typeof CRITERES_ACHETEUR)[number]['id'] | (typeof CRITERES_TAPES)[number]['id'] | 'financement';
+type CleAcheteur = (typeof RECHERCHE_ACHETEUR)[number]['id'] | (typeof CRITERES_ACHETEUR)[number]['id'] | (typeof CRITERES_TAPES)[number]['id'] | 'financement'
+  // Story 18.30 : surface habitable, chambres, terrain, budget en nombres, et les trois listes de l'acheteur.
+  | 'surface_min' | 'surface_max' | 'chambres_min' | 'terrain_min' | 'terrain_max' | 'budget_min' | 'budget_max' | 'indispensable' | 'apprecie' | 'redhibitoire';
 export type Reponses = Partial<Record<(typeof QUESTIONS)[number]['id'] | CleAcheteur, string>>;
-/** La recherche d'un acheteur, dans l'ordre où on la lit, sans les critères laissés vides (ticket #176). */
-export const RECHERCHE_LISIBLE: readonly { id: CleAcheteur; titre: string }[] = [
-  CRITERES_ACHETEUR[0], CRITERES_ACHETEUR[1], { id: 'surface', titre: 'Surface minimale' }, CRITERES_ACHETEUR[2], CRITERES_ACHETEUR[3],
-  { id: 'budget', titre: 'Budget' }, { id: 'secteur', titre: 'Secteur' }, { id: 'autres', titre: 'Autres critères' }, { id: 'financement', titre: 'Financement' },
-];
+/** La recherche renseignée, ligne par ligne (fiche de suivi, historique) : les critères vides sont omis, l'ancien format se lit encore. */
 export function rechercheRenseignee(r: Reponses): { titre: string; valeur: string }[] {
-  return RECHERCHE_LISIBLE.filter((q) => r[q.id]).map((q) => ({ titre: q.titre, valeur: q.id === 'surface' && /^\d+$/.test(r.surface ?? '') ? `${r.surface} m²` : r[q.id]! }));
+  const lignes: [string, string][] = [
+    ['Type de bien', r.types ?? ''], ['Pièces', r.pieces ?? ''], ['Surface habitable', surfaceLisible(r)], ['Chambres', chambresLisible(r)],
+    ['Terrain', terrainLisible(r).replace(/^terrain /, '')], ['Extérieur', r.exterieur ?? ''], ['Stationnement', r.stationnement ?? ''],
+    ['Budget', budgetLisible(r)], ['Secteur', r.secteur ?? ''], ['Indispensable', r.indispensable ?? ''], ['Apprécié', r.apprecie ?? ''],
+    ['Rédhibitoire', r.redhibitoire ?? ''], ['Autres critères', r.autres ?? ''], ['Financement', r.financement ?? ''],
+  ];
+  return lignes.filter(([, v]) => v).map(([titre, valeur]) => ({ titre, valeur }));
 }
-/** Ce qu'un acheteur cherche, en une ligne : « Maison · T4, T5 et plus · 120 m² et plus · Jardin ». */
-export function rechercheCourte(r: Reponses): string {
-  return [r.types ?? r.bien, r.pieces, r.surface ? `${r.surface.replace(/\s*m²$/, '')} m² et plus` : '', r.exterieur].filter(Boolean).join(' · ');
-}
+/** Ce qu'un acheteur cherche, en une ligne : « Maison · T4, T5 et plus · 120 à 160 m² · 3 chambres et plus · Jardin ». */
+export function rechercheCourte(r: Reponses): string { return ligneBien(r); }
 
 export const MOTIFS_PERTE = ['Exclusif ailleurs', 'Pas de projet', 'Hors secteur', 'Veut vendre seul', 'Injoignable', 'Autre'] as const;
 
@@ -551,8 +554,7 @@ export async function qualifier(env: EnvSite, id: string, reponses: Reponses, pa
       resume = `Pas joint, à rappeler le ${echeance(le)}`;
       break;
   }
-  const texteReponses = [...QUESTIONS, ...RECHERCHE_LISIBLE]
-    .filter((q) => reponses[q.id]).map((q) => `${q.titre} ${reponses[q.id]}`).join(' · ');
+  const texteReponses = [...QUESTIONS.filter((q) => reponses[q.id]).map((q) => `${q.titre} ${reponses[q.id]}`), ...rechercheRenseignee(reponses).map((x) => `${x.titre} ${x.valeur}`)].join(' · ');
   const lot = [
     env.DB.prepare(
       `UPDATE contact SET last_activity_at = ?2, parcours = COALESCE(?3, parcours), etape = ?4, prochaine_action = ?5, prochaine_action_le = ?6,
@@ -569,8 +571,7 @@ export async function qualifier(env: EnvSite, id: string, reponses: Reponses, pa
 /** Corrige les réponses d'un contact déjà en cours (story 13.22) : l'étape et la prochaine action ne bougent pas. */
 export async function corrigerQualification(env: EnvSite, id: string, reponses: Reponses, parcours: 'vendeur' | 'acheteur' | null, par: string): Promise<boolean> {
   const maintenant = new Date().toISOString();
-  const texteReponses = [...QUESTIONS, ...RECHERCHE_LISIBLE]
-    .filter((q) => reponses[q.id]).map((q) => `${q.titre} ${reponses[q.id]}`).join(' · ');
+  const texteReponses = [...QUESTIONS.filter((q) => reponses[q.id]).map((q) => `${q.titre} ${reponses[q.id]}`), ...rechercheRenseignee(reponses).map((x) => `${x.titre} ${x.valeur}`)].join(' · ');
   const r = await env.DB.batch([
     env.DB.prepare(`UPDATE contact SET last_activity_at = ?2, parcours = COALESCE(?3, parcours), qualification = ?4, qualifie_le = ?2 WHERE id = ?1`)
       .bind(id, maintenant, parcours, JSON.stringify(reponses)),

@@ -15,7 +15,8 @@ import { actionsAuChoix, rattacherAction } from '../../server/actions';
 import { pourSite as env } from '../../server/env';
 import { ULID } from '../../server/formulaires';
 import {
-  aujourdhui, corrigerQualification, echeance, FINANCEMENTS, libelleOrigine, lireContact, MOTIFS_PERTE, parisVersUtc, plusTard, qualifier, QUESTIONS, RECHERCHE_ACHETEUR, CRITERES_ACHETEUR, CRITERES_TAPES, type Issue, type Reponses, libelleEtape } from '../../server/pipeline';
+  aujourdhui, corrigerQualification, echeance, FINANCEMENTS, libelleOrigine, lireContact, MOTIFS_PERTE, parisVersUtc, plusTard, qualifier, QUESTIONS, CRITERES_ACHETEUR, type Issue, type Reponses, libelleEtape } from '../../server/pipeline';
+import { budgetAGarder, surfaceAGarder, CHOIX_CRITERES, CLES_CRITERES, fusionnerCriteres, lireCriteres, NOMBRES_CRITERES, verifierBornes, TEXTES_CRITERES, valeursFormulaire } from '../../server/criteres';
 import { resumeHtml } from '../../server/leedflow';
 import { envEspace } from '../../server/env';
 import { propositionsDe } from '../../server/tri-ia';
@@ -58,16 +59,38 @@ if (Astro.request.method === 'POST') {
     const coches = f.getAll(`a_${cr.id}`).map(String);
     saisi[`a_${cr.id}`] = (cr.options as readonly string[]).filter((o) => coches.includes(o)).join(', ');
   }
+  for (const k of CLES_CRITERES) if (!(k in CHOIX_CRITERES) && f.has(`a_${k}`)) saisi[`a_${k}`] = String(f.get(`a_${k}`) ?? '').trim();
+  const avant = { ...reponses };
   reponses = {};
   for (const q of QUESTIONS) if ((q.options as readonly string[]).includes(saisi[`q_${q.id}`])) reponses[q.id] = saisi[`q_${q.id}`];
   const parcours = saisi.parcours === 'vendeur' || saisi.parcours === 'acheteur' ? saisi.parcours : null;
-  // Ce que cherche un acheteur (story 13.15), gardé seulement pour un acheteur.
+  // Ce que cherche un acheteur (stories 13.15, 13.30, 18.30), gardé seulement pour un acheteur : les mêmes critères que le
+  // panneau de la page Contacts, validés par `lireCriteres` (nombres entiers, minimum au plus égal au maximum, textes bornés).
+  // Hors acheteur, les critères déjà notés sont reportés tels quels. Les anciens champs `a_surface` et `a_budget` (texte libre) restent lus.
+  const critere = (k: string) => k in avant ? { [k]: avant[k as keyof Reponses] } : {};
+  const dejaNotes: Reponses = {};
+  for (const k of [...CLES_CRITERES, 'surface', 'budget']) Object.assign(dejaNotes, critere(k));
   if ((parcours ?? c.parcours) === 'acheteur') {
-    for (const q of [...RECHERCHE_ACHETEUR, ...CRITERES_ACHETEUR, ...CRITERES_TAPES]) if (saisi[`a_${q.id}`]) reponses[q.id] = saisi[`a_${q.id}`].slice(0, q.id === 'autres' ? 200 : 120);
-    if (reponses.surface) reponses.surface = reponses.surface.replace(/\s*m(²|2)\s*$/i, '');
-    if ((FINANCEMENTS as readonly string[]).includes(saisi.a_financement ?? '')) reponses.financement = saisi.a_financement;
-  }
-  if (enCours) {
+    const brut: Record<string, unknown> = {};
+    for (const k of CLES_CRITERES) {
+      if (k in CHOIX_CRITERES) brut[k] = f.getAll(`a_${k}`).map(String).filter((o) => (CHOIX_CRITERES[k as keyof typeof CHOIX_CRITERES] as readonly string[]).includes(o));
+      else if (f.has(`a_${k}`)) brut[k] = String(f.get(`a_${k}`) ?? '');
+    }
+    if (!f.has('a_surface_min') && f.has('a_surface')) brut.surface_min = String(f.get('a_surface'));
+    if (!f.has('a_budget_min') && !f.has('a_budget_max') && f.has('a_budget')) brut.budget = String(f.get('a_budget'));
+    const legacyBudget = typeof brut.budget === 'string' ? brut.budget.trim().slice(0, 120) : '';
+    delete brut.budget;
+    const lu = lireCriteres(brut);
+    const fusionLue = typeof lu === 'string' ? null : fusionnerCriteres(dejaNotes, lu);
+    if (typeof lu === 'string') erreur = lu;
+    else if (fusionLue && verifierBornes(fusionLue)) erreur = verifierBornes(fusionLue)!;
+    else {
+      let fusion = fusionLue!;
+      if (legacyBudget) fusion = { ...fusion, budget: legacyBudget };
+      Object.assign(reponses, fusion);
+    }
+  } else Object.assign(reponses, dejaNotes);
+  if (enCours && !erreur) {
     await corrigerQualification(env, c.id, reponses, parcours, compte);
     const action = ULID.test(saisi.action ?? '') ? saisi.action : null;
     if ('action' in saisi && saisi.action !== (c.action_id ?? '')) await rattacherAction(env, c.id, action, compte);
@@ -76,7 +99,9 @@ if (Astro.request.method === 'POST') {
   let issue: Issue | null = null;
   const choixDate = (choix: string, autre: string) =>
     choix === '1m' ? plusTard(0, 1) : choix === '3m' ? plusTard(0, 3) : choix === '6m' ? plusTard(0, 6) : choix === '1j' ? plusTard(1) : choix === '2j' ? plusTard(2) : choix === '7j' ? plusTard(7) : DATE.test(autre) ? autre : '';
-  if (saisi.issue === 'rdv') {
+  if (erreur) {
+    // critères refusés : la page se réaffiche avec la saisie et le message
+  } else if (saisi.issue === 'rdv') {
     const le = parisVersUtc(saisi.rdv_le ?? '');
     if (!le) erreur = 'Indiquez la date et l\'heure du rendez-vous.';
     else if (!parcours && !c.parcours) erreur = 'Dites s\'il ou elle veut vendre ou acheter : le rendez-vous n\'est pas le même.';
@@ -152,11 +177,26 @@ const issues = [
           </fieldset>
         );
       })}
-      <div class="e-champs">
-        <label class="e-champ">Surface minimale (m²)<input name="a_surface" inputmode="numeric" value={saisi.a_surface ?? reponses.surface} placeholder="120" autocomplete="off" /></label>
-        {RECHERCHE_ACHETEUR.map((q) => <label class="e-champ">{q.titre}<input name={`a_${q.id}`} value={saisi[`a_${q.id}`] ?? reponses[q.id]} placeholder={q.id === 'budget' ? '750 k€ à 850 k€' : 'Anthy, Sciez'} autocomplete="off" /></label>)}
-        <label class="e-champ large">Autres critères<input name="a_autres" value={saisi.a_autres ?? reponses.autres} placeholder="Vue lac, plain-pied, proche école…" autocomplete="off" /></label>
-      </div>
+      {(() => {
+        const v = valeursFormulaire(reponses);
+        const val = (k: string) => saisi[`a_${k}`] ?? v[k] ?? '';
+        const ancien = budgetAGarder(reponses);
+        const ancienneSurface = surfaceAGarder(reponses);
+        return (
+          <>
+            <div class="e-champs">
+              {NOMBRES_CRITERES.map((n) => <label class="e-champ">{n.titre}<input name={`a_${n.id}`} inputmode="numeric" value={val(n.id)} autocomplete="off" maxlength="20" /></label>)}
+              <label class="e-champ">{TEXTES_CRITERES[0].titre}<input name="a_secteur" value={val('secteur')} placeholder="Anthy, Sciez" autocomplete="off" maxlength={TEXTES_CRITERES[0].max} /></label>
+            </div>
+            {ancien && <p class="e-muet" data-budget-ancien>Budget noté avant : {ancien}. Il reste tant que vous ne saisissez pas de montant.</p>}
+            {ancienneSurface && <p class="e-muet" data-surface-ancienne>Surface notée avant : {ancienneSurface}. Elle reste tant que vous ne saisissez pas de surface.</p>}
+            <div class="e-champs">
+              {TEXTES_CRITERES.slice(1, 4).map((t) => <label class="e-champ large">{t.titre}<textarea name={`a_${t.id}`} rows="2" maxlength={t.max}>{val(t.id)}</textarea></label>)}
+              <label class="e-champ large">Autres critères<input name="a_autres" value={val('autres')} placeholder="Vue lac, plain-pied, proche école…" autocomplete="off" maxlength={TEXTES_CRITERES[4].max} /></label>
+            </div>
+          </>
+        );
+      })()}
       <fieldset class="e-pastilles" style="margin-top:12px">
         <legend>Financement</legend>
         {FINANCEMENTS.map((fi) => <label><input type="radio" name="a_financement" value={fi} checked={(saisi.a_financement ?? reponses.financement) === fi} /><span>{fi}</span></label>)}

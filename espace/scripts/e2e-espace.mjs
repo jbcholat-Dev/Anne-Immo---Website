@@ -86,6 +86,7 @@
 // Story 18.12 : demandes des portails par e-mail, injectées dans le gestionnaire `email` par /cdn-cgi/handler/email
 // (Leboncoin par Modelo, SeLoger en HTML qui complète un contact du carnet, doublon, illisible, confirmation de Gmail,
 // opposition, expéditeur refusé, e-mail trop gros ; cartes et gestes, ménage du texte ; page à 1440 et 1280 px).
+// Story 18.30 : critères complets des acheteurs (surfaces, chambres, terrain, budget, secteur, indispensable, apprécié, rédhibitoire), résumé et modification dans le panneau.
 // Revue de code 18.9, 18.11, 18.12 (2026-11-02) : suite QUOTED-PRINTABLE d'une note vCard (serveur et script), CSV sans
 // ligne de titres, accord e-mail lors d'une fusion CONTACTS + EDB ; From falsifié et expéditeur d'enveloppe non autorisé.
 // Préalable, dans site/ : `PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA npm run build` et `npm run base:local` ;
@@ -1145,6 +1146,196 @@ try {
     await ctx.close();
     nettoyer();
   }
+  // Story 18.30 (ticket n° 284) : critères complets des acheteurs (type, surfaces, chambres, terrain, budget, secteur, indispensable,
+  // apprécié, rédhibitoire) dans la qualification, résumé et modification dans le panneau de la page Contacts, même saisie à la
+  // qualification. Lancé seul avec E2E_1830_SEUL=1 (après le démarrage des serveurs).
+  async function bloc1830() {
+    const P = 'E1830';
+    const ids = Array.from({ length: 5 }, (_, i) => `01KF30${String(i + 1).padStart(2, '0')}${NUM}${'0'.repeat(12)}`);
+    const [A, B, C, D, F] = ids; // acheteur complet, vendeur, ancien format, acheteur sans critère, acheteur pour la qualification
+    const JETON_C = jetonAcces({ email: undefined, common_name: 'essai-claude.access' });
+    const nettoyer = () => { sql(`DELETE FROM contact WHERE id IN (${ids.map((i) => `'${i}'`).join(',')})`); sql(`DELETE FROM contact WHERE nom LIKE 'Qualif${P}%'`); };
+    nettoyer();
+    const ins = (id, n, projet, qualification) => sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, commune, categorie_id, projet, telephone, qualification) VALUES
+      ('${id}', '2026-10-01T08:00:00Z', '2026-10-01T08:00:00Z', 'Sam', 'Cherche${P}${NUM}${n}', '${P}-ville', 'edb', '${projet}', '+3365${NUM}${n}', ${qualification ? `'${qualification.replace(/'/g, "''")}'` : 'NULL'})`);
+    ins(A, 1, 'acheteur', JSON.stringify({ delai: 'Dans 3 mois', agence: 'Non' }));
+    ins(B, 2, 'vendeur', null);
+    ins(C, 3, 'vendeur_acheteur', JSON.stringify({ delai: 'Ce mois-ci', types: 'Maison', pieces: 'T4', surface: '120', budget: '750 k€ à 850 k€', secteur: 'Anthy, Sciez', financement: 'Vérifié' }));
+    ins(D, 4, 'acheteur', null);
+    const api = async (corps, { jeton = JETON, methode = 'POST', id = null } = {}) => {
+      const y = await appeler(`${E}/api/fiche${id ? `?id=${id}` : ''}`, { method: methode, redirect: 'manual', headers: { 'cf-access-jwt-assertion': jeton, ...(methode === 'POST' ? { 'Content-Type': 'application/json' } : {}), Origin: E }, body: methode === 'POST' ? JSON.stringify(corps) : undefined });
+      let d = null; try { d = await y.json(); } catch {}
+      return { status: y.status, d };
+    };
+    const ligne = (id) => sql(`SELECT * FROM contact WHERE id = '${id}'`)[0];
+    const qualif = (id) => JSON.parse(ligne(id).qualification ?? '{}');
+    const nEv = (id) => sql(`SELECT count(*) AS n FROM contact_evenement WHERE contact_id = '${id}'`)[0].n;
+    const dernierEv = (id) => { const e = sql(`SELECT type, source, texte, donnees, par FROM contact_evenement WHERE contact_id = '${id}' ORDER BY id DESC LIMIT 1`)[0]; return e ? { ...e, d: JSON.parse(e.donnees) } : null; };
+    const sansNbsp = (t) => t.replace(/[  ]/g, ' ').replace(/\s+/g, ' ').trim();
+
+    // 1. Écriture par l'API, relue, avec l'événement d'avant-image.
+    const complet = { types: 'Maison', surface_min: 120, surface_max: 160, chambres_min: 3, terrain_min: 800, budget_min: 650000, budget_max: 800000, secteur: 'Anthy, Sciez', indispensable: 'Vue sur le lac', apprecie: 'Garage double', redhibitoire: 'Route passante' };
+    const avantA = ligne(A);
+    let r = await api({ id: A, corriger: { criteres: complet } });
+    const qa = qualif(A), ea = dernierEv(A), la = ligne(A);
+    constat(r.status === 200 && qa.types === 'Maison' && qa.surface_min === '120' && qa.surface_max === '160' && qa.chambres_min === '3' && qa.terrain_min === '800' && qa.budget_min === '650000' && qa.budget_max === '800000'
+      && qa.secteur === 'Anthy, Sciez' && qa.indispensable === 'Vue sur le lac' && qa.apprecie === 'Garage double' && qa.redhibitoire === 'Route passante' && qa.delai === 'Dans 3 mois' && qa.agence === 'Non',
+      '18.30 : tous les critères écrits dans la qualification (nombres en chiffres, textes), les autres réponses (délai, agence) gardées');
+    constat(ea.type === 'classement' && ea.source === 'anne' && !!ea.par && JSON.parse(ea.d.avant.qualification).delai === 'Dans 3 mois' && !('surface_min' in JSON.parse(ea.d.avant.qualification)) && JSON.parse(ea.d.apres.qualification).surface_min === '120'
+      && r.d.changes.includes('qualification') && ea.texte.includes('critères de recherche') && la.last_activity_at === avantA.last_activity_at && la.etape === avantA.etape && la.projet === 'acheteur' && la.qualifie_le === avantA.qualifie_le,
+      '18.30 : événement « classement » avec avant-image et après-image de la qualification ; date d\'activité, étape et projet intacts');
+    const lue = await api(null, { methode: 'GET', id: A });
+    constat(lue.d.fiche.recherche.surface_min === '120' && lue.d.fiche.recherche.secteur === 'Anthy, Sciez' && lue.d.fiche.recherche.redhibitoire === 'Route passante' && !('delai' in lue.d.fiche.recherche) && lue.d.fiche.parcours === null,
+      '18.30 : GET /api/fiche renvoie les critères (pas le délai ni l\'agence)');
+    const nA = nEv(A);
+    r = await api({ id: A, corriger: { criteres: { surface_min: 120, secteur: 'Anthy, Sciez' } } });
+    constat(r.status === 200 && r.d.changes.length === 0 && nEv(A) === nA, '18.30 : une saisie qui ne change rien n\'écrit rien (pas d\'événement)');
+    r = await api({ id: A, corriger: { criteres: { apprecie: '' } } });
+    constat(r.status === 200 && !('apprecie' in qualif(A)) && qualif(A).indispensable === 'Vue sur le lac' && dernierEv(A).d.avant.qualification.includes('Garage double'),
+      '18.30 : un critère vidé est retiré, les autres restent, l\'ancienne valeur reste dans l\'avant-image');
+    await api({ id: A, corriger: { criteres: { apprecie: 'Garage double' } } });
+
+    // 2. Refus : 400 et rien d'écrit.
+    const avantRefus = { q: ligne(A).qualification, n: nEv(A) };
+    const trop = (n) => 'x'.repeat(n);
+    const mauvais = [
+      ['surface min > max', { surface_min: 200, surface_max: 100 }], ['terrain min > max', { terrain_min: 5000, terrain_max: 100 }], ['budget min > max', { budget_min: 900000, budget_max: 100000 }],
+      ['budget : un maximum envoyé seul sous le minimum déjà noté (650 000)', { budget_max: 100000 }], ['surface : un minimum envoyé seul au-dessus du maximum noté (160)', { surface_min: 500 }],
+      ['surface négative', { surface_min: -5 }], ['chambres négatives', { chambres_min: -1 }], ['budget négatif en texte', { budget_max: '-800000' }],
+      ['décimal', { surface_min: 12.5 }], ['texte à la place du nombre', { chambres_min: 'beaucoup' }], ['nombre énorme', { budget_max: 10 ** 12 }], ['surface hors borne', { surface_max: 20000 }],
+      ['secteur trop long', { secteur: trop(121) }], ['indispensable trop long', { indispensable: trop(301) }], ['rédhibitoire trop long', { redhibitoire: trop(301) }],
+      ['type hors liste', { types: 'Château' }], ['critère inconnu', { piscine: 'oui' }], ['financement hors liste', { financement: 'Cash' }], ['liste vide', {}], ['texte à la place de l\'objet', 'oui'],
+    ];
+    const acceptes = [];
+    for (const [nom, c] of mauvais) { const y = await api({ id: A, corriger: { criteres: c } }); if (y.status !== 400) acceptes.push(`${nom} (${y.status})`); }
+    constat(acceptes.length === 0 && ligne(A).qualification === avantRefus.q && nEv(A) === avantRefus.n, `18.30 : ${mauvais.length} saisies refusées en 400 (min > max, négatif, décimal, texte, hors borne, trop long, hors liste, inconnu), rien d'écrit${acceptes.length ? ` (acceptées à tort : ${acceptes.join(', ')})` : ''}`);
+    // Les bornes exactes passent.
+    r = await api({ id: D, corriger: { criteres: { secteur: trop(120), indispensable: trop(300), surface_max: 10000, budget_max: 100000000 } } });
+    constat(r.status === 200 && qualif(D).secteur.length === 120 && qualif(D).indispensable.length === 300, '18.30 : les bornes exactes (120 et 300 caractères, 10 000 m², 100 millions) sont acceptées');
+    await api({ id: D, corriger: { criteres: { secteur: null, indispensable: null, surface_max: null, budget_max: null } } });
+    const jetonC = await api({ id: A, corriger: { criteres: { surface_min: 999 } } }, { jeton: JETON_C });
+    constat(jetonC.status === 403 && qualif(A).surface_min === '120' && nEv(A) === avantRefus.n, '18.30 : le jeton de service de Claude est refusé (403), rien d\'écrit');
+    const sansJeton = await appeler(`${E}/api/fiche`, { method: 'POST', redirect: 'manual', headers: { 'Content-Type': 'application/json', Origin: E }, body: JSON.stringify({ id: A, corriger: { criteres: { surface_min: 999 } } }) });
+    constat(sansJeton.status !== 200 && qualif(A).surface_min === '120', `18.30 : sans jeton d'accès, refusé (${sansJeton.status})`);
+
+    // 3. Le panneau : résumé, contact vendeur sans bloc, contact sans critère, ancien format.
+    const ctx = await nav.newContext({ viewport: { width: 1440, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
+    const o = await ctx.newPage();
+    const erreursPage = []; o.on('pageerror', (x) => erreursPage.push(x.message));
+    const ouvrir = async (id) => { await o.goto(`${E}/?fiche=${id}`); await o.waitForSelector('[data-fiche-form]'); };
+    const CAPTURES = process.env.E2E_1830_CAPTURES || OUT;
+    await ouvrir(A);
+    await o.waitForSelector('[data-fiche-recherche]');
+    const ligneA = sansNbsp(await o.textContent('[data-recherche-ligne]'));
+    constat(ligneA === 'Maison · 120 à 160 m² · 3 chambres et plus · terrain 800 m² et plus · 650 à 800 k€ · Anthy, Sciez', `18.30 : le résumé du panneau est lisible (« ${ligneA} »)`);
+    const trois = await o.$$eval('[data-recherche-lignes] li', (t) => t.map((x) => x.textContent.replace(/\s+/g, ' ').trim()));
+    constat(JSON.stringify(trois) === JSON.stringify(['Indispensable : Vue sur le lac', 'Apprécié : Garage double', 'Rédhibitoire : Route passante']), `18.30 : trois lignes courtes Indispensable, Apprécié, Rédhibitoire (${trois.join(' | ')})`);
+    const enHaut = await o.evaluate(() => { const b = document.querySelector('[data-fiche-recherche]'), f = document.querySelector('[data-fiche-form]'); return !!(b.compareDocumentPosition(f) & Node.DOCUMENT_POSITION_FOLLOWING); });
+    constat(enHaut, '18.30 : le bloc « Ce qu\'il cherche » est en haut du panneau, avant le formulaire d\'informations');
+    await o.screenshot({ path: path.join(CAPTURES, 'criteres-resume-1440.png') });
+    await o.click('[data-recherche-modifier]');
+    await o.waitForSelector('[data-recherche-form]');
+    await o.screenshot({ path: path.join(CAPTURES, 'criteres-formulaire-1440.png') });
+    const preA = await o.$eval('[data-recherche-form]', (f) => Object.fromEntries(new FormData(f)));
+    constat(preA.c_surface_min === '120' && preA.c_surface_max === '160' && preA.c_chambres_min === '3' && preA.c_terrain_min === '800' && preA.c_budget_min === '650000' && preA.c_budget_max === '800000' && preA.c_types === 'Maison' && preA.c_secteur === 'Anthy, Sciez' && preA.c_redhibitoire === 'Route passante',
+      '18.30 : « Modifier les critères » ouvre le formulaire dans le panneau, prérempli');
+    await o.click('[data-recherche-annuler]');
+    constat(await o.locator('[data-recherche-form]').count() === 0 && await o.locator('[data-recherche-ligne]').count() === 1, '18.30 : « Annuler » referme le formulaire sans rien écrire');
+
+    await ouvrir(B);
+    constat(await o.locator('[data-fiche-recherche]').count() === 0 && await o.locator('[data-recherche-form]').count() === 0, '18.30 : un contact vendeur n\'a pas de bloc « Ce qu\'il cherche »');
+
+    await ouvrir(D);
+    await o.waitForSelector('[data-recherche-vide]');
+    constat((await o.textContent('[data-recherche-vide]')).includes('Aucun critère noté') && await o.locator('[data-recherche-ligne]').count() === 0, '18.30 : sans critère, une phrase invite à les noter');
+
+    await ouvrir(C);
+    await o.waitForSelector('[data-recherche-ligne]');
+    const ligneC = sansNbsp(await o.textContent('[data-recherche-ligne]'));
+    constat(ligneC === 'Maison · T4 · 120 m² et plus · 750 k€ à 850 k€ · Anthy, Sciez' && await o.locator('[data-recherche-financement]').count() === 1, `18.30 : l'ancien format (surface minimale, budget en texte) s'affiche encore (« ${ligneC} »)`);
+    await o.click('[data-recherche-modifier]');
+    await o.waitForSelector('[data-recherche-form]');
+    const preC = await o.$eval('[data-recherche-form]', (f) => Object.fromEntries(new FormData(f)));
+    constat(preC.c_surface_min === '120' && preC.c_budget_min === '750000' && preC.c_budget_max === '850000', '18.30 : le formulaire reprend l\'ancienne surface et le budget « 750 k€ à 850 k€ » en nombres');
+    const nC = nEv(C);
+    await o.click('[data-recherche-enregistrer]');
+    await o.waitForSelector('[data-fiche-message]');
+    constat((await o.textContent('[data-fiche-message]')).includes('Rien n\'a changé') && nEv(C) === nC && qualif(C).surface === '120' && qualif(C).budget === '750 k€ à 850 k€', '18.30 : enregistrer sans rien changer n\'écrit rien, l\'ancien format reste en base');
+    await o.click('[data-recherche-modifier]');
+    await o.fill('[name=c_chambres_min]', '2');
+    await o.click('[data-recherche-enregistrer]');
+    await o.waitForFunction(() => (document.querySelector('[data-recherche-ligne]')?.textContent ?? '').includes('2 chambres'));
+    constat(sansNbsp(await o.textContent('[data-recherche-ligne]')) === 'Maison · T4 · 120 m² et plus · 2 chambres et plus · 750 k€ à 850 k€ · Anthy, Sciez' && qualif(C).chambres_min === '2' && qualif(C).surface === '120' && qualif(C).budget === '750 k€ à 850 k€' && qualif(C).delai === 'Ce mois-ci',
+      '18.30 : une modification ajoute le critère sans toucher à l\'ancien format ni au délai');
+    // Changer le budget ancien par des montants : l'ancienne clé est remplacée.
+    await o.click('[data-recherche-modifier]');
+    await o.fill('[name=c_budget_max]', '900000');
+    await o.click('[data-recherche-enregistrer]');
+    await o.waitForFunction(() => (document.querySelector('[data-recherche-ligne]')?.textContent ?? '').includes('900'));
+    constat(qualif(C).budget_min === '750000' && qualif(C).budget_max === '900000' && !('budget' in qualif(C)) && sansNbsp(await o.textContent('[data-recherche-ligne]')).includes('750 à 900 k€'), '18.30 : de nouveaux montants remplacent l\'ancien budget en texte (affiché « 750 à 900 k€ »)');
+
+    // 4. Modifier depuis le panneau : contact sans critère.
+    await ouvrir(D);
+    await o.click('[data-recherche-modifier]');
+    await o.waitForSelector('[data-recherche-form]');
+    await o.check('[name=c_types][value=Appartement]');
+    await o.fill('[name=c_surface_min]', '90');
+    await o.fill('[name=c_budget_max]', '500000');
+    await o.fill('[name=c_secteur]', 'Thonon');
+    await o.fill('[name=c_indispensable]', 'Balcon');
+    const eD = nEv(D);
+    await o.click('[data-recherche-enregistrer]');
+    await o.waitForSelector('[data-recherche-ligne]');
+    const ligneD = sansNbsp(await o.textContent('[data-recherche-ligne]'));
+    const evD = dernierEv(D);
+    constat(ligneD === 'Appartement · 90 m² et plus · jusqu\'à 500 k€ · Thonon' && qualif(D).types === 'Appartement' && qualif(D).surface_min === '90' && qualif(D).budget_max === '500000' && qualif(D).indispensable === 'Balcon'
+      && nEv(D) === eD + 1 && evD.type === 'classement' && [null, '{}'].includes(evD.d.avant.qualification) && JSON.parse(evD.d.apres.qualification).secteur === 'Thonon' && (await o.textContent('[data-fiche-message]')).includes('Critères enregistrés'),
+      `18.30 : critères saisis depuis le panneau : écrits, résumé mis à jour (« ${ligneD} »), événement avec avant-image sans critère`);
+    // Refus depuis le panneau : message, saisie gardée, rien d'écrit.
+    await o.click('[data-recherche-modifier]');
+    await o.fill('[name=c_surface_min]', '300');
+    await o.fill('[name=c_surface_max]', '100');
+    const avantD = ligne(D).qualification;
+    await o.click('[data-recherche-enregistrer]');
+    await o.waitForSelector('[data-fiche-message].erreur');
+    constat((await o.textContent('[data-fiche-message]')).includes('minimum') && await o.inputValue('[name=c_surface_min]') === '300' && await o.inputValue('[name=c_surface_max]') === '100' && ligne(D).qualification === avantD && nEv(D) === eD + 1,
+      '18.30 : min > max refusé dans le panneau : message clair, saisie gardée dans le formulaire, rien d\'écrit');
+    await o.click('[data-recherche-annuler]');
+    await o.screenshot({ path: path.join(CAPTURES, 'criteres-panneau-acheteur-1440.png') });
+
+    // 5. Pas de débordement à 1440 px (résumé et formulaire), pas d'erreur JavaScript.
+    await ouvrir(A);
+    const larg = async () => o.evaluate(() => ({ page: document.documentElement.scrollWidth - document.documentElement.clientWidth, panneau: document.querySelector('[data-fiche-corps]').scrollWidth - document.querySelector('[data-fiche-corps]').clientWidth, fiche: document.querySelector('[data-fiche]').scrollWidth - document.querySelector('[data-fiche]').clientWidth }));
+    const l1 = await larg();
+    await o.click('[data-recherche-modifier]');
+    const l2 = await larg();
+    constat(l1.page <= 0 && l1.panneau <= 0 && l1.fiche <= 0 && l2.page <= 0 && l2.panneau <= 0 && l2.fiche <= 0 && erreursPage.length === 0, `18.30 : pas de défilement horizontal à 1440 px (résumé et formulaire)${erreursPage.length ? ` ; erreur JavaScript : ${erreursPage[0]}` : ' ; aucune erreur JavaScript'}`);
+    await ctx.close();
+
+    // 6. La page « Qualifier » : mêmes champs, mêmes données.
+    await page('/ajouter', { quoi: 'contact', prenom: 'Zoé', nom: `Qualif${P}${NUM}`, email: `zoe${P.toLowerCase()}${NUM}@example.com`, canal: 'portail', parcours: 'acheteur', commune: 'Genève' });
+    const Fq = sql(`SELECT id FROM contact WHERE nom = 'Qualif${P}${NUM}'`)[0].id;
+    const form = await (await appeler(`${E}/contacts/qualifier?id=${Fq}`, { headers: avecJeton() })).text();
+    constat(['a_surface_min', 'a_surface_max', 'a_chambres_min', 'a_terrain_min', 'a_terrain_max', 'a_budget_min', 'a_budget_max', 'a_secteur', 'a_indispensable', 'a_apprecie', 'a_redhibitoire', 'a_types'].every((n) => form.includes(`name="${n}"`)),
+      '18.30 : la page « Qualifier » demande les mêmes critères que le panneau');
+    const base = [['q_delai', 'Dans 3 mois'], ['q_agence', 'Non'], ['q_bien', 'Maison'], ['q_motif', 'Autre'], ['q_vend_avant', 'Non'], ['issue', 'rdv'], ['rdv_le', '2027-03-02T10:00']];
+    r = await page(`/contacts/qualifier?id=${Fq}`, [...base, ['a_surface_min', '200'], ['a_surface_max', '100']]);
+    const refusee = await r.text();
+    constat(r.status === 200 && refusee.includes('data-erreur') && refusee.includes('le minimum ne peut pas dépasser le maximum') && ligne(Fq).qualifie_le === null && /name="a_surface_min"[^>]*value="200"/.test(refusee),
+      '18.30 : à la qualification, min > max est refusé (message, saisie gardée, rien enregistré)');
+    r = await page(`/contacts/qualifier?id=${Fq}`, [...base, ['a_types', 'Maison'], ['a_types', 'Terrain'], ['a_surface_min', '110'], ['a_surface_max', '150'], ['a_chambres_min', '4'], ['a_terrain_min', '1 000'], ['a_budget_min', '600000'], ['a_budget_max', '700 000 €'], ['a_secteur', 'Sciez, Anthy'], ['a_indispensable', 'Plain-pied'], ['a_apprecie', 'Vue lac'], ['a_redhibitoire', 'Bruit'], ['a_financement', 'Vérifié']]);
+    const qq = qualif(Fq);
+    constat(r.status === 303 && ligne(Fq).qualifie_le !== null && qq.types === 'Maison, Terrain' && qq.surface_min === '110' && qq.surface_max === '150' && qq.chambres_min === '4' && qq.terrain_min === '1000' && qq.budget_min === '600000' && qq.budget_max === '700000'
+      && qq.secteur === 'Sciez, Anthy' && qq.indispensable === 'Plain-pied' && qq.apprecie === 'Vue lac' && qq.redhibitoire === 'Bruit' && qq.financement === 'Vérifié' && qq.delai === 'Dans 3 mois',
+      '18.30 : la qualification écrit les mêmes clés que le panneau (espaces et « € » dans un nombre tolérés)');
+    const apres = (await api(null, { methode: 'GET', id: Fq })).d.fiche.recherche;
+    constat(apres.budget_max === '700000' && apres.redhibitoire === 'Bruit', '18.30 : ce qui est saisi à la qualification se lit dans le panneau (mêmes données)');
+    const fichePage = await (await appeler(`${E}/contacts/fiche?id=${Fq}`, { headers: avecJeton() })).text();
+    const resume = sansNbsp(fichePage.replace(/<[^>]+>/g, ' '));
+    constat(resume.includes('600 à 700 k€') && resume.includes('110 à 150 m²') && resume.includes('4 chambres et plus') && resume.includes('Rédhibitoire Bruit'),
+      '18.30 : la fiche de suivi (/contacts/fiche) montre les nouveaux critères');
+    nettoyer();
+  }
   // Story 20.7 : canaux de prospection, page « Ma semaine ». Sur une semaine passée réservée à l'essai (3 au 9 mars 2025) :
   // effort noté par canal (le boîtage écrit un passage du tableau du boîtage), leads et rendez-vous, refus (date future, nombre
   // hors bornes, canal inconnu, boîtage sans ville, effort hors canaux, lead du site), modèle envoyé compté dans les messages,
@@ -1479,6 +1670,7 @@ try {
   }
   if (process.env.E2E_2008_SEUL) { await bloc2008(); await nav.close(); throw new Error(echecs ? 'E2E_2008_SEUL : échecs' : 'E2E_2008_SEUL : terminé') }
   if (process.env.E2E_1824_SEUL) { await bloc1824(); await nav.close(); throw new Error(echecs ? 'E2E_1824_SEUL : échecs' : 'E2E_1824_SEUL : terminé') }
+  if (process.env.E2E_1830_SEUL) { await bloc1830(); await nav.close(); throw new Error(echecs ? 'E2E_1830_SEUL : échecs' : 'E2E_1830_SEUL : terminé') }
   if (process.env.E2E_1822_SEUL) { await bloc1822(); await nav.close(); throw new Error(echecs ? 'E2E_1822_SEUL : échecs' : 'E2E_1822_SEUL : terminé') }
   if (process.env.E2E_1821_SEUL) { await bloc1821(); await nav.close(); throw new Error(echecs ? 'E2E_1821_SEUL : échecs' : 'E2E_1821_SEUL : terminé') }
   if (process.env.E2E_1820_SEUL) { await bloc1820(); await nav.close(); throw new Error(echecs ? 'E2E_1820_SEUL : échecs' : 'E2E_1820_SEUL : terminé') }
@@ -2013,7 +2205,7 @@ try {
   };
   const ach1 = await ajouterAcheteur('Hugo', `hugo+${ESSAI}@example.com`), ach2 = await ajouterAcheteur('Inès', `ines+${ESSAI}@example.com`);
   r = await appeler(`${E}/contacts/qualifier?id=${ach1}`, { headers: avecJeton() });
-  constat((await r.text()).includes('name="a_budget"'), 'qualifier un acheteur : budget, secteur et financement demandés');
+  constat((await r.text()).includes('name="a_budget_min"'), 'qualifier un acheteur : budget (minimum et maximum), secteur et financement demandés');
   await qualif(ach1, [['q_bien', 'Maison'], ['q_vend_avant', 'Oui'], ['a_types', 'Maison'], ['a_pieces', 'T5 et plus'], ['a_pieces', 'T4'], ['a_pieces', 'Château'], ['a_surface', '120 m²'],
     ['a_exterieur', 'Jardin'], ['a_autres', 'Vue lac, plain-pied'], ['a_budget', '700 k€'], ['a_secteur', `${ANTHY}, Sciez`], ['a_financement', 'Après sa vente'], ['issue', 'rdv'], ['rdv_le', '2027-02-02T10:00']]);
   await qualif(ach2, { q_bien: 'Maison', q_vend_avant: 'Non', a_budget: '900 k€ à 1,1 M€', a_secteur: ANTHY, a_financement: 'Vérifié', issue: 'rdv', rdv_le: '2027-02-03T10:00' });
@@ -4020,6 +4212,7 @@ try {
   await bloc2007();
   await bloc1824();
   await bloc2008();
+  await bloc1830();
   // Story 18.8 : catégories et méthodes, par /api/categories puis dans la page /categories. Les catégories de départ sont
   // remises comme avant à la fin (nom, ordre, méthode), les catégories d'essai retirées (marque « E188 » dans le nom).
   const ancienne8 = sql(`SELECT id FROM categorie WHERE nom LIKE '%E188%'`).map((c) => `'${c.id}'`).join(',');
