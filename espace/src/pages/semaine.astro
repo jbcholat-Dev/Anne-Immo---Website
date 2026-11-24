@@ -13,7 +13,7 @@ import { pourSite as env } from '../server/env';
 import { ULID } from '../server/formulaires';
 import {
   bornes, CANAUX_PROSPECTION, CLES_OBJECTIF, enregistrerObjectifs, enregistrerSaisie, jourCourt, jourDemande, jourParis, LIBELLES_CANAL, libellePeriode,
-  lireFormObjectifs, lireObjectifs, lirePeriode, lireSaisie, nombre, objectifsDepart, partAtteinte, PERIODES_PAGE, retirerSaisie, TYPES_LEAD, voisine, type Periode,
+  dansListe, lireFormObjectifs, lireObjectifs, lirePeriode, lireSaisie, nombre, objectifsDepart, partAtteinte, PERIODES_PAGE, retirerSaisie, TYPES_LEAD, voisine, type Periode,
 } from '../server/prospection';
 
 export const prerender = false;
@@ -21,7 +21,7 @@ const compte = Astro.request.headers.get(ENTETE_COMPTE);
 if (!compte) return new Response('Accès refusé', { status: 403 });
 
 const demandee = Astro.url.searchParams.get('p') ?? 'semaine';
-const periode: Periode = demandee in PERIODES_PAGE ? (demandee as Periode) : 'semaine';
+const periode: Periode = dansListe(PERIODES_PAGE, demandee) ? (demandee as Periode) : 'semaine';
 let jour = jourDemande(Astro.url.searchParams.get('s'));
 let erreur = '';
 let ouvert = '';
@@ -38,7 +38,10 @@ if (Astro.request.method === 'POST') {
     erreur = 'Cette ligne ne peut pas être retirée ici.';
   } else if (quoi === 'objectifs') {
     const o = lireFormObjectifs(f);
-    if (typeof o === 'string') { erreur = o; ouvert = 'objectifs'; }
+    if (typeof o === 'string') {
+      erreur = o; ouvert = 'objectifs';
+      saisi = Object.fromEntries([...f.entries()].map(([k, v]) => [k, typeof v === 'string' ? v.trim().slice(0, 20) : '']));
+    }
     else { await enregistrerObjectifs(env, o, compte); return retour('objectifs'); }
   } else {
     const s = lireSaisie(f);
@@ -130,7 +133,7 @@ const qui = (par: string | null) => (par ? par.split('@')[0] : '');
             {l.effortAuto > 0 && <div class="s-def" data-auto>dont {l.effortAuto} envoyé(s) depuis l'espace</div>}
             <div class="s-resultats"><span data-leads>Leads <strong>{l.leads}</strong></span><span data-rdv>Rdv <strong>{l.rdv}</strong></span></div>
             <details class="s-noter" open={ouvrir}>
-              <summary>+ Noter</summary>
+              <summary><span class="s-ouvrir">+ Noter</span><span class="s-fermer">Fermer</span></summary>
               <form method="post" class="s-form" data-form={l.canal}>
                 <input type="hidden" name="canal" value={l.canal} />
                 <fieldset class="s-quoi">
@@ -139,10 +142,10 @@ const qui = (par: string | null) => (par ? par.split('@')[0] : '');
                   <label><input type="radio" name="quoi" value="lead" checked={ouvrir && val('quoi', '') === 'lead'} /><span>Lead</span></label>
                   <label><input type="radio" name="quoi" value="rdv" checked={ouvrir && val('quoi', '') === 'rdv'} /><span>Rendez-vous</span></label>
                 </fieldset>
-                <label class="e-champ">Combien<input name="quantite" inputmode="numeric" required value={ouvrir ? val('quantite', '') : l.canal === 'boitage' ? '' : '1'} placeholder={l.canal === 'boitage' ? '200' : '1'} autocomplete="off" /></label>
+                <label class="e-champ">Combien<input name="quantite" inputmode="numeric" required value={ouvrir ? val('quantite', '') : l.canal === 'boitage' ? '' : '1'} placeholder={l.canal === 'boitage' ? '200' : '1'} autocomplete="off" />{l.canal === 'messages' && <span class="e-muet s-si-effort" data-aide-messages>Sans les modèles envoyés depuis l'espace : ils sont déjà comptés ({l.effortAuto}).</span>}</label>
                 <label class="e-champ">Quel jour<input type="date" name="jour" required value={ouvrir ? val('jour', jourParDefaut) : jourParDefaut} max={auj} /></label>
                 {l.canal === 'boitage' && <label class="e-champ s-si-effort">Ville<input name="ville" value={ouvrir ? val('ville', '') : ''} maxlength="120" autocomplete="off" placeholder="Sciez" /></label>}
-                <label class="e-champ s-si-effort">Lieu ou précision (facultatif)<input name="note" value={ouvrir ? val('note', '') : ''} maxlength="200" autocomplete="off" /></label>
+                <label class="e-champ s-si-effort">Lieu ou précision (facultatif)<input name="note" value={ouvrir ? val('note', '') : ''} maxlength="200" autocomplete="off" /><span class="e-muet">Un lieu, pas le nom d'une personne.</span></label>
                 <fieldset class="s-si-lead s-quoi">
                   <legend class="e-muet">Type de lead</legend>
                   {Object.entries(TYPES_LEAD).map(([k, t]) => <label><input type="radio" name="type_lead" value={k} checked={(ouvrir ? val('type_lead', 'direct') : 'direct') === k} /><span>{t}</span></label>)}
@@ -155,7 +158,7 @@ const qui = (par: string | null) => (par ? par.split('@')[0] : '');
       })}
     </div>
   </div>
-  <p class="s-bonus" data-bonus-ligne>Bonus, hors objectif : <b>{sem.bonus[0].leads} lead{sem.bonus[0].leads > 1 ? 's' : ''}</b> venu{sem.bonus[0].leads > 1 ? 's' : ''} du site et des portails{sem.bonus[1].leads > 0 && <>, <b>{sem.bonus[1].leads}</b> d'ailleurs</>}.</p>
+  <p class="s-bonus" data-bonus-ligne>Bonus, hors objectif : <b>{sem.bonus[0].leads} lead{sem.bonus[0].leads > 1 ? 's' : ''}</b> venu{sem.bonus[0].leads > 1 ? 's' : ''} du site et des portails{sem.bonus[1].leads > 0 && <>, <b>{sem.bonus[1].leads}</b> d'ailleurs</>}{sem.total.rdvBonus > 0 && <> ; <b>{sem.total.rdvBonus} rendez-vous</b></>}. Ils ne comptent pas dans les objectifs.</p>
   <p class="e-muet s-note">Objectifs arrondis au-dessus. Taux de départ supposés : ils seront remplacés par ceux mesurés.</p>
 
   <section class="e-carte" data-bonus>
@@ -186,7 +189,7 @@ const qui = (par: string | null) => (par ? par.split('@')[0] : '');
   </section>
 
   <details class="e-carte s-replie" id="notes" data-notes open={m === 'retire' || m === 'deja'}>
-    <summary><h2>Ce qui a été noté ({sem.notes.length})</h2></summary>
+    <summary class="s-titre">Ce qui a été noté ({sem.notes.length})</summary>
     {sem.notes.length === 0 ? <p class="e-muet">Rien de noté pour l'instant. Chaque action compte : un passage, une carte, une publication.</p> : (
       <div class="e-table-zone">
         <table class="e-table">
@@ -212,7 +215,7 @@ const qui = (par: string | null) => (par ? par.split('@')[0] : '');
   </details>
 
   <details class="e-carte s-replie" open={ouvert === 'objectifs'} data-reglages>
-    <summary><h2>Objectifs de la semaine</h2></summary>
+    <summary class="s-titre">Objectifs de la semaine</summary>
     <form method="post" class="s-form">
       <input type="hidden" name="quoi" value="objectifs" />
       <div class="s-grille">
@@ -264,7 +267,9 @@ const qui = (par: string | null) => (par ? par.split('@')[0] : '');
   .s-noter { text-align: left; }
   .s-noter > summary { list-style: none; display: flex; align-items: center; justify-content: center; min-height: 44px; border: 1.5px solid var(--avt-brun); border-radius: 999px; font-size: 14px; cursor: pointer; }
   .s-noter > summary::-webkit-details-marker { display: none; }
-  .s-noter[open] > summary { display: none; }
+  .s-noter > summary .s-fermer, .s-noter[open] > summary .s-ouvrir { display: none; }
+  .s-noter[open] > summary .s-fermer { display: inline; }
+  .s-noter[open] > summary { border-color: var(--avt-border, #d8cfc2); margin-bottom: 8px; }
   .s-form { display: flex; flex-direction: column; gap: 10px; }
   .s-form .e-champ input { font-size: 15px; padding: 8px; }
   .s-quoi { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
@@ -286,7 +291,7 @@ const qui = (par: string | null) => (par ? par.split('@')[0] : '');
   .s-cache { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .s-lien { background: none; border: 0; padding: 0; min-height: 44px; color: var(--avt-terra); text-decoration: underline; font: inherit; cursor: pointer; }
   .s-replie > summary { cursor: pointer; }
-  .s-replie > summary h2 { display: inline; margin: 0; font-size: 18px; }
+  .s-replie > summary.s-titre { font-family: var(--avt-titre, inherit); font-size: 18px; font-weight: 600; }
   .s-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
   @media (max-width: 900px) { .s-canaux { grid-template-columns: repeat(2, minmax(0, 1fr)); } .s-jonction { display: none; } .s-fleche span { white-space: normal; text-align: center; width: max-content; max-width: 240px; border-radius: 12px; } }
 </style>

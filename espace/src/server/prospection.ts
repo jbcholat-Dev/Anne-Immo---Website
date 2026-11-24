@@ -41,10 +41,14 @@ export type TypeLead = keyof typeof TYPES_LEAD;
 
 const JOUR = /^\d{4}-\d{2}-\d{2}$/;
 const PREMIER_JOUR = '2025-01-01';
+/** Une clé propre à la liste (revue de code 20.7 : `in` accepterait aussi `toString` ou `constructor`). */
+export const dansListe = (liste: object, cle: string | null | undefined): boolean => typeof cle === 'string' && Object.hasOwn(liste, cle);
 export const jourParis = (t: number | Date = Date.now()) =>
   new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).format(t);
+/** Dernier jour accepté dans l'adresse : la fin de l'année prochaine (revue de code 20.7 : pas d'année 10000). */
+const dernierJour = () => `${Number(jourParis().slice(0, 4)) + 1}-12-31`;
 const jourValide = (v: unknown): v is string =>
-  typeof v === 'string' && JOUR.test(v) && !Number.isNaN(Date.parse(`${v}T12:00:00Z`)) && new Date(`${v}T12:00:00Z`).toISOString().slice(0, 10) === v;
+  typeof v === 'string' && JOUR.test(v) && v <= dernierJour() && !Number.isNaN(Date.parse(`${v}T12:00:00Z`)) && new Date(`${v}T12:00:00Z`).toISOString().slice(0, 10) === v;
 const decaler = (jour: string, n: number) => new Date(Date.parse(`${jour}T12:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
 
 /** Le lundi de la semaine qui contient ce jour (AAAA-MM-JJ). */
@@ -130,8 +134,8 @@ export function lireSaisie(f: FormData): Saisie | string {
   const jour = texte(f, 'jour', 20);
   const q = texte(f, 'quantite', 10).replace(/\s/g, '');
   if (quoi !== 'effort' && quoi !== 'lead' && quoi !== 'rdv') return 'Choisissez ce que vous notez : effort, lead ou rendez-vous.';
-  const suivi = canal in CANAUX_PROSPECTION;
-  if (!suivi && !(canal in CANAUX_BONUS)) return 'Canal inconnu.';
+  const suivi = dansListe(CANAUX_PROSPECTION, canal);
+  if (!suivi && !dansListe(CANAUX_BONUS, canal)) return 'Canal inconnu.';
   if (!jourValide(jour) || jour < PREMIER_JOUR) return 'Date invalide.';
   if (jour > jourParis()) return 'La date est dans le futur : notez ce qui est déjà fait.';
   const max = quoi === 'effort' ? 99999 : 99;
@@ -146,7 +150,7 @@ export function lireSaisie(f: FormData): Saisie | string {
   if (quoi === 'lead') {
     if (canal === 'site') return 'Les leads du site et des portails se comptent seuls, depuis les demandes reçues.';
     const t = texte(f, 'type_lead', 20) || 'direct';
-    if (!(t in TYPES_LEAD)) return 'Type de lead inconnu.';
+    if (!dansListe(TYPES_LEAD, t)) return 'Type de lead inconnu.';
     return { quoi, canal: canal as CanalResultat, jour, quantite, type_lead: t as TypeLead };
   }
   return { quoi, canal: canal as CanalResultat, jour, quantite };
@@ -209,7 +213,12 @@ export interface Semaine {
   objectifs: Objectifs;
   canaux: LigneCanal[];
   bonus: LigneBonus[];
-  total: { leads: number; rdv: number; leadsBonus: number; leadsDirects: number; leadsDiagnostic: number };
+  /**
+   * `leads` et `rdv` : les canaux suivis seulement, face à l'objectif. Le bonus (site, portails, autre) est à part, dans
+   * `leadsBonus` et `rdvBonus` (spec Priestley point 5 : « hors objectif, comptés en bonus » ; revue de code 20.7).
+   * `leadsDirects` et `leadsDiagnostic` comptent tous les leads, bonus compris.
+   */
+  total: { leads: number; rdv: number; leadsBonus: number; rdvBonus: number; leadsDirects: number; leadsDiagnostic: number };
   notes: Note[];
 }
 
@@ -270,10 +279,20 @@ export async function lirePeriode(env: EnvSite, periode: Periode, jour: string):
       .bind(lundi, dimanche).all<{ id: string; type: Note['quoi']; canal: string; type_lead: TypeLead | null; le: string; quantite: number; par: string | null }>(),
     env.DB.prepare('SELECT id, fait_le, coalesce(ville, secteur) AS ville, mots FROM passage_boitage WHERE fait_le BETWEEN ?1 AND ?2 ORDER BY fait_le DESC, created_at DESC')
       .bind(lundi, dimanche).all<{ id: string; fait_le: string; ville: string; mots: number | null }>(),
-    env.DB.prepare(`SELECT a FROM contact_evenement WHERE a >= ?1 AND a < ?2 AND json_valid(donnees) AND json_type(donnees, '$.envoi_modele') IS NOT NULL`)
+    // Messages ambassadeur : les modèles envoyés (à la main ou groupés) aux seuls ambassadeurs (projet « ambassadeur », inscrits
+    // ou partants, comme le tableau des ambassadeurs) ; une campagne aux acheteurs ne compte pas (revue de code 20.7).
+    // Le LIKE écarte vite les autres événements avant la lecture du JSON.
+    env.DB.prepare(`SELECT e.a FROM contact_evenement e JOIN contact c ON c.id = e.contact_id
+       WHERE e.a >= ?1 AND e.a < ?2 AND e.donnees LIKE '%envoi_modele%' AND json_valid(e.donnees) AND json_type(e.donnees, '$.envoi_modele') IS NOT NULL
+         AND (c.projet = 'ambassadeur' OR c.ambassadeur_inscrit_le IS NOT NULL OR c.ambassadeur_partant_le IS NOT NULL)`)
       .bind(de, a).all<{ a: string }>(),
-    env.DB.prepare(`SELECT recu_le, contact_id FROM nouveau WHERE source IN ('site', 'portail') AND recu_le >= ?1 AND recu_le < ?2`)
-      .bind(de, a).all<{ recu_le: string; contact_id: string | null }>(),
+    // Demandes du site et des portails, sauf celles écartées de la file « Nouveaux » et les e-mails de portail restés illisibles
+    // (confirmation Gmail, échec SPF, message trop gros). `origine` : la source du formulaire du site (diagnostic, guide…).
+    env.DB.prepare(`SELECT n.recu_le, n.contact_id, n.source, CASE WHEN json_valid(e.donnees) THEN json_extract(e.donnees, '$.source') END AS origine
+       FROM nouveau n LEFT JOIN contact_evenement e ON e.id = n.evenement_id LEFT JOIN portail_courriel p ON p.id = n.portail_courriel_id
+       WHERE n.source IN ('site', 'portail') AND n.recu_le >= ?1 AND n.recu_le < ?2 AND (n.issue IS NULL OR n.issue <> 'ecarte')
+         AND (n.source <> 'portail' OR p.etat IS NULL OR p.etat <> 'illisible')`)
+      .bind(de, a).all<{ recu_le: string; contact_id: string | null; source: string; origine: unknown }>(),
   ]);
 
   const canaux: LigneCanal[] = (Object.entries(CANAUX_PROSPECTION) as [CanalProspection, (typeof CANAUX_PROSPECTION)[CanalProspection]][]).map(([canal, c]) => ({
@@ -282,7 +301,7 @@ export async function lirePeriode(env: EnvSite, periode: Periode, jour: string):
   const parCanal = new Map<string, LigneCanal>(canaux.map((l) => [l.canal, l]));
   const bonus: LigneBonus[] = (Object.entries(CANAUX_BONUS) as [CanalBonus, string][]).map(([canal, libelle]) => ({ canal, libelle, leads: 0, rdv: 0 }));
   const parBonus = new Map<string, LigneBonus>(bonus.map((l) => [l.canal, l]));
-  const total = { leads: 0, rdv: 0, leadsBonus: 0, leadsDirects: 0, leadsDiagnostic: 0 };
+  const total = { leads: 0, rdv: 0, leadsBonus: 0, rdvBonus: 0, leadsDirects: 0, leadsDiagnostic: 0 };
   const notes: Note[] = [];
 
   for (const e of efforts.results) {
@@ -302,22 +321,29 @@ export async function lirePeriode(env: EnvSite, periode: Periode, jour: string):
   for (const r of resultats.results) {
     const l = parCanal.get(r.canal) ?? parBonus.get(r.canal);
     if (!l) continue;
+    const enBonus = parBonus.has(r.canal);
     if (r.type === 'lead') {
-      l.leads += r.quantite; total.leads += r.quantite;
+      l.leads += r.quantite;
+      if (enBonus) total.leadsBonus += r.quantite; else total.leads += r.quantite;
       if (r.type_lead === 'diagnostic') total.leadsDiagnostic += r.quantite; else total.leadsDirects += r.quantite;
-      if (parBonus.has(r.canal)) total.leadsBonus += r.quantite;
-    } else if (r.type === 'rdv') { l.rdv += r.quantite; total.rdv += r.quantite; }
+    } else if (r.type === 'rdv') { l.rdv += r.quantite; if (enBonus) total.rdvBonus += r.quantite; else total.rdv += r.quantite; }
     notes.push({ genre: 'resultat', id: r.id, canal: l.canal, jour: r.le, quoi: r.type, quantite: r.quantite, detail: r.type === 'lead' && r.type_lead ? TYPES_LEAD[r.type_lead].split(' (')[0] : null, par: r.par });
   }
-  // Leads du site et des portails : une personne par demande reçue de la semaine (deux demandes du même contact = un lead).
+  // Leads du site et des portails : une personne par période (deux demandes du même contact = un lead). Une inscription
+  // au programme ambassadeurs n'est pas un lead. Diagnostic et guide : des coordonnées laissées (lead « diagnostic »),
+  // le reste (contact, estimation, rendez-vous, portail) : une demande directe. Une personne venue des deux est directe.
   const site = parBonus.get('site')!;
-  const vus = new Set<string>();
+  const parPersonne = new Map<string, TypeLead>();
   for (const n of nouveaux.results) {
     if (!dans(jourParis(new Date(n.recu_le)))) continue;
-    const cle = n.contact_id ?? n.recu_le;
-    if (vus.has(cle)) continue;
-    vus.add(cle);
-    site.leads++; total.leads++; total.leadsBonus++; total.leadsDirects++;
+    if (n.origine === 'ambassadeur') continue;
+    const type: TypeLead = n.source === 'site' && (n.origine === 'diagnostic' || n.origine === 'guide') ? 'diagnostic' : 'direct';
+    const cle = n.contact_id ?? `${n.source}:${n.recu_le}`;
+    if (parPersonne.get(cle) !== 'direct') parPersonne.set(cle, type);
+  }
+  for (const type of parPersonne.values()) {
+    site.leads++; total.leadsBonus++;
+    if (type === 'diagnostic') total.leadsDiagnostic++; else total.leadsDirects++;
   }
   notes.sort((x, y) => (x.jour < y.jour ? 1 : x.jour > y.jour ? -1 : 0));
   return { periode, lundi, dimanche, objectifs, canaux, bonus, total, notes };

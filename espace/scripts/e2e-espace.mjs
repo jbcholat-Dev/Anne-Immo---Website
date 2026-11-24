@@ -1153,16 +1153,22 @@ try {
   async function bloc2007() {
     const P = 'E2007';
     const L = '2025-03-03', D = '2025-03-09';
-    const C = `01KF2007${NUM}${'0'.repeat(12)}`;
+    const C = `01KF2007${NUM}${'0'.repeat(12)}`, C2 = `01KF2007${NUM}${'0'.repeat(11)}1`;
+    // Revue de code 20.7 : le nettoyage ne retire que ce que l'essai a écrit ; les objectifs en place sont remis à la fin.
+    const objectifsAvant = sql(`SELECT cle, valeur, par, maj_le FROM prospection_objectif`);
     const nettoyer = () => {
-      sql(`DELETE FROM prospection_effort WHERE jour BETWEEN '${L}' AND '${D}'`);
-      sql(`DELETE FROM resultat WHERE le BETWEEN '${L}' AND '${D}'`);
+      sql(`DELETE FROM prospection_effort WHERE jour BETWEEN '${L}' AND '${D}' AND par = 'anne@example.com'`);
+      sql(`DELETE FROM resultat WHERE le BETWEEN '${L}' AND '${D}' AND par = 'anne@example.com'`);
+      sql(`DELETE FROM passage_boitage WHERE ville LIKE '${P}%'`);
+      sql(`DELETE FROM nouveau WHERE contact_id IN ('${C}', '${C2}')`);
+      sql(`DELETE FROM contact WHERE id IN ('${C}', '${C2}')`);
+    };
+    const remettreObjectifs = () => {
       sql(`DELETE FROM prospection_objectif`);
-      sql(`DELETE FROM passage_boitage WHERE ville LIKE '${P}%' OR (fait_le BETWEEN '${L}' AND '${D}')`);
-      sql(`DELETE FROM nouveau WHERE contact_id = '${C}'`);
-      sql(`DELETE FROM contact WHERE id = '${C}'`);
+      for (const x of objectifsAvant) sql(`INSERT INTO prospection_objectif (cle, valeur, par, maj_le) VALUES ('${x.cle}', ${Number(x.valeur)}, ${x.par === null ? 'NULL' : `'${String(x.par).replace(/'/g, "''")}'`}, '${x.maj_le}')`);
     };
     nettoyer();
+    sql(`DELETE FROM prospection_objectif`);
     const note = (champs) => page('/semaine', champs);
     // 1. Efforts, leads et rendez-vous.
     let r = await note({ quoi: 'effort', canal: 'cartes', quantite: '4', jour: '2025-03-04', note: 'Marché de Douvaine' });
@@ -1198,18 +1204,30 @@ try {
       ['type de lead inconnu', { quoi: 'lead', canal: 'cartes', quantite: '1', jour: L, type_lead: 'froid' }, 'Type de lead'],
       ['quoi inconnu', { quoi: 'mandat', canal: 'cartes', quantite: '1', jour: L }, 'Choisissez'],
       ['date illisible', { quoi: 'effort', canal: 'cartes', quantite: '1', jour: '2025-02-30' }, 'Date invalide'],
+      ['canal « constructor »', { quoi: 'effort', canal: 'constructor', quantite: '1', jour: L }, 'Canal inconnu'],
+      ['type de lead « toString »', { quoi: 'lead', canal: 'cartes', quantite: '1', jour: L, type_lead: 'toString' }, 'Type de lead'],
     ]) {
       r = await note(champs);
       const h = await r.text();
       if (r.status !== 200 || !h.includes('data-erreur') || !h.toLowerCase().includes(texte.toLowerCase())) refus.push(nom);
     }
     const apres = sql(`SELECT (SELECT count(*) FROM prospection_effort) + (SELECT count(*) FROM resultat) + (SELECT count(*) FROM passage_boitage) AS n`)[0].n;
-    constat(refus.length === 0 && apres === avant, `20.7 : 11 saisies invalides refusées avec un message, rien d'écrit${refus.length ? ` (à revoir : ${refus.join(', ')})` : ''}`);
-    // 3. Comptés seuls : un modèle envoyé depuis l'espace (messages), deux demandes du site de la même personne (un lead).
-    sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, categorie_id, projet) VALUES ('${C}', '2025-03-01T08:00:00Z', '2025-03-01T08:00:00Z', 'Sam', '${P}${NUM}', 'edb', 'a_qualifier')`);
+    constat(refus.length === 0 && apres === avant, `20.7 : 13 saisies invalides refusées (noms internes de JavaScript compris) avec un message, rien d'écrit${refus.length ? ` (à revoir : ${refus.join(', ')})` : ''}`);
+    // 3. Comptés seuls : un modèle envoyé à un ambassadeur (messages), deux demandes du site de la même personne (un lead direct).
+    // Ne comptent pas (revue de code 20.7) : une campagne à un acheteur, une demande écartée, une inscription ambassadeur.
+    // Une demande du diagnostic compte en lead « diagnostic ».
+    sql(`INSERT INTO contact (id, created_at, last_activity_at, prenom, nom, categorie_id, projet) VALUES ('${C}', '2025-03-01T08:00:00Z', '2025-03-01T08:00:00Z', 'Sam', '${P}${NUM}', 'edb', 'ambassadeur'),
+      ('${C2}', '2025-03-01T08:00:00Z', '2025-03-01T08:00:00Z', 'Lou', '${P}${NUM}b', 'edb', 'acheteur')`);
     sql(`INSERT INTO contact_evenement (contact_id, a, type, source, texte, donnees, par) VALUES ('${C}', '2025-03-05T10:00:00Z', 'note', 'anne', 'Envoyé', '{"envoi_modele":"Ambassadeur"}', 'anne@example.com'),
-      ('${C}', '2025-03-09T23:30:00Z', 'note', 'anne', 'Envoyé', '{"envoi_modele":"Ambassadeur"}', 'anne@example.com')`);
+      ('${C}', '2025-03-09T23:30:00Z', 'note', 'anne', 'Envoyé', '{"envoi_modele":"Ambassadeur"}', 'anne@example.com'),
+      ('${C2}', '2025-03-05T11:00:00Z', 'email', 'anne', 'Campagne envoyée', '{"campagne":"x","envoi_modele":"Nouveautés"}', 'anne@example.com')`);
+    sql(`INSERT INTO contact_evenement (contact_id, a, type, source, source_id, texte, donnees) VALUES ('${C2}', '2025-03-07T09:00:00Z', 'demande', 'site', '${P}${NUM}-diag', 'Demande', '{"source":"diagnostic"}'),
+      ('${C2}', '2025-03-07T10:00:00Z', 'demande', 'site', '${P}${NUM}-amb', 'Demande', '{"source":"ambassadeur"}')`);
+    const ev = (sid) => `(SELECT id FROM contact_evenement WHERE source = 'site' AND source_id = '${P}${NUM}-${sid}')`;
     sql(`INSERT INTO nouveau (id, source, recu_le, contact_id) VALUES ('01KF2007A${NUM}${'0'.repeat(11)}', 'site', '2025-03-06T09:00:00Z', '${C}'), ('01KF2007B${NUM}${'0'.repeat(11)}', 'site', '2025-03-06T15:00:00Z', '${C}')`);
+    sql(`INSERT INTO nouveau (id, source, recu_le, contact_id, evenement_id, vu_le, issue) VALUES ('01KF2007C${NUM}${'0'.repeat(11)}', 'site', '2025-03-07T09:00:00Z', '${C2}', ${ev('diag')}, NULL, NULL),
+      ('01KF2007D${NUM}${'0'.repeat(11)}', 'site', '2025-03-07T10:00:00Z', '${C2}', ${ev('amb')}, NULL, NULL),
+      ('01KF2007E${NUM}${'0'.repeat(11)}', 'portail', '2025-03-08T10:00:00Z', NULL, NULL, '2025-03-08T11:00:00Z', 'ecarte')`);
     // 4. La page de la semaine (adresse d'un mercredi : ramenée au lundi).
     const ctx = await nav.newContext({ viewport: { width: 1440, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
     const o = await ctx.newPage();
@@ -1217,12 +1235,13 @@ try {
     await o.goto(`${E}/semaine?s=2025-03-05`);
     const txt = async (sel) => (await o.textContent(sel))?.replace(/\s+/g, ' ').trim();
     const cartes = await txt('[data-canal=cartes] [data-effort]'), boit = await txt('[data-canal=boitage] [data-effort]'), msg = await txt('[data-canal=messages] [data-effort]');
-    constat(cartes === '4 sur 10 cartes données' && boit === '300 sur 1 500 flyers' && msg === '1 sur 20 messages' && (await txt('[data-canal=messages] [data-auto]')) === "dont 1 envoyé(s) depuis l'espace",
-      `20.7 : efforts de la semaine : cartes « ${cartes} », boîtage « ${boit} », messages « ${msg} » (le modèle envoyé le lundi 10 à 0 h 30, heure de Paris, compte la semaine suivante)`);
+    constat(cartes === '4 sur 10 cartes données' && boit === '300 sur 1 500 flyers' && msg === '1 sur 20 messages' && (await txt('[data-canal=messages] [data-auto]')) === "dont 1 envoyé(s) depuis l'espace"
+      && (await o.textContent('[data-aide-messages]'))?.includes('déjà comptés (1)'),
+      `20.7 : efforts de la semaine : cartes « ${cartes} », boîtage « ${boit} », messages « ${msg} » (le modèle envoyé le lundi 10 à 0 h 30, heure de Paris, compte la semaine suivante ; la campagne à un acheteur ne compte pas)`);
     const rdv = await txt('[data-objectif=rdv] .s-chiffre'), leads = await txt('[data-objectif=leads] .s-chiffre');
-    constat(rdv === '2 sur 3 · 67 %' && leads === '4 sur 3 · 100 %' && (await txt('[data-canal=reseaux] [data-leads]')) === 'Leads 2' && (await txt('[data-canal=cartes] [data-rdv]')) === 'Rdv 1'
-      && (await txt('[data-bonus-canal=site] td:nth-child(2)')) === '1' && (await txt('[data-bonus-canal=autre] td:nth-child(3)')) === '1',
-      `20.7 : en tête « Rendez-vous ${rdv} » et « Leads ${leads} » (deux demandes du site de la même personne = un lead, barre plafonnée à 100 %)`);
+    constat(rdv === '1 sur 3 · 33 %' && leads === '3 sur 3 · 100 %' && (await txt('[data-canal=reseaux] [data-leads]')) === 'Leads 2' && (await txt('[data-canal=cartes] [data-rdv]')) === 'Rdv 1'
+      && (await txt('[data-bonus-canal=site] td:nth-child(2)')) === '2' && (await txt('[data-bonus-canal=autre] td:nth-child(3)')) === '1',
+      `20.7 : en tête, hors bonus : « Rendez-vous ${rdv} » et « Leads ${leads} » ; site : 2 leads (deux demandes d'une personne = un ; écartée et inscription ambassadeur non comptées)`);
     constat(await o.textContent('h1').then((t) => t.includes('du 3 au 9 mars')) && await o.isVisible('[data-cette-semaine]') && await o.isVisible('[data-suivante]')
       && await o.getAttribute('[data-menu-semaine]', 'aria-current') === 'page', '20.7 : titre « du 3 au 9 mars », « Cette semaine » et « Suivante » sur une semaine passée, « Ma semaine » allumé dans la barre');
     // Le formulaire : « + Noter » s'ouvre, Ville et précision pour l'effort, type de lead pour un lead (sans JavaScript).
@@ -1249,11 +1268,14 @@ try {
     // 6. Objectifs.
     const objectifs = { rdv: '4', leads: '5', 'effort:boitage': '1000', 'effort:cartes': '12', 'effort:messages': '20', 'effort:reseaux': '7', 'effort:magasin': '1' };
     r = await note({ quoi: 'objectifs', ...objectifs, 'effort:cartes': '-1' });
-    const refusObj = r.status === 200 && (await r.text()).includes('data-erreur') && sql(`SELECT count(*) AS n FROM prospection_objectif`)[0].n === 0;
+    const hObj = await r.text();
+    const refusObj = r.status === 200 && hObj.includes('data-erreur') && hObj.includes('value="-1"') && sql(`SELECT count(*) AS n FROM prospection_objectif`)[0].n === 0;
     r = await note({ quoi: 'objectifs', ...objectifs });
     await o.goto(`${E}/semaine?s=${L}`);
     constat(refusObj && r.status === 303 && (await txt('[data-canal=cartes] [data-effort]')) === '4 sur 12 cartes données' && (await txt('[data-objectif=rdv] .s-chiffre')) === '1 sur 4 · 25 %'
-      && (await txt('[data-canal=magasin] [data-effort]')) === '0 sur 1 opérations', '20.7 : objectifs réglés (un négatif refusé, rien d\'écrit), page à jour');
+      && (await txt('[data-canal=magasin] [data-effort]')) === '0 sur 1 opérations', '20.7 : objectifs réglés (un négatif refusé, rien d\'écrit, saisie gardée), page à jour');
+    await o.goto(`${E}/semaine?p=toString&s=9999-12-28`);
+    constat((await txt('h1')).startsWith('Ma semaine') && !(await txt('h1')).includes('10000'), `20.7 : « ?p=toString » et une date trop lointaine ramènent à la semaine en cours (${await txt('h1')})`);
     await o.goto(`${E}/semaine?p=mois&s=2025-03-20`);
     const mois = [await txt('h1'), await txt('[data-canal=cartes] [data-effort]'), await txt('[data-objectif=rdv] .s-chiffre'), await o.getAttribute('[data-periode=mois]', 'aria-current')];
     await o.goto(`${E}/semaine?p=annee&s=2025-03-20`);
@@ -1273,11 +1295,13 @@ try {
     let pr = null; try { pr = JSON.parse(brut).prospection; } catch {}
     const cartesC = pr?.semaine?.canaux?.find((x) => x.canal === 'cartes');
     constat(r.status === 200 && pr?.semaine?.lundi === L && pr.precedente?.lundi === '2025-02-24' && cartesC?.effort === 4 && cartesC.objectif === 12 && cartesC.leads === 1 && cartesC.rdv === 1
-      && pr.semaine.total.rdv === 1 && pr.semaine.objectifs.rdv === 4 && !brut.includes(P) && !brut.includes('example.com') && !brut.includes('Douvaine') && !brut.includes('Chavannex'),
+      && pr.semaine.total.rdv === 1 && pr.semaine.total.leads === 4 && pr.semaine.total.leadsBonus === 2 && pr.semaine.total.leadsDiagnostic === 3 && pr.semaine.total.leadsDirects === 3
+      && pr.semaine.objectifs.rdv === 4 && !brut.includes(P) && !brut.includes('example.com') && !brut.includes('Douvaine') && !brut.includes('Chavannex'),
       '20.7 : /api/claude/bilan donne la prospection de la semaine et de la précédente, en nombres seulement');
     r = await appeler(`${E}/semaine`, { headers: avecJeton(JETON_C), redirect: 'manual' });
     constat(r.status === 403, `20.7 : la page Ma semaine est fermée au jeton de Claude (${r.status})`);
     nettoyer();
+    remettreObjectifs();
   }
   if (process.env.E2E_2007_SEUL) { await bloc2007(); await nav.close(); throw new Error(echecs ? 'E2E_2007_SEUL : échecs' : 'E2E_2007_SEUL : terminé') }
   if (process.env.E2E_1822_SEUL) { await bloc1822(); await nav.close(); throw new Error(echecs ? 'E2E_1822_SEUL : échecs' : 'E2E_1822_SEUL : terminé') }
