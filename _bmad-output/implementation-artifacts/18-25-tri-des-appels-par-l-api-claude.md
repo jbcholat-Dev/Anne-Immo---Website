@@ -1,6 +1,6 @@
 # Story 18.25 : tri des appels par l'API Claude
 
-- Epic : 18 (carnet de contacts). Statut : review.
+- Epic : 18 (carnet de contacts). Statut : done (PR n° 274 fusionnée par JB le 2026-11-24).
 - Demande : JB, 2026-11-24, « C'est validé. Là, j'aimerais que tu fasses une première passe pour que je me rende compte à quoi ça pourrait ressembler. » Fiche de poste du chief of staff (https://claude.ai/artifact/RMp2hF6EJvmt6z45MoQS9f, sections 4, 5, 7, 8 étape 4), choix « tri dans l'espace, avec l'API Claude ». Maquette : https://claude.ai/artifact/GqtZLm44EFHJDVWmJiYd2e. Part de la story 18.24 (tri par règles).
 - Décision : AD-37 (spine d'architecture de l'espace).
 

@@ -1,6 +1,6 @@
 # Story 18.26 : brief du jour
 
-- Epic : 18 (carnet de contacts). Statut : review.
+- Epic : 18 (carnet de contacts). Statut : done (PR n° 274 fusionnée par JB le 2026-11-24).
 - Demande : JB, 2026-11-24, même demande que la story 18.25 (« une première passe pour que je me rende compte à quoi ça pourrait ressembler »). Fiche de poste du chief of staff (https://claude.ai/artifact/RMp2hF6EJvmt6z45MoQS9f, sections 4, 5, 6 et 8 étape 5). Maquette : https://claude.ai/artifact/GqtZLm44EFHJDVWmJiYd2e, section 1.
 - Décision : AD-37 (spine d'architecture de l'espace).
 
