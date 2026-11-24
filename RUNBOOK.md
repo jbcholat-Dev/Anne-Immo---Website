@@ -277,6 +277,7 @@ Mise en place, une fois, par JB (≈ 25 min en tout, dont ≈ 10 min avec Anne, 
 - 2026-11-02 : revue de code des stories 18.9, 18.11, 18.12, § 4 sexies : réglage public `PORTAILS_EXPEDITEUR_AUTORISE` de l'espace (la Gmail d'Anne, déjà rempli) ; seul un e-mail transféré par elle est lu. Rien à faire par JB.
 <<<<<<< HEAD
 - 2026-11-24 : § 4 sexies, tri des appels par l'API Claude (éteint, réglage `TRI_IA`) et brief du jour visible de JB seul (stories 18.25 et 18.26), brief de la semaine déposé par Claude (18.27).
+- 2026-11-24 : tri des appels par l'API Claude allumé (`TRI_IA` = `"oui"`), accord de JB du jour.
 =======
 - 2026-11-24 : § 4 sexies, clé de l'API Claude : secret `ANTHROPIC_API_KEY` du Worker `anne-espace`, posé par JB ; fin de validité 2027-12-31 ; crédit mensuel lié à l'abonnement Max de JB ; plafond de 20 $ et recharge automatique désactivée à tenir dans la console. Fiche légale complétée (PR n° 270).
 >>>>>>> origin/main
