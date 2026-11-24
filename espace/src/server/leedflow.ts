@@ -449,7 +449,11 @@ export const estCategorie = (v: string): v is Categorie => v in CATEGORIES;
 export const FILTRES = { a_trier: 'À trier', pro: 'Pros', prive: 'Privés', demarchage: 'Démarchage', tous: 'Tous' } as const;
 export type Filtre = keyof typeof FILTRES;
 
-export interface EchangeInconnu { a: string; titre: string; resume: string; tache: boolean; echeance: string | null; manque: boolean }
+export interface EchangeInconnu {
+  a: string; titre: string; resume: string; tache: boolean; echeance: string | null; manque: boolean;
+  /** Story 18.24 : genre (appel, vocal, sms) et durée en secondes, pour le tri par règles de la barre « Nouveaux ». */
+  genre: string | null; duree: number | null;
+}
 export interface NumeroInconnu {
   telephone: string; prenom: string; nom: string; email: string; dernier: string; echanges: EchangeInconnu[]; taches: EchangeInconnu[];
   categorie: Categorie | null;
@@ -477,7 +481,8 @@ function grouper(lignes: LigneInconnu[], categories: Map<string, Categorie> = ne
     n.prenom ||= d.prenom_leedflow ?? ''; n.nom ||= d.nom_leedflow ?? ''; n.email ||= d.email_leedflow ?? '';
     const tache = l.source_id.startsWith('tache:');
     const [titre, ...reste] = (l.texte ?? '').split('\n');
-    (tache ? n.taches : n.echanges).push({ a: l.a, titre: tache ? (d.tache ?? titre) : titre, resume: reste.join('\n').trim(), tache, echeance: d.echeance ?? null, manque: d.manque === true });
+    (tache ? n.taches : n.echanges).push({ a: l.a, titre: tache ? (d.tache ?? titre) : titre, resume: reste.join('\n').trim(), tache, echeance: d.echeance ?? null, manque: d.manque === true,
+      genre: typeof d.genre === 'string' ? d.genre : null, duree: typeof d.duree === 'number' ? d.duree : null });
   }
   for (const n of parNumero.values()) n.silencieux = n.taches.length === 0 && n.echanges.length > 0 && n.echanges.every((e) => e.manque);
   return [...parNumero.values()];

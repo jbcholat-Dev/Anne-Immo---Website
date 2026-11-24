@@ -21,7 +21,7 @@ import type { EnvSite } from '@site/server/env';
 import { trouver } from '@site/server/contacts';
 import type { EnvEspace } from './env';
 import { annulerCreation, annulerLot, classer, corrigerFiche, creerContact, lireCorrection, type Correction, type Saisie } from './carnet';
-import { ANNULATION_MS, classerDepuisNouveaux, declasserDepuisNouveaux, extrait, resumesInconnus } from './leedflow';
+import { ANNULATION_MS, classerDepuisNouveaux, declasserDepuisNouveaux, extrait, resumesInconnus, type NumeroInconnu } from './leedflow';
 import { annulerSuiviParGeste, suivreParGeste } from './pipeline';
 import { PORTAILS, type Portail } from './portails';
 
@@ -55,6 +55,32 @@ export interface CarteNouveau {
   echanges: number;
   ecarte: boolean;
   gestes: Geste[];
+  /**
+   * Story 18.24 (tri par règles, sans IA) : pourquoi la carte est rangée dans la ligne repliée « Sans suite », ou null.
+   * Rien n'est effacé : la carte garde ses gestes, et ne fait que changer de place.
+   */
+  rangee: string | null;
+}
+
+/** En dessous, un appel décroché est « trop court » pour être une vraie demande (une erreur, un raccroché). */
+export const APPEL_TROP_COURT_S = 20;
+
+/**
+ * Story 18.24 : une carte de numéro inconnu se range dans « Sans suite » si ce numéro n'a laissé qu'un seul échange, sans
+ * tâche, sans nom connu de Leedflow, qui n'est pas déjà dans les contacts, et si cet échange est :
+ *   - un appel manqué sans message ;
+ *   - un appel de moins de `APPEL_TROP_COURT_S` secondes ;
+ *   - un message vocal ou un SMS vide.
+ * Un numéro qui rappelle (deux échanges ou plus) remonte de lui-même dans la barre. Renvoie la raison, ou null.
+ */
+export function raisonDeRanger(n: Pick<NumeroInconnu, 'echanges' | 'taches' | 'prenom' | 'nom' | 'email'> | undefined, connu: boolean): string | null {
+  if (!n || connu || n.taches.length > 0 || n.echanges.length !== 1 || n.prenom || n.nom || n.email) return null;
+  const e = n.echanges[0];
+  const vide = !e.resume.trim();
+  if (e.manque && vide) return 'Appel manqué sans message';
+  if (e.genre === 'appel' && !e.manque && e.duree !== null && e.duree < APPEL_TROP_COURT_S) return 'Appel trop court';
+  if ((e.genre === 'vocal' || e.genre === 'sms') && vide) return e.genre === 'sms' ? 'SMS vide' : 'Message vocal vide';
+  return null;
 }
 
 const SITE: Record<string, string> = {
@@ -121,6 +147,7 @@ export async function lireNouveaux(envE: EnvEspace): Promise<{ total: number; ca
         annonce: null, connu, prerempli: r ? { prenom: r.prenom || null, nom: r.nom || null, email: r.email || null } : null,
         echanges: (r?.echanges.length ?? 0) + (r?.taches.length ?? 0), ecarte: false,
         gestes: connu ? ['rattacher', 'ignorer'] : ['ajouter', 'ignorer'],
+        rangee: raisonDeRanger(r, !!connu),
       };
     }
     let d: Record<string, unknown> = {};
@@ -132,7 +159,7 @@ export async function lireNouveaux(envE: EnvEspace): Promise<{ total: number; ca
       titre: SITE[l.lead_source ?? String(d.source ?? '')] ?? (l.ev_texte ?? 'Demande reçue'),
       contact_id: l.contact_id, nom: nomDe(l.prenom, l.nom), telephone: l.telephone, email: l.email,
       texte: court(l.message) ?? (lieu || null), annonce: null, connu: null, prerempli: null, echanges: 0, ecarte: !!l.ecarte_le,
-      gestes: [...PAR_SOURCE[l.source]] as Geste[],
+      gestes: [...PAR_SOURCE[l.source]] as Geste[], rangee: null,
     };
   });
   return { total: results.length, cartes };
@@ -145,7 +172,7 @@ const texteDe = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : 
 /** Carte d'une demande de portail (story 18.12) : lue (contact créé ou complété), ou e-mail gardé pour être lu à la main. */
 function cartePortail(l: Ligne, d: Record<string, unknown>): CarteNouveau {
   const origine = PORTAILS[l.pc_portail ?? (texteDe(d.portail) as Portail | null) ?? 'autre'] ?? PORTAILS.autre;
-  const base = { id: l.id, source: 'portail' as const, recu_le: l.recu_le, origine, connu: null, prerempli: null, echanges: 0 };
+  const base = { id: l.id, source: 'portail' as const, recu_le: l.recu_le, origine, connu: null, prerempli: null, echanges: 0, rangee: null };
   if (l.contact_id) {
     const annonce = [texteDe(d.annonce), texteDe(d.reference) ? `réf. ${texteDe(d.reference)}` : null].filter(Boolean).join(' · ') || null;
     return {
