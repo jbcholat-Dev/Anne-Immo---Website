@@ -1,6 +1,6 @@
 # Story 18.24 : tri par règles de la barre « Nouveaux »
 
-- Epic : 18 (carnet de contacts). Statut : review.
+- Epic : 18 (carnet de contacts). Statut : done (PR n° 272 fusionnée par JB le 2026-11-24).
 - Demande : JB, 2026-11-24, fiche de poste du chief of staff (https://claude.ai/artifact/RMp2hF6EJvmt6z45MoQS9f, section 9) : « Tri par règles construit cette semaine avec les canaux de prospection (oui) ». Relayé par le fil chief of staff. Sans IA : le tri par l'API Claude viendra après, quand la clé sera posée.
 
 ## Objectif
@@ -45,5 +45,5 @@ Revue du 2026-11-24, skill `bmad-code-review` en session neuve, commit relu 0c52
 
 ## Ce qui reste
 
-- PR après la fusion de la PR n° 269 (choix de JB du 2026-11-24), accord de JB, fusion.
+- Seuil de 20 s à confirmer par JB à l'usage.
 - Tri par l'API Claude (fil chief of staff), quand la clé sera posée.
