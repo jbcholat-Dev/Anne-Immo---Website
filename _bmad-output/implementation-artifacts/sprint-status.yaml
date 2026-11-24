@@ -275,6 +275,7 @@ development_status:
   18-27-brief-de-la-semaine-du-chief-of-staff: done   # 2026-11-24, demande de JB (fil chief of staff) : 2 lignes déposées par Claude sur « Ma semaine » ; PR n° 274 fusionnée par JB le 2026-11-24
   18-28-retours-jb-brief-et-nouveaux: done   # 2026-11-24, retour de JB : inscrits ambassadeurs hors du brief, « pas laissé de message » rangé dans Sans suite ; PR n° 278 fusionnée par JB le 2026-11-24
   18-29-brief-qui-se-replie-et-appels-repetes: done   # 2026-11-24, retour de JB : ligne décidée qui disparaît, appels manqués répétés sans message rangés
+  18-30-criteres-des-acheteurs: review   # 2026-11-24, ticket n° 284 d'Anne : critères complets des acheteurs, résumé et modification dans le panneau de Contacts ; revue de code en session neuve à faire ; partie « catégorie prospect » du ticket en attente de JB
   epic-18-retrospective: optional   # non faite : décision JB « Finir économe » du 2026-11-02
 
   epic-19: backlog   # les séances et les campagnes (livraison 2) ; en pause (décision JB 2026-11-02)

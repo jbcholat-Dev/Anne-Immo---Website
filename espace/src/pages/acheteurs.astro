@@ -7,6 +7,7 @@ import Espace from '../layouts/Espace.astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { telLisible } from '@site/server/recherche';
 import { pourSite as env } from '../server/env';
+import { budgetLisible } from '../server/criteres';
 import { acheteursActifs, communesDe, depuis, rechercheCourte, vendeursEnSommeil, echeance } from '../server/pipeline';
 
 export const prerender = false;
@@ -40,7 +41,7 @@ const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
                   <div class="e-muet">{a.commune ? `${a.commune} · ` : ''}depuis {depuis(a.created_at).replace(/^il y a /, '')}</div>
                   {a.aussiVendeur && <span class="e-tag alerte" data-aussi-vendeur>Aussi vendeur</span>}</td>
                 <td>{rechercheCourte(a.reponses) || '—'}</td>
-                <td>{a.reponses.budget ?? '—'}</td>
+                <td>{budgetLisible(a.reponses) || '—'}</td>
                 <td>{a.reponses.secteur ?? '—'}</td>
                 <td><span class={a.reponses.financement === 'Vérifié' ? 'e-tag' : 'e-tag neutre'}>{a.reponses.financement ?? 'Non renseigné'}</span></td>
               </tr>

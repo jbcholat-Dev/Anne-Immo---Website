@@ -18,12 +18,17 @@
 // Story 18.20 : r1_le et r2_le, dates AAAA-MM-JJ (ou null pour effacer) du premier et du second rendez-vous ; R2 avant R1 → 400 'ordre'.
 // Story 18.21 : projet « aucun » (sans température) ; canal = la source (pige, boitage, portail, recommandation, evenement, autre, ou null) ;
 // partant = ambassadeur « partant » (true : daté d'aujourd'hui, false : retiré). La fiche renvoie aussi `canal` et `ambassadeur_partant_le`.
+// Story 18.30 (ticket n° 284) : corriger.criteres = { types?, surface_min?, surface_max?, chambres_min?, terrain_min?, terrain_max?,
+// budget_min?, budget_max?, secteur?, indispensable?, apprecie?, redhibitoire?, pieces?, exterieur?, stationnement?, autres?,
+// financement? } fusionné dans `contact.qualification` (vide ou null : critère retiré) ; entiers positifs bornés, minimum au plus
+// égal au maximum, textes de 120 à 300 caractères au plus : sinon 400 'correction', rien d'écrit. La fiche renvoie `recherche` et `parcours`.
 // 400 pour toute valeur hors vocabulaire. Réponses `{ ok, ... }` ou `{ ok: false, error: { code, message } }`.
 import type { APIRoute } from 'astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { ajouterNote, corrigerFiche, creerContact, REFUS_ORDRE_RDV, lireContactNote, lireCorrection, lireSaisie, noterContact } from '../../server/carnet';
 import { noterAccord, noterRefus } from '../../server/accord';
 import { COMPTE_CLAUDE, envEspace, pourSite as env } from '../../server/env';
+import { REFUS_BORNES } from '../../server/criteres';
 import { lireFiche } from '../../server/fiche';
 import { ULID } from '../../server/formulaires';
 import { rattacherInconnus } from '../../server/leedflow';
@@ -94,6 +99,7 @@ export const POST: APIRoute = async ({ request }) => {
       if ('opposition' in r) return erreur(409, 'opposition', 'Ce téléphone ou cet e-mail est celui d\'une personne qui a demandé l\'effacement de ses données : rien n\'a été changé.');
       if ('indisponible' in r) return erreur(503, 'opposition_indisponible', INDISPONIBLE);
       if (r.refus === REFUS_ORDRE_RDV) return erreur(400, 'ordre', r.refus);
+      if (r.refus.endsWith(REFUS_BORNES)) return erreur(400, 'correction', r.refus);
       return erreur(r.refus.startsWith('Il faut') ? 400 : 409, r.refus.startsWith('Il faut') ? 'correction' : 'modifie', r.refus);
     }
     // Un nouveau numéro principal peut avoir des appels déjà relevés par Leedflow (contact du suivi seulement, AD-32).

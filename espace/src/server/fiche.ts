@@ -4,6 +4,7 @@
 import type { EnvSite } from '@site/server/env';
 import { LIBELLES_ETAPES, type Etape } from '@site/server/contacts';
 import { SOURCES as SOURCES_DEMANDE } from '@site/server/gestion-donnees';
+import { CLES_LUES } from './criteres';
 import { etatEmail, peutRecevoirCampagne, SQL_ACCORD, type DonneesAccord, type EtatEmail } from './accord';
 import { SQL_MODELE_ENVOYE } from './tableau';
 import { etatAmbassadeur, libelleRencontre, libelleSource, rencontresDe, suiviEnCours, type EtatAmbassadeur } from './tableau-colonnes';
@@ -18,6 +19,8 @@ export interface Fiche {
   telephones: string[]; emails: string[]; profils: { reseau: string | null; url: string }[];
   categorie_id: string | null; categorie: string | null; appel_permis_categorie: boolean | null;
   projet: string; temperature: string | null; verifie_le: string | null; ecarte_le: string | null;
+  /** Parcours choisi à la qualification (story 18.30), et critères de recherche notés (clés de `criteres.ts`, ancien format compris). */
+  parcours: string | null; recherche: Record<string, string>;
   appel_autorise: boolean | null; a_rappeler_le: string | null;
   /** Dates du premier et du second rendez-vous (R1, R2, story 18.20), AAAA-MM-JJ. */
   r1_le: string | null; r2_le: string | null;
@@ -50,14 +53,24 @@ interface Ligne extends DonneesAccord {
   categorie_id: string | null; categorie: string | null; appel_permis: number | null; projet: string; temperature: string | null;
   verifie_le: string | null; ecarte_le: string | null; appel_autorise: number | null; a_rappeler_le: string | null; r1_le: string | null; r2_le: string | null;
   dernier_contact_le: string | null; dernier_contact_canal: string | null; ambassadeur_inscrit_le: string | null; ambassadeur_partant_le: string | null; canal: string | null; envoi_groupe_permis: number | null; modele_envoye: number;
-  prochaine_action: string | null; prochaine_action_le: string | null;
+  prochaine_action: string | null; prochaine_action_le: string | null; parcours: string | null; qualification: string | null;
+}
+
+/** Les seuls critères de la qualification (pas le délai ni l'agence) : ce que le panneau montre et corrige. */
+function rechercheDe(brut: string | null): Record<string, string> {
+  const r: Record<string, string> = {};
+  try {
+    const j = brut ? JSON.parse(brut) : {};
+    if (j && typeof j === 'object' && !Array.isArray(j)) for (const k of CLES_LUES) if (typeof j[k] === 'string' && j[k]) r[k] = j[k];
+  } catch {}
+  return r;
 }
 
 export async function lireFiche(env: EnvSite, id: string): Promise<Fiche | null> {
   const [c, coords, sources, demandes, historique] = await env.DB.batch([
     env.DB.prepare(`SELECT c.id, c.created_at, c.prenom, c.nom, c.entreprise, c.commune, c.telephone, c.categorie_id, k.nom AS categorie, k.appel_permis, k.envoi_groupe_permis, ${SQL_MODELE_ENVOYE} AS modele_envoye,
         c.projet, c.temperature, c.verifie_le, c.ecarte_le, c.appel_autorise, c.a_rappeler_le, c.r1_le, c.r2_le, c.dernier_contact_le, c.dernier_contact_canal,
-        c.ambassadeur_inscrit_le, c.ambassadeur_partant_le, c.canal, c.prochaine_action, c.prochaine_action_le, ${SQL_ACCORD}
+        c.ambassadeur_inscrit_le, c.ambassadeur_partant_le, c.canal, c.prochaine_action, c.prochaine_action_le, c.parcours, c.qualification, ${SQL_ACCORD}
       FROM contact c LEFT JOIN categorie k ON k.id = c.categorie_id WHERE c.id = ?1`).bind(id),
     env.DB.prepare('SELECT type, reseau, valeur FROM contact_coordonnee WHERE contact_id = ?1 ORDER BY id').bind(id),
     env.DB.prepare('SELECT source, a, lieu, mois FROM contact_source WHERE contact_id = ?1 ORDER BY a, id').bind(id),
@@ -74,7 +87,7 @@ export async function lireFiche(env: EnvSite, id: string): Promise<Fiche | null>
     emails: [l.email, ...coords.results.filter((x) => x.type === 'email').map((x) => x.valeur)].filter((x): x is string => !!x),
     profils: coords.results.filter((x) => x.type === 'profil' && LIEN_WEB.test(x.valeur)).map((x) => ({ reseau: x.reseau, url: x.valeur })),
     categorie_id: l.categorie_id, categorie: l.categorie, appel_permis_categorie: l.appel_permis === null ? null : !!l.appel_permis,
-    projet: l.projet, temperature: l.temperature, verifie_le: l.verifie_le, ecarte_le: l.ecarte_le,
+    projet: l.projet, temperature: l.temperature, verifie_le: l.verifie_le, ecarte_le: l.ecarte_le, parcours: l.parcours, recherche: rechercheDe(l.qualification),
     appel_autorise: l.appel_autorise === null ? null : !!l.appel_autorise, a_rappeler_le: l.a_rappeler_le, r1_le: l.r1_le, r2_le: l.r2_le,
     dernier_contact_le: l.dernier_contact_le, dernier_contact_canal: l.dernier_contact_canal, ambassadeur_inscrit_le: l.ambassadeur_inscrit_le, ambassadeur_partant_le: l.ambassadeur_partant_le, canal: l.canal,
     etape: l.etape, etape_libelle: l.etape ? LIBELLES_ETAPES[l.etape as Etape] ?? l.etape : null, en_cours: suiviEnCours(l.etape),
