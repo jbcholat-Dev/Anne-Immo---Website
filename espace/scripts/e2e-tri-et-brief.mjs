@@ -241,9 +241,16 @@ try {
   // Le bouton de la page : Plus tard sur une ligne encore ouverte.
   const ouverte = pageJb.locator('.br-ligne[data-decision=""]').first();
   if (await ouverte.count()) {
+    const avant = await pageJb.locator('.br-ligne:visible').count();
+    const idL = await ouverte.getAttribute('data-brief-ligne');
     await ouverte.locator('[data-brief-geste="plus_tard"]').click();
-    await pageJb.waitForSelector('.br-ligne[data-decision="plus_tard"] [data-brief-annuler]:not([hidden])');
-    constat(true, 'page : « Plus tard » d\'un clic, bouton Annuler affiché');
+    await pageJb.waitForSelector('[data-brief-info] [data-brief-annuler]');
+    const cachee = await pageJb.locator('.br-ligne:visible').count() === avant - 1;
+    const titreB = await pageJb.locator('[data-brief-titre]').innerText();
+    await pageJb.locator('[data-brief-info] [data-brief-annuler]').click();
+    await pageJb.waitForSelector(`[data-brief-ligne="${idL}"][data-decision=""]`);
+    const revenue = await pageJb.locator('.br-ligne:visible').count() === avant;
+    constat(cachee && revenue && /à prendre|tout est décidé/.test(titreB), `page (story 18.29) : la ligne décidée disparaît, « Annuler » sous le brief la fait revenir (titre « ${titreB} »)`);
   }
   const tel390 = await nav.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, extraHTTPHeaders: pourJb() });
   await tel390.goto(`${E}/`);
