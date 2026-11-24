@@ -69,6 +69,12 @@ export interface CarteNouveau {
 export const APPEL_TROP_COURT_S = 20;
 /** Un appel trop court n'est rangé que si sa transcription tient en moins de tant de caractères (« Allô ? ») : revue de code 18.24. */
 const RESUME_COURT = 40;
+/**
+ * Le résumé que Leedflow écrit quand le correspondant n'a rien laissé (« Le correspondant n'a pas laissé de message ») :
+ * il compte comme un résumé vide (retour de JB du 2026-11-24, « un mur de 94 nouveaux »).
+ */
+const RESUME_SANS_MESSAGE = /^(le correspondant |l'appelant )?n['’]a pas laiss[ée] de message\.?$|^(pas de|aucun) message( laiss[ée])?\.?$/i;
+const resumeVide = (r: string) => { const t = r.trim(); return !t || RESUME_SANS_MESSAGE.test(t); };
 
 /**
  * Story 18.24 : une carte de numéro inconnu se range dans « Sans suite » si ce numéro n'a laissé qu'un seul échange, sans
@@ -83,7 +89,7 @@ export function raisonDeRanger(n: Pick<NumeroInconnu, 'echanges' | 'taches' | 'p
   if (!n || connu || n.taches.length > 0 || n.echanges.length !== 1 || n.prenom || n.nom || n.email) return null;
   const e = n.echanges[0];
   if (e.sens !== 'entrant') return null;
-  const vide = !e.resume.trim();
+  const vide = resumeVide(e.resume);
   if (e.manque && vide) return 'Appel manqué sans message';
   if (e.genre === 'appel' && !e.manque && e.duree !== null && e.duree < APPEL_TROP_COURT_S && e.resume.trim().length < RESUME_COURT) return 'Appel trop court';
   if ((e.genre === 'vocal' || e.genre === 'sms') && vide) return e.genre === 'sms' ? 'SMS vide' : 'Message vocal vide';

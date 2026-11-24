@@ -73,10 +73,12 @@ async function candidats(envE: EnvEspace, jour: string): Promise<Candidat[]> {
   const env = envE as unknown as EnvSite;
   const [demandes, inconnus, relances] = await env.DB.batch([
     // Demandes du site et des portails non vues, avec un contact (celles « à lire à la main » restent dans « Nouveaux »).
+    // Sans les inscriptions au programme ambassadeurs : ce ne sont pas des personnes à rappeler (retour de JB du 2026-11-24).
     env.DB.prepare(`SELECT n.id, n.source, n.recu_le, c.prenom, c.nom, c.telephone, c.email, c.id AS contact_id, l.source AS genre_site
       FROM nouveau n JOIN contact c ON c.id = n.contact_id
         LEFT JOIN contact_evenement e ON e.id = n.evenement_id LEFT JOIN lead l ON e.source = 'site' AND l.id = e.source_id
-      WHERE n.vu_le IS NULL AND n.source IN ('site', 'portail') AND c.ecarte_le IS NULL ORDER BY n.recu_le LIMIT 20`),
+      WHERE n.vu_le IS NULL AND n.source IN ('site', 'portail') AND c.ecarte_le IS NULL
+        AND (l.source IS NULL OR l.source <> 'ambassadeur') ORDER BY n.recu_le LIMIT 20`),
     // Cartes des numéros inconnus encore ouvertes (le tri dit lesquelles comptent).
     // Une ligne par numéro : la carte la plus récente (revue de code 18.26 : choix stable d'un jour à l'autre). Les proches
     // sont exclus par leur numéro principal comme par leurs autres numéros, comme pour le tri et les cartes.
