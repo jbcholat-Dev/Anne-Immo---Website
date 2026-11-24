@@ -157,7 +157,7 @@ Toute écriture d'un module met à jour `last_activity_at`, sauf un classement o
 
 - **Binds:** FR-24, FR-25
 - **Prevents:** un résultat compté deux fois ; un bilan qui ne sait pas à quoi attribuer un rendez-vous
-- **Rule:** Table `resultat` (`id`, `type` ∈ {`rdv`, `recommandation`, `mandat`}, `le`, `contact_id` facultatif avec `ON DELETE SET NULL`, `seance_id` facultatif, `activite_id` facultatif, `note`). Seul `resultats` l'écrit. Le bilan compte un résultat sous le type de son activité, ou « séance » s'il est rattaché à une séance.
+- **Rule (amendée par AD-36 le 2026-11-24, revue de code 20.7) :** la table `resultat` existe depuis la migration 0026 : `id`, `type` ∈ {`lead`, `rdv`, `recommandation`, `mandat`}, `canal`, `type_lead`, `le`, `quantite`, `par`, `created_at`. Un seul module l'écrit : `server/prospection` (AD-36) ; la story qui ajoutera le rattachement l'y fera, pas dans un second module. `contact_id` (facultatif, `ON DELETE SET NULL`), `seance_id`, `activite_id` et `note` s'ajouteront par `ALTER TABLE` dans une migration nouvelle, jamais par un second `CREATE TABLE`. Le bilan compte un résultat sous son canal ; plus tard, sous le type de son activité, ou « séance » s'il est rattaché à une séance.
 
 ### AD-34 — « Nouveaux » est une file de demandes à voir, pas une seconde liste de contacts
 
@@ -244,3 +244,10 @@ Environnements inchangés (AD-19) : la branche de travail est construite sur l'a
 - **E-mail groupé depuis une séance (FR-17)** : reprend AD-21 le moment venu.
 - **Travail à plusieurs en même temps** : la dernière écriture l'emporte (hypothèse FR-6) ; pas de verrou.
 - **Glisser-déposer et poignée de durée** : HTML natif sans bibliothèque, à revoir seulement si le navigateur d'Anne pose problème.
+
+### AD-36 — Canaux de prospection : l'effort, les leads et les rendez-vous se notent par canal, sans rien saisir deux fois
+
+- **Décision du 2026-11-24** (story 20.7, demande de JB). Amende AD-33.
+- **Binds:** FR-21 à FR-25, AD-30, AD-33, AD-35
+- **Prevents:** des flyers comptés deux fois (page et tableau du boîtage) ; des chiffres de prospection qui sortent de l'espace avec des données personnelles
+- **Rule:** `server/prospection` est le seul écrivain de `prospection_effort`, `resultat` et `prospection_objectif` (migration 0026). Canaux fixes du code (AD-35) : boîtage, cartes, messages, réseaux, magasin ; hors canaux : site, autre. Le boîtage n'a pas de ligne d'effort : ses flyers sont `passage_boitage.mots`, écrits par `ajouterBoitage`. Les messages comptent aussi les événements `envoi_modele` des seuls ambassadeurs (projet « ambassadeur », inscrits ou partants) : une campagne à des acheteurs n'est pas un message ambassadeur. Les leads du site et des portails se lisent dans `nouveau` (une personne par période), jamais saisis ; sans les demandes écartées, les e-mails de portail illisibles ni les inscriptions au programme ambassadeurs ; diagnostic et guide comptent en lead « diagnostic », le reste en « direct ». Ces leads et les rendez-vous « autre » sont un bonus, hors objectif : l'en-tête ne compte que les canaux suivis. `resultat` porte `canal`, `type_lead` (direct, diagnostic) et `quantite` ; pas de contact tant que l'écran ne le demande pas (aucune donnée personnelle). Objectifs à la semaine ; mois × 46/12, année × 46, arrondis au-dessus. Claude ne lit que des totaux (`/api/claude/bilan`, clé `prospection`).

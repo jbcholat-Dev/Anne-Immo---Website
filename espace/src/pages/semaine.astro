@@ -1,0 +1,297 @@
+---
+// Ma semaine (story 20.7, AD-36) : les canaux de prospection d'Anne. En haut, les rendez-vous et les leads de la semaine
+// face à l'objectif ; puis une carte par canal (effort fait sur l'objectif, leads, rendez-vous) avec un seul bouton
+// « + Noter », qui ouvre un petit formulaire (quoi, combien, quel jour). Les flyers notés ici vont dans le tableau du
+// boîtage ; les modèles envoyés depuis l'espace comptent d'office dans les messages ; les demandes du site et des portails
+// comptent d'office comme leads, hors objectif. Tout passe par `server/prospection`. Sans JavaScript : formulaires simples,
+// chaque enregistrement revient sur la page (303) avec un message. Semaine choisie par `?s=AAAA-MM-JJ` (ramené au lundi).
+// Mise en page : schéma 1 « accueil de l'espace » de la page Priestley (https://claude.ai/artifact/UxifDiuBNeQjvPMEHpFz2p) :
+// rendez-vous en haut, leads, puis les canaux côte à côte reliés par des pointillés ; Année · Mois · Semaine (`?p=`).
+import Espace from '../layouts/Espace.astro';
+import { ENTETE_COMPTE } from '@site/server/acces';
+import { pourSite as env } from '../server/env';
+import { ULID } from '../server/formulaires';
+import {
+  bornes, CANAUX_PROSPECTION, CLES_OBJECTIF, enregistrerObjectifs, enregistrerSaisie, jourCourt, jourDemande, jourParis, LIBELLES_CANAL, libellePeriode,
+  dansListe, lireFormObjectifs, lireObjectifs, lirePeriode, lireSaisie, nombre, objectifsDepart, partAtteinte, PERIODES_PAGE, retirerSaisie, TYPES_LEAD, voisine, type Periode,
+} from '../server/prospection';
+
+export const prerender = false;
+const compte = Astro.request.headers.get(ENTETE_COMPTE);
+if (!compte) return new Response('Accès refusé', { status: 403 });
+
+const demandee = Astro.url.searchParams.get('p') ?? 'semaine';
+const periode: Periode = dansListe(PERIODES_PAGE, demandee) ? (demandee as Periode) : 'semaine';
+let jour = jourDemande(Astro.url.searchParams.get('s'));
+let erreur = '';
+let ouvert = '';
+let saisi: Record<string, string> = {};
+if (Astro.request.method === 'POST') {
+  const f = await Astro.request.formData();
+  const quoi = typeof f.get('quoi') === 'string' ? String(f.get('quoi')) : '';
+  const retour = (m: string, ancre = '') => Astro.redirect(`/semaine?${periode === 'semaine' ? '' : `p=${periode}&`}s=${bornes(periode, jour).debut}&m=${m}${ancre}`, 303);
+  if (quoi === 'retirer') {
+    const genre = f.get('genre'), id = f.get('id');
+    if ((genre === 'effort' || genre === 'resultat') && typeof id === 'string' && ULID.test(id)) {
+      return retour((await retirerSaisie(env, genre, id)) ? 'retire' : 'deja', '#notes');
+    }
+    erreur = 'Cette ligne ne peut pas être retirée ici.';
+  } else if (quoi === 'objectifs') {
+    const o = lireFormObjectifs(f);
+    if (typeof o === 'string') {
+      erreur = o; ouvert = 'objectifs';
+      saisi = Object.fromEntries([...f.entries()].map(([k, v]) => [k, typeof v === 'string' ? v.trim().slice(0, 20) : '']));
+    }
+    else { await enregistrerObjectifs(env, o, compte); return retour('objectifs'); }
+  } else {
+    const s = lireSaisie(f);
+    if (typeof s === 'string') {
+      erreur = s;
+      ouvert = typeof f.get('canal') === 'string' ? String(f.get('canal')) : '';
+      saisi = Object.fromEntries([...f.entries()].map(([k, v]) => [k, typeof v === 'string' ? v.trim().slice(0, 200) : '']));
+    } else {
+      await enregistrerSaisie(env, s, compte);
+      jour = s.jour;
+      return retour(s.quoi, `#canal-${s.canal}`);
+    }
+  }
+}
+
+const sem = await lirePeriode(env, periode, jour);
+const auj = jourParis();
+const actuelle = bornes(periode, auj).debut;
+const enCours = sem.lundi === actuelle;
+const futur = sem.lundi > actuelle;
+// Jour proposé dans les formulaires : aujourd'hui pour la période en cours, son dernier jour pour une période passée.
+const jourParDefaut = enCours || futur ? auj : sem.dimanche;
+const lien = (p: Periode, s?: string) => `/semaine?${p === 'semaine' ? '' : `p=${p}`}${s ? `${p === 'semaine' ? '' : '&'}s=${s}` : ''}`;
+const titre = periode === 'semaine' ? 'Ma semaine' : periode === 'mois' ? 'Mon mois' : 'Mon année';
+const m = Astro.url.searchParams.get('m') ?? '';
+const message = { effort: 'Effort noté.', lead: 'Lead noté.', rdv: 'Rendez-vous noté.', retire: 'Ligne retirée.', deja: 'Cette ligne était déjà retirée.', objectifs: 'Objectifs enregistrés.' }[m] ?? '';
+const depart = objectifsDepart();
+// Le formulaire des objectifs règle la semaine, quelle que soit la période affichée.
+const semaine = periode === 'semaine' ? sem.objectifs : await lireObjectifs(env);
+const val = (k: string, defaut: string) => saisi[k] ?? defaut;
+const tete = [
+  { cle: 'rdv', titre: 'Rendez-vous', fait: sem.total.rdv, vise: sem.objectifs.rdv, def: '', fleche: '9 leads directs sur 10, 1 diagnostic sur 4' },
+  { cle: 'leads', titre: 'Leads', fait: sem.total.leads, vise: sem.objectifs.leads, def: "personnes entrées en contact avec Anne, d'une manière ou d'une autre", fleche: 'selon le taux de chaque canal' },
+];
+const QUOI = { effort: 'Effort', lead: 'Lead', rdv: 'Rendez-vous', recommandation: 'Recommandation', mandat: 'Mandat' } as const;
+// Couleur de chaque canal, reprise du canevas de l'espace (maquette https://claude.ai/artifact/FUmUuJZTnjf3pG7HJWXH7Z, écran Accueil).
+const COULEURS: Record<string, string> = { boitage: 'var(--avt-terra-deep)', cartes: 'var(--avt-klein)', messages: 'var(--avt-klein)', reseaux: '#2E6B3F', magasin: 'var(--avt-terra-deep)' };
+const qui = (par: string | null) => (par ? par.split('@')[0] : '');
+---
+<Espace titre={titre} actif="semaine">
+  <div class="s-tete">
+    <div>
+      <div class="e-muet">Canaux de prospection</div>
+      <h1>{titre} <span class="s-dates">{libellePeriode(periode, sem.lundi)}</span></h1>
+    </div>
+    <div class="s-nav">
+      <nav class="s-periodes" aria-label="Période">
+        {(Object.entries(PERIODES_PAGE) as [Periode, string][]).map(([p, t]) => <a href={lien(p, enCours ? undefined : sem.lundi)} aria-current={p === periode ? 'page' : undefined} data-periode={p}>{t}</a>)}
+      </nav>
+      <nav class="s-fleches" aria-label="Autre période">
+        <a href={lien(periode, voisine(periode, sem.lundi, -1))} data-precedente aria-label="Période précédente">‹</a>
+        {!enCours && <a href={lien(periode)} data-cette-semaine>{periode === 'semaine' ? 'Cette semaine' : periode === 'mois' ? 'Ce mois-ci' : 'Cette année'}</a>}
+        {!enCours && !futur && <a href={lien(periode, voisine(periode, sem.lundi, 1))} data-suivante aria-label="Période suivante">›</a>}
+      </nav>
+    </div>
+  </div>
+
+  {message && <p class="e-message" role="status" data-message>{message}</p>}
+  {erreur && <p class="e-message" role="alert" data-erreur>{erreur}</p>}
+
+  <div class="s-pile" data-tete>
+    {tete.map((t) => {
+      const p = partAtteinte(t.fait, t.vise);
+      return (<>
+        <div class:list={['s-case', { 's-rdv': t.cle === 'rdv' }]} data-objectif={t.cle}>
+          <div class="s-nom">{t.titre}</div>
+          <div class="s-chiffre"><strong>{t.fait}</strong> sur {t.vise}{p !== null && <> · <span class="s-pc">{p} %</span></>}</div>
+          {t.def && <div class="s-def">{t.def}</div>}
+          <div class="s-barre" aria-hidden="true"><span style={`width:${p ?? 0}%`}></span></div>
+        </div>
+        <div class="s-fleche" aria-hidden="true"><span>{t.fleche}</span></div>
+      </>);
+    })}
+    <svg class="s-jonction" viewBox="0 0 500 46" preserveAspectRatio="none" aria-hidden="true">
+      {[50, 150, 250, 350, 450].map((x) => <path d={`M${x},46 V24 H250`} fill="none" stroke="#B9AE9F" stroke-width="1.5" stroke-dasharray="5 5" vector-effect="non-scaling-stroke" />)}
+      <path d="M250,24 V0" stroke="var(--avt-terra-deep)" stroke-width="2" vector-effect="non-scaling-stroke" />
+    </svg>
+    <div class="s-canaux">
+      {sem.canaux.map((l) => {
+        const p = partAtteinte(l.effort, l.objectif);
+        const ouvrir = ouvert === l.canal;
+        return (
+          <section class="s-case s-canal" id={`canal-${l.canal}`} data-canal={l.canal} style={`--c:${COULEURS[l.canal]}`}>
+            <h2 class="s-nom">{l.libelle}</h2>
+            <div class="s-chiffre" data-effort><strong>{nombre(l.effort)}</strong> {l.objectif > 0 ? <>sur {nombre(l.objectif)} </> : null}{l.unite}</div>
+            {l.objectif > 0
+              ? <><div class="s-barre" aria-hidden="true"><span style={`width:${p}%`}></span></div><div class="s-pc s-grand">{p} %</div></>
+              : <div class="s-def">Pas d'objectif</div>}
+            {l.effortAuto > 0 && <div class="s-def" data-auto>dont {l.effortAuto} envoyé(s) depuis l'espace</div>}
+            <div class="s-resultats"><span data-leads>Leads <strong>{l.leads}</strong></span><span data-rdv>Rdv <strong>{l.rdv}</strong></span></div>
+            <details class="s-noter" open={ouvrir}>
+              <summary><span class="s-ouvrir">+ Noter</span><span class="s-fermer">Fermer</span></summary>
+              <form method="post" class="s-form" data-form={l.canal}>
+                <input type="hidden" name="canal" value={l.canal} />
+                <fieldset class="s-quoi">
+                  <legend class="e-muet">Quoi ?</legend>
+                  <label><input type="radio" name="quoi" value="effort" checked={!ouvrir || val('quoi', 'effort') === 'effort'} /><span>{l.saisie}</span></label>
+                  <label><input type="radio" name="quoi" value="lead" checked={ouvrir && val('quoi', '') === 'lead'} /><span>Lead</span></label>
+                  <label><input type="radio" name="quoi" value="rdv" checked={ouvrir && val('quoi', '') === 'rdv'} /><span>Rendez-vous</span></label>
+                </fieldset>
+                <label class="e-champ">Combien<input name="quantite" inputmode="numeric" required value={ouvrir ? val('quantite', '') : l.canal === 'boitage' ? '' : '1'} placeholder={l.canal === 'boitage' ? '200' : '1'} autocomplete="off" />{l.canal === 'messages' && <span class="e-muet s-si-effort" data-aide-messages>Sans les modèles envoyés depuis l'espace : ils sont déjà comptés ({l.effortAuto}).</span>}</label>
+                <label class="e-champ">Quel jour<input type="date" name="jour" required value={ouvrir ? val('jour', jourParDefaut) : jourParDefaut} max={auj} /></label>
+                {l.canal === 'boitage' && <label class="e-champ s-si-effort">Ville<input name="ville" value={ouvrir ? val('ville', '') : ''} maxlength="120" autocomplete="off" placeholder="Sciez" /></label>}
+                <label class="e-champ s-si-effort">Lieu ou précision (facultatif)<input name="note" value={ouvrir ? val('note', '') : ''} maxlength="200" autocomplete="off" /><span class="e-muet">Un lieu, pas le nom d'une personne.</span></label>
+                <fieldset class="s-si-lead s-quoi">
+                  <legend class="e-muet">Type de lead</legend>
+                  {Object.entries(TYPES_LEAD).map(([k, t]) => <label><input type="radio" name="type_lead" value={k} checked={(ouvrir ? val('type_lead', 'direct') : 'direct') === k} /><span>{t}</span></label>)}
+                </fieldset>
+                <div><button class="e-bouton" type="submit">Enregistrer</button></div>
+              </form>
+            </details>
+          </section>
+        );
+      })}
+    </div>
+  </div>
+  <p class="s-bonus" data-bonus-ligne>Bonus, hors objectif : <b>{sem.bonus[0].leads} lead{sem.bonus[0].leads > 1 ? 's' : ''}</b> venu{sem.bonus[0].leads > 1 ? 's' : ''} du site et des portails{sem.bonus[1].leads > 0 && <>, <b>{sem.bonus[1].leads}</b> d'ailleurs</>}{sem.total.rdvBonus > 0 && <> ; <b>{sem.total.rdvBonus} rendez-vous</b></>}. Ils ne comptent pas dans les objectifs.</p>
+  <p class="e-muet s-note">Objectifs arrondis au-dessus. Taux de départ supposés : ils seront remplacés par ceux mesurés.</p>
+
+  <section class="e-carte" data-bonus>
+    <h2>Hors canaux</h2>
+    <div class="e-table-zone">
+      <table class="e-table">
+        <thead><tr><th>D'où</th><th class="n">Leads</th><th class="n">Rendez-vous</th><th><span class="s-cache">Noter</span></th></tr></thead>
+        <tbody>
+          {sem.bonus.map((b) => (
+            <tr id={`canal-${b.canal}`} data-bonus-canal={b.canal}>
+              <td>{b.libelle}{b.canal === 'site' && <div class="e-muet">Leads comptés seuls : une personne par demande reçue.</div>}</td>
+              <td class="n">{b.leads}</td><td class="n">{b.rdv}</td>
+              <td>
+                <form method="post" class="s-mini" data-form={b.canal}>
+                  <input type="hidden" name="canal" value={b.canal} />
+                  <input type="hidden" name="quantite" value="1" />
+                  <input type="hidden" name="jour" value={jourParDefaut} />
+                  <input type="hidden" name="type_lead" value="direct" />
+                  {b.canal !== 'site' && <button class="e-bouton second" name="quoi" value="lead" type="submit">+ 1 lead</button>}
+                  <button class="e-bouton second" name="quoi" value="rdv" type="submit">+ 1 rendez-vous</button>
+                </form>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <details class="e-carte s-replie" id="notes" data-notes open={m === 'retire' || m === 'deja'}>
+    <summary class="s-titre">Ce qui a été noté ({sem.notes.length})</summary>
+    {sem.notes.length === 0 ? <p class="e-muet">Rien de noté pour l'instant. Chaque action compte : un passage, une carte, une publication.</p> : (
+      <div class="e-table-zone">
+        <table class="e-table">
+          <thead><tr><th>Jour</th><th>Canal</th><th>Quoi</th><th class="n">Nombre</th><th>Précision</th><th>Par</th><th><span class="s-cache">Retirer</span></th></tr></thead>
+          <tbody>
+            {sem.notes.slice(0, 300).map((n) => (
+              <tr data-note={n.id} data-genre={n.genre}>
+                <td>{jourCourt(n.jour)}</td>
+                <td>{LIBELLES_CANAL[n.canal]}</td>
+                <td>{n.quoi === 'effort' ? CANAUX_PROSPECTION[n.canal as keyof typeof CANAUX_PROSPECTION]?.saisie ?? 'Effort' : QUOI[n.quoi]}</td>
+                <td class="n">{nombre(n.quantite)}</td>
+                <td>{n.detail ?? ''}</td>
+                <td class="e-muet">{qui(n.par)}</td>
+                <td>{n.genre === 'boitage'
+                  ? <a href="/actions?onglet=boitage">Corriger dans le boîtage</a>
+                  : <form method="post"><input type="hidden" name="quoi" value="retirer" /><input type="hidden" name="genre" value={n.genre} /><input type="hidden" name="id" value={n.id} /><button class="s-lien" type="submit">Retirer</button></form>}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </details>
+
+  <details class="e-carte s-replie" open={ouvert === 'objectifs'} data-reglages>
+    <summary class="s-titre">Objectifs de la semaine</summary>
+    <form method="post" class="s-form">
+      <input type="hidden" name="quoi" value="objectifs" />
+      <div class="s-grille">
+        {CLES_OBJECTIF.map((cle) => {
+          const canal = cle.startsWith('effort:') ? (cle.slice(7) as keyof typeof CANAUX_PROSPECTION) : null;
+          const nom = cle === 'rdv' ? 'Rendez-vous' : cle === 'leads' ? 'Leads' : `${CANAUX_PROSPECTION[canal!].libelle} (${CANAUX_PROSPECTION[canal!].unite})`;
+          return <label class="e-champ">{nom}<input name={cle} inputmode="numeric" required value={saisi[cle] ?? String(semaine[cle])} autocomplete="off" /><span class="e-muet">Départ : {nombre(depart[cle])}</span></label>;
+        })}
+      </div>
+      <p class="e-muet" style="margin:0">Objectifs par semaine. Le mois en vaut 46/12 et l'année 46, arrondis au-dessus. Départ : modèle de JB du 8 novembre. 0 = pas d'objectif.</p>
+      <div><button class="e-bouton" type="submit">Enregistrer les objectifs</button></div>
+    </form>
+  </details>
+</Espace>
+
+<style>
+  .s-tete { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px; }
+  .s-tete h1 { margin: 0; }
+  .s-dates { font-size: 0.6em; font-weight: 400; color: var(--avt-text-muted); white-space: nowrap; }
+  .s-nav { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .s-fleches { display: flex; gap: 6px; }
+  .s-periodes { display: inline-flex; background: var(--avt-ecru); border: 1px solid var(--avt-galet); border-radius: 999px; padding: 3px; }
+  .s-periodes a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border-radius: 999px; color: var(--avt-text-muted); text-decoration: none; font-size: 15px; }
+  .s-fleches a { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; justify-content: center; padding: 0 14px; border: 1.5px solid var(--avt-galet); border-radius: 999px; background: #fff; color: var(--avt-brun); text-decoration: none; font-size: 15px; box-sizing: border-box; }
+  .s-periodes a[aria-current=page] { background: var(--avt-brun); color: var(--avt-ecru); }
+  /* La pile du schéma 1 (page Priestley) : rendez-vous en haut, leads, puis les canaux côte à côte, reliés par des pointillés. */
+  .s-pile { display: flex; flex-direction: column; align-items: center; max-width: 1100px; width: 100%; margin: 0 auto; }
+  .s-case { background: #fff; border: 1px solid var(--avt-galet); border-radius: 14px; box-shadow: 0 1px 2px rgba(38,32,26,.05); padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; width: 260px; max-width: 100%; box-sizing: border-box; text-align: center; }
+  .s-rdv { border: 2px solid var(--avt-klein); }
+  .s-nom { margin: 0; font-weight: 500; font-size: 15px; color: var(--avt-text-muted); }
+  .s-chiffre { font-size: 14px; color: var(--avt-text-muted); font-variant-numeric: tabular-nums; }
+  .s-chiffre strong { font: 400 28px/1.1 var(--avt-font-display); color: var(--avt-brun); }
+  .s-pc { font-weight: 600; color: var(--avt-brun); }
+  .s-grand { font: 400 30px/1 var(--avt-font-display); color: var(--c, var(--avt-brun)); }
+  .s-def { font-size: 12px; font-style: italic; color: var(--avt-text-muted); line-height: 1.35; }
+  .s-barre { height: 7px; border-radius: 99px; background: var(--avt-ecru); overflow: hidden; }
+  .s-barre span { display: block; height: 100%; background: var(--c, var(--avt-klein)); border-radius: 99px; }
+  .s-fleche { position: relative; height: 56px; width: 100%; }
+  .s-fleche::before { content: ""; position: absolute; left: 50%; top: 8px; bottom: 0; width: 2px; margin-left: -1px; background: var(--avt-terra-deep); }
+  .s-fleche::after { content: ""; position: absolute; left: 50%; top: 0; margin-left: -6px; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 9px solid var(--avt-terra-deep); }
+  .s-fleche span { position: absolute; left: 50%; top: 54%; transform: translate(-50%, -50%); z-index: 1; white-space: nowrap; font-size: 12px; color: var(--avt-terra-deep); background: #fff; border: 1px solid #E8C9BC; border-radius: 999px; padding: 3px 11px; max-width: 92%; overflow: hidden; text-overflow: ellipsis; }
+  .s-jonction { width: 100%; height: 46px; display: block; }
+  .s-canaux { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; width: 100%; align-items: start; }
+  .s-canal { width: auto; padding: 12px 10px; }
+  .s-canal .s-nom { font-weight: 600; color: var(--avt-brun); min-height: 2.6em; display: flex; align-items: center; justify-content: center; line-height: 1.25; }
+  .s-canal .s-chiffre strong { font-size: 24px; }
+  .s-resultats { display: flex; justify-content: center; gap: 12px; font-size: 13px; color: var(--avt-text-muted); }
+  .s-resultats strong { color: var(--avt-brun); font-weight: 600; font-size: 15px; }
+  .s-noter { text-align: left; }
+  .s-noter > summary { list-style: none; display: flex; align-items: center; justify-content: center; min-height: 44px; border: 1.5px solid var(--avt-brun); border-radius: 999px; font-size: 14px; cursor: pointer; }
+  .s-noter > summary::-webkit-details-marker { display: none; }
+  .s-noter > summary .s-fermer, .s-noter[open] > summary .s-ouvrir { display: none; }
+  .s-noter[open] > summary .s-fermer { display: inline; }
+  .s-noter[open] > summary { border-color: var(--avt-border, #d8cfc2); margin-bottom: 8px; }
+  .s-form { display: flex; flex-direction: column; gap: 10px; }
+  .s-form .e-champ input { font-size: 15px; padding: 8px; }
+  .s-quoi { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .s-quoi legend { padding: 0; margin-bottom: 4px; }
+  .s-quoi label { display: inline-flex; }
+  .s-quoi input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .s-quoi span { display: inline-flex; align-items: center; min-height: 44px; padding: 6px 12px; border: 1.5px solid var(--avt-galet); border-radius: 999px; font-size: 13px; cursor: pointer; }
+  .s-quoi input:checked + span { border-color: var(--avt-terra); background: var(--avt-brume); font-weight: 500; }
+  .s-quoi input:focus-visible + span { outline: 2px solid var(--avt-brun); outline-offset: 2px; }
+  /* Les champs propres à l'effort ou au lead ne s'affichent que pour lui (sans JavaScript). */
+  .s-form:not(:has(input[name=quoi][value=effort]:checked)) .s-si-effort { display: none; }
+  .s-form:not(:has(input[name=quoi][value=lead]:checked)) .s-si-lead { display: none; }
+  .s-note { margin: 0; text-align: center; }
+  .s-bonus { margin: 6px 0 0; text-align: center; font-size: 14px; color: var(--avt-text-muted); }
+  .s-bonus b { color: var(--avt-brun); font-weight: 500; }
+  .s-mini { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+  .s-mini .e-bouton { min-height: 44px; padding: 6px 14px; font-size: 14px; }
+  .n { text-align: right; }
+  .s-cache { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .s-lien { background: none; border: 0; padding: 0; min-height: 44px; color: var(--avt-terra); text-decoration: underline; font: inherit; cursor: pointer; }
+  .s-replie > summary { cursor: pointer; }
+  .s-replie > summary.s-titre { font-family: var(--avt-titre, inherit); font-size: 18px; font-weight: 600; }
+  .s-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  @media (max-width: 900px) { .s-canaux { grid-template-columns: repeat(2, minmax(0, 1fr)); } .s-jonction { display: none; } .s-fleche span { white-space: normal; text-align: center; width: max-content; max-width: 240px; border-radius: 12px; } }
+</style>
