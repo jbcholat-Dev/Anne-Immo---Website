@@ -42,6 +42,14 @@
     // Demandes des portails par e-mail (story 18.12, revue de code) : la Gmail d'Anne qui fait suivre les demandes. Seul un
     // e-mail dont l'expéditeur d'enveloppe est cette adresse (ou sa forme de transfert Gmail « avialtissot+…@gmail.com »)
     // est lu ; tout autre est refusé. Vide : tout e-mail est refusé. Voir RUNBOOK.md § 4 sexies.
-    "PORTAILS_EXPEDITEUR_AUTORISE": "avialtissot@gmail.com"
+    "PORTAILS_EXPEDITEUR_AUTORISE": "avialtissot@gmail.com",
+    // Tri des appels par l'API Claude (story 18.25, AD-37) : « oui » l'allume, toute autre valeur l'éteint. Il reste éteint
+    // tant que JB n'a pas validé la fiche légale (points « Chez Anthropic »). Il faut aussi le secret ANTHROPIC_API_KEY.
+    "TRI_IA": "",
+    // Brief du jour (story 18.26) : les comptes Access qui le voient en tête de la page Contacts, donnés par l'empreinte
+    // SHA-256 de leur adresse en minuscules (le dépôt est public), séparées par des virgules. Phase 1 de la fiche de poste du
+    // chief of staff : JB seul (l'empreinte ci-dessous est celle de son adresse) ; Anne ne voit rien et ne reçoit rien.
+    // Vide : personne. Pour calculer une empreinte : printf '%s' adresse | sha256sum.
+    "BRIEF_LECTEURS": "5900f203d8d800298c093da4657b29fcc14f8cd9f42bfc462eab39bd04511124"
   }
 }

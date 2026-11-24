@@ -26,13 +26,21 @@ import { DUREES } from '../server/vues';
 import { listerVues } from '../server/vues-base';
 import { lireNouveaux } from '../server/nouveaux';
 import { envEspace } from '../server/env';
+import { BRIEF_MAX, DECISIONS, lireBrief, peutVoir } from '../server/brief';
 
 export const prerender = false;
 if (!Astro.request.headers.get(ENTETE_COMPTE)) return new Response('Accès refusé', { status: 403 });
 const m = Astro.url.searchParams.get('m') ?? '';
 if (['suite', 'tache-acceptee', 'tache-ignoree'].includes(m)) return Astro.redirect(`/aujourdhui?m=${m}`, 302);
 
-const [lignes, vues, categories, nouveaux] = await Promise.all([lireTableau(env), listerVues(env), lireCategories(env), lireNouveaux(envEspace)]);
+const compte = Astro.request.headers.get(ENTETE_COMPTE);
+// Story 18.26 : le brief du jour, en phase 1 visible des seuls comptes de BRIEF_LECTEURS (JB).
+const voitBrief = await peutVoir(envEspace, compte);
+const [lignes, vues, categories, nouveaux, brief] = await Promise.all([lireTableau(env), listerVues(env), lireCategories(env), lireNouveaux(envEspace),
+  voitBrief ? lireBrief(envEspace) : Promise.resolve(null)]);
+const jourBrief = new Date().toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris', weekday: 'long', day: 'numeric', month: 'long' });
+const ouvertes = brief ? brief.lignes.filter((l) => !l.decision).length : 0;
+const part = brief && brief.part.decidees ? Math.round((100 * brief.part.acceptees) / brief.part.decidees) : null;
 const total = lignes.filter((l) => !l.ecarte).length;
 const q = (Astro.url.searchParams.get('q') ?? '').trim().slice(0, 100);
 // Dans un <script type="application/json"> : « < » échappé, pour qu'aucun texte saisi ne ferme la balise.
@@ -63,6 +71,39 @@ const donneesNouveaux = enJson(nouveaux);
       </div>
     </aside>
     <div class="ct-principal">
+      {brief && (
+        <section class="br" data-brief aria-labelledby="br-titre">
+          <div class="br-tete">
+            <h2 id="br-titre">{brief.prepare ? `${brief.lignes.length} décision${brief.lignes.length > 1 ? 's' : ''} ce matin` : 'Brief du jour'}</h2>
+            <span class="br-sous">{jourBrief}{brief.prepare ? ` · ${ouvertes} à décider` : ''}{part !== null ? ` · ${part} % acceptées sur 4 semaines (${brief.part.acceptees} sur ${brief.part.decidees})` : ''}</span>
+            <span class="br-phase" title="Phase 1 de la fiche de poste : JB relit le brief, Anne ne le voit pas encore et ne reçoit aucun e-mail.">Brouillon · visible par JB seul</span>
+          </div>
+          {brief.prepare ? (
+            <ol class="br-lignes">
+              {brief.lignes.map((l) => (
+                <li class="br-ligne" data-brief-ligne={l.id} data-decision={l.decision ?? ''} data-genre={l.genre}>
+                  <span class="br-num">{l.rang}</span>
+                  <div class="br-corps">
+                    <div class="br-qui">{l.qui} <span class="br-etq">{l.genre === 'relance' ? 'Relance' : l.genre === 'demande' ? 'Demande reçue' : 'Appel trié'}</span></div>
+                    <div class="br-raison">{l.raison}</div>
+                    <div class="br-action"><b>{l.action}</b></div>
+                  </div>
+                  <div class="br-btns">
+                    <span class="br-etat" data-brief-etat>{l.decision ? DECISIONS[l.decision] : ''}</span>
+                    <button type="button" class="ct-btn bleu" data-brief-geste="accepte" hidden={!!l.decision}>Accepter</button>
+                    <button type="button" class="ct-btn" data-brief-geste="plus_tard" hidden={!!l.decision}>Plus tard</button>
+                    <button type="button" class="ct-btn" data-brief-geste="ecarte" hidden={!!l.decision}>Écarter</button>
+                    <button type="button" class="ct-btn" data-brief-annuler hidden={!l.decision}>Annuler</button>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <div class="br-vide">Le brief se prépare chaque jour à 7 h 30. <button type="button" class="ct-btn" data-brief-preparer>Préparer maintenant</button></div>
+          )}
+          <p class="br-info" data-brief-info aria-live="polite">Accepter ouvre la fiche : le geste reste à faire sur la fiche. {BRIEF_MAX} décisions au plus par jour.</p>
+        </section>
+      )}
       <section class="nv" data-nouveaux aria-label="Nouvelles demandes">
         <button type="button" class="nv-barre" data-nv-barre aria-expanded="false" aria-controls="nv-liste">
           <span class="nv-pastille" data-nv-compte>{nouveaux.total - nouveaux.cartes.filter((c) => c.rangee).length}</span><strong>Nouveaux</strong><span class="nv-src" data-nv-src></span><span class="nv-chev" aria-hidden="true">▾</span>
@@ -181,6 +222,7 @@ const donneesNouveaux = enJson(nouveaux);
   import { ajouter, pastilles, preparerFiltre, retirer, type CleFiltre, type Filtre, type Vue } from '../server/vues';
   import { brancherFiche } from '../islands/fiche-contact';
   import { brancherNouveaux } from '../islands/nouveaux';
+  import { brancherBrief } from '../islands/brief';
 
   const MEMOIRE = 'espace.contacts.colonnes';
   // Premier paquet de lignes écrit tout de suite, la suite par paquets aux images suivantes : le tableau répond vite même
@@ -820,6 +862,7 @@ const donneesNouveaux = enJson(nouveaux);
     afficher();
   }
   brancherNouveaux({ fiches, surLigne: remettreLigne, retirer: retirerLigne, montrer });
+  brancherBrief();
   $<HTMLButtonElement>('[data-nouveau-contact]').addEventListener('click', () => fiches.ouvrirCreation());
   const ficheDemandee = new URL(location.href).searchParams.get('fiche');
   if (ficheDemandee && /^[0-9A-HJKMNP-TV-Z]{26}$/.test(ficheDemandee)) void fiches.ouvrirFiche(ficheDemandee);
@@ -853,6 +896,32 @@ const donneesNouveaux = enJson(nouveaux);
   /* E-mail de portail à lire à la main (story 18.12) : tout le texte, lignes gardées, défilant au-delà de 14 lignes. */
   .nv-txt.nv-lire { display: block; -webkit-line-clamp: unset; white-space: pre-wrap; max-height: 21em; overflow-y: auto; background: var(--avt-brume); padding: 8px 10px; border-radius: 8px; font-size: 13px; }
   .nv-info, .nv-auto { font-size: 13px; color: var(--avt-text-muted); }
+  /* Story 18.26 : brief du jour (maquette du chief of staff), au-dessus de la barre « Nouveaux ». */
+  .br { background: #fff; border: 1px solid var(--avt-border, #ddd2c1); border-radius: 12px; margin-bottom: 14px; overflow: hidden; }
+  .br-tete { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; padding: 14px 18px; border-bottom: 1px solid var(--avt-border, #ddd2c1); }
+  .br-tete h2 { margin: 0; font-family: var(--avt-font-display, Georgia, serif); font-weight: 400; font-size: 22px; }
+  .br-sous { font-size: 13px; color: var(--avt-text-muted); }
+  .br-phase { margin-left: auto; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; background: #a34e30; color: #fff; border-radius: 999px; padding: 2px 10px; }
+  .br-lignes { list-style: none; margin: 0; padding: 0; }
+  .br-ligne { display: grid; grid-template-columns: 28px 1fr auto; gap: 4px 14px; padding: 12px 18px; border-bottom: 1px solid var(--avt-border, #ddd2c1); align-items: start; }
+  .br-ligne:last-child { border-bottom: 0; }
+  .br-ligne[data-decision="accepte"] { background: #e4f0e8; }
+  .br-ligne[data-decision="plus_tard"], .br-ligne[data-decision="ecarte"] { opacity: .55; }
+  .br-num { font-family: var(--avt-font-display, Georgia, serif); font-size: 22px; line-height: 1.1; color: #002fa7; }
+  .br-qui { font-weight: 600; }
+  .br-etq { font-weight: 500; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; background: #e7edf9; color: #002fa7; border-radius: 999px; padding: 2px 8px; margin-left: 6px; white-space: nowrap; }
+  .br-raison { font-size: 14px; color: var(--avt-text-muted); }
+  .br-action { font-size: 14px; }
+  .br-btns { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: flex-end; }
+  .br-etat { font-size: 13px; font-weight: 500; color: #2f6b4a; }
+  .br-vide { padding: 14px 18px; font-size: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .br-info { margin: 0; padding: 8px 18px; font-size: 12px; color: var(--avt-text-muted); background: #f7f2ea; }
+  @media (max-width: 760px) { .br-ligne { grid-template-columns: 24px 1fr; } .br-btns { grid-column: 2; justify-content: flex-start; } }
+  /* Story 18.25 : proposition du tri par l'API Claude, affichée seulement. */
+  .nv-tri { font-size: 13px; background: #e7edf9; color: #1d2a55; padding: 6px 8px; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 2px 6px; align-items: baseline; }
+  .nv-tri[data-c="prive"], .nv-tri[data-c="demarchage"], .nv-tri[data-c="sans_suite"] { background: #f1ece4; color: #5c5248; }
+  .nv-tri-etq { font-size: 11px; letter-spacing: .05em; text-transform: uppercase; font-weight: 500; }
+  .nv-tri-raison { flex-basis: 100%; color: var(--avt-text-muted); }
   .nv-dej { font-size: 13px; background: #fbf1e3; color: #7a4a12; padding: 6px 8px; border-radius: 8px; }
   .nv-alerte { font-size: 13px; background: #fbe9e7; color: #8a2a1c; padding: 6px 8px; border-radius: 8px; }
   .nv-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }

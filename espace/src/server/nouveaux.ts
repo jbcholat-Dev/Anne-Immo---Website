@@ -24,6 +24,7 @@ import { annulerCreation, annulerLot, classer, corrigerFiche, creerContact, lire
 import { ANNULATION_MS, classerDepuisNouveaux, declasserDepuisNouveaux, extrait, resumesInconnus, type NumeroInconnu } from './leedflow';
 import { annulerSuiviParGeste, suivreParGeste } from './pipeline';
 import { PORTAILS, type Portail } from './portails';
+import { CLASSEMENTS, propositionsDe } from './tri-ia';
 
 export type Geste = 'ranger' | 'vu' | 'ecarter' | 'ajouter' | 'rattacher' | 'ignorer';
 export const GESTES: readonly Geste[] = ['ranger', 'vu', 'ecarter', 'ajouter', 'rattacher', 'ignorer'];
@@ -60,6 +61,8 @@ export interface CarteNouveau {
    * Rien n'est effacé : la carte garde ses gestes, et ne fait que changer de place.
    */
   rangee: string | null;
+  /** Story 18.25 : la proposition de l'API Claude pour un numéro inconnu (affichée seulement, rien n'est appliqué). */
+  tri?: { classement: string; libelle: string; action: string; echeance: string | null; raison: string } | null;
 }
 
 /** En dessous, un appel décroché est « trop court » pour être une vraie demande (une erreur, un raccroché). */
@@ -136,13 +139,15 @@ export async function lireNouveaux(envE: EnvEspace): Promise<{ total: number; ca
   ).all<Ligne>();
   const lues = results.slice(0, MAX_CARTES);
   const tels = [...new Set(lues.filter((l) => l.source === 'leedflow' && l.leedflow_tel).map((l) => l.leedflow_tel!))];
-  const [resumes, connus] = await Promise.all([resumesInconnus(envE, tels), contactsDesNumeros(env, tels)]);
+  const [resumes, connus, tris] = await Promise.all([resumesInconnus(envE, tels), contactsDesNumeros(env, tels), propositionsDe(envE, tels)]);
   const cartes = lues.map((l): CarteNouveau => {
     if (l.source === 'leedflow') {
       const tel = l.leedflow_tel!;
       const r = resumes.get(tel);
       const dernier = r?.echanges[0];
       const connu = connus.get(tel) ?? null;
+      // Un numéro d'un contact du carnet (un proche) n'est jamais trié : une proposition ancienne n'est pas montrée.
+      const p = connu ? null : tris.get(tel);
       return {
         id: l.id, source: 'leedflow', recu_le: l.recu_le, origine: 'Leedflow',
         titre: dernier?.titre || (r?.taches.length ? 'Tâche détectée par Leedflow' : 'Appel reçu'),
@@ -152,6 +157,7 @@ export async function lireNouveaux(envE: EnvEspace): Promise<{ total: number; ca
         echanges: (r?.echanges.length ?? 0) + (r?.taches.length ?? 0), ecarte: false,
         gestes: connu ? ['rattacher', 'ignorer'] : ['ajouter', 'ignorer'],
         rangee: raisonDeRanger(r, !!connu),
+        tri: p ? { classement: p.classement, libelle: CLASSEMENTS[p.classement], action: p.action, echeance: p.echeance, raison: p.raison } : null,
       };
     }
     let d: Record<string, unknown> = {};

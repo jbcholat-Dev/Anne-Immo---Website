@@ -21,6 +21,8 @@ import { journal } from '@site/server/journal';
 import { COMPTE_CLAUDE, pourSite, type EnvEspace } from './src/server/env';
 import { envoyerCampagnes } from './src/server/campagnes';
 import { nettoyerIgnores, relever } from './src/server/leedflow';
+import { menageTri, trierNouveaux } from './src/server/tri-ia';
+import { briefDuMatin } from './src/server/brief';
 import { menagePortails, recevoirCourriel, TAILLE_MAX } from './src/server/portails';
 
 /** Le message brut en texte d'un caractère par octet (ce que lit src/server/courriel.ts) ; au-delà de TAILLE_MAX, le début seulement. */
@@ -76,7 +78,12 @@ export default {
   },
   async scheduled(_controleur, env, ctx) {
     ctx.waitUntil(Promise.all([
-      relever(env).catch((e) => journal('leedflow_echec', { detail: String(e).slice(0, 200) })),
+      relever(env).catch((e) => journal('leedflow_echec', { detail: String(e).slice(0, 200) }))
+        // Story 18.25 : les cartes nouvelles reçoivent la proposition de l'API Claude, une fois la relève faite (éteint sans TRI_IA).
+        .then(() => trierNouveaux(env)).catch((e) => journal('tri_ia_echec', { detail: String(e).slice(0, 200) }))
+        .then(() => menageTri(env)).catch((e) => journal('tri_ia_echec', { detail: String(e).slice(0, 200) }))
+        // Story 18.26 : le brief du jour, préparé une fois 7 h 30 passées, après la relève et le tri.
+        .then(() => briefDuMatin(env)).catch((e) => journal('brief_echec', { detail: String(e).slice(0, 200) })),
       envoyerCampagnes(pourSite).catch((e) => journal('campagnes_echec', { detail: String(e).slice(0, 200) })),
       // Story 18.11 : échanges des numéros ignorés depuis la barre « Nouveaux », effacés une fois le délai d'annulation passé.
       nettoyerIgnores(env).catch((e) => journal('nouveaux_echec', { detail: String(e).slice(0, 200) })),

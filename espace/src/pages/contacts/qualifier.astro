@@ -17,6 +17,8 @@ import { ULID } from '../../server/formulaires';
 import {
   aujourdhui, corrigerQualification, echeance, FINANCEMENTS, libelleOrigine, lireContact, MOTIFS_PERTE, parisVersUtc, plusTard, qualifier, QUESTIONS, RECHERCHE_ACHETEUR, CRITERES_ACHETEUR, CRITERES_TAPES, type Issue, type Reponses, libelleEtape } from '../../server/pipeline';
 import { resumeHtml } from '../../server/leedflow';
+import { envEspace } from '../../server/env';
+import { propositionsDe } from '../../server/tri-ia';
 
 export const prerender = false;
 const compte = Astro.request.headers.get(ENTETE_COMPTE);
@@ -35,6 +37,17 @@ let reponses: Reponses = {};
 try { reponses = c.qualification ? JSON.parse(c.qualification) : {}; } catch {}
 let saisi: Record<string, string> = {};
 let erreur = '';
+// Story 18.25 : un contact pas encore qualifié dont le numéro a reçu une proposition du tri par l'API Claude voit les
+// réponses que ses résumés donnent déjà, cochées d'avance. Rien n'est enregistré tant qu'Anne ne valide pas la page.
+let prerempli = 0;
+if (Astro.request.method !== 'POST' && !enCours && !Object.keys(reponses).length && c.telephone) {
+  const p = (await propositionsDe(envEspace, [c.telephone])).get(c.telephone);
+  if (p) {
+    reponses = { ...p.qualification };
+    prerempli = Object.keys(reponses).length;
+    if (!c.parcours && p.parcours) { saisi.parcours = p.parcours; prerempli++; }
+  }
+}
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 if (Astro.request.method === 'POST') {
@@ -111,6 +124,7 @@ const issues = [
     </details>
   )}
 
+  {prerempli > 0 && <p class="e-muet" data-prerempli>{prerempli} réponse{prerempli > 1 ? 's' : ''} cochée{prerempli > 1 ? 's' : ''} d'avance d'après les résumés des appels : vérifiez-les pendant l'appel.</p>}
   <form method="post" class="e-carte" data-qualifier>
     {!c.parcours && (
       <fieldset class="e-pastilles">

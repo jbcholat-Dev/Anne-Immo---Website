@@ -26,6 +26,8 @@ const LIBELLES: Record<Geste, string> = {
 };
 const PRINCIPAL: Geste[] = ['ranger', 'ajouter', 'rattacher'];
 const JOUR = new Intl.DateTimeFormat('fr-CA', { timeZone: 'Europe/Paris' });
+/** « 26 nov. » pour une date AAAA-MM-JJ (échéance proposée par le tri, story 18.25). */
+const jourCourt = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', timeZone: 'UTC' });
 function quand(iso: string): string {
   const t = Date.parse(iso);
   const heure = new Date(t).toLocaleTimeString('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit' }).replace(':', ' h ');
@@ -63,6 +65,7 @@ export function brancherNouveaux(r: Reglages) {
       <div class="nv-nom">${esc(nom)}${coord ? ` <span class="nv-coord">${esc(coord)}</span>` : ''}</div>
       ${c.annonce ? `<div class="nv-info">Annonce : ${esc(c.annonce)}</div>` : ''}
       ${c.texte ? `<p class="nv-txt${c.source === 'portail' && !c.contact_id ? ' nv-lire' : ''}">${esc(c.texte)}</p>` : ''}
+      ${c.tri ? `<div class="nv-tri" data-c="${esc(c.tri.classement)}"><span class="nv-tri-etq">Proposition · ${esc(c.tri.libelle)}</span> <b>${esc(c.tri.action)}</b>${c.tri.echeance ? ` avant le ${esc(jourCourt(c.tri.echeance))}` : ''}<span class="nv-tri-raison">${esc(c.tri.raison)}</span></div>` : ''}
       ${c.echanges > 1 ? `<div class="nv-info">${c.echanges} échanges vus par Leedflow</div>` : ''}
       ${c.contact_id ? `<div class="nv-auto">${c.ecarte ? 'Contact écarté' : 'Contact créé automatiquement, à ranger'}</div>` : ''}
       ${c.connu ? `<div class="nv-dej">Déjà dans les contacts : <b>${esc(c.connu.nom)}</b>${c.connu.categorie ? ` (${esc(c.connu.categorie)})` : ''}</div>` : ''}
