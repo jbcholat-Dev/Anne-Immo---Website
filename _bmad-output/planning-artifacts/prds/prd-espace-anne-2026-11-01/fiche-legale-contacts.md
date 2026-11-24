@@ -26,6 +26,24 @@ Le RGPD permet de garder des coordonnées sans accord écrit quand on a un inté
 ## Ce que Claude voit
 Claude fait l'import depuis la conversation : il lit les fichiers pour préparer l'aperçu et les envoie à l'espace. Les fichiers passent donc par Anthropic, l'entreprise qui fait fonctionner Claude, comme toute pièce jointe d'une conversation. Une fois l'import fait, Claude n'a plus accès qu'à l'import, jamais à la lecture des contacts (règle de conduite inscrite dans l'architecture).
 
+## Ajout proposé le 2026-11-24 : des textes traités par l'API Claude (à valider par JB)
+
+JB a choisi le 2026-11-24 que l'espace trie lui-même les appels reçus par Leedflow, avec l'API Claude. L'API Claude est le service d'Anthropic qui permet à un programme d'interroger Claude. Cela ajoute un destinataire aux données : Anthropic, comme sous-traitant.
+
+**Ce qui change**
+- **Ce qui est envoyé** : le résumé d'un appel ou d'un message vocal, le sens de l'appel et sa durée. Plus tard, si JB le décide : la note d'une fiche, pour préparer un brouillon de message. Jamais le carnet entier, jamais la transcription complète ni l'enregistrement (AD-20).
+- **Le moins possible** : le nom, le téléphone et l'e-mail du contact ne sont pas joints à l'envoi. Le résumé peut quand même citer un prénom ou une ville : c'est pour cela qu'Anthropic est noté comme destinataire.
+- **Ce qui revient** : un classement et une proposition. Anne décide ; rien ne part et rien ne change d'étape sans elle.
+- **Qui lit** : aucun fil du projet ne lit ces textes. L'envoi va de l'espace à l'API, avec une clé gardée en secret dans Cloudflare.
+- **Chez Anthropic** : à vérifier par JB dans les conditions commerciales d'Anthropic avant la mise en service : pas d'entraînement des modèles sur les données de l'API, durée de conservation, lieu du traitement (États-Unis possible, donc clauses contractuelles types), accord de sous-traitance (DPA) accepté avec le compte.
+- **Registre** : la ligne devient « destinataires : Anne et JB ; sous-traitants : Cloudflare (UE), Anthropic (tri et brouillons par IA) ».
+- **Information des personnes** : la politique de confidentialité du site reçoit une phrase sur ce sous-traitant.
+
+**Ce que JB valide**
+- [ ] L'envoi des résumés d'appels à l'API Claude, dans les limites ci-dessus.
+- [ ] Les points « Chez Anthropic » vérifiés.
+- [ ] La nouvelle ligne du registre et la phrase de la politique de confidentialité.
+
 ## Ce que JB valide (validé par JB le 2026-11-02 à 10 h 26)
 - [x] La base « intérêt légitime » et les règles 1 à 8.
 - [x] La phrase d'information au premier message (à ajuster avec Anne).
