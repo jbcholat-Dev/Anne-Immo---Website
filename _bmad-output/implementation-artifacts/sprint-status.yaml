@@ -278,13 +278,14 @@ development_status:
   19-4-bilan-d-une-campagne: backlog
   epic-19-retrospective: optional
 
-  epic-20: backlog   # la semaine et le bilan (livraison 3) ; en pause (décision JB 2026-11-02)
+  epic-20: in-progress   # la semaine et le bilan (livraison 3) ; rouvert le 2026-11-24 par 20.7 (canaux de prospection, demande de JB)
   20-1-page-de-la-semaine: backlog
   20-2-actions-de-prospection: backlog
   20-3-placer-deplacer-retirer-une-activite: backlog
   20-4-noter-une-activite-faite-et-effort-de-la-semaine: backlog
   20-5-noter-un-resultat: backlog
   20-6-bilan: backlog
+  20-7-canaux-de-prospection-ma-semaine: review   # 2026-11-24, demande de JB : page « Ma semaine », migration 0026
   epic-20-retrospective: optional
 
   epic-17: in-progress

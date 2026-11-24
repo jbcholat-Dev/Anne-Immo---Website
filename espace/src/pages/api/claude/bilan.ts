@@ -1,11 +1,14 @@
 // Accès de Claude au bilan (story 13.17) : les totaux par canal sur une période, avec ce que chaque canal a coûté.
 // Story 10.12 : avec l'entonnoir du diagnostic par campagne. Aucun nom, téléphone ni e-mail : seulement des nombres. GET /api/claude/bilan?p=semaine|mois|trimestre
+// Story 20.7 : `prospection`, les canaux de la page « Ma semaine » (effort, leads, rendez-vous face aux objectifs) pour la
+// semaine choisie par `s=AAAA-MM-JJ` (ramenée au lundi ; la semaine en cours sinon) et la précédente.
 import type { APIRoute } from 'astro';
 import { ENTETE_COMPTE } from '@site/server/acces';
 import { coutsParCanal } from '../../../server/actions';
 import { COMPTE_CLAUDE, pourSite as env } from '../../../server/env';
 import { entonnoir, question1, TOUTES } from '../../../server/entonnoir';
 import { bilan, PERIODES, type Periode } from '../../../server/pipeline';
+import { semaineDemandee, semainePrecedente, totauxSemaine } from '../../../server/prospection';
 
 export const prerender = false;
 
@@ -17,10 +20,13 @@ export const GET: APIRoute = async ({ request, url }) => {
   const couts = await coutsParCanal(env, b.debut);
   const diag = await entonnoir(env, b.debut);
   const ventiler = await question1(env, b.debut, diag.campagnes);
+  const lundi = semaineDemandee(url.searchParams.get('s'));
+  const [semaine, precedente] = await Promise.all([totauxSemaine(env, lundi), totauxSemaine(env, semainePrecedente(lundi))]);
   return new Response(JSON.stringify({
     periode, depuis: b.debut, total: { ...b.total, cout_centimes: [...couts.values()].reduce((t, c) => t + c, 0) },
     canaux: b.lignes.map((l) => ({ ...l, cout_centimes: couts.get(l.canal) ?? 0 })),
     delai_rappel_heures: b.delaiHeures, perdus: b.perdus,
+    prospection: { semaine, precedente },
     diagnostic: {
       total: diag.total, campagnes: diag.campagnes,
       // Story 10.13 : question 1 → question 2 par navigateur, appareil et temps d'affichage, toutes campagnes puis chacune.
