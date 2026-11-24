@@ -21,7 +21,7 @@ import type { EnvSite } from '@site/server/env';
 import { trouver } from '@site/server/contacts';
 import type { EnvEspace } from './env';
 import { annulerCreation, annulerLot, classer, corrigerFiche, creerContact, lireCorrection, type Correction, type Saisie } from './carnet';
-import { ANNULATION_MS, classerDepuisNouveaux, declasserDepuisNouveaux, extrait, resumesInconnus, type NumeroInconnu } from './leedflow';
+import { ANNULATION_MS, classerDepuisNouveaux, declasserDepuisNouveaux, extrait, resumesInconnus, resumeVide, type NumeroInconnu } from './leedflow';
 import { annulerSuiviParGeste, suivreParGeste } from './pipeline';
 import { PORTAILS, type Portail } from './portails';
 import { CLASSEMENTS, propositionsDe } from './tri-ia';
@@ -83,10 +83,11 @@ export function raisonDeRanger(n: Pick<NumeroInconnu, 'echanges' | 'taches' | 'p
   if (!n || connu || n.taches.length > 0 || n.echanges.length !== 1 || n.prenom || n.nom || n.email) return null;
   const e = n.echanges[0];
   if (e.sens !== 'entrant') return null;
-  const vide = !e.resume.trim();
+  const vide = resumeVide(e.resume);
   if (e.manque && vide) return 'Appel manqué sans message';
-  if (e.genre === 'appel' && !e.manque && e.duree !== null && e.duree < APPEL_TROP_COURT_S && e.resume.trim().length < RESUME_COURT) return 'Appel trop court';
-  if ((e.genre === 'vocal' || e.genre === 'sms') && vide) return e.genre === 'sms' ? 'SMS vide' : 'Message vocal vide';
+  if (e.genre === 'appel' && !e.manque && e.duree !== null && e.duree < APPEL_TROP_COURT_S && (vide || e.resume.trim().length < RESUME_COURT)) return 'Appel trop court';
+  // Un SMS n'est vide que sans texte : « Pas de message » écrit par une personne reste un vrai SMS (revue de code 18.28).
+  if ((e.genre === 'vocal' && vide) || (e.genre === 'sms' && !e.resume.trim())) return e.genre === 'sms' ? 'SMS vide' : 'Message vocal vide';
   return null;
 }
 
@@ -152,7 +153,7 @@ export async function lireNouveaux(envE: EnvEspace): Promise<{ total: number; ca
         id: l.id, source: 'leedflow', recu_le: l.recu_le, origine: 'Leedflow',
         titre: dernier?.titre || (r?.taches.length ? 'Tâche détectée par Leedflow' : 'Appel reçu'),
         contact_id: null, nom: r ? nomDe(r.prenom || null, r.nom || null) : null, telephone: tel, email: r?.email || null,
-        texte: dernier ? court(extrait(dernier.resume)) ?? 'Pas de résumé (appel sans message).' : court(r?.taches[0]?.titre),
+        texte: dernier ? (resumeVide(dernier.resume) ? 'Pas de résumé (appel sans message).' : court(extrait(dernier.resume))) ?? 'Pas de résumé (appel sans message).' : court(r?.taches[0]?.titre),
         annonce: null, connu, prerempli: r ? { prenom: r.prenom || null, nom: r.nom || null, email: r.email || null } : null,
         echanges: (r?.echanges.length ?? 0) + (r?.taches.length ?? 0), ecarte: false,
         gestes: connu ? ['rattacher', 'ignorer'] : ['ajouter', 'ignorer'],

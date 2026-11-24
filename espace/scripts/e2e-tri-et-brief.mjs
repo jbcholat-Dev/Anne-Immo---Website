@@ -42,7 +42,7 @@ const equipe = JSON.parse(Buffer.from(jetonAcces().split('.')[1], 'base64url').t
 // Numéros d'essai propres à ce passage (la base locale est gardée d'un essai à l'autre).
 const suffixe = String(Date.now()).slice(-6);
 const tel = (n) => `+3361${n}${suffixe}`.slice(0, 12);
-const T = { vendeur: tel(1), manque: tel(2), proche: tel(3), format: tel(4), panne: tel(5), refus: tel(6) };
+const T = { vendeur: tel(1), manque: tel(2), proche: tel(3), format: tel(4), panne: tel(5), refus: tel(6), sansMessage: tel(8) };
 const maintenant = Date.now();
 
 // Imitation de Leedflow : des appels de numéros inconnus, et la fiche Leedflow du vendeur (nom et e-mail connus).
@@ -52,6 +52,8 @@ const LF = {
     { id: `v${suffixe}`, created: maintenant - 3_600_000, customer: T.vendeur, direction: 'inbound', duration: 240, id_contact: `lf${suffixe}`,
       transcription: `Martine Durand appelle pour vendre sa maison à Sciez dans 3 mois, sans agence. Elle demande une estimation. Rappeler Martine au 06 12 34 56 78 ou martine.durand${suffixe}@example.com.` },
     { id: `m${suffixe}`, created: maintenant - 3_000_000, customer: T.manque, direction: 'inbound', missed: true },
+    // Le texte que Leedflow écrit pour un appel manqué sans message (retour de JB du 2026-11-24).
+    { id: `s${suffixe}`, created: maintenant - 2_900_000, customer: T.sansMessage, direction: 'inbound', missed: true, transcription: '**Le correspondant n’a pas laissé de message.**' },
     { id: `p${suffixe}`, created: maintenant - 2_000_000, customer: T.proche, direction: 'inbound', duration: 600, transcription: 'Discussion familiale sur le repas de dimanche.' },
     { id: `f${suffixe}`, created: maintenant - 1_500_000, customer: T.format, direction: 'inbound', duration: 60, transcription: 'Question sur un appartement à Thonon. RÉPONSE-HORS-FORMAT' },
     { id: `n${suffixe}`, created: maintenant - 1_000_000, customer: T.panne, direction: 'inbound', duration: 60, transcription: 'Un acheteur cherche un T3 à Évian. PANNE' },
@@ -158,6 +160,8 @@ try {
   const c = nv.cartes.find((x) => x.telephone === T.vendeur);
   constat(c?.tri?.libelle === 'Vendeur' && c.tri.action === proposition.action && !nv.cartes.find((x) => x.telephone === T.format)?.tri, 'carte : proposition montrée, aucune pour la réponse rejetée');
   constat(!nv.cartes.find((x) => x.telephone === T.proche)?.tri, 'carte du proche : aucune proposition');
+  const sansMsg = nv.cartes.find((x) => x.telephone === T.sansMessage);
+  constat(sansMsg?.rangee === 'Appel manqué sans message' && !tri(T.sansMessage), `« Le correspondant n'a pas laissé de message » : carte rangée dans « Sans suite », rien d'envoyé (${sansMsg?.rangee ?? 'pas de carte'})`);
   const { chromium } = await import('../../site/node_modules/playwright/index.mjs');
   const nav = await chromium.launch();
   const page = await nav.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 2, extraHTTPHeaders: avecJeton() });

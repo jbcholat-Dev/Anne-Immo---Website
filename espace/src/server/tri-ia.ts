@@ -15,7 +15,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { journal } from '@site/server/journal';
 import type { EnvEspace } from './env';
-import { resumesInconnus, type NumeroInconnu } from './leedflow';
+import { resumesInconnus, resumeVide, type NumeroInconnu } from './leedflow';
 import { raisonDeRanger } from './nouveaux';
 import { aujourdhui, plusTard, QUESTIONS, type Reponses } from './pipeline';
 import { masquerTelephones } from './telephones';
@@ -111,10 +111,11 @@ const genreDe = (titre: string, tache: boolean) => (tache ? 'Tâche détectée' 
 /** Le texte envoyé pour un numéro : rien qui l'identifie, seulement le genre, la date, le titre et le résumé masqué. */
 export function texteEnvoye(n: NumeroInconnu, jour = aujourdhui()): string | null {
   const echanges = [...n.echanges, ...n.taches].sort((a, b) => (a.a < b.a ? 1 : -1)).slice(0, ECHANGES_MAX);
-  if (!echanges.some((e) => e.resume.trim() || e.tache)) return null;
+  // Revue de code 18.28 : un résumé « pas laissé de message » ne dit rien ; un numéro qui n'a que ça n'est pas envoyé.
+  if (!echanges.some((e) => !resumeVide(e.resume) || e.tache)) return null;
   const lignes = echanges.reverse().map((e) => {
     // Coupé par caractère, pas par moitié d'émoji (revue de code 18.25 : un texte mal formé serait refusé par l'API).
-    const resume = masquer(Array.from(e.resume || '').slice(0, RESUME_MAX).join(''), n).trim();
+    const resume = resumeVide(e.resume) ? '' : masquer(Array.from(e.resume || '').slice(0, RESUME_MAX).join(''), n).trim();
     return `- ${e.a.slice(0, 10)} · ${genreDe(e.titre, e.tache)} · ${masquer(e.titre, n)}${e.echeance ? ` · échéance ${e.echeance.slice(0, 10)}` : ''}\n  ${resume || '(pas de résumé)'}`;
   });
   return `Aujourd'hui : ${jour}.\nÉchanges avec ce numéro, du plus ancien au plus récent :\n${lignes.join('\n')}`;
