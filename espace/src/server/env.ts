@@ -31,6 +31,11 @@ export interface EnvEspace extends Env {
    * du jour, site compris (défaut 90, sous les 100 de l'offre gratuite de Resend). */
   CAMPAGNE_PAR_PASSAGE?: string;
   CAMPAGNE_QUOTA_JOUR?: string;
+  /** Clé de l'API Claude (story 18.25, AD-37), posée par JB en secret de ce Worker, jamais lue par Claude (AD-9). Sans elle,
+   * ou tant que le réglage public TRI_IA ne vaut pas « oui », aucun tri par l'API n'a lieu. */
+  ANTHROPIC_API_KEY?: string;
+  /** Adresse de l'API Claude, seulement pour l'essai de bout en bout (imitation locale). Absente : l'adresse réelle. */
+  ANTHROPIC_URL?: string;
 }
 
 /** Le « compte » transmis aux pages pour une requête du programme de Claude (jamais une adresse e-mail). */

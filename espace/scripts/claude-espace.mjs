@@ -13,6 +13,10 @@
 //   node scripts/claude-espace.mjs retirer effort|resultat 01J…   (seulement une ligne notée par le chief of staff)
 //   node scripts/claude-espace.mjs creer '{"nom":"Pub Facebook novembre","canal":"reseaux","debut":"2026-11-01","budget_centimes":15000}'
 //   node scripts/claude-espace.mjs modifier 01J… '{"nom":"Pub Facebook novembre","canal":"reseaux","debut":"2026-11-01","cout_centimes":13240}'
+//   node scripts/claude-espace.mjs brief [AAAA-MM-JJ]   (story 18.27 : relire le brief de la semaine, la semaine en cours sinon)
+//   node scripts/claude-espace.mjs deposer-brief '{"semaine":"2026-11-23","bloque":"…","decision":"…"}'
+//     Le brief de la semaine du chief of staff, affiché à Anne et à JB en 2 lignes sur « Ma semaine » ; remplace celui de la même
+//     semaine. Texte de pilotage seulement : jamais de nom de contact, ni e-mail ni téléphone (refusés), 400 caractères au plus.
 const BASE = (process.env.ESPACE_URL ?? 'https://espace.annevialtissot.fr').replace(/\/+$/, '');
 const id = process.env.ESPACE_CLAUDE_ID, secret = process.env.ESPACE_CLAUDE_SECRET;
 if (!id || !secret) {
@@ -35,4 +39,11 @@ else if (commande === 'noter') await appel('/api/claude/prospection', { method: 
 else if (commande === 'retirer') await appel('/api/claude/prospection', { method: 'POST', body: JSON.stringify({ quoi: 'retirer', genre: a, id: b }) });
 else if (commande === 'creer') await appel('/api/claude/actions', { method: 'POST', body: JSON.stringify(JSON.parse(a)) });
 else if (commande === 'modifier') await appel('/api/claude/actions', { method: 'POST', body: JSON.stringify({ ...JSON.parse(b), id: a }) });
-else { console.error('Commandes : actions | bilan [semaine|mois|trimestre] [AAAA-MM-JJ] | semaine [AAAA-MM-JJ] | objectifs <json> | noter <json> | retirer effort|resultat <id> | creer <json> | modifier <id> <json>'); process.exit(2); }
+else if (commande === 'brief') await appel(`/api/claude/brief${a ? `?s=${encodeURIComponent(a)}` : ''}`);
+else if (commande === 'deposer-brief' && !a) { console.error('deposer-brief attend un texte JSON : {"bloque":"…","decision":"…"}'); process.exit(2); }
+else if (commande === 'deposer-brief') await appel('/api/claude/brief', { method: 'POST', body: JSON.stringify(JSON.parse(a)) });
+else {
+  console.error('Commandes : actions | bilan [semaine|mois|trimestre] [AAAA-MM-JJ] | semaine [AAAA-MM-JJ] | objectifs <json> | noter <json> | retirer effort|resultat <id> | creer <json> | modifier <id> <json> | brief [AAAA-MM-JJ] | deposer-brief <json>');
+  console.error('deposer-brief : {"semaine":"AAAA-MM-JJ" (facultatif), "bloque":"…", "decision":"…"}. Texte de pilotage seulement, sans nom de contact.');
+  process.exit(2);
+}

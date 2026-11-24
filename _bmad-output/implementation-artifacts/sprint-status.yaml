@@ -270,6 +270,9 @@ development_status:
   18-22-dernier-contact-moins-de-3-mois: done   # 2026-11-12, PR n° 259 fusionnée (313e90f), ticket n° 267
   18-23-listes-de-choix-dans-le-code: backlog   # 2026-11-12, décision de JB (AD-35) : retirer les CHECK de listes de `contact`, dernière reconstruction
   18-24-tri-par-regles-des-nouveaux: done   # 2026-11-24, demande de JB (fiche chief of staff) : appels sans suite rangés dans une ligne repliée de « Nouveaux » ; PR n° 272 fusionnée par JB le 2026-11-24
+  18-25-tri-des-appels-par-l-api-claude: review   # 2026-11-24, choix de JB (fiche chief of staff) : proposition de l'API Claude sur chaque carte, éteint (TRI_IA) jusqu'à la fiche légale
+  18-26-brief-du-jour: review   # 2026-11-24, fiche chief of staff § 4 et § 6 : brief du jour en tête de Contacts, phase 1 visible par JB seul
+  18-27-brief-de-la-semaine-du-chief-of-staff: review   # 2026-11-24, demande de JB (fil chief of staff) : 2 lignes déposées par Claude sur « Ma semaine »
   epic-18-retrospective: optional   # non faite : décision JB « Finir économe » du 2026-11-02
 
   epic-19: backlog   # les séances et les campagnes (livraison 2) ; en pause (décision JB 2026-11-02)

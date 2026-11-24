@@ -610,7 +610,14 @@ export async function classerNumero(env: EnvEspace, telephone: string, categorie
     `UPDATE nouveau SET vu_le = ?2, issue = 'ignore' WHERE source = 'leedflow' AND vu_le IS NULL
        AND leedflow_inconnu_id IN (SELECT source_id FROM leedflow_inconnu WHERE telephone = ?1)`,
   ).bind(tel, new Date().toISOString()));
-  if (categorie !== 'pro') lot.push(env.DB.prepare('DELETE FROM leedflow_inconnu WHERE telephone = ?1').bind(tel));
+  if (categorie !== 'pro') {
+    // Revue de code 18.27 : la proposition du tri et les lignes du brief de ce numéro partent avec ses échanges.
+    if (categorie === 'prive' || categorie === 'demarchage') lot.push(
+      env.DB.prepare(`DELETE FROM brief_ligne WHERE cle IN (SELECT 'nouveau:' || n.id FROM nouveau n JOIN leedflow_inconnu i ON i.source_id = n.leedflow_inconnu_id
+        WHERE i.telephone = ?1)`).bind(tel),
+      env.DB.prepare('DELETE FROM tri_ia WHERE telephone = ?1').bind(tel));
+    lot.push(env.DB.prepare('DELETE FROM leedflow_inconnu WHERE telephone = ?1').bind(tel));
+  }
   await env.DB.batch(lot);
   return true;
 }
@@ -667,8 +674,15 @@ export async function declasserDepuisNouveaux(env: EnvEspace, tel: string, categ
 
 /** Tâche planifiée : efface les échanges gardés des numéros ignorés (Privé, Démarchage) une fois le délai d'annulation passé. */
 export async function nettoyerIgnores(env: EnvEspace): Promise<void> {
-  await env.DB.prepare(`DELETE FROM leedflow_inconnu WHERE telephone IN (SELECT telephone FROM leedflow_ecarte WHERE categorie IN ('prive', 'demarchage') AND a <= ?1)`)
-    .bind(finAnnulation()).run();
+  const IGNORES = `SELECT telephone FROM leedflow_ecarte WHERE categorie IN ('prive', 'demarchage') AND a <= ?1`;
+  const fin = finAnnulation();
+  // Stories 18.25 et 18.26 (revue de code) : la proposition du tri et les lignes du brief de ces numéros partent aussi.
+  await env.DB.batch([
+    env.DB.prepare(`DELETE FROM brief_ligne WHERE cle IN (SELECT 'nouveau:' || n.id FROM nouveau n JOIN leedflow_inconnu i ON i.source_id = n.leedflow_inconnu_id
+      WHERE i.telephone IN (${IGNORES}))`).bind(fin),
+    env.DB.prepare(`DELETE FROM tri_ia WHERE telephone IN (${IGNORES})`).bind(fin),
+    env.DB.prepare(`DELETE FROM leedflow_inconnu WHERE telephone IN (${IGNORES})`).bind(fin),
+  ]);
 }
 
 // ——— Affichage d'un résumé ———
