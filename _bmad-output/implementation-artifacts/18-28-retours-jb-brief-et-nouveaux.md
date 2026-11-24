@@ -1,6 +1,6 @@
 # Story 18.28 : retours de JB sur le brief du jour et la barre « Nouveaux »
 
-- Epic : 18 (carnet de contacts). Statut : review.
+- Epic : 18 (carnet de contacts). Statut : done (PR n° 278 fusionnée par JB le 2026-11-24).
 - Demande : JB, 2026-11-24, après la fusion de la PR n° 274 : « Tout ça, c'est des gens qui se sont inscrits sur le listing des ambassadeurs […] il y a toujours un mur de contacts à 94 nouveaux. »
 
 ## Objectif
