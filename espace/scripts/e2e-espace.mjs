@@ -1304,6 +1304,78 @@ try {
     remettreObjectifs();
   }
   if (process.env.E2E_2007_SEUL) { await bloc2007(); await nav.close(); throw new Error(echecs ? 'E2E_2007_SEUL : échecs' : 'E2E_2007_SEUL : terminé') }
+  // Story 18.24 : tri par règles de la barre « Nouveaux » (sans IA). Un numéro inconnu qui n'a laissé qu'un appel manqué sans
+  // message, un appel trop court ou un message vide est rangé dans la ligne repliée « Sans suite » ; il remonte s'il rappelle ;
+  // rien n'est effacé et ses gestes restent. Lancé seul avec E2E_1824_SEUL=1.
+  async function bloc1824() {
+    const T = (i) => `+33769${String(i)}${NUM.slice(0, 5)}`;
+    const maintenant = Date.now();
+    const cas = [
+      // [cle, échanges [genre, manqué, durée, résumé], prénom Leedflow, rangée attendue]
+      ['manque', [['appel', true, 0, '']], '', 'Appel manqué sans message'],
+      ['court', [['appel', false, 8, 'Allô ?']], '', 'Appel trop court'],
+      ['sms', [['sms', false, null, '']], '', 'SMS vide'],
+      ['rappel', [['appel', true, 0, ''], ['appel', true, 0, '']], '', null],
+      ['vrai', [['appel', false, 180, 'Veut vendre une maison à Sciez']], '', null],
+      ['nomme', [['appel', true, 0, '']], 'Paula', null],
+      ['sortant', [['appel', true, 0, '', 'sortant']], '', null],
+      ['courtParle', [['appel', false, 15, 'Bonjour, je veux faire estimer ma maison à Sciez, rappelez-moi']], '', null],
+      ['vocal', [['vocal', false, 4, '']], '', 'Message vocal vide'],
+    ];
+    const ids = {};
+    const nettoyer = () => {
+      sql(`DELETE FROM nouveau WHERE leedflow_inconnu_id LIKE '%:e1824-${NUM}-%'`);
+      sql(`DELETE FROM leedflow_inconnu WHERE source_id LIKE '%:e1824-${NUM}-%'`);
+    };
+    nettoyer();
+    cas.forEach(([cle, echanges, prenom], i) => {
+      echanges.forEach(([genre, manque, duree, resume, sens = 'entrant'], j) => {
+        const sid = `${genre}:e1824-${NUM}-${cle}-${j}`;
+        const titre = genre === 'sms' ? 'SMS reçu' : manque ? 'Appel manqué' : `Appel reçu · ${duree} s`;
+        const donnees = JSON.stringify({ genre, sens, duree, manque, resume: !!resume, ...(prenom ? { prenom_leedflow: prenom } : {}) });
+        const a = new Date(maintenant - (60 - i * 5 - j) * 60_000).toISOString();
+        sql(`INSERT INTO leedflow_inconnu (source_id, telephone, a, texte, donnees) VALUES ('${sid}', '${T(i)}', '${a}', '${(resume ? `${titre}\n${resume}` : titre).replace(/'/g, "''")}', '${donnees}')`);
+        if (j === 0) {
+          ids[cle] = `01KF1824${String(i)}${NUM}${'0'.repeat(11)}`;
+          sql(`INSERT INTO nouveau (id, source, recu_le, leedflow_inconnu_id) VALUES ('${ids[cle]}', 'leedflow', '${a}', '${sid}')`);
+        }
+      });
+    });
+    const r = await appeler(`${E}/api/nouveaux`, { headers: avecJeton(JETON) });
+    const cartes = (await r.json()).cartes ?? [];
+    const vu = Object.fromEntries(cas.map(([cle]) => [cle, (cartes.find((c) => c.id === ids[cle]) ?? { rangee: 'absente' }).rangee]));
+    constat(cas.every(([cle, , , attendu]) => vu[cle] === attendu),
+      `18.24 : rangées : appel manqué sans message, appel trop court, SMS vide ; vocal vide ; pas rangés : numéro qui rappelle, vrai appel, nom connu de Leedflow, appel passé par Anne, appel court qui dit quelque chose (${JSON.stringify(vu)})`);
+    // La page : les cartes rangées sont sous la ligne repliée, hors du compteur, et gardent leurs gestes.
+    const ctx = await nav.newContext({ viewport: { width: 1440, height: 900 }, extraHTTPHeaders: { 'cf-access-jwt-assertion': JETON } });
+    const o = await ctx.newPage();
+    const erreurs = []; o.on('pageerror', (x) => erreurs.push(x.message));
+    await o.goto(`${E}/`);
+    const nRangees = cartes.filter((c) => c.rangee).length;
+    const compteServeur = Number(await (await appeler(`${E}/`, { headers: avecJeton(JETON) })).text().then((h) => h.match(/data-nv-compte>(\d+)</)?.[1]));
+    const compte = Number(await o.textContent('[data-nv-compte]'));
+    const src = await o.textContent('[data-nv-src]');
+    await o.click('[data-nv-barre]');
+    await o.waitForSelector(`[data-nv-carte="${ids.vrai}"]`);
+    const dedans = async (cle) => (await o.locator(`[data-nv-ranges] [data-nv-carte="${ids[cle]}"]`).count()) === 1;
+    const place = { manque: await dedans('manque'), court: await dedans('court'), sms: await dedans('sms'), rappel: await dedans('rappel'), vrai: await dedans('vrai') };
+    const cacheAvant = !(await o.isVisible(`[data-nv-carte="${ids.manque}"]`));
+    await o.click('[data-nv-ranges] > summary');
+    const visibleApres = await o.isVisible(`[data-nv-carte="${ids.manque}"] [data-nv-geste=ignorer]`);
+    await o.screenshot({ path: path.join(OUT, 'espace-nouveaux-sans-suite.png'), fullPage: true });
+    constat(compte === cartes.length - nRangees && compteServeur === compte && src.includes(`${nRangees} sans suite`) && place.manque && place.court && place.sms && !place.rappel && !place.vrai && cacheAvant && visibleApres && erreurs.length === 0,
+      `18.24 : la barre compte ${compte} à voir et « ${nRangees} sans suite » ; les rangées sont repliées en bas, avec leur bouton Ignorer (${JSON.stringify(place)})`);
+    // Le numéro rangé rappelle : il remonte.
+    sql(`INSERT INTO leedflow_inconnu (source_id, telephone, a, texte, donnees) VALUES ('appel:e1824-${NUM}-manque-1', '${T(0)}', '${new Date().toISOString()}', 'Appel manqué', '{"genre":"appel","sens":"entrant","manque":true,"duree":0}')`);
+    const apres = ((await (await appeler(`${E}/api/nouveaux`, { headers: avecJeton(JETON) })).json()).cartes ?? []).find((c) => c.id === ids.manque);
+    constat(apres && apres.rangee === null && apres.echanges === 2, '18.24 : un numéro rangé qui rappelle remonte dans la barre');
+    constat(sql(`SELECT count(*) AS n FROM leedflow_inconnu WHERE source_id LIKE '%:e1824-${NUM}-%'`)[0].n === 11
+      && sql(`SELECT count(*) AS n FROM nouveau WHERE id IN (${Object.values(ids).map((x) => `'${x}'`).join(',')}) AND vu_le IS NULL`)[0].n === 9,
+      '18.24 : rien n\'est effacé ni marqué vu par le tri');
+    await ctx.close();
+    nettoyer();
+  }
+  if (process.env.E2E_1824_SEUL) { await bloc1824(); await nav.close(); throw new Error(echecs ? 'E2E_1824_SEUL : échecs' : 'E2E_1824_SEUL : terminé') }
   if (process.env.E2E_1822_SEUL) { await bloc1822(); await nav.close(); throw new Error(echecs ? 'E2E_1822_SEUL : échecs' : 'E2E_1822_SEUL : terminé') }
   if (process.env.E2E_1821_SEUL) { await bloc1821(); await nav.close(); throw new Error(echecs ? 'E2E_1821_SEUL : échecs' : 'E2E_1821_SEUL : terminé') }
   if (process.env.E2E_1820_SEUL) { await bloc1820(); await nav.close(); throw new Error(echecs ? 'E2E_1820_SEUL : échecs' : 'E2E_1820_SEUL : terminé') }
@@ -3848,6 +3920,7 @@ try {
   await bloc1821();
   await bloc1822();
   await bloc2007();
+  await bloc1824();
   // Story 18.8 : catégories et méthodes, par /api/categories puis dans la page /categories. Les catégories de départ sont
   // remises comme avant à la fin (nom, ordre, méthode), les catégories d'essai retirées (marque « E188 » dans le nom).
   const ancienne8 = sql(`SELECT id FROM categorie WHERE nom LIKE '%E188%'`).map((c) => `'${c.id}'`).join(',');

@@ -1,6 +1,6 @@
 # Story 20.7 : canaux de prospection, page « Ma semaine »
 
-Epic 20 (la semaine et le bilan). Statut : review. Date : 2026-11-24. Origine : demande de JB du 2026-11-24 (fil « [Stratégie] Agent chief of staff à partir de Leedflow ») : « implémenter cette semaine les canaux de prospection pour qu'elle puisse dedans les renseigner, qu'on commence à avoir accès à des métriques concrètes », pour pousser Anne à l'adoption quotidienne de l'espace.
+Epic 20 (la semaine et le bilan). Statut : done. Date : 2026-11-24. Origine : demande de JB du 2026-11-24 (fil « [Stratégie] Agent chief of staff à partir de Leedflow ») : « implémenter cette semaine les canaux de prospection pour qu'elle puisse dedans les renseigner, qu'on commence à avoir accès à des métriques concrètes », pour pousser Anne à l'adoption quotidienne de l'espace.
 
 ## Objectif
 
@@ -66,6 +66,6 @@ Revue du 2026-11-24, skill `bmad-code-review` en session neuve, commit relu 018d
 
 ## Ce qui reste
 
-- Accord de JB (et sur les choix 2 et 3 de la revue), fusion (la migration 0026 part sur la base d'aperçu dès la poussée ; ajout de tables seulement).
+- ~~Accord de JB, fusion~~ : PR n° 269 fusionnée par JB le 2026-11-24. Choix 2 et 3 de la revue à confirmer par JB (la migration 0026 part sur la base d'aperçu dès la poussée ; ajout de tables seulement).
 - Anne essaie sur l'aperçu, retours.
 - Suite : mandats et honoraires (vues Mois et Année), recalcul du lundi, brief (fil chief of staff).

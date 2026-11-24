@@ -4,6 +4,9 @@
 // revenir (/api/nouveaux { annuler }). « Ranger » ouvre la fiche du contact (story 18.7) ; « Ajouter aux contacts » ouvre
 // la fenêtre de création préremplie. La ligne du contact touché revient dans le tableau sans recharger. Tout texte venu
 // des données passe par `esc` avant d'entrer dans le HTML.
+// Story 18.24 : les cartes sans suite (appel manqué sans message, appel trop court, message vide d'un numéro inconnu qui
+// n'a appelé qu'une fois) sont regroupées en bas, dans une ligne repliée « Sans suite » ; elles gardent leurs gestes.
+// Le compteur de la barre ne compte que les autres.
 import { telLisible } from '@site/server/recherche';
 import type { Prerempli, Reponse } from './fiche-contact';
 import type { CarteNouveau, Geste } from '../server/nouveaux';
@@ -49,13 +52,14 @@ export function brancherNouveaux(r: Reglages) {
   let cartes = depart.cartes;
   let total = depart.total;
   let ouvert = false;
+  let rangeesOuvertes = false;
   let occupe = false;
 
   function carteHtml(c: CarteNouveau): string {
     const coord = [c.telephone ? telLisible(c.telephone) : '', c.email ?? ''].filter(Boolean).join(' · ');
     const nom = c.nom ?? (c.source === 'leedflow' ? 'Numéro inconnu' : 'Sans nom');
     return `<article class="nv-carte" data-nv-carte="${esc(c.id)}" data-source="${esc(c.source)}">
-      <div class="nv-tete"><span class="nv-badge" data-s="${esc(c.source)}">${esc(c.origine)}</span><span>${esc(c.titre)} · ${esc(quand(c.recu_le))}</span></div>
+      <div class="nv-tete"><span class="nv-badge" data-s="${esc(c.source)}">${esc(c.origine)}</span><span>${esc(c.titre)} · ${esc(quand(c.recu_le))}</span>${c.rangee ? `<span class="nv-raison">${esc(c.rangee)}</span>` : ''}</div>
       <div class="nv-nom">${esc(nom)}${coord ? ` <span class="nv-coord">${esc(coord)}</span>` : ''}</div>
       ${c.annonce ? `<div class="nv-info">Annonce : ${esc(c.annonce)}</div>` : ''}
       ${c.texte ? `<p class="nv-txt${c.source === 'portail' && !c.contact_id ? ' nv-lire' : ''}">${esc(c.texte)}</p>` : ''}
@@ -68,16 +72,26 @@ export function brancherNouveaux(r: Reglages) {
 
   function rendre() {
     const vide = total === 0;
-    compte.textContent = String(total);
+    const aVoir = cartes.filter((c) => !c.rangee);
+    const rangees = cartes.filter((c) => c.rangee);
+    const nAVoir = total - rangees.length;
+    if (!rangees.length) rangeesOuvertes = false;
+    compte.textContent = String(nAVoir);
     barre.classList.toggle('vide', vide);
     barre.setAttribute('aria-expanded', String(ouvert && !vide));
     barre.querySelector('.nv-chev')!.textContent = ouvert ? '▴' : '▾';
-    const noms = [...new Set(cartes.map((c) => c.origine))];
-    sources.textContent = vide ? 'Aucune nouvelle demande' : noms.join(', ');
+    const noms = [...new Set(aVoir.map((c) => c.origine))];
+    sources.textContent = vide ? 'Aucune nouvelle demande'
+      : [noms.join(', '), rangees.length ? `${rangees.length} sans suite` : ''].filter(Boolean).join(' · ');
     liste.hidden = !ouvert || vide;
     if (!liste.hidden) {
-      liste.innerHTML = cartes.map(carteHtml).join('')
-        + (total > cartes.length ? `<p class="nv-vide">${total - cartes.length} autre(s) demande(s), plus anciennes : elles s'afficheront quand celles-ci seront traitées.</p>` : '');
+      liste.innerHTML = aVoir.map(carteHtml).join('')
+        + (total > cartes.length ? `<p class="nv-vide">${total - cartes.length} autre(s) demande(s), plus anciennes : elles s'afficheront quand celles-ci seront traitées.</p>` : '')
+        + (rangees.length ? `<details class="nv-ranges" data-nv-ranges${rangeesOuvertes ? ' open' : ''}>
+            <summary>${rangees.length} sans suite, rangé${rangees.length > 1 ? 's' : ''} ici : appels manqués sans message, appels trop courts, messages vides. Un numéro qui rappelle remonte.</summary>
+            <div class="nv-ranges-liste">${rangees.map(carteHtml).join('')}</div>
+          </details>` : '');
+      liste.querySelector<HTMLDetailsElement>('[data-nv-ranges]')?.addEventListener('toggle', (e) => { rangeesOuvertes = (e.target as HTMLDetailsElement).open; });
     }
   }
 
