@@ -1,6 +1,6 @@
 # Story 18.27 : brief de la semaine déposé par le chief of staff
 
-- Epic : 18 (carnet de contacts). Statut : review.
+- Epic : 18 (carnet de contacts). Statut : done (PR n° 274 fusionnée par JB le 2026-11-24).
 - Demande : JB, 2026-11-24 (fil chief of staff) : « que le Chief of Staff puisse mettre à jour l'espace d'Anne […] si on fait un brief ensemble, le répercute directement, qu'on n'est pas à la main à aller faire des choses ». Précisée par le fil chief of staff : deux textes courts, sur la page de prospection existante, en 2 lignes, sans nouvel écran (règle de la fiche de poste § 5 : « il enlève, il n'ajoute pas »).
 - Décision : AD-37 (spine d'architecture de l'espace).
 
