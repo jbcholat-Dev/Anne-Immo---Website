@@ -35,6 +35,19 @@
 - Captures à 1440 px (contacts fictifs) : `criteres-resume-1440.png` (résumé), `criteres-formulaire-1440.png` (formulaire), `criteres-panneau-acheteur-1440.png`.
 - Essai complet `e2e-espace.mjs` non relancé en entier (environ 25 minutes, et un défaut ancien arrête déjà l'essai, voir la story 18.29).
 
+## Revue de code
+
+2026-11-24, `bmad-code-review` en session neuve, commit a00da01 relu (diff origin/main..a00da01). Aucun constat bloquant.
+
+1. Une ancienne surface en texte libre (« 120 à 150 ») était cachée, puis effacée par la page de qualification : corrigé (commit suivant). Elle s'affiche telle quelle, une ligne « Surface notée avant » la montre au-dessus des deux formulaires, et elle n'est retirée que si une surface est saisie.
+2. `budgetAncien` lisait n'importe quel texte à deux nombres (« T4, 800 k€ » donnait 4 000 à 800 000 €) : corrigé. Le texte entier doit être « montant, séparateur (à, -, et), montant » ; sinon il reste en texte.
+3. Pas d'annulation par lot des critères : écarté, déjà noté dans « Écarts assumés » (l'avant-image est dans l'événement).
+4. `maxlength="12"` sur les champs de nombres : corrigé, 20.
+5. Le financement ne s'efface pas depuis la page de qualification : écarté, comportement d'avant ; le panneau a « Pas noté ».
+6. `CRITERES_TAPES` garde `surface` : écarté, sert au type `CleAcheteur`.
+
+Après corrections : `npm run build` et `npm run check` (espace) : 0 erreur ; `E2E_1830_SEUL=1` : 29 constats sur 29.
+
 ## Ce qui reste
 
 - Partie « catégorie prospect » du ticket n° 284 (remplacer par acheteurs d'un côté, vendeurs de l'autre) : en attente de JB.

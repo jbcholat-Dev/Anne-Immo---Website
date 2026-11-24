@@ -106,10 +106,11 @@ export function verifierBornes(r: Criteres): string | null {
 
 /** « 750 k€ à 850 k€ » ou « 900 k€ à 1,1 M€ » → { min, max } en euros ; null si le texte n'est pas de cette forme. */
 export function budgetAncien(texte: string): { min: number; max: number } | null {
-  const trouves = [...texte.matchAll(/(\d+(?:[.,]\d+)?)\s*(k|m)?\s*(?:€|euros?)?/gi)].filter((m) => m[1]);
-  if (trouves.length !== 2) return null;
+  // Revue de code 18.30 : le texte entier doit être « montant, séparateur, montant » (« T4, 800 k€ » n'est pas un budget).
+  const m = /^\s*(\d+(?:[.,]\d+)?)\s*(k|m)?\s*(?:€|euros?)?\s*(?:à|a|-|–|—|et)\s*(\d+(?:[.,]\d+)?)\s*(k|m)?\s*(?:€|euros?)?\s*$/i.exec(texte);
+  if (!m) return null;
   const unite = (u: string | undefined) => (u?.toLowerCase() === 'k' ? 1000 : u?.toLowerCase() === 'm' ? 1_000_000 : 0);
-  const [a, b] = trouves;
+  const a = [m[0], m[1], m[2]], b = [m[0], m[3], m[4]];
   const ub = unite(b[2]);
   const ua = unite(a[2]) || (Number(a[1].replace(',', '.')) < 1000 && ub ? ub : 1);
   const min = Math.round(Number(a[1].replace(',', '.')) * ua), max = Math.round(Number(b[1].replace(',', '.')) * (ub || 1));
@@ -139,17 +140,19 @@ function fourchette(min: number | null, max: number | null, fmt: (n: number) => 
 const mCarres = (n: number) => ({ nombre: espaces(n), unite: ' m²' });
 
 /** Ce que la qualification dit des critères, ancien format compris (les clés numériques l'emportent). */
-export interface VueCriteres { surfaceMin: number | null; surfaceMax: number | null; budgetMin: number | null; budgetMax: number | null; budgetTexte: string }
+export interface VueCriteres { surfaceMin: number | null; surfaceMax: number | null; surfaceTexte: string; budgetMin: number | null; budgetMax: number | null; budgetTexte: string }
 export function vueCriteres(r: Criteres): VueCriteres {
   const ancienneSurface = chiffre((r.surface ?? '').replace(/\s*m(²|2)\s*$/i, ''));
   const surfaceMin = chiffre(r.surface_min) ?? ancienneSurface;
   const budgetMin = chiffre(r.budget_min), budgetMax = chiffre(r.budget_max);
-  return { surfaceMin, surfaceMax: chiffre(r.surface_max), budgetMin, budgetMax, budgetTexte: budgetMin || budgetMax ? '' : (r.budget ?? '').trim() };
+  // Revue de code 18.30 : une ancienne surface en texte libre (« 120 à 150 ») reste lue telle quelle.
+  const surfaceTexte = surfaceMin || chiffre(r.surface_max) ? '' : (r.surface ?? '').trim();
+  return { surfaceMin, surfaceMax: chiffre(r.surface_max), surfaceTexte, budgetMin, budgetMax, budgetTexte: budgetMin || budgetMax ? '' : (r.budget ?? '').trim() };
 }
 
 export function surfaceLisible(r: Criteres): string {
   const v = vueCriteres(r);
-  return fourchette(v.surfaceMin, v.surfaceMax, mCarres, true).replace(/^(\d[\d ]*) à ([\d ]+ m²)$/, '$1 à $2');
+  return fourchette(v.surfaceMin, v.surfaceMax, mCarres, true).replace(/^(\d[\d ]*) à ([\d ]+ m²)$/, '$1 à $2') || v.surfaceTexte;
 }
 export function budgetLisible(r: Criteres): string {
   const v = vueCriteres(r);
@@ -195,6 +198,11 @@ export function budgetAGarder(r: Criteres): string {
   return v.budgetTexte && !budgetAncien(v.budgetTexte) ? v.budgetTexte : '';
 }
 
+/** L'ancienne surface en texte libre : montrée au-dessus du formulaire, gardée tant qu'aucune surface n'est saisie. */
+export function surfaceAGarder(r: Criteres): string {
+  return vueCriteres(r).surfaceTexte;
+}
+
 /**
  * Applique une saisie validée à une qualification existante (les autres réponses, délai, agence…, restent). Les anciennes
  * clés sont retirées quand les nouvelles prennent leur place : `surface` dès que la surface minimale est donnée, `budget`
@@ -209,7 +217,8 @@ export function fusionnerCriteres(existant: Criteres, saisie: SaisieCriteres): C
     if (!('budget_max' in saisie)) r.budget_max = String(lu.max);
   }
   for (const [cle, v] of Object.entries(saisie)) { if (v === null) delete r[cle]; else r[cle] = v; }
-  if ('surface_min' in saisie) delete r.surface;
+  // Revue de code 18.30 : une ancienne surface en texte libre n'est retirée que si une surface est saisie.
+  if (r.surface && 'surface_min' in saisie && (saisie.surface_min !== null || chiffre(r.surface.replace(/\s*m(²|2)\s*$/i, '')))) delete r.surface;
   if ('budget_min' in saisie || 'budget_max' in saisie) {
     if (r.budget_min || r.budget_max || !r.budget || budgetAncien(r.budget)) delete r.budget;
   }

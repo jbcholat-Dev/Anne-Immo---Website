@@ -7,7 +7,7 @@ import {
   CANAUX_CONTACT, CANAUX_SOURCE_CHOIX, ETATS_AMBASSADEUR, PROJETS, PROJETS_AVEC_TEMPERATURE, TEMPERATURES, TEMPERATURES_CHOIX, temperaturePermise, libelleCanalSource, type LigneTableau,
 } from '../server/tableau-colonnes';
 import type { Fiche } from '../server/fiche';
-import { budgetAGarder, CHOIX_CRITERES, CLES_CRITERES, FINANCEMENTS_CRITERES, NOMBRES_CRITERES, resumeCriteres, TEXTES_CRITERES, valeursFormulaire } from '../server/criteres';
+import { budgetAGarder, surfaceAGarder, CHOIX_CRITERES, CLES_CRITERES, FINANCEMENTS_CRITERES, NOMBRES_CRITERES, resumeCriteres, TEXTES_CRITERES, valeursFormulaire } from '../server/criteres';
 
 /** Une création préremplie (story 18.11) : valeurs des champs, et l'envoi par la barre « Nouveaux ». */
 export interface Prerempli { valeurs: Record<string, string | null>; envoyer: (saisie: Record<string, unknown>) => Promise<Reponse> }
@@ -80,11 +80,12 @@ export function brancherFiche(r: Reglages) {
     }
     const v = brouillon ?? valeursFormulaire(f.recherche);
     const ancien = brouillon ? '' : budgetAGarder(f.recherche);
+    const ancienneSurface = brouillon ? '' : surfaceAGarder(f.recherche);
     const choix = (cle: keyof typeof CHOIX_CRITERES) => {
       const coches = (v[cle] ?? '').split(', ');
       return `<fieldset class="fc-choix" data-recherche-choix="${cle}"><legend>${esc(TITRES_CHOIX[cle])}</legend>${(CHOIX_CRITERES[cle] as readonly string[]).map((o) => `<label class="fc-case"><input type="checkbox" name="c_${cle}" value="${esc(o)}"${coches.includes(o) ? ' checked' : ''} /> ${esc(o)}</label>`).join('')}</fieldset>`;
     };
-    const nombre = (id: string) => { const n = NOMBRES_CRITERES.find((x) => x.id === id)!; return `<label class="ct-champ">${esc(n.titre)}<input name="c_${id}" inputmode="numeric" value="${esc(v[id])}" autocomplete="off" maxlength="12" /></label>`; };
+    const nombre = (id: string) => { const n = NOMBRES_CRITERES.find((x) => x.id === id)!; return `<label class="ct-champ">${esc(n.titre)}<input name="c_${id}" inputmode="numeric" value="${esc(v[id])}" autocomplete="off" maxlength="20" /></label>`; };
     const texte = (id: string, lignes = 0) => { const t = TEXTES_CRITERES.find((x) => x.id === id)!; return `<label class="ct-champ">${esc(t.titre)}${lignes ? `<textarea name="c_${id}" rows="${lignes}" maxlength="${t.max}">${esc(v[id])}</textarea>` : `<input name="c_${id}" value="${esc(v[id])}" maxlength="${t.max}" autocomplete="off" />`}</label>`; };
     return `<form class="fc-bloc fc-recherche fc-form" data-recherche-form>
       <h3>Ce qu'il cherche</h3>
@@ -92,6 +93,7 @@ export function brancherFiche(r: Reglages) {
       <div class="fc-grille">${nombre('surface_min')}${nombre('surface_max')}${nombre('chambres_min')}${nombre('terrain_min')}${nombre('terrain_max')}</div>
       <div class="fc-grille">${nombre('budget_min')}${nombre('budget_max')}</div>
       ${ancien ? `<p class="fc-muet" data-recherche-ancien>Budget noté avant : ${esc(ancien)}. Il reste tant que vous ne saisissez pas de montant.</p>` : ''}
+      ${ancienneSurface ? `<p class="fc-muet" data-recherche-surface-ancienne>Surface notée avant : ${esc(ancienneSurface)}. Elle reste tant que vous ne saisissez pas de surface.</p>` : ''}
       ${texte('secteur')}
       ${texte('indispensable', 2)}${texte('apprecie', 2)}${texte('redhibitoire', 2)}
       ${choix('pieces')}${choix('exterieur')}${choix('stationnement')}

@@ -16,7 +16,7 @@ import { pourSite as env } from '../../server/env';
 import { ULID } from '../../server/formulaires';
 import {
   aujourdhui, corrigerQualification, echeance, FINANCEMENTS, libelleOrigine, lireContact, MOTIFS_PERTE, parisVersUtc, plusTard, qualifier, QUESTIONS, CRITERES_ACHETEUR, type Issue, type Reponses, libelleEtape } from '../../server/pipeline';
-import { budgetAGarder, CHOIX_CRITERES, CLES_CRITERES, fusionnerCriteres, lireCriteres, NOMBRES_CRITERES, verifierBornes, TEXTES_CRITERES, valeursFormulaire } from '../../server/criteres';
+import { budgetAGarder, surfaceAGarder, CHOIX_CRITERES, CLES_CRITERES, fusionnerCriteres, lireCriteres, NOMBRES_CRITERES, verifierBornes, TEXTES_CRITERES, valeursFormulaire } from '../../server/criteres';
 import { resumeHtml } from '../../server/leedflow';
 import { envEspace } from '../../server/env';
 import { propositionsDe } from '../../server/tri-ia';
@@ -181,13 +181,15 @@ const issues = [
         const v = valeursFormulaire(reponses);
         const val = (k: string) => saisi[`a_${k}`] ?? v[k] ?? '';
         const ancien = budgetAGarder(reponses);
+        const ancienneSurface = surfaceAGarder(reponses);
         return (
           <>
             <div class="e-champs">
-              {NOMBRES_CRITERES.map((n) => <label class="e-champ">{n.titre}<input name={`a_${n.id}`} inputmode="numeric" value={val(n.id)} autocomplete="off" maxlength="12" /></label>)}
+              {NOMBRES_CRITERES.map((n) => <label class="e-champ">{n.titre}<input name={`a_${n.id}`} inputmode="numeric" value={val(n.id)} autocomplete="off" maxlength="20" /></label>)}
               <label class="e-champ">{TEXTES_CRITERES[0].titre}<input name="a_secteur" value={val('secteur')} placeholder="Anthy, Sciez" autocomplete="off" maxlength={TEXTES_CRITERES[0].max} /></label>
             </div>
             {ancien && <p class="e-muet" data-budget-ancien>Budget noté avant : {ancien}. Il reste tant que vous ne saisissez pas de montant.</p>}
+            {ancienneSurface && <p class="e-muet" data-surface-ancienne>Surface notée avant : {ancienneSurface}. Elle reste tant que vous ne saisissez pas de surface.</p>}
             <div class="e-champs">
               {TEXTES_CRITERES.slice(1, 4).map((t) => <label class="e-champ large">{t.titre}<textarea name={`a_${t.id}`} rows="2" maxlength={t.max}>{val(t.id)}</textarea></label>)}
               <label class="e-champ large">Autres critères<input name="a_autres" value={val('autres')} placeholder="Vue lac, plain-pied, proche école…" autocomplete="off" maxlength={TEXTES_CRITERES[4].max} /></label>
