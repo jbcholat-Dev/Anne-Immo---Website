@@ -71,7 +71,8 @@ const message = { effort: 'Effort noté.', lead: 'Lead noté.', rdv: 'Rendez-vou
 const depart = objectifsDepart();
 // Le formulaire des objectifs règle la semaine, quelle que soit la période affichée.
 const semaine = periode === 'semaine' ? sem.objectifs : await lireObjectifs(env);
-// Story 20.8 : un objectif réglé par le chief of staff le dit, avec la valeur d'avant.
+// Story 20.8 : un objectif réglé par le chief of staff le dit, avec la valeur d'avant, dans le bloc replié des objectifs
+// seulement (JB, 2026-11-24 : l'espace est déjà chargé ; rien de plus en vue).
 const reglages = await lireReglages(env);
 const parChief = (cle: string) => { const r = reglages.get(cle); return r?.par === PAR_CHIEF ? { le: jourCourt(jourParis(new Date(r.maj_le))), avant: reglages.get(`avant:${cle}`)?.valeur } : null; };
 const val = (k: string, defaut: string) => saisi[k] ?? defaut;
@@ -218,7 +219,7 @@ const qui = (par: string | null) => (par ? par.split('@')[0] : '');
   </details>
 
   <details class="e-carte s-replie" open={ouvert === 'objectifs'} data-reglages>
-    <summary class="s-titre">Objectifs de la semaine{CLES_OBJECTIF.some((c) => parChief(c)) && <span class="e-muet s-chief" data-chief-resume> · retouchés par le chief of staff</span>}</summary>
+    <summary class="s-titre">Objectifs de la semaine</summary>
     <form method="post" class="s-form">
       <input type="hidden" name="quoi" value="objectifs" />
       <div class="s-grille">

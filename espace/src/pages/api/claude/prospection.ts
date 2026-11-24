@@ -42,6 +42,7 @@ export const GET: APIRoute = async ({ request, url }) => {
 
 export const POST: APIRoute = async ({ request }) => {
   if (!pourClaude(request)) return json({ erreur: 'Accès refusé' }, 403);
+  if (Number(request.headers.get('content-length') ?? 0) > 4000) return json({ erreur: 'Corps trop grand' }, 413);
   const texte = await request.text();
   if (texte.length > 4000) return json({ erreur: 'Corps trop grand' }, 413);
   let d: Record<string, unknown>;
@@ -56,7 +57,8 @@ export const POST: APIRoute = async ({ request }) => {
     if ((d.genre !== 'effort' && d.genre !== 'resultat') || typeof d.id !== 'string' || !ULID.test(d.id)) return json({ erreur: 'genre (effort ou resultat) et id attendus' }, 400);
     return (await retirerSaisieDe(env, d.genre, d.id, PAR_CHIEF)) ? json({ retire: d.id }) : json({ erreur: 'Ligne absente, ou notée par Anne : seule Anne la retire.' }, 404);
   }
-  // Le champ libre « lieu ou précision » est fermé au chief of staff (il pourrait recevoir un nom).
+  // Le champ libre « lieu ou précision » est fermé au chief of staff (il pourrait recevoir un nom) ; la ville du boîtage
+  // n'accepte qu'un nom de commune (revue de code 20.8).
   if ('note' in d) return json({ erreur: 'Le champ note n\'est pas ouvert au chief of staff.' }, 400);
   const s = lireSaisieJson(d);
   if (typeof s === 'string') return json({ erreur: s }, 400);
