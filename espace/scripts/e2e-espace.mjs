@@ -1145,7 +1145,6 @@ try {
     await ctx.close();
     nettoyer();
   }
-<<<<<<< HEAD
   // Story 20.7 : canaux de prospection, page « Ma semaine ». Sur une semaine passée réservée à l'essai (3 au 9 mars 2025) :
   // effort noté par canal (le boîtage écrit un passage du tableau du boîtage), leads et rendez-vous, refus (date future, nombre
   // hors bornes, canal inconnu, boîtage sans ville, effort hors canaux, lead du site), modèle envoyé compté dans les messages,
@@ -1305,7 +1304,6 @@ try {
     remettreObjectifs();
   }
   if (process.env.E2E_2007_SEUL) { await bloc2007(); await nav.close(); throw new Error(echecs ? 'E2E_2007_SEUL : échecs' : 'E2E_2007_SEUL : terminé') }
-=======
   // Story 18.24 : tri par règles de la barre « Nouveaux » (sans IA). Un numéro inconnu qui n'a laissé qu'un appel manqué sans
   // message, un appel trop court ou un message vide est rangé dans la ligne repliée « Sans suite » ; il remonte s'il rappelle ;
   // rien n'est effacé et ses gestes restent. Lancé seul avec E2E_1824_SEUL=1.
@@ -1374,7 +1372,6 @@ try {
     nettoyer();
   }
   if (process.env.E2E_1824_SEUL) { await bloc1824(); await nav.close(); throw new Error(echecs ? 'E2E_1824_SEUL : échecs' : 'E2E_1824_SEUL : terminé') }
->>>>>>> 0c52e46 (Espace 18.24 : la barre « Nouveaux » range en bas, repliés, les appels sans suite d'un numéro inconnu (manqué sans message, trop court, message vide) ; rien n'est effacé, un numéro qui rappelle remonte)
   if (process.env.E2E_1822_SEUL) { await bloc1822(); await nav.close(); throw new Error(echecs ? 'E2E_1822_SEUL : échecs' : 'E2E_1822_SEUL : terminé') }
   if (process.env.E2E_1821_SEUL) { await bloc1821(); await nav.close(); throw new Error(echecs ? 'E2E_1821_SEUL : échecs' : 'E2E_1821_SEUL : terminé') }
   if (process.env.E2E_1820_SEUL) { await bloc1820(); await nav.close(); throw new Error(echecs ? 'E2E_1820_SEUL : échecs' : 'E2E_1820_SEUL : terminé') }
@@ -3918,11 +3915,8 @@ try {
   await bloc1820();
   await bloc1821();
   await bloc1822();
-<<<<<<< HEAD
   await bloc2007();
-=======
   await bloc1824();
->>>>>>> 0c52e46 (Espace 18.24 : la barre « Nouveaux » range en bas, repliés, les appels sans suite d'un numéro inconnu (manqué sans message, trop court, message vide) ; rien n'est effacé, un numéro qui rappelle remonte)
   // Story 18.8 : catégories et méthodes, par /api/categories puis dans la page /categories. Les catégories de départ sont
   // remises comme avant à la fin (nom, ordre, méthode), les catégories d'essai retirées (marque « E188 » dans le nom).
   const ancienne8 = sql(`SELECT id FROM categorie WHERE nom LIKE '%E188%'`).map((c) => `'${c.id}'`).join(',');
