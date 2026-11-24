@@ -1,6 +1,6 @@
 # Story 18.29 : brief qui disparaît une fois décidé, appels manqués répétés rangés
 
-- Epic : 18 (carnet de contacts). Statut : review.
+- Epic : 18 (carnet de contacts). Statut : done (PR n° 282 fusionnée par JB le 2026-11-24).
 - Demande : JB, 2026-11-24 au soir, après la PR n° 278 : « On est passé à 54. Par contre, une fois que tu cliques sur le brief, je me retrouve avec ce truc-là au milieu de la page, ça ne part pas. […] L'ergonomie de l'outil, ce n'est pas ça. » Et une capture de la barre « Nouveaux » : beaucoup de numéros inconnus avec 2 ou 3 appels manqués sans message.
 - Puis, le même soir, sur une capture du brief aux 7 lignes écartées : « ce truc-là, c'est une énorme verrue au milieu. Est-ce que tu peux me l'enlever ? »
 
