@@ -1,6 +1,6 @@
 # Story 20.8 : le chief of staff met à jour « Ma semaine »
 
-- Epic 20 (la semaine et le bilan). Statut : review. Date : 2026-11-24.
+- Epic 20 (la semaine et le bilan). Statut : done (PR n° 275 fusionnée par JB le 2026-11-24). Date : 2026-11-24.
 - Demande de JB du 2026-11-24 (fil chief of staff) : « que le Chief of Staff puisse notamment mettre à jour l'espace d'Anne […] les objectifs de la semaine, au niveau de ses canaux de prospection, ce qui a été fait […] si on fait un brief ensemble, le répercute directement, qu'on n'est pas à la main à aller faire des choses ».
 
 ## Objectif
@@ -55,4 +55,4 @@ Revue du 2026-11-24, skill `bmad-code-review` en session neuve, commit relu d10e
 
 ## Ce qui reste
 
-- PR, accord de JB, fusion.
+- Premier usage par le fil chief of staff après un brief avec JB.
